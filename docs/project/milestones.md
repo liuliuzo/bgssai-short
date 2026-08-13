@@ -28,10 +28,10 @@ M0 结束时仓库仅有骨架继承的登录鉴权、登录日志分页示例�
 | 事项 | 状态 | 落点 |
 | --- | --- | --- |
 | 目标人群优先级与关键场景定稿 | 已完成 | `../../PRODUCT_VISION.md` 第二、三节 |
-| 制作全链路拆解为功能需求（12 份） | 已完成 | `../feature/*.md`（作品 / 剧本 / 剧情图谱 / 角色卡 / 分镜 / 文字预演 / 生成 / 配音 / 合成 / 质量 / 合规 / 用量） |
-| 各功能详细设计配图（11 张自包含 HTML + 内联 SVG） | 已完成 | `../feature/flow-*.html`、`../feature/state-*.html` |
+| 制作全链路拆解为功能需求（13 份） | 已完成 | `../feature/*.md`（作品 / 剧本 / 剧情图谱 / 三问体验 / 角色卡 / 分镜 / 文字预演 / 生成 / 配音 / 合成 / 质量 / 合规 / 用量） |
+| 各功能详细设计配图（12 张自包含 HTML + 内联 SVG） | 已完成 | `../feature/flow-*.html`、`../feature/state-*.html` |
 | 统一枚举字典（单一登记处） | 已完成 | `../feature/drama-work-management.md` 第八节 |
-| web 用户端原型（17 页，含骨架继承 3 页）与跳转真值 | 已完成 | `../demo-static/web/user/**`（含 `index.html`、`PAGE-FLOW.html`） |
+| web 用户端原型（18 页，含骨架继承 3 页；分镜与文字预演已合并为创作台一页）与跳转真值 | 已完成 | `../demo-static/web/user/**`（含 `index.html`、`PAGE-FLOW.html`） |
 | web 管理端原型（9 页）与跳转真值 | 已完成 | `../demo-static/web/admin/**`（含 `index.html`、`PAGE-FLOW.html`） |
 | 原型界面系统（应用外壳 + 业务组件） | 已完成 | `../demo-static/web/assets/shortdrama.css`（theme.css 为骨架同步副本，不改本体） |
 | 页面 → API 映射主表同步 | 已完成 | `../api/page-api-mapping.md`（Standards §9 要求） |
