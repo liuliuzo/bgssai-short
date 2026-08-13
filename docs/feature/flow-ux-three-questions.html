@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>三个问题体验主线 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:920px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .q { fill:#eff6ff; stroke:var(--accent); stroke-width:1.6; }
+  svg .src { fill:#f1f5f9; stroke:#64748b; stroke-width:1.2; }
+  svg .fix { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .okline { stroke:var(--ok); color:var(--ok); }
+</style>
+</head>
+<body>
+
+<h1>三个问题体验主线：入口按用户关心的事组织，能力按管线组织</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>用户端信息架构（不新增制作能力，重组入口与动线）</dd>
+  <dt>关联</dt><dd>ux-three-questions.md · previz-text-storyboard.md · story-map.md · drama-work-management.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、三个问题，三个直达入口，答案都能跳到修复位置</h2>
+<svg viewBox="0 0 1060 420" width="1060" height="420">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="380" y="16" width="300" height="46" rx="6"/>
+  <text class="lbl" x="530" y="36" text-anchor="middle">创作者打开作品工作台</text>
+  <text class="small" x="530" y="52" text-anchor="middle">顶部常驻三张问题卡（带状态摘要）</text>
+
+  <rect class="q" x="20" y="104" width="320" height="76" rx="8"/>
+  <text class="lbl" x="180" y="128" text-anchor="middle">问题一 我的视频会是什么样子</text>
+  <text class="small" x="180" y="148" text-anchor="middle">看样片 episode-preview</text>
+  <text class="small" x="180" y="164" text-anchor="middle">文字 + 草图把整集当成片看一遍，零视频费用</text>
+
+  <rect class="q" x="370" y="104" width="320" height="76" rx="8"/>
+  <text class="lbl" x="530" y="128" text-anchor="middle">问题二 我的剧情连不连贯</text>
+  <text class="small" x="530" y="148" text-anchor="middle">连贯性中心 continuity-center</text>
+  <text class="small" x="530" y="164" text-anchor="middle">全剧 / 集间 / 镜头三层问题一张清单</text>
+
+  <rect class="q" x="720" y="104" width="320" height="76" rx="8"/>
+  <text class="lbl" x="880" y="128" text-anchor="middle">问题三 管我的剧方不方便</text>
+  <text class="small" x="880" y="148" text-anchor="middle">管理看板（强化）</text>
+  <text class="small" x="880" y="164" text-anchor="middle">卡点排序 + 批量操作 + 三击直达</text>
+
+  <path class="arr accent" d="M 440 62 L 220 104"/>
+  <path class="arr accent" d="M 530 62 L 530 104"/>
+  <path class="arr accent" d="M 620 62 L 840 104"/>
+
+  <rect class="src" x="20" y="228" width="320" height="76" rx="6"/>
+  <text class="small" x="180" y="250" text-anchor="middle">数据来源（全部已有，不另算）</text>
+  <text class="small" x="180" y="268" text-anchor="middle">文字稿 previz_text · 草图 / 首帧素材</text>
+  <text class="small" x="180" y="284" text-anchor="middle">节奏体检（钩子秒位 / 反转 / 结尾）· 字幕规则</text>
+
+  <rect class="src" x="370" y="228" width="320" height="76" rx="6"/>
+  <text class="small" x="530" y="250" text-anchor="middle">数据来源（聚合 + 两项新增）</text>
+  <text class="small" x="530" y="268" text-anchor="middle">五类镜头断裂 · 走位轴线 · 关系揭晓 · 角色掉线</text>
+  <text class="small" x="530" y="284" text-anchor="middle">新增：伏笔台账 · 集间衔接检查</text>
+
+  <rect class="src" x="720" y="228" width="320" height="76" rx="6"/>
+  <text class="small" x="880" y="250" text-anchor="middle">数据来源（已有状态真值）</text>
+  <text class="small" x="880" y="268" text-anchor="middle">六阶段徽标 · 四道门状态 · 卡点原因</text>
+  <text class="small" x="880" y="284" text-anchor="middle">新增：批量动作（先预估后执行）</text>
+
+  <path class="arr" d="M 180 180 L 180 228"/>
+  <path class="arr" d="M 530 180 L 530 228"/>
+  <path class="arr" d="M 880 180 L 880 228"/>
+
+  <rect class="fix" x="230" y="348" width="600" height="52" rx="6"/>
+  <text class="lbl" x="530" y="370" text-anchor="middle">每个答案都带 fix_action：点击直达对应工作台并预填定位</text>
+  <text class="small" x="530" y="388" text-anchor="middle">三页均为只读视图，修改只在工作台发生——同一事实永远只有一处可改</text>
+
+  <path class="arr okline" d="M 180 304 L 340 348"/>
+  <path class="arr okline" d="M 530 304 L 530 348"/>
+  <path class="arr okline" d="M 880 304 L 720 348"/>
+</svg>
+
+<h2>二、三击直达原则（体验红线）</h2>
+<svg viewBox="0 0 1060 150" width="1060" height="150">
+  <rect class="box" x="30" y="44" width="200" height="56" rx="6"/>
+  <text class="lbl" x="130" y="68" text-anchor="middle">第 1 击 首页「接着做」</text>
+  <text class="small" x="130" y="86" text-anchor="middle">按卡点排序，不按时间</text>
+
+  <rect class="box" x="330" y="44" width="230" height="56" rx="6"/>
+  <text class="lbl" x="445" y="68" text-anchor="middle">第 2 击 卡点条 / 问题卡</text>
+  <text class="small" x="445" y="86" text-anchor="middle">作品工作台顶部常驻</text>
+
+  <rect class="fix" x="660" y="44" width="370" height="56" rx="6"/>
+  <text class="lbl" x="845" y="68" text-anchor="middle">第 3 击 修复位置（预填定位）</text>
+  <text class="small" x="845" y="86" text-anchor="middle">具体的一场戏 / 一个镜头 / 一条关系</text>
+
+  <path class="arr accent" d="M 230 72 L 330 72"/>
+  <path class="arr accent" d="M 560 72 L 660 72"/>
+  <text class="small" x="530" y="130" text-anchor="middle">从首页到任何一集卡点的修复位置，点击不超过 3 次；超过即为体验缺陷，按 Blocker 对待</text>
+</svg>
+
+<h2>三、两套入口，同一批页面（不造副本）</h2>
+<svg viewBox="0 0 1060 190" width="1060" height="190">
+  <rect class="q" x="30" y="30" width="440" height="52" rx="6"/>
+  <text class="lbl" x="250" y="52" text-anchor="middle">新用户默认动线：三个问题卡</text>
+  <text class="small" x="250" y="70" text-anchor="middle">看样片 → 查连贯 → 管进度，不需要理解管线</text>
+
+  <rect class="src" x="590" y="30" width="440" height="52" rx="6"/>
+  <text class="lbl" x="810" y="52" text-anchor="middle">专业用户动线：侧边制作分区</text>
+  <text class="small" x="810" y="70" text-anchor="middle">剧本 / 图谱 / 定妆 / 分镜 / 预演 / 生成 / 配音 / 合成 直达</text>
+
+  <rect class="box" x="310" y="120" width="440" height="46" rx="6"/>
+  <text class="lbl" x="530" y="140" text-anchor="middle">指向同一批工作台页面</text>
+  <text class="small" x="530" y="156" text-anchor="middle">严禁为三问入口另造第二套页面——两份必然漂移（Standards §0）</text>
+
+  <path class="arr" d="M 250 82 L 440 120"/>
+  <path class="arr" d="M 810 82 L 620 120"/>
+</svg>
+
+<p class="note">
+  设计立场：能力按管线组织（工程上正确），入口按问题组织（体验上正确），两者不冲突——
+  三问页面全部是既有数据的聚合只读视图，答案点下去仍回到唯一可改的工作台。
+  加的是「看懂自己的剧」的三扇窗，不是第二套编辑器。
+</p>
+
+</body>
+</html>

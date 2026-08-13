@@ -97,7 +97,7 @@
               <td><a href="story-map.html">剧情图谱</a></td>
               <td><code>/works/:work_id/story-map</code></td>
               <td>作品内子导航；剧本工作台；作品工作台</td>
-              <td>剧本工作台 · 分镜工作台 · 文字预演（按偏离点与越轴定位）· 作品工作台</td>
+              <td>剧本工作台 · 创作台（按偏离点与越轴定位）· 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -110,18 +110,10 @@
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
-              <td><a href="storyboard.html">分镜工作台</a></td>
+              <td><a href="storyboard.html">创作台（分镜 + 文字预演合并）</a></td>
               <td><code>/works/:work_id/storyboard</code></td>
-              <td>作品内子导航；剧本定稿后；质量报告返工链接</td>
-              <td>任务中心 · 角色与场景卡 · 质量报告 · 配音与字幕</td>
-              <td>作品内子导航</td>
-              <td>需 <code>Jwttoken</code></td>
-            </tr>
-            <tr>
-              <td><a href="previz.html">文字预演</a></td>
-              <td><code>/works/:work_id/previz</code></td>
-              <td>作品内子导航；分镜工作台「先看文字预演」；首页待处理问题</td>
-              <td>分镜工作台 · 任务中心 · 作品工作台</td>
+              <td>作品内子导航；剧本定稿后；质量报告与连贯性中心的返工链接；首页待处理问题</td>
+              <td>看样片 · 任务中心 · 角色与场景卡 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -147,6 +139,22 @@
               <td>作品内子导航；配音完成后；作品工作台剧集看板</td>
               <td>分镜工作台（时间轴点镜头）· 配音与字幕 · 作品工作台</td>
               <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="episode-preview.html">看样片</a></td>
+              <td><code>/works/:work_id/preview</code></td>
+              <td>作品工作台三问卡；侧边「三个问题」分区；连贯性中心「回看样片」</td>
+              <td>创作台（点镜改）· 连贯性中心 · 剧情图谱 · 作品工作台</td>
+              <td>三个问题</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="continuity-center.html">连贯性中心</a></td>
+              <td><code>/works/:work_id/continuity</code></td>
+              <td>作品工作台三问卡；侧边「三个问题」分区；看样片「连贯提示」</td>
+              <td>剧本工作台 / 创作台 / 剧情图谱（按 fix_action 定位）· 看样片 · 作品工作台</td>
+              <td>三个问题</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
@@ -189,7 +197,22 @@
     <div class="card">
       <h2 class="card-title">二、核心用户旅程</h2>
 
-      <p class="subtitle" style="margin-bottom:4px"><strong>旅程一：从一句话到第一集成片（主线）</strong></p>
+      <p class="subtitle" style="margin-bottom:4px"><strong>旅程零：三个问题（新用户默认动线）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">作品工作台</div><div class="n-route">三张问题卡常驻</div></div>
+        <div class="arrow">→<small>我的视频会是什么样子</small></div>
+        <div class="node"><div class="n-title">看样片</div><div class="n-route">/preview</div></div>
+        <div class="arrow">→<small>我的剧情连不连贯</small></div>
+        <div class="node"><div class="n-title">连贯性中心</div><div class="n-route">/continuity</div></div>
+        <div class="arrow">→<small>点 fix_action 去修</small></div>
+        <div class="node"><div class="n-title">对应工作台</div><div class="n-route">预填定位</div></div>
+      </div>
+      <div class="text-muted" style="font-size:12px">
+        三击直达原则（体验红线）：首页「接着做」→ 作品卡点条 / 问题卡 → 修复位置，不超过 3 次点击。
+        三问页面均为只读聚合视图，修改只在工作台发生。
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程一：从一句话到第一集成片（主线）</strong></p>
       <div class="flow">
         <div class="node"><div class="n-title">新建作品</div><div class="n-route">/works/create</div></div>
         <div class="arrow">→<small>创建成功</small></div>
@@ -203,8 +226,8 @@
       </div>
       <div class="flow">
         <div class="node"><div class="n-title">分镜工作台</div><div class="n-route">/storyboard</div></div>
-        <div class="arrow">→<small>过分镜门后先做文字预演</small></div>
-        <div class="node"><div class="n-title">文字预演</div><div class="n-route">/previz</div></div>
+        
+        
         <div class="arrow">→<small>构想改顺后批量生成</small></div>
         <div class="node"><div class="n-title">任务中心</div><div class="n-route">/tasks</div></div>
         <div class="arrow">→<small>画面出齐并定稿</small></div>
@@ -275,7 +298,7 @@
         <li><strong>无孤岛</strong>：除登录页外，每个页面在路由矩阵「主要入口」列都有至少一个站内父级入口。</li>
         <li><strong>全局导航外壳常驻</strong>：左侧导航（工作台 / 我的作品 / 任务中心 / 用量与账单 /
           登录日志 / MCP 接入 + 当前身份与余额）与顶部面包屑在所有页面常驻；作品内 8 个子页面另有一条
-          作品级阶段导航（剧集看板 / 剧本 / 角色定妆 / 分镜 / 文字预演 / 画面生成 / 配音字幕 / 合成导出 /
+          作品级阶段导航（剧集看板 / 剧本 / 角色定妆 / 创作台 / 画面生成 / 配音字幕 / 合成导出 /
           质量报告），保证作品内可横向直达、无需回退。</li>
         <li><strong>权限态分支</strong>：本端仅 <code>role_code=USER</code>；入口按身份渲染，权限不足不渲染入口而非渲染后报 403。
           后端仍按 JWT 中的 <code>user_id</code> 独立做数据范围过滤，不因前端隐藏入口而放宽。</li>

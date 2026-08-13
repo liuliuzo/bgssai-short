@@ -19,8 +19,12 @@
       <div class="ctx-meta">复仇逆袭 · 30 集 × 90 秒 · 竖屏</div>
     </div>
 
+    <div class="side-sec">三个问题</div>
+    <a class="side-link" href="episode-preview.html">看样片（文字版）</a>
+    <a class="side-link" href="continuity-center.html">连贯性中心<span class="ln hot">5</span></a>
+    <a class="side-link active" href="work-detail.html">管理看板</a>
+
     <div class="side-sec">制作</div>
-    <a class="side-link active" href="work-detail.html">剧集看板</a>
     <a class="side-link" href="script-studio.html">剧本工作台<span class="ln">15</span></a>
     <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
     <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
@@ -70,6 +74,56 @@
 
     <div class="app-page">
 
+      <div class="grid grid-3" style="margin-bottom:14px">
+        <a class="card" href="episode-preview.html" style="text-decoration:none">
+          <div class="row">
+            <div>
+              <div style="font-size:14px; font-weight:700">我的视频会是什么样子</div>
+              <div class="text-sub" style="font-size:12px; margin-top:4px">
+                用文字和草图把整集当成片看一遍，零视频费用
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="st doing">E14 样片就绪 · 草图级</span>
+            <span class="spacer"></span>
+            <span class="text-brand" style="font-size:12px; font-weight:600">去看样片</span>
+          </div>
+        </a>
+
+        <a class="card" href="continuity-center.html" style="text-decoration:none; border-color:#fecaca">
+          <div class="row">
+            <div>
+              <div style="font-size:14px; font-weight:700">我的剧情连不连贯</div>
+              <div class="text-sub" style="font-size:12px; margin-top:4px">
+                全剧 / 集间 / 镜头三层检查收敛为一张清单
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="st fail">5 条待处理 · 1 条集间断裂</span>
+            <span class="spacer"></span>
+            <span class="text-danger" style="font-size:12px; font-weight:600">去查连贯</span>
+          </div>
+        </a>
+
+        <a class="card" href="#board" style="text-decoration:none">
+          <div class="row">
+            <div>
+              <div style="font-size:14px; font-weight:700">管我的剧方不方便</div>
+              <div class="text-sub" style="font-size:12px; margin-top:4px">
+                卡点排序、批量操作，从首页到修复位置不超过三击
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="st warn">2 集卡在门禁 · 15 集可批量写本</span>
+            <span class="spacer"></span>
+            <span class="text-brand" style="font-size:12px; font-weight:600">看剧集看板</span>
+          </div>
+        </a>
+      </div>
+
       <div class="grid grid-4" style="margin-bottom:14px">
         <div class="stat">
           <div class="stat-label">制作进度</div>
@@ -108,17 +162,30 @@
         </div>
       </div>
 
-      <div class="card card-flush">
+      <div class="card card-flush" id="board">
         <div class="card-hd">
           <h2>剧集看板</h2>
           <span class="text-muted" style="font-size:12px">六阶段 + 四道质量门，状态与各模块真实状态一致</span>
           <span class="spacer"></span>
           <div class="seg-ctl">
-            <button class="on">全部 30</button>
-            <button>进行中 3</button>
-            <button>待处理 2</button>
+            <button class="on">按卡点</button>
+            <button>按集号</button>
           </div>
           <button class="btn btn-default btn-sm">追加一集</button>
+        </div>
+
+        <div class="card-body" style="padding-bottom:0">
+          <div class="toolbar" style="padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:8px">
+            <span class="text-sub" style="font-size:12px">已选 <strong>15</strong> 集（E16 至 E30）</span>
+            <span class="spacer"></span>
+            <button class="btn btn-primary btn-sm">批量生成剧本 约 3.80 元</button>
+            <button class="btn btn-default btn-sm">批量提交生成</button>
+            <button class="btn btn-default btn-sm">批量提审（2 集可提）</button>
+            <button class="btn btn-default btn-sm">批量导出（12 集可导）</button>
+          </div>
+          <div class="text-muted" style="font-size:11px; margin-top:6px">
+            批量动作先给费用与影响预估；含不满足前置条件的集会逐集列出原因（4006），不整批静默失败。
+          </div>
         </div>
 
         <div class="table-wrap">

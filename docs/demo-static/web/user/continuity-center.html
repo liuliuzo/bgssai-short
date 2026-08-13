@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 连贯性中心</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">连贯问题 5 条 · 伏笔 7 条</div>
+    </div>
+
+    <div class="side-sec">三个问题</div>
+    <a class="side-link" href="episode-preview.html">看样片（文字版）</a>
+    <a class="side-link active" href="continuity-center.html">连贯性中心<span class="ln hot">5</span></a>
+    <a class="side-link" href="work-detail.html">管理看板</a>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link" href="story-map.html">剧情图谱</a>
+    <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
+    <a class="side-link" href="storyboard.html">分镜工作台<span class="ln hot">2</span></a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">连贯性中心</span>
+      <span class="spacer"></span>
+      <span class="text-muted" style="font-size:12px">查看不计费 · 上次全查 12 分钟前</span>
+      <button class="btn btn-primary">一键重查全剧 约 0.05 元</button>
+    </header>
+
+    <div class="app-page">
+
+      <div class="card" style="border-color:#bfdbfe; background:#eff6ff; margin-bottom:14px">
+        <div class="row">
+          <div style="font-size:13px; line-height:1.7">
+            <strong>所有「接不上」的问题，一张清单看完。</strong>
+            <span class="text-sub">
+              三层检查：全剧（伏笔 / 关系 / 角色）、集与集之间（钩子衔接 / 时间线）、
+              镜头与镜头之间（空间 / 光线 / 服装 / 道具 / 轴线）。每条都能点过去直接修。
+            </span>
+          </div>
+          <span class="spacer"></span>
+          <div class="gates" style="flex:0 0 auto">
+            <div class="gate fail" style="min-width:76px"><div class="g-n">全剧层</div><div class="g-s text-danger">2</div></div>
+            <div class="gate fail" style="min-width:76px"><div class="g-n">集间层</div><div class="g-s text-danger">1</div></div>
+            <div class="gate fail" style="min-width:76px"><div class="g-n">镜头层</div><div class="g-s text-danger">2</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="card card-flush">
+            <div class="card-hd">
+              <h2>问题清单</h2>
+              <span class="chip active">全部 5</span>
+              <span class="chip">全剧 2</span>
+              <span class="chip">集间 1</span>
+              <span class="chip">镜头 2</span>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">按严重度排序</span>
+            </div>
+            <div class="card-body">
+
+              <div class="issue crit">
+                <div class="i-h">
+                  <span class="badge badge-danger">集间 · HOOK_MISMATCH</span>
+                  <span>E14 结尾的钩子，E15 开场没接住</span>
+                </div>
+                <div class="i-d">
+                  第 14 集末 5 秒老董事叫出「沈宛如」这个名字，观众带着这个悬念点开第 15 集——
+                  但 E15 开场三场戏无人提及这个名字。悬念被晾了 60 秒，追更动力直接断掉。
+                </div>
+                <div class="i-f">
+                  建议：E15 场 1 第一句就接「你刚才叫我什么」 ·
+                  <a href="script-studio.html">改写 E15 场 1</a>
+                </div>
+              </div>
+
+              <div class="issue crit">
+                <div class="i-h">
+                  <span class="badge badge-danger">全剧 · 关系揭晓</span>
+                  <span>血缘关系第 15 集揭晓，前 14 集零铺垫</span>
+                </div>
+                <div class="i-d">
+                  老董事与女主的血缘关系是全剧最大反转，但检索前 14 集台词与走位，
+                  两人没有任何一次互动或暗示。反转没铺垫就不是反转，是编不下去了硬编。
+                </div>
+                <div class="i-f">
+                  建议：第 6 集与第 10 集各埋一个眼神 / 称呼伏笔 ·
+                  <a href="story-map.html">看关系图</a> · <a href="script-studio.html">去埋伏笔</a>
+                </div>
+              </div>
+
+              <div class="issue crit">
+                <div class="i-h">
+                  <span class="badge badge-danger">镜头 · SPACE</span>
+                  <span>E14 镜 7 → 8 空间跳变</span>
+                </div>
+                <div class="i-d">镜 7 在走廊，镜 8 直接回到会议室，中间没有开门或落座的交代。</div>
+                <div class="i-f">
+                  建议：镜 7 末尾加推门动作，或插入一个空镜 ·
+                  <a href="storyboard.html">去文字层改（零成本）</a>
+                </div>
+              </div>
+
+              <div class="issue">
+                <div class="i-h">
+                  <span class="badge badge-warn">镜头 · EYELINE</span>
+                  <span>E14 镜 8 → 9 越轴</span>
+                </div>
+                <div class="i-d">两镜机位分居轴线两侧，剪辑点上两人左右位置会对调。</div>
+                <div class="i-f">
+                  建议：镜 9 机位移回轴线同侧 ·
+                  <a href="story-map.html">看走位对比</a> · <a href="#">一键修正机位</a>
+                </div>
+              </div>
+
+              <div class="issue" style="margin-bottom:0">
+                <div class="i-h">
+                  <span class="badge badge-warn">全剧 · 角色掉线</span>
+                  <span>苏曼自第 9 集起连续 6 集未出场</span>
+                </div>
+                <div class="i-d">配角凭空消失是短剧常见硬伤，观众会记得她。</div>
+                <div class="i-f">
+                  建议：补一场过渡戏，或在第 10 集明确写离场 ·
+                  <a href="story-map.html">看出场热力</a> · <a href="script-studio.html">去处理</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>集间衔接检查</h2>
+              <span class="text-muted" style="font-size:12px">上集结尾 ↔ 下集开场，逐对比对</span>
+              <span class="spacer"></span>
+              <span class="chip active">已写 15 集</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:80px">衔接</th>
+                    <th>上集结尾（钩子）</th>
+                    <th>下集开场（第一句）</th>
+                    <th style="width:100px">判定</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">E01→E02</td>
+                    <td>「退婚书我签，但有个条件。」</td>
+                    <td>「你的条件，我拒绝。」</td>
+                    <td><span class="st done">已接住</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">E13→E14</td>
+                    <td>收购文件签署完成的特写</td>
+                    <td>「这份收购案，谁批准的？」</td>
+                    <td><span class="st done">已接住</span></td>
+                  </tr>
+                  <tr style="background:#fff8f8">
+                    <td class="mono">E14→E15</td>
+                    <td>「沈…宛如？」（母亲的名字）</td>
+                    <td class="text-danger">开场三场无人提及该名字</td>
+                    <td><span class="st fail">钩子未接</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">E15→E16</td>
+                    <td class="text-muted">E15 剧本评审中</td>
+                    <td class="text-muted">E16 未写</td>
+                    <td><span class="st todo">待写</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card card-flush">
+            <div class="card-hd">
+              <h2>伏笔台账</h2>
+              <span class="spacer"></span>
+              <button class="btn btn-default btn-sm">添加伏笔</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>伏笔</th><th style="width:70px">埋设</th><th style="width:70px">回收</th><th style="width:80px">状态</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>退婚书上的附加条款</td>
+                    <td class="mono">E01 场2</td>
+                    <td class="mono">E08</td>
+                    <td><span class="st done">已回收</span></td>
+                  </tr>
+                  <tr>
+                    <td>母亲留下的股权文件</td>
+                    <td class="mono">E03 场4</td>
+                    <td class="mono">E15</td>
+                    <td><span class="st doing">待回收</span></td>
+                  </tr>
+                  <tr style="background:#fff8f8">
+                    <td>陆时衍抽屉里的旧照片</td>
+                    <td class="mono">E05 场1</td>
+                    <td class="text-muted">未计划</td>
+                    <td><span class="st warn">已埋未收</span></td>
+                  </tr>
+                  <tr style="background:#fff8f8">
+                    <td>E12 提到的「三年前那笔钱」</td>
+                    <td class="text-danger">找不到</td>
+                    <td class="mono">E12 场3</td>
+                    <td><span class="st fail">没埋过</span></td>
+                  </tr>
+                  <tr>
+                    <td>老董事的怀表</td>
+                    <td class="mono">E06 场2</td>
+                    <td class="mono">E24</td>
+                    <td><span class="st doing">待回收</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-body" style="padding-top:10px">
+              <div class="text-muted" style="font-size:11px; line-height:1.7">
+                伏笔由剧本自动抽取候选，可增删改。「已埋未收」在剧终前要么回收要么删掉；
+                「没埋过」的回收要补埋设，否则观众一脸问号。
+                剧终仍未回收的伏笔会列入质量档案。
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>检查覆盖范围</h2></div>
+            <div class="kv" style="grid-template-columns:76px 1fr">
+              <div class="k">全剧层</div><div>伏笔台账 · 关系揭晓时机 · 角色掉线</div>
+              <div class="k">集间层</div><div>钩子衔接 · 时间线跳跃 · 情绪归零</div>
+              <div class="k">镜头层</div><div>空间 / 光线 / 服装 / 道具 / 轴线（数据来自创作台与走位，本页只聚合）</div>
+            </div>
+            <div class="note" style="margin:10px 0 0">
+              连贯性问题不硬性拦截，但计入对应质量门评分。
+              全部发生在文字层，修一条不花一分钱。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>修完之后</h2></div>
+            <div style="font-size:12px; line-height:2.1">
+              <div class="row"><span class="st doing" style="width:22px">1</span> <a href="episode-preview.html">回看样片确认顺了</a></div>
+              <div class="row"><span class="st todo" style="width:22px">2</span> <a href="quality-report.html">重跑门禁</a></div>
+              <div class="row"><span class="st todo" style="width:22px">3</span> <a href="storyboard.html">提交生成</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>GET /bgssai/user/continuity/overview?work_id</code>（三层聚合：
+        <code>layer</code> = <code>WORK</code> / <code>INTER_EPISODE</code> / <code>SHOT</code>）·
+        <code>GET /bgssai/user/continuity/foreshadows?work_id</code> ·
+        <code>POST /bgssai/user/continuity/foreshadow-save</code> · <code>/recheck</code>。
+        伏笔：<code>foreshadow_desc</code> · <code>setup_episode_no</code> / <code>setup_scene_no</code> ·
+        <code>payoff_episode_no</code> · <code>foreshadow_status</code>（<code>PLANTED</code> /
+        <code>PAID_OFF</code> / <code>ORPHAN</code>）。集间：<code>episode_gap_type</code>
+        （<code>HOOK_MISMATCH</code> / <code>TIMELINE_JUMP</code> / <code>EMOTION_RESET</code>）。
+        镜头层复用 <code>drama_continuity_issue</code>，与创作台同一份数据。
+        需求见 <code>docs/feature/ux-three-questions.md</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

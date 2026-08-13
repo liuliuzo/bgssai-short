@@ -189,17 +189,17 @@
 ## 八、原型
 
 - 涉及端：web 用户端。
-- 页面：[`../demo-static/web/user/previz.html`](../demo-static/web/user/previz.html)
+- 页面：原型已并入创作台 [`../demo-static/web/user/storyboard.html`](../demo-static/web/user/storyboard.html)
   （文字分镜稿连读与逐镜编辑 + 连贯性检查 + 草图墙 + 提示词体检与 A/B 对照）；
   阶梯预演入口与提示词体检结果同时内嵌于
   [`../demo-static/web/user/storyboard.html`](../demo-static/web/user/storyboard.html) 的镜头详情。
-- 跳转关系：`script-studio.html` → `storyboard.html` → `previz.html` → `task-center.html`，
+- 跳转关系：`script-studio.html` → `storyboard.html`（创作台，含文字预演）→ `task-center.html`，
   登记在用户端 `PAGE-FLOW.html`。
 - 页面 → API 映射：`../api/page-api-mapping.md` 对应行。
 
 ## 九、四层同步检查清单
 
 - [x] 需求（本文件；枚举同步登记到 `drama-work-management.md` 附录）
-- [x] 原型（`docs/demo-static/web/user/previz.html`、`storyboard.html` 及 `PAGE-FLOW.html`）
+- [x] 原型（并入 `docs/demo-static/web/user/storyboard.html` 及 `PAGE-FLOW.html`）
 - [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
 - [ ] 代码与数据库

@@ -150,6 +150,9 @@
 | `task_status` 任务状态 | `QUEUED` 排队中 / `RUNNING` 执行中 / `SUCCEEDED` 成功 / `FAILED` 失败 / `CANCELED` 已取消 |
 | `ability_type` AI 能力类型 | 同 `task_type` |
 | `risk_level` 合规风险等级 | `PASS` 通过 / `WARN` 提示 / `BLOCK` 拦截 |
+| `foreshadow_status` 伏笔状态 | `PLANTED` 已埋未收 / `PAID_OFF` 已回收 / `ORPHAN` 回收了没埋过 |
+| `episode_gap_type` 集间断裂 | `HOOK_MISMATCH` 钩子未接 / `TIMELINE_JUMP` 时间线跳跃 / `EMOTION_RESET` 情绪无过渡归零 |
+| `batch_action` 批量动作 | `GEN_SCRIPT` 批量生成剧本 / `SUBMIT_GENERATE` 批量提交生成 / `SUBMIT_REVIEW` 批量提审 / `EXPORT` 批量导出 |
 | `map_scope` 图谱范围 | `WORK` 全剧 / `EPISODE` 单集 |
 | `relation_type` 人物关系 | `ALLY` 盟友 / `RIVAL` 对手 / `LOVE` 爱慕 / `FAMILY` 血缘 / `EMPLOY` 雇佣 / `SECRET` 隐藏关系 |
 | `deviation_type` 张力偏离 | `FLAT` 塌陷段 / `WEAK_HOOK` 钩子无力 / `WEAK_ENDING` 悬念无力 / `OVER_EARLY` 爽点前置过早 |

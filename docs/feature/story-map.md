@@ -180,7 +180,7 @@
 - 页面：[`../demo-static/web/user/story-map.html`](../demo-static/web/user/story-map.html)
   （全剧张力条带 + 单集张力曲线 + 人物关系图 + 场次时间带 + 角色出场热力）；
   镜头级走位示意图内嵌于
-  [`../demo-static/web/user/previz.html`](../demo-static/web/user/previz.html)（文字稿旁）与
+  创作台 [`../demo-static/web/user/storyboard.html`](../demo-static/web/user/storyboard.html)（文字稿旁）与
   [`../demo-static/web/user/storyboard.html`](../demo-static/web/user/storyboard.html) 镜头详情。
 - 跳转关系：`script-studio.html` / `work-detail.html` → `story-map.html` → 剧本 / 分镜（按偏离点定位），
   登记在用户端 `PAGE-FLOW.html`。
@@ -189,6 +189,6 @@
 ## 九、四层同步检查清单
 
 - [x] 需求（本文件；枚举同步登记到 `drama-work-management.md` 附录）
-- [x] 原型（`docs/demo-static/web/user/story-map.html`、`previz.html` 及 `PAGE-FLOW.html`）
+- [x] 原型（`docs/demo-static/web/user/story-map.html`、`storyboard.html` 及 `PAGE-FLOW.html`）
 - [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
 - [ ] 代码与数据库
