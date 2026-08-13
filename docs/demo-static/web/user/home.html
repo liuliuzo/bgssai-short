@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 用户端首页</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+      <h1 class="title" style="margin:0">首页</h1>
+      <span class="badge">USER</span>
+    </div>
+    <p class="subtitle">
+      导航：<a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
+      <a href="login.html">退出登录</a>
+    </p>
+
+    <div class="card">
+      <h2 class="title" style="font-size:15px">当前登录身份</h2>
+      <!-- 字段取自登录响应 result（snake_case） -->
+      <div class="kv">
+        <div class="k">user_name</div><div>demo</div>
+        <div class="k">real_name</div><div>演示用户</div>
+        <div class="k">role_code</div><div>USER</div>
+        <div class="k">role_name</div><div>用户</div>
+        <div class="k">user_id</div><div>u-demo-0001</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="subtitle" style="margin:0">
+        这是 AI 短剧制作平台用户端示例首页。登录、鉴权、统一响应封装、分页列表等基础链路已就绪，按产品需求在此基础上
+        新增页面与接口即可；用户端接口一律只返回当前登录用户本人的数据。
+      </p>
+    </div>
+
+    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+  </div>
+</body>
+</html>

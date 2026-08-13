@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 84" width="260" height="84" role="img" aria-label="BGSS">
+  <defs>
+    <linearGradient id="h-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b8bff"/>
+      <stop offset="0.45" stop-color="#255ee8"/>
+      <stop offset="1" stop-color="#123fc4"/>
+    </linearGradient>
+    <linearGradient id="h-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd54a"/>
+      <stop offset="0.5" stop-color="#fbb017"/>
+      <stop offset="1" stop-color="#e98a06"/>
+    </linearGradient>
+  </defs>
+  <g font-family="'Arial Rounded MT Bold','Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif"
+     font-weight="900" font-size="66" text-anchor="middle" dominant-baseline="central" letter-spacing="1">
+    <text x="34" y="44" fill="url(#h-blue)">B</text>
+    <text x="97" y="44" fill="url(#h-blue)">G</text>
+    <text x="160" y="44" fill="url(#h-gold)">S</text>
+    <text x="223" y="44" fill="url(#h-blue)">S</text>
+  </g>
+</svg>

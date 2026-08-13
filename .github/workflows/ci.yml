@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  backend:
+    name: Backend build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Compile
+        run: mvn -B -DskipTests compile
+      - name: Test
+        run: mvn -B test
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - bgssai-short-drama-admin/bgssai-short-drama-admin-react
+          - bgssai-short-drama-user/bgssai-short-drama-user-react
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        working-directory: ${{ matrix.app }}
+        run: npm install --no-audit --no-fund
+      - name: Build
+        working-directory: ${{ matrix.app }}
+        run: npm run build

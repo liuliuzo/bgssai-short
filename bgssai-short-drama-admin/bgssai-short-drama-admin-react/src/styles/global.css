@@ -1,0 +1,203 @@
+/*
+ * AI 短剧制作平台管理端 — 扁平设计体系（React 版）
+ * 与用户端共用 bgssai-blog React 令牌真值（--brand/--text/--sub 等，见 theme.css）：
+ * 实底白卡片 + 1px 细边框 + 轻微阴影 + 蓝色品牌色（#2563eb）。侧边栏统一为浅色（白底 + 蓝色激活态）。
+ * 旧「液态玻璃」令牌名保留并映射为扁平实底值，避免引用它们的页面失效。
+ */
+
+/* ============ 1. 设计令牌 ============ */
+:root {
+  /* blog canonical — 与 bgssai-blog React 令牌同名同值 */
+  --brand: #2563eb;
+  --brand-2: #1e40af;
+  --brand-3: #3b82f6;
+  --text: #0f172a;
+  --sub: #475569;
+  --muted: #64748b;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --surface-2: #f1f5f9;
+  --ai: #7c3aed;
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --hot: #ef4444;
+  --info-soft: #eff6ff;
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
+
+  /* 品牌色（legacy --lg-* 别名，对齐 blog canonical） */
+  --lg-accent: var(--brand);
+  --lg-accent-2: var(--brand-2);
+  --lg-accent-hover: #1d4ed8;
+  --lg-accent-soft: var(--info-soft);
+  --lg-accent-grad: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  --lg-accent-grad-r: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  --lg-accent-glow: rgba(37, 99, 235, 0.18);
+
+  /* 语义文字 */
+  --lg-text: var(--text);
+  --lg-text-muted: var(--sub);
+  --lg-text-faint: var(--muted);
+  --lg-text-on-accent: #ffffff;
+
+  /* 状态色 */
+  --lg-ai: var(--ai);
+  --lg-ok: var(--ok);
+  --lg-warn: var(--warn);
+  --lg-danger: var(--danger);
+  --lg-hot: var(--hot);
+
+  /* 表面与边框 */
+  --lg-bg-page: var(--bg);
+  --lg-card: var(--card);
+  --lg-border: var(--border);
+  --lg-border-subtle: #eef0f4;
+  --lg-hover-bg: var(--surface-2);
+
+  /* 兼容旧「玻璃」令牌名 → 扁平实底 */
+  --lg-glass-bg: #ffffff;
+  --lg-glass-bg-light: #f8fafc;
+  --lg-glass-bg-strong: #ffffff;
+  --lg-glass-sidebar: #ffffff;
+  --lg-highlight: transparent;
+
+  /* 阴影（轻微、扁平） */
+  --lg-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --lg-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --lg-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
+
+  /* 圆角 */
+  --lg-radius-sm: 6px;
+  --lg-radius-control: 8px;
+  --lg-radius-md: 10px;
+  --lg-radius-card: 12px;
+  --lg-radius-panel: 12px;
+  --lg-radius-pill: 999px;
+
+  /* 动效 */
+  --lg-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  --lg-duration: 0.18s;
+
+  --lg-blur: 0px;
+  --lg-saturate: 100%;
+
+  /* 平台管理员侧边栏：统一浅色（白底 + 蓝色激活态，对齐 blog .side-menu） */
+  --pa-sidebar-bg: #ffffff;
+  --pa-sidebar-text: #0f172a;
+  --pa-sidebar-muted: #94a3b8;
+  --pa-sidebar-active: #eff6ff;
+  --pa-sidebar-hover: #f1f5f9;
+  --pa-sidebar-border: #e2e8f0;
+}
+
+/* ============ 2. 工具类 ============ */
+.lg-bg {
+  background: var(--lg-bg-page);
+  min-height: 100vh;
+}
+
+.lg-surface,
+.lg-surface-strong {
+  background: var(--lg-card);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-shadow-sm);
+  border-radius: var(--lg-radius-card);
+}
+
+.lg-pill {
+  border-radius: var(--lg-radius-pill) !important;
+}
+
+.lg-card-hover {
+  transition: transform var(--lg-duration) var(--lg-easing),
+    box-shadow var(--lg-duration) var(--lg-easing);
+}
+.lg-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--lg-shadow);
+}
+
+/* ============ 3. 全局基础 ============ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body.lg-bg {
+  font-family: var(--font);
+  color: var(--lg-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============ 4. Ant Design 扁平覆盖 ============ */
+.ant-card {
+  background: var(--lg-card);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-shadow-sm);
+}
+
+.ant-btn-primary {
+  background: var(--lg-accent);
+  border: 1px solid var(--lg-accent);
+  box-shadow: none;
+}
+.ant-btn-primary:not(:disabled):hover {
+  background: var(--lg-accent-hover) !important;
+  border-color: var(--lg-accent-hover) !important;
+}
+
+.ant-table {
+  background: transparent !important;
+}
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: var(--lg-bg-page);
+  color: var(--lg-text-muted);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--lg-border);
+}
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  background: transparent;
+  color: var(--lg-text);
+}
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: var(--lg-hover-bg) !important;
+}
+
+.ant-modal .ant-modal-content {
+  background: var(--lg-card);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-shadow-lg);
+}
+
+.ant-dropdown .ant-dropdown-menu {
+  background: var(--lg-card);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-shadow-lg);
+}
+
+/* ============ 5. 滚动条 ============ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
