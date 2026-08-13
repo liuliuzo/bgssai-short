@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Form, Input, message } from 'antd'
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import authApi from '../../api/auth'
+import { useWechatFastLogin } from '../../components/WechatFastLoginDialog'
+import { parseWechatQrConnect } from '../../lib/wechatFastLogin'
 import { useUserStore, isAllowedRole } from '../../store/user'
 import './login.css'
 
@@ -16,7 +18,9 @@ export default function Login() {
   const navigate = useNavigate()
   const setUserInfo = useUserStore((s) => s.setUserInfo)
   const [loading, setLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(null)
   const [form] = Form.useForm()
+  const { startWechatFastLogin, wechatFastLoginDialog } = useWechatFastLogin()
 
   const loginSucceed = (result) => {
     if (!isAllowedRole(result)) {
@@ -47,6 +51,26 @@ export default function Login() {
       // Other business error codes are surfaced by the axios interceptor via message.warning.
     } finally {
       setLoading(false)
+    }
+  }
+
+  const startOAuth = async (platform) => {
+    if (oauthLoading) return
+    setOauthLoading(platform)
+    try {
+      const { data } = await authApi.oauthAuthorizeUrl({ platform })
+      const url = data?.result?.authorize_url
+      const code = data && data.code
+      const ok = code == CODE_OK_NUM || code === CODE_OK_STR_0 || code === CODE_OK_STR_200
+      if (!ok || !url) return
+      sessionStorage.setItem('oauth_pending', JSON.stringify({ platform }))
+      if (platform === 'wechat' && parseWechatQrConnect(url)) {
+        startWechatFastLogin(url)
+        return
+      }
+      window.location.assign(url)
+    } finally {
+      setOauthLoading(null)
     }
   }
 
@@ -88,8 +112,30 @@ export default function Login() {
           </Form.Item>
         </Form>
 
+        <div className="login-oauth-divider">或使用第三方账号</div>
+        <p className="login-oauth-note">首次授权即自动创建账号，无需再注册</p>
+        <div className="login-oauth-row">
+          {[
+            { key: 'wechat', label: '微信' },
+            { key: 'alipay', label: '支付宝' },
+            { key: 'douyin', label: '抖音' },
+            { key: 'weibo', label: '微博' },
+          ].map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              className={`login-oauth-btn${p.key === 'wechat' ? ' login-oauth-btn-wechat' : ''}`}
+              disabled={!!oauthLoading}
+              onClick={() => startOAuth(p.key)}
+            >
+              {oauthLoading === p.key ? '跳转中...' : `${p.label}登录`}
+            </button>
+          ))}
+        </div>
+
         <div className="login-copyright">© 2026 昆山兵贵神速智能科技有限公司</div>
       </div>
+      {wechatFastLoginDialog}
     </div>
   )
 }

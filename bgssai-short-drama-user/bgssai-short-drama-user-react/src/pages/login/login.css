@@ -89,3 +89,52 @@
   color: var(--lg-accent);
   font-weight: 500;
 }
+
+.login-oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 10px;
+  font-size: 12px;
+  color: var(--lg-text-muted, #64748b);
+}
+.login-oauth-divider::before,
+.login-oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--lg-border, #e2e8f0);
+}
+.login-oauth-note {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--lg-text-muted, #64748b);
+}
+.login-oauth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.login-oauth-btn {
+  height: 38px;
+  border: 1px solid var(--lg-border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--lg-text, #0f172a);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.login-oauth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.login-oauth-btn-wechat {
+  grid-column: 1 / -1;
+  background: #07c160;
+  border-color: #07c160;
+  color: #fff;
+}
+

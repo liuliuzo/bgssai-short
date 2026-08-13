@@ -1,5 +1,7 @@
 package com.bgssai.shortdrama.login.dto.resp;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * User login response. Carries the JWT token and identity on success.
  * JSON fields (snake_case): jwt_token, role_code, role_name, user_id, user_name, real_name.
@@ -19,6 +21,10 @@ public class RespUserLogin {
     private String userName;
 
     private String realName;
+
+    /** Java 字段不得用 is 前缀；wire 名必须是 is_new_user。 */
+    @JsonProperty("is_new_user")
+    private Boolean newUser;
 
     public String getJwtToken() {
         return jwtToken;
@@ -66,5 +72,14 @@ public class RespUserLogin {
 
     public void setRealName(String realName) {
         this.realName = realName;
+    }
+
+    @JsonProperty("is_new_user")
+    public Boolean getNewUser() {
+        return newUser;
+    }
+
+    public void setNewUser(Boolean newUser) {
+        this.newUser = newUser;
     }
 }

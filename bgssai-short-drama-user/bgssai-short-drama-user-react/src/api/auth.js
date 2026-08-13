@@ -7,4 +7,7 @@ import http from '../utils/http'
 // Accounts log in with role_code === 'USER'.
 const login = (data) => http.post('/user/login', data)
 
-export default { login }
+const oauthAuthorizeUrl = (data) => http.post('/user/oauth/authorize-url', data)
+const oauthCallback = (data) => http.post('/user/oauth/callback', data)
+
+export default { login, oauthAuthorizeUrl, oauthCallback }

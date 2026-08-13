@@ -25,7 +25,7 @@ instance.interceptors.request.use(
 
 const gotoLogin = () => {
   useUserStore.getState().clearUserInfo()
-  if (!window.location.pathname.startsWith('/login')) {
+  if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/oauth-callback') {
     window.location.href = '/login'
   }
 }
