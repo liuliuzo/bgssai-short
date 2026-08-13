@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 用户端概览</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">AI 短剧制作平台 web 用户端原型 — 概览</h1>
+    <p class="subtitle">
+      本目录是 AI 短剧制作平台 <strong>web 用户端</strong>（bgssai-short-drama-user，后端 8081 / 前端 3002，
+      <code>role_code=USER</code>）原型与页面跳转的<strong>权威参照</strong>：接口 JSON 字段命名（snake_case）、
+      响应结构、枚举 / 状态值与页面跳转关系，前后端实现逐字对齐。本端跳转真值见
+      <a href="PAGE-FLOW.html">PAGE-FLOW.html</a>；管理端原型见
+      <a href="../admin/index.html">../admin/index.html</a>。
+    </p>
+
+    <div class="card">
+      <h2 class="title" style="font-size:15px">页面清单</h2>
+      <table>
+        <thead>
+          <tr><th>页面</th><th>路由</th><th>对应接口</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="login.html">登录页</a></td>
+            <td><code>/login</code></td>
+            <td><code>POST /bgssai/user/login</code></td>
+            <td>账号密码登录，签发 JWT；本端不做角色门禁，启用中的账号均可登录</td>
+          </tr>
+          <tr>
+            <td><a href="home.html">首页</a></td>
+            <td><code>/home</code></td>
+            <td>-</td>
+            <td>展示当前登录身份</td>
+          </tr>
+          <tr>
+            <td><a href="login-logs.html">登录日志</a></td>
+            <td><code>/login-logs</code></td>
+            <td><code>GET /bgssai/user/login-logs</code></td>
+            <td>示例分页列表（仅本人记录，<code>user_id</code> 取自 JWT），消费 PageResponse</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2 class="title" style="font-size:15px">本端约定</h2>
+      <div class="kv">
+        <div class="k">工程</div><div>bgssai-short-drama-user，后端 8081 / 前端 3002</div>
+        <div class="k">角色</div><div><code>role_code=USER</code></div>
+        <div class="k">登录接口</div><div><code>POST /bgssai/user/login</code></div>
+        <div class="k">数据可见范围</div><div>仅本人数据；<code>user_id</code> 一律取自 JWT，不从请求参数取</div>
+        <div class="k">响应封装</div><div><code>{ code, message, success, result }</code>，分页附 <code>page_num / page_size / total_size</code></div>
+        <div class="k">鉴权</div><div>请求头 <code>Jwttoken</code></div>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+  </div>
+</body>
+</html>

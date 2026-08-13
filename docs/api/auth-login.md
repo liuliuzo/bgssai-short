@@ -1,0 +1,119 @@
+# 契约：登录与登录日志
+
+字段一律 snake_case；统一响应封装 `{ code, message, success, result }`；鉴权走请求头 `Jwttoken`。
+
+本篇一份契约覆盖两端（管理端 / 用户端），端差异逐节并列说明。对应原型：管理端
+[`../demo-static/web/admin/index.html`](../demo-static/web/admin/index.html)、用户端
+[`../demo-static/web/user/index.html`](../demo-static/web/user/index.html)；页面 → API 映射见
+[`page-api-mapping.md`](./page-api-mapping.md)。
+
+## 1. 登录
+
+管理端与用户端登录形状一致，仅路径与返回 `role_code` 不同：
+
+- 管理端：`POST /bgssai/admin/login`，成功 `role_code=PLATFORM_ADMIN`（非该角色返回 4003）。
+- 用户端：`POST /bgssai/user/login`，成功 `role_code=USER`。
+
+公开接口（无需 token），按 IP 限流（capacity 5 / 每分钟补 5）。
+
+### 请求体
+
+```json
+{
+  "login_type": "password",
+  "identifier": "admin",
+  "password": "your-password"
+}
+```
+
+- `login_type`：为契约对称保留，当前仅 `password` 生效。
+- `identifier`：登录账号（`sys_user.user_name`）。
+- `password`：密码（后端 BCrypt 校验，兼容历史明文并首登升级）。
+
+### 成功响应
+
+```json
+{
+  "code": "0",
+  "message": null,
+  "success": true,
+  "result": {
+    "jwt_token": "eyJhbGciOiJIUzI1NiJ9...",
+    "role_code": "PLATFORM_ADMIN",
+    "role_name": "管理员",
+    "user_id": "u-admin-0001",
+    "user_name": "admin",
+    "real_name": "系统管理员"
+  }
+}
+```
+
+前端将 `result` 存入本地并在后续请求注入请求头 `Jwttoken: <jwt_token>`。
+
+### 失败响应
+
+```json
+{ "code": "4001", "message": "invalid credentials", "success": false }
+```
+
+```json
+{ "code": "4003", "message": "access denied: only admin may use this console", "success": false }
+```
+
+## 2. 登录日志（示例分页接口）
+
+- 管理端：`GET /bgssai/admin/login-logs`（返回全部登录记录）。
+- 用户端：`GET /bgssai/user/login-logs`（仅返回当前用户本人记录，`user_id` 取自 JWT，不取自参数）。
+
+需鉴权（`@NeedAop`，请求头 `Jwttoken`）。物理分页走 PageHelper。
+
+### 查询参数
+
+| 参数 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `page_num` | int | 1 | 1 起页码 |
+| `page_size` | int | 20 | 每页条数（>100 回落 20） |
+
+### 成功响应（PageResponse）
+
+```json
+{
+  "code": "0",
+  "success": true,
+  "result": [
+    {
+      "id": 101,
+      "user_id": "u-admin-0001",
+      "action": "LOGIN_SUCCESS",
+      "ip_address": "203.0.113.7",
+      "user_agent": "Mozilla/5.0 ...",
+      "create_time": "2026-07-19 10:00:00"
+    }
+  ],
+  "page_num": 1,
+  "page_size": 20,
+  "total_size": 1
+}
+```
+
+### 未授权 / 无权限响应
+
+token 缺失或失效时切面直接返回（HTTP 200）：
+
+```json
+{ "code": "2002", "message": "token validation failed", "success": false }
+```
+
+token 有效但身份不符时同样是 HTTP 200 + 封装内 code：
+
+- 管理端 `GET /bgssai/admin/login-logs`，角色不是 `PLATFORM_ADMIN`：
+
+  ```json
+  { "code": "4003", "message": "only admin can view login logs", "success": false }
+  ```
+
+- 用户端 `GET /bgssai/user/login-logs`，上下文取不到 `user_id`（异常态）：
+
+  ```json
+  { "code": "2002", "message": "no user in context", "success": false }
+  ```

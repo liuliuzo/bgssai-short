@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 登录</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <style>
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .login-card { width: 380px; }
+    .login-head { text-align: center; margin-bottom: 24px; }
+    .login-mark { width: 56px; height: 56px; border-radius: 14px; background: var(--accent); margin: 0 auto 12px;
+      display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 20px; }
+    .login-name { font-size: 20px; font-weight: 700; }
+    .login-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="card login-card">
+      <div class="login-head">
+        <div class="login-mark">BG</div>
+        <div class="login-name">AI 短剧制作平台 管理控制台</div>
+        <div class="login-sub">Admin Console</div>
+        <div style="margin-top:8px"><span class="badge">仅限管理员登录</span></div>
+      </div>
+
+      <!--
+        对应接口：POST /bgssai/admin/login（用户端原型见 ../user/login.html）
+        请求体：{ "login_type": "password", "identifier": "<账号>", "password": "<密码>" }
+        成功 result：{ jwt_token, role_code, role_name, user_id, user_name, real_name }
+        成功后跳转 /home（见 PAGE-FLOW.html）。
+      -->
+      <div class="field">
+        <label>账号 identifier</label>
+        <input class="input" type="text" placeholder="请输入账号" />
+      </div>
+      <div class="field">
+        <label>密码 password</label>
+        <input class="input" type="password" placeholder="请输入密码" />
+      </div>
+      <button class="btn btn-block" onclick="location.href='home.html'">登 录</button>
+
+      <div class="footer" style="margin-top:20px">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </div>
+</body>
+</html>

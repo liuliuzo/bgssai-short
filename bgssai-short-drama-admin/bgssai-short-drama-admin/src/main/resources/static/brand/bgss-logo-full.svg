@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 188" width="520" height="188" role="img" aria-label="BGSS 昆山兵贵神速智能科技有限公司">
+  <defs>
+    <linearGradient id="f-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b8bff"/>
+      <stop offset="0.45" stop-color="#255ee8"/>
+      <stop offset="1" stop-color="#123fc4"/>
+    </linearGradient>
+    <linearGradient id="f-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd54a"/>
+      <stop offset="0.5" stop-color="#fbb017"/>
+      <stop offset="1" stop-color="#e98a06"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="508" height="176" rx="46" fill="#ffffff" stroke="#e6e8ec" stroke-width="2"/>
+  <g font-family="'Arial Rounded MT Bold','Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif"
+     font-weight="900" font-size="86" text-anchor="middle" dominant-baseline="central">
+    <text x="130" y="76" fill="url(#f-blue)">B</text>
+    <text x="215" y="76" fill="url(#f-blue)">G</text>
+    <text x="300" y="76" fill="url(#f-gold)">S</text>
+    <text x="385" y="76" fill="url(#f-blue)">S</text>
+  </g>
+  <text x="260" y="146" text-anchor="middle" dominant-baseline="central"
+        font-family="'PingFang SC','Microsoft YaHei','Hiragino Sans GB',system-ui,sans-serif"
+        font-weight="600" font-size="27" letter-spacing="6" fill="#3a4356">昆山兵贵神速智能科技有限公司</text>
+</svg>

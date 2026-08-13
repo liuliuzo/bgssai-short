@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>[标题] — bgssai architecture</title>
+<style>
+  /* --- 主题变量 — 改这里一处即可换色 --- */
+  :root {
+    --bg:        #fafafa;
+    --fg:        #1a1a1a;
+    --muted:     #6b7280;
+    --accent:    #2563eb;   /* 主色 */
+    --warn:      #d97706;   /* 警告 / 风险 */
+    --ok:        #059669;   /* 成功 / 完成 */
+    --err:       #dc2626;   /* 错误 / 阻塞 */
+    --line:      #d1d5db;
+    --box-fill:  #ffffff;
+    --box-stroke:#374151;
+    --font:      ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font);
+    margin: 0; padding: 24px; line-height: 1.5;
+  }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  .meta {
+    font-size: 12px; color: var(--muted); margin-bottom: 24px;
+    border-left: 3px solid var(--accent); padding-left: 12px;
+  }
+  .meta dt { font-weight: bold; display: inline; }
+  .meta dd { display: inline; margin: 0 16px 0 4px; }
+  svg { background: var(--box-fill); border: 1px solid var(--line); border-radius: 4px; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 16px; max-width: 800px; }
+  /* SVG 内部样式 */
+  svg text { font-family: var(--font); fill: var(--fg); }
+  svg .box  { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 1.5; }
+  svg .line { stroke: var(--line); stroke-width: 1; fill: none; }
+  svg .arr  { stroke: var(--fg); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+  svg .lbl  { font-size: 12px; }
+  svg .small { font-size: 10px; fill: var(--muted); }
+  svg .accent { stroke: var(--accent); }
+  svg .warn   { stroke: var(--warn); }
+  svg .ok     { stroke: var(--ok); }
+  svg .err    { stroke: var(--err); }
+</style>
+</head>
+<body>
+
+<h1>[标题占位]</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>[模块 / 子系统 / 流程]</dd>
+  <dt>关联</dt><dd>[commit / PR / docs 文件链接]</dd>
+  <dt>更新</dt><dd>YYYY-MM-DD</dd>
+</dl>
+
+<svg viewBox="0 0 800 400" width="800" height="400">
+  <!-- 复用箭头 marker:用 marker-end="url(#arrow)" 引用 -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <!-- 示例:两个 box + 一条箭头 -->
+  <rect class="box" x="60"  y="80"  width="200" height="60" rx="6"/>
+  <text class="lbl" x="160" y="115" text-anchor="middle">起点</text>
+
+  <rect class="box" x="540" y="80"  width="200" height="60" rx="6"/>
+  <text class="lbl" x="640" y="115" text-anchor="middle">终点</text>
+
+  <path class="arr accent" d="M 260 110 L 540 110"/>
+  <text class="lbl small" x="400" y="100" text-anchor="middle">动作 / 消息</text>
+</svg>
+
+<p class="note">
+  起新图时:复制本文件 → 改文件名 → 改 &lt;title&gt; / &lt;h1&gt; / meta 三处 → 替换 SVG 里的示例形状即可。
+  viewBox 自由调整,推荐 800×400 或 1000×600,过大就拆图。
+</p>
+
+</body>
+</html>

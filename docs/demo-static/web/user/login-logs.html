@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 用户端登录日志</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+      <h1 class="title" style="margin:0">登录日志</h1>
+      <span class="badge">USER</span>
+    </div>
+    <p class="subtitle">
+      导航：<a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
+      <a href="login.html">退出登录</a>
+    </p>
+
+    <div class="card">
+      <!--
+        对应接口：GET /bgssai/user/login-logs?page_num=1&page_size=20
+        仅返回当前登录用户本人记录，user_id 取自 JWT（UserContext），不从请求参数取；
+        管理端原型见 ../admin/login-logs.html（返回全量记录）。
+        响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
+        鉴权：请求头 Jwttoken（@NeedAop）
+      -->
+      <table>
+        <thead>
+          <tr><th>id</th><th>user_id</th><th>action</th><th>ip_address</th><th>create_time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>207</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.41</td><td>2026-07-19 09:31:22</td></tr>
+          <tr><td>206</td><td>u-demo-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.41</td><td>2026-07-19 09:30:58</td></tr>
+          <tr><td>205</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.9</td><td>2026-07-18 20:14:37</td></tr>
+        </tbody>
+      </table>
+
+      <div class="pager">
+        <button class="btn">上一页</button>
+        <span>page_num 1 / page_size 20 / total_size 3</span>
+        <button class="btn">下一页</button>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+  </div>
+</body>
+</html>

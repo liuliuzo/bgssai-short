@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — web 端概览</title>
+  <link rel="stylesheet" href="assets/theme.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">AI 短剧制作平台 web 端原型 — 概览</h1>
+    <p class="subtitle">
+      web 端按角色端拆为<strong>管理端</strong>与<strong>用户端</strong>两套独立原型，各自维护自己的
+      <code>index.html</code>（概览入口）与 <code>PAGE-FLOW.html</code>（跳转唯一真值），共享
+      <code>assets/theme.css</code>。原型是接口 JSON 字段命名（snake_case）、响应结构、枚举 / 状态值与页面
+      跳转关系的权威参照，前后端实现逐字对齐。
+    </p>
+
+    <div class="card">
+      <h2 class="title" style="font-size:15px">角色端入口</h2>
+      <table>
+        <thead>
+          <tr><th>端</th><th>目录</th><th>工程 / 端口</th><th>角色</th><th>入口</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>管理端</td>
+            <td><code>web/admin/</code></td>
+            <td>bgssai-short-drama-admin，后端 8080 / 前端 3001</td>
+            <td><code>PLATFORM_ADMIN</code></td>
+            <td><a href="admin/index.html">概览</a> · <a href="admin/PAGE-FLOW.html">跳转真值</a></td>
+          </tr>
+          <tr>
+            <td>用户端</td>
+            <td><code>web/user/</code></td>
+            <td>bgssai-short-drama-user，后端 8081 / 前端 3002</td>
+            <td><code>USER</code></td>
+            <td><a href="user/index.html">概览</a> · <a href="user/PAGE-FLOW.html">跳转真值</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2 class="title" style="font-size:15px">共用约定</h2>
+      <div class="kv">
+        <div class="k">响应封装</div><div><code>{ code, message, success, result }</code>，分页附 <code>page_num / page_size / total_size</code></div>
+        <div class="k">鉴权</div><div>请求头 <code>Jwttoken</code></div>
+        <div class="k">字段命名</div><div>一律 snake_case</div>
+        <div class="k">其它端</div><div>移动端原型见 <code>docs/demo-static/ios/</code> 与 <code>docs/demo-static/android/</code>（仅用户端）</div>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+  </div>
+</body>
+</html>

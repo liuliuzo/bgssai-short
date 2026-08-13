@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 用户端页面跳转真值</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <style>
+    .flow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+    .node {
+      border: 1px solid var(--border); background: var(--card); border-radius: var(--radius-control);
+      padding: 12px 16px; min-width: 130px; text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .node .n-title { font-weight: 700; font-size: 14px; }
+    .node .n-route { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .arrow { color: var(--accent); font-weight: 700; font-size: 20px; }
+    .arrow small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">页面跳转真值（PAGE-FLOW）</h1>
+    <p class="subtitle">本文件是 web <strong>用户端</strong>（bgssai-short-drama-user，前端 3002）页面跳转的
+      <strong>唯一真值</strong>。新增前端路由须先改本文件，再同步前端路由表
+      （<code>bgssai-short-drama-user-react/src/App.jsx</code>）。管理端跳转真值见
+      <a href="../admin/PAGE-FLOW.html">../admin/PAGE-FLOW.html</a>。</p>
+
+    <div class="card">
+      <div class="flow">
+        <div class="node">
+          <div class="n-title">登录页</div>
+          <div class="n-route">/login</div>
+        </div>
+        <div class="arrow">→<small>登录成功</small></div>
+        <div class="node">
+          <div class="n-title">首页</div>
+          <div class="n-route">/home</div>
+        </div>
+        <div class="arrow">→<small>点击「登录日志」</small></div>
+        <div class="node">
+          <div class="n-title">登录日志</div>
+          <div class="n-route">/login-logs</div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="node">
+          <div class="n-title">首页 / 登录日志</div>
+          <div class="n-route">受保护路由</div>
+        </div>
+        <div class="arrow">→<small>未登录 / 角色不符 / token 失效(2002)</small></div>
+        <div class="node">
+          <div class="n-title">登录页</div>
+          <div class="n-route">/login</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="title" style="font-size:15px">跳转规则</h2>
+      <ul style="font-size:13px; color:var(--text); line-height:1.9">
+        <li>访问 <code>/</code> 自动重定向到 <code>/home</code>（已登录）或 <code>/login</code>（未登录）。</li>
+        <li>受保护路由（<code>/home</code>、<code>/login-logs</code>）要求已登录且
+          <code>role_code=USER</code>，否则跳回 <code>/login</code>。</li>
+        <li>已登录用户访问 <code>/login</code> 自动跳回 <code>/home</code>。</li>
+        <li>接口返回 <code>code=2002</code>（token 失效 / 上下文无身份）时前端清理身份并跳回 <code>/login</code>；
+          <code>code=4003</code>（角色不符）同样提示后跳回登录。两者均为 HTTP 200 + 封装内 <code>code</code>，
+          前端只看 <code>code</code>。</li>
+        <li>本端所有列表 / 详情只呈现当前登录用户本人数据，越权访问由后端按 JWT 中的
+          <code>user_id</code> 过滤（不依赖前端隐藏入口）。</li>
+      </ul>
+    </div>
+
+    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+  </div>
+</body>
+</html>

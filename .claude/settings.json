@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|NotebookEdit|CronCreate|ScheduleWakeup|mcp__Claude_Code_Remote__create_trigger|mcp__Claude_Code_Remote__update_trigger",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-scheduled-automation.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
