@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>文字预演阶梯与提示词派生链 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:920px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .free { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.5; }
+  svg .cheap { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .mid { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .exp { fill:#fef2f2; stroke:var(--err); stroke-width:1.5; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .okline { stroke:var(--ok); color:var(--ok); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+</style>
+</head>
+<body>
+
+<h1>文字预演阶梯与提示词派生链：把试错压到最便宜的一级</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>剧本定稿之后、画面生成之前</dd>
+  <dt>关联</dt><dd>previz-text-storyboard.md · storyboard-workbench.md · shot-generation.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、四级阶梯：不满意就退回上一级，永远不用视频试错</h2>
+<svg viewBox="0 0 1060 340" width="1060" height="340">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="free" x="20" y="50" width="230" height="96" rx="6"/>
+  <text class="lbl" x="135" y="74" text-anchor="middle">一级 TEXT 文字分镜稿</text>
+  <text class="small" x="135" y="94" text-anchor="middle">谁 / 在哪 / 做什么 / 怎么拍 / 什么感觉</text>
+  <text class="small" x="135" y="110" text-anchor="middle">秒级返回 · 约 0.02 元 / 镜</text>
+  <text class="small" x="135" y="128" text-anchor="middle">可直接编辑，改剧情与构想都在这层</text>
+
+  <rect class="cheap" x="280" y="50" width="230" height="96" rx="6"/>
+  <text class="lbl" x="395" y="74" text-anchor="middle">二级 DRAFT_IMAGE 低清草图</text>
+  <text class="small" x="395" y="94" text-anchor="middle">长边 512，只看构图与人物位置</text>
+  <text class="small" x="395" y="110" text-anchor="middle">约 5 秒 · 约 0.10 元 / 镜</text>
+  <text class="small" x="395" y="128" text-anchor="middle">整集 44 镜约 4 元、1 分钟出齐</text>
+
+  <rect class="mid" x="540" y="50" width="230" height="96" rx="6"/>
+  <text class="lbl" x="655" y="74" text-anchor="middle">三级 IMAGE 高清首帧</text>
+  <text class="small" x="655" y="94" text-anchor="middle">1080x1920，定稿画面</text>
+  <text class="small" x="655" y="110" text-anchor="middle">约 20 秒 · 约 0.80 元 / 镜</text>
+  <text class="small" x="655" y="128" text-anchor="middle">作为图生视频的输入</text>
+
+  <rect class="exp" x="800" y="50" width="240" height="96" rx="6"/>
+  <text class="lbl" x="920" y="74" text-anchor="middle">四级 VIDEO 视频片段</text>
+  <text class="small" x="920" y="94" text-anchor="middle">最终成片素材</text>
+  <text class="small" x="920" y="110" text-anchor="middle">约 60 至 120 秒 · 约 1.60 元 / 4 秒</text>
+  <text class="small" x="920" y="128" text-anchor="middle">最慢最贵的一级，不用来试错</text>
+
+  <path class="arr accent" d="M 250 98 L 280 98"/>
+  <path class="arr accent" d="M 510 98 L 540 98"/>
+  <path class="arr accent" d="M 770 98 L 800 98"/>
+
+  <path class="arr okline" d="M 395 146 L 395 176 L 135 176 L 135 146"/>
+  <text class="small" x="265" y="192" text-anchor="middle">构图不对，退回文字层改（零成本）</text>
+
+  <path class="arr warnline" d="M 655 146 L 655 214 L 135 214 L 135 150"/>
+  <text class="small" x="395" y="230" text-anchor="middle">首帧不满意，退回文字层或草图层重来，不要在视频层反复抽</text>
+
+  <rect class="exp" x="280" y="256" width="490" height="56" rx="6"/>
+  <text class="lbl" x="525" y="278" text-anchor="middle">跳级约束（默认开启）</text>
+  <text class="small" x="525" y="298" text-anchor="middle">未出高清首帧的镜头提交 VIDEO 直接拒绝（4016）；可在作品设置关闭，但界面提示成本风险</text>
+  <path class="arr errline" d="M 880 146 L 880 284 L 770 284"/>
+
+  <text class="small" x="135" y="252" text-anchor="middle">改一次：0 秒 0 元</text>
+  <text class="small" x="920" y="252" text-anchor="middle">改一次：2 分钟 1.6 元</text>
+</svg>
+
+<h2>二、派生链：人只在前两层作业，提示词永远是派生物</h2>
+<svg viewBox="0 0 1060 300" width="1060" height="300">
+  <rect class="free" x="30" y="40" width="270" height="86" rx="6"/>
+  <text class="lbl" x="165" y="64" text-anchor="middle">previz_text 文字分镜稿</text>
+  <text class="small" x="165" y="84" text-anchor="middle">中文自然语言，人读的那一版</text>
+  <text class="small" x="165" y="100" text-anchor="middle">可直接编辑</text>
+  <text class="small" x="165" y="116" text-anchor="middle">「镜头从她背后推上去，冷蓝顶光压下来」</text>
+
+  <rect class="cheap" x="390" y="40" width="270" height="86" rx="6"/>
+  <text class="lbl" x="525" y="64" text-anchor="middle">结构化字段</text>
+  <text class="small" x="525" y="84" text-anchor="middle">shot_size / camera_move / lighting</text>
+  <text class="small" x="525" y="100" text-anchor="middle">emotion / character_ref / scene_card</text>
+  <text class="small" x="525" y="116" text-anchor="middle">可直接编辑（下拉与开关）</text>
+
+  <rect class="box" x="750" y="40" width="280" height="86" rx="6"/>
+  <text class="lbl" x="890" y="64" text-anchor="middle">image_prompt 提示词</text>
+  <text class="small" x="890" y="84" text-anchor="middle">模型语言，只读派生</text>
+  <text class="small" x="890" y="100" text-anchor="middle">按固定模板拼装，分段标注来源</text>
+  <text class="small" x="890" y="116" text-anchor="middle">正文不可手改</text>
+
+  <path class="arr accent" d="M 300 70 L 390 70"/>
+  <text class="small" x="345" y="60" text-anchor="middle">解析</text>
+  <path class="arr accent" d="M 390 96 L 300 96"/>
+  <text class="small" x="345" y="112" text-anchor="middle">回写</text>
+  <path class="arr accent" d="M 660 83 L 750 83"/>
+  <text class="small" x="705" y="73" text-anchor="middle">拼装</text>
+
+  <rect class="exp" x="750" y="160" width="280" height="48" rx="6"/>
+  <text class="small" x="890" y="180" text-anchor="middle">禁止直接编辑提示词正文</text>
+  <text class="small" x="890" y="196" text-anchor="middle">否则绕过角色一致性指纹，人物会换脸</text>
+  <path class="arr errline" d="M 890 126 L 890 160"/>
+
+  <rect class="mid" x="30" y="160" width="630" height="110" rx="6"/>
+  <text class="lbl" x="345" y="182" text-anchor="middle">提交生成前的两道免费检查（秒级、不花钱）</text>
+  <text class="small" x="180" y="206" text-anchor="middle">连贯性检查 continuity_check</text>
+  <text class="small" x="180" y="222" text-anchor="middle">空间跳变 / 光线突变 / 服装跳变</text>
+  <text class="small" x="180" y="238" text-anchor="middle">/ 道具异常 / 轴线矛盾</text>
+  <text class="small" x="180" y="256" text-anchor="middle">定位到 shot_no，可一键改写</text>
+
+  <text class="small" x="500" y="206" text-anchor="middle">提示词体检 prompt_check</text>
+  <text class="small" x="500" y="222" text-anchor="middle">八要素齐全度 / 自相矛盾 / 冗余超长</text>
+  <text class="small" x="500" y="238" text-anchor="middle">/ 否定词建议</text>
+  <text class="small" x="500" y="256" text-anchor="middle">每条可一键采纳（改字段，不改正文）</text>
+
+  <path class="arr warnline" d="M 165 126 L 165 160"/>
+  <path class="arr warnline" d="M 525 126 L 525 160"/>
+</svg>
+
+<h2>三、一集的实际作业顺序</h2>
+<svg viewBox="0 0 1060 150" width="1060" height="150">
+  <rect class="box" x="20" y="40" width="150" height="52" rx="6"/>
+  <text class="small" x="95" y="62" text-anchor="middle">剧本定稿</text>
+  <text class="small" x="95" y="78" text-anchor="middle">一键拆镜</text>
+
+  <rect class="free" x="200" y="40" width="170" height="52" rx="6"/>
+  <text class="small" x="285" y="62" text-anchor="middle">通读整集文字稿</text>
+  <text class="small" x="285" y="78" text-anchor="middle">改剧情连贯与画面构想</text>
+
+  <rect class="cheap" x="400" y="40" width="170" height="52" rx="6"/>
+  <text class="small" x="485" y="62" text-anchor="middle">整集草图墙</text>
+  <text class="small" x="485" y="78" text-anchor="middle">一眼看完画面走向</text>
+
+  <rect class="mid" x="600" y="40" width="180" height="52" rx="6"/>
+  <text class="small" x="690" y="62" text-anchor="middle">提示词体检 + 批量套用</text>
+  <text class="small" x="690" y="78" text-anchor="middle">出高清首帧并定稿</text>
+
+  <rect class="exp" x="810" y="40" width="230" height="52" rx="6"/>
+  <text class="small" x="925" y="62" text-anchor="middle">图生视频（每镜至多重抽 1 次）</text>
+  <text class="small" x="925" y="78" text-anchor="middle">此时才开始等待与花大钱</text>
+
+  <path class="arr accent" d="M 170 66 L 200 66"/>
+  <path class="arr accent" d="M 370 66 L 400 66"/>
+  <path class="arr accent" d="M 570 66 L 600 66"/>
+  <path class="arr accent" d="M 780 66 L 810 66"/>
+
+  <text class="small" x="530" y="122" text-anchor="middle">口径：进入视频生成前的返工，90% 以上应发生在文字层与首帧层</text>
+</svg>
+
+<p class="note">
+  这条链路的取舍：文字稿之所以可直接编辑、而提示词之所以只读，是因为两者的作者不同——
+  文字稿是创作者的构想，提示词是系统按一致性规则拼装的执行指令。让人改构想、让系统管执行，
+  既保住了跨镜头一致性，又把「想清楚」这件事放回到了它该在的位置：生成之前，而不是生成之后。
+</p>
+
+</body>
+</html>

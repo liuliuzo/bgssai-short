@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 内容审核队列</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>平台管理端</span></div>
+
+    <div class="side-sec">内容</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link active" href="content-review.html">内容审核<span class="ln hot">37</span></a>
+
+    <div class="side-sec">平台配置</div>
+    <a class="side-link" href="ai-models.html">AI 能力与模型</a>
+    <a class="side-link" href="quality-templates.html">结构模板与阈值</a>
+
+    <div class="side-sec">运营</div>
+    <a class="side-link" href="usage-cost.html">用量与成本</a>
+    <a class="side-link" href="creators.html">创作者<span class="ln hot">3</span></a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+
+    <div class="side-foot">
+      <div class="who">系统管理员</div>
+      <div class="bal">PLATFORM_ADMIN</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
+      <span class="top-title">内容审核</span>
+      <span class="spacer"></span>
+      <span class="text-muted" style="font-size:12px">按提交时间正序 · 对创作内容只读</span>
+      <a class="btn btn-primary" href="review-detail.html">审核最早一条</a>
+    </header>
+
+    <div class="app-page">
+
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat">
+          <div class="stat-label">待审核</div>
+          <div class="stat-value text-warn">37</div>
+          <div class="stat-sub">最久等待 4 小时 12 分</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">今日已处理</div>
+          <div class="stat-value">58</div>
+          <div class="stat-sub">通过 51 · 驳回 7</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">含 BLOCK 命中</div>
+          <div class="stat-value text-ok">0</div>
+          <div class="stat-sub">BLOCK 在生成前已被硬拦截，走不到这里</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">含 WARN 命中</div>
+          <div class="stat-value text-warn">9</div>
+          <div class="stat-sub">需人工判断</div>
+        </div>
+      </div>
+
+      <div class="card card-flush">
+        <div class="card-hd">
+          <h2>审核队列</h2>
+          <span class="chip active">待审核 37</span>
+          <span class="chip">今日已处理 58</span>
+          <span class="chip">全部</span>
+          <span class="spacer"></span>
+          <select style="width:130px"><option>风险：全部</option><option>WARN</option><option>PASS</option></select>
+          <select style="width:130px"><option>题材：全部</option><option>复仇逆袭</option><option>豪门总裁</option></select>
+          <input style="width:160px" placeholder="搜索剧名 / 创作者" />
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:54px">成片</th>
+                <th>作品 / 剧集</th>
+                <th style="width:110px">创作者</th>
+                <th style="width:100px">题材</th>
+                <th style="width:70px">时长</th>
+                <th style="width:90px">预检</th>
+                <th style="width:110px">提交时间</th>
+                <th style="width:80px">等待</th>
+                <th style="width:70px">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="phone" style="width:34px; border-radius:4px"><div class="ph-body" style="font-size:8px">E12</div></div></td>
+                <td>
+                  <a href="review-detail.html" class="font-bold">退婚三年后她成了首富 · 第 12 集</a>
+                  <div class="text-muted" style="font-size:11px">r-80001 · 第 1 次提交</div>
+                </td>
+                <td>演示用户<div class="text-muted" style="font-size:11px">u-demo-0001</div></td>
+                <td><span class="st doing">复仇逆袭</span></td>
+                <td>88 秒</td>
+                <td><span class="st warn">WARN 1</span></td>
+                <td class="text-muted">08-13 09:40</td>
+                <td class="text-warn">4h 12m</td>
+                <td><a href="review-detail.html">审核</a></td>
+              </tr>
+              <tr>
+                <td><div class="phone" style="width:34px; border-radius:4px; background:linear-gradient(150deg,#78350f,#1c1917)"><div class="ph-body" style="font-size:8px">E15</div></div></td>
+                <td>
+                  <a href="review-detail.html" class="font-bold">重生之我在古代当村霸 · 第 15 集</a>
+                  <div class="text-muted" style="font-size:11px">r-80002 · 第 2 次提交（曾驳回）</div>
+                </td>
+                <td>老张<div class="text-muted" style="font-size:11px">u-0007</div></td>
+                <td><span class="st todo">穿越重生</span></td>
+                <td>92 秒</td>
+                <td><span class="st warn">WARN 2</span></td>
+                <td class="text-muted">08-13 10:05</td>
+                <td>3h 47m</td>
+                <td><a href="review-detail.html">审核</a></td>
+              </tr>
+              <tr>
+                <td><div class="phone" style="width:34px; border-radius:4px; background:linear-gradient(150deg,#164e63,#0f172a)"><div class="ph-body" style="font-size:8px">E03</div></div></td>
+                <td>
+                  <a href="review-detail.html" class="font-bold">总裁的隐婚小娇妻 · 第 3 集</a>
+                  <div class="text-muted" style="font-size:11px">r-80003 · 第 1 次提交</div>
+                </td>
+                <td>小林<div class="text-muted" style="font-size:11px">u-0021</div></td>
+                <td><span class="st todo">豪门总裁</span></td>
+                <td>61 秒</td>
+                <td><span class="st done">PASS</span></td>
+                <td class="text-muted">08-13 11:22</td>
+                <td>2h 30m</td>
+                <td><a href="review-detail.html">审核</a></td>
+              </tr>
+              <tr>
+                <td><div class="phone" style="width:34px; border-radius:4px; background:linear-gradient(150deg,#1e3a8a,#0f172a)"><div class="ph-body" style="font-size:8px">E28</div></div></td>
+                <td>
+                  <a href="review-detail.html" class="font-bold">离婚后我成了顶流 · 第 28 集</a>
+                  <div class="text-muted" style="font-size:11px">r-80004 · 第 1 次提交</div>
+                </td>
+                <td>阿May<div class="text-muted" style="font-size:11px">u-0033</div></td>
+                <td><span class="st doing">复仇逆袭</span></td>
+                <td>89 秒</td>
+                <td><span class="st done">PASS</span></td>
+                <td class="text-muted">08-13 12:01</td>
+                <td>1h 51m</td>
+                <td><a href="review-detail.html">审核</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button>上一页</button>
+          <button class="active">1</button><button>2</button>
+          <button>下一页</button>
+          <span class="text-muted" style="font-size:12px; margin-left:8px">
+            page_num=1 · page_size=20 · total_size=37
+          </span>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口 <code>GET /bgssai/admin/reviews/list?page_num&amp;page_size&amp;review_status&amp;risk_level&amp;keyword</code>，
+        需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>（角色取自 JWT，不取自请求参数）。
+        列表字段：<code>review_id</code> · <code>work_title</code> · <code>episode_no</code> ·
+        <code>creator_user_id</code> / <code>creator_name</code> · <code>genre</code> ·
+        <code>review_status</code>（<code>NOT_SUBMITTED</code> / <code>PENDING</code> /
+        <code>APPROVED</code> / <code>REJECTED</code>）· <code>risk_level</code> ·
+        <code>warn_count</code> / <code>block_count</code> · <code>film_duration_sec</code> ·
+        <code>submitted_time</code> · <code>submit_seq</code>。
+        审核动作全部落 <code>drama_review_record</code>，只增不删、可追溯。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

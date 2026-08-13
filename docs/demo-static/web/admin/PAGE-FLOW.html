@@ -3,70 +3,194 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 短剧制作平台原型 — 页面跳转真值</title>
+  <title>AI 短剧制作平台原型 — 管理端页面跳转真值</title>
   <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
   <style>
-    .flow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+    .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
     .node {
-      border: 1px solid var(--border); background: var(--card); border-radius: var(--radius-control);
-      padding: 12px 16px; min-width: 130px; text-align: center; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border); background: var(--card); border-radius: var(--radius);
+      padding: 10px 14px; min-width: 120px; text-align: center; box-shadow: var(--shadow-sm);
     }
-    .node .n-title { font-weight: 700; font-size: 14px; }
-    .node .n-route { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-    .arrow { color: var(--accent); font-weight: 700; font-size: 20px; }
-    .arrow small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+    .node .n-title { font-weight: 700; font-size: 13px; }
+    .node .n-route { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .arrow { color: var(--brand); font-weight: 700; font-size: 18px; text-align: center; }
+    .arrow small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="title">页面跳转真值（PAGE-FLOW）</h1>
-    <p class="subtitle">本文件是 web <strong>管理端</strong>（bgssai-short-drama-admin，前端 3001）页面跳转的
-      <strong>唯一真值</strong>。新增前端路由须先改本文件，再同步前端路由表
-      （<code>bgssai-short-drama-admin-react/src/App.jsx</code>）。用户端跳转真值见
-      <a href="../user/PAGE-FLOW.html">../user/PAGE-FLOW.html</a>。</p>
+    <h1 class="title">页面跳转真值（PAGE-FLOW）· web 管理端</h1>
+    <p class="subtitle">
+      本文件是 web <strong>管理端</strong>（bgssai-short-drama-admin，前端 3001，
+      <code>role_code=PLATFORM_ADMIN</code>）页面跳转的<strong>唯一真值</strong>：
+      路由矩阵 + 核心用户旅程 + 导航不变量。新增页面或调整跳转关系时，先改本文件（评审后）再写实现代码，
+      并同步刷 <code>docs/api/page-api-mapping.md</code>。前端路由表落在
+      <code>bgssai-short-drama-admin-react/src/App.jsx</code>。用户端跳转真值见
+      <a href="../user/PAGE-FLOW.html">../user/PAGE-FLOW.html</a>。
+    </p>
 
     <div class="card">
-      <div class="flow">
-        <div class="node">
-          <div class="n-title">登录页</div>
-          <div class="n-route">/login</div>
-        </div>
-        <div class="arrow">→<small>登录成功</small></div>
-        <div class="node">
-          <div class="n-title">首页</div>
-          <div class="n-route">/home</div>
-        </div>
-        <div class="arrow">→<small>点击「登录日志」</small></div>
-        <div class="node">
-          <div class="n-title">登录日志</div>
-          <div class="n-route">/login-logs</div>
-        </div>
-      </div>
-
-      <div class="flow">
-        <div class="node">
-          <div class="n-title">首页 / 登录日志</div>
-          <div class="n-route">受保护路由</div>
-        </div>
-        <div class="arrow">→<small>未登录 / 角色不符 / token 失效(2002)</small></div>
-        <div class="node">
-          <div class="n-title">登录页</div>
-          <div class="n-route">/login</div>
-        </div>
+      <h2 class="card-title">一、路由矩阵</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>页面</th>
+              <th>路由</th>
+              <th>主要入口（谁能到达）</th>
+              <th>出口（能去往哪）</th>
+              <th>导航项</th>
+              <th>鉴权</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="login.html">登录页</a></td>
+              <td><code>/login</code></td>
+              <td>未登录访问任意受保护路由；头像「退出登录」</td>
+              <td>首页</td>
+              <td class="text-muted">无外壳</td>
+              <td>公开（非 <code>PLATFORM_ADMIN</code> 返回 <code>4003</code>）</td>
+            </tr>
+            <tr>
+              <td><a href="home.html">首页</a></td>
+              <td><code>/home</code></td>
+              <td>登录成功；品牌 logo；面包屑首项</td>
+              <td>内容审核 · AI 能力 · 结构模板 · 用量与成本 · 创作者 · 登录日志</td>
+              <td>品牌 logo</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="content-review.html">内容审核队列</a></td>
+              <td><code>/reviews</code></td>
+              <td>顶部导航「内容审核」；首页待办卡</td>
+              <td>审核详情 · 首页</td>
+              <td>内容审核</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="review-detail.html">审核详情与处置</a></td>
+              <td><code>/reviews/:review_id</code></td>
+              <td>审核队列任一行</td>
+              <td>审核队列（处置后自动返回）· 创作者 · 首页</td>
+              <td>内容审核</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="ai-models.html">AI 能力与模型配置</a></td>
+              <td><code>/ai-models</code></td>
+              <td>顶部导航「AI 能力」；首页待办卡；用量页异常提示</td>
+              <td>用量与成本 · 首页</td>
+              <td>AI 能力</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="quality-templates.html">结构模板与质量阈值</a></td>
+              <td><code>/quality-templates</code></td>
+              <td>顶部导航「结构模板」；首页质量分卡</td>
+              <td>首页</td>
+              <td>结构模板</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="usage-cost.html">平台用量与成本</a></td>
+              <td><code>/usage-cost</code></td>
+              <td>顶部导航「用量与成本」；首页成本卡</td>
+              <td>创作者 · AI 能力 · 首页</td>
+              <td>用量与成本</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="creators.html">创作者账号与配额</a></td>
+              <td><code>/creators</code></td>
+              <td>顶部导航「创作者」；首页配额待办；用量页「管理」；审核详情「查看创作者」</td>
+              <td>首页</td>
+              <td>创作者</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+            <tr>
+              <td><a href="login-logs.html">登录日志</a></td>
+              <td><code>/login-logs</code></td>
+              <td>顶部导航「登录日志」</td>
+              <td>首页</td>
+              <td>登录日志</td>
+              <td>需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <div class="card">
-      <h2 class="title" style="font-size:15px">跳转规则</h2>
-      <ul style="font-size:13px; color:var(--text); line-height:1.9">
-        <li>访问 <code>/</code> 自动重定向到 <code>/home</code>（已登录）或 <code>/login</code>（未登录）。</li>
-        <li>受保护路由（<code>/home</code>、<code>/login-logs</code>）要求已登录且
-          <code>role_code=PLATFORM_ADMIN</code>，否则跳回 <code>/login</code>。</li>
-        <li>已登录用户访问 <code>/login</code> 自动跳回 <code>/home</code>。</li>
-        <li>接口返回 <code>code=2002</code>（token 失效）时前端清理身份并跳回 <code>/login</code>。</li>
-        <li>接口返回 <code>code=4003</code>（角色不是 <code>PLATFORM_ADMIN</code>）时提示「无权限访问」后清理身份
-          并跳回 <code>/login</code>；两者均为 HTTP 200 + 封装内 <code>code</code>，前端只看 <code>code</code>。</li>
-      </ul>
+      <h2 class="card-title">二、核心用户旅程</h2>
+
+      <p class="subtitle" style="margin-bottom:4px"><strong>旅程一：审核一集内容（主线）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">首页</div><div class="n-route">/home</div></div>
+        <div class="arrow">→<small>待审 37</small></div>
+        <div class="node"><div class="n-title">审核队列</div><div class="n-route">/reviews</div></div>
+        <div class="arrow">→<small>点任一行</small></div>
+        <div class="node"><div class="n-title">审核详情</div><div class="n-route">/reviews/:id</div></div>
+        <div class="arrow">→<small>通过 / 驳回（必填原因）</small></div>
+        <div class="node"><div class="n-title">审核队列</div><div class="n-route">/reviews</div></div>
+      </div>
+      <div class="text-muted" style="font-size:12px">
+        处置后该条从待审队列移除并进入已处理列表；驳回后创作者修改重提，回到队列（<code>submit_seq</code> +1）。
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程二：换模型 / 调价（业务零改动）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">AI 能力</div><div class="n-route">/ai-models</div></div>
+        <div class="arrow">→<small>新增模型或改单价</small></div>
+        <div class="node"><div class="n-title">设为默认</div><div class="n-route">-</div></div>
+        <div class="arrow">→<small>即刻生效</small></div>
+        <div class="node"><div class="n-title">用量与成本</div><div class="n-route">/usage-cost</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程三：质量运营（提升平台内容下限）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">首页</div><div class="n-route">平均质量分</div></div>
+        <div class="arrow">→<small>看模板表现</small></div>
+        <div class="node"><div class="n-title">结构模板</div><div class="n-route">/quality-templates</div></div>
+        <div class="arrow">→<small>改节拍 / 阈值 / 停用低分模板</small></div>
+        <div class="node"><div class="n-title">保存生效</div><div class="n-route">-</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程四：处理创作者余额不足</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">用量与成本</div><div class="n-route">异常提示</div></div>
+        <div class="arrow">→<small>点「去调整」</small></div>
+        <div class="node"><div class="n-title">创作者</div><div class="n-route">/creators</div></div>
+        <div class="arrow">→<small>调整配额（备注必填）</small></div>
+        <div class="node"><div class="n-title">变更记录</div><div class="n-route">留痕</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程五：鉴权失败回落</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">任意受保护路由</div><div class="n-route">-</div></div>
+        <div class="arrow">→<small>未登录 / <code>2002</code> token 失效 / <code>4003</code> 角色不符</small></div>
+        <div class="node"><div class="n-title">登录页</div><div class="n-route">/login</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">三、导航不变量（逐条强制，CR 核对）</h2>
+      <ol style="font-size:13px; line-height:1.9">
+        <li><strong>列表必达详情</strong>：审核队列每一行可进审核详情；用量分创作者列表每行可进创作者管理；
+          模型列表每行可编辑。严禁假可点。</li>
+        <li><strong>详情必可返回</strong>：审核详情顶部常驻「返回审核队列」与面包屑。</li>
+        <li><strong>无死胡同</strong>：每个页面都可经品牌 logo 或面包屑首项回到 <code>/home</code>。</li>
+        <li><strong>无孤岛</strong>：除登录页外，每个页面在路由矩阵「主要入口」列都有至少一个站内父级入口。</li>
+        <li><strong>全局导航外壳常驻</strong>：顶部导航栏（内容审核 / AI 能力 / 结构模板 / 用量与成本 /
+          创作者 / 登录日志 + 头像）与面包屑在所有页面常驻。</li>
+        <li><strong>权限态分支</strong>：本端只允许 <code>role_code=PLATFORM_ADMIN</code>，其它角色登录返回
+          <code>4003</code>；角色一律取自 JWT，不取自请求参数（零信任）。</li>
+        <li><strong>只读边界</strong>：管理端对创作内容只读——不提供任何编辑创作者剧本 / 镜头 / 素材的入口，
+          只提供审核结论与平台配置入口。</li>
+        <li><strong>必填留痕</strong>：驳回必填原因与风险类别、调整配额必填备注，未填不放行（<code>4006</code>）；
+          审核与配额变更记录只增不删。</li>
+      </ol>
     </div>
 
     <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>

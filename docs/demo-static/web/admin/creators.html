@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 创作者账号与配额</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>平台管理端</span></div>
+
+    <div class="side-sec">内容</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link" href="content-review.html">内容审核<span class="ln hot">37</span></a>
+
+    <div class="side-sec">平台配置</div>
+    <a class="side-link" href="ai-models.html">AI 能力与模型</a>
+    <a class="side-link" href="quality-templates.html">结构模板与阈值</a>
+
+    <div class="side-sec">运营</div>
+    <a class="side-link" href="usage-cost.html">用量与成本</a>
+    <a class="side-link active" href="creators.html">创作者<span class="ln hot">3</span></a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+
+    <div class="side-foot">
+      <div class="who">系统管理员</div>
+      <div class="bal">PLATFORM_ADMIN</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
+      <span class="top-title">创作者账号与配额</span>
+      <span class="spacer"></span>
+      <span class="text-muted" style="font-size:12px">调整必填备注并留痕</span>
+      <input style="width:180px" placeholder="搜索账号 / 姓名" />
+    </header>
+
+    <div class="app-page">
+
+      <div class="card card-flush">
+        <div class="card-hd">
+          <h2>创作者</h2>
+          <span class="chip active">全部 128</span>
+          <span class="chip">正常 124</span>
+          <span class="chip">已停用 4</span>
+          <span class="chip">余额不足 3</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>创作者</th><th style="width:64px">作品</th><th style="width:100px">本月消耗</th>
+                <th style="width:100px">余额</th><th style="width:100px">月度上限</th>
+                <th style="width:90px">平均质量分</th><th style="width:90px">审核通过率</th>
+                <th style="width:90px">状态</th><th style="width:80px">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="font-bold">老张</span>
+                  <div class="text-muted" style="font-size:11px">u-0007 · 注册 2026-03-11</div></td>
+                <td>4</td><td>6 428.40</td><td>1 200.00</td><td>8 000.00</td>
+                <td><span class="text-ok font-bold">85</span></td><td>96%</td>
+                <td><span class="st done">正常</span></td><td><a href="#">调整配额</a></td>
+              </tr>
+              <tr>
+                <td><span class="font-bold">阿May</span>
+                  <div class="text-muted" style="font-size:11px">u-0033 · 注册 2026-05-02</div></td>
+                <td>3</td><td>5 246.20</td><td>3 400.00</td><td class="text-muted">不限</td>
+                <td><span class="text-ok font-bold">88</span></td><td>98%</td>
+                <td><span class="st done">正常</span></td><td><a href="#">调整配额</a></td>
+              </tr>
+              <tr style="background:#fff8f8">
+                <td><span class="font-bold">小林</span>
+                  <div class="text-muted" style="font-size:11px">u-0021 · 注册 2026-04-18</div></td>
+                <td>2</td><td>3 108.60</td>
+                <td class="text-danger font-bold">86.40</td><td>5 000.00</td>
+                <td><span class="font-bold">76</span></td><td>88%</td>
+                <td><span class="st warn">余额不足</span></td><td><a href="#adjust">调整配额</a></td>
+              </tr>
+              <tr>
+                <td><span class="font-bold">演示用户</span>
+                  <div class="text-muted" style="font-size:11px">u-demo-0001 · 注册 2026-01-05</div></td>
+                <td>5</td><td>1 496.70</td><td>2 500.00</td><td>3 000.00</td>
+                <td><span class="text-ok font-bold">86</span></td><td>92%</td>
+                <td><span class="st done">正常</span></td><td><a href="#">调整配额</a></td>
+              </tr>
+              <tr>
+                <td><span class="font-bold text-muted">测试账号 07</span>
+                  <div class="text-muted" style="font-size:11px">u-0099 · 注册 2026-07-30</div></td>
+                <td>1</td><td>0.00</td><td>0.00</td><td>0.00</td>
+                <td class="text-muted">-</td><td class="text-muted">-</td>
+                <td><span class="st fail">已停用</span></td><td><a href="#">启用</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button>上一页</button>
+          <button class="active">1</button><button>2</button><button>3</button>
+          <button>下一页</button>
+          <span class="text-muted" style="font-size:12px; margin-left:8px">
+            page_num=1 · page_size=20 · total_size=128
+          </span>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top:14px">
+        <div class="card" id="adjust">
+          <div class="card-hd"><h2>调整配额 · 小林（u-0021）</h2>
+            <span class="spacer"></span>
+            <span class="st warn">余额不足</span>
+          </div>
+
+          <div class="kv" style="grid-template-columns:96px 1fr; margin-bottom:14px">
+            <div class="k">当前余额</div><div class="text-danger font-bold">86.40 元</div>
+            <div class="k">本月已消耗</div><div>3 108.60 元</div>
+            <div class="k">月度上限</div><div>5 000.00 元</div>
+            <div class="k">上限重置日</div><div>每月 1 日</div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="field">
+              <label>余额增减（元）</label><input value="3000" />
+              <div class="hint">正数为充值，负数为扣减</div>
+            </div>
+            <div class="field">
+              <label>月度上限（元）</label><input value="5000" />
+              <div class="hint">填 0 表示不限</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>备注（必填）</label>
+            <textarea rows="2" placeholder="写清楚为什么调整，这条会永久留痕"></textarea>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn btn-primary">提交调整</button>
+            <button class="btn btn-danger">停用账号</button>
+          </div>
+
+          <div class="note note-warn" style="margin:12px 0 0">
+            备注为空返回 <code>4006</code>。余额不足时该创作者新任务被拒（<code>4007</code>），
+            在途任务不受影响；月度上限触顶返回 <code>4015</code>。
+          </div>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-hd"><h2>配额变更记录</h2>
+            <span class="text-muted" style="font-size:12px">只增不删</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:100px">时间</th><th>创作者</th><th style="width:100px">增减</th>
+                  <th style="width:90px">变更后</th><th style="width:70px">操作人</th><th>备注</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-muted">08-01 09:12</td><td>演示用户</td>
+                  <td class="text-ok">+3 000.00</td><td>3 000.00</td><td>admin</td>
+                  <td class="text-sub">八月套餐充值</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">07-30 16:40</td><td>测试账号 07</td>
+                  <td class="text-muted">上限改 0</td><td>0.00</td><td>admin</td>
+                  <td class="text-sub">测试账号停用</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">07-28 14:33</td><td>老张</td>
+                  <td class="text-ok">+8 000.00</td><td>9 240.00</td><td>admin</td>
+                  <td class="text-sub">季度合作方额度</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">07-22 11:05</td><td>小林</td>
+                  <td class="text-danger">-500.00</td><td>1 086.40</td><td>admin</td>
+                  <td class="text-sub">重复充值纠正</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-body" style="padding-top:10px">
+            <div class="text-muted" style="font-size:11px">
+              供财务对账与事后追溯。本轮不做线上支付，充值一律由运营手工调整。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>GET /bgssai/admin/creators/list?page_num&amp;page_size&amp;keyword&amp;enabled_flag</code> ·
+        <code>POST /bgssai/admin/creators/adjust-quota</code>（<code>user_id</code> +
+        <code>balance_delta_cent</code> + <code>monthly_limit_cent</code> + <code>remark</code>，
+        <code>remark</code> 必填）· <code>POST /bgssai/admin/creators/toggle-enabled</code>。
+        配额表 <code>user_quota</code>：<code>balance_cent</code> · <code>monthly_limit_cent</code> ·
+        <code>month_spent_cent</code> · <code>month_reset_date</code>；
+        变更记录 <code>quota_change_log</code>：<code>operator_user_id</code> ·
+        <code>balance_delta_cent</code> · <code>balance_after_cent</code> · <code>remark</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

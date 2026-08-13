@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 审核详情</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>平台管理端</span></div>
+
+    <div class="side-sec">内容</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link active" href="content-review.html">内容审核<span class="ln hot">37</span></a>
+
+    <div class="side-sec">平台配置</div>
+    <a class="side-link" href="ai-models.html">AI 能力与模型</a>
+    <a class="side-link" href="quality-templates.html">结构模板与阈值</a>
+
+    <div class="side-sec">运营</div>
+    <a class="side-link" href="usage-cost.html">用量与成本</a>
+    <a class="side-link" href="creators.html">创作者<span class="ln hot">3</span></a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+
+    <div class="side-foot">
+      <div class="who">系统管理员</div>
+      <div class="bal">PLATFORM_ADMIN</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="home.html">首页</a><span class="sep">/</span>
+        <a href="content-review.html">内容审核</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">退婚三年后她成了首富 · 第 12 集</span>
+      <span class="st warn">待审核</span>
+      <span class="spacer"></span>
+      <a class="btn btn-default btn-sm" href="content-review.html">返回队列</a>
+      <button class="btn btn-danger btn-sm">驳回</button>
+      <button class="btn btn-primary">通过</button>
+    </header>
+
+    <div class="app-page">
+
+      <div class="split">
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <h2>成片</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">r-80001 · 第 1 次提交 · 08-13 09:40</span>
+            </div>
+
+            <div class="row-top">
+              <div class="phone" style="max-width:160px">
+                <span class="ph-tag">播放</span>
+                <div class="ph-body">1080x1920 · 30fps<br />88 秒 · 40 镜</div>
+                <div class="ph-sub">你确定要在这儿动手？</div>
+                <span class="ph-dur">00:42 / 01:28</span>
+              </div>
+
+              <div style="flex:1">
+                <div class="kv" style="grid-template-columns:96px 1fr">
+                  <div class="k">创作者</div><div>演示用户（u-demo-0001）</div>
+                  <div class="k">题材 / 时长</div><div>复仇逆袭 · 88 秒 · 竖屏 9:16</div>
+                  <div class="k">film_asset_id</div><div class="mono">a-53012</div>
+                  <div class="k">创作者质量分</div>
+                  <div><span class="text-ok font-bold">86</span>（G1 85 · G2 83 · G3 88 · G4 91）</div>
+                  <div class="k">强制放行</div><div class="text-muted">无</div>
+                  <div class="k">结构模板</div><div>复仇逆袭 · 当众打脸型</div>
+                </div>
+                <div class="note" style="margin:12px 0 0">
+                  创作者侧质量分仅供参考，不构成审核依据。审核只看内容合规。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>合规预检命中</h2>
+              <span class="text-muted" style="font-size:12px">创作者提交前已知晓</span>
+            </div>
+            <div class="issue">
+              <div class="i-h">
+                <span class="badge badge-warn">WARN</span>
+                <span>血腥暴力 VIOLENCE</span>
+              </div>
+              <div class="i-d">
+                命中位置：场 4 · 第 9 句 · 镜 17<br />
+                命中片段：「一刀捅进去」<br />
+                系统建议：改为不展示器械接触的冲突表达
+              </div>
+              <div class="i-f">
+                创作者处理：未修改，确认知晓后提交 · <a href="#">跳转镜 17 画面</a>
+              </div>
+            </div>
+            <div class="text-muted" style="font-size:12px">
+              BLOCK 级风险在生成任务提交前即被硬拦截，走不到审核环节；此处只会出现 WARN 与 PASS。
+            </div>
+          </div>
+
+          <div class="card card-flush">
+            <div class="card-hd">
+              <h2>台词全文</h2>
+              <span class="text-muted" style="font-size:12px">只读</span>
+              <span class="spacer"></span>
+              <span class="chip active">全部</span>
+              <span class="chip">仅命中场次</span>
+            </div>
+            <div class="card-body">
+              <div class="scene">
+                <div class="sc-h"><span>场 1</span><span class="st todo">董事会会议室</span></div>
+                <div class="sc-b">
+                  <div class="line"><span class="who">陆时衍</span><span class="txt">这份收购案，谁批准的？</span></div>
+                  <div class="line"><span class="who">沈知微</span><span class="txt">我。持股 51%，需要向你报备吗？</span></div>
+                  <div class="line"><span class="who">旁白</span><span class="txt">全场死寂。三年来所有人都以为她只是个挂名股东。</span></div>
+                </div>
+              </div>
+              <div class="scene">
+                <div class="sc-h"><span>场 4</span><span class="st todo">仓库</span>
+                  <span class="spacer"></span><span class="st warn">WARN 命中</span></div>
+                <div class="sc-b">
+                  <div class="line hit">
+                    <span class="who">打手</span>
+                    <span class="txt">一刀捅进去，谁也查不到。<span class="st warn">VIOLENCE</span></span>
+                  </div>
+                  <div class="line"><span class="who">沈知微</span><span class="txt">你确定要在这儿动手？</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>处置</h2></div>
+            <div class="field">
+              <label>结论</label>
+              <div class="seg-ctl">
+                <button class="on">通过 APPROVE</button>
+                <button>驳回 REJECT</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>风险类别（驳回必填）</label>
+              <select>
+                <option>血腥暴力 VIOLENCE</option><option>色情低俗 PORN</option>
+                <option>涉政 POLITICS</option><option>未成年人相关 MINOR</option>
+                <option>封建迷信 SUPERSTITION</option><option>疑似侵权 IP_RISK</option>
+                <option>其它 OTHER</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>定位镜头（选填）</label>
+              <input placeholder="如 17" />
+            </div>
+            <div class="field">
+              <label>意见 / 驳回原因（驳回必填）</label>
+              <textarea rows="4" placeholder="写清楚哪一处、为什么、怎么改能过——创作者据此定点修改"></textarea>
+            </div>
+            <button class="btn btn-primary">提交结论</button>
+            <div class="note note-warn" style="margin:12px 0 0">
+              驳回未填原因返回 <code>4006</code>。驳回后创作者可修改重提，次数不限但每次留痕
+              （<code>submit_seq</code>）。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>创作者</h2></div>
+            <div class="kv" style="grid-template-columns:88px 1fr">
+              <div class="k">账号</div><div>演示用户 u-demo-0001</div>
+              <div class="k">历史提交</div><div>13 次 · 通过 12 · 驳回 1</div>
+              <div class="k">本作</div><div>退婚三年后她成了首富（30 集）</div>
+              <div class="k">已过审</div><div>8 集</div>
+              <div class="k">账号状态</div><div><span class="st done">正常</span></div>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <a class="btn btn-default btn-sm" href="creators.html">查看创作者</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>处置历史</h2></div>
+            <div style="font-size:12px; line-height:1.9">
+              <div class="row"><span class="st doing">第 1 次</span> 08-13 09:40 创作者提交</div>
+              <div class="text-muted">当前待处置</div>
+            </div>
+            <hr class="divider" />
+            <div class="text-muted" style="font-size:11px; line-height:1.7">
+              成片过期时（创作者改了上游素材），已有审核结论自动回落
+              <code>NOT_SUBMITTED</code>，避免「审的是旧版、发的是新版」。
+              管理端对创作内容只读，不提供任何编辑入口。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>GET /bgssai/admin/reviews/detail?review_id</code> ·
+        <code>POST /bgssai/admin/reviews/approve</code>（<code>review_id</code> + <code>review_comment</code>）·
+        <code>POST /bgssai/admin/reviews/reject</code>（<code>review_id</code> + <code>reject_reason</code> +
+        <code>risk_category</code> + 可选 <code>reject_shot_no</code>）。
+        需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>。
+        全部剧集 <code>APPROVED</code> 后，作品 <code>work_status</code> 自动推进为 <code>COMPLETED</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

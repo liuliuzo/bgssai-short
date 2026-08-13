@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>优秀短剧质量流水线 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:920px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .gate { fill:#fffbeb; stroke:var(--warn); stroke-width:1.5; }
+  svg .judge { fill:#f5f3ff; stroke:#7c3aed; stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .tpl { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .okline { stroke:var(--ok); color:var(--ok); }
+</style>
+</head>
+<body>
+
+<h1>优秀短剧质量流水线：对标 → 择优 → 评审 → 门禁 → 定点返工</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>贯穿剧本 / 分镜 / 画面 / 成片四阶段的质量闭环</dd>
+  <dt>关联</dt><dd>quality-pipeline.md（主线）· script-studio.md · storyboard-workbench.md · shot-generation.md · film-compose-export.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、四道门卡在四个阶段的出口上</h2>
+<svg viewBox="0 0 1060 420" width="1060" height="420">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="tpl" x="20" y="26" width="1020" height="44" rx="6"/>
+  <text class="lbl" x="530" y="46" text-anchor="middle">结构模板库（爆款对标）：钩子类型 + 单集节拍表 + 全剧反转位 + 题材踩雷点</text>
+  <text class="small" x="530" y="62" text-anchor="middle">建作品时选定，作为生成的硬约束与评分的对照基准，用户可逐拍覆盖</text>
+
+  <rect class="box" x="20"  y="110" width="220" height="46" rx="6"/>
+  <text class="lbl" x="130" y="132" text-anchor="middle">阶段一 剧本</text>
+  <text class="small" x="130" y="148" text-anchor="middle">大纲 + 场次 + 台词</text>
+
+  <rect class="box" x="280" y="110" width="220" height="46" rx="6"/>
+  <text class="lbl" x="390" y="132" text-anchor="middle">阶段二 分镜</text>
+  <text class="small" x="390" y="148" text-anchor="middle">镜头表 + 提示词</text>
+
+  <rect class="box" x="540" y="110" width="220" height="46" rx="6"/>
+  <text class="lbl" x="650" y="132" text-anchor="middle">阶段三 画面</text>
+  <text class="small" x="650" y="148" text-anchor="middle">首帧图 + 视频</text>
+
+  <rect class="box" x="800" y="110" width="240" height="46" rx="6"/>
+  <text class="lbl" x="920" y="132" text-anchor="middle">阶段四 成片</text>
+  <text class="small" x="920" y="148" text-anchor="middle">配音 + 字幕 + 合成</text>
+
+  <rect class="gate" x="20"  y="186" width="220" height="66" rx="6"/>
+  <text class="lbl" x="130" y="208" text-anchor="middle">G1 剧本门</text>
+  <text class="small" x="130" y="226" text-anchor="middle">节奏体检 + 人设一致性</text>
+  <text class="small" x="130" y="242" text-anchor="middle">+ 节拍覆盖 + 反转有效性</text>
+
+  <rect class="gate" x="280" y="186" width="220" height="66" rx="6"/>
+  <text class="lbl" x="390" y="208" text-anchor="middle">G2 分镜门</text>
+  <text class="small" x="390" y="226" text-anchor="middle">景别分布 + 情绪高点特写</text>
+  <text class="small" x="390" y="242" text-anchor="middle">+ 运镜多样 + 时长节奏</text>
+
+  <rect class="gate" x="540" y="186" width="220" height="66" rx="6"/>
+  <text class="lbl" x="650" y="208" text-anchor="middle">G3 画面门</text>
+  <text class="small" x="650" y="226" text-anchor="middle">角色一致性抽检 + 瑕疵检测</text>
+  <text class="small" x="650" y="242" text-anchor="middle">+ 风格统一 + 构图切题</text>
+
+  <rect class="gate" x="800" y="186" width="240" height="66" rx="6"/>
+  <text class="lbl" x="920" y="208" text-anchor="middle">G4 成片门</text>
+  <text class="small" x="920" y="226" text-anchor="middle">音画对齐 + 字幕断句</text>
+  <text class="small" x="920" y="242" text-anchor="middle">+ 黑帧跳帧 + 首尾有效性</text>
+
+  <path class="arr accent" d="M 130 156 L 130 186"/>
+  <path class="arr accent" d="M 390 156 L 390 186"/>
+  <path class="arr accent" d="M 650 156 L 650 186"/>
+  <path class="arr accent" d="M 920 156 L 920 186"/>
+  <path class="arr accent" d="M 240 133 L 280 133"/>
+  <path class="arr accent" d="M 500 133 L 540 133"/>
+  <path class="arr accent" d="M 760 133 L 800 133"/>
+
+  <rect class="done" x="20" y="300" width="500" height="46" rx="6"/>
+  <text class="lbl" x="270" y="320" text-anchor="middle">gate_score &gt;= 阈值 → PASSED，进入下一阶段</text>
+  <text class="small" x="270" y="336" text-anchor="middle">默认阈值 75；第 1 集 85（首集决定完播与追更）</text>
+
+  <rect class="fail" x="560" y="300" width="480" height="46" rx="6"/>
+  <text class="lbl" x="800" y="320" text-anchor="middle">gate_score &lt; 阈值 → FAILED，产出定点返工清单</text>
+  <text class="small" x="800" y="336" text-anchor="middle">每条 issue 带 fix_action 与目标 id，点击直达并预填参数</text>
+
+  <path class="arr okline" d="M 130 252 L 130 300"/>
+  <path class="arr errline" d="M 920 252 L 920 300"/>
+
+  <rect class="gate" x="330" y="370" width="400" height="40" rx="6"/>
+  <text class="small" x="530" y="386" text-anchor="middle">强制放行 FORCE_PASSED：允许，但须逐条确认 + 必填理由 + 写入质量档案</text>
+  <text class="small" x="530" y="402" text-anchor="middle">合规 BLOCK 级问题不在此列，由 content-compliance 硬拦截</text>
+  <path class="arr warnline" d="M 700 346 L 640 370"/>
+</svg>
+
+<h2>二、返工闭环：改的是那一处，不是整集重抽</h2>
+<svg viewBox="0 0 1060 220" width="1060" height="220">
+  <rect class="fail" x="20" y="40" width="200" height="60" rx="6"/>
+  <text class="lbl" x="120" y="62" text-anchor="middle">issue 定位</text>
+  <text class="small" x="120" y="80" text-anchor="middle">scene_no / shot_no / line_no</text>
+  <text class="small" x="120" y="94" text-anchor="middle">+ severity 严重度</text>
+
+  <rect class="box" x="270" y="40" width="220" height="60" rx="6"/>
+  <text class="lbl" x="380" y="62" text-anchor="middle">fix_action 可执行动作</text>
+  <text class="small" x="380" y="80" text-anchor="middle">REWRITE_SCENE / ADJUST_SHOT</text>
+  <text class="small" x="380" y="94" text-anchor="middle">REGENERATE_SHOT / REDUB_LINE / RECOMPOSE</text>
+
+  <rect class="box" x="540" y="40" width="200" height="60" rx="6"/>
+  <text class="lbl" x="640" y="62" text-anchor="middle">跳转并预填参数</text>
+  <text class="small" x="640" y="80" text-anchor="middle">只改这一处</text>
+  <text class="small" x="640" y="94" text-anchor="middle">其余内容逐字不变</text>
+
+  <rect class="gate" x="790" y="40" width="250" height="60" rx="6"/>
+  <text class="lbl" x="915" y="62" text-anchor="middle">重跑该门</text>
+  <text class="small" x="915" y="80" text-anchor="middle">分数变化可见，issue 标 resolved</text>
+  <text class="small" x="915" y="94" text-anchor="middle">上游变更时该门自动回落 NOT_RUN</text>
+
+  <path class="arr accent" d="M 220 70 L 270 70"/>
+  <path class="arr accent" d="M 490 70 L 540 70"/>
+  <path class="arr accent" d="M 740 70 L 790 70"/>
+  <path class="arr warnline" d="M 915 100 L 915 150 L 120 150 L 120 100"/>
+  <text class="small" x="520" y="146" text-anchor="middle">未达标则继续循环，直到过线或创作者决定强制放行</text>
+
+  <rect class="box" x="20" y="176" width="1020" height="36" rx="6"/>
+  <text class="small" x="530" y="198" text-anchor="middle">硬性要求：严禁产出「节奏偏慢」这类无法执行的评语——每条 issue 必须带目标对象与可点击的修复动作</text>
+</svg>
+
+<h2>三、关键节点多方案择优 + 三视角评审团</h2>
+<svg viewBox="0 0 1060 300" width="1060" height="300">
+  <rect class="box" x="20" y="30" width="230" height="70" rx="6"/>
+  <text class="lbl" x="135" y="52" text-anchor="middle">关键节点</text>
+  <text class="small" x="135" y="70" text-anchor="middle">首集开场 / 集末钩子</text>
+  <text class="small" x="135" y="86" text-anchor="middle">反转集关键镜 / 作品封面</text>
+
+  <rect class="judge" x="300" y="20" width="150" height="40" rx="6"/>
+  <text class="small" x="375" y="45" text-anchor="middle">方案 A</text>
+  <rect class="judge" x="300" y="70" width="150" height="40" rx="6"/>
+  <text class="small" x="375" y="95" text-anchor="middle">方案 B</text>
+  <rect class="judge" x="300" y="120" width="150" height="40" rx="6"/>
+  <text class="small" x="375" y="145" text-anchor="middle">方案 C</text>
+
+  <path class="arr accent" d="M 250 60 L 300 40"/>
+  <path class="arr accent" d="M 250 65 L 300 90"/>
+  <path class="arr accent" d="M 250 70 L 300 140"/>
+
+  <rect class="judge" x="510" y="20" width="230" height="46" rx="6"/>
+  <text class="small" x="625" y="40" text-anchor="middle">AUDIENCE 观众视角</text>
+  <text class="small" x="625" y="56" text-anchor="middle">这一秒会不会划走</text>
+
+  <rect class="judge" x="510" y="76" width="230" height="46" rx="6"/>
+  <text class="small" x="625" y="96" text-anchor="middle">CENSOR 平台审核视角</text>
+  <text class="small" x="625" y="112" text-anchor="middle">能不能过、有没有擦边</text>
+
+  <rect class="judge" x="510" y="132" width="230" height="46" rx="6"/>
+  <text class="small" x="625" y="152" text-anchor="middle">DIRECTOR 导演视角</text>
+  <text class="small" x="625" y="168" text-anchor="middle">有没有把事讲清楚、情绪是否递进</text>
+
+  <path class="arr accent" d="M 450 90 L 510 43"/>
+  <path class="arr accent" d="M 450 95 L 510 99"/>
+  <path class="arr accent" d="M 450 100 L 510 155"/>
+
+  <rect class="box" x="800" y="40" width="240" height="60" rx="6"/>
+  <text class="lbl" x="920" y="62" text-anchor="middle">排序 + recommended_flag</text>
+  <text class="small" x="920" y="80" text-anchor="middle">AI 给推荐，人做终选</text>
+  <text class="small" x="920" y="94" text-anchor="middle">未选中方案保留可回看</text>
+
+  <rect class="fail" x="800" y="120" width="240" height="60" rx="6"/>
+  <text class="lbl" x="920" y="142" text-anchor="middle">divergent_flag=1</text>
+  <text class="small" x="920" y="160" text-anchor="middle">三视角分歧超 20 分时高亮</text>
+  <text class="small" x="920" y="174" text-anchor="middle">系统不调和，交给人拍板</text>
+
+  <path class="arr accent" d="M 740 70 L 800 70"/>
+  <path class="arr errline" d="M 740 150 L 800 150"/>
+
+  <rect class="box" x="20" y="210" width="1020" height="70" rx="6"/>
+  <text class="lbl" x="530" y="232" text-anchor="middle">成本约束</text>
+  <text class="small" x="530" y="250" text-anchor="middle">多方案默认只在关键节点启用（默认 3 版、上限 5），避免全片 N 倍成本；发起前费用预估并计入预算闸门</text>
+  <text class="small" x="530" y="268" text-anchor="middle">同一对象 5 分钟内重复评审返回缓存结果，不重复计费</text>
+</svg>
+
+<p class="note">
+  这条流水线的立场：AI 负责把「专业剧组里编审、导演、剪辑师会挑的毛病」提前挑出来并定位到具体一处，
+  人负责在分歧处拍板。它不追求把创作者替换掉，而是把创作者的注意力从「哪里不对」转移到「怎么改更好」——
+  这是平庸与优秀之间那段路上，唯一能被工程化的部分。
+</p>
+
+</body>
+</html>

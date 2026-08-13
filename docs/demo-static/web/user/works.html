@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 我的作品</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-sec">工作台</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link active" href="works.html">我的作品<span class="ln">5</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln hot">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+    <a class="side-link" href="mcp-tokens.html">MCP 接入</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元 · 本月已用 1 286.50</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
+      <span class="top-title">我的作品</span>
+      <span class="spacer"></span>
+      <a class="btn btn-default btn-sm" href="usage-billing.html">余额 2 500.00 元</a>
+      <a class="btn btn-primary" href="work-create.html">新建作品</a>
+    </header>
+
+    <div class="app-page">
+
+      <div class="toolbar" style="margin-bottom:14px">
+        <span class="chip active">全部 5</span>
+        <span class="chip">剧本中 1</span>
+        <span class="chip">制作中 1</span>
+        <span class="chip">审核中 1</span>
+        <span class="chip">已完成 2</span>
+        <span class="spacer"></span>
+        <select style="width:140px"><option>题材：全部</option><option>复仇逆袭</option><option>豪门总裁</option></select>
+        <select style="width:130px"><option>最近更新</option><option>创建时间</option><option>质量分</option></select>
+        <input style="width:170px" placeholder="搜索剧名" />
+      </div>
+
+      <div class="grid grid-4">
+
+        <div class="card card-flush">
+          <div style="position:relative">
+            <div class="phone" style="border-radius:12px 12px 0 0">
+              <span class="ph-tag">制作中</span>
+              <span class="ph-tag r">E12 / 30</span>
+              <div class="ph-body">封面 · 第 1 集首帧<br />沈知微立于董事会长桌前</div>
+              <div class="ph-sub">退婚三年后她成了首富</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <a href="work-detail.html" style="font-weight:700; font-size:14px">退婚三年后她成了首富</a>
+              <span class="spacer"></span>
+              <span class="st done">86 分</span>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin:5px 0 9px">
+              复仇逆袭 · 30 集 × 90 秒 · 都市写实
+            </div>
+            <div class="progress"><div class="bar" style="width:40%"></div></div>
+            <div class="row" style="font-size:11px; color:var(--muted); margin-top:5px">
+              <span>12 / 30 集已合成</span>
+              <span class="spacer"></span>
+              <span>1 286 / 3 000 元</span>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <a class="btn btn-primary btn-sm" href="work-detail.html">继续制作</a>
+              <a class="btn btn-default btn-sm" href="quality-report.html">质量</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-flush">
+          <div class="phone empty" style="border-radius:12px 12px 0 0">
+            <span class="ph-tag">剧本中</span>
+            <div class="ph-body">尚无画面<br />大纲已出，剧本未开始</div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <a href="work-detail.html" style="font-weight:700; font-size:14px">总裁的隐婚小娇妻</a>
+              <span class="spacer"></span>
+              <span class="st todo">未评</span>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin:5px 0 9px">
+              豪门总裁 · 24 集 × 60 秒 · 都市写实
+            </div>
+            <div class="progress"><div class="bar" style="width:8%"></div></div>
+            <div class="row" style="font-size:11px; color:var(--muted); margin-top:5px">
+              <span>0 / 24 集已合成</span>
+              <span class="spacer"></span>
+              <span>62 / 1 500 元</span>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <a class="btn btn-primary btn-sm" href="script-studio.html">写剧本</a>
+              <a class="btn btn-default btn-sm" href="work-detail.html">看板</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-flush">
+          <div class="phone" style="border-radius:12px 12px 0 0; background:linear-gradient(150deg,#78350f,#1c1917)">
+            <span class="ph-tag">审核中</span>
+            <span class="ph-tag r">E20 / 20</span>
+            <div class="ph-body">封面 · 村口对峙</div>
+            <div class="ph-sub">重生之我在古代当村霸</div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <a href="work-detail.html" style="font-weight:700; font-size:14px">重生之我在古代当村霸</a>
+              <span class="spacer"></span>
+              <span class="st done">81 分</span>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin:5px 0 9px">
+              穿越重生 · 20 集 × 90 秒 · 古装
+            </div>
+            <div class="progress"><div class="bar ok" style="width:100%"></div></div>
+            <div class="row" style="font-size:11px; color:var(--muted); margin-top:5px">
+              <span>14 / 20 集已过审</span>
+              <span class="spacer"></span>
+              <span>2 340 / 3 000 元</span>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <a class="btn btn-default btn-sm" href="compose-export.html">导出</a>
+              <a class="btn btn-default btn-sm" href="work-detail.html">看板</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-flush">
+          <div class="phone" style="border-radius:12px 12px 0 0; background:linear-gradient(150deg,#164e63,#0f172a)">
+            <span class="ph-tag">已完成</span>
+            <span class="ph-tag r">E30 / 30</span>
+            <div class="ph-body">封面 · 红毯回眸</div>
+            <div class="ph-sub">离婚后我成了顶流</div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <a href="work-detail.html" style="font-weight:700; font-size:14px">离婚后我成了顶流</a>
+              <span class="spacer"></span>
+              <span class="st done">88 分</span>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin:5px 0 9px">
+              复仇逆袭 · 30 集 × 90 秒 · 电影感
+            </div>
+            <div class="progress"><div class="bar ok" style="width:100%"></div></div>
+            <div class="row" style="font-size:11px; color:var(--muted); margin-top:5px">
+              <span>30 / 30 集全部过审</span>
+              <span class="spacer"></span>
+              <span>2 760 / 3 000 元</span>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <a class="btn btn-default btn-sm" href="compose-export.html">整剧导出</a>
+              <a class="btn btn-default btn-sm" href="quality-report.html">复盘</a>
+            </div>
+          </div>
+        </div>
+
+        <a class="card" href="work-create.html"
+           style="display:flex; align-items:center; justify-content:center; text-align:center;
+                  border-style:dashed; min-height:230px; text-decoration:none">
+          <div>
+            <div style="font-size:15px; font-weight:700; color:var(--brand)">新建作品</div>
+            <div class="text-muted" style="font-size:12px; margin-top:6px; line-height:1.7">
+              一句话梗概 + 题材集数<br />三步建出一部剧的骨架
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <div class="pagination">
+        <button>上一页</button>
+        <button class="active">1</button>
+        <button>下一页</button>
+        <span class="text-muted" style="font-size:12px; margin-left:8px">page_num=1 · page_size=20 · total_size=5</span>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径（本页即接口契约的权威参照）</div>
+        接口 <code>GET /bgssai/user/drama-works/list?page_num&amp;page_size&amp;work_status&amp;genre&amp;keyword</code>，
+        需请求头 <code>Jwttoken</code>，仅返回本人作品（<code>user_id</code> 取自 JWT）。
+        卡片字段：<code>work_id</code> · <code>work_title</code> · <code>genre</code> / <code>genre_name</code> ·
+        <code>work_status</code> / <code>work_status_name</code> · <code>episode_count</code> ·
+        <code>episode_duration_sec</code> · <code>visual_style</code> · <code>overall_quality_score</code> ·
+        <code>cost_spent_cent</code> / <code>cost_budget_cent</code>（单位为分，页面展示为元）·
+        <code>cover_asset_id</code> · <code>updated_time</code>。枚举见
+        <code>docs/feature/drama-work-management.md</code> 第八节。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 用户端概览</title>
   <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
 </head>
 <body>
   <div class="container">
@@ -18,42 +19,147 @@
     </p>
 
     <div class="card">
-      <h2 class="title" style="font-size:15px">页面清单</h2>
-      <table>
-        <thead>
-          <tr><th>页面</th><th>路由</th><th>对应接口</th><th>说明</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><a href="login.html">登录页</a></td>
-            <td><code>/login</code></td>
-            <td><code>POST /bgssai/user/login</code></td>
-            <td>账号密码登录，签发 JWT；本端不做角色门禁，启用中的账号均可登录</td>
-          </tr>
-          <tr>
-            <td><a href="home.html">首页</a></td>
-            <td><code>/home</code></td>
-            <td>-</td>
-            <td>展示当前登录身份</td>
-          </tr>
-          <tr>
-            <td><a href="login-logs.html">登录日志</a></td>
-            <td><code>/login-logs</code></td>
-            <td><code>GET /bgssai/user/login-logs</code></td>
-            <td>示例分页列表（仅本人记录，<code>user_id</code> 取自 JWT），消费 PageResponse</td>
-          </tr>
-          <tr>
-            <td><a href="mcp-tokens.html">MCP 接入</a></td>
-            <td><code>/mcp-tokens</code></td>
-            <td><code>POST /bgssai/mcp-tokens/create</code> · <code>/list</code> · <code>/revoke</code></td>
-            <td>个人访问令牌管理；AI 客户端调用 <code>POST /api/mcp</code>（Bearer PAT）</td>
-          </tr>
-        </tbody>
-      </table>
+      <h2 class="card-title">制作主线（按流程顺序）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>页面</th><th>路由</th><th>对应接口</th><th>说明</th><th>需求</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="works.html">我的作品</a></td>
+              <td><code>/works</code></td>
+              <td><code>GET /bgssai/user/drama-works/list</code></td>
+              <td>作品列表，按状态 / 题材过滤，走 PageResponse</td>
+              <td>drama-work-management</td>
+            </tr>
+            <tr>
+              <td><a href="work-create.html">新建作品</a></td>
+              <td><code>/works/create</code></td>
+              <td><code>POST /bgssai/user/drama-works/create</code></td>
+              <td>三步向导：基本信息 → 结构模板 → 预算；填了梗概自动触发大纲生成</td>
+              <td>drama-work-management · quality-pipeline</td>
+            </tr>
+            <tr>
+              <td><a href="work-detail.html">作品工作台</a></td>
+              <td><code>/works/:work_id</code></td>
+              <td><code>GET /bgssai/user/drama-works/detail</code></td>
+              <td>剧集看板：六阶段徽标 + 质量分 + 四道门状态</td>
+              <td>drama-work-management</td>
+            </tr>
+            <tr>
+              <td><a href="script-studio.html">剧本工作台</a></td>
+              <td><code>/works/:work_id/script</code></td>
+              <td><code>POST /bgssai/user/scripts/generate</code> · <code>/rewrite</code> · <code>/ready</code></td>
+              <td>分集大纲 + 场次台词 + 节奏体检 + 版本回滚</td>
+              <td>script-studio</td>
+            </tr>
+            <tr>
+              <td><a href="story-map.html">剧情图谱</a></td>
+              <td><code>/works/:work_id/story-map</code></td>
+              <td><code>GET /bgssai/user/story-map/tension</code> · <code>/relations</code> · <code>/blocking</code></td>
+              <td>张力曲线、人物关系图、走位示意、场次时间带、出场热力；零成本看出节奏与空间问题</td>
+              <td>story-map</td>
+            </tr>
+            <tr>
+              <td><a href="character-bible.html">角色与场景卡</a></td>
+              <td><code>/works/:work_id/characters</code></td>
+              <td><code>POST /bgssai/user/characters/portrait-generate</code> · <code>/lock</code></td>
+              <td>一次定妆全剧锁定，形成一致性指纹；场景卡 / 道具卡同构</td>
+              <td>character-bible</td>
+            </tr>
+            <tr>
+              <td><a href="storyboard.html">分镜工作台</a></td>
+              <td><code>/works/:work_id/storyboard</code></td>
+              <td><code>POST /bgssai/user/shots/split-from-script</code> · <code>GET /bgssai/user/shots/list</code></td>
+              <td>一键拆镜、镜头参数化、提示词分段来源、批量提交生成</td>
+              <td>storyboard-workbench</td>
+            </tr>
+            <tr>
+              <td><a href="previz.html">文字预演</a></td>
+              <td><code>/works/:work_id/previz</code></td>
+              <td><code>POST /bgssai/user/previz/generate</code> · <code>GET /bgssai/user/prompts/check</code></td>
+              <td>文字分镜稿连读与编辑、连贯性检查、草图墙、提示词体检与 A/B 对照；把试错压到文字层</td>
+              <td>previz-text-storyboard</td>
+            </tr>
+            <tr>
+              <td><a href="task-center.html">任务中心</a></td>
+              <td><code>/works/:work_id/tasks</code></td>
+              <td><code>POST /bgssai/user/ai-tasks/estimate</code> · <code>/submit</code> · <code>/retry</code></td>
+              <td>批次进度、失败重试、断点续跑、费用累计与计费口径</td>
+              <td>shot-generation</td>
+            </tr>
+            <tr>
+              <td><a href="voice-studio.html">配音与字幕</a></td>
+              <td><code>/works/:work_id/voice</code></td>
+              <td><code>POST /bgssai/user/dubbings/submit</code> · <code>/align</code></td>
+              <td>角色音色绑定、逐镜配音、音画对齐三解法、字幕与样式</td>
+              <td>voice-subtitle</td>
+            </tr>
+            <tr>
+              <td><a href="compose-export.html">合成与导出</a></td>
+              <td><code>/works/:work_id/compose</code></td>
+              <td><code>GET /bgssai/user/films/precheck</code> · <code>POST /bgssai/user/films/compose</code></td>
+              <td>前置检查、四轨时间轴（只读）、一键合成、多版本导出、提交审核</td>
+              <td>film-compose-export · content-compliance</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report.html">质量报告</a></td>
+              <td><code>/works/:work_id/quality</code></td>
+              <td><code>POST /bgssai/user/quality/gate-run</code> · <code>GET /bgssai/user/quality/gate-result</code></td>
+              <td>四道门 + 三视角评审团 + 定点返工清单 + 多方案择优 + 质量档案</td>
+              <td>quality-pipeline</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="card">
-      <h2 class="title" style="font-size:15px">本端约定</h2>
+      <h2 class="card-title">账户与基础页</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>页面</th><th>路由</th><th>对应接口</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="login.html">登录页</a></td>
+              <td><code>/login</code></td>
+              <td><code>POST /bgssai/user/login</code></td>
+              <td>账号密码登录，签发 JWT；本端不做角色门禁，启用中的账号均可登录</td>
+            </tr>
+            <tr>
+              <td><a href="home.html">首页</a></td>
+              <td><code>/home</code></td>
+              <td>-（消费登录响应缓存的身份字段）</td>
+              <td>继续制作、待处理问题、全部入口</td>
+            </tr>
+            <tr>
+              <td><a href="usage-billing.html">用量与账单</a></td>
+              <td><code>/usage</code></td>
+              <td><code>GET /bgssai/user/usage/summary</code> · <code>/records</code></td>
+              <td>余额、本月消耗、按作品 / 按能力聚合、流水下钻到镜头</td>
+            </tr>
+            <tr>
+              <td><a href="login-logs.html">登录日志</a></td>
+              <td><code>/login-logs</code></td>
+              <td><code>GET /bgssai/user/login-logs</code></td>
+              <td>示例分页列表（仅本人记录，<code>user_id</code> 取自 JWT）</td>
+            </tr>
+            <tr>
+              <td><a href="mcp-tokens.html">MCP 接入</a></td>
+              <td><code>/mcp-tokens</code></td>
+              <td><code>POST /bgssai/mcp-tokens/create</code> · <code>/list</code> · <code>/revoke</code></td>
+              <td>个人访问令牌管理；AI 客户端调用 <code>POST /api/mcp</code>（Bearer PAT）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">本端约定</h2>
       <div class="kv">
         <div class="k">工程</div><div>bgssai-short-drama-user，后端 8081 / 前端 3002</div>
         <div class="k">角色</div><div><code>role_code=USER</code></div>
@@ -61,6 +167,9 @@
         <div class="k">数据可见范围</div><div>仅本人数据；<code>user_id</code> 一律取自 JWT，不从请求参数取</div>
         <div class="k">响应封装</div><div><code>{ code, message, success, result }</code>，分页附 <code>page_num / page_size / total_size</code></div>
         <div class="k">鉴权</div><div>请求头 <code>Jwttoken</code></div>
+        <div class="k">金额口径</div><div>接口字段一律以<strong>分</strong>为单位（<code>*_cent</code>），页面展示为元</div>
+        <div class="k">枚举字典</div><div>见 <code>docs/feature/drama-work-management.md</code> 第八节（单一登记处）</div>
+        <div class="k">样式</div><div><code>../assets/theme.css</code>（标准主题）+ <code>../assets/shortdrama.css</code>（本产品补充）</div>
       </div>
     </div>
 

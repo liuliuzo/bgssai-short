@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 剧情图谱</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+  <style>
+    .chart { width: 100%; background: #fbfcfd; border: 1px solid var(--border); border-radius: var(--radius); }
+    .chart text { font-family: var(--font); }
+    .band { display: grid; grid-template-columns: repeat(30, 1fr); gap: 3px; }
+    .band i {
+      display: block; height: 34px; border-radius: 3px; position: relative; cursor: pointer;
+      font-style: normal; font-size: 9px; color: #fff; text-align: center; line-height: 34px;
+    }
+    .band i.turn { outline: 2px solid var(--warn); outline-offset: 1px; }
+    .heat { display: grid; grid-template-columns: 70px repeat(15, 1fr); gap: 2px; font-size: 10px; align-items: center; }
+    .heat i { display: block; height: 16px; border-radius: 2px; font-style: normal; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 14 集 对峙 · 图谱已生成</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link active" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
+    <a class="side-link" href="storyboard.html">分镜工作台</a>
+    <a class="side-link" href="previz.html">文字预演</a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">剧情图谱</span>
+      <span class="spacer"></span>
+      <span class="text-muted" style="font-size:12px">生成一次约 0.03 元 / 集，查看与拖动不花钱</span>
+      <button class="btn btn-default btn-sm">重新生成图谱</button>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot doing"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html" class="active"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot fail"></span>分镜</a>
+      <a href="previz.html"><span class="dot doing"></span>文字预演</a>
+      <a href="task-center.html"><span class="dot"></span>画面生成</a>
+      <a href="compose-export.html"><span class="dot"></span>合成导出</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="card" style="border-color:#bfdbfe; background:#eff6ff; margin-bottom:14px">
+        <div class="row">
+          <div style="font-size:13px; line-height:1.7">
+            <strong>图形和文字一样便宜，但快得多。</strong>
+            <span class="text-sub">
+              节奏塌在哪、关系揭早了没、两个人有没有站反——用文字描述要读半天，看图一眼就知道。
+              而且全部发生在生成画面之前，改起来不花一分钱。
+            </span>
+          </div>
+          <span class="spacer"></span>
+          <div class="stages">
+            <span class="st fail">3 处待处理</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <h2>全剧张力条带</h2>
+          <span class="text-muted" style="font-size:12px">每格一集，颜色越深张力越高；描边格为模板标注的反转集</span>
+          <span class="spacer"></span>
+          <span class="text-muted" style="font-size:12px">30 集 · 已写 15 集</span>
+        </div>
+
+        <div class="band">
+          <i style="background:#1e3a8a" title="E01 张力 88">1</i>
+          <i style="background:#2f52a8">2</i>
+          <i style="background:#1e3a8a" class="turn">3</i>
+          <i style="background:#4b74c4">4</i>
+          <i style="background:#6a8fd4">5</i>
+          <i style="background:#89a9e0">6</i>
+          <i style="background:#9db8e6">7</i>
+          <i style="background:#2f52a8" class="turn">8</i>
+          <i style="background:#b9cdee">9</i>
+          <i style="background:#c9d9f2">10</i>
+          <i style="background:#b9cdee">11</i>
+          <i style="background:#89a9e0">12</i>
+          <i style="background:#6a8fd4">13</i>
+          <i style="background:#c9d9f2" title="E14 张力 58 偏平">14</i>
+          <i style="background:#2f52a8" class="turn">15</i>
+          <i style="background:#e2e8f0; color:#94a3b8">16</i>
+          <i style="background:#e2e8f0; color:#94a3b8">17</i>
+          <i style="background:#e2e8f0; color:#94a3b8">18</i>
+          <i style="background:#e2e8f0; color:#94a3b8">19</i>
+          <i style="background:#e2e8f0; color:#94a3b8">20</i>
+          <i style="background:#e2e8f0; color:#94a3b8">21</i>
+          <i style="background:#e2e8f0; color:#94a3b8">22</i>
+          <i style="background:#e2e8f0; color:#94a3b8">23</i>
+          <i style="background:#e2e8f0; color:#94a3b8" class="turn">24</i>
+          <i style="background:#e2e8f0; color:#94a3b8">25</i>
+          <i style="background:#e2e8f0; color:#94a3b8">26</i>
+          <i style="background:#e2e8f0; color:#94a3b8">27</i>
+          <i style="background:#e2e8f0; color:#94a3b8">28</i>
+          <i style="background:#e2e8f0; color:#94a3b8">29</i>
+          <i style="background:#e2e8f0; color:#94a3b8">30</i>
+        </div>
+
+        <div class="issue" style="margin-top:12px; margin-bottom:0">
+          <div class="i-h">
+            <span class="badge badge-warn">OVER_EARLY</span>
+            <span>爽点堆在前八集，第 9 至 11 集连续三集偏平</span>
+          </div>
+          <div class="i-d">
+            前 8 集平均张力 79，第 9 至 11 集降到 52。观众追到第 9 集容易弃剧，
+            而第 15 集的反转还没到。
+          </div>
+          <div class="i-f">
+            建议：把第 15 集的「母亲名字」线索拆一半提前到第 10 集埋伏笔 ·
+            <a href="script-studio.html">去改第 10 集大纲</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <h2>单集张力曲线 · 第 14 集</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">实线为实际，虚线为模板期望</span>
+            </div>
+
+            <svg class="chart" viewBox="0 0 720 260" height="260">
+              <line x1="52" y1="200" x2="700" y2="200" stroke="#cbd5e1"/>
+              <line x1="52" y1="20" x2="52" y2="200" stroke="#cbd5e1"/>
+              <text x="44" y="26" font-size="10" fill="#94a3b8" text-anchor="end">100</text>
+              <text x="44" y="114" font-size="10" fill="#94a3b8" text-anchor="end">50</text>
+              <text x="44" y="204" font-size="10" fill="#94a3b8" text-anchor="end">0</text>
+
+              <rect x="52" y="20" width="22" height="180" fill="#dbeafe" opacity="0.5"/>
+              <text x="63" y="216" font-size="9" fill="#64748b" text-anchor="middle">钩子</text>
+              <rect x="74" y="20" width="180" height="180" fill="#f1f5f9" opacity="0.5"/>
+              <text x="164" y="216" font-size="9" fill="#64748b" text-anchor="middle">建立 3-30s</text>
+              <rect x="254" y="20" width="216" height="180" fill="#f8fafc" opacity="0.5"/>
+              <text x="362" y="216" font-size="9" fill="#64748b" text-anchor="middle">升级 30-60s</text>
+              <rect x="470" y="20" width="180" height="180" fill="#f1f5f9" opacity="0.5"/>
+              <text x="560" y="216" font-size="9" fill="#64748b" text-anchor="middle">反转 60-85s</text>
+              <rect x="650" y="20" width="50" height="180" fill="#dbeafe" opacity="0.5"/>
+              <text x="675" y="216" font-size="9" fill="#64748b" text-anchor="middle">悬念</text>
+
+              <rect x="254" y="20" width="146" height="180" fill="#fef2f2" opacity="0.75"/>
+              <text x="327" y="150" font-size="11" fill="#dc2626" text-anchor="middle">FLAT 塌陷段</text>
+              <text x="327" y="166" font-size="10" fill="#dc2626" text-anchor="middle">30 至 48 秒</text>
+              <text x="327" y="180" font-size="10" fill="#dc2626" text-anchor="middle">场 3 · 镜 11 至 14</text>
+
+              <path d="M 52 56 L 124 74 L 196 92 L 254 88 L 326 70 L 400 56 L 470 44 L 542 36 L 614 54 L 700 40"
+                    fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="5 4"/>
+              <text x="620" y="30" font-size="10" fill="#94a3b8">模板期望</text>
+
+              <path d="M 52 60 L 124 80 L 196 124 L 254 128 L 326 122 L 400 84 L 470 50 L 542 42 L 614 92 L 700 84"
+                    fill="none" stroke="#2563eb" stroke-width="2.4"/>
+              <circle cx="52" cy="60" r="3" fill="#2563eb"/>
+              <circle cx="254" cy="128" r="3.5" fill="#dc2626"/>
+              <circle cx="326" cy="122" r="3.5" fill="#dc2626"/>
+              <circle cx="470" cy="50" r="3" fill="#2563eb"/>
+              <circle cx="700" cy="84" r="3.5" fill="#d97706"/>
+              <text x="452" y="42" font-size="10" fill="#2563eb">实际</text>
+
+              <text x="700" y="72" font-size="9" fill="#d97706" text-anchor="end">末 5 秒偏弱</text>
+            </svg>
+
+            <div class="issue crit" style="margin-top:12px">
+              <div class="i-h">
+                <span class="badge badge-danger">FLAT</span>
+                <span>第 30 至 48 秒张力低于期望 21 分</span>
+              </div>
+              <div class="i-d">
+                这 18 秒里只有对白往复，没有新信息也没有情绪转折。短剧里连续 15 秒无进展，
+                划走率会明显上升。
+              </div>
+              <div class="i-f">
+                建议：把第 4 场的身份揭露提前到 62 秒处 ·
+                <a href="script-studio.html">改写场 3</a> · <a href="storyboard.html">看镜 11 至 14</a>
+              </div>
+            </div>
+
+            <div class="issue" style="margin-bottom:0">
+              <div class="i-h">
+                <span class="badge badge-warn">WEAK_ENDING</span>
+                <span>末 5 秒悬念偏弱（52 / 期望 72）</span>
+              </div>
+              <div class="i-f">
+                抛出了母亲名字，但没暗示这个名字为什么重要 · <a href="script-studio.html">改写场 3 结尾</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>走位示意图 · 第 14 集 镜 8</h2>
+              <span class="text-muted" style="font-size:12px">俯视 · 两人及以上出场的镜头必备</span>
+              <span class="spacer"></span>
+              <select style="width:110px"><option>镜 8</option><option>镜 9</option><option>镜 10</option></select>
+            </div>
+
+            <div class="grid grid-2">
+              <div>
+                <div class="text-sub" style="font-size:12px; margin-bottom:6px">镜 8（当前）· 中景 · 固定</div>
+                <svg class="chart" viewBox="0 0 340 260" height="240">
+                  <rect x="24" y="24" width="292" height="212" fill="#f8fafc" stroke="#cbd5e1"/>
+                  <text x="170" y="18" font-size="10" fill="#94a3b8" text-anchor="middle">董事会会议室（俯视）</text>
+
+                  <rect x="70" y="112" width="200" height="26" rx="4" fill="#e2e8f0" stroke="#94a3b8"/>
+                  <text x="170" y="129" font-size="10" fill="#64748b" text-anchor="middle">长桌</text>
+                  <rect x="24" y="96" width="6" height="44" fill="#cbd5e1"/>
+                  <text x="40" y="92" font-size="9" fill="#94a3b8">门</text>
+                  <rect x="90" y="24" width="160" height="6" fill="#bfdbfe"/>
+                  <text x="170" y="44" font-size="9" fill="#94a3b8" text-anchor="middle">落地窗</text>
+
+                  <line x1="86" y1="125" x2="254" y2="125" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4 4"/>
+                  <text x="170" y="152" font-size="9" fill="#dc2626" text-anchor="middle">轴线</text>
+
+                  <circle cx="86" cy="125" r="15" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+                  <text x="86" y="129" font-size="9" fill="#5b21b6" text-anchor="middle">沈</text>
+                  <path d="M 101 125 L 113 121 L 113 129 Z" fill="#7c3aed"/>
+
+                  <circle cx="254" cy="125" r="15" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+                  <text x="254" y="129" font-size="9" fill="#1e40af" text-anchor="middle">陆</text>
+                  <path d="M 239 125 L 227 121 L 227 129 Z" fill="#2563eb"/>
+
+                  <path d="M 170 206 L 158 224 L 182 224 Z" fill="#0f172a"/>
+                  <text x="170" y="240" font-size="9" fill="#64748b" text-anchor="middle">机位 A · 中景 · 固定</text>
+                  <path d="M 170 206 L 120 150" stroke="#0f172a" stroke-width="1" stroke-dasharray="3 3"/>
+                  <path d="M 170 206 L 220 150" stroke="#0f172a" stroke-width="1" stroke-dasharray="3 3"/>
+                </svg>
+              </div>
+
+              <div>
+                <div class="text-sub" style="font-size:12px; margin-bottom:6px">
+                  镜 9（下一镜）· 近景 · 固定 <span class="st fail">越轴</span>
+                </div>
+                <svg class="chart" viewBox="0 0 340 260" height="240">
+                  <rect x="24" y="24" width="292" height="212" fill="#fef2f2" stroke="#fecaca"/>
+                  <text x="170" y="18" font-size="10" fill="#94a3b8" text-anchor="middle">董事会会议室（俯视）</text>
+
+                  <rect x="70" y="112" width="200" height="26" rx="4" fill="#e2e8f0" stroke="#94a3b8"/>
+                  <text x="170" y="129" font-size="10" fill="#64748b" text-anchor="middle">长桌</text>
+
+                  <line x1="86" y1="125" x2="254" y2="125" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4 4"/>
+
+                  <circle cx="86" cy="125" r="15" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+                  <text x="86" y="129" font-size="9" fill="#5b21b6" text-anchor="middle">沈</text>
+                  <circle cx="254" cy="125" r="15" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+                  <text x="254" y="129" font-size="9" fill="#1e40af" text-anchor="middle">陆</text>
+
+                  <path d="M 170 56 L 158 38 L 182 38 Z" fill="#dc2626"/>
+                  <text x="170" y="32" font-size="9" fill="#dc2626" text-anchor="middle">机位 B（跨到轴线另一侧）</text>
+                  <path d="M 170 56 L 120 100" stroke="#dc2626" stroke-width="1" stroke-dasharray="3 3"/>
+                  <path d="M 170 56 L 220 100" stroke="#dc2626" stroke-width="1" stroke-dasharray="3 3"/>
+
+                  <text x="170" y="196" font-size="10" fill="#dc2626" text-anchor="middle">越轴：镜 9 里两人左右位置会对调</text>
+                  <text x="170" y="212" font-size="10" fill="#dc2626" text-anchor="middle">观众会以为他们换了位置</text>
+                </svg>
+              </div>
+            </div>
+
+            <div class="issue crit" style="margin-top:12px; margin-bottom:0">
+              <div class="i-h">
+                <span class="badge badge-danger">EYELINE 越轴</span>
+                <span>镜 8 与镜 9 机位分居轴线两侧</span>
+              </div>
+              <div class="i-d">
+                180 度规则：同一场对话戏的机位应保持在轴线同侧，否则两人的左右关系会在剪辑点对调，
+                观众会瞬间出戏。这条判定的数据来源就是上面两张走位图。
+              </div>
+              <div class="i-f">
+                建议：把镜 9 机位移回轴线下方（与镜 8 同侧）·
+                <a href="#">一键修正机位</a> · <a href="previz.html">在文字预演页查看该条</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>场次时间带 · 第 14 集</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">总时长 90 秒 · 5 场 · 44 镜</span>
+            </div>
+
+            <svg class="chart" viewBox="0 0 720 120" height="120">
+              <rect x="20" y="30" width="122" height="34" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+              <text x="81" y="51" font-size="10" fill="#1e40af" text-anchor="middle">场 1 会议室 16s</text>
+
+              <rect x="146" y="30" width="252" height="34" rx="3" fill="#fee2e2" stroke="#fca5a5"/>
+              <text x="272" y="47" font-size="10" fill="#b91c1c" text-anchor="middle">场 2 走廊 33s（37%）</text>
+              <text x="272" y="60" font-size="9" fill="#b91c1c" text-anchor="middle">18 镜 · 张力塌陷段在此</text>
+
+              <rect x="402" y="30" width="130" height="34" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+              <text x="467" y="51" font-size="10" fill="#1e40af" text-anchor="middle">场 3 会议室 17s</text>
+
+              <rect x="536" y="30" width="92" height="34" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+              <text x="582" y="51" font-size="10" fill="#1e40af" text-anchor="middle">场 4 仓库 12s</text>
+
+              <rect x="632" y="30" width="68" height="34" rx="3" fill="#dcfce7" stroke="#86efac"/>
+              <text x="666" y="51" font-size="10" fill="#166534" text-anchor="middle">场 5 结尾 12s</text>
+
+              <text x="20" y="86" font-size="9" fill="#94a3b8">0s</text>
+              <text x="360" y="86" font-size="9" fill="#94a3b8" text-anchor="middle">45s</text>
+              <text x="700" y="86" font-size="9" fill="#94a3b8" text-anchor="end">90s</text>
+              <text x="360" y="106" font-size="10" fill="#64748b" text-anchor="middle">
+                场 2 占 37%，接近 40% 拆场提示线，且塌陷段正落在这一场
+              </text>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <h2>人物关系图</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">截至第 15 集</span>
+            </div>
+
+            <div class="field" style="margin-bottom:10px">
+              <label>拖动看关系怎么变化</label>
+              <div class="row">
+                <span class="text-muted" style="font-size:11px">E01</span>
+                <input type="range" min="1" max="30" value="15" style="flex:1; padding:0" />
+                <span class="text-muted" style="font-size:11px">E30</span>
+              </div>
+            </div>
+
+            <svg class="chart" viewBox="0 0 320 300" height="290">
+              <line x1="80" y1="80" x2="240" y2="80" stroke="#dc2626" stroke-width="2"/>
+              <text x="160" y="72" font-size="9" fill="#dc2626" text-anchor="middle">对手 RIVAL</text>
+
+              <line x1="80" y1="80" x2="160" y2="196" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="5 4"/>
+              <text x="88" y="150" font-size="9" fill="#94a3b8">血缘 · 未揭晓</text>
+
+              <line x1="240" y1="80" x2="160" y2="196" stroke="#2563eb" stroke-width="1.6"/>
+              <text x="232" y="150" font-size="9" fill="#2563eb">雇佣</text>
+
+              <line x1="80" y1="80" x2="60" y2="232" stroke="#059669" stroke-width="1.4"/>
+              <text x="34" y="160" font-size="9" fill="#059669">盟友</text>
+
+              <circle cx="80" cy="80" r="26" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+              <text x="80" y="78" font-size="10" fill="#5b21b6" text-anchor="middle">沈知微</text>
+              <text x="80" y="90" font-size="8" fill="#7c3aed" text-anchor="middle">女主</text>
+
+              <circle cx="240" cy="80" r="26" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+              <text x="240" y="78" font-size="10" fill="#1e40af" text-anchor="middle">陆时衍</text>
+              <text x="240" y="90" font-size="8" fill="#2563eb" text-anchor="middle">男主</text>
+
+              <circle cx="160" cy="196" r="24" fill="#f1f5f9" stroke="#64748b" stroke-width="1.6"/>
+              <text x="160" y="194" font-size="10" fill="#334155" text-anchor="middle">老董事</text>
+              <text x="160" y="206" font-size="8" fill="#64748b" text-anchor="middle">配角</text>
+
+              <circle cx="60" cy="232" r="22" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.6"
+                      stroke-dasharray="4 3"/>
+              <text x="60" y="230" font-size="10" fill="#b91c1c" text-anchor="middle">苏曼</text>
+              <text x="60" y="242" font-size="8" fill="#dc2626" text-anchor="middle">已掉线</text>
+
+              <text x="160" y="284" font-size="9" fill="#94a3b8" text-anchor="middle">
+                虚线灰边 = 观众此刻还不知道的关系
+              </text>
+            </svg>
+
+            <div class="issue" style="margin-top:10px">
+              <div class="i-h">
+                <span class="badge badge-warn">揭晓时机</span>
+                <span>血缘关系定在第 15 集揭晓</span>
+              </div>
+              <div class="i-d">
+                在此之前观众完全不知道老董事与女主的关系，第 15 集的反转会显得突兀。
+              </div>
+              <div class="i-f">建议：第 10 集埋一个眼神或称呼上的伏笔 · <a href="script-studio.html">去改</a></div>
+            </div>
+
+            <div class="issue" style="margin-bottom:0">
+              <div class="i-h">
+                <span class="badge badge-warn">角色掉线</span>
+                <span>苏曼自第 9 集起连续 6 集未出场</span>
+              </div>
+              <div class="i-f">
+                最后出场：第 9 集 · 建议补一场过渡戏或明确写离场 ·
+                <a href="script-studio.html">去处理</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>角色出场热力</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">格子越深，该集镜头越多</span>
+            </div>
+
+            <div class="heat">
+              <span class="text-sub">集</span>
+              <span style="text-align:center; color:var(--muted)">1</span>
+              <span style="text-align:center; color:var(--muted)">2</span>
+              <span style="text-align:center; color:var(--muted)">3</span>
+              <span style="text-align:center; color:var(--muted)">4</span>
+              <span style="text-align:center; color:var(--muted)">5</span>
+              <span style="text-align:center; color:var(--muted)">6</span>
+              <span style="text-align:center; color:var(--muted)">7</span>
+              <span style="text-align:center; color:var(--muted)">8</span>
+              <span style="text-align:center; color:var(--muted)">9</span>
+              <span style="text-align:center; color:var(--muted)">10</span>
+              <span style="text-align:center; color:var(--muted)">11</span>
+              <span style="text-align:center; color:var(--muted)">12</span>
+              <span style="text-align:center; color:var(--muted)">13</span>
+              <span style="text-align:center; color:var(--muted)">14</span>
+              <span style="text-align:center; color:var(--muted)">15</span>
+
+              <span class="text-sub">沈知微</span>
+              <i style="background:#1e3a8a"></i><i style="background:#1e3a8a"></i><i style="background:#2f52a8"></i>
+              <i style="background:#1e3a8a"></i><i style="background:#2f52a8"></i><i style="background:#1e3a8a"></i>
+              <i style="background:#2f52a8"></i><i style="background:#1e3a8a"></i><i style="background:#4b74c4"></i>
+              <i style="background:#2f52a8"></i><i style="background:#1e3a8a"></i><i style="background:#2f52a8"></i>
+              <i style="background:#1e3a8a"></i><i style="background:#2f52a8"></i><i style="background:#1e3a8a"></i>
+
+              <span class="text-sub">陆时衍</span>
+              <i style="background:#2f52a8"></i><i style="background:#4b74c4"></i><i style="background:#6a8fd4"></i>
+              <i style="background:#2f52a8"></i><i style="background:#4b74c4"></i><i style="background:#89a9e0"></i>
+              <i style="background:#4b74c4"></i><i style="background:#2f52a8"></i><i style="background:#6a8fd4"></i>
+              <i style="background:#4b74c4"></i><i style="background:#2f52a8"></i><i style="background:#4b74c4"></i>
+              <i style="background:#2f52a8"></i><i style="background:#2f52a8"></i><i style="background:#4b74c4"></i>
+
+              <span class="text-sub">老董事</span>
+              <i style="background:#e2e8f0"></i><i style="background:#e2e8f0"></i><i style="background:#c9d9f2"></i>
+              <i style="background:#e2e8f0"></i><i style="background:#e2e8f0"></i><i style="background:#b9cdee"></i>
+              <i style="background:#e2e8f0"></i><i style="background:#c9d9f2"></i><i style="background:#e2e8f0"></i>
+              <i style="background:#e2e8f0"></i><i style="background:#e2e8f0"></i><i style="background:#c9d9f2"></i>
+              <i style="background:#e2e8f0"></i><i style="background:#e2e8f0"></i><i style="background:#89a9e0"></i>
+
+              <span class="text-sub text-danger">苏曼</span>
+              <i style="background:#89a9e0"></i><i style="background:#b9cdee"></i><i style="background:#c9d9f2"></i>
+              <i style="background:#89a9e0"></i><i style="background:#b9cdee"></i><i style="background:#c9d9f2"></i>
+              <i style="background:#b9cdee"></i><i style="background:#c9d9f2"></i><i style="background:#c9d9f2"></i>
+              <i style="background:#fee2e2"></i><i style="background:#fee2e2"></i><i style="background:#fee2e2"></i>
+              <i style="background:#fee2e2"></i><i style="background:#fee2e2"></i><i style="background:#fee2e2"></i>
+            </div>
+
+            <div class="text-muted" style="font-size:11px; margin-top:10px">
+              红色格为该角色缺席。苏曼从第 10 集起整片空白，这类结构问题只有横着看才发现得了。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>本页成本</h2></div>
+            <div class="kv" style="grid-template-columns:96px 1fr">
+              <div class="k">生成图谱</div><div>TEXT 任务 · 单集约 0.03 元 · 秒级</div>
+              <div class="k">查看与拖动</div><div>不产生费用</div>
+              <div class="k">走位调整</div><div>不产生费用，保存后自动重算轴线与提示词方位</div>
+              <div class="k">对比</div><div>同样的问题若拖到视频层发现，重抽两镜要 3.20 元加 4 分钟</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>POST /bgssai/user/story-map/generate</code>；
+        <code>GET /bgssai/user/story-map/tension?episode_id</code> · <code>/tension-band?work_id</code> ·
+        <code>/relations?work_id&amp;as_of_episode_no</code> · <code>/blocking?shot_id</code> ·
+        <code>/scene-band?episode_id</code> · <code>/appearance-heat?work_id</code>；
+        <code>POST /bgssai/user/story-map/relation-save</code> · <code>/blocking-save</code>。
+        关键字段：<code>tension_score</code> · <code>expect_list</code> ·
+        <code>deviation_type</code>（<code>FLAT</code> / <code>WEAK_HOOK</code> /
+        <code>WEAK_ENDING</code> / <code>OVER_EARLY</code>）· <code>relation_type</code>
+        （<code>ALLY</code> / <code>RIVAL</code> / <code>LOVE</code> / <code>FAMILY</code> /
+        <code>EMPLOY</code> / <code>SECRET</code>）· <code>reveal_episode_no</code> /
+        <code>revealed_flag</code> · <code>blocking_json</code>（<code>stage</code> ·
+        <code>actor_list</code>[<code>x</code> / <code>y</code> / <code>facing</code>] ·
+        <code>camera</code>）· <code>axis_flag</code>。
+        越轴结果写入 <code>drama_continuity_issue</code>（<code>issue_type=EYELINE</code>），
+        与文字预演页共用同一条清单。需求见 <code>docs/feature/story-map.md</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

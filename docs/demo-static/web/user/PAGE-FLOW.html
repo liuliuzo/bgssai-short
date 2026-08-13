@@ -5,75 +5,285 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 用户端页面跳转真值</title>
   <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
   <style>
-    .flow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+    .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
     .node {
-      border: 1px solid var(--border); background: var(--card); border-radius: var(--radius-control);
-      padding: 12px 16px; min-width: 130px; text-align: center; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border); background: var(--card); border-radius: var(--radius);
+      padding: 10px 14px; min-width: 120px; text-align: center; box-shadow: var(--shadow-sm);
     }
-    .node .n-title { font-weight: 700; font-size: 14px; }
-    .node .n-route { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-    .arrow { color: var(--accent); font-weight: 700; font-size: 20px; }
-    .arrow small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+    .node .n-title { font-weight: 700; font-size: 13px; }
+    .node .n-route { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .arrow { color: var(--brand); font-weight: 700; font-size: 18px; text-align: center; }
+    .arrow small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="title">页面跳转真值（PAGE-FLOW）</h1>
-    <p class="subtitle">本文件是 web <strong>用户端</strong>（bgssai-short-drama-user，前端 3002）页面跳转的
-      <strong>唯一真值</strong>。新增前端路由须先改本文件，再同步前端路由表
-      （<code>bgssai-short-drama-user-react/src/App.jsx</code>）。管理端跳转真值见
-      <a href="../admin/PAGE-FLOW.html">../admin/PAGE-FLOW.html</a>。</p>
+    <h1 class="title">页面跳转真值（PAGE-FLOW）· web 用户端</h1>
+    <p class="subtitle">
+      本文件是 web <strong>用户端</strong>（bgssai-short-drama-user，前端 3002，<code>role_code=USER</code>）
+      页面跳转的<strong>唯一真值</strong>：路由矩阵 + 核心用户旅程 + 导航不变量。
+      新增页面或调整跳转关系时，先改本文件（评审后）再写实现代码，并同步刷
+      <code>docs/api/page-api-mapping.md</code>。前端路由表落在
+      <code>bgssai-short-drama-user-react/src/App.jsx</code>。管理端跳转真值见
+      <a href="../admin/PAGE-FLOW.html">../admin/PAGE-FLOW.html</a>。
+    </p>
 
     <div class="card">
-      <div class="flow">
-        <div class="node">
-          <div class="n-title">登录页</div>
-          <div class="n-route">/login</div>
-        </div>
-        <div class="arrow">→<small>登录成功</small></div>
-        <div class="node">
-          <div class="n-title">首页</div>
-          <div class="n-route">/home</div>
-        </div>
-        <div class="arrow">→<small>点击「登录日志」</small></div>
-        <div class="node">
-          <div class="n-title">登录日志</div>
-          <div class="n-route">/login-logs</div>
-        </div>
-        <div class="arrow">→<small>点击「MCP 接入」</small></div>
-        <div class="node">
-          <div class="n-title">MCP 接入</div>
-          <div class="n-route">/mcp-tokens</div>
-        </div>
-      </div>
-
-      <div class="flow">
-        <div class="node">
-          <div class="n-title">首页 / 登录日志</div>
-          <div class="n-route">受保护路由</div>
-        </div>
-        <div class="arrow">→<small>未登录 / 角色不符 / token 失效(2002)</small></div>
-        <div class="node">
-          <div class="n-title">登录页</div>
-          <div class="n-route">/login</div>
-        </div>
+      <h2 class="card-title">一、路由矩阵</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>页面</th>
+              <th>路由</th>
+              <th>主要入口（谁能到达）</th>
+              <th>出口（能去往哪）</th>
+              <th>导航项</th>
+              <th>鉴权</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="login.html">登录页</a></td>
+              <td><code>/login</code></td>
+              <td>未登录访问任意受保护路由；顶部头像「退出登录」</td>
+              <td>首页</td>
+              <td class="text-muted">无外壳</td>
+              <td>公开</td>
+            </tr>
+            <tr>
+              <td><a href="home.html">首页</a></td>
+              <td><code>/home</code></td>
+              <td>登录成功；顶部品牌 logo；任意页面面包屑首项</td>
+              <td>我的作品 · 新建作品 · 任务中心 · 质量报告 · 用量与账单 · 登录日志 · MCP 接入</td>
+              <td>品牌 logo</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="works.html">我的作品</a></td>
+              <td><code>/works</code></td>
+              <td>顶部导航「我的作品」；首页统计卡</td>
+              <td>新建作品 · 作品工作台 · 首页</td>
+              <td>我的作品</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="work-create.html">新建作品</a></td>
+              <td><code>/works/create</code></td>
+              <td>我的作品「新建作品」；首页「新建作品」</td>
+              <td>作品工作台（创建成功）· 我的作品（取消）</td>
+              <td>我的作品</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="work-detail.html">作品工作台</a></td>
+              <td><code>/works/:work_id</code></td>
+              <td>我的作品列表任一行；新建作品成功后</td>
+              <td>作品内 7 个子页面 · 我的作品</td>
+              <td>我的作品</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="script-studio.html">剧本工作台</a></td>
+              <td><code>/works/:work_id/script</code></td>
+              <td>作品工作台剧集看板；作品内子导航</td>
+              <td>分镜工作台（定稿后）· 质量报告 · 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="story-map.html">剧情图谱</a></td>
+              <td><code>/works/:work_id/story-map</code></td>
+              <td>作品内子导航；剧本工作台；作品工作台</td>
+              <td>剧本工作台 · 分镜工作台 · 文字预演（按偏离点与越轴定位）· 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="character-bible.html">角色与场景卡</a></td>
+              <td><code>/works/:work_id/characters</code></td>
+              <td>作品内子导航；分镜工作台「去定妆」；配音页「改绑」</td>
+              <td>分镜工作台 · 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="storyboard.html">分镜工作台</a></td>
+              <td><code>/works/:work_id/storyboard</code></td>
+              <td>作品内子导航；剧本定稿后；质量报告返工链接</td>
+              <td>任务中心 · 角色与场景卡 · 质量报告 · 配音与字幕</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="previz.html">文字预演</a></td>
+              <td><code>/works/:work_id/previz</code></td>
+              <td>作品内子导航；分镜工作台「先看文字预演」；首页待处理问题</td>
+              <td>分镜工作台 · 任务中心 · 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="task-center.html">任务中心</a></td>
+              <td><code>/works/:work_id/tasks</code></td>
+              <td>作品内子导航；分镜工作台提交生成后；首页统计卡</td>
+              <td>分镜工作台 · 配音与字幕 · 合成与导出 · 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="voice-studio.html">配音与字幕</a></td>
+              <td><code>/works/:work_id/voice</code></td>
+              <td>作品内子导航；作品工作台剧集看板</td>
+              <td>合成与导出 · 角色与场景卡 · 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="compose-export.html">合成与导出</a></td>
+              <td><code>/works/:work_id/compose</code></td>
+              <td>作品内子导航；配音完成后；作品工作台剧集看板</td>
+              <td>分镜工作台（时间轴点镜头）· 配音与字幕 · 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="quality-report.html">质量报告</a></td>
+              <td><code>/works/:work_id/quality</code></td>
+              <td>作品内子导航；四个工作台的门禁提示条；首页「待处理问题」</td>
+              <td>剧本工作台 · 分镜工作台 · 配音与字幕 · 合成与导出（按 <code>fix_action</code> 直达）</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="usage-billing.html">用量与账单</a></td>
+              <td><code>/usage</code></td>
+              <td>顶部导航「用量与账单」；首页余额卡</td>
+              <td>作品工作台 · 分镜工作台 · 首页（流水下钻）</td>
+              <td>用量与账单</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="login-logs.html">登录日志</a></td>
+              <td><code>/login-logs</code></td>
+              <td>顶部导航「登录日志」</td>
+              <td>首页</td>
+              <td>登录日志</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="mcp-tokens.html">MCP 接入</a></td>
+              <td><code>/mcp-tokens</code></td>
+              <td>顶部导航「MCP 接入」</td>
+              <td>首页</td>
+              <td>MCP 接入</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <div class="card">
-      <h2 class="title" style="font-size:15px">跳转规则</h2>
-      <ul style="font-size:13px; color:var(--text); line-height:1.9">
-        <li>访问 <code>/</code> 自动重定向到 <code>/home</code>（已登录）或 <code>/login</code>（未登录）。</li>
-        <li>受保护路由（<code>/home</code>、<code>/login-logs</code>、<code>/mcp-tokens</code>）要求已登录且
-          <code>role_code=USER</code>，否则跳回 <code>/login</code>。</li>
-        <li>已登录用户访问 <code>/login</code> 自动跳回 <code>/home</code>。</li>
-        <li>接口返回 <code>code=2002</code>（token 失效 / 上下文无身份）时前端清理身份并跳回 <code>/login</code>；
-          <code>code=4003</code>（角色不符）同样提示后跳回登录。两者均为 HTTP 200 + 封装内 <code>code</code>，
-          前端只看 <code>code</code>。</li>
-        <li>本端所有列表 / 详情只呈现当前登录用户本人数据，越权访问由后端按 JWT 中的
-          <code>user_id</code> 过滤（不依赖前端隐藏入口）。</li>
-      </ul>
+      <h2 class="card-title">二、核心用户旅程</h2>
+
+      <p class="subtitle" style="margin-bottom:4px"><strong>旅程一：从一句话到第一集成片（主线）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">新建作品</div><div class="n-route">/works/create</div></div>
+        <div class="arrow">→<small>创建成功</small></div>
+        <div class="node"><div class="n-title">作品工作台</div><div class="n-route">/works/:id</div></div>
+        <div class="arrow">→<small>写本集剧本</small></div>
+        <div class="node"><div class="n-title">剧本工作台</div><div class="n-route">/script</div></div>
+        <div class="arrow">→<small>过剧本门后定稿</small></div>
+        <div class="node"><div class="n-title">角色与场景卡</div><div class="n-route">/characters</div></div>
+        <div class="arrow">→<small>定妆锁定形象</small></div>
+        <div class="node"><div class="n-title">分镜工作台</div><div class="n-route">/storyboard</div></div>
+      </div>
+      <div class="flow">
+        <div class="node"><div class="n-title">分镜工作台</div><div class="n-route">/storyboard</div></div>
+        <div class="arrow">→<small>过分镜门后先做文字预演</small></div>
+        <div class="node"><div class="n-title">文字预演</div><div class="n-route">/previz</div></div>
+        <div class="arrow">→<small>构想改顺后批量生成</small></div>
+        <div class="node"><div class="n-title">任务中心</div><div class="n-route">/tasks</div></div>
+        <div class="arrow">→<small>画面出齐并定稿</small></div>
+        <div class="node"><div class="n-title">配音与字幕</div><div class="n-route">/voice</div></div>
+        <div class="arrow">→<small>音画对齐完成</small></div>
+        <div class="node"><div class="n-title">合成与导出</div><div class="n-route">/compose</div></div>
+        <div class="arrow">→<small>提交审核</small></div>
+        <div class="node"><div class="n-title">作品工作台</div><div class="n-route">/works/:id</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程二：质量返工闭环（贯穿主线，决定成片好坏）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">任一工作台</div><div class="n-route">门禁提示条</div></div>
+        <div class="arrow">→<small>门禁未达标</small></div>
+        <div class="node"><div class="n-title">质量报告</div><div class="n-route">/quality</div></div>
+        <div class="arrow">→<small>点 issue 的 fix_action</small></div>
+        <div class="node"><div class="n-title">对应工作台</div><div class="n-route">预填参数</div></div>
+        <div class="arrow">→<small>改完重跑该门</small></div>
+        <div class="node"><div class="n-title">质量报告</div><div class="n-route">/quality</div></div>
+      </div>
+      <div class="text-muted" style="font-size:12px">
+        <code>fix_action</code> 到页面的映射：<code>REWRITE_SCENE</code> → 剧本工作台；
+        <code>ADJUST_SHOT</code> / <code>REGENERATE_SHOT</code> → 分镜工作台；
+        <code>REDUB_LINE</code> → 配音与字幕；<code>RECOMPOSE</code> → 合成与导出。
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程三：四级阶梯预演（把试错压到最便宜的一级）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">文字分镜稿</div><div class="n-route">0.02 元 · 秒级</div></div>
+        <div class="arrow">→<small>构想对了</small></div>
+        <div class="node"><div class="n-title">低清草图</div><div class="n-route">0.10 元 · 5 秒</div></div>
+        <div class="arrow">→<small>构图对了</small></div>
+        <div class="node"><div class="n-title">高清首帧</div><div class="n-route">0.80 元 · 20 秒</div></div>
+        <div class="arrow">→<small>画面定稿</small></div>
+        <div class="node"><div class="n-title">视频</div><div class="n-route">1.60 元 · 2 分钟</div></div>
+      </div>
+      <div class="text-muted" style="font-size:12px">
+        任一级不满意都退回上一级改，不在视频层试错。未出高清首帧的镜头提交视频被拒
+        （<code>4016</code>，作品设置可关闭该约束）。
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程四：成本失控前的拦截</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">分镜工作台</div><div class="n-route">批量生成</div></div>
+        <div class="arrow">→<small>预估费用弹窗</small></div>
+        <div class="node"><div class="n-title">确认 / 拒绝</div><div class="n-route">4007 / 4008</div></div>
+        <div class="arrow">→<small>确认后</small></div>
+        <div class="node"><div class="n-title">任务中心</div><div class="n-route">/tasks</div></div>
+        <div class="arrow">→<small>看流水明细</small></div>
+        <div class="node"><div class="n-title">用量与账单</div><div class="n-route">/usage</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程五：鉴权失败回落</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">任意受保护路由</div><div class="n-route">-</div></div>
+        <div class="arrow">→<small>未登录 / <code>2002</code> token 失效 / <code>4003</code> 角色不符</small></div>
+        <div class="node"><div class="n-title">登录页</div><div class="n-route">/login</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">三、导航不变量（逐条强制，CR 核对）</h2>
+      <ol style="font-size:13px; line-height:1.9">
+        <li><strong>列表必达详情</strong>：作品列表每一行可进作品工作台；剧集看板每一集可进对应工作台；
+          镜头网格每一镜可开详情面板；任务列表每条可回到其目标对象；流水每条可下钻到作品 / 剧集 / 镜头。严禁假可点。</li>
+        <li><strong>详情必可返回</strong>：所有二级页面顶部常驻「返回作品工作台」与面包屑，可层层返回。</li>
+        <li><strong>无死胡同</strong>：每个页面都可经品牌 logo 或面包屑首项回到 <code>/home</code>。</li>
+        <li><strong>无孤岛</strong>：除登录页外，每个页面在路由矩阵「主要入口」列都有至少一个站内父级入口。</li>
+        <li><strong>全局导航外壳常驻</strong>：左侧导航（工作台 / 我的作品 / 任务中心 / 用量与账单 /
+          登录日志 / MCP 接入 + 当前身份与余额）与顶部面包屑在所有页面常驻；作品内 8 个子页面另有一条
+          作品级阶段导航（剧集看板 / 剧本 / 角色定妆 / 分镜 / 文字预演 / 画面生成 / 配音字幕 / 合成导出 /
+          质量报告），保证作品内可横向直达、无需回退。</li>
+        <li><strong>权限态分支</strong>：本端仅 <code>role_code=USER</code>；入口按身份渲染，权限不足不渲染入口而非渲染后报 403。
+          后端仍按 JWT 中的 <code>user_id</code> 独立做数据范围过滤，不因前端隐藏入口而放宽。</li>
+        <li><strong>阻塞态入口禁用而非隐藏</strong>：合成前置条件不满足、镜头被合规拦截、门禁未达标时，
+          对应按钮<strong>禁用并给出可读原因与直达修复链接</strong>，不静默隐藏——用户必须知道自己卡在哪。</li>
+        <li><strong>只读态</strong>：剧集提交审核后其编辑入口整体转只读（撤回后恢复），
+          避免「审核中的内容仍在被改」。</li>
+      </ol>
     </div>
 
     <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>

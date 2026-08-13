@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 质量报告</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 14 集 · G2 未过门</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
+    <a class="side-link" href="storyboard.html">分镜工作台<span class="ln hot">2</span></a>
+    <a class="side-link" href="previz.html">文字预演</a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link active" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">质量报告</span>
+      <select style="width:150px"><option>第 14 集 对峙</option><option>第 1 集 退婚</option><option>第 13 集 收购</option></select>
+      <span class="spacer"></span>
+      <button class="btn btn-default btn-sm">全剧质量档案</button>
+      <button class="btn btn-primary">重跑全部门禁</button>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot doing"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot fail"></span>分镜</a>
+      <a href="previz.html"><span class="dot doing"></span>文字预演</a>
+      <a href="task-center.html"><span class="dot"></span>画面生成</a>
+      <a href="voice-studio.html"><span class="dot"></span>配音字幕</a>
+      <a href="quality-report.html" class="active"><span class="dot fail"></span>质量报告</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="row" style="margin-bottom:12px">
+          <h2 style="margin:0; font-size:14px">第 14 集 · 四道门</h2>
+          <span class="text-muted" style="font-size:12px">阈值 75（第 1 集为 85）</span>
+          <span class="spacer"></span>
+          <span class="text-muted" style="font-size:12px">加权：剧本 35% · 分镜 20% · 画面 25% · 成片 20%</span>
+        </div>
+        <div class="gates">
+          <div class="gate pass">
+            <div class="g-n">G1 剧本门</div>
+            <div class="g-s text-ok">81</div>
+            <div class="g-m">已通过 · 节拍覆盖 5/5</div>
+          </div>
+          <div class="gate fail">
+            <div class="g-n">G2 分镜门</div>
+            <div class="g-s text-danger">68</div>
+            <div class="g-m">未达标 · 2 条 MAJOR</div>
+          </div>
+          <div class="gate idle">
+            <div class="g-n">G3 画面门</div>
+            <div class="g-s text-muted">-</div>
+            <div class="g-m">未运行 · 画面未生成</div>
+          </div>
+          <div class="gate idle">
+            <div class="g-n">G4 成片门</div>
+            <div class="g-s text-muted">-</div>
+            <div class="g-m">未运行 · 尚未合成</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <h2>G2 分镜门 · 返工清单</h2>
+              <span class="badge badge-danger">68 / 75</span>
+              <span class="spacer"></span>
+              <button class="btn btn-default btn-sm">全部按建议改</button>
+              <button class="btn btn-primary btn-sm">改完重跑 G2</button>
+            </div>
+
+            <div class="issue crit">
+              <div class="i-h">
+                <span class="badge badge-danger">MAJOR</span>
+                <span>镜 8 至 10 连续三镜同为中景</span>
+              </div>
+              <div class="i-d">
+                连续同景别会让观众失去空间感与情绪起伏，是短剧「看着累」最常见的原因。
+                对话场景应按正打 / 反打 / 双人中景交替。
+              </div>
+              <div class="i-f">
+                建议：镜 9 改近景、镜 10 改特写 ·
+                <a href="storyboard.html">调整镜 9</a> · <a href="storyboard.html">调整镜 10</a>
+              </div>
+            </div>
+
+            <div class="issue crit">
+              <div class="i-h">
+                <span class="badge badge-danger">MAJOR</span>
+                <span>镜 23 是本集情绪高点，却给了远景</span>
+              </div>
+              <div class="i-d">
+                剧本标记该处为情绪转折（沈知微说出「我从来没输过」），高点必须给近景或特写，
+                远景会把这一击打散。
+              </div>
+              <div class="i-f">
+                建议：改为特写，时长由 4 秒缩到 3 秒 · <a href="storyboard.html">调整镜 23</a>
+              </div>
+            </div>
+
+            <div class="issue">
+              <div class="i-h">
+                <span class="badge badge-warn">MINOR</span>
+                <span>全集运镜单调：固定镜占 71%</span>
+              </div>
+              <div class="i-d">建议在情绪推进处加推镜、在追逐跟随处加跟镜，提升镜头语言层次。</div>
+              <div class="i-f">镜 12 改推、镜 30 改跟 · <a href="storyboard.html">批量调整</a></div>
+            </div>
+
+            <div class="issue min">
+              <div class="i-h">
+                <span class="badge">MINOR</span>
+                <span>单镜时长过于均匀（标准差 0.6 秒）</span>
+              </div>
+              <div class="i-d">全片匀速会削弱节奏感。建议反转处压短、情绪停顿处拉长。</div>
+              <div class="i-f">镜 23 缩到 2 秒、镜 31 拉到 6 秒 · <a href="storyboard.html">批量调整</a></div>
+            </div>
+
+            <div class="issue min" style="margin-bottom:0">
+              <div class="i-h">
+                <span class="badge">来自文字预演</span>
+                <span>镜 7 与镜 8 空间跳变</span>
+              </div>
+              <div class="i-d">走廊直接切回会议室，中间没有转场交代（连贯性检查命中，计入本门评分）。</div>
+              <div class="i-f"><a href="previz.html">去文字层改写</a>（零成本）</div>
+            </div>
+
+            <div class="note note-warn" style="margin:12px 0 0">
+              也可以<strong>强制放行</strong>：需逐条确认并填写理由，记录进质量档案。
+              合规 BLOCK 级问题不在此列——那是红线，由合规预检硬拦截，不接受强制放行。
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <button class="btn btn-danger btn-sm">强制放行（需填理由）</button>
+            </div>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>关键节点多方案择优 · 第 14 集开场</h2>
+              <span class="text-muted" style="font-size:12px">默认 3 版 · 上限 5 · 只在关键节点启用</span>
+              <span class="spacer"></span>
+              <button class="btn btn-default btn-sm">再生成一版 1.20 元</button>
+            </div>
+            <div class="card-body">
+              <div class="assets" style="grid-template-columns:repeat(3,1fr)">
+
+                <div class="asset pick">
+                  <div class="phone sel">
+                    <span class="ph-tag">方案 A</span><span class="ph-tag r">推荐</span>
+                    <div class="ph-body">电梯门开<br />众人回头</div>
+                  </div>
+                  <div class="as-b">
+                    <div class="row"><span class="as-n">综合 86</span><span class="spacer"></span><span class="st done">推荐</span></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">观众</span><span class="j-s text-ok">89</span>
+                      <div class="j-bar"><div class="progress"><div class="bar ok" style="width:89%"></div></div></div></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">审核</span><span class="j-s text-ok">92</span>
+                      <div class="j-bar"><div class="progress"><div class="bar ok" style="width:92%"></div></div></div></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">导演</span><span class="j-s">77</span>
+                      <div class="j-bar"><div class="progress"><div class="bar" style="width:77%"></div></div></div></div>
+                    <button class="btn btn-primary btn-sm" style="margin-top:8px">选定</button>
+                  </div>
+                </div>
+
+                <div class="asset" style="border-color:var(--warn)">
+                  <div class="phone warnf">
+                    <span class="ph-tag">方案 B</span><span class="ph-tag r">分歧大</span>
+                    <div class="ph-body">从签字的手<br />特写拉开</div>
+                  </div>
+                  <div class="as-b">
+                    <div class="row"><span class="as-n">综合 78</span><span class="spacer"></span><span class="st warn">分歧 25</span></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">观众</span><span class="j-s text-danger">64</span>
+                      <div class="j-bar"><div class="progress"><div class="bar danger" style="width:64%"></div></div></div></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">审核</span><span class="j-s text-ok">90</span>
+                      <div class="j-bar"><div class="progress"><div class="bar ok" style="width:90%"></div></div></div></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">导演</span><span class="j-s text-ok">89</span>
+                      <div class="j-bar"><div class="progress"><div class="bar ok" style="width:89%"></div></div></div></div>
+                    <button class="btn btn-default btn-sm" style="margin-top:8px">选定</button>
+                  </div>
+                </div>
+
+                <div class="asset">
+                  <div class="phone">
+                    <span class="ph-tag">方案 C</span>
+                    <div class="ph-body">全景俯拍<br />会议室</div>
+                  </div>
+                  <div class="as-b">
+                    <div class="row"><span class="as-n">综合 71</span></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">观众</span><span class="j-s text-danger">62</span>
+                      <div class="j-bar"><div class="progress"><div class="bar danger" style="width:62%"></div></div></div></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">审核</span><span class="j-s text-ok">91</span>
+                      <div class="j-bar"><div class="progress"><div class="bar ok" style="width:91%"></div></div></div></div>
+                    <div class="judge" style="padding:4px 0"><span class="j-n">导演</span><span class="j-s">60</span>
+                      <div class="j-bar"><div class="progress"><div class="bar" style="width:60%"></div></div></div></div>
+                    <button class="btn btn-default btn-sm" style="margin-top:8px">选定</button>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="note note-warn" style="margin:12px 0 0">
+                方案 B <code>divergent_flag=1</code>：观众 64、导演 89，分歧 25 分。
+                导演觉得镜头语言讲究，观众觉得前 3 秒没信息量会划走。
+                系统不替你调和——这正是需要你拍板的地方。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>三视角评审团</h2></div>
+            <div class="judge">
+              <span class="j-n">观众视角</span><span class="j-s text-danger">66</span>
+              <div class="j-bar"><div class="progress"><div class="bar danger" style="width:66%"></div></div></div>
+            </div>
+            <div class="text-sub" style="font-size:12px; padding:2px 0 8px">
+              会不会在这一秒划走：镜 8-10 三个中景连着看会累，镜 23 的爽点被远景稀释。
+            </div>
+            <div class="judge">
+              <span class="j-n">审核视角</span><span class="j-s text-ok">90</span>
+              <div class="j-bar"><div class="progress"><div class="bar ok" style="width:90%"></div></div></div>
+            </div>
+            <div class="text-sub" style="font-size:12px; padding:2px 0 8px">
+              能不能过审：无擦边表达，冲突处理克制。
+            </div>
+            <div class="judge">
+              <span class="j-n">导演视角</span><span class="j-s">72</span>
+              <div class="j-bar"><div class="progress"><div class="bar" style="width:72%"></div></div></div>
+            </div>
+            <div class="text-sub" style="font-size:12px; padding:2px 0 0">
+              有没有讲清楚：对峙的空间关系交代不足，缺一个建立两人位置的双人中景。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>全剧质量档案</h2></div>
+            <div class="row" style="margin-bottom:10px">
+              <div class="bigscore text-ok">86</div>
+              <div class="text-sub" style="font-size:12px; line-height:1.6">
+                作品质量分<br /><span class="text-muted">13 / 30 集已评审</span>
+              </div>
+            </div>
+            <div class="kv" style="grid-template-columns:96px 1fr">
+              <div class="k">一次过线率</div><div>62%（8 / 13 集首评达标）</div>
+              <div class="k">累计返工</div><div>27 次（剧本 11 · 分镜 9 · 画面 6 · 成片 1）</div>
+              <div class="k">强制放行</div><div><span class="text-warn font-bold">2 处</span></div>
+            </div>
+            <hr class="divider" />
+            <div class="text-sub" style="font-size:12px; line-height:1.7">
+              <strong>被将就的地方（复盘用）</strong><br />
+              第 1 集 G3 画面门 72 分强制放行<br />
+              <span class="text-muted">理由：赶发布节点，女二侧脸有轻微形变</span><br /><br />
+              第 9 集 G1 剧本门 73 分强制放行<br />
+              <span class="text-muted">理由：过渡集，接受节奏偏平</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>各集分数</h2></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>集</th><th>G1</th><th>G2</th><th>G3</th><th>G4</th><th>综合</th></tr></thead>
+                <tbody>
+                  <tr><td>E01</td><td class="text-ok">90</td><td class="text-ok">88</td><td class="text-warn">72</td><td class="text-ok">95</td><td class="font-bold">92</td></tr>
+                  <tr><td>E12</td><td class="text-ok">85</td><td class="text-ok">83</td><td class="text-ok">88</td><td class="text-ok">91</td><td class="font-bold">86</td></tr>
+                  <tr><td>E13</td><td class="text-ok">84</td><td class="text-ok">79</td><td class="text-muted">-</td><td class="text-muted">-</td><td class="text-muted">待评</td></tr>
+                  <tr><td>E14</td><td class="text-ok">81</td><td class="text-danger">68</td><td class="text-muted">-</td><td class="text-muted">-</td><td class="text-muted">待评</td></tr>
+                  <tr><td>E15</td><td class="text-warn">评审中</td><td class="text-muted">-</td><td class="text-muted">-</td><td class="text-muted">-</td><td class="text-muted">待评</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>结构模板对标</h2></div>
+            <div class="text-sub" style="font-size:12px; line-height:1.7">
+              复仇逆袭 · 当众打脸型（tpl-001）· 反转集 3 / 8 / 15 / 24
+            </div>
+            <div style="font-size:12px; line-height:2.1; margin-top:8px">
+              <div class="row"><span class="st done" style="width:64px">0-3s</span> 钩子 · 已覆盖</div>
+              <div class="row"><span class="st done" style="width:64px">3-30s</span> 建立 · 已覆盖</div>
+              <div class="row"><span class="st done" style="width:64px">30-60s</span> 升级 · 已覆盖</div>
+              <div class="row"><span class="st done" style="width:64px">60-85s</span> 反转 · 已覆盖</div>
+              <div class="row"><span class="st done" style="width:64px">85-90s</span> 悬念 · 已覆盖</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>POST /bgssai/user/quality/gate-run</code> · <code>/force-pass</code> ·
+        <code>/variants-generate</code> · <code>/variant-select</code>；
+        <code>GET /bgssai/user/quality/gate-result?gate_code&amp;episode_id</code> ·
+        <code>/variants?variant_node&amp;target_id</code> · <code>/profile?work_id</code> ·
+        <code>/templates?genre</code>。
+        门禁字段：<code>gate_code</code>（<code>G1_SCRIPT</code> / <code>G2_STORYBOARD</code> /
+        <code>G3_VISUAL</code> / <code>G4_FILM</code>）· <code>gate_score</code> ·
+        <code>threshold_score</code> · <code>gate_status</code> · <code>judge_list</code>
+        [<code>judge_role</code>（<code>AUDIENCE</code> / <code>CENSOR</code> / <code>DIRECTOR</code>）·
+        <code>judge_score</code> · <code>judge_comment</code>] · <code>divergent_flag</code> ·
+        <code>issue_list</code>[<code>fix_action</code> · <code>target_id</code> · <code>severity</code>]。
+        强制放行须填 <code>force_reason</code>，否则 <code>4006</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

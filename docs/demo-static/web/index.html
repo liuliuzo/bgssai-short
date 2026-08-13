@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — web 端概览</title>
   <link rel="stylesheet" href="assets/theme.css" />
+  <link rel="stylesheet" href="assets/shortdrama.css" />
 </head>
 <body>
   <div class="container">
@@ -12,8 +13,9 @@
     <p class="subtitle">
       web 端按角色端拆为<strong>管理端</strong>与<strong>用户端</strong>两套独立原型，各自维护自己的
       <code>index.html</code>（概览入口）与 <code>PAGE-FLOW.html</code>（跳转唯一真值），共享
-      <code>assets/theme.css</code>。原型是接口 JSON 字段命名（snake_case）、响应结构、枚举 / 状态值与页面
-      跳转关系的权威参照，前后端实现逐字对齐。
+      <code>assets/theme.css</code>（全产品线标准主题）与 <code>assets/shortdrama.css</code>（本产品补充样式）。
+      原型是接口 JSON 字段命名（snake_case）、响应结构、枚举 / 状态值与页面跳转关系的权威参照，
+      前后端实现逐字对齐。当前用户端 11 页（制作主线 + 账户）、管理端 9 页（平台控制面）。
     </p>
 
     <div class="card">

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>后期管线：配音对齐、字幕与合成 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .track { fill:#f1f5f9; stroke:#cbd5e1; stroke-width:1; }
+  svg .clip { fill:#dbeafe; stroke:var(--accent); stroke-width:1; }
+  svg .clipa { fill:#dcfce7; stroke:var(--ok); stroke-width:1; }
+  svg .clips { fill:#fef3c7; stroke:var(--warn); stroke-width:1; }
+</style>
+</head>
+<body>
+
+<h1>后期管线：配音时长对齐、字幕派生与成片合成</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>配音 / 字幕 / 四轨合成 / 过期回落</dd>
+  <dt>关联</dt><dd>voice-subtitle.md · film-compose-export.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、配音时长对齐：三种解法各自的代价</h2>
+<svg viewBox="0 0 1040 300" width="1040" height="300">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="40" width="180" height="50" rx="6"/>
+  <text class="lbl" x="110" y="62" text-anchor="middle">台词 + 角色卡音色</text>
+  <text class="small" x="110" y="78" text-anchor="middle">voice_id 全剧沿用</text>
+
+  <rect class="run" x="240" y="40" width="170" height="50" rx="6"/>
+  <text class="lbl" x="325" y="62" text-anchor="middle">VOICE 任务生成</text>
+  <text class="small" x="325" y="78" text-anchor="middle">audio_duration_sec</text>
+
+  <rect class="warnbox" x="450" y="40" width="240" height="50" rx="6"/>
+  <text class="lbl" x="570" y="62" text-anchor="middle">与 shot_duration_sec 比对</text>
+  <text class="small" x="570" y="78" text-anchor="middle">align_gap_sec = 音频 - 镜头</text>
+
+  <rect class="done" x="730" y="40" width="280" height="50" rx="6"/>
+  <text class="lbl" x="870" y="62" text-anchor="middle">偏差在正负 0.5 秒内 = ALIGNED</text>
+  <text class="small" x="870" y="78" text-anchor="middle">直接进入字幕生成</text>
+
+  <path class="arr accent" d="M 200 65 L 240 65"/>
+  <path class="arr accent" d="M 410 65 L 450 65"/>
+  <path class="arr accent" d="M 690 65 L 730 65"/>
+
+  <rect class="warnbox" x="40"  y="150" width="290" height="66" rx="6"/>
+  <text class="lbl" x="185" y="172" text-anchor="middle">ADJUST_SPEED 提高语速</text>
+  <text class="small" x="185" y="190" text-anchor="middle">上限 1.25 倍；只重配音，不动画面</text>
+  <text class="small" x="185" y="206" text-anchor="middle">代价：语速略快，费用低</text>
+
+  <rect class="fail" x="370" y="150" width="290" height="66" rx="6"/>
+  <text class="lbl" x="515" y="172" text-anchor="middle">EXTEND_SHOT 延长镜头</text>
+  <text class="small" x="515" y="190" text-anchor="middle">需重新生成该镜视频，先给费用预估</text>
+  <text class="small" x="515" y="206" text-anchor="middle">代价：花钱，须显式确认</text>
+
+  <rect class="done" x="700" y="150" width="290" height="66" rx="6"/>
+  <text class="lbl" x="845" y="172" text-anchor="middle">PAD_SILENCE 尾部补静音</text>
+  <text class="small" x="845" y="190" text-anchor="middle">音频短于镜头时的默认解法</text>
+  <text class="small" x="845" y="206" text-anchor="middle">代价：无，不重新生成</text>
+
+  <path class="arr warnline" d="M 540 90 L 300 150"/>
+  <path class="arr warnline" d="M 570 90 L 515 150"/>
+  <path class="arr warnline" d="M 600 90 L 800 150"/>
+
+  <rect class="fail" x="370" y="250" width="290" height="40" rx="6"/>
+  <text class="small" x="515" y="266" text-anchor="middle">未处理的 MISALIGNED 镜头不阻塞配音完成</text>
+  <text class="small" x="515" y="282" text-anchor="middle">但阻塞该集合成，合成入口禁用并列出待处理数</text>
+</svg>
+
+<h2>二、四轨时间轴与合成</h2>
+<svg viewBox="0 0 1040 260" width="1040" height="260">
+  <text class="small" x="20" y="34">VIDEO</text>
+  <rect class="track" x="80" y="20" width="880" height="26" rx="3"/>
+  <rect class="clip" x="82"  y="22" width="120" height="22" rx="2"/>
+  <text class="small" x="142" y="38" text-anchor="middle">镜 1</text>
+  <rect class="clip" x="206" y="22" width="90"  height="22" rx="2"/>
+  <text class="small" x="251" y="38" text-anchor="middle">镜 2</text>
+  <rect class="clip" x="300" y="22" width="160" height="22" rx="2"/>
+  <text class="small" x="380" y="38" text-anchor="middle">镜 3</text>
+  <rect class="clip" x="464" y="22" width="140" height="22" rx="2"/>
+  <text class="small" x="534" y="38" text-anchor="middle">镜 4</text>
+  <rect class="clip" x="608" y="22" width="200" height="22" rx="2"/>
+  <text class="small" x="708" y="38" text-anchor="middle">镜 5</text>
+  <rect class="clip" x="812" y="22" width="146" height="22" rx="2"/>
+  <text class="small" x="885" y="38" text-anchor="middle">镜 6</text>
+
+  <text class="small" x="20" y="76">AUDIO</text>
+  <rect class="track" x="80" y="62" width="880" height="26" rx="3"/>
+  <rect class="clipa" x="90"  y="64" width="104" height="22" rx="2"/>
+  <rect class="clipa" x="212" y="64" width="76"  height="22" rx="2"/>
+  <rect class="clipa" x="310" y="64" width="140" height="22" rx="2"/>
+  <rect class="clipa" x="470" y="64" width="126" height="22" rx="2"/>
+  <rect class="clipa" x="618" y="64" width="180" height="22" rx="2"/>
+  <rect class="clipa" x="820" y="64" width="130" height="22" rx="2"/>
+
+  <text class="small" x="20" y="118">SUBTITLE</text>
+  <rect class="track" x="80" y="104" width="880" height="26" rx="3"/>
+  <rect class="clips" x="90"  y="106" width="104" height="22" rx="2"/>
+  <rect class="clips" x="212" y="106" width="76"  height="22" rx="2"/>
+  <rect class="clips" x="310" y="106" width="140" height="22" rx="2"/>
+  <rect class="clips" x="470" y="106" width="126" height="22" rx="2"/>
+  <rect class="clips" x="618" y="106" width="180" height="22" rx="2"/>
+  <rect class="clips" x="820" y="106" width="130" height="22" rx="2"/>
+
+  <text class="small" x="20" y="160">BGM</text>
+  <rect class="track" x="80" y="146" width="880" height="26" rx="3"/>
+  <rect class="clip" x="82" y="148" width="876" height="22" rx="2" opacity="0.5"/>
+  <text class="small" x="520" y="164" text-anchor="middle">整集贯穿，有台词处自动闪避 duck_flag=1</text>
+
+  <rect class="box" x="80" y="196" width="880" height="48" rx="6"/>
+  <text class="small" x="520" y="216" text-anchor="middle">时间轴为只读预览：镜头时长与顺序只能回分镜工作台修改，避免同一事实两处可改而漂移</text>
+  <text class="small" x="520" y="234" text-anchor="middle">合成走 COMPOSE 任务，产出 1080x1920 / 30fps 成片，可导出 WITH_SUBTITLE / NO_SUBTITLE / SRT_ONLY</text>
+</svg>
+
+<h2>三、过期回落：上游一变，成片即标过期</h2>
+<svg viewBox="0 0 1040 150" width="1040" height="150">
+  <rect class="box" x="20" y="40" width="200" height="50" rx="6"/>
+  <text class="small" x="120" y="62" text-anchor="middle">上游变更</text>
+  <text class="small" x="120" y="78" text-anchor="middle">镜头重抽 / 重配音 / 改字幕</text>
+
+  <rect class="warnbox" x="280" y="40" width="220" height="50" rx="6"/>
+  <text class="small" x="390" y="62" text-anchor="middle">compose_status 回落 NONE</text>
+  <text class="small" x="390" y="78" text-anchor="middle">expired_flag=1，成片文件保留</text>
+
+  <rect class="warnbox" x="560" y="40" width="220" height="50" rx="6"/>
+  <text class="small" x="670" y="62" text-anchor="middle">review_status 回落</text>
+  <text class="small" x="670" y="78" text-anchor="middle">NOT_SUBMITTED，需重新提审</text>
+
+  <rect class="fail" x="840" y="40" width="180" height="50" rx="6"/>
+  <text class="small" x="930" y="62" text-anchor="middle">过期成片禁止下载</text>
+  <text class="small" x="930" y="78" text-anchor="middle">错误码 4012</text>
+
+  <path class="arr warnline" d="M 220 65 L 280 65"/>
+  <path class="arr warnline" d="M 500 65 L 560 65"/>
+  <path class="arr errline" d="M 780 65 L 840 65"/>
+  <text class="small" x="520" y="122" text-anchor="middle">目的：杜绝创作者拿到与当前素材不符的旧成片，以及平台审核结论与实际内容不一致</text>
+</svg>
+
+<p class="note">
+  合成前置条件（任一不满足则入口禁用并列出缺口与修复直达链接）：全部镜头 LOCKED、
+  dubbing_status=READY 且无 MISALIGNED、字幕已生成、合规无 BLOCK 项。
+</p>
+
+</body>
+</html>

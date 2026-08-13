@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>剧情图谱的数据来源与回流 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:920px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .src { fill:#f1f5f9; stroke:#64748b; stroke-width:1.2; }
+  svg .view { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .data { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.5; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .okline { stroke:var(--ok); color:var(--ok); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .dash { stroke-dasharray:5 4; }
+</style>
+</head>
+<body>
+
+<h1>剧情图谱：节奏、关系、空间三类图形的来源与回流</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>文字层的可视化（与文字分镜稿同层，均在生成画面之前）</dd>
+  <dt>关联</dt><dd>story-map.md · previz-text-storyboard.md · script-studio.md · quality-pipeline.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、三类图形分别回答一个问题</h2>
+<svg viewBox="0 0 1060 300" width="1060" height="300">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="src" x="20" y="34" width="200" height="52" rx="6"/>
+  <text class="lbl" x="120" y="56" text-anchor="middle">剧本 scene_list</text>
+  <text class="small" x="120" y="74" text-anchor="middle">场次 / 台词 / 情绪 / 时长</text>
+
+  <rect class="src" x="20" y="110" width="200" height="52" rx="6"/>
+  <text class="lbl" x="120" y="132" text-anchor="middle">镜头表 drama_shot</text>
+  <text class="small" x="120" y="150" text-anchor="middle">景别 / 运镜 / 出场角色</text>
+
+  <rect class="src" x="20" y="186" width="200" height="52" rx="6"/>
+  <text class="lbl" x="120" y="208" text-anchor="middle">角色卡 + 结构模板</text>
+  <text class="small" x="120" y="226" text-anchor="middle">关系抽取 / 期望曲线</text>
+
+  <rect class="view" x="300" y="26" width="300" height="66" rx="6"/>
+  <text class="lbl" x="450" y="48" text-anchor="middle">张力曲线（节奏）</text>
+  <text class="small" x="450" y="66" text-anchor="middle">这部剧哪一段是平的</text>
+  <text class="small" x="450" y="82" text-anchor="middle">实线为实际，虚线为模板期望</text>
+
+  <rect class="view" x="300" y="104" width="300" height="66" rx="6"/>
+  <text class="lbl" x="450" y="126" text-anchor="middle">人物关系图（关系）</text>
+  <text class="small" x="450" y="144" text-anchor="middle">观众此刻知道了什么</text>
+  <text class="small" x="450" y="160" text-anchor="middle">SECRET 关系揭晓前虚线灰显</text>
+
+  <rect class="view" x="300" y="182" width="300" height="66" rx="6"/>
+  <text class="lbl" x="450" y="204" text-anchor="middle">走位示意图（空间）</text>
+  <text class="small" x="450" y="222" text-anchor="middle">谁站哪、面朝哪、机位在哪</text>
+  <text class="small" x="450" y="238" text-anchor="middle">俯视图，两人及以上镜头必备</text>
+
+  <path class="arr accent" d="M 220 60 L 300 59"/>
+  <path class="arr accent" d="M 220 136 L 300 137"/>
+  <path class="arr accent" d="M 220 212 L 300 215"/>
+  <path class="arr accent" d="M 220 200 L 300 150"/>
+  <path class="arr accent" d="M 220 124 L 300 70"/>
+
+  <rect class="warnbox" x="680" y="26" width="360" height="66" rx="6"/>
+  <text class="lbl" x="860" y="48" text-anchor="middle">偏离标注 → 定位到秒与镜号</text>
+  <text class="small" x="860" y="66" text-anchor="middle">FLAT 塌陷段 / WEAK_HOOK / WEAK_ENDING / OVER_EARLY</text>
+  <text class="small" x="860" y="82" text-anchor="middle">点击直达剧本或分镜对应位置</text>
+
+  <rect class="warnbox" x="680" y="104" width="360" height="66" rx="6"/>
+  <text class="lbl" x="860" y="126" text-anchor="middle">角色掉线提示</text>
+  <text class="small" x="860" y="144" text-anchor="middle">连续 5 集无出场且无关系变化</text>
+  <text class="small" x="860" y="160" text-anchor="middle">附最后出场集数</text>
+
+  <rect class="warnbox" x="680" y="182" width="360" height="66" rx="6"/>
+  <text class="lbl" x="860" y="204" text-anchor="middle">轴线检查（180 度规则）</text>
+  <text class="small" x="860" y="222" text-anchor="middle">相邻镜头机位跨越角色连线即判越轴</text>
+  <text class="small" x="860" y="238" text-anchor="middle">产出 EYELINE 连贯性问题</text>
+
+  <path class="arr warnline" d="M 600 59 L 680 59"/>
+  <path class="arr warnline" d="M 600 137 L 680 137"/>
+  <path class="arr warnline" d="M 600 215 L 680 215"/>
+
+  <text class="small" x="530" y="288" text-anchor="middle">三类图形全部是派生视图，生成走 TEXT 任务（单集约 0.03 元），查看与拖动不产生任何费用</text>
+</svg>
+
+<h2>二、走位图不只是给人看的：它反哺提示词与连贯性检查</h2>
+<svg viewBox="0 0 1060 240" width="1060" height="240">
+  <rect class="data" x="20" y="40" width="240" height="60" rx="6"/>
+  <text class="lbl" x="140" y="62" text-anchor="middle">blocking_json</text>
+  <text class="small" x="140" y="80" text-anchor="middle">角色坐标与朝向 + 机位与运镜路径</text>
+  <text class="small" x="140" y="94" text-anchor="middle">镜头级持久化数据</text>
+
+  <rect class="view" x="340" y="16" width="300" height="52" rx="6"/>
+  <text class="small" x="490" y="38" text-anchor="middle">俯视示意图（人看）</text>
+  <text class="small" x="490" y="54" text-anchor="middle">生成前确认站位是否合理</text>
+
+  <rect class="view" x="340" y="84" width="300" height="52" rx="6"/>
+  <text class="small" x="490" y="106" text-anchor="middle">方位描述（模型看）</text>
+  <text class="small" x="490" y="122" text-anchor="middle">「她在画面左侧，面向右方的他」进提示词</text>
+
+  <rect class="view" x="340" y="152" width="300" height="52" rx="6"/>
+  <text class="small" x="490" y="174" text-anchor="middle">轴线判定（系统看）</text>
+  <text class="small" x="490" y="190" text-anchor="middle">相邻镜机位是否跨越角色连线</text>
+
+  <path class="arr okline" d="M 260 60 L 340 42"/>
+  <path class="arr okline" d="M 260 70 L 340 110"/>
+  <path class="arr okline" d="M 260 80 L 340 178"/>
+
+  <rect class="box" x="720" y="16" width="320" height="52" rx="6"/>
+  <text class="small" x="880" y="38" text-anchor="middle">拖动调整即改数据</text>
+  <text class="small" x="880" y="54" text-anchor="middle">保存后自动重算下面两项</text>
+
+  <rect class="box" x="720" y="84" width="320" height="52" rx="6"/>
+  <text class="small" x="880" y="106" text-anchor="middle">减少「两人对话却各看各的」</text>
+  <text class="small" x="880" y="122" text-anchor="middle">画面空间关系与剧本一致</text>
+
+  <rect class="box" x="720" y="152" width="320" height="52" rx="6"/>
+  <text class="small" x="880" y="174" text-anchor="middle">越轴写入 drama_continuity_issue</text>
+  <text class="small" x="880" y="190" text-anchor="middle">与文字预演页是同一条清单，不另立一套</text>
+
+  <path class="arr accent" d="M 640 42 L 720 42"/>
+  <path class="arr accent" d="M 640 110 L 720 110"/>
+  <path class="arr accent" d="M 640 178 L 720 178"/>
+</svg>
+
+<h2>三、张力曲线的读法（示意）</h2>
+<svg viewBox="0 0 1060 260" width="1060" height="260">
+  <rect x="70" y="30" width="920" height="160" fill="#fbfbfb" stroke="var(--line)"/>
+
+  <line x1="70" y1="190" x2="990" y2="190" stroke="var(--line)"/>
+  <line x1="70" y1="30" x2="70" y2="190" stroke="var(--line)"/>
+  <text class="small" x="60" y="36" text-anchor="end">100</text>
+  <text class="small" x="60" y="194" text-anchor="end">0</text>
+  <text class="small" x="70" y="208">0s</text>
+  <text class="small" x="376" y="208">30s</text>
+  <text class="small" x="682" y="208">60s</text>
+  <text class="small" x="978" y="208">90s</text>
+
+  <path class="dash" stroke="var(--muted)" fill="none" stroke-width="1.5"
+        d="M 70 62 L 172 78 L 274 96 L 376 92 L 478 74 L 580 60 L 682 46 L 784 38 L 886 58 L 990 42"/>
+  <text class="small" x="905" y="34" fill="var(--muted)">模板期望</text>
+
+  <path stroke="var(--accent)" fill="none" stroke-width="2"
+        d="M 70 66 L 172 84 L 274 128 L 376 132 L 478 126 L 580 88 L 682 52 L 784 44 L 886 96 L 990 88"/>
+  <text class="small" x="700" y="42" fill="var(--accent)">实际</text>
+
+  <rect x="274" y="30" width="204" height="160" fill="#fef2f2" opacity="0.55"/>
+  <text class="small" x="376" y="150" text-anchor="middle" fill="var(--err)">FLAT 塌陷段 30-48s</text>
+  <text class="small" x="376" y="166" text-anchor="middle" fill="var(--err)">场 3 · 镜 11 至 14</text>
+
+  <rect x="886" y="30" width="104" height="160" fill="#fffbeb" opacity="0.6"/>
+  <text class="small" x="938" y="150" text-anchor="middle" fill="var(--warn)">WEAK_ENDING</text>
+  <text class="small" x="938" y="166" text-anchor="middle" fill="var(--warn)">末 5 秒悬念弱</text>
+
+  <text class="small" x="530" y="232" text-anchor="middle">读法：实线掉到虚线以下 15 分且持续 10 秒以上即为塌陷段，直接给出对应场次与镜号，点击定位去改</text>
+  <text class="small" x="530" y="248" text-anchor="middle">张力值是估算，只用于定位讨论，不参与质量门评分——不让一个估算数字绑架创作</text>
+</svg>
+
+<p class="note">
+  为什么这三张图值得单独做：文字稿解决「读得懂」，图谱解决「一眼看得出」。
+  节奏塌陷、关系揭晓时机、越轴，这三类问题的共同点是——用文字描述要读半天才能察觉，
+  用图看一眼就知道，而且它们都发生在生成画面之前，改起来不花一分钱。
+</p>
+
+</body>
+</html>

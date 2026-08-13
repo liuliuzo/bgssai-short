@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 管理端概览</title>
   <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
 </head>
 <body>
   <div class="container">
@@ -18,42 +19,93 @@
     </p>
 
     <div class="card">
-      <h2 class="title" style="font-size:15px">页面清单</h2>
-      <table>
-        <thead>
-          <tr><th>页面</th><th>路由</th><th>对应接口</th><th>说明</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><a href="login.html">登录页</a></td>
-            <td><code>/login</code></td>
-            <td><code>POST /bgssai/admin/login</code></td>
-            <td>账号密码登录，签发 JWT；非 <code>PLATFORM_ADMIN</code> 返回 4003</td>
-          </tr>
-          <tr>
-            <td><a href="home.html">首页</a></td>
-            <td><code>/home</code></td>
-            <td>-</td>
-            <td>展示当前登录身份</td>
-          </tr>
-          <tr>
-            <td><a href="login-logs.html">登录日志</a></td>
-            <td><code>/login-logs</code></td>
-            <td><code>GET /bgssai/admin/login-logs</code></td>
-            <td>示例分页列表（全量记录），消费 PageResponse</td>
-          </tr>
-        </tbody>
-      </table>
+      <h2 class="card-title">页面清单</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>页面</th><th>路由</th><th>对应接口</th><th>说明</th><th>需求</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="login.html">登录页</a></td>
+              <td><code>/login</code></td>
+              <td><code>POST /bgssai/admin/login</code></td>
+              <td>账号密码登录，签发 JWT；非 <code>PLATFORM_ADMIN</code> 返回 4003</td>
+              <td class="text-muted">骨架内置</td>
+            </tr>
+            <tr>
+              <td><a href="home.html">首页</a></td>
+              <td><code>/home</code></td>
+              <td>-（消费登录响应缓存的身份字段）</td>
+              <td>今日待办、平台指标、职责边界、全部入口</td>
+              <td class="text-muted">骨架内置</td>
+            </tr>
+            <tr>
+              <td><a href="content-review.html">内容审核队列</a></td>
+              <td><code>/reviews</code></td>
+              <td><code>GET /bgssai/admin/reviews/list</code></td>
+              <td>以剧集为单位的待审队列，按提交时间正序，支持风险 / 题材 / 关键词筛选</td>
+              <td>content-compliance</td>
+            </tr>
+            <tr>
+              <td><a href="review-detail.html">审核详情与处置</a></td>
+              <td><code>/reviews/:review_id</code></td>
+              <td><code>GET /bgssai/admin/reviews/detail</code> · <code>POST /approve</code> · <code>/reject</code></td>
+              <td>成片、台词全文、预检命中、处置历史；驳回必填原因与风险类别</td>
+              <td>content-compliance</td>
+            </tr>
+            <tr>
+              <td><a href="ai-models.html">AI 能力与模型配置</a></td>
+              <td><code>/ai-models</code></td>
+              <td><code>GET /bgssai/admin/ai-models/list</code> · <code>POST /create</code> · <code>/update</code> · <code>/set-default</code> · <code>/toggle-enabled</code></td>
+              <td>按能力类型配供应商 / 模型 / 单价 / 质量档 / 开关，改配置即生效</td>
+              <td>ai-capability-usage</td>
+            </tr>
+            <tr>
+              <td><a href="quality-templates.html">结构模板与质量阈值</a></td>
+              <td><code>/quality-templates</code></td>
+              <td><code>GET /bgssai/admin/quality/templates/list</code> · <code>POST /threshold-save</code></td>
+              <td>爆款节拍模板库、四道门阈值、多方案版本数、分歧告警线</td>
+              <td>quality-pipeline</td>
+            </tr>
+            <tr>
+              <td><a href="usage-cost.html">平台用量与成本</a></td>
+              <td><code>/usage-cost</code></td>
+              <td><code>GET /bgssai/admin/usage/summary</code> · <code>/by-creator</code></td>
+              <td>按能力 / 按创作者 / 按日的用量、成本、成功率、平均耗时与对账口径</td>
+              <td>ai-capability-usage</td>
+            </tr>
+            <tr>
+              <td><a href="creators.html">创作者账号与配额</a></td>
+              <td><code>/creators</code></td>
+              <td><code>GET /bgssai/admin/creators/list</code> · <code>POST /adjust-quota</code> · <code>/toggle-enabled</code></td>
+              <td>余额与月度上限维护，调整必填备注并写 <code>quota_change_log</code></td>
+              <td>ai-capability-usage</td>
+            </tr>
+            <tr>
+              <td><a href="login-logs.html">登录日志</a></td>
+              <td><code>/login-logs</code></td>
+              <td><code>GET /bgssai/admin/login-logs</code></td>
+              <td>示例分页列表（全量记录），消费 PageResponse</td>
+              <td class="text-muted">骨架内置</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="card">
-      <h2 class="title" style="font-size:15px">本端约定</h2>
+      <h2 class="card-title">本端约定</h2>
       <div class="kv">
         <div class="k">工程</div><div>bgssai-short-drama-admin，后端 8080 / 前端 3001</div>
         <div class="k">角色</div><div><code>role_code=PLATFORM_ADMIN</code>（其它角色不得登录本端）</div>
         <div class="k">登录接口</div><div><code>POST /bgssai/admin/login</code></div>
+        <div class="k">对内容的权限</div><div><strong>只读</strong>——只给审核结论与平台配置，不修改创作者的剧本 / 镜头 / 素材</div>
         <div class="k">响应封装</div><div><code>{ code, message, success, result }</code>，分页附 <code>page_num / page_size / total_size</code></div>
-        <div class="k">鉴权</div><div>请求头 <code>Jwttoken</code></div>
+        <div class="k">鉴权</div><div>请求头 <code>Jwttoken</code>；角色取自 JWT，不取自请求参数（零信任）</div>
+        <div class="k">金额口径</div><div>接口字段一律以<strong>分</strong>为单位（<code>*_cent</code>），页面展示为元</div>
+        <div class="k">枚举字典</div><div>见 <code>docs/feature/drama-work-management.md</code> 第八节（单一登记处）</div>
+        <div class="k">样式</div><div><code>../assets/theme.css</code>（标准主题）+ <code>../assets/shortdrama.css</code>（本产品补充）</div>
       </div>
     </div>
 

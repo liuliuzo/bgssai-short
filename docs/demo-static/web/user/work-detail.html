@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 作品工作台</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">复仇逆袭 · 30 集 × 90 秒 · 竖屏</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link active" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台<span class="ln">15</span></a>
+    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
+    <a class="side-link" href="storyboard.html">分镜工作台<span class="ln hot">2</span></a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="home.html">首页</a><span class="sep">/</span>
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">退婚三年后她成了首富</span>
+      <span class="st doing">制作中</span>
+      <span class="spacer"></span>
+      <button class="btn btn-default btn-sm">作品设置</button>
+      <a class="btn btn-primary" href="storyboard.html">继续制作</a>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html" class="active"><span class="dot doing"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot fail"></span>分镜</a>
+      <a href="task-center.html"><span class="dot doing"></span>画面生成</a>
+      <a href="voice-studio.html"><span class="dot"></span>配音字幕</a>
+      <a href="compose-export.html"><span class="dot"></span>合成导出</a>
+      <a href="quality-report.html"><span class="dot fail"></span>质量报告</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat">
+          <div class="stat-label">制作进度</div>
+          <div class="stat-value">12 <span style="font-size:14px; color:var(--muted)">/ 30</span></div>
+          <div class="progress" style="margin-top:6px"><div class="bar" style="width:40%"></div></div>
+          <div class="stat-sub">集已合成，8 集已过审</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">作品质量分</div>
+          <div class="stat-value text-ok">86</div>
+          <div class="stat-sub">剧本 35% · 分镜 20% · 画面 25% · 成片 20%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">成本 / 预算</div>
+          <div class="stat-value">1 286<span style="font-size:14px; color:var(--muted)">.50 元</span></div>
+          <div class="progress" style="margin-top:6px"><div class="bar warn" style="width:43%"></div></div>
+          <div class="stat-sub">预算 3 000.00 元，已用 43%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">在途任务</div>
+          <div class="stat-value">6</div>
+          <div class="stat-sub">4 生成中 · 2 排队中 · <a href="task-center.html">去看</a></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:#fecaca; background:#fef2f2; margin-bottom:14px">
+        <div class="row">
+          <span class="badge badge-danger">待处理</span>
+          <div style="font-size:13px">
+            <strong>第 14 集分镜门未过（68 / 75）</strong>
+            <span class="text-sub">：镜 8-10 连续三镜同景别；镜 23 是情绪高点却给了远景。
+            现在修，比生成完再返工省 42 次抽卡钱。</span>
+          </div>
+          <span class="spacer"></span>
+          <a class="btn btn-danger btn-sm" href="quality-report.html">查看返工清单</a>
+        </div>
+      </div>
+
+      <div class="card card-flush">
+        <div class="card-hd">
+          <h2>剧集看板</h2>
+          <span class="text-muted" style="font-size:12px">六阶段 + 四道质量门，状态与各模块真实状态一致</span>
+          <span class="spacer"></span>
+          <div class="seg-ctl">
+            <button class="on">全部 30</button>
+            <button>进行中 3</button>
+            <button>待处理 2</button>
+          </div>
+          <button class="btn btn-default btn-sm">追加一集</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:190px">剧集</th>
+                <th style="width:120px">首帧</th>
+                <th>六阶段</th>
+                <th style="width:180px">四道门</th>
+                <th style="width:80px">质量分</th>
+                <th style="width:120px">下一步</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="compose-export.html" style="font-weight:600">第 1 集 退婚</a>
+                  <div class="text-muted" style="font-size:11px">e-20001 · 42 镜 · 88 秒</div>
+                </td>
+                <td>
+                  <div class="phone" style="width:52px; border-radius:5px">
+                    <div class="ph-body" style="font-size:9px; padding:4px">婚礼现场</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st done">剧本</span><span class="st done">分镜</span>
+                    <span class="st done">画面 42/42</span><span class="st done">配音</span>
+                    <span class="st done">合成</span><span class="st done">已过审</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st done">G1 90</span><span class="st done">G2 88</span>
+                    <span class="st warn">G3 72</span><span class="st done">G4 95</span>
+                  </div>
+                </td>
+                <td><span class="font-bold text-ok">92</span></td>
+                <td><a href="compose-export.html">查看成片</a></td>
+              </tr>
+
+              <tr>
+                <td>
+                  <a href="storyboard.html" style="font-weight:600">第 13 集 收购</a>
+                  <div class="text-muted" style="font-size:11px">e-20013 · 39 镜</div>
+                </td>
+                <td>
+                  <div class="phone" style="width:52px; border-radius:5px; background:linear-gradient(150deg,#1e3a8a,#0f172a)">
+                    <div class="ph-body" style="font-size:9px; padding:4px">会议室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st done">剧本</span><span class="st done">分镜</span>
+                    <span class="st doing">画面 31/39</span><span class="st todo">配音</span>
+                    <span class="st todo">合成</span><span class="st todo">未提交</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st done">G1 84</span><span class="st done">G2 79</span>
+                    <span class="st todo">G3</span><span class="st todo">G4</span>
+                  </div>
+                </td>
+                <td class="text-muted">待评</td>
+                <td><a href="task-center.html">看进度</a></td>
+              </tr>
+
+              <tr style="background:#fffbf5">
+                <td>
+                  <a href="storyboard.html" style="font-weight:600">第 14 集 对峙</a>
+                  <div class="text-muted" style="font-size:11px">e-20014 · 44 镜</div>
+                </td>
+                <td>
+                  <div class="phone empty" style="width:52px; border-radius:5px">
+                    <div class="ph-body" style="font-size:9px; padding:4px">未生成</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st done">剧本</span><span class="st fail">分镜未过门</span>
+                    <span class="st todo">画面 0/44</span><span class="st todo">配音</span>
+                    <span class="st todo">合成</span><span class="st todo">未提交</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st done">G1 81</span><span class="st fail">G2 68</span>
+                    <span class="st todo">G3</span><span class="st todo">G4</span>
+                  </div>
+                </td>
+                <td class="text-muted">待评</td>
+                <td><a href="quality-report.html" class="text-danger">去返工</a></td>
+              </tr>
+
+              <tr>
+                <td>
+                  <a href="script-studio.html" style="font-weight:600">第 15 集 反转</a>
+                  <div class="text-muted" style="font-size:11px">e-20015 · <span class="st warn">反转集</span></div>
+                </td>
+                <td>
+                  <div class="phone empty" style="width:52px; border-radius:5px">
+                    <div class="ph-body" style="font-size:9px; padding:4px">未生成</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st doing">剧本评审中</span><span class="st todo">分镜</span>
+                    <span class="st todo">画面</span><span class="st todo">配音</span>
+                    <span class="st todo">合成</span><span class="st todo">未提交</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st doing">G1 评审中</span><span class="st todo">G2</span>
+                    <span class="st todo">G3</span><span class="st todo">G4</span>
+                  </div>
+                </td>
+                <td class="text-muted">待评</td>
+                <td><a href="script-studio.html">写剧本</a></td>
+              </tr>
+
+              <tr>
+                <td>
+                  <span class="text-muted" style="font-weight:600">第 16 至 30 集</span>
+                  <div class="text-muted" style="font-size:11px">大纲已出，剧本未开始</div>
+                </td>
+                <td>
+                  <div class="phone empty" style="width:52px; border-radius:5px">
+                    <div class="ph-body" style="font-size:9px; padding:4px">15 集</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stages">
+                    <span class="st todo">剧本</span><span class="st todo">分镜</span>
+                    <span class="st todo">画面</span><span class="st todo">配音</span>
+                    <span class="st todo">合成</span><span class="st todo">未提交</span>
+                  </div>
+                </td>
+                <td class="text-muted">-</td>
+                <td class="text-muted">-</td>
+                <td><a href="script-studio.html">批量生成</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top:14px">
+        <div class="card">
+          <div class="card-hd"><h2>作品级设定（全部剧集继承）</h2>
+            <span class="spacer"></span>
+            <button class="btn btn-default btn-sm">编辑</button>
+          </div>
+          <div class="kv">
+            <div class="k">结构模板</div>
+            <div>复仇逆袭 · 当众打脸型（tpl-001）· 反转集 3 / 8 / 15 / 24</div>
+            <div class="k">画风 / 画幅</div>
+            <div>都市写实 MODERN_URBAN · 竖屏 9:16 · 1080x1920 · 30fps</div>
+            <div class="k">角色卡 / 场景卡</div>
+            <div><a href="character-bible.html">6 个角色（5 已定妆，1 待建卡）· 9 个场景卡</a></div>
+            <div class="k">旁白音色</div><div>v-male-narrator-02</div>
+            <div class="k">合成设置</div><div>转场 DISSOLVE · BGM 闪避开 · 片头 3 秒 · 字幕烧录</div>
+            <div class="k">质量阈值</div><div>75（第 1 集 85）</div>
+            <div class="k">生成方式</div><div>两段式（先首帧图 0.80 元，再图生视频 1.60 元 / 4 秒）</div>
+          </div>
+          <div class="note note-warn" style="margin:12px 0 0">
+            改画风或画幅只影响之后新建的生成任务，不回溯已生成素材。当前已有 517 个镜头已生成，
+            改设定不会自动重做它们。
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>本周产出</h2></div>
+            <div class="row" style="font-size:12px; margin-bottom:7px">
+              <span style="width:52px" class="text-sub">镜头</span>
+              <div class="progress" style="flex:1"><div class="bar" style="width:78%"></div></div>
+              <span class="font-bold">312</span>
+            </div>
+            <div class="row" style="font-size:12px; margin-bottom:7px">
+              <span style="width:52px" class="text-sub">成片</span>
+              <div class="progress" style="flex:1"><div class="bar ok" style="width:40%"></div></div>
+              <span class="font-bold">4 集</span>
+            </div>
+            <div class="row" style="font-size:12px">
+              <span style="width:52px" class="text-sub">花费</span>
+              <div class="progress" style="flex:1"><div class="bar warn" style="width:56%"></div></div>
+              <span class="font-bold">486 元</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>全剧大纲节奏</h2></div>
+            <div style="font-size:12px; line-height:2">
+              <div class="row"><span class="st done">E03</span> 三年后 <span class="spacer"></span><span class="st warn">反转集</span></div>
+              <div class="row"><span class="st done">E08</span> 身份初露 <span class="spacer"></span><span class="st warn">反转集</span></div>
+              <div class="row"><span class="st doing">E15</span> 反转 <span class="spacer"></span><span class="st warn">反转集</span></div>
+              <div class="row"><span class="st todo">E24</span> 终局 <span class="spacer"></span><span class="st warn">反转集</span></div>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              反转集的关键镜头默认走多方案择优（3 版）。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口 <code>GET /bgssai/user/drama-works/detail?work_id=w-10001</code>。
+        剧集行字段：<code>episode_id</code> · <code>episode_no</code> · <code>episode_title</code> ·
+        <code>script_status</code> · <code>storyboard_status</code> · <code>shot_total</code> /
+        <code>shot_ready</code> · <code>dubbing_status</code> · <code>compose_status</code> ·
+        <code>review_status</code> · <code>film_duration_sec</code> ·
+        <code>gate_status_map</code>（<code>G1_SCRIPT</code> / <code>G2_STORYBOARD</code> /
+        <code>G3_VISUAL</code> / <code>G4_FILM</code>）· <code>episode_quality_score</code>。
+        作品状态由下游产出自动推进，不提供手工改状态入口（<code>ARCHIVED</code> 除外）。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

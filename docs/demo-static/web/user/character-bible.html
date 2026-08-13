@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 角色与场景卡</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">6 角色 · 9 场景卡</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link active" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
+    <a class="side-link" href="storyboard.html">分镜工作台</a>
+    <a class="side-link" href="previz.html">文字预演</a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告</a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">角色与场景卡</span>
+      <span class="spacer"></span>
+      <span class="text-muted" style="font-size:12px">一次定妆，全剧锁定</span>
+      <button class="btn btn-default btn-sm">新建场景卡</button>
+      <button class="btn btn-primary">新建角色卡</button>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot doing"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html" class="active"><span class="dot fail"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot fail"></span>分镜</a>
+      <a href="previz.html"><span class="dot doing"></span>文字预演</a>
+      <a href="task-center.html"><span class="dot doing"></span>画面生成</a>
+      <a href="voice-studio.html"><span class="dot"></span>配音字幕</a>
+      <a href="compose-export.html"><span class="dot"></span>合成导出</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="card" style="border-color:#fecaca; background:#fef2f2; margin-bottom:14px">
+        <div class="row">
+          <span class="badge badge-danger">1 个角色待定妆</span>
+          <div style="font-size:13px">
+            「苏曼」在第 15 集剧本里出现，还没定妆。引用她的 3 个镜头已被标红，无法提交生成。
+          </div>
+          <span class="spacer"></span>
+          <a class="btn btn-danger btn-sm" href="#suman">去定妆</a>
+        </div>
+      </div>
+
+      <div class="card card-flush">
+        <div class="card-hd">
+          <h2>角色卡</h2>
+          <span class="text-muted" style="font-size:12px">5 已定妆 · 1 待建卡</span>
+          <span class="spacer"></span>
+          <span class="chip active">全部</span>
+          <span class="chip">已定妆</span>
+          <span class="chip">待建卡</span>
+        </div>
+        <div class="card-body">
+          <div class="assets">
+
+            <div class="asset locked">
+              <div class="phone">
+                <span class="ph-tag">定妆照</span>
+                <div class="ph-body">沈知微<br />三年后职业装</div>
+              </div>
+              <div class="as-b">
+                <div class="row">
+                  <span class="as-n">沈知微</span>
+                  <span class="spacer"></span>
+                  <span class="st done">已定妆</span>
+                </div>
+                <div class="as-m">女主 · 被引用 42 镜</div>
+                <div class="text-sub" style="font-size:11px; line-height:1.6; margin-top:6px">
+                  26 岁，鹅蛋脸，黑色长直发，冷感眼神，身形清瘦
+                </div>
+                <div class="text-muted" style="font-size:10px; margin-top:5px">
+                  seed 88213417 · v-female-cold-01
+                </div>
+                <div class="opts" style="margin-top:7px">
+                  <span class="chip active">职业装</span>
+                  <span class="chip">婚纱</span>
+                  <span class="chip">居家</span>
+                </div>
+                <div class="toolbar" style="margin-top:8px">
+                  <button class="btn btn-default btn-sm">编辑</button>
+                  <button class="btn btn-default btn-sm">加造型</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="asset locked">
+              <div class="phone" style="background:linear-gradient(150deg,#1f2937,#0f172a)">
+                <span class="ph-tag">定妆照</span>
+                <div class="ph-body">陆时衍<br />西装</div>
+              </div>
+              <div class="as-b">
+                <div class="row">
+                  <span class="as-n">陆时衍</span>
+                  <span class="spacer"></span>
+                  <span class="st done">已定妆</span>
+                </div>
+                <div class="as-m">男主 · 被引用 38 镜</div>
+                <div class="text-sub" style="font-size:11px; line-height:1.6; margin-top:6px">
+                  30 岁，方脸，短寸黑发，眉骨深，身形挺拔
+                </div>
+                <div class="text-muted" style="font-size:10px; margin-top:5px">
+                  seed 41209833 · v-male-low-03
+                </div>
+                <div class="opts" style="margin-top:7px">
+                  <span class="chip active">西装</span>
+                  <span class="chip">休闲</span>
+                </div>
+                <div class="toolbar" style="margin-top:8px">
+                  <button class="btn btn-default btn-sm">编辑</button>
+                  <button class="btn btn-default btn-sm">加造型</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="asset locked">
+              <div class="phone" style="background:linear-gradient(150deg,#44403c,#1c1917)">
+                <span class="ph-tag">定妆照</span>
+                <div class="ph-body">老董事</div>
+              </div>
+              <div class="as-b">
+                <div class="row">
+                  <span class="as-n">老董事</span>
+                  <span class="spacer"></span>
+                  <span class="st done">已定妆</span>
+                </div>
+                <div class="as-m">配角 · 被引用 6 镜</div>
+                <div class="text-sub" style="font-size:11px; line-height:1.6; margin-top:6px">
+                  65 岁，银发梳背，金丝眼镜，深灰三件套
+                </div>
+                <div class="text-muted" style="font-size:10px; margin-top:5px">
+                  seed 77341022 · v-male-elder-01
+                </div>
+                <div class="toolbar" style="margin-top:8px">
+                  <button class="btn btn-default btn-sm">编辑</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="asset" id="suman" style="border-color:var(--danger)">
+              <div class="phone bad">
+                <span class="ph-tag">待建卡</span>
+                <div class="ph-body">尚未定妆<br />不能被镜头引用</div>
+              </div>
+              <div class="as-b">
+                <div class="row">
+                  <span class="as-n">苏曼</span>
+                  <span class="spacer"></span>
+                  <span class="st fail">待建卡</span>
+                </div>
+                <div class="as-m">从第 15 集剧本自动抽取</div>
+                <div class="text-sub" style="font-size:11px; line-height:1.6; margin-top:6px">
+                  剧本里出现了这个名字，系统自动登记但不自动生成图（避免无谓消耗）。
+                </div>
+                <button class="btn btn-primary btn-sm" style="margin-top:8px">开始定妆</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top:14px">
+        <div class="card card-flush">
+          <div class="card-hd">
+            <h2>定妆 · 苏曼</h2>
+            <span class="spacer"></span>
+            <div class="wizard">
+              <div class="w-s ok"><span class="w-n">1</span>填描述</div>
+              <span class="w-a">→</span>
+              <div class="w-s on"><span class="w-n">2</span>选候选</div>
+              <span class="w-a">→</span>
+              <div class="w-s"><span class="w-n">3</span>锁定</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="assets" style="grid-template-columns:repeat(4,1fr)">
+              <div class="asset pick">
+                <div class="phone sel"><span class="ph-tag">候选 1</span><div class="ph-body">圆脸 栗色微卷<br />米色针织衫</div></div>
+                <div class="as-b" style="text-align:center">
+                  <button class="btn btn-primary btn-sm">选定</button>
+                </div>
+              </div>
+              <div class="asset">
+                <div class="phone"><span class="ph-tag">候选 2</span><div class="ph-body">圆脸 直发</div></div>
+                <div class="as-b" style="text-align:center">
+                  <button class="btn btn-default btn-sm">选定</button>
+                </div>
+              </div>
+              <div class="asset">
+                <div class="phone"><span class="ph-tag">候选 3</span><div class="ph-body">圆脸 高马尾</div></div>
+                <div class="as-b" style="text-align:center">
+                  <button class="btn btn-default btn-sm">选定</button>
+                </div>
+              </div>
+              <div class="asset">
+                <div class="phone"><span class="ph-tag">候选 4</span><div class="ph-body">侧分 微卷</div></div>
+                <div class="as-b" style="text-align:center">
+                  <button class="btn btn-default btn-sm">选定</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="note" style="margin-top:12px">
+              一次定妆生成 4 张候选（<code>candidate_count</code> 固定 4，共 3.20 元）。
+              选定后 <code>card_status</code> 由 <code>GENERATING</code> 变 <code>LOCKED</code>，
+              <code>ref_image_asset_id</code> 固化为这一张，此后全剧所有镜头都以它为准。
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>外观与音色</h2></div>
+            <div class="field">
+              <label>外观描述 appearance_prompt</label>
+              <textarea rows="4">24 岁女性，圆脸，栗色微卷中长发，笑眼，穿米色针织衫</textarea>
+              <div class="hint">写清年龄、脸型、发型、眼神、体型、服装。越具体，跨镜头越稳。</div>
+            </div>
+            <div class="field">
+              <label>角色定位 character_role</label>
+              <select><option>配角 SUPPORTING</option><option>女主 FEMALE_LEAD</option><option>男主 MALE_LEAD</option><option>反派 ANTAGONIST</option></select>
+            </div>
+            <div class="field">
+              <label>绑定音色 voice_id</label>
+              <select><option>v-female-sweet-02 甜美女声</option><option>v-female-cold-01 冷感女声</option></select>
+              <div class="hint">绑定后全剧配音自动沿用，不必逐集挑音色</div>
+            </div>
+            <div class="field">
+              <label>一致性种子 consistency_seed</label>
+              <input value="定妆时自动固化" disabled />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>一致性指纹</h2></div>
+            <div class="text-sub" style="font-size:12px; line-height:1.8">
+              定妆后，这三样东西被打包成该角色的指纹，随每一个镜头下发给模型，单镜内不可改写：
+            </div>
+            <div style="font-size:12px; line-height:2; margin-top:8px">
+              <div class="row"><span class="st done">1</span> <code>ref_image_asset_id</code> 定妆照参考图</div>
+              <div class="row"><span class="st done">2</span> <code>appearance_prompt</code> 外观描述</div>
+              <div class="row"><span class="st done">3</span> <code>consistency_seed</code> 固定种子</div>
+            </div>
+            <div class="note note-warn" style="margin:10px 0 0">
+              要改形象只能改角色卡本身。改已锁定的卡不回溯已生成镜头，但会列出受影响镜头数并提供
+              「批量加入重生成队列」入口，由你决定是否重做。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-flush" style="margin-top:14px">
+        <div class="card-hd">
+          <h2>场景卡与道具卡</h2>
+          <span class="text-muted" style="font-size:12px">card_type = SCENE / PROP</span>
+          <span class="spacer"></span>
+          <button class="btn btn-default btn-sm">新建</button>
+        </div>
+        <div class="card-body">
+          <div class="assets">
+            <div class="asset locked">
+              <div class="phone wide" style="background:linear-gradient(150deg,#1e3a8a,#0f172a)">
+                <span class="ph-tag">SCENE</span><div class="ph-body">董事会会议室<br />长桌 落地窗</div>
+              </div>
+              <div class="as-b">
+                <div class="row"><span class="as-n">董事会会议室</span><span class="spacer"></span><span class="st done">锁定</span></div>
+                <div class="as-m">被引用 24 镜</div>
+              </div>
+            </div>
+            <div class="asset locked">
+              <div class="phone wide" style="background:linear-gradient(150deg,#7c2d12,#1c1917)">
+                <span class="ph-tag">SCENE</span><div class="ph-body">婚礼现场</div>
+              </div>
+              <div class="as-b">
+                <div class="row"><span class="as-n">婚礼现场</span><span class="spacer"></span><span class="st done">锁定</span></div>
+                <div class="as-m">被引用 18 镜</div>
+              </div>
+            </div>
+            <div class="asset locked">
+              <div class="phone wide" style="background:linear-gradient(150deg,#334155,#0f172a)">
+                <span class="ph-tag">SCENE</span><div class="ph-body">走廊</div>
+              </div>
+              <div class="as-b">
+                <div class="row"><span class="as-n">走廊</span><span class="spacer"></span><span class="st done">锁定</span></div>
+                <div class="as-m">被引用 11 镜</div>
+              </div>
+            </div>
+            <div class="asset locked">
+              <div class="phone wide" style="background:linear-gradient(150deg,#78350f,#292524)">
+                <span class="ph-tag">PROP</span><div class="ph-body">退婚书</div>
+              </div>
+              <div class="as-b">
+                <div class="row"><span class="as-n">退婚书</span><span class="spacer"></span><span class="st done">锁定</span></div>
+                <div class="as-m">关键道具 · 被引用 5 镜</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>GET /bgssai/user/characters/list?work_id</code> ·
+        <code>POST /bgssai/user/characters/create</code> · <code>/portrait-generate</code> ·
+        <code>/lock</code> · <code>/update</code> · <code>/delete</code> · <code>/bind-voice</code>；
+        <code>GET /bgssai/user/characters/affected-shots?character_id</code>；
+        场景卡同构 <code>/bgssai/user/scene-cards/*</code>。
+        角色字段：<code>character_id</code> · <code>character_name</code> · <code>character_role</code> ·
+        <code>card_status</code>（<code>CANDIDATE</code> / <code>DRAFT</code> / <code>GENERATING</code> /
+        <code>LOCKED</code>）· <code>appearance_prompt</code> · <code>consistency_seed</code> ·
+        <code>ref_image_asset_id</code> · <code>default_outfit_code</code> · <code>outfit_list</code> ·
+        <code>voice_id</code> / <code>voice_speed</code> · <code>used_shot_count</code>。
+        未 <code>LOCKED</code> 的卡被引用时该镜 <code>blocked_flag=1</code>；删除被引用卡返回 <code>4006</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

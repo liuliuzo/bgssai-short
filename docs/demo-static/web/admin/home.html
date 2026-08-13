@@ -3,40 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 短剧制作平台原型 — 首页</title>
+  <title>AI 短剧制作平台原型 — 管理端首页</title>
   <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
 </head>
 <body>
-  <div class="container">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
-      <h1 class="title" style="margin:0">首页</h1>
-      <span class="badge">ADMIN</span>
-    </div>
-    <p class="subtitle">
-      导航：<a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>平台管理端</span></div>
+
+    <div class="side-sec">内容</div>
+    <a class="side-link active" href="home.html">首页</a>
+    <a class="side-link" href="content-review.html">内容审核<span class="ln hot">37</span></a>
+
+    <div class="side-sec">平台配置</div>
+    <a class="side-link" href="ai-models.html">AI 能力与模型</a>
+    <a class="side-link" href="quality-templates.html">结构模板与阈值</a>
+
+    <div class="side-sec">运营</div>
+    <a class="side-link" href="usage-cost.html">用量与成本</a>
+    <a class="side-link" href="creators.html">创作者<span class="ln hot">3</span></a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+
+    <div class="side-foot">
+      <div class="who">系统管理员</div>
+      <div class="bal">PLATFORM_ADMIN · u-admin-0001</div>
       <a href="login.html">退出登录</a>
-    </p>
+    </div>
+  </aside>
 
-    <div class="card">
-      <h2 class="title" style="font-size:15px">当前登录身份</h2>
-      <!-- 字段取自登录响应 result（snake_case） -->
-      <div class="kv">
-        <div class="k">user_name</div><div>admin</div>
-        <div class="k">real_name</div><div>系统管理员</div>
-        <div class="k">role_code</div><div>PLATFORM_ADMIN</div>
-        <div class="k">role_name</div><div>管理员</div>
-        <div class="k">user_id</div><div>u-admin-0001</div>
+  <main class="app-main">
+    <header class="app-top">
+      <span class="top-title">首页</span>
+      <span class="badge badge-identity">PLATFORM_ADMIN</span>
+      <span class="spacer"></span>
+      <a class="btn btn-primary" href="content-review.html">处理待审（37）</a>
+    </header>
+
+    <div class="app-page">
+
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat">
+          <div class="stat-label">待审核剧集</div>
+          <div class="stat-value text-warn">37</div>
+          <div class="stat-sub">最久等待 4 小时 12 分</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">今日平台成本</div>
+          <div class="stat-value">3 108<span style="font-size:14px; color:var(--muted)">.40 元</span></div>
+          <div class="stat-sub">环比昨日 -24%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">平均作品质量分</div>
+          <div class="stat-value text-ok">81.4</div>
+          <div class="stat-sub">一次过线率 58%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">创作者</div>
+          <div class="stat-value">128</div>
+          <div class="stat-sub">3 人余额不足 · 4 人已停用</div>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <p class="subtitle" style="margin:0">
-        这是 AI 短剧制作平台管理端示例首页。登录、鉴权、统一响应封装、分页列表等基础链路已就绪，按产品需求在此基础上
-        新增页面与接口即可。
-      </p>
-    </div>
+      <div class="split">
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>今日待办</h2></div>
 
-    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
-  </div>
+            <div class="issue crit">
+              <div class="i-h"><span class="badge badge-danger">审核</span><span>37 集待审，最久已等待 4 小时 12 分</span></div>
+              <div class="i-d">队列按提交时间正序。含 WARN 预检命中 9 集，需人工判断。</div>
+              <div class="i-f"><a href="content-review.html">进入审核队列</a></div>
+            </div>
+
+            <div class="issue">
+              <div class="i-h"><span class="badge badge-warn">配额</span><span>小林（u-0021）余额仅剩 86.40 元</span></div>
+              <div class="i-d">余额不足会导致其新任务被拒（4007），在途任务不受影响。</div>
+              <div class="i-f"><a href="creators.html">去调整配额</a></div>
+            </div>
+
+            <div class="issue min" style="margin-bottom:0">
+              <div class="i-h"><span class="badge">能力</span><span>COMPOSE 成功率 89.3%，低于平台均值</span></div>
+              <div class="i-d">失败多为素材缺失或时长越界，建议排查合成服务。</div>
+              <div class="i-f"><a href="ai-models.html">去查看模型配置</a></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>近 7 日平台成本</h2></div>
+            <div style="font-size:12px; line-height:2.1">
+              <div class="row"><span style="width:48px" class="text-muted">08-13</span>
+                <div class="progress" style="flex:1"><div class="bar" style="width:72%"></div></div>
+                <span style="width:62px; text-align:right">3 108.40</span></div>
+              <div class="row"><span style="width:48px" class="text-muted">08-12</span>
+                <div class="progress" style="flex:1"><div class="bar" style="width:95%"></div></div>
+                <span style="width:62px; text-align:right">4 106.20</span></div>
+              <div class="row"><span style="width:48px" class="text-muted">08-11</span>
+                <div class="progress" style="flex:1"><div class="bar" style="width:64%"></div></div>
+                <span style="width:62px; text-align:right">2 764.80</span></div>
+              <div class="row"><span style="width:48px" class="text-muted">08-10</span>
+                <div class="progress" style="flex:1"><div class="bar" style="width:48%"></div></div>
+                <span style="width:62px; text-align:right">2 072.60</span></div>
+              <div class="row"><span style="width:48px" class="text-muted">08-09</span>
+                <div class="progress" style="flex:1"><div class="bar" style="width:41%"></div></div>
+                <span style="width:62px; text-align:right">1 786.40</span></div>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <a class="btn btn-default btn-sm" href="usage-cost.html">用量与成本详情</a>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>当前登录身份</h2></div>
+            <div class="kv" style="grid-template-columns:84px 1fr">
+              <div class="k">user_name</div><div>admin</div>
+              <div class="k">real_name</div><div>系统管理员</div>
+              <div class="k">role_code</div><div>PLATFORM_ADMIN</div>
+              <div class="k">role_name</div><div>管理员</div>
+              <div class="k">user_id</div><div>u-admin-0001</div>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:10px">
+              零信任：角色取自 JWT，不取自请求参数；非 <code>PLATFORM_ADMIN</code> 登录本端返回
+              <code>4003</code>。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>管理端职责边界</h2></div>
+            <div class="kv" style="grid-template-columns:84px 1fr">
+              <div class="k">内容审核</div><div>以剧集为单位给结论；驳回必填原因与风险类别，可定位到镜头</div>
+              <div class="k">AI 能力</div><div>供应商 / 模型 / 单价 / 开关 / 质量档，改配置即生效</div>
+              <div class="k">结构模板</div><div>爆款节拍模板与四道门阈值，决定平台内容质量下限</div>
+              <div class="k">运营</div><div>用量成本、创作者账号与配额（调整必填备注并留痕）</div>
+              <div class="k">不做</div><div>不修改创作者的剧本 / 镜头 / 素材；不做线上支付</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>全部入口</h2></div>
+            <div style="font-size:13px; line-height:2">
+              <div><a href="content-review.html">内容审核队列</a></div>
+              <div><a href="review-detail.html">审核详情与处置</a></div>
+              <div><a href="ai-models.html">AI 能力与模型配置</a></div>
+              <div><a href="quality-templates.html">结构模板与质量阈值</a></div>
+              <div><a href="usage-cost.html">平台用量与成本</a></div>
+              <div><a href="creators.html">创作者账号与配额</a></div>
+              <div><a href="login-logs.html">登录日志</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        本页消费登录响应缓存的身份字段与各模块概览接口。全部管理端接口需
+        <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>。跳转真值见
+        <a href="PAGE-FLOW.html">PAGE-FLOW.html</a>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
 </body>
 </html>

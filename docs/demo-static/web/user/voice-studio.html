@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 配音与字幕</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 12 集 · 34 镜有台词</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="character-bible.html">角色与场景卡</a>
+    <a class="side-link" href="storyboard.html">分镜工作台</a>
+    <a class="side-link" href="previz.html">文字预演</a>
+    <a class="side-link active" href="voice-studio.html">配音与字幕<span class="ln hot">2</span></a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告</a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">配音与字幕 · 第 12 集</span>
+      <span class="spacer"></span>
+      <button class="btn btn-default btn-sm">整集连续试听</button>
+      <button class="btn btn-primary">批量配音（34 镜 · 4.08 元）</button>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot done"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot done"></span>分镜</a>
+      <a href="previz.html"><span class="dot done"></span>文字预演</a>
+      <a href="task-center.html"><span class="dot done"></span>画面生成</a>
+      <a href="voice-studio.html" class="active"><span class="dot fail"></span>配音字幕</a>
+      <a href="compose-export.html"><span class="dot"></span>合成导出</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="card" style="border-color:#fecaca; background:#fef2f2; margin-bottom:14px">
+        <div class="row">
+          <span class="badge badge-danger">2 镜音画未对齐</span>
+          <div style="font-size:13px">
+            本集「合成」入口当前禁用。处理完这 2 镜，<code>dubbing_status</code> 变
+            <code>READY</code>，合成自动放开。
+          </div>
+          <span class="spacer"></span>
+          <a class="btn btn-danger btn-sm" href="#misaligned">去处理</a>
+        </div>
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat">
+          <div class="stat-label">配音进度</div>
+          <div class="stat-value">34 <span style="font-size:14px; color:var(--muted)">/ 34</span></div>
+          <div class="stat-sub">有台词镜头全部已出音频</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">已对齐</div>
+          <div class="stat-value text-ok">32</div>
+          <div class="stat-sub">偏差在正负 0.5 秒内</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">未对齐</div>
+          <div class="stat-value text-danger">2</div>
+          <div class="stat-sub">阻塞合成，需先处理</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">字幕条目</div>
+          <div class="stat-value">51</div>
+          <div class="stat-sub">单条最长 15 字，超长自动断句</div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="card card-flush" id="misaligned">
+            <div class="card-hd">
+              <h2>逐镜配音</h2>
+              <span class="chip active">未对齐 2</span>
+              <span class="chip">全部 34</span>
+              <span class="chip">已对齐 32</span>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">音色取自角色卡绑定，全剧自动沿用</span>
+            </div>
+
+            <div class="card-body">
+
+              <div class="card" style="border-color:#fecaca; margin-bottom:12px">
+                <div class="row" style="margin-bottom:8px">
+                  <span class="font-bold">镜 18</span>
+                  <span class="st fail">未对齐 +2.4 秒</span>
+                  <span class="spacer"></span>
+                  <span class="text-muted" style="font-size:12px">沈知微 · v-female-cold-01</span>
+                </div>
+                <div style="font-size:13px; margin-bottom:10px">
+                  从你在婚礼上把退婚书推到我面前那天起，我就在计划。
+                </div>
+
+                <div class="tl" style="margin-bottom:10px">
+                  <div class="tl-row">
+                    <div class="tl-n">镜头 4.0s</div>
+                    <div class="tl-b"><div class="clip" style="width:200px">画面 4.0 秒</div></div>
+                  </div>
+                  <div class="tl-row">
+                    <div class="tl-n">配音 6.4s</div>
+                    <div class="tl-b">
+                      <div class="clip a" style="width:200px">配音 4.0 秒</div>
+                      <div class="clip" style="width:120px; background:#fee2e2; border-color:#fca5a5; color:#b91c1c">超出 2.4 秒</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="toolbar">
+                  <button class="btn btn-default btn-sm">提高语速至 1.25 倍（免费，只重配音）</button>
+                  <button class="btn btn-default btn-sm">延长镜头到 6.5 秒（1.60 元，需重生成画面）</button>
+                  <button class="btn btn-default btn-sm">改台词</button>
+                </div>
+                <div class="text-muted" style="font-size:11px; margin-top:7px">
+                  语速上限 1.25 倍；本条按 1.25 倍可压到 5.1 秒，仍差 1.1 秒，建议改台词或延长镜头。
+                </div>
+              </div>
+
+              <div class="card" style="border-color:#fecaca; margin-bottom:12px">
+                <div class="row" style="margin-bottom:8px">
+                  <span class="font-bold">镜 27</span>
+                  <span class="st fail">未对齐 +1.8 秒</span>
+                  <span class="spacer"></span>
+                  <span class="text-muted" style="font-size:12px">沈知微 · v-female-cold-01</span>
+                </div>
+                <div style="font-size:13px; margin-bottom:10px">（沉默两秒后）你知道我为什么回来吗？</div>
+                <div class="toolbar">
+                  <button class="btn btn-primary btn-sm">提高语速（免费）</button>
+                  <button class="btn btn-default btn-sm">延长镜头（1.60 元）</button>
+                </div>
+              </div>
+
+              <hr class="divider" />
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:60px">镜</th><th>台词</th><th style="width:120px">角色 / 音色</th>
+                      <th style="width:130px">时长对比</th><th style="width:90px">状态</th><th style="width:70px">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>镜 1</td>
+                      <td>这份收购案，谁批准的？</td>
+                      <td>陆时衍<div class="text-muted" style="font-size:11px">v-male-low-03</div></td>
+                      <td>2.4s / 2.6s <div class="text-muted" style="font-size:11px">gap -0.2</div></td>
+                      <td><span class="st done">已对齐</span></td>
+                      <td><a href="#">重配</a></td>
+                    </tr>
+                    <tr>
+                      <td>镜 2</td>
+                      <td>我。持股 51%，需要向你报备吗？</td>
+                      <td>沈知微<div class="text-muted" style="font-size:11px">v-female-cold-01</div></td>
+                      <td>3.2s / 4.0s <div class="text-muted" style="font-size:11px">尾部补静音</div></td>
+                      <td><span class="st done">已对齐</span></td>
+                      <td><a href="#">重配</a></td>
+                    </tr>
+                    <tr>
+                      <td>镜 3</td>
+                      <td>全场死寂。三年来所有人都以为她只是个挂名股东。</td>
+                      <td>旁白<div class="text-muted" style="font-size:11px">v-male-narrator-02</div></td>
+                      <td>4.2s / 4.0s <div class="text-muted" style="font-size:11px">gap +0.2</div></td>
+                      <td><span class="st done">已对齐</span></td>
+                      <td><a href="#">重配</a></td>
+                    </tr>
+                    <tr>
+                      <td>镜 5</td>
+                      <td class="text-muted">（空镜，无台词）</td>
+                      <td class="text-muted">-</td>
+                      <td class="text-muted">-</td>
+                      <td><span class="st todo">不配音</span></td>
+                      <td class="text-muted">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>字幕轨</h2>
+              <span class="text-muted" style="font-size:12px">按对齐后的时间轴自动生成</span>
+              <span class="spacer"></span>
+              <button class="btn btn-default btn-sm">重新生成</button>
+              <button class="btn btn-default btn-sm">导出 SRT</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th style="width:44px">序</th><th style="width:200px">时间轴</th><th>字幕</th><th style="width:56px">操作</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>1</td><td class="mono">00:00:00,300 → 00:00:02,700</td><td>这份收购案，谁批准的？</td><td><a href="#">改</a></td></tr>
+                  <tr><td>2</td><td class="mono">00:00:03,100 → 00:00:05,000</td><td>我。持股 51%</td><td><a href="#">改</a></td></tr>
+                  <tr><td>3</td><td class="mono">00:00:05,000 → 00:00:06,300</td><td>需要向你报备吗？</td><td><a href="#">改</a></td></tr>
+                  <tr><td>4</td><td class="mono">00:00:06,800 → 00:00:11,000</td><td>全场死寂。三年来所有人</td><td><a href="#">改</a></td></tr>
+                  <tr><td>5</td><td class="mono">00:00:11,000 → 00:00:13,400</td><td>都以为她只是个挂名股东</td><td><a href="#">改</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-body" style="padding-top:10px">
+              <div class="text-muted" style="font-size:11px">
+                第 4、5 条由一句长旁白自动断句而来（单条上限 15 字）。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>角色音色绑定</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">作品级</span>
+            </div>
+            <div style="font-size:12px; line-height:2.2">
+              <div class="row">
+                <span style="width:56px">沈知微</span>
+                <span class="text-muted" style="flex:1">冷感女声 1.00x</span>
+                <button class="btn btn-default btn-sm">试听</button>
+              </div>
+              <div class="row">
+                <span style="width:56px">陆时衍</span>
+                <span class="text-muted" style="flex:1">低沉男声 0.95x</span>
+                <button class="btn btn-default btn-sm">试听</button>
+              </div>
+              <div class="row">
+                <span style="width:56px">老董事</span>
+                <span class="text-muted" style="flex:1">老年男声 0.90x</span>
+                <button class="btn btn-default btn-sm">试听</button>
+              </div>
+              <div class="row">
+                <span style="width:56px">旁白</span>
+                <span class="text-muted" style="flex:1">旁白男声 1.05x</span>
+                <button class="btn btn-default btn-sm">试听</button>
+              </div>
+            </div>
+            <div class="note" style="margin:10px 0 0">
+              绑定在角色卡上，全剧沿用，不必逐集挑音色。
+              <a href="character-bible.html">去角色卡改绑</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>三种对齐解法</h2></div>
+            <div style="font-size:12px; line-height:1.75">
+              <div class="row" style="margin-bottom:8px">
+                <span class="st done" style="width:76px">提高语速</span>
+                <span class="text-sub" style="flex:1">上限 1.25 倍，只重配音，<strong>免费</strong></span>
+              </div>
+              <div class="row" style="margin-bottom:8px">
+                <span class="st fail" style="width:76px">延长镜头</span>
+                <span class="text-sub" style="flex:1">需重生成该镜视频，<strong>1.60 元</strong>，先给预估</span>
+              </div>
+              <div class="row">
+                <span class="st done" style="width:76px">补静音</span>
+                <span class="text-sub" style="flex:1">音频短于镜头时默认执行，无需干预</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>字幕样式</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">作品级 · 合成时烧录</span>
+            </div>
+            <div class="phone" style="max-width:130px; margin:0 auto 12px">
+              <div class="ph-body">画面预览</div>
+              <div class="ph-sub">我。持股 51%</div>
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label>字号</label>
+                <select><option>48</option><option>42</option><option>56</option></select>
+              </div>
+              <div class="field">
+                <label>位置</label>
+                <select><option>底部居中</option><option>底部偏上</option></select>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label>字色</label><input value="#FFFFFF" />
+              </div>
+              <div class="field">
+                <label>描边</label><input value="#000000" />
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm">保存样式</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>POST /bgssai/user/dubbings/submit</code> · <code>/regenerate</code> ·
+        <code>/align</code> · <code>/apply-voice-to-character</code>；
+        <code>GET /bgssai/user/dubbings/list?episode_id</code> · <code>GET /bgssai/user/voices/list</code>；
+        字幕 <code>GET /bgssai/user/subtitles/detail?episode_id</code> · <code>POST /regenerate</code> ·
+        <code>/update</code> · <code>/style-save</code>。
+        对齐字段：<code>audio_duration_sec</code> · <code>shot_duration_sec</code> ·
+        <code>align_gap_sec</code> · <code>align_status</code>（<code>PENDING</code> /
+        <code>ALIGNED</code> / <code>MISALIGNED</code>）· <code>suggest_action</code> ·
+        <code>align_action</code>（<code>ADJUST_SPEED</code> / <code>EXTEND_SHOT</code> /
+        <code>PAD_SILENCE</code>）。存在 <code>MISALIGNED</code> 时该集合成入口禁用。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

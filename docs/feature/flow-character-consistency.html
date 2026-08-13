@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>角色一致性指纹与引用链 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .lock { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.5; }
+  svg .ai { fill:#f5f3ff; stroke:#7c3aed; stroke-width:1.2; }
+  svg .stop { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .okline { stroke:var(--ok); color:var(--ok); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+</style>
+</head>
+<body>
+
+<h1>角色一致性指纹的产生与引用链</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>角色卡 / 场景卡 与 镜头生成的引用关系</dd>
+  <dt>关联</dt><dd>character-bible.md · storyboard-workbench.md · shot-generation.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、定妆一次，全剧锁定</h2>
+<svg viewBox="0 0 1040 330" width="1040" height="330">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="36" width="170" height="54" rx="6"/>
+  <text class="lbl" x="105" y="58" text-anchor="middle">剧本抽取角色名</text>
+  <text class="small" x="105" y="76" text-anchor="middle">card_status=CANDIDATE</text>
+
+  <rect class="box" x="230" y="36" width="170" height="54" rx="6"/>
+  <text class="lbl" x="315" y="58" text-anchor="middle">填写外观描述</text>
+  <text class="small" x="315" y="76" text-anchor="middle">appearance_prompt</text>
+
+  <rect class="ai" x="440" y="36" width="170" height="54" rx="6"/>
+  <text class="lbl" x="525" y="58" text-anchor="middle">生成 4 张候选</text>
+  <text class="small" x="525" y="76" text-anchor="middle">IMAGE 任务</text>
+
+  <rect class="lock" x="650" y="36" width="360" height="54" rx="6"/>
+  <text class="lbl" x="830" y="58" text-anchor="middle">选定定妆照 → card_status=LOCKED</text>
+  <text class="small" x="830" y="76" text-anchor="middle">ref_image_asset_id 固化，成为该角色的唯一形象来源</text>
+
+  <path class="arr accent" d="M 190 63 L 230 63"/>
+  <path class="arr accent" d="M 400 63 L 440 63"/>
+  <path class="arr accent" d="M 610 63 L 650 63"/>
+
+  <rect class="lock" x="330" y="130" width="380" height="76" rx="6"/>
+  <text class="lbl" x="520" y="152" text-anchor="middle">一致性指纹（三件套，单镜内不可改写）</text>
+  <text class="small" x="520" y="172" text-anchor="middle">ref_image_asset_id 定妆照参考图  +  appearance_prompt 外观描述</text>
+  <text class="small" x="520" y="190" text-anchor="middle">+  consistency_seed 固定随机种子</text>
+  <path class="arr okline" d="M 830 90 L 830 118 L 710 118 L 710 130"/>
+
+  <rect class="box" x="20"  y="250" width="200" height="54" rx="6"/>
+  <text class="lbl" x="120" y="272" text-anchor="middle">第 1 集 镜 3</text>
+  <text class="small" x="120" y="290" text-anchor="middle">outfit_code=WEDDING</text>
+
+  <rect class="box" x="250" y="250" width="200" height="54" rx="6"/>
+  <text class="lbl" x="350" y="272" text-anchor="middle">第 1 集 镜 17</text>
+  <text class="small" x="350" y="290" text-anchor="middle">outfit_code=MODERN_SUIT</text>
+
+  <rect class="box" x="480" y="250" width="200" height="54" rx="6"/>
+  <text class="lbl" x="580" y="272" text-anchor="middle">第 12 集 镜 5</text>
+  <text class="small" x="580" y="290" text-anchor="middle">outfit_code=MODERN_SUIT</text>
+
+  <rect class="box" x="710" y="250" width="200" height="54" rx="6"/>
+  <text class="lbl" x="810" y="272" text-anchor="middle">第 28 集 镜 22</text>
+  <text class="small" x="810" y="290" text-anchor="middle">outfit_code=MODERN_SUIT</text>
+
+  <path class="arr okline" d="M 430 206 L 120 250"/>
+  <path class="arr okline" d="M 480 206 L 350 250"/>
+  <path class="arr okline" d="M 560 206 L 580 250"/>
+  <path class="arr okline" d="M 620 206 L 810 250"/>
+  <text class="small" x="880" y="226" text-anchor="middle">同一指纹下发给所有镜头，跨镜头 / 跨集一致</text>
+</svg>
+
+<h2>二、镜头提示词的合成来源（用户只改结构化字段，不直接写提示词）</h2>
+<svg viewBox="0 0 1040 240" width="1040" height="240">
+  <rect class="box" x="20"  y="30" width="150" height="46" rx="6"/>
+  <text class="small" x="95" y="50" text-anchor="middle">WORK_STYLE</text>
+  <text class="small" x="95" y="66" text-anchor="middle">作品画风</text>
+
+  <rect class="box" x="190" y="30" width="150" height="46" rx="6"/>
+  <text class="small" x="265" y="50" text-anchor="middle">SCENE_CARD</text>
+  <text class="small" x="265" y="66" text-anchor="middle">场景卡描述</text>
+
+  <rect class="lock" x="360" y="30" width="180" height="46" rx="6"/>
+  <text class="small" x="450" y="50" text-anchor="middle">CHARACTER_CARD</text>
+  <text class="small" x="450" y="66" text-anchor="middle">角色指纹 + 造型</text>
+
+  <rect class="box" x="560" y="30" width="180" height="46" rx="6"/>
+  <text class="small" x="650" y="50" text-anchor="middle">SHOT_PARAM</text>
+  <text class="small" x="650" y="66" text-anchor="middle">景别/运镜/光线/情绪</text>
+
+  <rect class="box" x="760" y="30" width="130" height="46" rx="6"/>
+  <text class="small" x="825" y="50" text-anchor="middle">SHOT_DESC</text>
+  <text class="small" x="825" y="66" text-anchor="middle">画面描述</text>
+
+  <rect class="box" x="910" y="30" width="110" height="46" rx="6"/>
+  <text class="small" x="965" y="50" text-anchor="middle">EXTRA</text>
+  <text class="small" x="965" y="66" text-anchor="middle">用户补充</text>
+
+  <rect class="ai" x="300" y="130" width="440" height="50" rx="6"/>
+  <text class="lbl" x="520" y="152" text-anchor="middle">image_prompt（只读派生字段）</text>
+  <text class="small" x="520" y="170" text-anchor="middle">按固定模板拼装，页面按 prompt_source_list 分段标注来源</text>
+
+  <path class="arr accent" d="M 95 76 L 380 130"/>
+  <path class="arr accent" d="M 265 76 L 440 130"/>
+  <path class="arr accent" d="M 450 76 L 490 130"/>
+  <path class="arr accent" d="M 650 76 L 560 130"/>
+  <path class="arr accent" d="M 825 76 L 630 130"/>
+  <path class="arr accent" d="M 965 76 L 700 130"/>
+
+  <rect class="stop" x="20" y="130" width="230" height="50" rx="6"/>
+  <text class="small" x="135" y="152" text-anchor="middle">禁止直接编辑提示词正文</text>
+  <text class="small" x="135" y="170" text-anchor="middle">否则一致性指纹会被绕过</text>
+
+  <text class="small" x="520" y="212" text-anchor="middle">引用未 LOCKED 的角色卡 / 场景卡时，该镜 blocked_flag=1，生成入口禁用并给出「去定妆」直达链接</text>
+</svg>
+
+<p class="note">
+  改卡的传播规则：修改已 LOCKED 角色卡的定妆照或描述，不回溯已生成镜头（避免无声重扣费），
+  但界面必须给出受影响镜头数与「批量加入重生成队列」的入口，由创作者决定是否重做。
+</p>
+
+</body>
+</html>

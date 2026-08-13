@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>批量生成任务与预算闸门 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .gate { fill:#fffbeb; stroke:var(--warn); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .lane { fill:none; stroke:var(--line); stroke-width:1; stroke-dasharray:4 4; }
+</style>
+</head>
+<body>
+
+<h1>批量生成：预估、闸门、执行与计费</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>ai-tasks/estimate · submit · retry 全链路</dd>
+  <dt>关联</dt><dd>shot-generation.md · ai-capability-usage.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、提交前的三道闸门（钱花出去之前）</h2>
+<svg viewBox="0 0 1040 340" width="1040" height="340">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="40" width="170" height="50" rx="6"/>
+  <text class="lbl" x="105" y="62" text-anchor="middle">勾选 42 个镜头</text>
+  <text class="small" x="105" y="78" text-anchor="middle">分镜工作台批量提交</text>
+
+  <rect class="gate" x="230" y="40" width="180" height="50" rx="6"/>
+  <text class="lbl" x="320" y="62" text-anchor="middle">闸门一 合规预检</text>
+  <text class="small" x="320" y="78" text-anchor="middle">BLOCK 项不放行</text>
+
+  <rect class="gate" x="450" y="40" width="180" height="50" rx="6"/>
+  <text class="lbl" x="540" y="62" text-anchor="middle">闸门二 引用完整性</text>
+  <text class="small" x="540" y="78" text-anchor="middle">未定妆角色卡不放行</text>
+
+  <rect class="gate" x="670" y="40" width="200" height="50" rx="6"/>
+  <text class="lbl" x="770" y="62" text-anchor="middle">闸门三 费用与预算</text>
+  <text class="small" x="770" y="78" text-anchor="middle">estimate 预估 + 余额比对</text>
+
+  <path class="arr accent" d="M 190 65 L 230 65"/>
+  <path class="arr accent" d="M 410 65 L 450 65"/>
+  <path class="arr accent" d="M 630 65 L 670 65"/>
+
+  <rect class="fail" x="230" y="130" width="400" height="46" rx="6"/>
+  <text class="small" x="430" y="152" text-anchor="middle">拒绝提交并定位到具体镜头：4006 合规拦截 / 引用未定妆卡</text>
+  <text class="small" x="430" y="168" text-anchor="middle">页面标红该镜并给出直达修复入口</text>
+  <path class="arr errline" d="M 320 90 L 320 130"/>
+  <path class="arr errline" d="M 540 90 L 540 130"/>
+
+  <rect class="fail" x="670" y="130" width="200" height="46" rx="6"/>
+  <text class="small" x="770" y="152" text-anchor="middle">4007 余额不足：拒绝</text>
+  <text class="small" x="770" y="168" text-anchor="middle">4008 超预算：需二次确认</text>
+  <path class="arr errline" d="M 770 90 L 770 130"/>
+
+  <rect class="box" x="670" y="210" width="200" height="50" rx="6"/>
+  <text class="lbl" x="770" y="232" text-anchor="middle">生成 batch_id</text>
+  <text class="small" x="770" y="248" text-anchor="middle">42 条任务入队 QUEUED</text>
+  <path class="arr accent" d="M 890 65 L 960 65 L 960 235 L 870 235"/>
+  <text class="small" x="960" y="150" text-anchor="middle">全部通过</text>
+
+  <rect class="run" x="380" y="210" width="240" height="50" rx="6"/>
+  <text class="lbl" x="500" y="232" text-anchor="middle">调度执行（在途上限 20）</text>
+  <text class="small" x="500" y="248" text-anchor="middle">超出部分继续排队，不丢弃</text>
+  <path class="arr accent" d="M 670 235 L 620 235"/>
+
+  <rect class="done" x="20" y="210" width="150" height="50" rx="6"/>
+  <text class="lbl" x="95" y="232" text-anchor="middle">SUCCEEDED</text>
+  <text class="small" x="95" y="248" text-anchor="middle">写素材 + 计费</text>
+
+  <rect class="fail" x="200" y="290" width="160" height="44" rx="6"/>
+  <text class="small" x="280" y="312" text-anchor="middle">FAILED（不计费）</text>
+  <text class="small" x="280" y="328" text-anchor="middle">自动重试至多 2 次</text>
+
+  <path class="arr accent" d="M 380 235 L 170 235"/>
+  <path class="arr errline" d="M 440 260 L 320 290"/>
+  <path class="arr warnline" d="M 360 300 L 460 300 L 460 260"/>
+
+  <rect class="gate" x="20" y="290" width="160" height="44" rx="6"/>
+  <text class="small" x="100" y="312" text-anchor="middle">累计触及预算 100%</text>
+  <text class="small" x="100" y="328" text-anchor="middle">剩余排队任务自动取消</text>
+  <path class="arr warnline" d="M 95 260 L 95 290"/>
+</svg>
+
+<h2>二、断点续跑：进程与浏览器无关</h2>
+<svg viewBox="0 0 1040 200" width="1040" height="200">
+  <path class="lane" d="M 20 60 L 1020 60"/>
+  <path class="lane" d="M 20 130 L 1020 130"/>
+  <text class="small" x="24" y="52">服务端</text>
+  <text class="small" x="24" y="122">浏览器</text>
+
+  <rect class="run" x="120" y="36" width="160" height="46" rx="6"/>
+  <text class="small" x="200" y="58" text-anchor="middle">任务队列持久化</text>
+  <text class="small" x="200" y="74" text-anchor="middle">drama_ai_task 落库</text>
+
+  <rect class="run" x="380" y="36" width="160" height="46" rx="6"/>
+  <text class="small" x="460" y="58" text-anchor="middle">调度器持续执行</text>
+  <text class="small" x="460" y="74" text-anchor="middle">与前端连接无关</text>
+
+  <rect class="done" x="640" y="36" width="160" height="46" rx="6"/>
+  <text class="small" x="720" y="58" text-anchor="middle">结果回写素材表</text>
+  <text class="small" x="720" y="74" text-anchor="middle">进度写 progress_percent</text>
+
+  <rect class="box" x="120" y="106" width="160" height="46" rx="6"/>
+  <text class="small" x="200" y="128" text-anchor="middle">提交后拿到 batch_id</text>
+  <text class="small" x="200" y="144" text-anchor="middle">可直接关闭页面</text>
+
+  <rect class="fail" x="380" y="106" width="160" height="46" rx="6"/>
+  <text class="small" x="460" y="128" text-anchor="middle">关闭浏览器 / 断网</text>
+  <text class="small" x="460" y="144" text-anchor="middle">任务不受影响</text>
+
+  <rect class="box" x="640" y="106" width="220" height="46" rx="6"/>
+  <text class="small" x="750" y="128" text-anchor="middle">重新进入任务中心按 batch_id</text>
+  <text class="small" x="750" y="144" text-anchor="middle">恢复视图，进度延续、不重复执行</text>
+
+  <path class="arr accent" d="M 280 59 L 380 59"/>
+  <path class="arr accent" d="M 540 59 L 640 59"/>
+  <path class="arr accent" d="M 200 106 L 200 82"/>
+  <path class="arr accent" d="M 800 82 L 800 106"/>
+</svg>
+
+<p class="note">
+  设计取舍：预算耗尽时选择「自动取消剩余排队任务」而不是「继续跑到余额为零」，
+  因为对创作者而言，最坏的体验不是任务停了，而是钱在自己不知情时被烧光。
+  取消是可恢复的（补预算后手工重提），烧掉的钱不可恢复。
+</p>
+
+</body>
+</html>

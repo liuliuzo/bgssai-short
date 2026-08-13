@@ -14,6 +14,30 @@
   小节说明；严禁建 `admin/` · `user/` 子目录或双份副本。
 - 新建功能文档可复制 `_TEMPLATE-feature.md`。
 
+## 本产品业务功能（AI 短剧制作全链路）
+
+制作主线按流程顺序排列，质量流水线横跨全流程。全部功能的枚举值统一登记在
+[`drama-work-management.md`](./drama-work-management.md) 第八节（单一登记处），其它文档只引用不复制。
+
+| 功能 | 解决的痛点 | 需求文档 | 配图 | 原型 |
+| --- | --- | --- | --- | --- |
+| 作品与剧集管理 | 产物散落、进度靠记，没有承载整部剧的容器 | [`drama-work-management.md`](./drama-work-management.md) | [`flow-production-pipeline.html`](./flow-production-pipeline.html) | 用户端 `works` / `work-create` / `work-detail` |
+| 剧本工作台与节奏体检 | AI 写成小说腔，没钩子没反转，节奏对不上时长 | [`script-studio.md`](./script-studio.md) | [`flow-script-generation.html`](./flow-script-generation.html) | 用户端 `script-studio` |
+| **剧情图谱与走位示意** | 节奏塌在哪、关系揭早了没、两人有没有站反——用文字读半天，看图一眼就知道 | [`story-map.md`](./story-map.md) | [`flow-story-map.html`](./flow-story-map.html) | 用户端 `story-map`（走位内嵌 `previz` / `storyboard`） |
+| 角色卡与场景卡 | 同一角色每镜换脸、场景每镜换装修，只能反复抽卡 | [`character-bible.md`](./character-bible.md) | [`flow-character-consistency.html`](./flow-character-consistency.html) | 用户端 `character-bible` |
+| 分镜工作台 | 不懂镜头语言，一集 40 多镜要手写提示词，耗掉大半天 | [`storyboard-workbench.md`](./storyboard-workbench.md) | [`state-shot-lifecycle.html`](./state-shot-lifecycle.html) | 用户端 `storyboard` |
+| **文字预演与提示词优化** | 视频生成一次要等几分钟，不满意再改提示词，时间与钱全耗在等待上 | [`previz-text-storyboard.md`](./previz-text-storyboard.md) | [`flow-previz-prompt.html`](./flow-previz-prompt.html) | 用户端 `previz`（+ `storyboard` 内嵌） |
+| 画面生成与任务中心 | 批量任务失控、失败无从续跑、花了多少钱不知道 | [`shot-generation.md`](./shot-generation.md) | [`flow-generation-task.html`](./flow-generation-task.html) · [`state-shot-lifecycle.html`](./state-shot-lifecycle.html) | 用户端 `task-center` |
+| 配音与字幕 | 音色跨集不一致、音画对不齐、字幕逐句手打 | [`voice-subtitle.md`](./voice-subtitle.md) | [`flow-post-production.html`](./flow-post-production.html) | 用户端 `voice-studio` |
+| 成片合成与导出 | 要学剪辑软件，每集重复体力活，导出规格易出错 | [`film-compose-export.md`](./film-compose-export.md) | [`flow-post-production.html`](./flow-post-production.html) | 用户端 `compose-export` |
+| **优秀短剧质量流水线（主线）** | 做得出但做得平庸，不知道差在哪、该改哪一句 | [`quality-pipeline.md`](./quality-pipeline.md) | [`flow-quality-pipeline.html`](./flow-quality-pipeline.html) | 用户端 `quality-report` · 管理端 `quality-templates` |
+| 合规预检与内容审核 | 花完生成费才发现过不了审 | [`content-compliance.md`](./content-compliance.md) | [`state-review-compliance.html`](./state-review-compliance.html) | 管理端 `content-review` / `review-detail`（用户端内嵌预检） |
+| AI 能力配置与用量成本 | 换模型要改代码、单价无处统一维护、用量无法核账 | [`ai-capability-usage.md`](./ai-capability-usage.md) | [`flow-usage-billing.html`](./flow-usage-billing.html) | 管理端 `ai-models` / `usage-cost` / `creators` · 用户端 `usage-billing` |
+
+> **当前进度**：以上功能已完成「需求 → 原型」两步（Standards §0 功能研发必经顺序），
+> 详细设计（`docs/architecture` / `docs/api` 契约正文）与代码 / 数据库尚未启动。
+> 本轮已同步更新 `docs/api/page-api-mapping.md`（§9 要求：新增原型页须刷映射表）。
+
 ## 仓库内置的基础功能（自骨架继承）
 
 | 功能 | 说明 | 契约 | 原型 |

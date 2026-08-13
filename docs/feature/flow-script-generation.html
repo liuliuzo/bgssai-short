@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>剧本生成与节奏体检 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing: border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .ai { fill:#f5f3ff; stroke:#7c3aed; stroke-width:1.2; }
+  svg .chk { fill:#ecfdf5; stroke:var(--ok); stroke-width:1.2; }
+  svg .stop { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+</style>
+</head>
+<body>
+
+<h1>剧本生成与节奏体检链路</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>剧本工作台（大纲 → 单集剧本 → 体检 → 定稿）</dd>
+  <dt>关联</dt><dd>script-studio.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、从一句话梗概到可拍剧本</h2>
+<svg viewBox="0 0 1040 300" width="1040" height="300">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="40" width="150" height="56" rx="6"/>
+  <text class="lbl" x="95" y="62" text-anchor="middle">一句话梗概</text>
+  <text class="small" x="95" y="80" text-anchor="middle">one_line_pitch + genre</text>
+
+  <rect class="ai" x="210" y="40" width="160" height="56" rx="6"/>
+  <text class="lbl" x="290" y="62" text-anchor="middle">大纲生成 TEXT 任务</text>
+  <text class="small" x="290" y="80" text-anchor="middle">节奏规则注入提示词</text>
+
+  <rect class="box" x="410" y="40" width="160" height="56" rx="6"/>
+  <text class="lbl" x="490" y="62" text-anchor="middle">分集大纲</text>
+  <text class="small" x="490" y="80" text-anchor="middle">标题 / 梗概 / 结尾钩子</text>
+
+  <rect class="ai" x="610" y="40" width="160" height="56" rx="6"/>
+  <text class="lbl" x="690" y="62" text-anchor="middle">单集剧本生成</text>
+  <text class="small" x="690" y="80" text-anchor="middle">场次 + 台词 + 情绪</text>
+
+  <rect class="chk" x="810" y="40" width="200" height="56" rx="6"/>
+  <text class="lbl" x="910" y="62" text-anchor="middle">节奏体检 rhythm_check</text>
+  <text class="small" x="910" y="80" text-anchor="middle">四维度评分 + issue_list</text>
+
+  <path class="arr accent" d="M 170 68 L 210 68"/>
+  <path class="arr accent" d="M 370 68 L 410 68"/>
+  <path class="arr accent" d="M 570 68 L 610 68"/>
+  <path class="arr accent" d="M 770 68 L 810 68"/>
+
+  <rect class="box" x="810" y="150" width="200" height="50" rx="6"/>
+  <text class="lbl" x="910" y="172" text-anchor="middle">total_score &gt;= 60</text>
+  <text class="small" x="910" y="188" text-anchor="middle">可定稿 script_status=READY</text>
+
+  <rect class="stop" x="560" y="150" width="200" height="50" rx="6"/>
+  <text class="lbl" x="660" y="172" text-anchor="middle">total_score &lt; 60</text>
+  <text class="small" x="660" y="188" text-anchor="middle">定稿受阻，须强制确认</text>
+
+  <rect class="ai" x="300" y="150" width="200" height="50" rx="6"/>
+  <text class="lbl" x="400" y="172" text-anchor="middle">定点重写 rewrite</text>
+  <text class="small" x="400" y="188" text-anchor="middle">只替换选中场次 / 台词</text>
+
+  <path class="arr accent" d="M 910 96 L 910 150"/>
+  <path class="arr errline" d="M 860 96 L 760 150"/>
+  <path class="arr errline" d="M 560 175 L 500 175"/>
+  <path class="arr accent" d="M 400 150 L 400 110 L 690 110 L 690 96"/>
+  <text class="small" x="545" y="104" text-anchor="middle">重写后自动重跑体检，版本号 +1</text>
+
+  <rect class="box" x="810" y="240" width="200" height="44" rx="6"/>
+  <text class="lbl" x="910" y="267" text-anchor="middle">进入分镜拆解</text>
+  <path class="arr accent" d="M 910 200 L 910 240"/>
+
+  <text class="small" x="240" y="250">强制确认路径：勾选后记录 force_ready_flag=1，</text>
+  <text class="small" x="240" y="266">供后续复盘「哪些集是压着分上的」。</text>
+</svg>
+
+<h2>二、节奏体检四维度与判定</h2>
+<svg viewBox="0 0 1040 190" width="1040" height="190">
+  <rect class="chk" x="20"  y="30" width="230" height="70" rx="6"/>
+  <text class="lbl" x="135" y="52" text-anchor="middle">hook_score 开场钩子</text>
+  <text class="small" x="135" y="70" text-anchor="middle">前 3 秒是否有冲突 / 悬念 / 反常</text>
+  <text class="small" x="135" y="86" text-anchor="middle">短剧最贵的三秒</text>
+
+  <rect class="chk" x="270" y="30" width="230" height="70" rx="6"/>
+  <text class="lbl" x="385" y="52" text-anchor="middle">beat_score 打点密度</text>
+  <text class="small" x="385" y="70" text-anchor="middle">每 15 秒至少一个信息点</text>
+  <text class="small" x="385" y="86" text-anchor="middle">或情绪转折</text>
+
+  <rect class="chk" x="520" y="30" width="230" height="70" rx="6"/>
+  <text class="lbl" x="635" y="52" text-anchor="middle">dialogue_score 口语度</text>
+  <text class="small" x="635" y="70" text-anchor="middle">句长 / 书面词占比 / 旁白比例</text>
+  <text class="small" x="635" y="86" text-anchor="middle">避免小说腔</text>
+
+  <rect class="chk" x="770" y="30" width="240" height="70" rx="6"/>
+  <text class="lbl" x="890" y="52" text-anchor="middle">ending_score 结尾悬念</text>
+  <text class="small" x="890" y="70" text-anchor="middle">末 5 秒是否留未解决问题</text>
+  <text class="small" x="890" y="86" text-anchor="middle">决定追下一集的比例</text>
+
+  <rect class="box" x="20" y="126" width="990" height="44" rx="6"/>
+  <text class="small" x="515" y="144" text-anchor="middle">附加校验：全集 estimated_sec 合计须落在 episode_duration_sec 正负 15% 内，超出时标出可删场次</text>
+  <text class="small" x="515" y="160" text-anchor="middle">每条 issue 携带 scene_no / line_no 定位与改写建议，点击即跳到编辑区对应位置</text>
+</svg>
+
+<p class="note">
+  设计要点：体检不是为了给分，而是为了让创作者**只改该改的那一段**。因此每个维度必须产出可定位、
+  可执行的 issue，而不是一句「节奏偏慢」。低分不硬性阻断（允许强制定稿并留痕），把判断权留给创作者。
+</p>
+
+</body>
+</html>

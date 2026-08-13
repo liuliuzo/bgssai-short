@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>合规预检拦截点与审核泳道 — bgssai short-drama feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .gate { fill:#fffbeb; stroke:var(--warn); stroke-width:1.5; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .lane { fill:none; stroke:var(--line); stroke-width:1; stroke-dasharray:4 4; }
+</style>
+</head>
+<body>
+
+<h1>合规预检拦截点与审核处置泳道</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>用户端预检 / 提交审核 与 管理端处置</dd>
+  <dt>关联</dt><dd>content-compliance.md</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、三个拦截点全部在花钱之前</h2>
+<svg viewBox="0 0 1040 240" width="1040" height="240">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="gate" x="20" y="40" width="280" height="60" rx="6"/>
+  <text class="lbl" x="160" y="62" text-anchor="middle">拦截点一 剧本定稿时</text>
+  <text class="small" x="160" y="80" text-anchor="middle">check_scope=SCRIPT，扫全集台词</text>
+  <text class="small" x="160" y="94" text-anchor="middle">此时尚未产生任何生成费用</text>
+
+  <rect class="gate" x="360" y="40" width="280" height="60" rx="6"/>
+  <text class="lbl" x="500" y="62" text-anchor="middle">拦截点二 镜头提交生成前</text>
+  <text class="small" x="500" y="80" text-anchor="middle">check_scope=SHOT，扫 image_prompt 与台词</text>
+  <text class="small" x="500" y="94" text-anchor="middle">BLOCK 项直接拒绝提交（4006）</text>
+
+  <rect class="gate" x="700" y="40" width="300" height="60" rx="6"/>
+  <text class="lbl" x="850" y="62" text-anchor="middle">拦截点三 提交审核前</text>
+  <text class="small" x="850" y="80" text-anchor="middle">check_scope=EPISODE，整集汇总</text>
+  <text class="small" x="850" y="94" text-anchor="middle">把风险清单一并交给审核人</text>
+
+  <path class="arr accent" d="M 300 70 L 360 70"/>
+  <path class="arr accent" d="M 640 70 L 700 70"/>
+
+  <rect class="done" x="20" y="150" width="300" height="60" rx="6"/>
+  <text class="lbl" x="170" y="172" text-anchor="middle">PASS 通过</text>
+  <text class="small" x="170" y="190" text-anchor="middle">正常继续，无提示</text>
+
+  <rect class="gate" x="360" y="150" width="300" height="60" rx="6"/>
+  <text class="lbl" x="510" y="172" text-anchor="middle">WARN 提示</text>
+  <text class="small" x="510" y="190" text-anchor="middle">不阻塞，但提交前弹窗列出全部 WARN 项并需确认</text>
+
+  <rect class="fail" x="700" y="150" width="300" height="60" rx="6"/>
+  <text class="lbl" x="850" y="172" text-anchor="middle">BLOCK 拦截</text>
+  <text class="small" x="850" y="190" text-anchor="middle">blocked_flag=1，定位到 scene_no / line_no / shot_no</text>
+  <text class="small" x="850" y="204" text-anchor="middle">改文本后重新预检自动解除</text>
+</svg>
+
+<h2>二、审核泳道：创作者与平台管理员</h2>
+<svg viewBox="0 0 1040 320" width="1040" height="320">
+  <path class="lane" d="M 20 100 L 1020 100"/>
+  <path class="lane" d="M 20 220 L 1020 220"/>
+  <text class="small" x="24" y="46">创作者 USER</text>
+  <text class="small" x="24" y="166">平台管理员 PLATFORM_ADMIN</text>
+
+  <rect class="box" x="120" y="52" width="160" height="44" rx="6"/>
+  <text class="small" x="200" y="72" text-anchor="middle">成片 READY 且未过期</text>
+  <text class="small" x="200" y="88" text-anchor="middle">NOT_SUBMITTED</text>
+
+  <rect class="box" x="330" y="52" width="150" height="44" rx="6"/>
+  <text class="small" x="405" y="72" text-anchor="middle">提交审核</text>
+  <text class="small" x="405" y="88" text-anchor="middle">PENDING，素材转只读</text>
+
+  <rect class="box" x="330" y="130" width="150" height="44" rx="6"/>
+  <text class="small" x="405" y="150" text-anchor="middle">待审队列</text>
+  <text class="small" x="405" y="166" text-anchor="middle">按提交时间正序</text>
+
+  <rect class="box" x="540" y="130" width="180" height="44" rx="6"/>
+  <text class="small" x="630" y="150" text-anchor="middle">审核详情：成片 / 台词</text>
+  <text class="small" x="630" y="166" text-anchor="middle">/ 预检命中 / 历史处置</text>
+
+  <rect class="done" x="790" y="106" width="160" height="44" rx="6"/>
+  <text class="small" x="870" y="126" text-anchor="middle">APPROVE 通过</text>
+  <text class="small" x="870" y="142" text-anchor="middle">APPROVED</text>
+
+  <rect class="fail" x="790" y="166" width="160" height="44" rx="6"/>
+  <text class="small" x="870" y="186" text-anchor="middle">REJECT 驳回</text>
+  <text class="small" x="870" y="202" text-anchor="middle">必填原因 + 风险类别</text>
+
+  <rect class="fail" x="540" y="250" width="230" height="50" rx="6"/>
+  <text class="small" x="655" y="270" text-anchor="middle">创作者收到驳回原因与定位镜头</text>
+  <text class="small" x="655" y="286" text-anchor="middle">修改 → 重新合成 → 重提（留痕 submit_seq）</text>
+
+  <rect class="done" x="120" y="250" width="230" height="50" rx="6"/>
+  <text class="small" x="235" y="270" text-anchor="middle">全部剧集 APPROVED</text>
+  <text class="small" x="235" y="286" text-anchor="middle">作品 work_status 推进为 COMPLETED</text>
+
+  <path class="arr accent" d="M 280 74 L 330 74"/>
+  <path class="arr accent" d="M 405 96 L 405 130"/>
+  <path class="arr accent" d="M 480 152 L 540 152"/>
+  <path class="arr accent" d="M 720 145 L 790 128"/>
+  <path class="arr errline" d="M 720 160 L 790 182"/>
+  <path class="arr errline" d="M 870 210 L 870 275 L 770 275"/>
+  <path class="arr warnline" d="M 540 275 L 405 275 L 405 174"/>
+  <path class="arr accent" d="M 790 128 L 760 60 L 360 40 L 235 250"/>
+  <text class="small" x="470" y="34" text-anchor="middle">全集通过后回写作品状态</text>
+
+  <rect class="box" x="20" y="250" width="80" height="50" rx="6"/>
+  <text class="small" x="60" y="278" text-anchor="middle">撤回</text>
+  <path class="arr warnline" d="M 120 262 L 100 262"/>
+  <text class="small" x="60" y="316" text-anchor="middle">恢复可编辑</text>
+</svg>
+
+<p class="note">
+  边界：管理端对创作内容只读——只能给结论，不能替创作者改剧本、镜头或素材。
+  所有审核动作写入 drama_review_record（只增不删，含审核人与时间），成片过期时已有结论回落 NOT_SUBMITTED，
+  避免「审的是旧版、发的是新版」。
+</p>
+
+</body>
+</html>

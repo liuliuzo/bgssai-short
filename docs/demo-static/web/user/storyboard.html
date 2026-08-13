@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 分镜工作台</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 14 集 对峙 · 44 镜</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
+    <a class="side-link active" href="storyboard.html">分镜工作台<span class="ln hot">2</span></a>
+    <a class="side-link" href="previz.html">文字预演</a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">分镜工作台 · 第 14 集</span>
+      <select style="width:120px"><option>第 14 集</option><option>第 13 集</option><option>第 15 集</option></select>
+      <span class="spacer"></span>
+      <button class="btn btn-default btn-sm">重新拆镜</button>
+      <a class="btn btn-default btn-sm" href="previz.html">先看文字预演</a>
+      <button class="btn btn-primary">批量生成首帧（12 镜 · 9.60 元）</button>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot doing"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html" class="active"><span class="dot fail"></span>分镜</a>
+      <a href="previz.html"><span class="dot doing"></span>文字预演</a>
+      <a href="task-center.html"><span class="dot"></span>画面生成</a>
+      <a href="voice-studio.html"><span class="dot"></span>配音字幕</a>
+      <a href="compose-export.html"><span class="dot"></span>合成导出</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="card" style="border-color:#fecaca; background:#fef2f2; margin-bottom:14px">
+        <div class="row">
+          <span class="badge badge-danger">G2 分镜门 68 / 75</span>
+          <div style="font-size:13px">
+            镜 8-10 连续三镜同景别；镜 23 是情绪高点却给了远景。
+            <span class="text-sub">在出画面前修完，省 42 次抽卡。</span>
+          </div>
+          <span class="spacer"></span>
+          <a class="btn btn-danger btn-sm" href="quality-report.html">返工清单</a>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="card card-flush">
+            <div class="card-hd">
+              <h2>镜头表</h2>
+              <div class="seg-ctl">
+                <button class="on">画布</button>
+                <button>列表</button>
+              </div>
+              <span class="spacer"></span>
+              <span class="chip active">全部 44</span>
+              <span class="chip">待生成 31</span>
+              <span class="chip">已出首帧 8</span>
+              <span class="chip">已出视频 4</span>
+              <span class="chip">失败 1</span>
+              <span class="chip">被拦截 1</span>
+            </div>
+
+            <div class="card-body">
+              <div class="shots">
+
+                <div class="shot sel">
+                  <div class="phone sel">
+                    <span class="ph-tag">镜 1</span><span class="ph-tag r">已定稿</span>
+                    <div class="ph-body">沈知微推门而入<br />会议室众人回头</div>
+                    <span class="ph-dur">4s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line">这份收购案，谁批准的？</div>
+                    <div class="sh-meta"><span class="st done">LOCKED</span><span>中景 · 推</span></div>
+                  </div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone">
+                    <span class="ph-tag">镜 2</span><span class="ph-tag r">视频已出</span>
+                    <div class="ph-body">陆时衍起身</div>
+                    <span class="ph-dur">3s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line">我。持股 51%，需要向你报备吗？</div>
+                    <div class="sh-meta"><span class="st doing">VIDEO_READY</span><span>近景</span></div>
+                  </div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone" style="background:linear-gradient(150deg,#1e3a8a,#0f172a)">
+                    <span class="ph-tag">镜 3</span><span class="ph-tag r">62%</span>
+                    <div class="ph-body">全场哗然<br />生成中</div>
+                    <span class="ph-dur">3s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line text-muted">（无台词，群像反应）</div>
+                    <div class="sh-meta"><span class="st doing">生成中</span><span>全景 · 摇</span></div>
+                  </div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone">
+                    <span class="ph-tag">镜 4</span><span class="ph-tag r">首帧已出</span>
+                    <div class="ph-body">特写：签字的手</div>
+                    <span class="ph-dur">2s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line text-muted">（无台词）</div>
+                    <div class="sh-meta"><span class="st todo">IMAGE_READY</span><span>特写</span></div>
+                  </div>
+                </div>
+
+                <div class="shot bad">
+                  <div class="phone bad">
+                    <span class="ph-tag">镜 5</span><span class="ph-tag r">被拦截</span>
+                    <div class="ph-body">引用未定妆角色<br />苏曼</div>
+                    <span class="ph-dur">3s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line">苏曼：知微姐，他们都在等你。</div>
+                    <div class="sh-meta"><span class="st fail">blocked</span><a href="character-bible.html">去定妆</a></div>
+                  </div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone warnf">
+                    <span class="ph-tag">镜 6</span><span class="ph-tag r">失败</span>
+                    <div class="ph-body">模型超时<br />已自动重试 2 次</div>
+                    <span class="ph-dur">4s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line">陆时衍：你早就计划好了。</div>
+                    <div class="sh-meta"><span class="st fail">FAILED</span><span class="text-muted">不计费</span></div>
+                  </div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone empty">
+                    <span class="ph-tag">镜 7</span>
+                    <div class="ph-body">仅文字稿<br />走廊跟拍</div>
+                    <span class="ph-dur">4s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line text-muted">（脚步声）</div>
+                    <div class="sh-meta"><span class="st todo">PENDING</span><span>中景 · 跟</span></div>
+                  </div>
+                </div>
+
+                <div class="shot warn">
+                  <div class="phone empty">
+                    <span class="ph-tag">镜 8</span><span class="ph-tag r">G2</span>
+                    <div class="ph-body">会议室对峙</div>
+                    <span class="ph-dur">4s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line">从你把退婚书推给我那天起。</div>
+                    <div class="sh-meta"><span class="st warn">连续同景别</span></div>
+                  </div>
+                </div>
+
+                <div class="shot warn">
+                  <div class="phone empty">
+                    <span class="ph-tag">镜 9</span><span class="ph-tag r">G2</span>
+                    <div class="ph-body">反打</div>
+                    <span class="ph-dur">4s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line">这三年我一直在准备。</div>
+                    <div class="sh-meta"><span class="st warn">连续同景别</span></div>
+                  </div>
+                </div>
+
+                <div class="shot warn">
+                  <div class="phone empty">
+                    <span class="ph-tag">镜 10</span><span class="ph-tag r">G2</span>
+                    <div class="ph-body">沉默对视</div>
+                    <span class="ph-dur">3s</span>
+                  </div>
+                  <div class="sh-b">
+                    <div class="sh-line text-muted">（无台词）</div>
+                    <div class="sh-meta"><span class="st warn">建议改特写</span></div>
+                  </div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone empty"><span class="ph-tag">镜 11</span><div class="ph-body">文件特写</div><span class="ph-dur">2s</span></div>
+                  <div class="sh-b"><div class="sh-line text-muted">（无台词）</div><div class="sh-meta"><span class="st todo">PENDING</span></div></div>
+                </div>
+
+                <div class="shot">
+                  <div class="phone empty"><span class="ph-tag">镜 12</span><div class="ph-body">推门离场</div><span class="ph-dur">3s</span></div>
+                  <div class="sh-b"><div class="sh-line">我们法庭上见。</div><div class="sh-meta"><span class="st todo">PENDING</span></div></div>
+                </div>
+
+              </div>
+
+              <div class="pagination">
+                <button>上一页</button>
+                <button class="active">1</button><button>2</button><button>3</button>
+                <button>下一页</button>
+                <span class="text-muted" style="font-size:12px; margin-left:8px">total_size=44</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <h2>镜 1 详情</h2>
+              <span class="spacer"></span>
+              <span class="st done">LOCKED</span>
+            </div>
+
+            <div class="phone" style="max-width:150px; margin:0 auto 12px">
+              <span class="ph-tag">当前选定</span>
+              <div class="ph-body">沈知微推门而入<br />会议室众人回头</div>
+              <span class="ph-dur">4s</span>
+            </div>
+
+            <div class="row" style="justify-content:center; gap:6px; margin-bottom:12px">
+              <div class="phone" style="width:44px; border-radius:5px"><div class="ph-body" style="font-size:9px">v1</div></div>
+              <div class="phone sel" style="width:44px; border-radius:5px"><div class="ph-body" style="font-size:9px">v2</div></div>
+              <div class="phone" style="width:44px; border-radius:5px"><div class="ph-body" style="font-size:9px">v3</div></div>
+              <div class="phone empty" style="width:44px; border-radius:5px"><div class="ph-body" style="font-size:9px">重抽</div></div>
+            </div>
+            <div class="text-muted" style="font-size:11px; text-align:center; margin-bottom:12px">
+              候选保留最近 5 个，切换选定不花钱
+            </div>
+
+            <div class="field">
+              <label>画面文字稿 previz_text（这里可以直接改）</label>
+              <textarea rows="3">沈知微推门而入，会议室里的人齐刷刷回头。镜头从她背后推上去，冷蓝顶光压下来。</textarea>
+              <div class="hint">改完自动回写下方结构化字段与提示词 · <a href="previz.html">去连读整集</a></div>
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label>景别</label>
+                <select><option>中景 MEDIUM</option><option>全景</option><option>近景</option><option>特写</option></select>
+              </div>
+              <div class="field">
+                <label>运镜</label>
+                <select><option>推 PUSH</option><option>固定</option><option>摇</option><option>跟</option></select>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label>时长（秒）</label>
+                <input value="4" />
+              </div>
+              <div class="field">
+                <label>光线</label>
+                <select><option>冷蓝光</option><option>暖黄光</option><option>逆光</option></select>
+              </div>
+            </div>
+            <div class="field">
+              <label>出场角色</label>
+              <div class="opts">
+                <span class="chip active">沈知微 · 职业装</span>
+                <span class="chip">陆时衍 · 西装</span>
+                <span class="chip">添加</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>场景卡</label>
+              <select><option>董事会会议室 sc-31001</option><option>走廊 sc-31003</option></select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>阶梯预演</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">当前到第三级</span>
+            </div>
+            <div style="font-size:12px; line-height:1.9">
+              <div class="row"><span class="st done">1 文字稿</span><span class="spacer"></span><span class="text-muted">0.02 元 · 秒级</span></div>
+              <div class="row"><span class="st done">2 草图</span><span class="spacer"></span><span class="text-muted">0.10 元 · 5 秒</span></div>
+              <div class="row"><span class="st done">3 高清首帧</span><span class="spacer"></span><span class="text-muted">0.80 元 · 20 秒</span></div>
+              <div class="row"><span class="st doing">4 视频</span><span class="spacer"></span><span class="text-muted">1.60 元 · 2 分钟</span></div>
+            </div>
+            <div class="note note-warn" style="margin:10px 0 0">
+              未出高清首帧的镜头不能直接提交视频（<code>4016</code>）。不满意请退回文字稿或草图层改，
+              别在视频层反复抽——那是最慢最贵的一级。
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <button class="btn btn-default btn-sm">重抽首帧 0.80</button>
+              <button class="btn btn-primary btn-sm">生成视频 1.60</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>提示词（只读派生）</h2>
+              <span class="spacer"></span>
+              <span class="badge badge-ok">体检 88</span>
+            </div>
+            <div class="prompt">
+              <span class="sg sg-style">都市写实画风</span>，
+              <span class="sg sg-scene">董事会会议室</span>，
+              <span class="sg sg-char">26 岁女性 鹅蛋脸 黑色长直发 深灰西装套裙</span>，
+              <span class="sg sg-param">中景，镜头推进，冷蓝顶光</span>，
+              <span class="sg sg-desc">推门而入，众人回头</span>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              正文不可手改（会绕过角色一致性指纹）。改画面改上面的文字稿，改镜头改结构化字段。
+              <a href="previz.html">体检与 A/B 对照</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>镜头操作</h2></div>
+            <div class="toolbar">
+              <button class="btn btn-default btn-sm">拆分</button>
+              <button class="btn btn-default btn-sm">与下一镜合并</button>
+              <button class="btn btn-default btn-sm">上移</button>
+              <button class="btn btn-default btn-sm">下移</button>
+              <button class="btn btn-default btn-sm">插入空镜</button>
+              <button class="btn btn-danger btn-sm">删除</button>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              顺序变化后 <code>shot_no</code> 自动重排为连续整数，已生成素材不受影响。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>POST /bgssai/user/shots/split-from-script</code> ·
+        <code>GET /bgssai/user/shots/list?episode_id&amp;page_num&amp;page_size&amp;shot_status</code> ·
+        <code>POST /bgssai/user/shots/update</code> · <code>/split</code> · <code>/merge</code> ·
+        <code>/move</code> · <code>/insert</code> · <code>/delete</code> · <code>/lock</code> ·
+        <code>/select-candidate</code>。
+        镜头字段：<code>shot_no</code> · <code>shot_size</code> · <code>camera_move</code> ·
+        <code>shot_duration_sec</code> · <code>shot_desc</code> · <code>dialogue_text</code> ·
+        <code>emotion</code> · <code>lighting</code> · <code>character_ref_json</code> ·
+        <code>scene_card_id</code> · <code>previz_text</code> · <code>previz_level</code> ·
+        <code>image_prompt</code>（只读派生，附 <code>prompt_source_list</code>）·
+        <code>shot_status</code> · <code>blocked_flag</code> · <code>risk_level</code> ·
+        <code>first_frame_asset_id</code> · <code>video_asset_id</code> · <code>retry_count</code> ·
+        <code>cost_spent_cent</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

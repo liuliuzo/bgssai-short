@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 成片合成与导出</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 1 集 退婚 · 已合成</div>
+    </div>
+
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="work-detail.html">剧集看板</a>
+    <a class="side-link" href="script-studio.html">剧本工作台</a>
+    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="character-bible.html">角色与场景卡</a>
+    <a class="side-link" href="storyboard.html">分镜工作台</a>
+    <a class="side-link" href="previz.html">文字预演</a>
+    <a class="side-link" href="voice-studio.html">配音与字幕</a>
+    <a class="side-link active" href="compose-export.html">合成与导出</a>
+
+    <div class="side-sec">监控</div>
+    <a class="side-link" href="quality-report.html">质量报告</a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">合成与导出 · 第 1 集</span>
+      <select style="width:120px"><option>第 1 集</option><option>第 12 集</option><option>第 14 集</option></select>
+      <span class="spacer"></span>
+      <button class="btn btn-default btn-sm">合成设置</button>
+      <button class="btn btn-primary">提交平台审核</button>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot done"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot done"></span>分镜</a>
+      <a href="previz.html"><span class="dot done"></span>文字预演</a>
+      <a href="task-center.html"><span class="dot done"></span>画面生成</a>
+      <a href="voice-studio.html"><span class="dot done"></span>配音字幕</a>
+      <a href="compose-export.html" class="active"><span class="dot done"></span>合成导出</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
+          <div class="stat-label">镜头定稿</div>
+          <div class="stat-value text-ok">42 / 42</div>
+          <div class="stat-sub">全部 LOCKED</div>
+        </div>
+        <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
+          <div class="stat-label">配音对齐</div>
+          <div class="stat-value text-ok">READY</div>
+          <div class="stat-sub">无 MISALIGNED 镜头</div>
+        </div>
+        <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
+          <div class="stat-label">字幕</div>
+          <div class="stat-value text-ok">58 条</div>
+          <div class="stat-sub">已生成，时间轴与配音一致</div>
+        </div>
+        <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
+          <div class="stat-label">合规预检</div>
+          <div class="stat-value text-ok">无 BLOCK</div>
+          <div class="stat-sub">1 条 WARN 已知晓</div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="card card-flush">
+            <div class="card-hd">
+              <h2>时间轴预览</h2>
+              <span class="text-muted" style="font-size:12px">只读——顺序与时长回分镜工作台改</span>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">总时长 88 秒 / 目标 90 秒</span>
+            </div>
+
+            <div class="card-body">
+              <div class="tl">
+                <div class="tl-ruler">
+                  <span>0s</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span><span>75s</span><span>88s</span>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">画面</div>
+                  <div class="tl-b">
+                    <div class="clip" style="width:62px">镜 1 · 4s</div>
+                    <div class="clip" style="width:46px">镜 2 · 3s</div>
+                    <div class="clip" style="width:46px">镜 3 · 3s</div>
+                    <div class="clip" style="width:32px">镜 4</div>
+                    <div class="clip" style="width:62px">镜 5 · 4s</div>
+                    <div class="clip" style="width:78px">镜 6 · 5s</div>
+                    <div class="clip" style="width:46px">镜 7</div>
+                    <div class="clip" style="width:62px">镜 8</div>
+                    <div class="clip" style="width:120px">镜 9 至 42</div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">配音</div>
+                  <div class="tl-b">
+                    <div class="clip gap" style="width:8px"></div>
+                    <div class="clip a" style="width:54px">沈知微</div>
+                    <div class="clip a" style="width:44px">陆时衍</div>
+                    <div class="clip a" style="width:48px">旁白</div>
+                    <div class="clip gap" style="width:30px"></div>
+                    <div class="clip a" style="width:60px">沈知微</div>
+                    <div class="clip a" style="width:74px">陆时衍</div>
+                    <div class="clip a" style="width:44px">旁白</div>
+                    <div class="clip a" style="width:120px">沈知微</div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">字幕</div>
+                  <div class="tl-b">
+                    <div class="clip gap" style="width:8px"></div>
+                    <div class="clip s" style="width:54px">这份收购案</div>
+                    <div class="clip s" style="width:44px">我。51%</div>
+                    <div class="clip s" style="width:48px">全场死寂</div>
+                    <div class="clip gap" style="width:30px"></div>
+                    <div class="clip s" style="width:60px">你早计划好</div>
+                    <div class="clip s" style="width:74px">这三年</div>
+                    <div class="clip s" style="width:44px">沈宛如？</div>
+                    <div class="clip s" style="width:120px">（脚步顿）</div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">BGM</div>
+                  <div class="tl-b">
+                    <div class="clip m">bgm-tension-04 · 整集贯穿 · 有台词处自动闪避</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-muted" style="font-size:11px; margin-top:8px">
+                点击任一画面片段跳转到<a href="storyboard.html">分镜工作台</a>对应镜头。
+                时间轴是只读预览：同一事实两处可改必然漂移。
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>成片</h2>
+              <span class="st done">已合成 · 未过期</span>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">2026-08-12 19:40:22</span>
+            </div>
+
+            <div class="row-top">
+              <div class="phone" style="max-width:150px">
+                <span class="ph-tag">成片</span>
+                <div class="ph-body">1080x1920 · 30fps<br />88 秒 · 42 镜</div>
+                <div class="ph-sub">这份收购案，谁批准的？</div>
+                <span class="ph-dur">00:04 / 01:28</span>
+              </div>
+
+              <div style="flex:1">
+                <div class="kv" style="grid-template-columns:100px 1fr">
+                  <div class="k">film_asset_id</div><div class="mono">a-53001</div>
+                  <div class="k">规格</div><div>1080x1920 · 30fps · H.264 · 42.6 MB</div>
+                  <div class="k">时长</div><div>88 秒（目标 90 秒，偏差 2.2%）</div>
+                  <div class="k">成片门 G4</div><div><span class="text-ok font-bold">95</span> 已通过</div>
+                  <div class="k">审核</div><div><span class="st done">已通过</span> 2026-08-13 09:12</div>
+                </div>
+                <div class="toolbar" style="margin-top:12px">
+                  <button class="btn btn-default btn-sm">重新合成 2.00 元</button>
+                  <button class="btn btn-primary btn-sm">导出</button>
+                </div>
+                <div class="note note-warn" style="margin:12px 0 0">
+                  上游任一素材变更（重抽镜头 / 重配音 / 改字幕）会把成片标为<strong>已过期</strong>，
+                  <code>compose_status</code> 回落 <code>NONE</code>，审核结论同步回落
+                  <code>NOT_SUBMITTED</code>，过期成片禁止下载（<code>4012</code>）。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>导出</h2>
+              <div class="opts">
+                <span class="chip active">带字幕</span>
+                <span class="chip active">纯净版</span>
+                <span class="chip">仅 SRT</span>
+              </div>
+              <span class="spacer"></span>
+              <button class="btn btn-default btn-sm">整剧打包（12 集可用）</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>文件</th><th style="width:150px">规格</th><th style="width:80px">大小</th><th style="width:110px">生成时间</th><th style="width:60px">操作</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">退婚三年后她成了首富_E01_WITH_SUBTITLE.mp4</td>
+                    <td>1080x1920 · 30fps</td><td>42.6 MB</td>
+                    <td class="text-muted">08-12 19:41</td><td><a href="#">下载</a></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">退婚三年后她成了首富_E01_NO_SUBTITLE.mp4</td>
+                    <td>1080x1920 · 30fps</td><td>42.1 MB</td>
+                    <td class="text-muted">08-12 19:41</td><td><a href="#">下载</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-body" style="padding-top:10px">
+              <div class="text-muted" style="font-size:11px">
+                下载走 30 分钟有效的签名 URL，不暴露对象存储永久地址。
+                整剧打包只含已合成且未过期的剧集，过期集打包前会列出并要求确认。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>合成设置</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">作品级</span>
+            </div>
+            <div class="field">
+              <label>转场</label>
+              <select><option>叠化 DISSOLVE</option><option>淡入淡出 FADE</option><option>硬切 NONE</option></select>
+            </div>
+            <div class="field">
+              <label>BGM</label>
+              <select><option>bgm-tension-04 紧张对峙</option><option>bgm-sad-02 悲伤</option><option>bgm-power-01 爽感反击</option></select>
+            </div>
+            <div class="field">
+              <label>BGM 音量 / 闪避</label>
+              <div class="row">
+                <input value="30" style="width:70px" />
+                <span class="chip active">有台词处自动闪避</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>片头 / 片尾</label>
+              <div class="opts">
+                <span class="chip active">片头 3 秒</span>
+                <span class="chip active">片尾 2 秒</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>字幕</label>
+              <div class="opts"><span class="chip active">合成时烧录</span></div>
+              <div class="hint">样式在<a href="voice-studio.html">配音与字幕</a>页设置</div>
+            </div>
+            <button class="btn btn-primary btn-sm">保存并应用到全剧</button>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>其它剧集</h2></div>
+            <div style="font-size:12px; line-height:2.2">
+              <div class="row"><span class="st done" style="width:44px">E01</span> 已合成 · 已过审</div>
+              <div class="row"><span class="st done" style="width:44px">E12</span> 已合成 · 待审核</div>
+              <div class="row"><span class="st warn" style="width:44px">E11</span> 已过期（镜 7 重抽过）</div>
+              <div class="row"><span class="st doing" style="width:44px">E13</span> 画面 31/39</div>
+              <div class="row"><span class="st fail" style="width:44px">E14</span> 3 镜未定稿 · 2 镜未对齐</div>
+            </div>
+            <div class="note note-warn" style="margin:10px 0 0">
+              第 14 集前置条件不满足，合成入口禁用并列出缺口与直达修复链接——
+              不静默隐藏，你必须知道自己卡在哪。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>本集审核</h2></div>
+            <div class="kv" style="grid-template-columns:80px 1fr">
+              <div class="k">状态</div><div><span class="st done">已通过</span></div>
+              <div class="k">提交</div><div>2026-08-12 19:45</div>
+              <div class="k">审核</div><div>2026-08-13 09:12</div>
+              <div class="k">次数</div><div>第 1 次</div>
+              <div class="k">意见</div><div class="text-sub">画面与台词无违规，通过。</div>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              提交审核后该集编辑入口整体转只读，撤回后恢复可编辑。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>GET /bgssai/user/films/precheck?episode_id</code> · <code>/timeline?episode_id</code> ·
+        <code>/detail?episode_id</code> · <code>/download-url?asset_id</code>；
+        <code>POST /bgssai/user/films/compose</code> · <code>/settings-save</code> · <code>/export</code>；
+        审核 <code>POST /bgssai/user/reviews/submit</code> · <code>/withdraw</code>。
+        时间轴：<code>track_list</code>[<code>track_type</code>（<code>VIDEO</code> / <code>AUDIO</code> /
+        <code>SUBTITLE</code> / <code>BGM</code>）· <code>clip_list</code>[<code>start_ms</code> ·
+        <code>end_ms</code> · <code>asset_id</code>]]；成片：<code>compose_status</code> ·
+        <code>expired_flag</code> · <code>film_duration_sec</code>；
+        导出版本 <code>WITH_SUBTITLE</code> / <code>NO_SUBTITLE</code> / <code>SRT_ONLY</code>，
+        命名 <code>{work_title}_E{episode_no}_{version}.mp4</code>。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

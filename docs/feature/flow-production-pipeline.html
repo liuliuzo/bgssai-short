@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>短剧制作全链路管线 — bgssai short-drama feature</title>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #1a1a1a; --muted: #6b7280; --accent: #2563eb;
+    --warn: #d97706; --ok: #059669; --err: #dc2626; --line: #d1d5db;
+    --box-fill: #ffffff; --box-stroke: #374151;
+    --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 24px; line-height: 1.5; }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  h2 { font-size: 14px; margin: 28px 0 8px; }
+  .meta { font-size: 12px; color: var(--muted); margin-bottom: 24px; border-left: 3px solid var(--accent); padding-left: 12px; }
+  .meta dt { font-weight: bold; display: inline; }
+  .meta dd { display: inline; margin: 0 16px 0 4px; }
+  svg { background: var(--box-fill); border: 1px solid var(--line); border-radius: 4px; max-width: 100%; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 16px; max-width: 900px; }
+  svg text { font-family: var(--font); fill: var(--fg); }
+  svg .box { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 1.5; }
+  svg .pain { fill: #fef2f2; stroke: var(--err); stroke-width: 1.2; }
+  svg .cure { fill: #eff6ff; stroke: var(--accent); stroke-width: 1.2; }
+  svg .arr { stroke: var(--fg); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+  svg .lbl { font-size: 12px; }
+  svg .small { font-size: 10px; fill: var(--muted); }
+  svg .accent { stroke: var(--accent); color: var(--accent); }
+  svg .err { stroke: var(--err); color: var(--err); }
+</style>
+</head>
+<body>
+
+<h1>短剧制作全链路管线：痛点、对应功能与状态推进</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>作品与剧集管理 / 全部制作环节</dd>
+  <dt>关联</dt><dd>drama-work-management.md 及其余全部功能文档</dd>
+  <dt>更新</dt><dd>2026-08-13</dd>
+</dl>
+
+<h2>一、六阶段管线与各阶段解决的痛点</h2>
+<svg viewBox="0 0 1080 380" width="1080" height="380">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <text class="lbl small" x="20" y="26">阶段</text>
+  <rect class="box" x="20"  y="36" width="150" height="52" rx="6"/>
+  <text class="lbl" x="95"  y="58" text-anchor="middle">1 剧本</text>
+  <text class="small" x="95" y="76" text-anchor="middle">script-studio</text>
+
+  <rect class="box" x="196" y="36" width="150" height="52" rx="6"/>
+  <text class="lbl" x="271" y="58" text-anchor="middle">2 角色与场景卡</text>
+  <text class="small" x="271" y="76" text-anchor="middle">character-bible</text>
+
+  <rect class="box" x="372" y="36" width="150" height="52" rx="6"/>
+  <text class="lbl" x="447" y="58" text-anchor="middle">3 分镜</text>
+  <text class="small" x="447" y="76" text-anchor="middle">storyboard-workbench</text>
+
+  <rect class="box" x="548" y="36" width="150" height="52" rx="6"/>
+  <text class="lbl" x="623" y="58" text-anchor="middle">4 画面生成</text>
+  <text class="small" x="623" y="76" text-anchor="middle">shot-generation</text>
+
+  <rect class="box" x="724" y="36" width="150" height="52" rx="6"/>
+  <text class="lbl" x="799" y="58" text-anchor="middle">5 配音与字幕</text>
+  <text class="small" x="799" y="76" text-anchor="middle">voice-subtitle</text>
+
+  <rect class="box" x="900" y="36" width="160" height="52" rx="6"/>
+  <text class="lbl" x="980" y="58" text-anchor="middle">6 合成与导出</text>
+  <text class="small" x="980" y="76" text-anchor="middle">film-compose-export</text>
+
+  <path class="arr accent" d="M 170 62 L 196 62"/>
+  <path class="arr accent" d="M 346 62 L 372 62"/>
+  <path class="arr accent" d="M 522 62 L 548 62"/>
+  <path class="arr accent" d="M 698 62 L 724 62"/>
+  <path class="arr accent" d="M 874 62 L 900 62"/>
+
+  <text class="lbl small" x="20" y="130">创作者原有痛点</text>
+  <rect class="pain" x="20"  y="140" width="150" height="64" rx="6"/>
+  <text class="small" x="95"  y="162" text-anchor="middle">AI 写成小说腔</text>
+  <text class="small" x="95"  y="178" text-anchor="middle">没钩子没反转</text>
+  <text class="small" x="95"  y="194" text-anchor="middle">节奏对不上时长</text>
+
+  <rect class="pain" x="196" y="140" width="150" height="64" rx="6"/>
+  <text class="small" x="271" y="162" text-anchor="middle">人物每镜换脸</text>
+  <text class="small" x="271" y="178" text-anchor="middle">场景每镜换装修</text>
+  <text class="small" x="271" y="194" text-anchor="middle">只能反复抽卡</text>
+
+  <rect class="pain" x="372" y="140" width="150" height="64" rx="6"/>
+  <text class="small" x="447" y="162" text-anchor="middle">不懂镜头语言</text>
+  <text class="small" x="447" y="178" text-anchor="middle">40 镜手写提示词</text>
+  <text class="small" x="447" y="194" text-anchor="middle">一集耗大半天</text>
+
+  <rect class="pain" x="548" y="140" width="150" height="64" rx="6"/>
+  <text class="small" x="623" y="162" text-anchor="middle">批量任务失控</text>
+  <text class="small" x="623" y="178" text-anchor="middle">失败无从续跑</text>
+  <text class="small" x="623" y="194" text-anchor="middle">花了多少不知道</text>
+
+  <rect class="pain" x="724" y="140" width="150" height="64" rx="6"/>
+  <text class="small" x="799" y="162" text-anchor="middle">音色跨集不一致</text>
+  <text class="small" x="799" y="178" text-anchor="middle">音画对不齐</text>
+  <text class="small" x="799" y="194" text-anchor="middle">字幕逐句手打</text>
+
+  <rect class="pain" x="900" y="140" width="160" height="64" rx="6"/>
+  <text class="small" x="980" y="162" text-anchor="middle">要学剪辑软件</text>
+  <text class="small" x="980" y="178" text-anchor="middle">每集重复体力活</text>
+  <text class="small" x="980" y="194" text-anchor="middle">导出规格易出错</text>
+
+  <text class="lbl small" x="20" y="246">本产品的解法</text>
+  <rect class="cure" x="20"  y="256" width="150" height="64" rx="6"/>
+  <text class="small" x="95"  y="278" text-anchor="middle">节奏引擎</text>
+  <text class="small" x="95"  y="294" text-anchor="middle">四维体检 + 定点</text>
+  <text class="small" x="95"  y="310" text-anchor="middle">重写</text>
+
+  <rect class="cure" x="196" y="256" width="150" height="64" rx="6"/>
+  <text class="small" x="271" y="278" text-anchor="middle">一次定妆全剧锁定</text>
+  <text class="small" x="271" y="294" text-anchor="middle">定妆图 + 描述</text>
+  <text class="small" x="271" y="310" text-anchor="middle">+ seed 一致性指纹</text>
+
+  <rect class="cure" x="372" y="256" width="150" height="64" rx="6"/>
+  <text class="small" x="447" y="278" text-anchor="middle">一键拆镜</text>
+  <text class="small" x="447" y="294" text-anchor="middle">参数化镜头语言</text>
+  <text class="small" x="447" y="310" text-anchor="middle">提示词自动合成</text>
+
+  <rect class="cure" x="548" y="256" width="150" height="64" rx="6"/>
+  <text class="small" x="623" y="278" text-anchor="middle">费用预估 + 预算闸门</text>
+  <text class="small" x="623" y="294" text-anchor="middle">批次进度 / 失败重试</text>
+  <text class="small" x="623" y="310" text-anchor="middle">断点续跑 / 候选回滚</text>
+
+  <rect class="cure" x="724" y="256" width="150" height="64" rx="6"/>
+  <text class="small" x="799" y="278" text-anchor="middle">角色卡绑定音色</text>
+  <text class="small" x="799" y="294" text-anchor="middle">时长自动对齐</text>
+  <text class="small" x="799" y="310" text-anchor="middle">字幕自动生成</text>
+
+  <rect class="cure" x="900" y="256" width="160" height="64" rx="6"/>
+  <text class="small" x="980" y="278" text-anchor="middle">一键合成四轨</text>
+  <text class="small" x="980" y="294" text-anchor="middle">竖屏规格固定</text>
+  <text class="small" x="980" y="310" text-anchor="middle">多版本导出</text>
+
+  <text class="small" x="20" y="352">贯穿全链路：合规预检（content-compliance）在花钱之前拦截 BLOCK 级风险；用量计费（ai-capability-usage）在每次任务成功时记账。</text>
+</svg>
+
+<h2>二、作品状态自动推进（取全部剧集中进度最靠前的阶段）</h2>
+<svg viewBox="0 0 1080 150" width="1080" height="150">
+  <rect class="box" x="20"  y="40" width="120" height="46" rx="6"/>
+  <text class="lbl" x="80"  y="62" text-anchor="middle">DRAFT</text>
+  <text class="small" x="80" y="78" text-anchor="middle">草稿</text>
+
+  <rect class="box" x="180" y="40" width="120" height="46" rx="6"/>
+  <text class="lbl" x="240" y="62" text-anchor="middle">SCRIPTING</text>
+  <text class="small" x="240" y="78" text-anchor="middle">剧本中</text>
+
+  <rect class="box" x="340" y="40" width="120" height="46" rx="6"/>
+  <text class="lbl" x="400" y="62" text-anchor="middle">PRODUCING</text>
+  <text class="small" x="400" y="78" text-anchor="middle">制作中</text>
+
+  <rect class="box" x="500" y="40" width="120" height="46" rx="6"/>
+  <text class="lbl" x="560" y="62" text-anchor="middle">COMPOSING</text>
+  <text class="small" x="560" y="78" text-anchor="middle">合成中</text>
+
+  <rect class="box" x="660" y="40" width="120" height="46" rx="6"/>
+  <text class="lbl" x="720" y="62" text-anchor="middle">REVIEWING</text>
+  <text class="small" x="720" y="78" text-anchor="middle">审核中</text>
+
+  <rect class="box" x="820" y="40" width="120" height="46" rx="6"/>
+  <text class="lbl" x="880" y="62" text-anchor="middle">COMPLETED</text>
+  <text class="small" x="880" y="78" text-anchor="middle">已完成</text>
+
+  <rect class="box" x="960" y="40" width="100" height="46" rx="6"/>
+  <text class="lbl" x="1010" y="62" text-anchor="middle">ARCHIVED</text>
+  <text class="small" x="1010" y="78" text-anchor="middle">已归档</text>
+
+  <path class="arr accent" d="M 140 63 L 180 63"/>
+  <path class="arr accent" d="M 300 63 L 340 63"/>
+  <path class="arr accent" d="M 460 63 L 500 63"/>
+  <path class="arr accent" d="M 620 63 L 660 63"/>
+  <path class="arr accent" d="M 780 63 L 820 63"/>
+  <path class="arr" d="M 940 63 L 960 63"/>
+  <text class="small" x="1010" y="112" text-anchor="middle">手工归档 / 恢复</text>
+  <text class="small" x="440" y="118" text-anchor="middle">前六态由下游产出自动推进，不提供手工改状态入口；ARCHIVED 为唯一手工态，恢复后回到归档前状态。</text>
+</svg>
+
+<p class="note">
+  阅读顺序：第一张图从上到下三行分别是「阶段 / 创作者原有痛点 / 本产品的解法」，同一列上下对应。
+  管线是单向的，但允许回流——任一上游产出变更会让下游状态回落（剧本改动使分镜回落 DRAFT，
+  镜头重抽使成片过期并回落审核状态），回落规则见各功能文档第五节。
+</p>
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 新建作品</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/shortdrama.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-sec">工作台</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link active" href="works.html">我的作品<span class="ln">5</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln hot">6</span></a>
+
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+    <a class="side-link" href="mcp-tokens.html">MCP 接入</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb"><a href="works.html">我的作品</a><span class="sep">/</span></span>
+      <span class="top-title">新建作品</span>
+      <span class="spacer"></span>
+      <div class="wizard">
+        <div class="w-s on"><span class="w-n">1</span>基本信息</div>
+        <span class="w-a">→</span>
+        <div class="w-s"><span class="w-n">2</span>结构模板</div>
+        <span class="w-a">→</span>
+        <div class="w-s"><span class="w-n">3</span>预算与确认</div>
+      </div>
+    </header>
+
+    <div class="app-page">
+
+      <div class="split">
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>第一步 基本信息</h2></div>
+
+            <div class="field">
+              <label>剧名</label>
+              <input value="退婚三年后她成了首富" />
+            </div>
+
+            <div class="field">
+              <label>一句话梗概（选填，填了直接出全剧大纲）</label>
+              <textarea rows="3">被退婚的落魄千金三年后带着资本回归，收购前未婚夫的公司</textarea>
+              <div class="hint">这一句话是整部剧的种子。写清「谁、遇到什么、要做什么」，AI 出的大纲会准得多。</div>
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label>题材</label>
+                <select>
+                  <option>复仇逆袭 REVENGE</option><option>豪门总裁 CEO</option>
+                  <option>穿越重生 TIME_TRAVEL</option><option>甜宠 SWEET</option>
+                  <option>悬疑 SUSPENSE</option><option>玄幻 FANTASY</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>画风</label>
+                <select>
+                  <option>都市写实 MODERN_URBAN</option><option>古装 ANCIENT_CHINESE</option>
+                  <option>动漫 ANIME</option><option>电影感 CINEMATIC</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label>集数</label>
+                <input value="30" />
+                <div class="hint">创建后自动生成等量剧集占位，后续可增删</div>
+              </div>
+              <div class="field">
+                <label>单集时长</label>
+                <div class="seg-ctl">
+                  <button>60 秒</button><button class="on">90 秒</button><button>120 秒</button>
+                </div>
+                <div class="hint">时长决定节奏：剧本体检按此校验台词时长合计（正负 15%）</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>画幅</label>
+              <div class="row">
+                <div class="phone" style="width:44px; border-radius:5px">
+                  <div class="ph-body" style="font-size:9px">9:16</div>
+                </div>
+                <div class="text-sub" style="font-size:12px">
+                  竖屏 9:16（<code>VERTICAL_9_16</code>）· 1080x1920 · 30fps<br />
+                  <span class="text-muted">本轮唯一值，横屏不在范围内</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>第二步 结构模板</h2>
+              <span class="text-muted" style="font-size:12px">决定这部剧的质量下限</span>
+            </div>
+            <div class="text-sub" style="font-size:13px; line-height:1.75; margin-bottom:12px">
+              模板是经过验证的爆款节拍：开场钩子类型、单集节拍表、全剧反转位、题材踩雷点。
+              选定后作为生成的硬约束，也是剧本门评分的对照基准。
+            </div>
+
+            <div class="grid grid-2">
+              <div class="card" style="border-color:var(--brand); background:#f8faff">
+                <div class="row" style="margin-bottom:6px">
+                  <span class="font-bold">复仇逆袭 · 当众打脸型</span>
+                  <span class="spacer"></span>
+                  <span class="st done">已选</span>
+                </div>
+                <div class="text-muted" style="font-size:11px">tpl-001 · 187 部采用 · 平均 84.2 分</div>
+                <hr class="divider" />
+                <div class="text-sub" style="font-size:12px; line-height:1.9">
+                  钩子：当众羞辱 / 身份反差<br />
+                  节拍：0-3s 钩子 · 3-30s 建立 · 30-60s 升级 · 60-85s 反转 · 末 5s 悬念<br />
+                  反转集：3 / 8 / 15 / 24<br />
+                  踩雷：爽点前置过早、反派智商掉线
+                </div>
+              </div>
+              <div class="card">
+                <div class="row" style="margin-bottom:6px">
+                  <span class="font-bold">复仇逆袭 · 隐藏身份型</span>
+                </div>
+                <div class="text-muted" style="font-size:11px">tpl-002 · 96 部采用 · 平均 81.7 分</div>
+                <hr class="divider" />
+                <div class="text-sub" style="font-size:12px; line-height:1.9">
+                  钩子：误会顶点 / 死而复生<br />
+                  节拍：0-3s 钩子 · 3-25s 误会 · 25-70s 试探 · 70-85s 暴露 · 末 5s 悬念<br />
+                  反转集：5 / 12 / 20<br />
+                  踩雷：身份暴露过晚导致中段乏味
+                </div>
+              </div>
+            </div>
+
+            <div class="note note-warn" style="margin-top:12px">
+              也可选「不套用模板」由 AI 自由发挥。自由发挥的剧本门通过率明显更低，
+              且没有节拍覆盖率这一维度可定位问题。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>第三步 预算与确认</h2></div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label>作品预算（元）</label>
+                <input value="3000" />
+                <div class="hint">累计消耗触及 100% 时，剩余排队任务自动取消，不会静默烧完余额</div>
+              </div>
+              <div class="field">
+                <label>质量阈值</label>
+                <input value="75" />
+                <div class="hint">第 1 集自动用 85（首集决定完播与追更），可上调不可下调</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>生成方式</label>
+              <div class="opts">
+                <span class="chip active">两段式：先首帧图，再图生视频（推荐，省钱）</span>
+                <span class="chip">直接生成视频</span>
+              </div>
+              <div class="hint">两段式用 0.80 元的图确认构图，避免 1.60 元的视频白抽</div>
+            </div>
+
+            <div class="toolbar" style="margin-top:16px">
+              <a class="btn btn-primary btn-lg" href="work-detail.html">创建作品并生成大纲</a>
+              <a class="btn btn-default" href="works.html">取消</a>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>费用预估</h2></div>
+            <div class="text-sub" style="font-size:12px; line-height:1.8; margin-bottom:10px">
+              30 集 × 约 42 镜 ≈ <strong>1 260 个镜头</strong>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>环节</th><th>单价</th><th>合计</th></tr></thead>
+                <tbody>
+                  <tr><td>文字稿</td><td>0.02 / 镜</td><td>25.20</td></tr>
+                  <tr><td>草图预演</td><td>0.10 / 镜</td><td>126.00</td></tr>
+                  <tr><td>高清首帧</td><td>0.80 / 镜</td><td>1 008.00</td></tr>
+                  <tr><td>视频（4 秒）</td><td>1.60 / 镜</td><td>2 016.00</td></tr>
+                  <tr><td>配音</td><td>0.30 / 分钟</td><td>约 90.00</td></tr>
+                  <tr><td>合成</td><td>2.00 / 集</td><td>60.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note" style="margin-top:10px">
+              合计约 <strong>3 325 元</strong>（含少量重抽）。实际以每次提交前的
+              <code>estimate</code> 预估为准，且每一步都有预算闸门。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>创建之后</h2></div>
+            <div style="font-size:12px; line-height:2.1">
+              <div class="row"><span class="st doing" style="width:22px">1</span> 生成 30 集大纲（含结尾钩子）</div>
+              <div class="row"><span class="st todo" style="width:22px">2</span> 逐集写剧本，过剧本门</div>
+              <div class="row"><span class="st todo" style="width:22px">3</span> 角色定妆，锁定形象</div>
+              <div class="row"><span class="st todo" style="width:22px">4</span> 一键拆镜，过分镜门</div>
+              <div class="row"><span class="st todo" style="width:22px">5</span> 文字预演 + 草图墙</div>
+              <div class="row"><span class="st todo" style="width:22px">6</span> 批量出画面，过画面门</div>
+              <div class="row"><span class="st todo" style="width:22px">7</span> 配音字幕、合成，过成片门</div>
+              <div class="row"><span class="st todo" style="width:22px">8</span> 提交平台审核</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><h2>请求体</h2></div>
+            <div class="prompt mono" style="line-height:1.8">
+              {<br />
+              &nbsp;&nbsp;"work_title": "退婚三年后她成了首富",<br />
+              &nbsp;&nbsp;"one_line_pitch": "被退婚的落魄千金三年后带资本回归",<br />
+              &nbsp;&nbsp;"genre": "REVENGE",<br />
+              &nbsp;&nbsp;"episode_count": 30,<br />
+              &nbsp;&nbsp;"episode_duration_sec": 90,<br />
+              &nbsp;&nbsp;"visual_style": "MODERN_URBAN",<br />
+              &nbsp;&nbsp;"aspect_ratio": "VERTICAL_9_16",<br />
+              &nbsp;&nbsp;"template_id": "tpl-001",<br />
+              &nbsp;&nbsp;"cost_budget_cent": 300000,<br />
+              &nbsp;&nbsp;"quality_threshold_score": 75<br />
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口 <code>POST /bgssai/user/drama-works/create</code>（POST 业务参数走 JSON Body），
+        返回 <code>work_id</code>；填了 <code>one_line_pitch</code> 时同时产生一条
+        <code>task_type=TEXT</code> 的大纲生成任务。模板列表取自
+        <code>GET /bgssai/user/quality/templates?genre</code>。
+        金额字段单位为分（<code>cost_budget_cent</code>），页面展示为元。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
