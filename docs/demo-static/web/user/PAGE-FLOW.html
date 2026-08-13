@@ -64,7 +64,7 @@
             <tr>
               <td><a href="works.html">我的作品</a></td>
               <td><code>/works</code></td>
-              <td>顶部导航「我的作品」；首页统计卡</td>
+              <td>侧栏「当前工作 - 我的作品」；首页统计卡</td>
               <td>新建作品 · 作品工作台 · 首页</td>
               <td>我的作品</td>
               <td>需 <code>Jwttoken</code></td>
@@ -80,23 +80,25 @@
             <tr>
               <td><a href="work-detail.html">作品工作台</a></td>
               <td><code>/works/:work_id</code></td>
-              <td>我的作品列表任一行；新建作品成功后</td>
-              <td>作品内 7 个子页面 · 我的作品</td>
+              <td>我的作品列表任一行；新建作品成功后；侧栏「三个问题 - 剧集看板」</td>
+              <td>作品内 7 个子页面 · 我的作品 · 作品设置区块（页内 <code>#work-settings</code>：
+                预算上限（可选，默认不限）/ 质量阈值（可随时调整，调整留痕）/ 预演跳级约束开关）</td>
               <td>我的作品</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
               <td><a href="script-studio.html">总剧本</a></td>
               <td><code>/works/:work_id/script</code></td>
-              <td>简单动线侧边导航；作品工作台剧集看板</td>
-              <td>创作台（定稿后）· 质量报告 · 作品工作台</td>
+              <td>侧栏「当前工作 - 总剧本」；作品工作台剧集看板</td>
+              <td>创作台（定稿后）· 质量报告 · 作品工作台 · 历史版本抽屉（展开集内：
+                <code>/scripts/versions</code> 版本列表 + <code>/scripts/rollback</code> 回滚）</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
               <td><a href="story-map.html">剧情图谱</a></td>
               <td><code>/works/:work_id/story-map</code></td>
-              <td>作品内子导航；总剧本；作品工作台</td>
+              <td>侧栏「更多 - 剧情图谱」；总剧本；作品工作台</td>
               <td>总剧本 · 创作台（按偏离点与越轴定位）· 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -104,7 +106,7 @@
             <tr>
               <td><a href="character-bible.html">角色与场景卡</a></td>
               <td><code>/works/:work_id/characters</code></td>
-              <td>作品内子导航；创作台「去定妆」；配音页「改绑」</td>
+              <td>侧栏「更多 - 角色与场景卡」；创作台「去定妆」；配音页「改绑」</td>
               <td>创作台 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -112,7 +114,7 @@
             <tr>
               <td><a href="storyboard.html">创作台（分镜 + 文字预演合并）</a></td>
               <td><code>/works/:work_id/storyboard</code></td>
-              <td>作品内子导航；剧本定稿后；质量报告与连贯性中心的返工链接；首页待处理问题</td>
+              <td>侧栏「当前工作 - 创作台」；剧本定稿后；质量报告与连贯性中心的返工链接；首页待处理问题</td>
               <td>看样片 · 任务中心 · 角色与场景卡 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -120,7 +122,7 @@
             <tr>
               <td><a href="task-center.html">任务中心</a></td>
               <td><code>/works/:work_id/tasks</code></td>
-              <td>作品内子导航；创作台提交生成后；首页统计卡</td>
+              <td>侧栏常驻「任务中心」；创作台提交生成后；首页统计卡</td>
               <td>创作台 · 配音与字幕 · 合成与导出 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -128,7 +130,7 @@
             <tr>
               <td><a href="voice-studio.html">配音与字幕</a></td>
               <td><code>/works/:work_id/voice</code></td>
-              <td>作品内子导航；作品工作台剧集看板</td>
+              <td>侧栏「更多 - 配音与字幕」；作品工作台剧集看板</td>
               <td>合成与导出 · 角色与场景卡 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -136,7 +138,7 @@
             <tr>
               <td><a href="compose-export.html">合成与导出</a></td>
               <td><code>/works/:work_id/compose</code></td>
-              <td>作品内子导航；配音完成后；作品工作台剧集看板</td>
+              <td>侧栏「更多 - 合成与导出」；配音完成后；作品工作台剧集看板</td>
               <td>创作台（时间轴点镜头）· 配音与字幕 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -160,7 +162,7 @@
             <tr>
               <td><a href="quality-report.html">质量报告</a></td>
               <td><code>/works/:work_id/quality</code></td>
-              <td>作品内子导航；四个工作台的门禁提示条；首页「待处理问题」</td>
+              <td>侧栏「更多 - 质量报告」；四个工作台的门禁提示条；首页「待处理问题」</td>
               <td>总剧本 · 创作台 · 配音与字幕 · 合成与导出（按 <code>fix_action</code> 直达）</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -168,7 +170,7 @@
             <tr>
               <td><a href="usage-billing.html">用量与账单</a></td>
               <td><code>/usage</code></td>
-              <td>顶部导航「用量与账单」；首页余额卡</td>
+              <td>侧栏「更多 - 用量账单」；首页余额卡</td>
               <td>作品工作台 · 创作台 · 首页（流水下钻）</td>
               <td>用量与账单</td>
               <td>需 <code>Jwttoken</code></td>
@@ -176,17 +178,17 @@
             <tr>
               <td><a href="login-logs.html">登录日志</a></td>
               <td><code>/login-logs</code></td>
-              <td>顶部导航「登录日志」</td>
-              <td>首页</td>
-              <td>登录日志</td>
+              <td>侧栏「更多 - 账户」</td>
+              <td>首页 · MCP 接入</td>
+              <td>更多 - 账户</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
               <td><a href="mcp-tokens.html">MCP 接入</a></td>
               <td><code>/mcp-tokens</code></td>
-              <td>顶部导航「MCP 接入」</td>
+              <td>「账户」（登录日志）页内入口；首页「全部入口」列表</td>
               <td>首页</td>
-              <td>MCP 接入</td>
+              <td>更多 - 账户</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
           </tbody>
@@ -296,8 +298,11 @@
         <li><strong>详情必可返回</strong>：所有二级页面顶部常驻「返回作品工作台」与面包屑，可层层返回。</li>
         <li><strong>无死胡同</strong>：每个页面都可经品牌 logo 或面包屑首项回到 <code>/home</code>。</li>
         <li><strong>无孤岛</strong>：除登录页外，每个页面在路由矩阵「主要入口」列都有至少一个站内父级入口。</li>
-        <li><strong>全局导航外壳常驻</strong>：左侧导航（工作台 / 我的作品 / 任务中心 / 用量与账单 /
-          登录日志 / MCP 接入 + 当前身份与余额）与顶部面包屑在所有页面常驻；作品内 8 个子页面另有一条
+        <li><strong>全局导航外壳常驻</strong>：左侧导航统一为同一套结构——
+          「首页 / 三个问题（看样片、连贯性中心、剧集看板）/ 当前工作（我的作品、总剧本、创作台）/
+          任务中心 / 更多（折叠：角色与场景卡、配音与字幕、合成与导出、质量报告、剧情图谱、
+          用量账单、账户）+ 当前身份与余额」，首页、我的作品、作品工作台、总剧本、创作台五个主页面
+          逐字一致；顶部面包屑在所有页面常驻；作品内子页面另有一条
           作品级阶段导航（剧集看板 / 剧本 / 角色定妆 / 创作台 / 画面生成 / 配音字幕 / 合成导出 /
           质量报告），保证作品内可横向直达、无需回退。</li>
         <li><strong>权限态分支</strong>：本端仅 <code>role_code=USER</code>；入口按身份渲染，权限不足不渲染入口而非渲染后报 403。

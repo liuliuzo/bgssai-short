@@ -65,12 +65,12 @@
         <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
           <div class="stat-label">镜头定稿</div>
           <div class="stat-value text-ok">42 / 42</div>
-          <div class="stat-sub">全部 LOCKED</div>
+          <div class="stat-sub">全部已定稿</div>
         </div>
         <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
           <div class="stat-label">配音对齐</div>
-          <div class="stat-value text-ok">READY</div>
-          <div class="stat-sub">无 MISALIGNED 镜头</div>
+          <div class="stat-value text-ok">已就绪</div>
+          <div class="stat-sub">无音画未对齐镜头</div>
         </div>
         <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
           <div class="stat-label">字幕</div>
@@ -79,8 +79,8 @@
         </div>
         <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
           <div class="stat-label">合规预检</div>
-          <div class="stat-value text-ok">无 BLOCK</div>
-          <div class="stat-sub">1 条 WARN 已知晓</div>
+          <div class="stat-value text-ok">无拦截项</div>
+          <div class="stat-sub">1 条提醒已知晓</div>
         </div>
       </div>
 
@@ -174,7 +174,7 @@
 
               <div style="flex:1">
                 <div class="kv" style="grid-template-columns:100px 1fr">
-                  <div class="k">film_asset_id</div><div class="mono">a-53001</div>
+                  <div class="k">成片编号</div><div class="mono">a-53001</div>
                   <div class="k">规格</div><div>1080x1920 · 30fps · H.264 · 42.6 MB</div>
                   <div class="k">时长</div><div>88 秒（目标 90 秒，偏差 2.2%）</div>
                   <div class="k">成片门 G4</div><div><span class="text-ok font-bold">95</span> 已通过</div>
@@ -182,12 +182,14 @@
                 </div>
                 <div class="toolbar" style="margin-top:12px">
                   <button class="btn btn-default btn-sm">重新合成 2.00 元</button>
+                  <button class="btn btn-default btn-sm">仅重烧字幕 0.20 元</button>
                   <button class="btn btn-primary btn-sm">导出</button>
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">
-                  上游任一素材变更（重抽镜头 / 重配音 / 改字幕）会把成片标为<strong>已过期</strong>，
-                  <code>compose_status</code> 回落 <code>NONE</code>，审核结论同步回落
-                  <code>NOT_SUBMITTED</code>，过期成片禁止下载（<code>4012</code>）。
+                  过期分两级：<strong>重抽镜头、重配音</strong>会让成片整体过期——须重新合成，
+                  已通过的审核也要重新提交，过期成片禁止下载；<strong>只改字幕文本或样式</strong>
+                  不作废成片，点「仅重烧字幕 0.20 元」即可，不重编码画面与声音，
+                  已通过的审核结论保留并标注「仅字幕变更」。
                 </div>
               </div>
             </div>
@@ -206,24 +208,26 @@
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>文件</th><th style="width:150px">规格</th><th style="width:80px">大小</th><th style="width:110px">生成时间</th><th style="width:60px">操作</th></tr></thead>
+                <thead><tr><th>文件</th><th style="width:150px">规格</th><th style="width:80px">大小</th><th style="width:110px">生成时间</th><th style="width:140px">操作</th></tr></thead>
                 <tbody>
                   <tr>
                     <td class="mono">退婚三年后她成了首富_E01_WITH_SUBTITLE.mp4</td>
                     <td>1080x1920 · 30fps</td><td>42.6 MB</td>
-                    <td class="text-muted">08-12 19:41</td><td><a href="#">下载</a></td>
+                    <td class="text-muted">08-12 19:41</td>
+                    <td><a href="#">下载</a> · <a href="#">重新获取链接</a></td>
                   </tr>
                   <tr>
                     <td class="mono">退婚三年后她成了首富_E01_NO_SUBTITLE.mp4</td>
                     <td>1080x1920 · 30fps</td><td>42.1 MB</td>
-                    <td class="text-muted">08-12 19:41</td><td><a href="#">下载</a></td>
+                    <td class="text-muted">08-12 19:41</td>
+                    <td><a href="#">下载</a> · <a href="#">重新获取链接</a></td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div class="card-body" style="padding-top:10px">
               <div class="text-muted" style="font-size:11px">
-                下载走 30 分钟有效的签名 URL，不暴露对象存储永久地址。
+                下载链接 30 分钟后失效，失效了点「重新获取链接」就行，不用重新导出、更不用重新合成。
                 整剧打包只含已合成且未过期的剧集，过期集打包前会列出并要求确认。
               </div>
             </div>
@@ -238,7 +242,11 @@
             </div>
             <div class="field">
               <label>转场</label>
-              <select><option>叠化 DISSOLVE</option><option>淡入淡出 FADE</option><option>硬切 NONE</option></select>
+              <select>
+                <option value="DISSOLVE">叠化</option>
+                <option value="FADE">淡入淡出</option>
+                <option value="NONE">硬切</option>
+              </select>
             </div>
             <div class="field">
               <label>BGM</label>
@@ -261,7 +269,24 @@
             <div class="field">
               <label>字幕</label>
               <div class="opts"><span class="chip active">合成时烧录</span></div>
-              <div class="hint">样式在<a href="voice-studio.html">配音与字幕</a>页设置</div>
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label>字幕字号</label>
+                <select><option>48</option><option>42</option><option>56</option></select>
+              </div>
+              <div class="field">
+                <label>字幕位置</label>
+                <select><option>底部居中</option><option>底部偏上</option></select>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="field"><label>字幕字色</label><input value="#FFFFFF" /></div>
+              <div class="field"><label>字幕描边</label><input value="#000000" /></div>
+            </div>
+            <div class="hint" style="margin-bottom:10px">
+              与<a href="voice-studio.html">配音与字幕</a>页共用同一份样式，两处改的是同一个东西；
+              改样式后点「仅重烧字幕」即可生效，不必整片重新合成。
             </div>
             <button class="btn btn-primary btn-sm">保存并应用到全剧</button>
           </div>
@@ -271,7 +296,8 @@
             <div style="font-size:12px; line-height:2.2">
               <div class="row"><span class="st done" style="width:44px">E01</span> 已合成 · 已过审</div>
               <div class="row"><span class="st done" style="width:44px">E12</span> 已合成 · 待审核</div>
-              <div class="row"><span class="st warn" style="width:44px">E11</span> 已过期（镜 7 重抽过）</div>
+              <div class="row"><span class="st warn" style="width:44px">E11</span> 已过期（镜 7 重抽过，须重新合成）</div>
+              <div class="row"><span class="st warn" style="width:44px">E10</span> 字幕有更新（仅重烧字幕即可）</div>
               <div class="row"><span class="st doing" style="width:44px">E13</span> 画面 31/39</div>
               <div class="row"><span class="st fail" style="width:44px">E14</span> 3 镜未定稿 · 2 镜未对齐</div>
             </div>
@@ -288,10 +314,13 @@
               <div class="k">提交</div><div>2026-08-12 19:45</div>
               <div class="k">审核</div><div>2026-08-13 09:12</div>
               <div class="k">次数</div><div>第 1 次</div>
+              <div class="k">排队位次</div><div>提交时第 3 位</div>
+              <div class="k">预计处理</div><div>约 14 小时（实际 13.4 小时出结果）</div>
               <div class="k">意见</div><div class="text-sub">画面与台词无违规，通过。</div>
             </div>
             <div class="text-muted" style="font-size:11px; margin-top:8px">
-              提交审核后该集编辑入口整体转只读，撤回后恢复可编辑。
+              审核中「排队位次」与「预计处理」两行实时更新，排到第几位、还要等多久都看得见，
+              不用干等着猜。提交审核后该集编辑入口整体转只读，撤回后恢复可编辑。
             </div>
           </div>
         </div>
@@ -300,15 +329,24 @@
       <div class="spec">
         <div class="spec-t">字段口径</div>
         接口：<code>GET /bgssai/user/films/precheck?episode_id</code> · <code>/timeline?episode_id</code> ·
-        <code>/detail?episode_id</code> · <code>/download-url?asset_id</code>；
-        <code>POST /bgssai/user/films/compose</code> · <code>/settings-save</code> · <code>/export</code>；
-        审核 <code>POST /bgssai/user/reviews/submit</code> · <code>/withdraw</code>。
+        <code>/detail?episode_id</code> · <code>/download-url?asset_id</code>（重新获取链接同此接口）；
+        <code>POST /bgssai/user/films/compose</code> · <code>/rebake-subtitle</code>
+        （<code>compose_mode=SUBTITLE_ONLY</code>，仅重烧字幕）· <code>/settings-save</code> ·
+        <code>/export</code>；审核 <code>POST /bgssai/user/reviews/submit</code> · <code>/withdraw</code>，
+        审核队列展示 <code>queue_position</code> · <code>estimated_review_hours</code>
+        （契约见 content-compliance.md）。
+        失效分级：镜头重抽 / 配音重配置 <code>expired_flag=1</code>、<code>compose_status</code> 回落
+        <code>NONE</code>、审核回落 <code>NOT_SUBMITTED</code>，过期成片下载返回 <code>4012</code>；
+        仅字幕文本 / 样式变更置 <code>subtitle_stale_flag=1</code>，重烧后清零，审核结论保留。
+        字幕样式与配音字幕页共用 <code>subtitle_style_json</code>（<code>POST /bgssai/user/subtitles/style-save</code>）。
         时间轴：<code>track_list</code>[<code>track_type</code>（<code>VIDEO</code> / <code>AUDIO</code> /
         <code>SUBTITLE</code> / <code>BGM</code>）· <code>clip_list</code>[<code>start_ms</code> ·
         <code>end_ms</code> · <code>asset_id</code>]]；成片：<code>compose_status</code> ·
         <code>expired_flag</code> · <code>film_duration_sec</code>；
         导出版本 <code>WITH_SUBTITLE</code> / <code>NO_SUBTITLE</code> / <code>SRT_ONLY</code>，
-        命名 <code>{work_title}_E{episode_no}_{version}.mp4</code>。
+        命名 <code>{work_title}_E{episode_no}_{version}.mp4</code>；
+        转场 <code>transition_type</code>（<code>NONE</code> / <code>FADE</code> / <code>DISSOLVE</code>，
+        下拉展示中文、枚举值收在选项 value）。
       </div>
 
       <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>

@@ -47,7 +47,9 @@
      - `EYELINE` 视线与轴线（对话正反打的朝向矛盾）——判定依据为镜头走位数据
        `blocking_json`，由 `story-map.md` 产出，本功能只消费不另算。
   6. 每条命中给出定位（`shot_no`）、原因与修复建议，并可一键按建议改写该镜文字稿；
-     连贯性问题不阻塞生成，但会计入分镜门 `G2_STORYBOARD` 评分（见 `quality-pipeline.md`）。
+     连贯性问题不阻塞生成（对应镜头的生成按钮不因此禁用），创作者也可对单条命中执行
+     「忽略这条（计入分镜门评分）」——忽略后提示行收起、`resolved_flag=1`（留痕），
+     该条仍计入分镜门 `G2_STORYBOARD` 评分（见 `quality-pipeline.md`）。
 
 ### 2.3 提示词优化（文字稿 → 提示词，可诊断、可对照、可复用）
 
@@ -87,7 +89,12 @@
 
   12. **跳级约束**：未选定高清首帧（`shot_status` 至少 `IMAGE_READY`）的镜头不允许直接提交 `VIDEO`；
       作品设置可关闭该约束（提示成本风险），但默认开启。
-  13. 草图支持**整集一次性预演**（`DRAFT_IMAGE` 批量，一集 40 余镜约 4 元、1 分钟内出齐），
+  13. 支持**整集批量生成**，批量口径带「目标级别」参数 `target_level`
+      （取 `previz_level` 的 `DRAFT_IMAGE` 草图 / `IMAGE` 高清首帧 / `VIDEO` 视频），
+      提交前展示镜头数与费用预估；可选「首帧完成后自动接视频」
+      （`auto_continue_video_flag`，默认关闭）——开启后每镜首帧出图即自动提交对应视频任务
+      （首帧先行天然满足规则 12 的跳级约束，仍逐笔过预算闸门）。
+      草图级整集预演（`DRAFT_IMAGE` 批量，一集 40 余镜约 4 元、1 分钟内出齐）
       形成一面「草图墙」，创作者一眼看完整集的画面走向，再决定哪些镜需要回文字层改。
   14. 草图不进素材库正式候选（`draft_flag=1`），不参与合成，仅供预览；升级到 `IMAGE` 时按新任务计费。
 
@@ -147,7 +154,9 @@
   ```
 - `GET /bgssai/user/prompts/diff?shot_id=s-40008&left_version=3&right_version=4`（字段级差异，不计费）
 - `POST /bgssai/user/prompts/apply-to-shots`（`source_shot_id` + `target_shot_id_list` + `field_list`；批量套用镜头参数）
-- `POST /bgssai/user/previz/draft-generate`（`episode_id` 或 `shot_id_list`；低清草图批量预演，返回 `batch_id`）
+- `POST /bgssai/user/previz/draft-generate`（`episode_id` 或 `shot_id_list` + `target_level`
+  （`DRAFT_IMAGE` / `IMAGE` / `VIDEO`，默认 `DRAFT_IMAGE`）+ `auto_continue_video_flag`
+  （可选，默认 0；仅 `target_level=IMAGE` 时有意义）；批量生成，提交前返回费用预估、确认后返回 `batch_id`）
 - `POST /bgssai/user/previz/promote`（`shot_id_list`；草图升级为高清首帧，按新任务计费）
 - 鉴权：全部需 `Jwttoken`；按 JWT `user_id` 校验作品归属。
 - 错误码：`4003` 越权 / `4006` 剧本或分镜未就绪 / `4007` 余额不足 /

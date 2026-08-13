@@ -42,9 +42,21 @@
 
 - 业务规则：
   7. 用量流水按任务粒度记录，可下钻到 `work_id` / `episode_id` / `shot_id`；
-     支持按作品、按能力类型、按时间区间聚合。
-  8. 每条流水固定字段：能力类型、模型、计费单位、用量、单价快照、金额、关联对象、时间。
+     支持按作品、按能力类型、**按剧集**、按时间区间聚合（`records` 接口支持 `episode_id` 参数，
+     按剧集筛选时返回该集**累计成本**聚合）。
+  8. 每条流水固定字段：能力类型、模型、**模型档位**（`quality_level`，用于区分同能力不同单价，
+     如视频快速档 0.40 元 / 秒与高质档 1.20 元 / 秒）、计费单位、用量、单价快照、金额、关联对象、时间；
+     页面提供档位单价对照说明。
   9. 只读：创作者不能修改流水，只能查看与导出。
+  10. **余额换算与预警**：余额卡按「近期单集均价」（最近完成的 5 集平均成本，不足 5 集按已有集数）
+      换算展示「约还能做 N 集」；余额低于近一集均价的 **3 倍**时，用量页与任务提交处提前预警
+      （`low_balance_flag=1`），不等到 `4007` 才知道没钱了。
+  11. **批量任务余额保护**：批量任务预估金额超出当前余额时，预估接口按预估单集成本返回
+      「按当前余额可先做前 X 集」（`affordable_episode_count`），提交入口给出相应提示，
+      不做「要么全做要么全拒」。
+  12. **充值申请**：用户端提供在线「充值申请」入口——提交申请金额与备注后由运营处理
+      （平台仍不做线上支付，处理动作即管理端调整余额并留痕 `quota_change_log`）；
+      页面展示申请状态（`recharge_apply_status`），申请与处理全程留痕。
 
 ## 三、验收标准
 
@@ -55,6 +67,12 @@
 5. 余额不足时新任务被拒（`4007`），在途任务不受影响。
 6. 每条用量流水可点击下钻到对应作品 / 剧集 / 镜头，`FAILED` 任务不产生流水。
 7. 管理端调整创作者余额时必须填写备注，调整记录可查。
+8. 余额卡展示按近期单集均价换算的「约还能做 N 集」；余额低于近一集均价 3 倍时出现预警。
+9. 流水支持按剧集筛选（`episode_id`），筛选后展示该集累计成本；同能力不同单价的流水行
+   标注档位名称（快速 / 标准 / 高质），页面有档位单价对照说明。
+10. 用户可在线提交充值申请并看到申请状态流转；运营处理（完成或驳回）后状态同步更新，
+    完成时余额变动与 `quota_change_log` 留痕一致。
+11. 批量任务预估超出余额时，提示「可先做前 X 集」而非直接拒绝整批。
 
 ## 四、接口契约（snake_case）
 
@@ -82,18 +100,29 @@
 ### 用户端
 
 - `GET /bgssai/user/usage/summary?start_date&end_date`
-  （`balance_cent`、`monthly_limit_cent`、`month_spent_cent`、按作品与按能力聚合）
-- `GET /bgssai/user/usage/records?page_num&page_size&work_id&ability_type&start_date&end_date`
+  （`balance_cent`、`monthly_limit_cent`、`month_spent_cent`、按作品与按能力聚合；
+  另返回 `recent_episode_avg_cost_cent` 近期单集均价、`estimated_remaining_episode_count`
+  按余额换算的「约还能做 N 集」、`low_balance_flag` 余额低于近一集均价 3 倍的预警标记）
+- `GET /bgssai/user/usage/records?page_num&page_size&work_id&episode_id&ability_type&start_date&end_date`
   ```json
   { "result": { "record_list": [
       { "record_id": "ur-a1001", "ability_type": "VIDEO", "model_code": "vid-fast-v3",
+        "quality_level": "FAST", "quality_level_name": "快速",
         "price_unit": "PER_SECOND", "usage_amount": 4, "unit_price_cent": 40, "cost_cent": 160,
         "work_id": "w-10001", "work_title": "退婚三年后她成了首富",
         "episode_no": 1, "shot_no": 1, "task_id": "t-60001",
         "created_time": "2026-08-13 10:22:48" } ],
+      "episode_total_cost_cent": 10720,
       "page_num": 1, "page_size": 20, "total_size": 863 } }
   ```
-- 鉴权：需 `Jwttoken`；仅本人流水（`user_id` 取自 JWT）。
+  `episode_id` 为可选筛选参数；传入时返回 `episode_total_cost_cent`（该集累计成本），否则不返回该字段。
+- `POST /bgssai/user/recharge/apply`（`apply_amount_cent` + 可选 `remark`；提交后状态 `SUBMITTED`）
+- `GET /bgssai/user/recharge/list`（本人充值申请列表：`apply_id`、`apply_amount_cent`、
+  `apply_status`、`user_remark`、`operator_remark`、`created_time`、`handled_time`）
+- 管理端配套：`GET /bgssai/admin/recharge/list?page_num&page_size&apply_status` ·
+  `POST /bgssai/admin/recharge/handle`（`apply_id` + `handle_action`（`COMPLETE` / `REJECT`）+
+  `remark`，`remark` 必填；`COMPLETE` 时同步调整余额并写 `quota_change_log`）
+- 鉴权：需 `Jwttoken`；仅本人流水与申请（`user_id` 取自 JWT）。
 - 错误码：`4003` 无权限 / `4007` 余额不足 / `4014` 该能力当前不可用 / `4015` 月度用量触顶。
 
 ## 五、流程 / 状态机（须配图）
@@ -114,8 +143,13 @@
   `month_reset_date`、`updated_time`。
 - 新增表 `quota_change_log`：`log_id`(PK)、`user_id`、`operator_user_id`、`balance_delta_cent`、
   `balance_after_cent`、`monthly_limit_cent`、`remark`、`created_time`。
+- 新增表 `recharge_apply`：`apply_id`(PK)、`user_id`、`apply_amount_cent`、`apply_status`、
+  `user_remark`、`operator_user_id`、`operator_remark`、`handled_time`、`created_time`、`updated_time`。
 - 索引：`ai_usage_record(user_id, created_time)`、`ai_usage_record(work_id)`、
-  `ai_model_config(ability_type, enabled_flag, default_flag)`。
+  `ai_usage_record(episode_id)`、`ai_model_config(ability_type, enabled_flag, default_flag)`、
+  `recharge_apply(user_id, apply_status)`。
+- 补充枚举（登记回 `drama-work-management.md` 附录）：`recharge_apply_status` 充值申请状态——
+  `SUBMITTED` 已提交 / `PROCESSING` 处理中 / `COMPLETED` 已完成 / `REJECTED` 已驳回。
 
 ## 七、原型
 

@@ -51,7 +51,8 @@
       </span>
       <span class="top-title">任务中心</span>
       <span class="spacer"></span>
-      <span class="text-muted" style="font-size:12px">关掉浏览器不影响执行</span>
+      <span class="text-muted" style="font-size:12px">关掉浏览器不影响执行，结果会发站内通知</span>
+      <button class="btn btn-default btn-sm">通知中心（2）</button>
       <button class="btn btn-default btn-sm">重试全部失败项（3）</button>
       <button class="btn btn-danger btn-sm">取消剩余排队（4）</button>
     </header>
@@ -61,7 +62,7 @@
       <div class="card" style="margin-bottom:14px">
         <div class="row" style="margin-bottom:10px">
           <span class="badge badge-verified">批次 b-70001</span>
-          <span class="st doing">VIDEO 视频生成</span>
+          <span class="st doing">视频生成</span>
           <span class="text-muted" style="font-size:12px">第 13 集 · 提交于 10:21:03</span>
           <span class="spacer"></span>
           <span style="font-size:13px">本批已花 <strong>49.60</strong> / 预估 <strong>67.20</strong> 元</span>
@@ -80,6 +81,29 @@
           <span class="spacer"></span>
           <span class="text-muted">预计还需 6 分钟</span>
         </div>
+
+        <div class="row" style="margin-top:10px; font-size:12px">
+          <button class="btn btn-default btn-sm">暂停批次</button>
+          <label class="row" style="gap:6px"><input type="checkbox" checked />
+            完成后自动做下一步（视频完成接配音，提交前照常出费用预估）</label>
+          <span class="spacer"></span>
+          <span class="text-muted">批次完成或出现失败会发站内通知，不用守在这页刷新</span>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:#fde68a; background:#fffbeb; margin-bottom:14px">
+        <div class="row">
+          <span class="badge">批次 b-70002</span>
+          <span class="st warn">已暂停</span>
+          <div style="font-size:13px; flex:1">
+            第 14 集首帧批次：排队中的 12 个任务已暂停，原地保留、不作废，执行中的跑完当前不中断。
+            手工暂停和预算触顶都会进入这个状态；恢复后原位续跑，不重走提交流程、不重复扣费。
+            预算触顶时这里直接给「提高预算并恢复排队」，不用先去账单页改完再回来。
+          </div>
+          <span class="spacer"></span>
+          <button class="btn btn-primary btn-sm">恢复排队</button>
+          <button class="btn btn-default btn-sm">提高预算并恢复排队</button>
+        </div>
       </div>
 
       <div class="grid grid-4" style="margin-bottom:14px">
@@ -87,7 +111,7 @@
           <div class="stat-label">作品累计消耗</div>
           <div class="stat-value">1 286<span style="font-size:14px; color:var(--muted)">.50 元</span></div>
           <div class="progress" style="margin-top:6px"><div class="bar warn" style="width:43%"></div></div>
-          <div class="stat-sub">预算 3 000.00 元 · 触及 100% 自动暂停排队</div>
+          <div class="stat-sub">预算 3 000.00 元 · 触顶自动暂停排队，可一键提高预算并恢复</div>
         </div>
         <div class="stat">
           <div class="stat-label">在途任务</div>
@@ -115,9 +139,19 @@
           <span class="chip">失败 3</span>
           <span class="chip">已成功</span>
           <span class="spacer"></span>
-          <select style="width:150px">
-            <option>类型：全部</option><option>TEXT</option><option>IMAGE</option>
-            <option>VIDEO</option><option>VOICE</option><option>COMPOSE</option>
+          <select style="width:120px">
+            <option value="">剧集：全部</option><option value="e-20012">第 12 集</option>
+            <option value="e-20013">第 13 集</option><option value="e-20014">第 14 集</option>
+            <option value="e-20015">第 15 集</option>
+          </select>
+          <select style="width:120px">
+            <option value="">批次：全部</option><option value="b-70001">b-70001</option>
+            <option value="b-70002">b-70002</option><option value="b-70004">b-70004</option>
+          </select>
+          <select style="width:110px">
+            <option value="">类型：全部</option><option value="TEXT">剧本</option>
+            <option value="IMAGE">图片</option><option value="VIDEO">视频</option>
+            <option value="VOICE">配音</option><option value="COMPOSE">合成</option>
           </select>
         </div>
 
@@ -143,7 +177,7 @@
                   <a href="storyboard.html" class="font-bold">第 13 集 · 镜 1</a>
                   <div class="text-muted" style="font-size:11px">t-60001 · 图生视频 4 秒</div>
                 </td>
-                <td><span class="st doing">VIDEO</span></td>
+                <td><span class="st doing">视频</span></td>
                 <td class="mono">vid-fast-v3</td>
                 <td><span class="badge badge-verified">执行中</span></td>
                 <td>
@@ -160,7 +194,7 @@
                   <a href="storyboard.html" class="font-bold">第 13 集 · 镜 2</a>
                   <div class="text-muted" style="font-size:11px">t-60002</div>
                 </td>
-                <td><span class="st doing">VIDEO</span></td>
+                <td><span class="st doing">视频</span></td>
                 <td class="mono">vid-fast-v3</td>
                 <td><span class="badge badge-ok">成功</span></td>
                 <td class="text-muted">100%</td>
@@ -174,13 +208,41 @@
                   <a href="storyboard.html" class="font-bold">第 13 集 · 镜 6</a>
                   <div class="text-danger" style="font-size:11px">模型超时，已自动重试 2 次</div>
                 </td>
-                <td><span class="st doing">VIDEO</span></td>
+                <td><span class="st doing">视频</span></td>
                 <td class="mono">vid-fast-v3</td>
                 <td><span class="badge badge-danger">失败</span></td>
                 <td class="text-muted">-</td>
                 <td>2</td>
                 <td class="text-muted">不计费</td>
-                <td><a href="#">重试</a></td>
+                <td><a href="#">换备用模型重试</a></td>
+              </tr>
+              <tr style="background:#fff8f8">
+                <td><div class="phone warnf" style="width:34px; border-radius:4px"><div class="ph-body" style="font-size:8px">镜 9</div></div></td>
+                <td>
+                  <a href="storyboard.html" class="font-bold">第 13 集 · 镜 9</a>
+                  <div class="text-danger" style="font-size:11px">提示词被内容安全拦截，改写后可重新提交</div>
+                </td>
+                <td><span class="st doing">视频</span></td>
+                <td class="mono">vid-fast-v3</td>
+                <td><span class="badge badge-danger">失败</span></td>
+                <td class="text-muted">-</td>
+                <td>0</td>
+                <td class="text-muted">不计费</td>
+                <td><a href="storyboard.html">去改提示词</a></td>
+              </tr>
+              <tr style="background:#fff8f8">
+                <td><div class="phone warnf" style="width:34px; border-radius:4px"><div class="ph-body" style="font-size:8px">镜 14</div></div></td>
+                <td>
+                  <a href="storyboard.html" class="font-bold">第 13 集 · 镜 14</a>
+                  <div class="text-danger" style="font-size:11px">缺少首帧图，图生视频无法开工</div>
+                </td>
+                <td><span class="st doing">视频</span></td>
+                <td class="mono">vid-fast-v3</td>
+                <td><span class="badge badge-danger">失败</span></td>
+                <td class="text-muted">-</td>
+                <td>0</td>
+                <td class="text-muted">不计费</td>
+                <td><a href="storyboard.html">去补首帧</a></td>
               </tr>
               <tr>
                 <td><div class="phone empty" style="width:34px; border-radius:4px"><div class="ph-body" style="font-size:8px">镜 11</div></div></td>
@@ -188,7 +250,7 @@
                   <a href="storyboard.html" class="font-bold">第 13 集 · 镜 11</a>
                   <div class="text-muted" style="font-size:11px">t-60011 · 队列第 2 位</div>
                 </td>
-                <td><span class="st doing">VIDEO</span></td>
+                <td><span class="st doing">视频</span></td>
                 <td class="mono">vid-fast-v3</td>
                 <td><span class="badge">排队中</span></td>
                 <td class="text-muted">-</td>
@@ -202,7 +264,7 @@
                   <a href="script-studio.html" class="font-bold">第 15 集 · 剧本门评审</a>
                   <div class="text-muted" style="font-size:11px">t-59870 · 三视角评审团</div>
                 </td>
-                <td><span class="st todo">TEXT</span></td>
+                <td><span class="st todo">剧本</span></td>
                 <td class="mono">txt-std-v4</td>
                 <td><span class="badge badge-verified">执行中</span></td>
                 <td>
@@ -219,7 +281,7 @@
                   <a href="storyboard.html" class="font-bold">第 14 集 · 整集草图预演</a>
                   <div class="text-muted" style="font-size:11px">b-70004 · 44 张低清草图</div>
                 </td>
-                <td><span class="st todo">IMAGE</span></td>
+                <td><span class="st todo">图片</span></td>
                 <td class="mono">img-draft-v1</td>
                 <td><span class="badge badge-ok">成功</span></td>
                 <td class="text-muted">44 / 44</td>
@@ -233,7 +295,7 @@
                   <a href="voice-studio.html" class="font-bold">第 12 集 · 镜 30 台词 2</a>
                   <div class="text-muted" style="font-size:11px">t-59802 · 重配（提高语速）</div>
                 </td>
-                <td><span class="st todo">VOICE</span></td>
+                <td><span class="st todo">配音</span></td>
                 <td class="mono">tts-std-v2</td>
                 <td><span class="badge badge-ok">成功</span></td>
                 <td class="text-muted">100%</td>
@@ -247,7 +309,7 @@
                   <a href="compose-export.html" class="font-bold">第 12 集 · 成片合成</a>
                   <div class="text-muted" style="font-size:11px">t-59741 · 四轨合成 88 秒</div>
                 </td>
-                <td><span class="st todo">COMPOSE</span></td>
+                <td><span class="st todo">合成</span></td>
                 <td class="mono">compose-v1</td>
                 <td><span class="badge badge-ok">成功</span></td>
                 <td class="text-muted">100%</td>
@@ -272,26 +334,37 @@
       <div class="card" style="margin-top:14px">
         <div class="card-hd"><h2>计费口径（写在页面上，避免事后争议）</h2></div>
         <div class="kv">
-          <div class="k">计费</div><div>任务 <code>SUCCEEDED</code> 时按单价快照计一次；用户手工发起的重抽照常计费</div>
-          <div class="k">不计费</div><div><code>FAILED</code> / <code>CANCELED</code>；平台侧原因（模型超时、供应商 5xx）触发的自动重试</div>
-          <div class="k">自动重试</div><div>失败按指数退避重试至多 2 次，仍失败置 <code>FAILED</code> 并记 <code>fail_reason</code></div>
-          <div class="k">在途上限</div><div>单用户 <code>QUEUED</code> + <code>RUNNING</code> 合计 20，超出继续排队不丢弃</div>
-          <div class="k">断点续跑</div><div>任务落库执行，与浏览器连接无关；重进按 <code>batch_id</code> 恢复视图</div>
-          <div class="k">预算耗尽</div><div>作品累计触及预算 100% 时，剩余排队任务自动 <code>CANCELED</code> 并提示，不静默烧完余额</div>
+          <div class="k">计费</div><div>任务成功时按单价快照计一次；你手工发起的重抽照常计费</div>
+          <div class="k">不计费</div><div>失败与已取消不计费；平台侧原因（模型超时、供应商故障）触发的自动重试不计费</div>
+          <div class="k">自动重试</div><div>失败按指数退避重试至多 2 次；仍失败按原因分类（超时 / 内容拦截 / 素材缺失），列表里直接给对应动作</div>
+          <div class="k">在途上限</div><div>单用户排队加执行中合计 20，超出继续排队不丢弃</div>
+          <div class="k">暂停恢复</div><div>批次可随时暂停：排队任务原地保留，执行中的跑完当前不中断；恢复原位续跑，不重走提交、不重复扣费</div>
+          <div class="k">断点续跑</div><div>任务落库执行，与浏览器连接无关；重进页面按批次恢复视图</div>
+          <div class="k">预算触顶</div><div>作品累计触及预算 100% 时剩余排队任务自动暂停并提示，一键「提高预算并恢复排队」，不静默烧完余额</div>
         </div>
       </div>
 
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        接口：<code>POST /bgssai/user/ai-tasks/estimate</code> · <code>/submit</code> ·
-        <code>/retry</code> · <code>/cancel</code>；
-        <code>GET /bgssai/user/ai-tasks/list?page_num&amp;page_size&amp;task_type&amp;task_status&amp;batch_id&amp;episode_id</code> ·
-        <code>/batch-progress?batch_id</code>。
-        任务字段：<code>task_id</code> · <code>batch_id</code> · <code>task_type</code> ·
-        <code>task_status</code>（<code>QUEUED</code> / <code>RUNNING</code> / <code>SUCCEEDED</code> /
-        <code>FAILED</code> / <code>CANCELED</code>）· <code>target_type</code> / <code>target_id</code> /
-        <code>target_label</code> · <code>model_code</code> · <code>progress_percent</code> ·
-        <code>retry_count</code> · <code>fail_reason</code> · <code>cost_cent</code> ·
+        接口：<code>POST /bgssai/user/ai-tasks/estimate</code> · <code>/submit</code>
+        （可带 <code>auto_next_flag</code>：完成后自动做下一步）· <code>/retry</code>
+        （可带 <code>fallback_model_flag</code>：换备用模型重试）· <code>/cancel</code> ·
+        <code>/pause</code> · <code>/resume</code>（批次暂停 / 恢复，<code>QUEUED</code> 与
+        <code>PAUSED</code> 互转，恢复不重走提交流程）；
+        <code>GET /bgssai/user/ai-tasks/list?page_num&amp;page_size&amp;task_type&amp;task_status&amp;batch_id&amp;episode_id</code>
+        （剧集 / 批次筛选器即 <code>episode_id</code> / <code>batch_id</code>）·
+        <code>/batch-progress?batch_id</code>；站内通知
+        <code>GET /bgssai/user/notifications/list</code>（<code>notify_type</code>：
+        <code>BATCH_DONE</code> / <code>BATCH_FAILED</code>）· <code>POST /bgssai/user/notifications/read</code>。
+        任务字段：<code>task_id</code> · <code>batch_id</code> · <code>task_type</code>
+        （<code>TEXT</code> / <code>IMAGE</code> / <code>VIDEO</code> / <code>VOICE</code> /
+        <code>COMPOSE</code>，下拉展示中文、枚举值收在选项 value）·
+        <code>task_status</code>（<code>QUEUED</code> / <code>PAUSED</code> / <code>RUNNING</code> /
+        <code>SUCCEEDED</code> / <code>FAILED</code> / <code>CANCELED</code>）·
+        <code>target_type</code> / <code>target_id</code> / <code>target_label</code> ·
+        <code>model_code</code> · <code>progress_percent</code> · <code>retry_count</code> ·
+        <code>fail_reason</code> · <code>fail_reason_code</code>（<code>MODEL_TIMEOUT</code> /
+        <code>CONTENT_BLOCKED</code> / <code>ASSET_MISSING</code>）· <code>cost_cent</code> ·
         <code>queued_time</code> / <code>started_time</code> / <code>finished_time</code>。
         提交与重试接口加 <code>@RateLimit</code>（USER 维度）；余额不足 <code>4007</code>、
         超预算未确认 <code>4008</code>、在途超限 <code>4011</code>。

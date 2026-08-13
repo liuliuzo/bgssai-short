@@ -78,6 +78,19 @@
   15. **角色出场热力**：横轴为集、纵轴为角色的网格，格子深浅表示该角色在该集的出场镜头数，
       用于发现「主角连续三集只有两个镜头」这类结构问题。
 
+### 2.5 文字层体检统一口径（与 `quality-pipeline.md` 2.6 同一约定）
+
+- 业务规则：
+  16. 内容（剧本 / 分镜 / 走位）保存后自动触发**统一的文字层体检**；图谱 `stale` 时自动重查
+      （`TEXT` 任务，约 0.03 元 / 集，随保存自动发起），查看与拖动始终免费。
+      剧情图谱、连贯性中心、质量报告三页展示的是**同一份按 `issue_id` 去重的清单**，
+      任一页处理一条，三页同步消掉；同一问题（如越轴 / 空间跳变）在三页的措辞与
+      严重度标签（严重 / 轻微）统一。
+  17. 三页侧栏统一「三个问题」分区入口（看样片、连贯性中心、剧集看板），
+      入口角标数字采用同一口径（同一份去重清单的待处理条数）。
+  18. **草稿态也可生成图谱**：剧本处于草稿态即可生成，结果标注「估算，定稿后自动更新」
+      （`draft_flag=1`），定稿后自动重新生成并去掉标注；不设「剧本未定稿不可生成」的硬限制。
+
 ## 三、验收标准
 
 1. 单集张力曲线与模板期望曲线叠加显示，塌陷段（`FLAT`）被标出并给出对应 `scene_no` / `shot_no` 范围，
@@ -90,14 +103,18 @@
 7. 相邻镜头越轴时产出 `EYELINE` 连贯性问题，定位到镜号，与文字预演页的连贯性清单是同一条数据。
 8. 场次时间带按时长占比呈现，单场超 40% 时给出拆场提示。
 9. 全部图谱均为零成本视图（张力与关系抽取走 `TEXT` 任务，单集约 0.03 元；查看与拖动不产生费用）。
+10. 剧本草稿态可生成图谱，页面标注「估算，定稿后自动更新」；定稿后自动重新生成并去掉标注。
+11. 内容保存后图谱自动重查（无需手动点重新生成）；本页问题清单与连贯性中心、质量报告
+    按 `issue_id` 去重同源，任一页处理后三页同步消失。
 
 ## 四、接口契约（snake_case）
 
-- `POST /bgssai/user/story-map/generate`（`work_id` 或 `episode_id` + `map_scope`；返回 `task_id`）
+- `POST /bgssai/user/story-map/generate`（`work_id` 或 `episode_id` + `map_scope`；返回 `task_id`；
+  剧本草稿态可调用，结果带 `draft_flag=1`）
 - `GET /bgssai/user/story-map/tension?episode_id=e-20014`
   ```json
   { "result": {
-      "episode_id": "e-20014", "duration_sec": 90,
+      "episode_id": "e-20014", "duration_sec": 90, "draft_flag": 0,
       "point_list": [
         { "at_sec": 0, "tension_score": 82, "shot_no": 1, "scene_no": 1 },
         { "at_sec": 34, "tension_score": 41, "shot_no": 12, "scene_no": 3 } ],
@@ -145,14 +162,16 @@
 - `GET /bgssai/user/story-map/scene-band?episode_id=e-20014`（场次时长占比与镜头数）
 - `GET /bgssai/user/story-map/appearance-heat?work_id=w-10001`（角色 × 集 的出场镜头数网格）
 - 鉴权：全部需 `Jwttoken`；按 JWT `user_id` 校验作品归属。
-- 错误码：`4003` 越权 / `4006` 剧本未定稿即生成图谱 / `429` 限流。
+- 错误码：`4003` 越权 / `429` 限流（剧本草稿态可生成图谱，不再返回 `4006`，见规则 18）。
 
 ## 五、流程 / 状态机（须配图）
 
 三类图谱的数据来源与回流路径见 [`flow-story-map.html`](./flow-story-map.html)。
 
 图谱本身无状态机，均为派生视图；唯一持久化的新数据是镜头级 `blocking_json` 与作品级关系边。
-上游变更（剧本改写、镜头增删）时图谱标记 `stale_flag=1`，提示重新生成（`TEXT` 任务，约 0.03 元 / 集）。
+上游变更（剧本改写、镜头增删）时图谱标记 `stale_flag=1` 并随内容保存**自动重查**
+（`TEXT` 任务，约 0.03 元 / 集），查看免费，无需手动重新生成；手动重查入口保留。
+剧本草稿态生成的图谱带 `draft_flag=1`（标注「估算，定稿后自动更新」），定稿后自动重生成并清除。
 
 ## 六、数据模型影响
 
@@ -161,7 +180,7 @@
   `deleted_flag`、`created_time`、`updated_time`。
 - 新增表 `drama_story_map`：`map_id`(PK)、`work_id`、`episode_id`、`user_id`、`map_scope`
   （`WORK` / `EPISODE`）、`tension_json`、`expect_json`、`deviation_json`、`scene_band_json`、
-  `appearance_heat_json`、`stale_flag`、`source_task_id`、`created_time`、`updated_time`。
+  `appearance_heat_json`、`stale_flag`、`draft_flag`、`source_task_id`、`created_time`、`updated_time`。
 - `drama_shot` 新增列：`blocking_json`、`axis_flag`。
 - 索引：`drama_character_relation(work_id, from_character_id)`、`drama_story_map(work_id, episode_id, map_scope)`。
 - 轴线检查结果复用 `drama_continuity_issue`（`issue_type=EYELINE`），不新建表。
@@ -172,7 +191,7 @@
 | --- | --- |
 | `map_scope` 图谱范围 | `WORK` 全剧 / `EPISODE` 单集 |
 | `relation_type` 人物关系 | `ALLY` 盟友 / `RIVAL` 对手 / `LOVE` 爱慕 / `FAMILY` 血缘 / `EMPLOY` 雇佣 / `SECRET` 隐藏关系 |
-| `deviation_type` 张力偏离 | `FLAT` 塌陷段 / `WEAK_HOOK` 钩子无力 / `WEAK_ENDING` 悬念无力 / `OVER_EARLY` 爽点前置过早 |
+| `deviation_type` 张力偏离 | `FLAT` 塌陷段 / `WEAK_HOOK` 钩子无力 / `WEAK_ENDING` 结尾悬念偏弱 / `OVER_EARLY` 爽点前置过早 |
 
 ## 八、原型
 

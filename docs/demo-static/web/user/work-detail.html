@@ -19,26 +19,30 @@
       <div class="ctx-meta">复仇逆袭 · 30 集 × 90 秒 · 竖屏</div>
     </div>
 
-    <div class="side-sec">三个问题</div>
-    <a class="side-link" href="episode-preview.html">看样片（文字版）</a>
+    <a class="side-link" href="home.html" style="margin-top:8px">首页</a>
+
+    <div class="side-sec">三个问题（当前作品）</div>
+    <a class="side-link" href="episode-preview.html">看样片</a>
     <a class="side-link" href="continuity-center.html">连贯性中心<span class="ln hot">5</span></a>
-    <a class="side-link active" href="work-detail.html">管理看板</a>
+    <a class="side-link active" href="work-detail.html">剧集看板</a>
 
-    <div class="side-sec">制作</div>
-    <a class="side-link" href="script-studio.html">总剧本<span class="ln">15</span></a>
-    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
-    <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
-    <a class="side-link" href="storyboard.html">创作台<span class="ln hot">2</span></a>
-    <a class="side-link" href="voice-studio.html">配音与字幕</a>
-    <a class="side-link" href="compose-export.html">合成与导出</a>
+    <div class="side-sec">当前工作</div>
+    <a class="side-link" href="works.html">我的作品<span class="ln">5</span></a>
+    <a class="side-link" href="script-studio.html">总剧本</a>
+    <a class="side-link" href="storyboard.html">创作台</a>
 
-    <div class="side-sec">监控</div>
-    <a class="side-link" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
-    <a class="side-link" href="task-center.html">任务中心<span class="ln">6</span></a>
+    <a class="side-link" href="task-center.html" style="margin-top:8px">任务中心<span class="ln hot">6</span></a>
 
-    <div class="side-sec">账户</div>
-    <a class="side-link" href="works.html">我的作品</a>
-    <a class="side-link" href="usage-billing.html">用量与账单</a>
+    <details>
+      <summary class="side-link" style="cursor:pointer">更多</summary>
+      <a class="side-link" href="character-bible.html">角色与场景卡</a>
+      <a class="side-link" href="voice-studio.html">配音与字幕</a>
+      <a class="side-link" href="compose-export.html">合成与导出</a>
+      <a class="side-link" href="quality-report.html">质量报告</a>
+      <a class="side-link" href="story-map.html">剧情图谱</a>
+      <a class="side-link" href="usage-billing.html">用量账单</a>
+      <a class="side-link" href="login-logs.html">账户</a>
+    </details>
 
     <div class="side-foot">
       <div class="who">演示用户</div>
@@ -56,7 +60,7 @@
       <span class="top-title">退婚三年后她成了首富</span>
       <span class="st doing">制作中</span>
       <span class="spacer"></span>
-      <button class="btn btn-default btn-sm">作品设置</button>
+      <a class="btn btn-default btn-sm" href="#work-settings">作品设置</a>
       <a class="btn btn-primary" href="storyboard.html">继续制作</a>
     </header>
 
@@ -220,8 +224,8 @@
                 </td>
                 <td>
                   <div class="stages">
-                    <span class="st done">G1 90</span><span class="st done">G2 88</span>
-                    <span class="st warn">G3 72</span><span class="st done">G4 95</span>
+                    <span class="st done" title="G1_SCRIPT">剧本门 90</span><span class="st done" title="G2_STORYBOARD">分镜门 88</span>
+                    <span class="st warn" title="G3_VISUAL">画面门 72</span><span class="st done" title="G4_FILM">成片门 95</span>
                   </div>
                 </td>
                 <td><span class="font-bold text-ok">92</span></td>
@@ -247,8 +251,8 @@
                 </td>
                 <td>
                   <div class="stages">
-                    <span class="st done">G1 84</span><span class="st done">G2 79</span>
-                    <span class="st todo">G3</span><span class="st todo">G4</span>
+                    <span class="st done" title="G1_SCRIPT">剧本门 84</span><span class="st done" title="G2_STORYBOARD">分镜门 79</span>
+                    <span class="st todo" title="G3_VISUAL">画面门</span><span class="st todo" title="G4_FILM">成片门</span>
                   </div>
                 </td>
                 <td class="text-muted">待评</td>
@@ -274,8 +278,8 @@
                 </td>
                 <td>
                   <div class="stages">
-                    <span class="st done">G1 81</span><span class="st fail">G2 68</span>
-                    <span class="st todo">G3</span><span class="st todo">G4</span>
+                    <span class="st done" title="G1_SCRIPT">剧本门 81</span><span class="st fail" title="G2_STORYBOARD">分镜门 68</span>
+                    <span class="st todo" title="G3_VISUAL">画面门</span><span class="st todo" title="G4_FILM">成片门</span>
                   </div>
                 </td>
                 <td class="text-muted">待评</td>
@@ -301,8 +305,8 @@
                 </td>
                 <td>
                   <div class="stages">
-                    <span class="st doing">G1 评审中</span><span class="st todo">G2</span>
-                    <span class="st todo">G3</span><span class="st todo">G4</span>
+                    <span class="st doing" title="G1_SCRIPT">剧本门 评审中</span><span class="st todo" title="G2_STORYBOARD">分镜门</span>
+                    <span class="st todo" title="G3_VISUAL">画面门</span><span class="st todo" title="G4_FILM">成片门</span>
                   </div>
                 </td>
                 <td class="text-muted">待评</td>
@@ -333,6 +337,12 @@
             </tbody>
           </table>
         </div>
+        <div class="card-body" style="padding-top:10px">
+          <div class="text-muted" style="font-size:11px">
+            空态口径：作品还没有大纲时，看板此处不列一排空集，改为一条引导
+            「先补一句话梗概，出全剧大纲」，按钮直达「总剧本」页顶部的梗概输入框。
+          </div>
+        </div>
       </div>
 
       <div class="split" style="margin-top:14px">
@@ -350,12 +360,43 @@
             <div><a href="character-bible.html">6 个角色（5 已定妆，1 待建卡）· 9 个场景卡</a></div>
             <div class="k">旁白音色</div><div>v-male-narrator-02</div>
             <div class="k">合成设置</div><div>转场 DISSOLVE · BGM 闪避开 · 片头 3 秒 · 字幕烧录</div>
-            <div class="k">质量阈值</div><div>75（第 1 集 85）</div>
+            <div class="k">质量阈值</div><div>75（第 1 集 85）· 可随时调整（调整留痕）</div>
             <div class="k">生成方式</div><div>两段式（先首帧图 0.80 元，再图生视频 1.60 元 / 4 秒）</div>
           </div>
           <div class="note note-warn" style="margin:12px 0 0">
             改画风或画幅只影响之后新建的生成任务，不回溯已生成素材。当前已有 517 个镜头已生成，
             改设定不会自动重做它们。
+          </div>
+
+          <div class="card" id="work-settings" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>作品设置</h2>
+              <span class="text-muted" style="font-size:12px">顶部「作品设置」按钮到这里；创建时不问的都在这</span>
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label>预算上限（元，可选）</label>
+                <input value="3000" placeholder="不填即不限" />
+                <div class="hint">默认不限。设了上限后，累计消耗触及 100% 时剩余排队任务自动取消，不会静默烧完余额</div>
+              </div>
+              <div class="field">
+                <label>质量阈值</label>
+                <input value="75" />
+                <div class="hint">由结构模板给默认值（第 1 集自动用 85）。可随时调整，每次调整留痕</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>预演跳级约束</label>
+              <div class="opts">
+                <span class="chip active">开启（推荐）：未出高清首帧的镜头不允许直接生成视频</span>
+                <span class="chip">关闭：允许跳过首帧直接生成视频（成本风险自担）</span>
+              </div>
+              <div class="hint">对应 <code>skip_level_check_flag</code>，关闭时提交视频不再返回 4016</div>
+            </div>
+            <div class="toolbar" style="margin-top:12px">
+              <button class="btn btn-primary btn-sm">保存设置</button>
+              <span class="text-muted" style="font-size:11px">保存走 <code>POST /bgssai/user/drama-works/update</code></span>
+            </div>
           </div>
         </div>
 
@@ -403,7 +444,13 @@
         <code>review_status</code> · <code>film_duration_sec</code> ·
         <code>gate_status_map</code>（<code>G1_SCRIPT</code> / <code>G2_STORYBOARD</code> /
         <code>G3_VISUAL</code> / <code>G4_FILM</code>）· <code>episode_quality_score</code>。
+        四道门徽标一律显示中文（剧本门 / 分镜门 / 画面门 / 成片门 + 分数），
+        内部代号收在 <code>title</code> 属性。
         作品状态由下游产出自动推进，不提供手工改状态入口（<code>ARCHIVED</code> 除外）。
+        「作品设置」区块（<code>#work-settings</code>）保存走
+        <code>POST /bgssai/user/drama-works/update</code>：<code>cost_budget_cent</code>
+        预算上限（可选，空即不限）· <code>quality_threshold_score</code>
+        质量阈值（可随时调整，调整留痕）· <code>skip_level_check_flag</code> 预演跳级约束开关。
       </div>
 
       <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>

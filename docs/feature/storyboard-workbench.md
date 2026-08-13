@@ -18,8 +18,8 @@
 
 - 业务规则：
   1. 拆镜输入是**已定稿剧本**（`script_status=READY`），输出是该集的 `drama_shot` 列表；
-     剧本未定稿时拆镜入口禁用。重复拆镜为**全量覆盖**，须二次确认，且已 `LOCKED` 的镜头默认保留
-     （勾选「保留已定稿镜头」时按 `scene_no` + `line_no` 对齐保留）。
+     剧本未定稿时拆镜入口禁用。重复拆镜为**全量覆盖**，须二次确认；
+     重复拆镜时已定稿（`LOCKED`）镜头**一律保留**（按 `scene_no` + `line_no` 对齐），无需勾选。
   2. 拆镜规则：一个镜头默认承载 1 至 3 句连续台词或一个动作单元，`shot_duration_sec` 取 2 至 8 秒；
      全集镜头时长合计对齐 `episode_duration_sec ± 15%`。对话场景按「正打 / 反打 / 双人中景」交替给景别，
      情绪高点自动给 `CLOSE` 或 `EXTREME_CLOSE`。
@@ -48,11 +48,13 @@
    修改任一结构化字段后合成结果实时更新。
 4. 拆分 / 合并 / 移动 / 插入 / 删除后 `shot_no` 连续无空洞，且不影响其它镜头已有素材。
 5. 引用未定妆角色的镜头被标红且「生成」按钮禁用，点击提示直达角色卡页。
-6. 重复拆镜时勾选「保留已定稿镜头」，已 `LOCKED` 镜头的素材与参数保持逐字不变。
+6. 重复拆镜时已 `LOCKED` 镜头的素材与参数保持逐字不变（系统按 `scene_no` + `line_no`
+   对齐自动保留，无需任何勾选）。
 
 ## 四、接口契约（snake_case）
 
-- `POST /bgssai/user/shots/split-from-script`（`episode_id` + `keep_locked_flag`；返回 `task_id`）
+- `POST /bgssai/user/shots/split-from-script`（`episode_id`；已 `LOCKED` 镜头一律保留，
+  无 `keep_locked_flag` 之类参数；返回 `task_id`）
 - `GET /bgssai/user/shots/list?episode_id=e-20001&page_num&page_size&shot_status`
   ```json
   { "result": { "shot_list": [
@@ -104,7 +106,11 @@
 
 - 涉及端：web 用户端。
 - 页面：[`../demo-static/web/user/storyboard.html`](../demo-static/web/user/storyboard.html)
-  （镜头表 + 镜头详情面板 + 提示词来源分段 + 批量生成入口）。
+  （镜头表 + 镜头详情面板 + 提示词来源分段 + 批量生成入口——「全部生成」带目标级别选择
+  （草图 / 首帧 / 视频）与费用预估，批量口径见 `previz-text-storyboard.md`）。
+  镜头卡行内展示连贯性提示（不阻塞生成，可「忽略这条（计入分镜门评分）」）与合规预检命中
+  （命中片段高亮 + 风险类别中文 + 改写建议 + 「采纳改写」，契约见 `content-compliance.md`）；
+  生成区旁展示剧本门（`G1_SCRIPT`）与合规预检状态徽标（中文）。
 - 跳转关系：`script-studio.html` → `storyboard.html` → `task-center.html` / `character-bible.html`，
   登记在用户端 `PAGE-FLOW.html`。
 - 页面 → API 映射：`../api/page-api-mapping.md` 对应行。

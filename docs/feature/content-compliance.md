@@ -27,8 +27,14 @@
   3. `BLOCK` 镜头的 `blocked_flag=1`，生成提交接口直接拒绝（`4006`）；修改后重新预检自动解除。
   4. **提交审核**：以**剧集**为单位提交（成片 `compose_status=READY` 且未过期）；
      提交后 `review_status=PENDING`，用户不可再改该集素材（编辑入口置只读），撤回后恢复可编辑。
-  5. 驳回后 `review_status=REJECTED`，页面展示驳回原因与定位；用户修改后重新合成再重提，
-     重提次数不限但每次都留痕。
+     排队期间用户可见**排队位次**（`queue_position`）与**预计审核时长**（`estimated_review_hours`，
+     按队列长度与近期处理速率估算），不让创作者盲等。
+  5. 驳回后 `review_status=REJECTED`，页面按 `reject_item_list` **逐项**展示驳回内容与定位
+     （见规则 7）；用户修改后重新合成再重提，重提次数不限但每次都留痕。
+  5.1 **轻量重合成**：整改后若仅涉及**字幕 / 台词文本类**修改（错别字、断句、字幕措辞、台词文案），
+     允许走轻量重合成路径——仅重烧字幕，不整集全量重合成（路径与费用口径与
+     `film-compose-export.md` 的「重烧字幕」一致，具体流程见该文件，本文件只做衔接）；
+     涉及画面 / 配音 / 镜头内容的整改仍走整集重合成。
 
 ### 管理端（`PLATFORM_ADMIN`）
 
@@ -38,8 +44,13 @@
 - 业务规则：
   6. 审核队列按 `review_status=PENDING` 与提交时间正序，支持按创作者、题材、风险等级筛选。
   7. 审核详情提供成片播放、剧集台词全文、预检命中清单、创作者与作品基本信息；
-     处置动作为 `APPROVE` 或 `REJECT`（`REJECT` 必填 `reject_reason` 与 `risk_category`，
-     可选定位到 `shot_no`）。
+     处置动作为 `APPROVE` 或 `REJECT`。**驳回必须结构化**：`REJECT` 必填 `reject_item_list`
+     （至少一项，替代自由文本驳回），每项含：
+     - `risk_category`（风险类别，枚举同预检）；
+     - `episode_no` 与定位（`shot_no` 或 `line_no`，二者至少其一）；
+     - `reject_desc`（该项驳回说明）；
+     - `suggestion`（改写建议，口径与预检 `suggestion` 一致，复用同一改写建议生成逻辑）。
+     整体可另附 `review_comment`（选填的总评）。
   8. 审核动作全部落 `drama_review_record`（谁、何时、什么结论、什么原因），不可删除、可追溯。
   9. 管理端对创作内容**只读**：不得修改创作者的剧本、镜头与素材，只能给结论。
   10. 全部剧集审核通过后，作品 `work_status` 推进为 `COMPLETED`。
@@ -49,9 +60,13 @@
 1. 台词中含 `BLOCK` 级内容时，剧本定稿被拒并定位到 `scene_no` / `line_no`，给出改写建议。
 2. 含 `BLOCK` 项的镜头在分镜工作台标红且「生成」按钮禁用；修改文本后重新预检自动解除。
 3. `WARN` 级不阻塞流程，但提交生成前弹窗列出全部 `WARN` 项并需确认。
-4. 提交审核后该集全部编辑入口变只读；撤回后恢复可编辑。
+4. 提交审核后该集全部编辑入口变只读；撤回后恢复可编辑。`PENDING` 状态下用户端可见
+   排队位次与预计审核时长。
 5. 管理端队列按提交时间正序，处理后从待审队列移除并出现在已处理列表。
-6. 驳回必须带原因，用户端可见驳回原因、风险类别与定位镜头；修改重提后重新回到队列。
+6. 驳回必须带至少一条结构化驳回项；用户端逐项可见风险类别、集数、镜头或台词定位、
+   驳回说明与改写建议；修改重提后重新回到队列。
+6.1 整改仅涉及字幕 / 台词文本类修改时，可走轻量重合成（仅重烧字幕）后直接重提，
+    不强制整集全量重合成。
 7. 全部剧集审核通过后作品状态自动变为 `COMPLETED`。
 8. 任一审核动作在 `drama_review_record` 留下不可删除的记录，含审核人 `user_id` 与时间。
 
@@ -74,7 +89,22 @@
   ```
 - `POST /bgssai/user/reviews/submit`（`episode_id`）· `POST /bgssai/user/reviews/withdraw`
 - `GET /bgssai/user/reviews/list?work_id=w-10001`
-  （每集 `review_status`、`submitted_time`、`reviewed_time`、`reject_reason`、`reject_shot_no`）
+  ```json
+  { "result": { "episode_review_list": [
+      { "episode_id": "e-20001", "episode_no": 1, "review_status": "PENDING",
+        "submitted_time": "2026-08-13 09:40:11",
+        "queue_position": 6, "estimated_review_hours": 4 },
+      { "episode_id": "e-20002", "episode_no": 2, "review_status": "REJECTED",
+        "reviewed_time": "2026-08-12 17:02:40",
+        "reject_item_list": [
+          { "risk_category": "VIOLENCE", "risk_category_name": "血腥暴力",
+            "episode_no": 2, "shot_no": 17, "line_no": null,
+            "reject_desc": "镜 17 打斗画面展示器械接触，超出平台尺度",
+            "suggestion": "改为不展示器械接触的冲突表达" } ],
+        "light_recompose_flag": 0 } ] } }
+  ```
+  `queue_position` 与 `estimated_review_hours` 仅 `PENDING` 状态返回；
+  `light_recompose_flag=1` 表示本次整改仅涉及字幕 / 台词文本类修改、可走轻量重合成（规则 5.1）。
 
 ### 管理端
 
@@ -90,9 +120,12 @@
   ```
 - `GET /bgssai/admin/reviews/detail?review_id=r-80001`（成片地址、台词全文、预检命中、历史处置）
 - `POST /bgssai/admin/reviews/approve`（`review_id` + `review_comment`）
-- `POST /bgssai/admin/reviews/reject`（`review_id` + `reject_reason` + `risk_category` + 可选 `reject_shot_no`）
+- `POST /bgssai/admin/reviews/reject`（`review_id` + `reject_item_list`（至少一项，每项含
+  `risk_category`、`episode_no`、`shot_no` 或 `line_no`、`reject_desc`、`suggestion`）+
+  可选 `review_comment`）
 - 鉴权：用户端需 `Jwttoken`；管理端需 `Jwttoken` + `PLATFORM_ADMIN`（角色取自 JWT，不取自参数）。
-- 错误码：`4003` 无权限 / `4006` 成片未就绪或已过期即提交、驳回未填原因 / `4013` 重复提交（已在审核中）。
+- 错误码：`4003` 无权限 / `4006` 成片未就绪或已过期即提交、驳回未带结构化驳回项 /
+  `4013` 重复提交（已在审核中）。
 
 ## 五、流程 / 状态机（须配图）
 
@@ -105,8 +138,10 @@
 
 - 新增表 `drama_review_record`：`review_id`(PK)、`work_id`、`episode_id`、`creator_user_id`、
   `review_status`、`risk_level`、`warn_count`、`block_count`、`film_asset_id`、`submitted_time`、
-  `reviewer_user_id`、`reviewed_time`、`review_comment`、`reject_reason`、`risk_category`、
-  `reject_shot_no`、`submit_seq`（第几次提交）、`created_time`、`updated_time`。
+  `reviewer_user_id`、`reviewed_time`、`review_comment`、`reject_item_json`（结构化驳回项数组，
+  每项含 `risk_category` / `episode_no` / `shot_no` 或 `line_no` / `reject_desc` / `suggestion`）、
+  `submit_seq`（第几次提交）、`created_time`、`updated_time`。
+- `queue_position` 与 `estimated_review_hours` 为查询时按队列实时派生，不落库。
 - 新增表 `drama_compliance_hit`：`hit_id`(PK)、`work_id`、`episode_id`、`shot_id`、`check_scope`、
   `risk_category`、`risk_level`、`scene_no`、`line_no`、`shot_no`、`hit_text`、`suggestion`、
   `resolved_flag`、`created_time`。

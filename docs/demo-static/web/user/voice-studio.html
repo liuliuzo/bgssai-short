@@ -70,13 +70,13 @@
 
       <div class="card" style="border-color:#fecaca; background:#fef2f2; margin-bottom:14px">
         <div class="row">
-          <span class="badge badge-danger">2 镜音画未对齐</span>
+          <span class="badge badge-danger">2 镜等你确认</span>
           <div style="font-size:13px">
-            本集「合成」入口当前禁用。处理完这 2 镜，<code>dubbing_status</code> 变
-            <code>READY</code>，合成自动放开。
+            能免费解决的未对齐系统已自动处理好（补静音 2 镜、提速 1 镜）。剩下这 2 镜
+            要延长镜头、会花钱，等你确认——处理完这 2 镜就能出片。
           </div>
           <span class="spacer"></span>
-          <a class="btn btn-danger btn-sm" href="#misaligned">去处理</a>
+          <a class="btn btn-danger btn-sm" href="#misaligned">去确认</a>
         </div>
       </div>
 
@@ -89,12 +89,12 @@
         <div class="stat">
           <div class="stat-label">已对齐</div>
           <div class="stat-value text-ok">32</div>
-          <div class="stat-sub">偏差在正负 0.5 秒内</div>
+          <div class="stat-sub">含系统自动处理 3 镜（补静音 / 提速）</div>
         </div>
         <div class="stat">
           <div class="stat-label">未对齐</div>
           <div class="stat-value text-danger">2</div>
-          <div class="stat-sub">阻塞合成，需先处理</div>
+          <div class="stat-sub">都要延长镜头（花钱），等你确认</div>
         </div>
         <div class="stat">
           <div class="stat-label">字幕条目</div>
@@ -112,17 +112,23 @@
               <span class="chip">全部 34</span>
               <span class="chip">已对齐 32</span>
               <span class="spacer"></span>
-              <span class="text-muted" style="font-size:12px">音色取自角色卡绑定，全剧自动沿用</span>
+              <button class="btn btn-primary btn-sm">按建议一键处理全部未对齐</button>
             </div>
 
             <div class="card-body">
+
+              <div class="note" style="margin-bottom:12px">
+                免费的对齐动作已自动执行完毕：补静音 2 镜、提速 1 镜，不花钱、不用逐镜点确认。
+                下面 2 镜提速到上限也压不进镜头时长，需要延长镜头（会重生成画面、花钱），等你确认；
+                「按建议一键处理」也只会把这类要花钱的项列出来等确认，不会自作主张扣费。
+              </div>
 
               <div class="card" style="border-color:#fecaca; margin-bottom:12px">
                 <div class="row" style="margin-bottom:8px">
                   <span class="font-bold">镜 18</span>
                   <span class="st fail">未对齐 +2.4 秒</span>
                   <span class="spacer"></span>
-                  <span class="text-muted" style="font-size:12px">沈知微 · v-female-cold-01</span>
+                  <span class="text-muted" style="font-size:12px">沈知微 · 冷感女声</span>
                 </div>
                 <div style="font-size:13px; margin-bottom:10px">
                   从你在婚礼上把退婚书推到我面前那天起，我就在计划。
@@ -143,12 +149,12 @@
                 </div>
 
                 <div class="toolbar">
-                  <button class="btn btn-default btn-sm">提高语速至 1.25 倍（免费，只重配音）</button>
-                  <button class="btn btn-default btn-sm">延长镜头到 6.5 秒（1.60 元，需重生成画面）</button>
+                  <button class="btn btn-primary btn-sm">延长镜头到 6.5 秒（1.60 元，重生成画面）</button>
                   <button class="btn btn-default btn-sm">改台词</button>
                 </div>
                 <div class="text-muted" style="font-size:11px; margin-top:7px">
-                  语速上限 1.25 倍；本条按 1.25 倍可压到 5.1 秒，仍差 1.1 秒，建议改台词或延长镜头。
+                  已替你试算：提速到上限 1.25 倍可压到 5.1 秒，仍差 1.1 秒——免费解法不够用，
+                  只能延长镜头或改台词。
                 </div>
               </div>
 
@@ -157,12 +163,15 @@
                   <span class="font-bold">镜 27</span>
                   <span class="st fail">未对齐 +1.8 秒</span>
                   <span class="spacer"></span>
-                  <span class="text-muted" style="font-size:12px">沈知微 · v-female-cold-01</span>
+                  <span class="text-muted" style="font-size:12px">沈知微 · 冷感女声</span>
                 </div>
                 <div style="font-size:13px; margin-bottom:10px">（沉默两秒后）你知道我为什么回来吗？</div>
                 <div class="toolbar">
-                  <button class="btn btn-primary btn-sm">提高语速（免费）</button>
-                  <button class="btn btn-default btn-sm">延长镜头（1.60 元）</button>
+                  <button class="btn btn-primary btn-sm">延长镜头到 5.0 秒（1.60 元，重生成画面）</button>
+                  <button class="btn btn-default btn-sm">改台词</button>
+                </div>
+                <div class="text-muted" style="font-size:11px; margin-top:7px">
+                  台词里有两秒沉默的表演要求，提速到上限仍差 0.6 秒，免费解法不够用。
                 </div>
               </div>
 
@@ -180,7 +189,7 @@
                     <tr>
                       <td>镜 1</td>
                       <td>这份收购案，谁批准的？</td>
-                      <td>陆时衍<div class="text-muted" style="font-size:11px">v-male-low-03</div></td>
+                      <td>陆时衍<div class="text-muted" style="font-size:11px">低沉男声</div></td>
                       <td>2.4s / 2.6s <div class="text-muted" style="font-size:11px">gap -0.2</div></td>
                       <td><span class="st done">已对齐</span></td>
                       <td><a href="#">重配</a></td>
@@ -188,15 +197,15 @@
                     <tr>
                       <td>镜 2</td>
                       <td>我。持股 51%，需要向你报备吗？</td>
-                      <td>沈知微<div class="text-muted" style="font-size:11px">v-female-cold-01</div></td>
-                      <td>3.2s / 4.0s <div class="text-muted" style="font-size:11px">尾部补静音</div></td>
+                      <td>沈知微<div class="text-muted" style="font-size:11px">冷感女声</div></td>
+                      <td>3.2s / 4.0s <div class="text-muted" style="font-size:11px">已自动补静音（免费）</div></td>
                       <td><span class="st done">已对齐</span></td>
                       <td><a href="#">重配</a></td>
                     </tr>
                     <tr>
                       <td>镜 3</td>
                       <td>全场死寂。三年来所有人都以为她只是个挂名股东。</td>
-                      <td>旁白<div class="text-muted" style="font-size:11px">v-male-narrator-02</div></td>
+                      <td>旁白<div class="text-muted" style="font-size:11px">旁白男声</div></td>
                       <td>4.2s / 4.0s <div class="text-muted" style="font-size:11px">gap +0.2</div></td>
                       <td><span class="st done">已对齐</span></td>
                       <td><a href="#">重配</a></td>
@@ -280,19 +289,22 @@
           </div>
 
           <div class="card">
-            <div class="card-hd"><h2>三种对齐解法</h2></div>
+            <div class="card-hd"><h2>三种对齐解法</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">免费的自动做</span>
+            </div>
             <div style="font-size:12px; line-height:1.75">
               <div class="row" style="margin-bottom:8px">
                 <span class="st done" style="width:76px">提高语速</span>
-                <span class="text-sub" style="flex:1">上限 1.25 倍，只重配音，<strong>免费</strong></span>
+                <span class="text-sub" style="flex:1">上限 1.25 倍，只重配音，<strong>免费</strong>——能解时系统自动执行</span>
               </div>
               <div class="row" style="margin-bottom:8px">
                 <span class="st fail" style="width:76px">延长镜头</span>
-                <span class="text-sub" style="flex:1">需重生成该镜视频，<strong>1.60 元</strong>，先给预估</span>
+                <span class="text-sub" style="flex:1">需重生成该镜视频，<strong>1.60 元</strong>，单独列出等你确认</span>
               </div>
               <div class="row">
                 <span class="st done" style="width:76px">补静音</span>
-                <span class="text-sub" style="flex:1">音频短于镜头时默认执行，无需干预</span>
+                <span class="text-sub" style="flex:1">音频短于镜头时自动执行，无需干预</span>
               </div>
             </div>
           </div>
@@ -332,7 +344,9 @@
       <div class="spec">
         <div class="spec-t">字段口径</div>
         接口：<code>POST /bgssai/user/dubbings/submit</code> · <code>/regenerate</code> ·
-        <code>/align</code> · <code>/apply-voice-to-character</code>；
+        <code>/align</code> · <code>/align-batch</code>（一键处理：免费项按 <code>suggest_action</code>
+        执行，<code>EXTEND_SHOT</code> 项返回清单与 <code>estimated_cost_cent</code> 等确认）·
+        <code>/apply-voice-to-character</code>；
         <code>GET /bgssai/user/dubbings/list?episode_id</code> · <code>GET /bgssai/user/voices/list</code>；
         字幕 <code>GET /bgssai/user/subtitles/detail?episode_id</code> · <code>POST /regenerate</code> ·
         <code>/update</code> · <code>/style-save</code>。
@@ -340,7 +354,10 @@
         <code>align_gap_sec</code> · <code>align_status</code>（<code>PENDING</code> /
         <code>ALIGNED</code> / <code>MISALIGNED</code>）· <code>suggest_action</code> ·
         <code>align_action</code>（<code>ADJUST_SPEED</code> / <code>EXTEND_SHOT</code> /
-        <code>PAD_SILENCE</code>）。存在 <code>MISALIGNED</code> 时该集合成入口禁用。
+        <code>PAD_SILENCE</code>）· <code>auto_fixed_flag</code>（免费解法系统自动执行后置 1）。
+        免费项自动处理后直接落 <code>ALIGNED</code>；仍为 <code>MISALIGNED</code> 的均为待付费确认的
+        <code>EXTEND_SHOT</code> 项，存在时该集合成入口禁用（<code>dubbing_status</code> 达
+        <code>READY</code> 后放开）。
       </div>
 
       <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>

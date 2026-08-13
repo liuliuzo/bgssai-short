@@ -18,10 +18,15 @@
 - 用户故事三：作为 `USER`，我希望角色卡上直接绑定音色，配音时不用再逐集挑一遍。
 
 - 业务规则：
-  1. 角色卡 `drama_character` 挂在**作品**级，跨全部剧集复用；剧本中出现的新角色名自动进入
-     「待建卡」列表（`card_status=CANDIDATE`），不自动生成图，避免无谓消耗。
-  2. 定妆流程：填写外观描述（`appearance_prompt`：年龄 / 体型 / 发型 / 面部特征 / 服装）→
-     一次生成 4 张候选 → 选定 1 张为 `ref_image_asset_id`（定妆照）→ `card_status=LOCKED`。
+  1. 角色卡 `drama_character` 挂在**作品**级，跨全部剧集复用；剧本定稿时除角色名外同步抽取
+     外观描述与出场场次清单，预填 `appearance_prompt` 后进入「待建卡」列表（`card_status=CANDIDATE`）；
+     剧本中出现的新场景名同样自动创建场景卡（`card_status=CANDIDATE`）。待建卡不自动生成图，
+     避免无谓消耗。
+  2. 定妆流程：确认或修改预填的外观描述（`appearance_prompt`：年龄 / 体型 / 发型 / 面部特征 / 服装）→
+     生成候选（`candidate_count` 可选 2 / 4 / 8，默认 4，提交前当场显示对应价格）→
+     选定 1 张为 `ref_image_asset_id`（定妆照）→ `card_status=LOCKED`。
+     候选区提供「换一批（同参数同价）」与「微调描述后重出」快捷入口（均为再次生成候选）；
+     另提供「全部待建卡一键出候选」批量入口，提交前显示总价。
      未 `LOCKED` 的角色卡不允许被镜头引用（生成时拦截并提示先定妆）。
   3. **一致性锁**：镜头生成时，系统把 `ref_image_asset_id`（图生图参考）+ `appearance_prompt`
      + `consistency_seed` 一并下发给图像模型，三者构成该角色的一致性指纹，用户不可在单镜内改写，
@@ -33,18 +38,24 @@
   6. 场景卡 `drama_scene_card` 结构与角色卡对齐（描述 + 候选 + 定妆图 + 锁定），
      `card_type` 取 `SCENE`（场景）或 `PROP`（关键道具）。
   7. 改角色卡定妆照会影响后续生成，不回溯已生成镜头；界面须提示「已有 N 个镜头使用旧形象，
-     是否加入重生成队列」，用户可一键把这些镜头批量加入重生成（走 `shot-generation.md` 的批量任务）。
+     是否加入重生成队列」，并按镜列出重生成预估费用（`estimated_cost_cent`）；批量重生成弹窗
+     按镜可勾选，默认只勾选非 `LOCKED` 镜头（已定稿的不动），确认后批量加入重生成
+     （走 `shot-generation.md` 的批量任务）。
   8. 删除角色卡：被镜头引用中的角色卡不允许删除，须先解除引用。
 
 ## 三、验收标准
 
-1. 剧本定稿后进入角色卡页，剧本中出现的角色全部以 `CANDIDATE` 状态列出，无需手工录入姓名。
-2. 一次定妆生成 4 张候选，选定后角色卡状态变 `LOCKED` 并展示定妆照；未定妆角色出现在镜头引用列表时
+1. 剧本定稿后进入角色卡页，剧本中出现的角色全部以 `CANDIDATE` 状态列出，外观描述与出场场次
+   已预填，无需手工录入；新场景名同步出现在场景卡待建卡列表。
+2. 定妆候选张数可选 2 / 4 / 8 并当场显示价格，选定后角色卡状态变 `LOCKED` 并展示定妆照；
+   候选不满意可「换一批（同价）」或「微调描述后重出」；未定妆角色出现在镜头引用列表时
    被禁用并提示「请先完成定妆」。
 3. 同一角色卡在同一集连续 10 个镜头生成的画面，人工抽检面部与服装一致（不少于 9/10）。
 4. 为角色新增一套造型后，镜头引用处可切换 `outfit_code`，切换后生成的画面换装但面部一致。
-5. 修改已 `LOCKED` 角色卡的定妆照，系统列出受影响镜头数并提供批量重生成入口；不点则已有镜头不变。
-6. 删除被引用的角色卡返回 `4006` 并列出引用它的镜头数。
+5. 修改已 `LOCKED` 角色卡的定妆照，系统按镜列出受影响镜头与重生成预估费用，批量重生成弹窗
+   默认只勾选非 `LOCKED` 镜头、可逐镜调整；不点则已有镜头不变。
+6. 存在多张待建卡时，「全部待建卡一键出候选」显示总价，确认后一次性提交全部候选生成任务。
+7. 删除被引用的角色卡返回 `4006` 并列出引用它的镜头数。
 
 ## 四、接口契约（snake_case）
 
@@ -65,13 +76,18 @@
         "used_shot_count": 42 } ] } }
   ```
 - `POST /bgssai/user/characters/create`（`work_id` + `character_name` + `character_role` + `appearance_prompt`）
-- `POST /bgssai/user/characters/portrait-generate`（`character_id` + `outfit_code` + `candidate_count`，固定 4；返回 `task_id`）
+- `POST /bgssai/user/characters/portrait-generate`（`character_id` + `outfit_code` + `candidate_count`，
+  取 2 / 4 / 8，默认 4；返回 `task_id`）
+- `POST /bgssai/user/characters/portrait-generate-batch`（`work_id` + 可选 `character_id_list`，
+  缺省为作品下全部待建卡；返回 `batch_id` 与总价 `estimated_cost_cent`；场景卡同构）
 - `POST /bgssai/user/characters/lock`（`character_id` + `outfit_code` + 选中的 `ref_image_asset_id`）
 - `POST /bgssai/user/characters/update` · `POST /bgssai/user/characters/delete`
 - `POST /bgssai/user/characters/bind-voice`（`character_id` + `voice_id` + `voice_speed`）
 - `GET /bgssai/user/scene-cards/list?work_id=w-10001&card_type=SCENE`
 - `POST /bgssai/user/scene-cards/create` · `/portrait-generate` · `/lock` · `/update` · `/delete`
-- `GET /bgssai/user/characters/affected-shots?character_id=c-30001`（改卡前查受影响镜头）
+- `GET /bgssai/user/characters/affected-shots?character_id=c-30001`（改卡前查受影响镜头；返回
+  `shot_list`[`shot_id` · `shot_no` · `shot_status` · `estimated_cost_cent`] 与合计 `estimated_cost_cent`，
+  供批量重生成弹窗按镜勾选，默认只勾选非 `LOCKED` 镜头）
 - 鉴权：需 `Jwttoken`，按 JWT `user_id` 校验作品归属。
 - 错误码：`4003` 越权 / `4006` 未定妆即被引用、删除被引用卡 / `4010` 一致性指纹缺失（模型未返回可用参考图）。
 
@@ -80,7 +96,7 @@
 一致性指纹的产生与在镜头生成中的引用链见
 [`flow-character-consistency.html`](./flow-character-consistency.html)。
 
-`card_status` 流转：`CANDIDATE`（剧本抽取待建卡）→ `DRAFT`（已填描述未定妆）→
+`card_status` 流转：`CANDIDATE`（剧本抽取待建卡，外观描述与场次清单已预填）→ `DRAFT`（已确认描述未定妆）→
 `GENERATING`（候选生成中）→ `LOCKED`（已定妆，可被引用）；`LOCKED` 后改描述回落 `DRAFT`。
 
 ## 六、数据模型影响

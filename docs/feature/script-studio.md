@@ -36,7 +36,14 @@
      其余内容与 `script_version` 不变；每次生成保存一个版本，可回滚到任意历史版本（保留最近 20 版）。
   6. 剧本定稿（`script_status=READY`）后才允许进入分镜拆解；定稿后再改剧本会把该集
      `storyboard_status` 标为 `DRAFT` 并提示受影响的镜头数（不自动删除已生成素材）。
+     例外：定稿后仅错别字级的文字修改（不改变场次划分与台词切分，只替换个别字词）
+     不回落 `storyboard_status`，避免改一个字就把整集分镜打回。
   7. 角色首次出现时自动登记为该作品的角色卡候选（见 `character-bible.md`），不重复登记同名角色。
+  8. 重新生成大纲仅更新大纲层（各集标题 / 梗概 / 结尾钩子），**不覆盖已定稿集的正文**——
+     已写好的单集剧本 `scene_json` 一律保留。执行前须展示影响范围与费用说明
+     （如「重新生成 30 集大纲 约 0.15 元，已写好的 15 集剧本不会被覆盖」）；
+     梗概修改触发重新生成大纲时同样先给出该说明。
+     空态语义：无大纲时入口文案为「生成大纲」，已有大纲时才是「重新生成大纲」。
 
 ## 三、验收标准
 
@@ -45,7 +52,10 @@
 3. 总分低于 60 时「定稿」按钮不可直接提交，勾选强制确认后方可提交，且 `force_ready_flag=1` 落库。
 4. 选中一个场次点「重写」，仅该场次内容变化，其它场次逐字不变，版本号 +1 且可回滚。
 5. 全集 `estimated_sec` 合计与 `episode_duration_sec` 偏差超过 15% 时，体检给出明确的秒数差与建议删改场次。
-6. 剧本已定稿的剧集再次修改剧本，该集 `storyboard_status` 变为 `DRAFT` 并提示受影响镜头数。
+6. 剧本已定稿的剧集再次修改剧本，该集 `storyboard_status` 变为 `DRAFT` 并提示受影响镜头数；
+   仅错别字级文字修改（不改变场次与台词切分）时 `storyboard_status` 保持不变。
+7. 已有大纲时点「重新生成大纲」，先展示影响范围与费用说明（集数、约多少元、
+   已写好的 N 集剧本不会被覆盖），确认后执行且已定稿集正文逐字不变；无大纲时入口文案为「生成大纲」。
 
 ## 四、接口契约（snake_case）
 
@@ -88,7 +98,8 @@
 生成与体检链路见 [`flow-script-generation.html`](./flow-script-generation.html)。
 
 `script_status` 流转：`NONE` → `GENERATING` → `DRAFT` →（体检通过或强制确认）→ `READY`；
-`READY` 状态下任何保存操作回落到 `DRAFT`，并联动该集 `storyboard_status=DRAFT`。
+`READY` 状态下保存操作回落到 `DRAFT`，并联动该集 `storyboard_status=DRAFT`
+（仅错别字级文字修改除外，见业务规则 6：`script_status` 与 `storyboard_status` 均不回落）。
 
 ## 六、数据模型影响
 
@@ -103,7 +114,11 @@
 
 - 涉及端：web 用户端。
 - 页面：[`../demo-static/web/user/script-studio.html`](../demo-static/web/user/script-studio.html)
-  （左：分集大纲；中：场次与台词编辑；右：节奏体检与版本）。
+  （每集一行大纲、点开直接编辑整集剧本；展开集内含「历史版本」抽屉——复用
+  `GET /bgssai/user/scripts/versions` 展示最近版本列表、`POST /bgssai/user/scripts/rollback` 回滚；
+  台词行内展示合规预检命中（命中片段高亮 + 风险类别中文 + 改写建议 + 「采纳改写」），
+  「定稿」按钮旁展示剧本门（`G1_SCRIPT`）与合规预检状态徽标，中文文案，
+  预检契约见 `content-compliance.md`）。
 - 跳转关系：`work-detail.html` → `script-studio.html` → `storyboard.html`，登记在用户端 `PAGE-FLOW.html`。
 - 页面 → API 映射：`../api/page-api-mapping.md` 对应行。
 

@@ -52,13 +52,21 @@
   | 成片门 | `G4_FILM` | 音画对齐 + 字幕断句与错别字 + 黑帧 / 跳帧 + 首 3 秒与末 5 秒有效性 + 整集时长偏差 | 提交审核前 |
 
   5. 每道门产出 `gate_score`（0-100）、`gate_status` 与 `issue_list`（定位 + 原因 + 建议 + 一键返工动作）。
-     默认阈值 75；**首集阈值 85**（首集决定完播与追更，标准更高，见规则 8）。阈值由管理端维护，
-     作品级可上调不可下调。
+     默认阈值 75；**首集阈值 85**（首集决定完播与追更，标准更高，见规则 8）。默认阈值由管理端维护；
+     **作品级阈值可随时上调或下调**，每次调整写入留痕（操作人、时间、原值、新值、调整理由，
+     落 `drama_quality_threshold_log`），在质量报告页可查——阈值是创作者自己的水准线，不是单向棘轮。
   6. 未达标不硬性阻断：允许**强制放行**（`FORCE_PASSED`），但必须逐条确认，且写入作品质量档案；
      `BLOCK` 级合规问题除外——那是合规红线，由 `content-compliance.md` 硬拦截，与质量门无关。
   7. 每条 `issue` 必须可执行：给出 `fix_action`（`REWRITE_SCENE` 重写场次 / `ADJUST_SHOT` 调整镜头参数 /
      `REGENERATE_SHOT` 重抽镜头 / `REDUB_LINE` 重配台词 / `RECOMPOSE` 重新合成）与目标对象 id，
      点击直达对应页面并预填参数。严禁产出「节奏偏慢」这类无法执行的评语。
+  7.1 **逐条处理状态**：每条 `issue` 支持状态操作「已修复」或「不改（从预置理由中选一个：
+     有意为之 / 成本取舍 / 赶进度 / 其它）」（`issue_handle_status`）；`MINOR`（轻微）级另支持
+     **「知悉不改」一键处理**（`ACKNOWLEDGED`），知悉不改的条目**不写入质量档案**。
+  7.2 **增量校验**：处理单条 `issue` 后只对该条做增量校验，并局部刷新其所属维度分数与门禁总分，
+     **不强制整门重跑、不重复整门付费**；整门重跑仍可手动发起（如上游大改后）。
+  7.3 界面展示口径：`severity` 中文标签统一为 `CRITICAL` 致命 / `MAJOR` 严重 / `MINOR` 轻微，
+     英文值仅出现在接口与页面字段口径区，不在正文展示。
 
 ### 2.3 首集特权与关键节点多方案择优
 
@@ -92,23 +100,43 @@
 - 用户故事五：作为 `USER`，我希望一部剧做完能看到它的质量档案，知道哪里将就了、下一部该注意什么。
 
 - 业务规则：
-  14. 作品级质量档案记录：四道门每集的分数与趋势、返工次数、强制放行处及其理由、
+  14. 作品级质量档案记录：四道门每集的分数与趋势、返工次数、取舍与放行记录、
       多方案择优的选择记录、各集最终 `overall_quality_score`（四门加权：剧本 35%、分镜 20%、
       画面 25%、成片 20%）。
+  14.1 **取舍与放行记录用中性表述**（不使用「被将就」等评价性措辞），并区分两类：
+      - **主动取舍**：选了理由的「不改」（`WONT_FIX`）条目，含所选理由；
+      - **妥协放行**：强制放行（`FORCE_PASSED`）的门及其 `force_reason`。
+      `MINOR` 级「知悉不改」（`ACKNOWLEDGED`）条目不进入档案（见规则 7.1）。
   15. 档案只读、不可编辑，作为创作者复盘与平台质量运营的共同依据。
+
+### 2.6 文字层体检统一口径（与 `story-map.md`、连贯性中心共用）
+
+- 业务规则：
+  16. 内容（剧本 / 分镜 / 走位）保存后自动触发**统一的文字层体检**；体检结果 `stale` 时自动重查，
+      查看免费。剧情图谱、连贯性中心、质量报告三页展示的是**同一份按 `issue_id` 去重的清单**，
+      任一页处理一条，三页同步消掉。
+  17. 三页中对同一问题（如越轴 / 空间跳变）的措辞与严重度标签必须统一（严重 / 轻微），
+      不得同一条问题在不同页面呈现不同说法或不同严重度。
+  18. 三页侧栏统一「三个问题」分区入口（看样片、连贯性中心、剧集看板），
+      入口角标数字采用同一口径（同一份去重清单的待处理条数）。
 
 ## 三、验收标准
 
 1. 新建作品时可选结构模板；选用后生成的大纲，其节拍与反转集位置与模板一致（覆盖处除外）。
 2. 剧本定稿前自动跑 `G1_SCRIPT`，产出分数与 `issue_list`；每条 issue 点击可直达对应场次并预填重写指令。
 3. 第 1 集的门禁阈值为 85，其余集为 75；未达标时定稿 / 提交按钮进入「需强制放行」态，
-   放行须逐条确认并写入质量档案。
+   放行须逐条确认并写入质量档案。作品级阈值可上调也可下调，每次调整均留痕可查。
 4. 提交批量生成前自动跑 `G2_STORYBOARD`，能检出「连续三镜同景别」「情绪高点未给特写」并给出可执行修改。
 5. 画面生成完成后 `G3_VISUAL` 能检出角色一致性偏差与明显画面瑕疵，返工建议直接指向具体 `shot_no`。
 6. 合成后 `G4_FILM` 能检出音画错位、字幕断句问题与首尾无效帧，`fix_action` 可一键跳转修复。
 7. 首集开场默认产出 3 个方案，评审团三视角各自给分与结论；分歧超 20 分的条目高亮标记。
-8. 作品完成后质量档案可查：四门分数趋势、返工次数、全部强制放行处及理由。
+8. 作品完成后质量档案可查：四门分数趋势、返工次数、取舍与放行记录（区分主动取舍与妥协放行，
+   表述中性）；`MINOR` 级「知悉不改」条目不出现在档案中。
 9. 同一对象 5 分钟内重复发起评审不重复计费，返回缓存结果。
+10. 单条 issue 标记「已修复」或「不改」后，仅该条做增量校验并局部刷新所属维度分数与门禁总分，
+    不触发整门重跑、不产生整门评审费用。
+11. `MINOR` 级 issue 可一键「知悉不改」，处理后从三页（剧情图谱 / 连贯性中心 / 质量报告）
+    的待处理清单同步消失。
 
 ## 四、接口契约（snake_case）
 
@@ -145,9 +173,16 @@
           "issue_desc": "模板第 4 拍（60-85 秒反转）在本集缺失",
           "suggestion": "把第 5 场的身份揭露提前到 62 秒处",
           "fix_action": "REWRITE_SCENE", "target_type": "SCENE", "target_id": "5",
-          "scene_no": 5, "severity": "MAJOR" } ] } }
+          "scene_no": 5, "severity": "MAJOR", "severity_name": "严重",
+          "handle_status": "OPEN" } ] } }
   ```
 - `POST /bgssai/user/quality/force-pass`（`gate_code` + `episode_id` + `force_reason`，`force_reason` 必填）
+- `POST /bgssai/user/quality/issue-handle`（`issue_id` + `handle_action`：`FIXED` 已修复 /
+  `WONT_FIX` 不改（须带 `wont_fix_reason`，预置理由码）/ `ACKNOWLEDGED` 知悉不改（仅 `MINOR` 级）；
+  返回该 issue 的增量校验结果与所属维度分数、门禁总分的局部刷新值，不触发整门重跑、不整门计费）
+- `POST /bgssai/user/quality/threshold-adjust`（`work_id` + `threshold_score` + `adjust_reason`，
+  `adjust_reason` 必填；可上调或下调，写入 `drama_quality_threshold_log`）
+- `GET /bgssai/user/quality/threshold-logs?work_id=w-10001`（阈值调整留痕列表）
 - `POST /bgssai/user/quality/variants-generate`（`variant_node` + `target_id` + `variant_count`；返回 `batch_id`）
 - `GET /bgssai/user/quality/variants?variant_node=EPISODE_OPENING&target_id=e-20001`
   （各方案素材、三视角评分、`recommended_flag`）
@@ -157,14 +192,19 @@
 - 管理端：`GET /bgssai/admin/quality/templates/list` · `POST /bgssai/admin/quality/templates/create` ·
   `/update` · `/toggle-enabled`；`POST /bgssai/admin/quality/threshold-save`（门禁阈值）
 - 鉴权：用户端需 `Jwttoken`；管理端另需 `PLATFORM_ADMIN`。
-- 错误码：`4003` 越权 / `4006` 前置阶段未就绪即跑门禁、强制放行未填理由 / `4007` 余额不足 / `429` 限流。
+- 错误码：`4003` 越权 / `4006` 前置阶段未就绪即跑门禁、强制放行未填理由、
+  阈值调整未填理由、「不改」未选理由 / `4007` 余额不足 / `429` 限流。
 
 ## 五、流程 / 状态机（须配图）
 
 四道门的位置、评审团与返工闭环见 [`flow-quality-pipeline.html`](./flow-quality-pipeline.html)。
 
 `gate_status`：`NOT_RUN` → `RUNNING` → `PASSED`（`gate_score` >= 阈值）/ `FAILED`（低于阈值）；
-`FAILED` 可经强制放行转 `FORCE_PASSED`（留痕）。上游内容变更时该门回落 `NOT_RUN`，须重跑。
+`FAILED` 可经强制放行转 `FORCE_PASSED`（留痕）。上游内容变更时该门回落 `NOT_RUN`，须重跑；
+处理单条 issue 走增量校验（规则 7.2），不使该门回落，仅局部刷新分数。
+
+`issue_handle_status`：`OPEN` →（处理）→ `FIXED` / `WONT_FIX`（须选理由）/
+`ACKNOWLEDGED`（仅 `MINOR`，一键知悉不改，不入质量档案）。
 
 ## 六、数据模型影响
 
@@ -175,13 +215,15 @@
   `force_pass_flag`、`force_reason`、`run_task_id`、`created_time`、`updated_time`。
 - 新增表 `drama_quality_issue`：`issue_id`(PK)、`gate_id`、`episode_id`、`dimension`、`issue_desc`、
   `suggestion`、`fix_action`、`target_type`、`target_id`、`scene_no`、`shot_no`、`severity`、
-  `resolved_flag`、`created_time`。
+  `handle_status`、`wont_fix_reason`、`handled_time`、`created_time`。
+- 新增表 `drama_quality_threshold_log`：`log_id`(PK)、`work_id`、`user_id`、`old_threshold_score`、
+  `new_threshold_score`、`adjust_reason`、`created_time`（作品级阈值调整留痕，只增不删）。
 - 新增表 `drama_variant`：`variant_id`(PK)、`work_id`、`episode_id`、`variant_node`、`target_id`、
   `variant_no`、`asset_id`、`content_json`、`judge_json`、`avg_score`、`recommended_flag`、
   `selected_flag`、`source_task_id`、`created_time`。
 - 作品级新增列：`drama_work.template_id`、`drama_work.template_override_json`、
   `drama_work.quality_threshold_score`、`drama_work.overall_quality_score`。
-- 索引：`drama_quality_gate(episode_id, gate_code)`、`drama_quality_issue(gate_id, resolved_flag)`、
+- 索引：`drama_quality_gate(episode_id, gate_code)`、`drama_quality_issue(gate_id, handle_status)`、
   `drama_variant(variant_node, target_id)`。
 
 ## 七、补充枚举（登记回 `drama-work-management.md` 附录，此处仅列新增项）
@@ -192,8 +234,10 @@
 | `gate_status` 门禁状态 | `NOT_RUN` 未运行 / `RUNNING` 评审中 / `PASSED` 已通过 / `FAILED` 未达标 / `FORCE_PASSED` 强制放行 |
 | `judge_role` 评审视角 | `AUDIENCE` 观众视角 / `CENSOR` 平台审核视角 / `DIRECTOR` 导演视角 |
 | `fix_action` 返工动作 | `REWRITE_SCENE` / `ADJUST_SHOT` / `REGENERATE_SHOT` / `REDUB_LINE` / `RECOMPOSE` |
-| `severity` 问题严重度 | `CRITICAL` 致命 / `MAJOR` 主要 / `MINOR` 次要 |
+| `severity` 问题严重度 | `CRITICAL` 致命 / `MAJOR` 严重 / `MINOR` 轻微 |
 | `variant_node` 多方案节点 | `EPISODE_OPENING` 单集开场 / `EPISODE_HOOK` 集末钩子 / `KEY_SHOT` 关键反转镜头 / `WORK_COVER` 作品封面 |
+| `issue_handle_status` issue 处理状态 | `OPEN` 待处理 / `FIXED` 已修复 / `WONT_FIX` 不改（须选理由）/ `ACKNOWLEDGED` 知悉不改（仅 MINOR，不入质量档案） |
+| `wont_fix_reason` 不改理由 | `INTENDED` 有意为之 / `COST_TRADEOFF` 成本取舍 / `SCHEDULE_RUSH` 赶进度 / `OTHER` 其它 |
 
 ## 八、原型
 
