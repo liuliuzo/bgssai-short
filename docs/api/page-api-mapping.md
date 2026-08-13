@@ -22,6 +22,7 @@
 | `login.html` | `/login` | `POST /bgssai/user/login` | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录，`user_id` 取自 JWT） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
+| `mcp-tokens.html` | `/mcp-tokens` | `POST /bgssai/mcp-tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT | [`MCP.md`](./MCP.md) |
 
 ## iOS 端（`docs/demo-static/ios/`）
 

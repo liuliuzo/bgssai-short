@@ -91,3 +91,26 @@ CREATE TABLE `oauth_binding` (
   UNIQUE INDEX `uniq_ob_platform_openid`(`platform`, `open_id`) USING BTREE,
   INDEX `idx_ob_user`(`user_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '三方平台账号绑定' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- mcp_access_token MCP 个人访问令牌（AI 客户端接入 /api/mcp）
+-- 临时开发期明文落 token_hash 列；上生产前按 interim-plaintext 回滚闸门改回 SHA-256。
+-- ----------------------------
+DROP TABLE IF EXISTS `mcp_access_token`;
+CREATE TABLE `mcp_access_token` (
+  `id`                 BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`            VARCHAR(64)  NOT NULL                       COMMENT '归属用户 sys_user.user_id',
+  `token_name`         VARCHAR(64)  NOT NULL                       COMMENT '令牌备注名',
+  `token_hash`         VARCHAR(80)  NOT NULL                       COMMENT '令牌明文（临时开发期全量明文策略；列名沿用）',
+  `last_used_time`     DATETIME     DEFAULT NULL                   COMMENT '最近使用时间',
+  `del_flag`           TINYINT(1)   NOT NULL DEFAULT 0             COMMENT '软删 0/1',
+  `create_by`          VARCHAR(64)  NOT NULL DEFAULT 'system'      COMMENT '创建人',
+  `create_time`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by`          VARCHAR(64)  NOT NULL DEFAULT 'system'      COMMENT '更新人',
+  `update_time`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_mcp_token_hash` (`token_hash`),
+  KEY `idx_mcp_token_user` (`user_id`, `del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='MCP 个人访问令牌';
+
+

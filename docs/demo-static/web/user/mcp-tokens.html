@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 用户端 MCP 接入</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+      <h1 class="title" style="margin:0">MCP 接入</h1>
+      <span class="badge">USER</span>
+    </div>
+    <p class="subtitle">
+      导航：<a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
+      <a href="mcp-tokens.html">MCP 接入</a> ·
+      <a href="login.html">退出登录</a>
+    </p>
+
+    <div class="card">
+      <p class="subtitle">
+        创建个人访问令牌，供 Cursor / Claude 连接 <code>POST /api/mcp</code>。
+        明文仅创建时显示一次。当前工具仅登录日志与健康探针。
+      </p>
+      <p>查询 API：<code>POST /bgssai/mcp-tokens/list</code>（需请求头 <code>Jwttoken</code>）</p>
+      <p>动作 API：<code>POST /bgssai/mcp-tokens/create</code> body <code>{token_name}</code>；
+        <code>POST /bgssai/mcp-tokens/revoke</code> body <code>{id}</code></p>
+      <p>MCP 端点鉴权：<code>Authorization: Bearer bgs_mcp_...</code></p>
+      <table>
+        <thead>
+          <tr><th>token_name</th><th>token_masked</th><th>last_used_time</th><th>create_time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cursor</td><td>bgs_mcp_****abcd</td><td>2026-08-13 10:00</td><td>2026-08-13 09:00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+  </div>
+</body>
+</html>

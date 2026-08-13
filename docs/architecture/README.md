@@ -30,6 +30,7 @@ forward 到 `/index.html`。
 | 序列化 | `configuration/BgssConfig`：Jackson 2 全局 snake_case；Spring Boot 4 默认 Jackson 3，故显式插入 Jackson 2 转换器保住契约 |
 | CORS | `configuration/CorsConfig`：显式白名单（禁 `*`），按 profile 配置 allowed-origins |
 | 健康检查 | `health/**` + `configuration/AsyncConfig` 的 `healthProbeExecutor`：三个公开端点（存活 / 就绪 / 全量）+ 组件化探针 + 单检查硬超时 + 整批 TTL 缓存。全产品线统一口径见 Standards §13，详设见 `health-check-design.md` |
+| MCP | 用户端 `mcp/**`：`POST /api/mcp` PAT 自校验 + JSON-RPC；令牌管理 `POST /bgssai/mcp-tokens/*`。详设见 `mcp-server.md` |
 
 ### 请求处理链（示例：GET /bgssai/admin/login-logs）
 

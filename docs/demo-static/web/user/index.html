@@ -42,6 +42,12 @@
             <td><code>GET /bgssai/user/login-logs</code></td>
             <td>示例分页列表（仅本人记录，<code>user_id</code> 取自 JWT），消费 PageResponse</td>
           </tr>
+          <tr>
+            <td><a href="mcp-tokens.html">MCP 接入</a></td>
+            <td><code>/mcp-tokens</code></td>
+            <td><code>POST /bgssai/mcp-tokens/create</code> · <code>/list</code> · <code>/revoke</code></td>
+            <td>个人访问令牌管理；AI 客户端调用 <code>POST /api/mcp</code>（Bearer PAT）</td>
+          </tr>
         </tbody>
       </table>
     </div>

@@ -41,6 +41,11 @@
           <div class="n-title">登录日志</div>
           <div class="n-route">/login-logs</div>
         </div>
+        <div class="arrow">→<small>点击「MCP 接入」</small></div>
+        <div class="node">
+          <div class="n-title">MCP 接入</div>
+          <div class="n-route">/mcp-tokens</div>
+        </div>
       </div>
 
       <div class="flow">
@@ -60,7 +65,7 @@
       <h2 class="title" style="font-size:15px">跳转规则</h2>
       <ul style="font-size:13px; color:var(--text); line-height:1.9">
         <li>访问 <code>/</code> 自动重定向到 <code>/home</code>（已登录）或 <code>/login</code>（未登录）。</li>
-        <li>受保护路由（<code>/home</code>、<code>/login-logs</code>）要求已登录且
+        <li>受保护路由（<code>/home</code>、<code>/login-logs</code>、<code>/mcp-tokens</code>）要求已登录且
           <code>role_code=USER</code>，否则跳回 <code>/login</code>。</li>
         <li>已登录用户访问 <code>/login</code> 自动跳回 <code>/home</code>。</li>
         <li>接口返回 <code>code=2002</code>（token 失效 / 上下文无身份）时前端清理身份并跳回 <code>/login</code>；

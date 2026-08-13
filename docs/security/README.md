@@ -15,6 +15,7 @@
 | 限流 | Bucket4j 令牌桶（`@RateLimit`），登录接口按 IP 限流，防暴力破解 |
 | 配置安全 | properties **禁用 `${}` 占位符**（Standards §1），环境差异分 profile 硬编码；生产凭证绝不入 git |
 | 数据越权 | 用户端分页接口以 JWT 中的 `user_id` 过滤，用户只能读本人数据 |
+| MCP PAT | Bearer `bgs_mcp_` 自校验；工具不接受 `user_id`；仅登录日志与健康探针。见 `mcp-server.md` |
 
 ## 变更约束
 

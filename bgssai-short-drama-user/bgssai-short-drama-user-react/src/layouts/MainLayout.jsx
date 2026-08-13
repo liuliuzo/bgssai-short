@@ -1,6 +1,6 @@
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, ApiOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import './main-layout.css'
 
@@ -8,6 +8,7 @@ import './main-layout.css'
 const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
   { key: '/login-logs', label: '我的登录日志', icon: <ProfileOutlined /> },
+  { key: '/mcp-tokens', label: 'MCP 接入', icon: <ApiOutlined /> },
 ]
 
 export default function MainLayout() {

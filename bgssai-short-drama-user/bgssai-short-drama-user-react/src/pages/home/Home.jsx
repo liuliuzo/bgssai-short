@@ -1,4 +1,5 @@
-import { Card, Descriptions, Typography } from 'antd'
+import { Card, Descriptions, Typography, Button } from 'antd'
+import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../../store/user'
 
 const { Title, Paragraph } = Typography
@@ -6,6 +7,7 @@ const { Title, Paragraph } = Typography
 // Sample landing page. Replace with the product home.
 export default function Home() {
   const userInfo = useUserStore((s) => s.userInfo)
+  const navigate = useNavigate()
 
   return (
     <div>
@@ -24,6 +26,9 @@ export default function Home() {
           </Descriptions.Item>
           <Descriptions.Item label="用户 ID">{userInfo?.user_id || '-'}</Descriptions.Item>
         </Descriptions>
+        <Button type="link" style={{ paddingLeft: 0, marginTop: 8 }} onClick={() => navigate('/mcp-tokens')}>
+          MCP 接入
+        </Button>
       </Card>
     </div>
   )

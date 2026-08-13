@@ -5,6 +5,7 @@ import Login from './pages/login/Login'
 import OAuthCallback from './pages/login/OAuthCallback'
 import Home from './pages/home/Home'
 import LoginLogsPage from './pages/loginLogs/LoginLogsPage'
+import McpTokens from './pages/mcp/McpTokens'
 
 function RequireAuth({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
@@ -49,6 +50,7 @@ export default function App() {
       >
         <Route path="/home" element={<Home />} />
         <Route path="/login-logs" element={<LoginLogsPage />} />
+        <Route path="/mcp-tokens" element={<McpTokens />} />
         <Route path="/" element={<Navigate to="/home" replace />} />
       </Route>
 

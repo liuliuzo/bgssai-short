@@ -54,6 +54,8 @@
 | 存活探针（两端同构，公开） | GET | `/bgssai/health/liveness` | `health-check.md` |
 | 就绪探针（两端同构，公开） | GET | `/bgssai/health/readiness` | `health-check.md` |
 | 全量健康报告（两端同构，公开） | GET | `/bgssai/health` | `health-check.md` |
+| MCP 协议（用户端，PAT） | POST | `/api/mcp` | `MCP.md` |
+| MCP 令牌创建 / 列表 / 吊销 | POST | `/bgssai/mcp-tokens/create` · `/list` · `/revoke` | `MCP.md` |
 
 > 健康检查三端点是**全产品线共用契约**（Standards §13），不带 `/admin` · `/user` 端前缀、不需要
 > `Jwttoken`，且 `code` / `success` 恒表达「接口调用成功」——健康结论只看 `result.status` 与 HTTP 状态码。
