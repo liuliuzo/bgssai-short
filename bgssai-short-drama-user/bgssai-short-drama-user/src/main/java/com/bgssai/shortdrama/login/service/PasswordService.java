@@ -2,17 +2,15 @@ package com.bgssai.shortdrama.login.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.bgssai.shortdrama.mapper.SysUserMapper;
 import com.bgssai.shortdrama.model.SysUser;
 
 /**
- * Password verification with BCrypt soft-migration.
- * Handles both BCrypt-hashed and legacy plaintext passwords.
- * On first plaintext match, upgrades in-place to BCrypt.
+ * 口令存储口径：本项目一律明文存储、明文比对（全环境统一，不分开发 / 生产）。
+ * hash() 直接返回原文入库、比对成功后不回写；为兼容库内可能残留的历史 BCrypt 行，
+ * 校验时若发现存量哈希仍走哈希校验，其余一律明文等值比对。
  */
 @Service
 public class PasswordService {
@@ -25,14 +23,10 @@ public class PasswordService {
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    @Autowired
-    private SysUserMapper sysUserMapper;
-
     /**
-     * Verify raw password against stored value.
-     * Handles BCrypt hash and legacy plaintext. Upgrades plaintext on success.
+     * 校验原文口令：库内为存量 BCrypt 哈希时走哈希校验（兼容旧数据），否则明文等值比对。
      *
-     * @return true if password is correct, false otherwise
+     * @return true 表示口令正确
      */
     public boolean matches(SysUser sysUser, String rawPassword) {
         if (sysUser == null || rawPassword == null || sysUser.getPassword() == null) {
@@ -43,33 +37,18 @@ public class PasswordService {
         if (isBcryptHash(stored)) {
             return encoder.matches(rawPassword, stored);
         }
-        if (stored.equals(rawPassword)) {
-            upgradeToBcrypt(sysUser, rawPassword);
-            return true;
-        }
-        return false;
+        return stored.equals(rawPassword);
     }
 
+    /** 明文口径：入库口令直接存原文，不做哈希。 */
     public String hash(String rawPassword) {
         if (rawPassword == null) throw new IllegalArgumentException("rawPassword null");
-        return encoder.encode(rawPassword);
+        return rawPassword;
     }
 
     private static boolean isBcryptHash(String stored) {
         return stored.startsWith(BCRYPT_PREFIX_2A)
             || stored.startsWith(BCRYPT_PREFIX_2B)
             || stored.startsWith(BCRYPT_PREFIX_2Y);
-    }
-
-    private void upgradeToBcrypt(SysUser sysUser, String rawPassword) {
-        try {
-            SysUser update = new SysUser();
-            update.setId(sysUser.getId());
-            update.setPassword(encoder.encode(rawPassword));
-            sysUserMapper.updateByPrimaryKeySelective(update);
-            log.info("[PasswordService] legacy password upgraded to BCrypt userId={}", sysUser.getUserId());
-        } catch (Exception e) {
-            log.warn("[PasswordService] upgrade failed userId={} err={}", sysUser.getUserId(), e.getMessage());
-        }
     }
 }
