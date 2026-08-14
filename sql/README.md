@@ -17,14 +17,13 @@ mysql -h <host> -u <user> -p < sql/DDL.sql
 mysql -h <host> -u <user> -p bgssai_short_drama < sql/DML.sql
 ```
 
-## 示例账号
+## 开发环境种子账号
 
 | 账号 | 密码 | 角色 | 可登录 |
 | --- | --- | --- | --- |
 | `admin` | `admin123` | `PLATFORM_ADMIN` | 管理端 8080 |
-| `demo` | `demo123` | `USER` | 用户端 8081 |
 
-生产环境请删除或改密上述账号，切勿沿用示例密码。
+用户端通过注册或第三方授权建号。登录页不得公示口令。生产环境请改密 `admin`，不要沿用开发口令。
 
 ## 结构性变更约定
 
