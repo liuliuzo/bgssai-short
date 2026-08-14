@@ -26,15 +26,15 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 | 基础链路（自骨架继承） | `common/**`、`configuration/**`、`utils/**` | 统一响应与分页、JWT 登录鉴权与 `@NeedAop` 切面、角色守卫、全局异常与错误码、全链路 traceId、Bucket4j 限流、CORS、SPA 回退。逐项清单见 `README.md`「内置的基础链路」 |
 | 健康检查 | `health/**` + `configuration/AsyncConfig` + 对应四层产出 | 全产品线唯一口径（Standards §13）：`/bgssai/health/liveness` · `/readiness` · `/bgssai/health` 三端点、组件化探针、单检查硬超时、整批 TTL 缓存。只对齐、不发明 |
 | 本产品 schema 权威 | `sql/DDL.sql`、`sql/DML.sql` | 收敛到仓库根、目录扁平，不用 `migration/` 与 `V*__xxx.sql`；当前仅 `sys_user`、`login_log` 两张基础表 |
-| 交付与部署范式 | 前端 `npm run build:deploy` → 后端 `static/`、`deploy/**`、`.github/workflows/ci.yml` | 单体交付（前端产物打进后端 jar）、密钥模板、CI 构建校验 |
+| 交付与部署范式 | 前端 `npm run build:deploy` → 后端 `static/`、`deploy/**`、`Jenkinsfile` | 单体交付（前端产物打进后端 jar）；部署通道只有 Jenkins |
 | 成本红线闸门 | `.claude/hooks/block-scheduled-automation.py` | 拦截会自唤起、持续消耗 token 的循环任务（Standards §12） |
 
 ## 职责边界（本仓不做什么）
 
 * 不维护规范本体：编码与研发规范、目录拓扑的唯一权威在 `bgssai-skeleton`。本仓 `docs/BGSSAI-Standards.md`
   是骨架仓的**同步副本**，发现规范缺口应回骨架仓改本体再同步，**严禁**只在本仓改出第二套口径。
-* 不做应用部署与 Jenkins / Actions 编排（`bgssai-workflows`）、不执行建库 / 清库（`bgssai-database`）、
-  不采集服务器日志（`bgssai-logs`）。
+* 不维护 Jenkins 共享库与 Job 清单（`bgssai-workflows`）、不执行建库 / 清库（`bgssai-database`）、
+  不采集服务器日志（`bgssai-logs`）。本仓只保留 20 余行的 `Jenkinsfile` / `jenkins/Jenkinsfile.stop` 作为单产品部署 / 关停壳子。
 * 不承载其它产品的业务：本仓只放 AI 短剧制作平台自身的需求与实现。
 
 ## 产品线仓库拓扑（4 个非应用仓 + 产品仓）
@@ -72,13 +72,14 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 * 接口的 POST 业务参数一律走 JSON Body（POST→body，详见 Standards §3）。
 * 目录权威：`docs/DIRECTORY-LAYOUT.md`。
 * 提交信息遵循 Conventional Commits。
+* 部署通道只有一条：自建 Jenkins（本仓 `Jenkinsfile` 负责部署、`jenkins/Jenkinsfile.stop` 负责关停，均**仅手动**触发（Jenkins 上 Build with Parameters），不挂 SCM 触发器、不配 webhook；搭建与用法见中央仓 `bgssai-workflows/jenkins/README.md`）。GitHub Actions 部署通道不使用。部署失败时，不得自动触发重新部署：不重跑部署流水线、不向 `develop` 推送空提交或改动以促成重部署；仅报告失败并定位原因，重新部署由人工手动执行。
 * 一切产出物（代码 / 文档 / 原型 / 提交信息 / PR 描述 / 评审与回信）**全局禁用 emoji 及装饰性图形符号**；语义性符号（→、×、§ 等用于流程示意、表格与条款引用者）不属装饰性符号，允许使用。
 * `docs/BGSSAI-Standards.md` 与 `docs/DIRECTORY-LAYOUT.md` 为骨架仓同步副本，**本仓不改本体**；需要改规范时先在骨架仓定稿，再整份同步回本仓。
 
 ## 工程命名与拓扑
 
 * 后端包名 `com.bgssai.shortdrama`；聚合父 `com.bgssai.shortdrama:bgssai-short-drama-parent`。
-* 管理端 `bgssai-short-drama-admin`（后端 8080 / 前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。
-* 用户端 `bgssai-short-drama-user`（后端 8081 / 前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
+* 管理端 `bgssai-short-drama-admin`（远程 dev 8082 HTTP / prod 8080 HTTP / 本地前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。dev 管理端与 Jenkins 共机，避开其 8080。
+* 用户端 `bgssai-short-drama-user`（远程 8081 HTTP / 本地前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
 * 两后端共用同一 MySQL 库 `bgssai_short_drama`；当前仅有 `sys_user`、`login_log` 两张基础表，业务表随需求逐个落地。
 * 新增 / 变更表结构后，用 MyBatis Generator 按新库表重新生成 `model/**`、`mapper/**` 与 Mapper XML（Standards §2「Generator 同步更新契约」），**禁止**手改这三件套。

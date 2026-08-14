@@ -37,7 +37,7 @@ bgssai-short-drama-parent/         # 本仓库根（Maven 聚合父工程，pack
 ├── pom.xml                        # Maven 聚合父工程（聚合两个后端模块）
 ├── sql/                           # DDL.sql / DML.sql（本产品共享库权威 schema）
 ├── docs/                          # 所有文档（单一事实来源）
-├── deploy/                        # 部署说明与密钥模板
+├── deploy/                        # 部署说明与 Jenkins 流水线脚本（与中央仓逐字节一致）
 ├── .github/workflows/             # CI（构建校验）
 │
 ├── bgssai-short-drama-admin/      # 【管理端】端口 8080，role_code=PLATFORM_ADMIN
@@ -99,8 +99,8 @@ mysql bgssai_short_drama < sql/DML.sql
 # 2. 编译后端（根聚合工程一次编译两个模块）
 mvn -q -DskipTests compile
 
-# 3. 启动后端（各自独立部署，共享库）
-mvn -pl bgssai-short-drama-admin/bgssai-short-drama-admin spring-boot:run   # 管理端 8080
+# 3. 启动后端（dev 档连境外开发库；管理端远程 8082 避开 Jenkins 8080，本机可 --server.port=8080）
+mvn -pl bgssai-short-drama-admin/bgssai-short-drama-admin spring-boot:run   # 管理端
 mvn -pl bgssai-short-drama-user/bgssai-short-drama-user   spring-boot:run   # 用户端 8081
 
 # 4. 启动前端（另开终端）
