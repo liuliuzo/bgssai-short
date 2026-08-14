@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * User-app backend (business plane). Runs on port 8081.
- * Shares one MySQL database with the admin-console backend (bgssai-short-drama-admin, port 8080).
+ * User-app backend (business plane). Remote deploy: HTTPS 443 + HTTP 80 redirect.
+ * Shares one MySQL database with the admin-console backend (bgssai-short-drama-admin).
  * Serves the normal user role; protected endpoints are guarded by @NeedAop.
  */
 @SpringBootApplication

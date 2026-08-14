@@ -11,6 +11,8 @@
 | `spring.datasource.username` | 数据库账号 | 环境 DBA 提供 |
 | `spring.datasource.password` | 数据库密码 | 环境 DBA 提供 |
 | `jwt.secret` | JWT 签名密钥，>= 32 字符 | `openssl rand -base64 48`，dev/test/prod 各不复用、两端互不复用 |
+| `server.ssl.key-store` | TLS 证书 keystore 路径 | classpath 内置 JKS；**文件名（不含 .jks）= 应用域名** |
+| `server.ssl.key-store-password` | keystore 口令 | 证书签发时生成 |
 
 ## 落位方式
 
@@ -22,9 +24,11 @@
 
 ## 安全约束与代价
 
-- **代价（登记，不隐藏）**：生产数据库口令与 `jwt.secret` 随仓库和 jar 分发——凡能
+- **代价（登记，不隐藏）**：生产数据库口令、`jwt.secret` 与 keystore 口令随仓库和 jar 分发——凡能
   读仓库或取到 jar 的人即可直连生产库、伪造任意用户 token；轮换需改代码 + 重新构建部署，
   旧值永久留在 git 历史。这是**开发阶段以排障速度优先的取舍**，上线前应重新评估是否恢复服务器侧注入。
 - `jwt.secret` 留空或不足 32 字符时 `JwtUtil` 启动 fail-fast（预期安全行为）。
-- 本产品两端与中间件 / Jenkins 共机，当前未上 HTTPS；对外域名见 `deploy/README.md`。
+- prod / dev 启用 `server.ssl.enabled=true`，keystore 为 classpath 内置 JKS、口令写在同一份 profile 文件里；
+  test 档关闭 SSL，`server.ssl.key-store` / `key-store-password` 保持空值是刻意的（不读这两项）。
+- **域名约定**：应用对外域名 = JKS 文件名去掉 `.jks`（例 `dev.admin.bgssai-short.com.jks` → `https://dev.admin.bgssai-short.com`）。
 - 泄漏或轮换：轮换 `jwt.secret` 会使存量 token 失效（用户需重新登录），属预期。

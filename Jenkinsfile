@@ -19,8 +19,8 @@
 // 代码、就地构建、就地部署。走哪条由共享库 bgssaiDeployEnd 按环境判断。
 // 目标机因此需要具备构建工具链，一次性准备见中央仓 jenkins/install/provision-build-host.sh。
 //
-// 本产品两端与中间件 / Jenkins 共机，未上 HTTPS 443：健康检查协议钉死 http，端口由主机清单
-// SHORT_DRAMA_<端>_PORT 给出（dev admin=8082 避开 Jenkins 8080，其余见 hosts 模板）。
+// 本产品两端与中间件 / Jenkins 共机，但 80/443 空闲（Jenkins 占 8080，不占 443）。
+// 与其它产品一致：HTTPS 443 + HTTP 80 跳转。健康检查钉死 https / 443。
 
 @Library('bgssai') _
 
@@ -36,7 +36,8 @@ PRODUCT = [
   product: 'short-drama',
   packageManager: 'npm',
   frontendScript: 'build:deploy',
-  healthScheme: 'http',
+  appPort: '443',
+  healthScheme: 'https',
 ]
 
 pipeline {

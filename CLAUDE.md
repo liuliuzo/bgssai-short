@@ -79,7 +79,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 ## 工程命名与拓扑
 
 * 后端包名 `com.bgssai.shortdrama`；聚合父 `com.bgssai.shortdrama:bgssai-short-drama-parent`。
-* 管理端 `bgssai-short-drama-admin`（远程 dev 8082 HTTP / prod 8080 HTTP / 本地前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。dev 管理端与 Jenkins 共机，避开其 8080。
-* 用户端 `bgssai-short-drama-user`（远程 8081 HTTP / 本地前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
+* 管理端 `bgssai-short-drama-admin`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。dev 管理端与 Jenkins 共机，避开其 8080。
+* 用户端 `bgssai-short-drama-user`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
 * 两后端共用同一 MySQL 库 `bgssai_short_drama`；当前仅有 `sys_user`、`login_log` 两张基础表，业务表随需求逐个落地。
 * 新增 / 变更表结构后，用 MyBatis Generator 按新库表重新生成 `model/**`、`mapper/**` 与 Mapper XML（Standards §2「Generator 同步更新契约」），**禁止**手改这三件套。

@@ -99,9 +99,9 @@ mysql bgssai_short_drama < sql/DML.sql
 # 2. 编译后端（根聚合工程一次编译两个模块）
 mvn -q -DskipTests compile
 
-# 3. 启动后端（dev 档连境外开发库；管理端远程 8082 避开 Jenkins 8080，本机可 --server.port=8080）
+# 3. 启动后端（dev 档连境外开发库；远程 HTTPS 443。本机明文调试可加 --server.port=8080 --server.ssl.enabled=false）
 mvn -pl bgssai-short-drama-admin/bgssai-short-drama-admin spring-boot:run   # 管理端
-mvn -pl bgssai-short-drama-user/bgssai-short-drama-user   spring-boot:run   # 用户端 8081
+mvn -pl bgssai-short-drama-user/bgssai-short-drama-user   spring-boot:run   # 用户端
 
 # 4. 启动前端（另开终端）
 cd bgssai-short-drama-admin/bgssai-short-drama-admin-react && npm install && npm run dev   # 3001
