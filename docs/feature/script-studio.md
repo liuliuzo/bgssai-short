@@ -103,12 +103,12 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_script`：`script_id`(PK)、`episode_id`、`work_id`、`user_id`、`script_version`、
+- 新增表 `short_script`：`script_id`(PK)、`episode_id`、`work_id`、`user_id`、`script_version`、
   `script_status`、`scene_json`（场次与台词结构化正文）、`estimated_total_sec`、
   `rhythm_json`（体检结果）、`total_score`、`force_ready_flag`、`created_time`、`updated_time`。
-- 新增表 `drama_script_version`：`version_id`(PK)、`script_id`、`script_version`、`scene_json`、
+- 新增表 `short_script_version`：`version_id`(PK)、`script_id`、`script_version`、`scene_json`、
   `total_score`、`change_summary`、`created_time`（保留最近 20 版，超出按时间淘汰）。
-- 全剧大纲存 `drama_work.outline_json`，同时把每集标题 / 梗概回写 `drama_episode`。
+- 全剧大纲存 `short_work.outline_json`，同时把每集标题 / 梗概回写 `short_episode`。
 
 ## 七、原型
 

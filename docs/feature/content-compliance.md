@@ -51,7 +51,7 @@
      - `reject_desc`（该项驳回说明）；
      - `suggestion`（改写建议，口径与预检 `suggestion` 一致，复用同一改写建议生成逻辑）。
      整体可另附 `review_comment`（选填的总评）。
-  8. 审核动作全部落 `drama_review_record`（谁、何时、什么结论、什么原因），不可删除、可追溯。
+  8. 审核动作全部落 `short_review_record`（谁、何时、什么结论、什么原因），不可删除、可追溯。
   9. 管理端对创作内容**只读**：不得修改创作者的剧本、镜头与素材，只能给结论。
   10. 全部剧集审核通过后，作品 `work_status` 推进为 `COMPLETED`。
 
@@ -68,7 +68,7 @@
 6.1 整改仅涉及字幕 / 台词文本类修改时，可走轻量重合成（仅重烧字幕）后直接重提，
     不强制整集全量重合成。
 7. 全部剧集审核通过后作品状态自动变为 `COMPLETED`。
-8. 任一审核动作在 `drama_review_record` 留下不可删除的记录，含审核人 `user_id` 与时间。
+8. 任一审核动作在 `short_review_record` 留下不可删除的记录，含审核人 `user_id` 与时间。
 
 ## 四、接口契约（snake_case）
 
@@ -136,17 +136,17 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_review_record`：`review_id`(PK)、`work_id`、`episode_id`、`creator_user_id`、
+- 新增表 `short_review_record`：`review_id`(PK)、`work_id`、`episode_id`、`creator_user_id`、
   `review_status`、`risk_level`、`warn_count`、`block_count`、`film_asset_id`、`submitted_time`、
   `reviewer_user_id`、`reviewed_time`、`review_comment`、`reject_item_json`（结构化驳回项数组，
   每项含 `risk_category` / `episode_no` / `shot_no` 或 `line_no` / `reject_desc` / `suggestion`）、
   `submit_seq`（第几次提交）、`created_time`、`updated_time`。
 - `queue_position` 与 `estimated_review_hours` 为查询时按队列实时派生，不落库。
-- 新增表 `drama_compliance_hit`：`hit_id`(PK)、`work_id`、`episode_id`、`shot_id`、`check_scope`、
+- 新增表 `short_compliance_hit`：`hit_id`(PK)、`work_id`、`episode_id`、`shot_id`、`check_scope`、
   `risk_category`、`risk_level`、`scene_no`、`line_no`、`shot_no`、`hit_text`、`suggestion`、
   `resolved_flag`、`created_time`。
-- `drama_episode.review_status`、`drama_shot.risk_level` / `blocked_flag` 由本功能维护。
-- 审核记录只增不删（`drama_review_record` 无 `deleted_flag`）。
+- `short_episode.review_status`、`short_shot.risk_level` / `blocked_flag` 由本功能维护。
+- 审核记录只增不删（`short_review_record` 无 `deleted_flag`）。
 
 ## 七、原型
 

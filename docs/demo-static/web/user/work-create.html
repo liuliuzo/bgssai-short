@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 新建作品</title>
   <link rel="stylesheet" href="../assets/theme.css" />
-  <link rel="stylesheet" href="../assets/shortdrama.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
 </head>
 <body>
 <div class="app">
@@ -257,7 +257,7 @@
 
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        接口 <code>POST /bgssai/user/drama-works/create</code>（POST 业务参数走 JSON Body），
+        接口 <code>POST /bgssai/user/short-works/create</code>（POST 业务参数走 JSON Body），
         必填仅 <code>work_title</code> 与 <code>one_line_pitch</code>（梗概必填，提交即产生一条
         <code>task_type=TEXT</code> 的大纲生成任务），返回 <code>work_id</code>。
         高级设置字段（<code>genre</code> / <code>episode_count</code> /

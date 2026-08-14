@@ -48,7 +48,7 @@
        `TIMELINE_JUMP` 时间线无交代跳跃、`EMOTION_RESET` 情绪无过渡归零）——新增检查；
      - **镜头层**：五类跨镜头断裂（`SPACE` / `LIGHT` / `OUTFIT` / `PROP` / `EYELINE`）——
        数据来自 `previz-text-storyboard.md` 与走位轴线判定，本页只聚合不另算。
-  7. **伏笔台账** `drama_foreshadow`：每条伏笔记录埋设位置（集 / 场）、计划回收位置、当前状态
+  7. **伏笔台账** `short_foreshadow`：每条伏笔记录埋设位置（集 / 场）、计划回收位置、当前状态
      （`PLANTED` 已埋未收 / `PAID_OFF` 已回收 / `ORPHAN` 回收了没埋过）。剧本生成时自动抽取候选，
      创作者可增删改；全剧完结时仍为 `PLANTED` 的伏笔在质量档案中列出。
   8. **一键重查**：上游内容变更后本页标 `stale_flag`，重查为 `TEXT` 任务（整剧约 0.05 元），
@@ -128,14 +128,14 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_foreshadow`：`foreshadow_id`(PK)、`work_id`、`user_id`、`foreshadow_desc`、
+- 新增表 `short_foreshadow`：`foreshadow_id`(PK)、`work_id`、`user_id`、`foreshadow_desc`、
   `setup_episode_no`、`setup_scene_no`、`payoff_episode_no`、`foreshadow_status`、
   `auto_extracted_flag`、`deleted_flag`、`created_time`、`updated_time`。
-- 新增表 `drama_episode_gap`：`gap_id`(PK)、`work_id`、`from_episode_no`、`to_episode_no`、
+- 新增表 `short_episode_gap`：`gap_id`(PK)、`work_id`、`from_episode_no`、`to_episode_no`、
   `gap_type`、`issue_desc`、`suggestion`、`resolved_flag`、`created_time`。
 - 看样片与连贯性中心其余数据均为既有表的聚合视图，不新增存储。
 
-## 七、补充枚举（登记回 `drama-work-management.md` 附录）
+## 七、补充枚举（登记回 `short-work-management.md` 附录）
 
 | 枚举 | 值 |
 | --- | --- |
@@ -157,7 +157,7 @@
 
 ## 九、四层同步检查清单
 
-- [x] 需求（本文件；枚举同步登记到 `drama-work-management.md` 附录）
+- [x] 需求（本文件；枚举同步登记到 `short-work-management.md` 附录）
 - [x] 原型（`episode-preview.html`、`continuity-center.html`、`work-detail.html` 及 `PAGE-FLOW.html`）
 - [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
 - [ ] 代码与数据库

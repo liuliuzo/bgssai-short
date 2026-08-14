@@ -24,7 +24,7 @@
   而不是自由发挥出一篇小说。
 
 - 业务规则：
-  1. 平台维护**结构模板库** `drama_reference_template`（管理端维护，用户端只读选用），
+  1. 平台维护**结构模板库** `short_reference_template`（管理端维护，用户端只读选用），
      每个模板按题材给出：
      - `hook_type_list`：开场钩子类型（如身份反差 / 当众羞辱 / 死而复生 / 误会顶点）；
      - `beat_sheet_json`：单集节拍表（第 0-3 秒钩子、3-30 秒建立、30-60 秒升级、60-85 秒反转、
@@ -54,7 +54,7 @@
   5. 每道门产出 `gate_score`（0-100）、`gate_status` 与 `issue_list`（定位 + 原因 + 建议 + 一键返工动作）。
      默认阈值 75；**首集阈值 85**（首集决定完播与追更，标准更高，见规则 8）。默认阈值由管理端维护；
      **作品级阈值可随时上调或下调**，每次调整写入留痕（操作人、时间、原值、新值、调整理由，
-     落 `drama_quality_threshold_log`），在质量报告页可查——阈值是创作者自己的水准线，不是单向棘轮。
+     落 `short_quality_threshold_log`），在质量报告页可查——阈值是创作者自己的水准线，不是单向棘轮。
   6. 未达标不硬性阻断：允许**强制放行**（`FORCE_PASSED`），但必须逐条确认，且写入作品质量档案；
      `BLOCK` 级合规问题除外——那是合规红线，由 `content-compliance.md` 硬拦截，与质量门无关。
   7. 每条 `issue` 必须可执行：给出 `fix_action`（`REWRITE_SCENE` 重写场次 / `ADJUST_SHOT` 调整镜头参数 /
@@ -76,7 +76,7 @@
 - 业务规则：
   8. **首集特权**：第 1 集自动启用更高阈值（默认 85）与更多方案数（开场默认 3 版），
      因为首集的完播与追更决定整部剧的命运。
-  9. **多方案择优**（`drama_variant`）适用节点：单集开场（前 3 秒）、集末钩子、
+  9. **多方案择优**（`short_variant`）适用节点：单集开场（前 3 秒）、集末钩子、
      结构模板标注的反转集关键镜头、作品封面。每个节点生成 N 版（默认 3，上限 5），
      由 AI 评审团打分排序，人工终选；未选中的方案保留可回看，不重复计费。
   10. 多方案的费用在发起前预估并计入预算闸门（口径同 `shot-generation.md`），
@@ -181,7 +181,7 @@
   `WONT_FIX` 不改（须带 `wont_fix_reason`，预置理由码）/ `ACKNOWLEDGED` 知悉不改（仅 `MINOR` 级）；
   返回该 issue 的增量校验结果与所属维度分数、门禁总分的局部刷新值，不触发整门重跑、不整门计费）
 - `POST /bgssai/user/quality/threshold-adjust`（`work_id` + `threshold_score` + `adjust_reason`，
-  `adjust_reason` 必填；可上调或下调，写入 `drama_quality_threshold_log`）
+  `adjust_reason` 必填；可上调或下调，写入 `short_quality_threshold_log`）
 - `GET /bgssai/user/quality/threshold-logs?work_id=w-10001`（阈值调整留痕列表）
 - `POST /bgssai/user/quality/variants-generate`（`variant_node` + `target_id` + `variant_count`；返回 `batch_id`）
 - `GET /bgssai/user/quality/variants?variant_node=EPISODE_OPENING&target_id=e-20001`
@@ -208,25 +208,25 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_reference_template`：`template_id`(PK)、`template_name`、`genre`、`hook_type_json`、
+- 新增表 `short_reference_template`：`template_id`(PK)、`template_name`、`genre`、`hook_type_json`、
   `beat_sheet_json`、`turning_point_json`、`taboo_json`、`enabled_flag`、`created_time`、`updated_time`。
-- 新增表 `drama_quality_gate`：`gate_id`(PK)、`work_id`、`episode_id`、`user_id`、`gate_code`、
+- 新增表 `short_quality_gate`：`gate_id`(PK)、`work_id`、`episode_id`、`user_id`、`gate_code`、
   `gate_score`、`threshold_score`、`gate_status`、`judge_json`（三视角评分与结论）、`divergent_flag`、
   `force_pass_flag`、`force_reason`、`run_task_id`、`created_time`、`updated_time`。
-- 新增表 `drama_quality_issue`：`issue_id`(PK)、`gate_id`、`episode_id`、`dimension`、`issue_desc`、
+- 新增表 `short_quality_issue`：`issue_id`(PK)、`gate_id`、`episode_id`、`dimension`、`issue_desc`、
   `suggestion`、`fix_action`、`target_type`、`target_id`、`scene_no`、`shot_no`、`severity`、
   `handle_status`、`wont_fix_reason`、`handled_time`、`created_time`。
-- 新增表 `drama_quality_threshold_log`：`log_id`(PK)、`work_id`、`user_id`、`old_threshold_score`、
+- 新增表 `short_quality_threshold_log`：`log_id`(PK)、`work_id`、`user_id`、`old_threshold_score`、
   `new_threshold_score`、`adjust_reason`、`created_time`（作品级阈值调整留痕，只增不删）。
-- 新增表 `drama_variant`：`variant_id`(PK)、`work_id`、`episode_id`、`variant_node`、`target_id`、
+- 新增表 `short_variant`：`variant_id`(PK)、`work_id`、`episode_id`、`variant_node`、`target_id`、
   `variant_no`、`asset_id`、`content_json`、`judge_json`、`avg_score`、`recommended_flag`、
   `selected_flag`、`source_task_id`、`created_time`。
-- 作品级新增列：`drama_work.template_id`、`drama_work.template_override_json`、
-  `drama_work.quality_threshold_score`、`drama_work.overall_quality_score`。
-- 索引：`drama_quality_gate(episode_id, gate_code)`、`drama_quality_issue(gate_id, handle_status)`、
-  `drama_variant(variant_node, target_id)`。
+- 作品级新增列：`short_work.template_id`、`short_work.template_override_json`、
+  `short_work.quality_threshold_score`、`short_work.overall_quality_score`。
+- 索引：`short_quality_gate(episode_id, gate_code)`、`short_quality_issue(gate_id, handle_status)`、
+  `short_variant(variant_node, target_id)`。
 
-## 七、补充枚举（登记回 `drama-work-management.md` 附录，此处仅列新增项）
+## 七、补充枚举（登记回 `short-work-management.md` 附录，此处仅列新增项）
 
 | 枚举 | 值 |
 | --- | --- |
@@ -251,7 +251,7 @@
 
 ## 九、四层同步检查清单
 
-- [x] 需求（本文件；枚举同步登记到 `drama-work-management.md` 附录）
+- [x] 需求（本文件；枚举同步登记到 `short-work-management.md` 附录）
 - [x] 原型（用户端 `quality-report.html` + 管理端 `quality-templates.html`，及两端 `PAGE-FLOW.html`）
 - [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
 - [ ] 代码与数据库

@@ -18,7 +18,7 @@
 - 用户故事三：作为 `USER`，我希望角色卡上直接绑定音色，配音时不用再逐集挑一遍。
 
 - 业务规则：
-  1. 角色卡 `drama_character` 挂在**作品**级，跨全部剧集复用；剧本定稿时除角色名外同步抽取
+  1. 角色卡 `short_character` 挂在**作品**级，跨全部剧集复用；剧本定稿时除角色名外同步抽取
      外观描述与出场场次清单，预填 `appearance_prompt` 后进入「待建卡」列表（`card_status=CANDIDATE`）；
      剧本中出现的新场景名同样自动创建场景卡（`card_status=CANDIDATE`）。待建卡不自动生成图，
      避免无谓消耗。
@@ -35,7 +35,7 @@
      定妆照与 `outfit_code`；镜头引用角色时选择 `outfit_code`，默认取 `default_outfit_code`。
      造型用于处理剧情跨越时间线的换装需求，同一角色不同造型仍共享面部一致性指纹。
   5. 角色卡绑定音色 `voice_id` 与 `voice_speed`（见 `voice-subtitle.md`），配音默认取此绑定。
-  6. 场景卡 `drama_scene_card` 结构与角色卡对齐（描述 + 候选 + 定妆图 + 锁定），
+  6. 场景卡 `short_scene_card` 结构与角色卡对齐（描述 + 候选 + 定妆图 + 锁定），
      `card_type` 取 `SCENE`（场景）或 `PROP`（关键道具）。
   7. 改角色卡定妆照会影响后续生成，不回溯已生成镜头；界面须提示「已有 N 个镜头使用旧形象，
      是否加入重生成队列」，并按镜列出重生成预估费用（`estimated_cost_cent`）；批量重生成弹窗
@@ -101,13 +101,13 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_character`：`character_id`(PK)、`work_id`、`user_id`、`character_name`、`character_role`、
+- 新增表 `short_character`：`character_id`(PK)、`work_id`、`user_id`、`character_name`、`character_role`、
   `card_status`、`appearance_prompt`、`consistency_seed`、`default_outfit_code`、`outfit_json`、
   `voice_id`、`voice_speed`、`deleted_flag`、`created_time`、`updated_time`。
-- 新增表 `drama_scene_card`：`scene_card_id`(PK)、`work_id`、`user_id`、`card_type`、`card_name`、
+- 新增表 `short_scene_card`：`scene_card_id`(PK)、`work_id`、`user_id`、`card_type`、`card_name`、
   `appearance_prompt`、`consistency_seed`、`ref_image_asset_id`、`card_status`、`deleted_flag`、时间戳。
-- 唯一约束：`drama_character(work_id, character_name, deleted_flag)`。
-- 引用计数不落库，按 `drama_shot.character_ref_json` 实时统计。
+- 唯一约束：`short_character(work_id, character_name, deleted_flag)`。
+- 引用计数不落库，按 `short_shot.character_ref_json` 实时统计。
 
 ## 七、原型
 

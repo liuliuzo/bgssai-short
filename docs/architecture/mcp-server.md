@@ -1,6 +1,6 @@
 # MCP 服务架构
 
-用户端新增 `com.bgssai.shortdrama.mcp`：
+用户端新增 `com.bgssai.shortai.mcp`：
 
 - `McpEndpointController`：`POST /api/mcp`
 - `McpProtocolService`：JSON-RPC 分发 + Bucket4j（60/分钟，拒绝批量数组）

@@ -8,7 +8,7 @@
 -- 生产环境请删除或改密这两个示例账号；请勿在联网环境沿用示例密码。
 -- =====================================================================
 
-USE `bgssai_short_drama`;
+USE `bgssai_short`;
 
 DELETE FROM `sys_user` WHERE `user_name` IN ('admin', 'demo');
 
@@ -19,7 +19,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `org_co
 -- §B 用户端铺底数据（仅 dev / 联调；禁止生产执行）
 
 -- ===== BEGIN USER-VOLUME-SEED =====
--- Short Drama 用户端铺底（骨架产品：账号 / 登录 / OAuth / MCP）
+-- Short 用户端铺底（骨架产品：账号 / 登录 / OAuth / MCP）
 -- 本段由 tmp/gen_user_seed_dml.py 生成：约 1000 条用户端铺底，覆盖各功能模块。
 -- 登录账号 seeduserNNN / 口令 demo123
 -- 虚构演示数据；开发期口令按各产品既有 DML 口径。禁止生产执行。

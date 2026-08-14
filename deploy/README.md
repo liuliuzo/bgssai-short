@@ -1,7 +1,7 @@
 # 部署说明（deploy）
 
 两个后端均为 Java 21 + Spring Boot 4，以可执行 jar 运行（`java -jar`），不使用 Docker。前端为静态产物，
-由对应后端作为 SPA 提供。管理端与用户端**分机独立部署**，共享同一 MySQL 库 `bgssai_short_drama`。
+由对应后端作为 SPA 提供。管理端与用户端**分机独立部署**，共享同一 MySQL 库 `bgssai_short`。
 
 两端走 HTTPS 443 + HTTP 80 跳转（SslConfig），与其它产品一致。两端与中间件 / Jenkins 共机：
 Jenkins 占 8080、Redis 占 6379、EMQX 占 1883/8883 等，均不占 80/443。
@@ -27,7 +27,7 @@ dev 与 prod 共用同一条通道（选择规则收在共享库 `bgssaiDeployEn
 
 | 通道 | 状态 | 入口 |
 | --- | --- | --- |
-| **Jenkins** | 主用 | Jenkins -> `bgssai` 文件夹 -> `bgssai-short-drama deploy(dev)` / `bgssai-short-drama deploy(prod)`（关停为 `bgssai-short-drama stop(dev)` / `bgssai-short-drama stop(prod)`）-> Build with Parameters |
+| **Jenkins** | 主用 | Jenkins -> `bgssai` 文件夹 -> `bgssai-short deploy(dev)` / `bgssai-short deploy(prod)`（关停为 `bgssai-short stop(dev)` / `bgssai-short stop(prod)`）-> Build with Parameters |
 
 **环境由 Job 名决定，不是下拉框**：名字末尾是 `(dev)` 就是开发环境，是 `(prod)` 就是生产
 环境。所有任务点 Build 即执行，无需填写任何内容（可选 `target` 参数，不改就是两端都做）。
@@ -39,24 +39,24 @@ Jenkins 侧实现：本仓 `Jenkinsfile`（部署）与 `jenkins/Jenkinsfile.sto
 | 配置项 | Jenkins 落点 |
 | --- | --- |
 | SSH 用户名 / 密码 | 凭据 `bgssai-<env>-ssh`（Username with password） |
-| 目标主机 | 凭据 `bgssai-<env>-hosts`（Secret file）里的 `SHORT_DRAMA_USER_HOST` / `SHORT_DRAMA_ADMIN_HOST` |
-| 端口 / 协议 / 探针 | 同一文件里的 `SHORT_DRAMA_<端>_PORT` / `_HEALTH_SCHEME` / `_HEALTH_PATH` |
+| 目标主机 | 凭据 `bgssai-<env>-hosts`（Secret file）里的 `SHORT_USER_HOST` / `SHORT_ADMIN_HOST` |
+| 端口 / 协议 / 探针 | 同一文件里的 `SHORT_<端>_PORT` / `_HEALTH_SCHEME` / `_HEALTH_PATH` |
 
 部署失败时：不重跑流水线、不推空提交促成重部署；定位原因后由**人工手动**重新触发。
 健康检查失败时 `remote-deploy.sh` 已自动回滚到上一个可用 jar，服务应仍在跑旧版本。
 
-首次部署前请先跑 `bgssai-short-drama init database(dev|prod)`：就绪探针会探数据库，库不存在时发布会回滚。
+首次部署前请先跑 `bgssai-short init database(dev|prod)`：就绪探针会探数据库，库不存在时发布会回滚。
 
 ## 一、Jenkins 部署
 
 | 环境 | 部署 | 关停 |
 | --- | --- | --- |
-| `dev` | `bgssai-short-drama deploy(dev)` | `bgssai-short-drama stop(dev)` |
-| `prod` | `bgssai-short-drama deploy(prod)` | `bgssai-short-drama stop(prod)` |
+| `dev` | `bgssai-short deploy(dev)` | `bgssai-short stop(dev)` |
+| `prod` | `bgssai-short deploy(prod)` | `bgssai-short stop(prod)` |
 
 ### 目标主机与端口
 
-| Environment | `SHORT_DRAMA_ADMIN_HOST` | admin 端口 | `SHORT_DRAMA_USER_HOST` | user 端口 | 共机 |
+| Environment | `SHORT_ADMIN_HOST` | admin 端口 | `SHORT_USER_HOST` | user 端口 | 共机 |
 | --- | --- | --- | --- | --- | --- |
 | `dev` | `101.44.189.190` | **443** HTTPS | `101.44.26.229` | 443 HTTPS | admin 与 Jenkins 共机（Jenkins 占 8080，不占 443）；user 与应用网关-境外 / 注册中心-境外共机 |
 | `prod` | `121.37.142.152` | 443 HTTPS | `121.37.158.8` | 443 HTTPS | admin 与 EMQX-MQTT-境内共机；user 与 REDIS-境内共机 |
@@ -77,8 +77,8 @@ Jenkins 侧实现：本仓 `Jenkinsfile`（部署）与 `jenkins/Jenkinsfile.sto
 
 ```bash
 # 前端（各自构建并同步产物到对应后端 static/）
-cd bgssai-short-drama-admin/bgssai-short-drama-admin-react && npm ci && npm run build:deploy
-cd bgssai-short-drama-user/bgssai-short-drama-user-react   && npm ci && npm run build:deploy
+cd bgssai-short-admin/bgssai-short-admin-react && npm ci && npm run build:deploy
+cd bgssai-short-user/bgssai-short-user-react   && npm ci && npm run build:deploy
 
 # 后端（根聚合工程一次构建两个模块，产出可执行 jar）
 mvn -q -DskipTests clean package
@@ -105,10 +105,10 @@ mvn -q -DskipTests clean package
 
 ```bash
 # 管理端
-java -jar bgssai-short-drama-admin.jar --spring.profiles.active=prod
+java -jar bgssai-short-admin.jar --spring.profiles.active=prod
 
 # 用户端
-java -jar bgssai-short-drama-user.jar --spring.profiles.active=prod
+java -jar bgssai-short-user.jar --spring.profiles.active=prod
 ```
 
 配置全部来自 jar 内的 `application-prod.properties`。日志默认落 `/opt/bgssai/log`。

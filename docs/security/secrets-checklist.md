@@ -7,7 +7,7 @@
 
 | key | 说明 | 生成 / 来源 |
 | --- | --- | --- |
-| `spring.datasource.url` | 数据库连接串（指向 `bgssai_short_drama` 库） | 环境 DBA 提供 |
+| `spring.datasource.url` | 数据库连接串（指向 `bgssai_short` 库） | 环境 DBA 提供 |
 | `spring.datasource.username` | 数据库账号 | 环境 DBA 提供 |
 | `spring.datasource.password` | 数据库密码 | 环境 DBA 提供 |
 | `jwt.secret` | JWT 签名密钥，>= 32 字符 | `openssl rand -base64 48`，dev/test/prod 各不复用、两端互不复用 |

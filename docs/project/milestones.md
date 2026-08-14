@@ -9,9 +9,9 @@
 
 | 事项 | 状态 | 落点 |
 | --- | --- | --- |
-| 双端工程结构（管理端 8080 / 3001、用户端 8081 / 3002） | 已完成 | `bgssai-short-drama-admin/**`、`bgssai-short-drama-user/**` |
-| 后端包名与聚合工程改为本产品命名（`com.bgssai.shortdrama`） | 已完成 | `pom.xml`、各模块 `pom.xml`、`src/main/java/**` |
-| 数据库改为本产品库 `bgssai_short_drama` | 已完成 | `sql/DDL.sql`、`sql/DML.sql`、各 `application-*.properties` |
+| 双端工程结构（管理端 8080 / 3001、用户端 8081 / 3002） | 已完成 | `bgssai-short-admin/**`、`bgssai-short-user/**` |
+| 后端包名与聚合工程改为本产品命名（`com.bgssai.shortai`） | 已完成 | `pom.xml`、各模块 `pom.xml`、`src/main/java/**` |
+| 数据库改为本产品库 `bgssai_short` | 已完成 | `sql/DDL.sql`、`sql/DML.sql`、各 `application-*.properties` |
 | 基础链路（鉴权 / 统一响应 / 分页 / traceId / 限流 / CORS / SPA 回退） | 已完成 | `common/**`、`configuration/**`、`utils/**` |
 | 健康检查三端点（Standards §13 口径） | 已完成 | `health/**` + `docs/feature/health-check.md` 等四层产出 |
 | 文档与原型骨架（`docs/` 7 类目录 + 各端 `index.html` / `PAGE-FLOW.html`） | 已完成 | `docs/**` |
@@ -30,12 +30,12 @@ M0 结束时仓库仅有骨架继承的登录鉴权、登录日志分页示例�
 | 目标人群优先级与关键场景定稿 | 已完成 | `../../PRODUCT_VISION.md` 第二、三节 |
 | 制作全链路拆解为功能需求（13 份） | 已完成 | `../feature/*.md`（作品 / 剧本 / 剧情图谱 / 三问体验 / 角色卡 / 分镜 / 文字预演 / 生成 / 配音 / 合成 / 质量 / 合规 / 用量） |
 | 各功能详细设计配图（12 张自包含 HTML + 内联 SVG） | 已完成 | `../feature/flow-*.html`、`../feature/state-*.html` |
-| 统一枚举字典（单一登记处） | 已完成 | `../feature/drama-work-management.md` 第八节 |
+| 统一枚举字典（单一登记处） | 已完成 | `../feature/short-work-management.md` 第八节 |
 | web 用户端原型（18 页，含骨架继承 3 页；分镜与文字预演已合并为创作台一页）与跳转真值 | 已完成 | `../demo-static/web/user/**`（含 `index.html`、`PAGE-FLOW.html`） |
 | web 管理端原型（9 页）与跳转真值 | 已完成 | `../demo-static/web/admin/**`（含 `index.html`、`PAGE-FLOW.html`） |
-| 原型界面系统（应用外壳 + 业务组件） | 已完成 | `../demo-static/web/assets/shortdrama.css`（theme.css 为骨架同步副本，不改本体） |
+| 原型界面系统（应用外壳 + 业务组件） | 已完成 | `../demo-static/web/assets/short.css`（theme.css 为骨架同步副本，不改本体） |
 | 页面 → API 映射主表同步 | 已完成 | `../api/page-api-mapping.md`（Standards §9 要求） |
-| AI 能力接入方式、素材存储、长耗时任务机制 | 需求层已定口径，待详设定稿 | 能力经 `ai_model_config` 抽象、素材存对象存储只落 `storage_key`、长耗时统一走 `drama_ai_task` 任务体系 |
+| AI 能力接入方式、素材存储、长耗时任务机制 | 需求层已定口径，待详设定稿 | 能力经 `ai_model_config` 抽象、素材存对象存储只落 `storage_key`、长耗时统一走 `short_ai_task` 任务体系 |
 | 移动端（iOS / Android）原型 | 未开始 | 本轮不含移动端工程，`../demo-static/ios|android/` 仍为占位页 |
 
 ## M2 详细设计与契约（未开始）

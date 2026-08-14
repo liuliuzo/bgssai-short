@@ -1,6 +1,6 @@
 # sql（共享库权威 schema）
 
-管理端与用户端共用一个 MySQL 库 `bgssai_short_drama`；其 schema 与种子数据统一在本目录维护，不在各后端
+管理端与用户端共用一个 MySQL 库 `bgssai_short`；其 schema 与种子数据统一在本目录维护，不在各后端
 模块 `src/` 下重复存放（Standards §9）。
 
 ## 文件
@@ -14,7 +14,7 @@
 
 ```bash
 mysql -h <host> -u <user> -p < sql/DDL.sql
-mysql -h <host> -u <user> -p bgssai_short_drama < sql/DML.sql
+mysql -h <host> -u <user> -p bgssai_short < sql/DML.sql
 ```
 
 ## 开发环境种子账号

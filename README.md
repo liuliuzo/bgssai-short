@@ -1,4 +1,4 @@
-# bgssai-short-drama（AI 短剧制作平台）
+# bgssai-short（AI 短剧制作平台）
 
 昆山兵贵神速智能科技有限公司 BGSSAI 产品线的产品仓之一，承载 **AI 短剧制作平台**：面向短剧创作者的
 AI 短剧制作应用，把一部短剧从想法做到成片的全流程搬到线上，用 AI 承担其中最费人力的环节。产品定位与
@@ -30,7 +30,7 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 ## 目录结构
 
 ```text
-bgssai-short-drama-parent/         # 本仓库根（Maven 聚合父工程，packaging=pom）
+bgssai-short-parent/         # 本仓库根（Maven 聚合父工程，packaging=pom）
 ├── README.md                      # 本文件（总览）
 ├── PRODUCT_VISION.md              # 产品愿景与定位
 ├── CLAUDE.md / AGENTS.md          # AI 助手协作约定
@@ -40,16 +40,16 @@ bgssai-short-drama-parent/         # 本仓库根（Maven 聚合父工程，pack
 ├── deploy/                        # 部署说明与 Jenkins 流水线脚本（与中央仓逐字节一致）
 ├── .github/workflows/             # CI（构建校验）
 │
-├── bgssai-short-drama-admin/      # 【管理端】端口 8080，role_code=PLATFORM_ADMIN
-│   ├── bgssai-short-drama-admin/       # 后端：Java 21 + Spring Boot 4 + MyBatis
-│   └── bgssai-short-drama-admin-react/ # 前端：React 18 + Vite + Ant Design 5（端口 3001）
+├── bgssai-short-admin/      # 【管理端】端口 8080，role_code=PLATFORM_ADMIN
+│   ├── bgssai-short-admin/       # 后端：Java 21 + Spring Boot 4 + MyBatis
+│   └── bgssai-short-admin-react/ # 前端：React 18 + Vite + Ant Design 5（端口 3001）
 │
-└── bgssai-short-drama-user/       # 【用户端】端口 8081，role_code=USER
-    ├── bgssai-short-drama-user/        # 后端：Java 21 + Spring Boot 4 + MyBatis
-    └── bgssai-short-drama-user-react/  # 前端：React 18 + Vite + Ant Design 5（端口 3002）
+└── bgssai-short-user/       # 【用户端】端口 8081，role_code=USER
+    ├── bgssai-short-user/        # 后端：Java 21 + Spring Boot 4 + MyBatis
+    └── bgssai-short-user-react/  # 前端：React 18 + Vite + Ant Design 5（端口 3002）
 ```
 
-两个后端共用同一个 MySQL 库（`bgssai_short_drama`）：管理端承载运营方（`PLATFORM_ADMIN`）的控制面
+两个后端共用同一个 MySQL 库（`bgssai_short`）：管理端承载运营方（`PLATFORM_ADMIN`）的控制面
 API（账号、内容审核、AI 能力与用量管理），用户端承载创作者（`USER`）的制作业务 API。每个前端工程与其
 对应后端工程是同一父目录下的兄弟目录，因此各前端的 `npm run build:deploy`（`scripts/sync-static.mjs`，
 向对应后端 `src/main/resources/static/` 同步产物）开箱即用。
@@ -94,18 +94,18 @@ API（账号、内容审核、AI 能力与用量管理），用户端承载创�
 ```bash
 # 1. 建库并导入 schema 与种子数据
 mysql < sql/DDL.sql
-mysql bgssai_short_drama < sql/DML.sql
+mysql bgssai_short < sql/DML.sql
 
 # 2. 编译后端（根聚合工程一次编译两个模块）
 mvn -q -DskipTests compile
 
 # 3. 启动后端（dev 档连境外开发库；远程 HTTPS 443。本机明文调试可加 --server.port=8080 --server.ssl.enabled=false）
-mvn -pl bgssai-short-drama-admin/bgssai-short-drama-admin spring-boot:run   # 管理端
-mvn -pl bgssai-short-drama-user/bgssai-short-drama-user   spring-boot:run   # 用户端
+mvn -pl bgssai-short-admin/bgssai-short-admin spring-boot:run   # 管理端
+mvn -pl bgssai-short-user/bgssai-short-user   spring-boot:run   # 用户端
 
 # 4. 启动前端（另开终端）
-cd bgssai-short-drama-admin/bgssai-short-drama-admin-react && npm install && npm run dev   # 3001
-cd bgssai-short-drama-user/bgssai-short-drama-user-react   && npm install && npm run dev   # 3002
+cd bgssai-short-admin/bgssai-short-admin-react && npm install && npm run dev   # 3001
+cd bgssai-short-user/bgssai-short-user-react   && npm install && npm run dev   # 3002
 ```
 
 两个后端均为 Java 21 + Spring Boot 4，不使用 Docker，以可执行 jar 运行（`java -jar`）。部署细节见

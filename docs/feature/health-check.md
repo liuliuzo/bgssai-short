@@ -85,7 +85,7 @@ AI 生成服务、消息队列等）按详设「扩展点」逐个追加组件�
 | `jvm_memory` | `RUNTIME` | false | `heap_used_mb` `heap_max_mb` `heap_used_percent` `heap_used_threshold_percent` `thread_count` |
 | `disk_space` | `RUNTIME` | false | `free_mb` `total_mb` `free_threshold_mb` |
 
-管理端 `bgssai-short-drama-admin` 与用户端 `bgssai-short-drama-user` 的组件清单**完全相同**：探针不区分业务
+管理端 `bgssai-short-admin` 与用户端 `bgssai-short-user` 的组件清单**完全相同**：探针不区分业务
 角色，两端同构。
 
 ## 6. 未做与理由

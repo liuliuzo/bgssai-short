@@ -96,13 +96,13 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_dubbing`：`dubbing_id`(PK)、`shot_id`、`episode_id`、`work_id`、`user_id`、`line_no`、
+- 新增表 `short_dubbing`：`dubbing_id`(PK)、`shot_id`、`episode_id`、`work_id`、`user_id`、`line_no`、
   `character_id`、`voice_id`、`voice_speed`、`emotion`、`line_text`、`audio_asset_id`、
   `audio_duration_sec`、`align_status`、`align_gap_sec`、`auto_fixed_flag`、`deleted_flag`、时间戳。
-- 新增表 `drama_subtitle`：`subtitle_id`(PK)、`episode_id`、`work_id`、`user_id`、`subtitle_no`、
+- 新增表 `short_subtitle`：`subtitle_id`(PK)、`episode_id`、`work_id`、`user_id`、`subtitle_no`、
   `start_ms`、`end_ms`、`subtitle_text`、`shot_id`、`deleted_flag`、时间戳。
-- 作品级新增列：`drama_work.narrator_voice_id`、`drama_work.subtitle_style_json`。
-- 索引：`drama_dubbing(episode_id, shot_id, line_no)`、`drama_subtitle(episode_id, subtitle_no)`。
+- 作品级新增列：`short_work.narrator_voice_id`、`short_work.subtitle_style_json`。
+- 索引：`short_dubbing(episode_id, shot_id, line_no)`、`short_subtitle(episode_id, subtitle_no)`。
 
 ## 七、原型
 

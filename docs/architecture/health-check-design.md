@@ -10,7 +10,7 @@
 ## 1. 组件拓扑
 
 ```text
-com.bgssai.shortdrama.health
+com.bgssai.shortai.health
 ├── HealthStatus                 枚举 UP / DEGRADED / DOWN
 ├── HealthComponentType          枚举 DATABASE / MIDDLEWARE / RUNTIME / EXTERNAL（声明序即报告序）
 ├── HealthHttpStatus             DOWN -> 503，其余 -> 200
@@ -40,7 +40,7 @@ com.bgssai.shortdrama.health
     ├── QueryReadinessController     GET /bgssai/health/readiness
     └── QueryHealthReportController  GET /bgssai/health
 
-com.bgssai.shortdrama.configuration.AsyncConfig
+com.bgssai.shortai.configuration.AsyncConfig
 └── healthProbeExecutor          健康探针专用线程池（Standards §4：线程池集中声明并命名）
 ```
 
@@ -177,7 +177,7 @@ public class RedisHealthIndicator implements HealthIndicator {
 
 ## 6. 测试
 
-`src/test/java/com/bgssai/shortdrama/health/HealthProbeRunnerTest`（两端各一份，8 条）钉死本方案里最容易被
+`src/test/java/com/bgssai/shortai/health/HealthProbeRunnerTest`（两端各一份，8 条）钉死本方案里最容易被
 「顺手改一下」的两条规则：
 
 - **聚合规则**：全 UP → UP；critical DOWN → DOWN；非 critical DOWN → 仅 DEGRADED；任一 DEGRADED → DEGRADED；

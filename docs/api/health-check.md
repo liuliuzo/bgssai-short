@@ -8,11 +8,11 @@
 
 > **本契约是全产品线共用的**：9 个产品仓 18 个后端的健康端点路径、字段集、枚举值与本文逐字一致，
 > 差异只允许出现在「组件清单」一节（各产品依赖不同）。改本文等于改 9 个仓，须按 Standards §13.8
-> 先改 `bgssai-short-drama` 的 Standards §13，再各仓同步。
+> 先改 `bgssai-short` 的 Standards §13，再各仓同步。
 
 ## 0. 通用约定
 
-- **两端同构**：管理端 `bgssai-short-drama-admin` 与用户端 `bgssai-short-drama-user` 各自暴露下列 3 个端点，
+- **两端同构**：管理端 `bgssai-short-admin` 与用户端 `bgssai-short-user` 各自暴露下列 3 个端点，
   **路径、请求、响应结构逐字一致**，无 `/admin` · `/user` 前缀之分——探针不区分业务角色。
 - **公开端点**：三个端点均**不需要** `Jwttoken` 请求头，也不做角色校验（HC-07）。调用方是部署脚本、
   进程守护与集中巡检平台，无法持有业务令牌。对应地，三个 Controller 都不带 `@NeedAop`。
@@ -63,7 +63,7 @@
   "success": true,
   "result": {
     "status": "UP",
-    "app": "bgssai-short-drama-admin",
+    "app": "bgssai-short-admin",
     "profile": "dev",
     "uptime_seconds": 3675,
     "checked_at": "2026-07-31 10:24:05"
@@ -99,7 +99,7 @@
   "success": true,
   "result": {
     "status": "UP",
-    "app": "bgssai-short-drama-admin",
+    "app": "bgssai-short-admin",
     "checked_at": "2026-07-31 10:24:05",
     "components": [
       { "name": "db", "status": "UP" },
@@ -118,7 +118,7 @@
   "success": true,
   "result": {
     "status": "DOWN",
-    "app": "bgssai-short-drama-admin",
+    "app": "bgssai-short-admin",
     "checked_at": "2026-07-31 10:24:05",
     "components": [
       { "name": "db", "status": "DOWN" },
@@ -146,7 +146,7 @@
   "success": true,
   "result": {
     "status": "DEGRADED",
-    "app": "bgssai-short-drama-admin",
+    "app": "bgssai-short-admin",
     "profile": "dev",
     "uptime_seconds": 3675,
     "checked_at": "2026-07-31 10:24:05",

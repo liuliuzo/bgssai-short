@@ -130,7 +130,7 @@
 能力解析、计费与账单链路见 [`flow-usage-billing.html`](./flow-usage-billing.html)。
 
 计费时机：任务 `SUCCEEDED` 时按快照单价写一条 `ai_usage_record`，同时扣减 `user_quota.balance_cent`
-并累加 `drama_work.cost_spent_cent`；`FAILED` / `CANCELED` 与平台侧自动重试不计费。
+并累加 `short_work.cost_spent_cent`；`FAILED` / `CANCELED` 与平台侧自动重试不计费。
 
 ## 六、数据模型影响
 
@@ -148,7 +148,7 @@
 - 索引：`ai_usage_record(user_id, created_time)`、`ai_usage_record(work_id)`、
   `ai_usage_record(episode_id)`、`ai_model_config(ability_type, enabled_flag, default_flag)`、
   `recharge_apply(user_id, apply_status)`。
-- 补充枚举（登记回 `drama-work-management.md` 附录）：`recharge_apply_status` 充值申请状态——
+- 补充枚举（登记回 `short-work-management.md` 附录）：`recharge_apply_status` 充值申请状态——
   `SUBMITTED` 已提交 / `PROCESSING` 处理中 / `COMPLETED` 已完成 / `REJECTED` 已驳回。
 
 ## 七、原型

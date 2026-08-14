@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 管理端页面跳转真值</title>
   <link rel="stylesheet" href="../assets/theme.css" />
-  <link rel="stylesheet" href="../assets/shortdrama.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
   <style>
     .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
     .node {
@@ -22,11 +22,11 @@
   <div class="container">
     <h1 class="title">页面跳转真值（PAGE-FLOW）· web 管理端</h1>
     <p class="subtitle">
-      本文件是 web <strong>管理端</strong>（bgssai-short-drama-admin，前端 3001，
+      本文件是 web <strong>管理端</strong>（bgssai-short-admin，前端 3001，
       <code>role_code=PLATFORM_ADMIN</code>）页面跳转的<strong>唯一真值</strong>：
       路由矩阵 + 核心用户旅程 + 导航不变量。新增页面或调整跳转关系时，先改本文件（评审后）再写实现代码，
       并同步刷 <code>docs/api/page-api-mapping.md</code>。前端路由表落在
-      <code>bgssai-short-drama-admin-react/src/App.jsx</code>。用户端跳转真值见
+      <code>bgssai-short-admin-react/src/App.jsx</code>。用户端跳转真值见
       <a href="../user/PAGE-FLOW.html">../user/PAGE-FLOW.html</a>。
     </p>
 

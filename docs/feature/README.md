@@ -17,12 +17,12 @@
 ## 本产品业务功能（AI 短剧制作全链路）
 
 制作主线按流程顺序排列，质量流水线横跨全流程。全部功能的枚举值统一登记在
-[`drama-work-management.md`](./drama-work-management.md) 第八节（单一登记处），其它文档只引用不复制。
+[`short-work-management.md`](./short-work-management.md) 第八节（单一登记处），其它文档只引用不复制。
 
 | 功能 | 解决的痛点 | 需求文档 | 配图 | 原型 |
 | --- | --- | --- | --- | --- |
 | **三个问题体验主线** | 功能按管线组织，但用户关心的是：视频会是什么样 / 剧情连不连贯 / 管起来方不方便 | [`ux-three-questions.md`](./ux-three-questions.md) | [`flow-ux-three-questions.html`](./flow-ux-three-questions.html) | 用户端 `episode-preview` / `continuity-center` + `work-detail` 三问入口 |
-| 作品与剧集管理 | 产物散落、进度靠记，没有承载整部剧的容器 | [`drama-work-management.md`](./drama-work-management.md) | [`flow-production-pipeline.html`](./flow-production-pipeline.html) | 用户端 `works` / `work-create` / `work-detail` |
+| 作品与剧集管理 | 产物散落、进度靠记，没有承载整部剧的容器 | [`short-work-management.md`](./short-work-management.md) | [`flow-production-pipeline.html`](./flow-production-pipeline.html) | 用户端 `works` / `work-create` / `work-detail` |
 | 剧本工作台与节奏体检 | AI 写成小说腔，没钩子没反转，节奏对不上时长 | [`script-studio.md`](./script-studio.md) | [`flow-script-generation.html`](./flow-script-generation.html) | 用户端 `script-studio` |
 | **剧情图谱与走位示意** | 节奏塌在哪、关系揭早了没、两人有没有站反——用文字读半天，看图一眼就知道 | [`story-map.md`](./story-map.md) | [`flow-story-map.html`](./flow-story-map.html) | 用户端 `story-map`（走位内嵌 `previz` / `storyboard`） |
 | 角色卡与场景卡 | 同一角色每镜换脸、场景每镜换装修，只能反复抽卡 | [`character-bible.md`](./character-bible.md) | [`flow-character-consistency.html`](./flow-character-consistency.html) | 用户端 `character-bible` |

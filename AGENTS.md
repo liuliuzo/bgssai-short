@@ -22,7 +22,7 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 | 功能需求（版本基准） | `docs/feature/**` | 每个功能的需求澄清 + 详细设计；一切下游产出对齐需求当前版本 |
 | 原型与跳转真值 | `docs/demo-static/**` | 字段命名 / 响应结构 / 枚举 / 页面跳转的权威参照；按端分目录 |
 | 设计与接口契约 | `docs/architecture`、`docs/api`、`docs/security` | 数据模型、状态机、REST 契约、页面 → API 映射、安全设计 |
-| 可运行的双端工程 | `bgssai-short-drama-admin/**`、`bgssai-short-drama-user/**` | 管理端（8080 / 3001）与用户端（8081 / 3002），Java 21 + Spring Boot 4 + MyBatis + React 18 + Vite + Ant Design 5，共用同一 MySQL 库 |
+| 可运行的双端工程 | `bgssai-short-admin/**`、`bgssai-short-user/**` | 管理端（8080 / 3001）与用户端（8081 / 3002），Java 21 + Spring Boot 4 + MyBatis + React 18 + Vite + Ant Design 5，共用同一 MySQL 库 |
 | 基础链路（自骨架继承） | `common/**`、`configuration/**`、`utils/**` | 统一响应与分页、JWT 登录鉴权与 `@NeedAop` 切面、角色守卫、全局异常与错误码、全链路 traceId、Bucket4j 限流、CORS、SPA 回退。逐项清单见 `README.md`「内置的基础链路」 |
 | 健康检查 | `health/**` + `configuration/AsyncConfig` + 对应四层产出 | 全产品线唯一口径（Standards §13）：`/bgssai/health/liveness` · `/readiness` · `/bgssai/health` 三端点、组件化探针、单检查硬超时、整批 TTL 缓存。只对齐、不发明 |
 | 本产品 schema 权威 | `sql/DDL.sql`、`sql/DML.sql` | 收敛到仓库根、目录扁平，不用 `migration/` 与 `V*__xxx.sql`；当前仅 `sys_user`、`login_log` 两张基础表 |
@@ -45,7 +45,7 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 | [bgssai-database](https://github.com/liuliuzo/bgssai-database) | 非应用（数据库） | 让全部应用的数据库脚本集中在一个仓库维护与执行 | DDL / DML 批次归档 + 建库 / 清库入口 |
 | [bgssai-workflows](https://github.com/liuliuzo/bgssai-workflows) | 非应用（CI/CD 与运维） | 统一维护管理 Jenkins 与 GitHub 两条通道，承载部署与运维任务 | Jenkins 共享库 + Job 清单唯一权威 + 中央全量启停 |
 | [bgssai-logs](https://github.com/liuliuzo/bgssai-logs) | 非应用（日志） | 统一收集全部应用服务器上的日志 | 日志采集 / 清理 / 状态检查 + 批次归档 |
-| **[bgssai-short-drama](https://github.com/liuliuzo/bgssai-short-drama)（本仓）** | 应用 | 承载 AI 短剧制作平台业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
+| **[bgssai-short](https://github.com/liuliuzo/bgssai-short)（本仓）** | 应用 | 承载 AI 短剧制作平台业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
 | 其余产品仓（blog / builder / geo-cn / geo-global / publish / saas / vpn / voiceunion / marklens） | 应用 | 承载各产品自身业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
 
 非应用仓之间**不重叠、不互相代管**：数据库脚本只在 database 仓执行，部署编排只在 workflows 仓维护，
@@ -78,8 +78,8 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 
 ## 工程命名与拓扑
 
-* 后端包名 `com.bgssai.shortdrama`；聚合父 `com.bgssai.shortdrama:bgssai-short-drama-parent`。
-* 管理端 `bgssai-short-drama-admin`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。dev 管理端与 Jenkins 共机，避开其 8080。
-* 用户端 `bgssai-short-drama-user`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
-* 两后端共用同一 MySQL 库 `bgssai_short_drama`；当前仅有 `sys_user`、`login_log` 两张基础表，业务表随需求逐个落地。
+* 后端包名 `com.bgssai.shortai`；聚合父 `com.bgssai.shortai:bgssai-short-parent`。
+* 管理端 `bgssai-short-admin`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。dev 管理端与 Jenkins 共机，避开其 8080。
+* 用户端 `bgssai-short-user`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
+* 两后端共用同一 MySQL 库 `bgssai_short`；当前仅有 `sys_user`、`login_log` 两张基础表，业务表随需求逐个落地。
 * 新增 / 变更表结构后，用 MyBatis Generator 按新库表重新生成 `model/**`、`mapper/**` 与 Mapper XML（Standards §2「Generator 同步更新契约」），**禁止**手改这三件套。

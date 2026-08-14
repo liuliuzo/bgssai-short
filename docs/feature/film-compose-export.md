@@ -104,12 +104,12 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_film`：`film_id`(PK)、`episode_id`、`work_id`、`user_id`、`film_asset_id`、
+- 新增表 `short_film`：`film_id`(PK)、`episode_id`、`work_id`、`user_id`、`film_asset_id`、
   `film_duration_sec`、`compose_status`、`expired_flag`、`subtitle_stale_flag`、`compose_task_id`、
   `composed_time`、
   `export_json`（各版本导出产物）、`deleted_flag`、时间戳。
-- 作品级新增列：`drama_work.compose_setting_json`（转场 / BGM / 片头片尾 / 闪避开关）。
-- 成片与导出文件复用 `drama_asset`（`asset_type=FILM`）。
+- 作品级新增列：`short_work.compose_setting_json`（转场 / BGM / 片头片尾 / 闪避开关）。
+- 成片与导出文件复用 `short_asset`（`asset_type=FILM`）。
 
 ## 七、原型
 

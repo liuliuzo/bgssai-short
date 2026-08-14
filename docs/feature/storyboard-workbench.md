@@ -17,7 +17,7 @@
 - 用户故事三：作为 `USER`，我希望能拆镜、并镜、调整顺序、插入空镜，而不是被 AI 的拆法锁死。
 
 - 业务规则：
-  1. 拆镜输入是**已定稿剧本**（`script_status=READY`），输出是该集的 `drama_shot` 列表；
+  1. 拆镜输入是**已定稿剧本**（`script_status=READY`），输出是该集的 `short_shot` 列表；
      剧本未定稿时拆镜入口禁用。重复拆镜为**全量覆盖**，须二次确认；
      重复拆镜时已定稿（`LOCKED`）镜头**一律保留**（按 `scene_no` + `line_no` 对齐），无需勾选。
   2. 拆镜规则：一个镜头默认承载 1 至 3 句连续台词或一个动作单元，`shot_duration_sec` 取 2 至 8 秒；
@@ -94,12 +94,12 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_shot`：`shot_id`(PK)、`episode_id`、`work_id`、`user_id`、`shot_no`、`scene_no`、
+- 新增表 `short_shot`：`shot_id`(PK)、`episode_id`、`work_id`、`user_id`、`shot_no`、`scene_no`、
   `shot_size`、`camera_move`、`shot_duration_sec`、`shot_desc`、`dialogue_text`、`emotion`、`lighting`、
   `character_ref_json`、`scene_card_id`、`extra_prompt`、`image_prompt`、`shot_status`、`blocked_flag`、
   `risk_level`、`first_frame_asset_id`、`video_asset_id`、`retry_count`、`cost_spent_cent`、
   `shot_version`、`deleted_flag`、`created_time`、`updated_time`。
-- 索引：`drama_shot(episode_id, shot_no)`、`drama_shot(user_id, shot_status)`。
+- 索引：`short_shot(episode_id, shot_no)`、`short_shot(user_id, shot_status)`。
 - `image_prompt` 为派生字段，落库用于任务留痕与复现，不作为编辑入口。
 
 ## 七、原型

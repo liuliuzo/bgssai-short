@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 用户端概览</title>
   <link rel="stylesheet" href="../assets/theme.css" />
-  <link rel="stylesheet" href="../assets/shortdrama.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
 </head>
 <body>
   <div class="container">
     <h1 class="title">AI 短剧制作平台 web 用户端原型 — 概览</h1>
     <p class="subtitle">
-      本目录是 AI 短剧制作平台 <strong>web 用户端</strong>（bgssai-short-drama-user，后端 8081 / 前端 3002，
+      本目录是 AI 短剧制作平台 <strong>web 用户端</strong>（bgssai-short-user，后端 8081 / 前端 3002，
       <code>role_code=USER</code>）原型与页面跳转的<strong>权威参照</strong>：接口 JSON 字段命名（snake_case）、
       响应结构、枚举 / 状态值与页面跳转关系，前后端实现逐字对齐。本端跳转真值见
       <a href="PAGE-FLOW.html">PAGE-FLOW.html</a>；管理端原型见
@@ -29,23 +29,23 @@
             <tr>
               <td><a href="works.html">我的作品</a></td>
               <td><code>/works</code></td>
-              <td><code>GET /bgssai/user/drama-works/list</code></td>
+              <td><code>GET /bgssai/user/short-works/list</code></td>
               <td>作品列表，按状态 / 题材过滤，走 PageResponse</td>
-              <td>drama-work-management</td>
+              <td>short-work-management</td>
             </tr>
             <tr>
               <td><a href="work-create.html">新建作品</a></td>
               <td><code>/works/create</code></td>
-              <td><code>POST /bgssai/user/drama-works/create</code></td>
+              <td><code>POST /bgssai/user/short-works/create</code></td>
               <td>三步向导：基本信息 → 结构模板 → 预算；填了梗概自动触发大纲生成</td>
-              <td>drama-work-management · quality-pipeline</td>
+              <td>short-work-management · quality-pipeline</td>
             </tr>
             <tr>
               <td><a href="work-detail.html">作品工作台</a></td>
               <td><code>/works/:work_id</code></td>
-              <td><code>GET /bgssai/user/drama-works/detail</code></td>
+              <td><code>GET /bgssai/user/short-works/detail</code></td>
               <td>剧集看板：六阶段徽标 + 质量分 + 四道门状态</td>
-              <td>drama-work-management</td>
+              <td>short-work-management</td>
             </tr>
             <tr>
               <td><a href="script-studio.html">总剧本</a></td>
@@ -168,15 +168,15 @@
     <div class="card">
       <h2 class="card-title">本端约定</h2>
       <div class="kv">
-        <div class="k">工程</div><div>bgssai-short-drama-user，后端 8081 / 前端 3002</div>
+        <div class="k">工程</div><div>bgssai-short-user，后端 8081 / 前端 3002</div>
         <div class="k">角色</div><div><code>role_code=USER</code></div>
         <div class="k">登录接口</div><div><code>POST /bgssai/user/login</code></div>
         <div class="k">数据可见范围</div><div>仅本人数据；<code>user_id</code> 一律取自 JWT，不从请求参数取</div>
         <div class="k">响应封装</div><div><code>{ code, message, success, result }</code>，分页附 <code>page_num / page_size / total_size</code></div>
         <div class="k">鉴权</div><div>请求头 <code>Jwttoken</code></div>
         <div class="k">金额口径</div><div>接口字段一律以<strong>分</strong>为单位（<code>*_cent</code>），页面展示为元</div>
-        <div class="k">枚举字典</div><div>见 <code>docs/feature/drama-work-management.md</code> 第八节（单一登记处）</div>
-        <div class="k">样式</div><div><code>../assets/theme.css</code>（标准主题）+ <code>../assets/shortdrama.css</code>（本产品补充）</div>
+        <div class="k">枚举字典</div><div>见 <code>docs/feature/short-work-management.md</code> 第八节（单一登记处）</div>
+        <div class="k">样式</div><div><code>../assets/theme.css</code>（标准主题）+ <code>../assets/short.css</code>（本产品补充）</div>
       </div>
     </div>
 

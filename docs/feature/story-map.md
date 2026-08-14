@@ -39,7 +39,7 @@
 - 用户故事二：作为 `USER`，我希望看到一张人物关系图，并能拖动集数看关系怎么变化。
 
 - 业务规则：
-  5. 节点为角色卡（`drama_character`），边为关系，`relation_type` 取
+  5. 节点为角色卡（`short_character`），边为关系，`relation_type` 取
      `ALLY` 盟友 / `RIVAL` 对手 / `LOVE` 爱慕 / `FAMILY` 血缘 / `EMPLOY` 雇佣 / `SECRET` 隐藏关系。
      边带 `relation_strength`（1-5）与 `reveal_episode_no`（该关系对观众揭晓的集数）。
   6. **按集演进**：拖动集数滑块，图按「截至该集观众已知的信息」渲染——
@@ -175,17 +175,17 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_character_relation`：`relation_id`(PK)、`work_id`、`user_id`、`from_character_id`、
+- 新增表 `short_character_relation`：`relation_id`(PK)、`work_id`、`user_id`、`from_character_id`、
   `to_character_id`、`relation_type`、`relation_strength`、`reveal_episode_no`、`relation_desc`、
   `deleted_flag`、`created_time`、`updated_time`。
-- 新增表 `drama_story_map`：`map_id`(PK)、`work_id`、`episode_id`、`user_id`、`map_scope`
+- 新增表 `short_story_map`：`map_id`(PK)、`work_id`、`episode_id`、`user_id`、`map_scope`
   （`WORK` / `EPISODE`）、`tension_json`、`expect_json`、`deviation_json`、`scene_band_json`、
   `appearance_heat_json`、`stale_flag`、`draft_flag`、`source_task_id`、`created_time`、`updated_time`。
-- `drama_shot` 新增列：`blocking_json`、`axis_flag`。
-- 索引：`drama_character_relation(work_id, from_character_id)`、`drama_story_map(work_id, episode_id, map_scope)`。
-- 轴线检查结果复用 `drama_continuity_issue`（`issue_type=EYELINE`），不新建表。
+- `short_shot` 新增列：`blocking_json`、`axis_flag`。
+- 索引：`short_character_relation(work_id, from_character_id)`、`short_story_map(work_id, episode_id, map_scope)`。
+- 轴线检查结果复用 `short_continuity_issue`（`issue_type=EYELINE`），不新建表。
 
-## 七、补充枚举（登记回 `drama-work-management.md` 附录）
+## 七、补充枚举（登记回 `short-work-management.md` 附录）
 
 | 枚举 | 值 |
 | --- | --- |
@@ -207,7 +207,7 @@
 
 ## 九、四层同步检查清单
 
-- [x] 需求（本文件；枚举同步登记到 `drama-work-management.md` 附录）
+- [x] 需求（本文件；枚举同步登记到 `short-work-management.md` 附录）
 - [x] 原型（`docs/demo-static/web/user/story-map.html`、`storyboard.html` 及 `PAGE-FLOW.html`）
 - [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
 - [ ] 代码与数据库

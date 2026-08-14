@@ -42,13 +42,13 @@
      批次支持「重试全部失败项」与**暂停 / 恢复**：暂停把批内 `QUEUED` 任务转 `PAUSED`
      （`RUNNING` 任务跑完当前一条、不强行中断），恢复原位转回 `QUEUED`，不重走提交流程；
      页面刷新 / 关闭浏览器不影响任务执行，重新进入按 `batch_id` 恢复视图。
-  5. **候选与回滚**：每次生成产出的素材进 `drama_asset` 并挂到镜头的候选列表（`candidate_list`），
+  5. **候选与回滚**：每次生成产出的素材进 `short_asset` 并挂到镜头的候选列表（`candidate_list`），
      用户可在候选间切换选定（`selected_flag`），切换不产生新费用；候选保留最近 5 个，超出按时间淘汰
      （已被选定的不淘汰）。
   6. **镜头定稿**：视频候选选定后可 `LOCKED`，锁定的镜头不参与批量重生成（除非显式解锁）。
   7. **并发与限流**：单用户在途任务（`QUEUED` + `RUNNING`）上限 20，超出的排队等待；
      提交接口按 `USER` 维度限流（`@RateLimit`），防止误点重复提交。
-  8. 任务与镜头解耦：`drama_ai_task` 是通用任务表，`task_type` 覆盖 `TEXT` / `IMAGE` / `VIDEO` /
+  8. 任务与镜头解耦：`short_ai_task` 是通用任务表，`task_type` 覆盖 `TEXT` / `IMAGE` / `VIDEO` /
      `VOICE` / `COMPOSE`，剧本生成、定妆、配音、合成等全部走同一张任务表与同一套任务中心视图。
   9. **站内通知**：批次完成、批次出现失败任务时各发一条站内通知（`notify_type=BATCH_DONE` /
      `BATCH_FAILED`），通知中心入口常驻任务中心页头，用户不必守在页面等待。
@@ -136,16 +136,16 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_ai_task`：`task_id`(PK)、`batch_id`、`user_id`、`work_id`、`episode_id`、`task_type`、
+- 新增表 `short_ai_task`：`task_id`(PK)、`batch_id`、`user_id`、`work_id`、`episode_id`、`task_type`、
   `task_status`、`target_type`、`target_id`、`model_code`、`request_json`、`result_json`、
   `progress_percent`、`retry_count`、`fail_reason`、`fail_reason_code`、`auto_next_flag`、`cost_cent`、
   `queued_time`、`started_time`、`finished_time`、`created_time`、`updated_time`。
-- 新增表 `drama_notification`：`notify_id`(PK)、`user_id`、`notify_type`、`title`、`content`、
+- 新增表 `short_notification`：`notify_id`(PK)、`user_id`、`notify_type`、`title`、`content`、
   `link_page`、`read_flag`、`deleted_flag`、时间戳。
-- 新增表 `drama_asset`：`asset_id`(PK)、`user_id`、`work_id`、`episode_id`、`shot_id`、`asset_type`
+- 新增表 `short_asset`：`asset_id`(PK)、`user_id`、`work_id`、`episode_id`、`shot_id`、`asset_type`
   （`IMAGE` / `VIDEO` / `AUDIO` / `SUBTITLE` / `FILM`）、`storage_key`、`file_url`、`file_size_byte`、
   `duration_sec`、`width`、`height`、`source_task_id`、`selected_flag`、`deleted_flag`、时间戳。
-- 索引：`drama_ai_task(user_id, task_status)`、`drama_ai_task(batch_id)`、`drama_asset(shot_id, asset_type)`。
+- 索引：`short_ai_task(user_id, task_status)`、`short_ai_task(batch_id)`、`short_asset(shot_id, asset_type)`。
 - 素材文件存对象存储，库内只存 `storage_key` 与访问用的签名 URL 生成参数（详设阶段定稿存储方案）。
 
 ## 七、原型

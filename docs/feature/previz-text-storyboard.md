@@ -174,18 +174,18 @@
 
 ## 六、数据模型影响
 
-- 新增表 `drama_shot_previz`：`previz_id`(PK)、`shot_id`、`episode_id`、`work_id`、`user_id`、
+- 新增表 `short_shot_previz`：`previz_id`(PK)、`shot_id`、`episode_id`、`work_id`、`user_id`、
   `previz_text`、`previz_level`、`draft_asset_id`、`prompt_score`、`prompt_check_json`、
   `stale_flag`、`created_time`、`updated_time`。
-- 新增表 `drama_prompt_version`：`version_id`(PK)、`shot_id`、`prompt_version`、`image_prompt`、
+- 新增表 `short_prompt_version`：`version_id`(PK)、`shot_id`、`prompt_version`、`image_prompt`、
   `shot_param_json`（当次结构化字段快照）、`change_summary`、`created_time`（保留最近 10 版，供 A/B 对照）。
-- 新增表 `drama_continuity_issue`：`issue_id`(PK)、`episode_id`、`work_id`、`issue_type`、
+- 新增表 `short_continuity_issue`：`issue_id`(PK)、`episode_id`、`work_id`、`issue_type`、
   `from_shot_no`、`to_shot_no`、`issue_desc`、`suggestion`、`resolved_flag`、`created_time`。
-- `drama_shot` 新增列：`previz_level`、`stale_flag`、`prompt_version`。
-- `drama_asset` 新增列：`draft_flag`（草图标记，不进合成、不进正式候选）。
-- 索引：`drama_shot_previz(episode_id, shot_id)`、`drama_prompt_version(shot_id, prompt_version)`。
+- `short_shot` 新增列：`previz_level`、`stale_flag`、`prompt_version`。
+- `short_asset` 新增列：`draft_flag`（草图标记，不进合成、不进正式候选）。
+- 索引：`short_shot_previz(episode_id, shot_id)`、`short_prompt_version(shot_id, prompt_version)`。
 
-## 七、补充枚举（登记回 `drama-work-management.md` 附录）
+## 七、补充枚举（登记回 `short-work-management.md` 附录）
 
 | 枚举 | 值 |
 | --- | --- |
@@ -208,7 +208,7 @@
 
 ## 九、四层同步检查清单
 
-- [x] 需求（本文件；枚举同步登记到 `drama-work-management.md` 附录）
+- [x] 需求（本文件；枚举同步登记到 `short-work-management.md` 附录）
 - [x] 原型（并入 `docs/demo-static/web/user/storyboard.html` 及 `PAGE-FLOW.html`）
 - [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
 - [ ] 代码与数据库

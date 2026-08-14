@@ -1,7 +1,7 @@
 -- =====================================================================
 -- DDL.sql — AI 短剧制作平台建库脚本（单一真值，仓库根 sql/DDL.sql）
 -- =====================================================================
--- 管理端与用户端共用同一个库 bgssai_short_drama。当前仅含两张基础表：
+-- 管理端与用户端共用同一个库 bgssai_short。当前仅含两张基础表：
 --   sys_user   用户表（登录鉴权）
 --   login_log  登录记录表（示例分页接口的数据源）
 --
@@ -11,8 +11,8 @@
 --   - 新增 / 变更表结构后，用 MyBatis Generator 按新库表重新生成 model/mapper/XML。
 -- =====================================================================
 
-CREATE DATABASE IF NOT EXISTS `bgssai_short_drama` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `bgssai_short_drama`;
+CREATE DATABASE IF NOT EXISTS `bgssai_short` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `bgssai_short`;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;

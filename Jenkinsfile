@@ -1,11 +1,11 @@
-// bgssai-short-drama 部署流水线（Jenkins）。
+// bgssai-short 部署流水线（Jenkins）。
 //
 // 部署通道唯一：本流水线是该产品的唯一部署入口，仅手动触发。
 // 构建与 ship 的全部逻辑收敛在中央仓 bgssai-workflows 的 Jenkins 共享库（vars/ + resources/），
 // 本文件只声明参数与阶段，避免多个产品仓各自维护一份实现而漂移。
 //
-// **目标环境由 Job 名前缀决定**（内部名 dev-short-drama-deploy / prod-short-drama-deploy，界面显示名
-// bgssai-short-drama deploy(dev) / bgssai-short-drama deploy(prod)），
+// **目标环境由 Job 名前缀决定**（内部名 dev-short-deploy / prod-short-deploy，界面显示名
+// bgssai-short deploy(dev) / bgssai-short deploy(prod)），
 // 刻意不提供 environment 下拉框 —— 下拉框选错就会把生产环境当开发环境部署，
 // 而 Job 名会出现在面包屑、构建页与通知里，看错的机会小得多。详见共享库 bgssaiResolveEnvironment。
 //
@@ -33,7 +33,7 @@
 // steps / when 块未必看得见（视 Jenkins 版本而定，症状是运行期报 No such property）。
 // 不加 def 则落进脚本 binding，各阶段一律可见。
 PRODUCT = [
-  product: 'short-drama',
+  product: 'short',
   packageManager: 'npm',
   frontendScript: 'build:deploy',
   appPort: '443',
@@ -92,10 +92,10 @@ pipeline {
 
   post {
     success {
-      echo "部署成功: bgssai-short-drama environment=${env.BGSSAI_ENV} target=${params.target}"
+      echo "部署成功: bgssai-short environment=${env.BGSSAI_ENV} target=${params.target}"
     }
     failure {
-      echo "部署失败: bgssai-short-drama environment=${env.BGSSAI_ENV} target=${params.target}"
+      echo "部署失败: bgssai-short environment=${env.BGSSAI_ENV} target=${params.target}"
       echo '按仓库约定：不自动重跑本流水线、不自动重新部署。请先定位原因，再由人工手动触发。'
       echo '目标机自建构建失败时远端未被改动；健康检查失败时 remote-deploy.sh 已自动回滚到上一个可用 jar，服务应仍在跑旧版本。'
     }

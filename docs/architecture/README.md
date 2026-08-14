@@ -7,10 +7,10 @@
 
 ### 拓扑
 
-单仓 monorepo，含两套独立部署、共享一个 MySQL 库（`bgssai_short_drama`）的系统：
+单仓 monorepo，含两套独立部署、共享一个 MySQL 库（`bgssai_short`）的系统：
 
-- 管理端 `bgssai-short-drama-admin`：后端 8080（`PLATFORM_ADMIN` 控制面）+ React 前端 3001。
-- 用户端 `bgssai-short-drama-user`：后端 8081（`USER` 业务面）+ React 前端 3002。
+- 管理端 `bgssai-short-admin`：后端 8080（`PLATFORM_ADMIN` 控制面）+ React 前端 3001。
+- 用户端 `bgssai-short-user`：后端 8081（`USER` 业务面）+ React 前端 3002。
 
 每个后端为 Java 21 + Spring Boot 4，以可执行 jar 运行；前端 `build:deploy` 将产物同步到对应后端
 `src/main/resources/static/`，由 Spring Boot 作为 SPA 提供，深链经 `SpaFallbackConfig` 白名单前缀

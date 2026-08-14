@@ -1,5 +1,5 @@
 -- =====================================================================
--- BGSS Short Drama 存量库升级脚本
+-- BGSS Short 存量库升级脚本
 -- 文件：sql/UPGRADE-20260813-oauth-binding.sql
 -- 适用范围：已经存在且有数据的库，新增三方授权登录绑定表。
 -- 重跑安全：CREATE TABLE IF NOT EXISTS。

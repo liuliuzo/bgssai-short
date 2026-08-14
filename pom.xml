@@ -12,17 +12,17 @@
         <relativePath />
     </parent>
 
-    <!-- 聚合父 POM：统一管理管理端(bgssai-short-drama-admin)与用户端(bgssai-short-drama-user)两个后端模块 -->
-    <groupId>com.bgssai.shortdrama</groupId>
-    <artifactId>bgssai-short-drama-parent</artifactId>
+    <!-- 聚合父 POM：统一管理管理端(bgssai-short-admin)与用户端(bgssai-short-user)两个后端模块 -->
+    <groupId>com.bgssai.shortai</groupId>
+    <artifactId>bgssai-short-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>bgssai-short-drama-parent</name>
-    <description>AI 短剧制作平台聚合父工程：bgssai-short-drama-admin 管理端 + bgssai-short-drama-user 用户端；文档与 SQL 见仓库根 docs/、sql/</description>
+    <name>bgssai-short-parent</name>
+    <description>AI 短剧制作平台聚合父工程：bgssai-short-admin 管理端 + bgssai-short-user 用户端；文档与 SQL 见仓库根 docs/、sql/</description>
 
     <modules>
-        <module>bgssai-short-drama-user/bgssai-short-drama-user</module>
-        <module>bgssai-short-drama-admin/bgssai-short-drama-admin</module>
+        <module>bgssai-short-user/bgssai-short-user</module>
+        <module>bgssai-short-admin/bgssai-short-admin</module>
     </modules>
 
     <properties>

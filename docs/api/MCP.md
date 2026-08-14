@@ -1,4 +1,4 @@
-# BGSSAI Short Drama MCP 接入契约
+# BGSSAI Short MCP 接入契约
 
 平台用户端提供 MCP（Model Context Protocol）Server，供 Cursor / Claude 等客户端以工具查询本站能力。
 
@@ -31,7 +31,7 @@
 ```json
 {
   "mcpServers": {
-    "bgssai-short-drama": {
+    "bgssai-short": {
       "url": "https://<域名>/api/mcp",
       "headers": { "Authorization": "Bearer bgs_mcp_你的令牌" }
     }

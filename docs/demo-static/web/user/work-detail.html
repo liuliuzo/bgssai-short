@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI 短剧制作平台原型 — 作品工作台</title>
   <link rel="stylesheet" href="../assets/theme.css" />
-  <link rel="stylesheet" href="../assets/shortdrama.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
 </head>
 <body>
 <div class="app">
@@ -395,7 +395,7 @@
             </div>
             <div class="toolbar" style="margin-top:12px">
               <button class="btn btn-primary btn-sm">保存设置</button>
-              <span class="text-muted" style="font-size:11px">保存走 <code>POST /bgssai/user/drama-works/update</code></span>
+              <span class="text-muted" style="font-size:11px">保存走 <code>POST /bgssai/user/short-works/update</code></span>
             </div>
           </div>
         </div>
@@ -437,7 +437,7 @@
 
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        接口 <code>GET /bgssai/user/drama-works/detail?work_id=w-10001</code>。
+        接口 <code>GET /bgssai/user/short-works/detail?work_id=w-10001</code>。
         剧集行字段：<code>episode_id</code> · <code>episode_no</code> · <code>episode_title</code> ·
         <code>script_status</code> · <code>storyboard_status</code> · <code>shot_total</code> /
         <code>shot_ready</code> · <code>dubbing_status</code> · <code>compose_status</code> ·
@@ -448,7 +448,7 @@
         内部代号收在 <code>title</code> 属性。
         作品状态由下游产出自动推进，不提供手工改状态入口（<code>ARCHIVED</code> 除外）。
         「作品设置」区块（<code>#work-settings</code>）保存走
-        <code>POST /bgssai/user/drama-works/update</code>：<code>cost_budget_cent</code>
+        <code>POST /bgssai/user/short-works/update</code>：<code>cost_budget_cent</code>
         预算上限（可选，空即不限）· <code>quality_threshold_score</code>
         质量阈值（可随时调整，调整留痕）· <code>skip_level_check_flag</code> 预演跳级约束开关。
       </div>
