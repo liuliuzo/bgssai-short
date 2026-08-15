@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 收款商户</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>平台管理端</span></div>
+    <div class="side-sec">运营</div>
+    <a class="side-link" href="creators.html">创作者</a>
+    <a class="side-link" href="credit-packs.html">加量包</a>
+    <a class="side-link active" href="pay-merchants.html">收款商户</a>
+    <div class="side-foot">
+      <div class="who">系统管理员</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+  <main class="app-main">
+    <header class="app-top"><span class="top-title">收款商户</span></header>
+    <div class="app-page">
+      <div class="card">
+        <p>路径对齐 VPN：POST /bgssai/admin/pay/wechat-configs/save · POST /bgssai/admin/pay/alipay-configs/save；指定收款 POST .../set-collection-active。</p>
+        <ul>
+          <li>微信 Native：mch_id 唯一；空白凭据保留原值；同号软删行复活。</li>
+          <li>支付宝当面付：app_id 唯一；sign_type 仅 RSA2。</li>
+          <li>同渠道至多一行 is_collection_active=1。生产无收款商户时用户下单返回 60013。</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

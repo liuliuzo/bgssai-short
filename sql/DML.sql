@@ -16,6 +16,17 @@ DELETE FROM `sys_user` WHERE `user_name` IN ('admin', 'demo');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-admin-0001', 'admin', '系统管理员', 'admin123', 'PLATFORM_ADMIN', 1, 0, 'system');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-demo-0001', 'demo', '演示用户', 'demo123', 'USER', 1, 0, 'system');
 
+
+-- 订阅套餐与加量包目录
+INSERT INTO subscription_plan (plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator) VALUES ('FREE', '免费', 0, 10000, 10000, 1, 1, 0, 'system');
+INSERT INTO subscription_plan (plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator) VALUES ('PRO', '专业', 9900, 100000, 100000, 1, 2, 0, 'system');
+INSERT INTO subscription_plan (plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator) VALUES ('MAX5', 'MAX 5', 29900, 500000, 500000, 1, 3, 0, 'system');
+INSERT INTO subscription_plan (plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator) VALUES ('MAX10', 'MAX 10', 49900, 1000000, 1000000, 1, 4, 0, 'system');
+INSERT INTO subscription_plan (plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator) VALUES ('MAX20', 'MAX 20', 89900, 2000000, 2000000, 1, 5, 0, 'system');
+INSERT INTO credit_pack (pack_code, name, credit_cent, price_cent, is_active, sort_order, is_delete, creator) VALUES ('pack_50', '加量 50 元', 5000, 4900, 1, 1, 0, 'system');
+INSERT INTO credit_pack (pack_code, name, credit_cent, price_cent, is_active, sort_order, is_delete, creator) VALUES ('pack_200', '加量 200 元', 20000, 18900, 1, 2, 0, 'system');
+INSERT INTO credit_pack (pack_code, name, credit_cent, price_cent, is_active, sort_order, is_delete, creator) VALUES ('pack_1000', '加量 1000 元', 100000, 89900, 1, 3, 0, 'system');
+
 -- §B 用户端铺底数据（仅 dev / 联调；禁止生产执行）
 
 -- ===== BEGIN USER-VOLUME-SEED =====

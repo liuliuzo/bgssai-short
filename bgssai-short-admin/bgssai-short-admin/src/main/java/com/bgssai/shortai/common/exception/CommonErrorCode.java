@@ -19,7 +19,12 @@ public enum CommonErrorCode implements ErrorCode {
     REQUEST_TOO_LARGE("413000", "request too large"),
     RATE_LIMIT_EXCEEDED("429000", "too many requests, please try again later"),
     UPSTREAM_ERROR("502000", "upstream service error"),
-    UPSTREAM_TIMEOUT("504000", "upstream service timeout");
+    UPSTREAM_TIMEOUT("504000", "upstream service timeout"),
+    QUOTA_INSUFFICIENT("4007", "insufficient quota"),
+    MONTHLY_LIMIT("4015", "monthly usage cap reached"),
+    UNSUPPORTED_PAY_CHANNEL("60004", "unsupported pay channel"),
+    NOTIFY_VERIFY_FAILED("60005", "notify signature verify failed"),
+    PAYMENT_NOT_CONFIGURED("60013", "production payment not configured");
 
     private final String code;
 

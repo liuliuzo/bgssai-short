@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 套餐与加量</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+    <div class="side-sec">工作台</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link" href="works.html">我的作品<span class="ln">5</span></a>
+    <a class="side-link" href="task-center.html">任务中心<span class="ln hot">6</span></a>
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+    <a class="side-link active" href="subscription.html">套餐与加量</a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+    <a class="side-link" href="mcp-tokens.html">MCP 接入</a>
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">可用 100.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
+      <span class="top-title">套餐与加量</span>
+    </header>
+    <div class="app-page">
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat">
+          <div class="stat-label">当前套餐</div>
+          <div class="stat-value">PRO</div>
+          <div class="stat-sub">周期余额 1 000.00 元 · 加量 0.00 元</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">可用合计</div>
+          <div class="stat-value">1 000<span style="font-size:14px; color:var(--muted)">.00 元</span></div>
+          <div class="stat-sub">balance_cent + extra_balance_cent</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h2>订阅套餐</h2></div>
+        <table>
+          <thead><tr><th>档位</th><th>售价</th><th>月度发放</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>FREE</td><td>0 元</td><td>100 元</td><td>开通即到账</td></tr>
+            <tr><td>PRO</td><td>99 元</td><td>1 000 元</td><td>微信 Native / 支付宝当面付</td></tr>
+            <tr><td>MAX5</td><td>299 元</td><td>5 000 元</td><td>微信 / 支付宝</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-hd"><h2>加量包</h2></div>
+        <p class="text-muted">加量进入 extra_balance_cent，不随套餐到期清零。下单金额只取服务端目录价。</p>
+        <table>
+          <thead><tr><th>包</th><th>到账</th><th>售价</th></tr></thead>
+          <tbody>
+            <tr><td>pack_50</td><td>50 元</td><td>49 元</td></tr>
+            <tr><td>pack_200</td><td>200 元</td><td>189 元</td></tr>
+            <tr><td>pack_1000</td><td>1 000 元</td><td>899 元</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

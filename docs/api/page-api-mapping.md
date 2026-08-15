@@ -24,6 +24,8 @@
 | `quality-templates.html` | `/quality-templates` | `GET /bgssai/admin/quality/templates/list` · `POST /bgssai/admin/quality/templates/create` · `/update` · `/toggle-enabled` · `POST /bgssai/admin/quality/threshold-save` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`../feature/quality-pipeline.md`](../feature/quality-pipeline.md) |
 | `usage-cost.html` | `/usage-cost` | `GET /bgssai/admin/usage/summary?start_date&end_date&ability_type` · `GET /bgssai/admin/usage/by-creator?page_num&page_size&start_date&end_date` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`../feature/ai-capability-usage.md`](../feature/ai-capability-usage.md) |
 | `creators.html` | `/creators` | `GET /bgssai/admin/creators/list?page_num&page_size&keyword&enabled_flag` · `POST /bgssai/admin/creators/adjust-quota` · `/toggle-enabled`；充值申请处理：`GET /bgssai/admin/recharge/list` · `POST /bgssai/admin/recharge/handle` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`../feature/ai-capability-usage.md`](../feature/ai-capability-usage.md) |
+| `credit-packs.html` | `/credit-packs` | `GET /bgssai/admin/credit-packs/list` · `POST /bgssai/admin/credit-packs/save` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
+| `pay-merchants.html` | `/pay-merchants` | `GET /bgssai/admin/pay/wechat-configs` · `POST /bgssai/admin/pay/wechat-configs/save` · `/set-collection-active`；支付宝同构 `/alipay-configs` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 
 ## web 用户端（`docs/demo-static/web/user/`，前端 3002 / 后端 8081，`role_code=USER`）
 
@@ -49,6 +51,7 @@
 | `continuity-center.html` | `/works/:work_id/continuity` | `GET /bgssai/user/continuity/overview?work_id` · `/foreshadows?work_id`；`POST /bgssai/user/continuity/foreshadow-save` · `/recheck`；镜头层复用 `short_continuity_issue` 数据 | 需 `Jwttoken` | [`../feature/ux-three-questions.md`](../feature/ux-three-questions.md) |
 | `quality-report.html` | `/works/:work_id/quality` | `POST /bgssai/user/quality/gate-run` · `/force-pass` · `/issue-handle`（单条 issue 处理与增量校验）· `/threshold-adjust` · `/variants-generate` · `/variant-select`；`GET /bgssai/user/quality/gate-result?gate_code&episode_id` · `/threshold-logs` · `/variants?variant_node&target_id` · `/profile?work_id` · `/templates?genre` | 需 `Jwttoken` | [`../feature/quality-pipeline.md`](../feature/quality-pipeline.md) |
 | `usage-billing.html` | `/usage` | `GET /bgssai/user/usage/summary?start_date&end_date`（响应新增 `recent_episode_avg_cost_cent` / `estimated_remaining_episode_count` / `low_balance_flag`）· `/records?page_num&page_size&work_id&episode_id&ability_type&start_date&end_date`（响应新增 `quality_level` / `quality_level_name` / `episode_total_cost_cent`）；充值申请：`POST /bgssai/user/recharge/apply` · `GET /bgssai/user/recharge/list` | 需 `Jwttoken` | [`../feature/ai-capability-usage.md`](../feature/ai-capability-usage.md) |
+| `subscription.html` | `/subscription` | `GET /bgssai/user/subscription/plans` · `GET /bgssai/user/subscription/me` · `POST /bgssai/user/subscription/order/create` · `GET /bgssai/user/credit-packs` · `POST /bgssai/user/credit-packs/orders`；回调 `POST /bgssai/user/payment/wechat/notify` · `/alipay/notify`（公开验签） | 需 `Jwttoken`（回调公开） | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 
 ## iOS 端（`docs/demo-static/ios/`）
 

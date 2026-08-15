@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.AlipayConfigMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.AlipayConfig">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="merchant_name" jdbcType="VARCHAR" property="merchantName" />
+    <result column="app_id" jdbcType="VARCHAR" property="appId" />
+    <result column="key_mode" jdbcType="VARCHAR" property="keyMode" />
+    <result column="app_private_key" jdbcType="LONGVARCHAR" property="appPrivateKey" />
+    <result column="alipay_public_key" jdbcType="LONGVARCHAR" property="alipayPublicKey" />
+    <result column="app_cert_public_key" jdbcType="LONGVARCHAR" property="appCertPublicKey" />
+    <result column="alipay_cert_public_key" jdbcType="LONGVARCHAR" property="alipayCertPublicKey" />
+    <result column="alipay_root_cert" jdbcType="LONGVARCHAR" property="alipayRootCert" />
+    <result column="app_cert_sn" jdbcType="VARCHAR" property="appCertSn" />
+    <result column="alipay_root_cert_sn" jdbcType="VARCHAR" property="alipayRootCertSn" />
+    <result column="sign_type" jdbcType="VARCHAR" property="signType" />
+    <result column="charset" jdbcType="VARCHAR" property="charset" />
+    <result column="gateway_url" jdbcType="VARCHAR" property="gatewayUrl" />
+    <result column="notify_url" jdbcType="VARCHAR" property="notifyUrl" />
+    <result column="return_url" jdbcType="VARCHAR" property="returnUrl" />
+    <result column="env_mode" jdbcType="VARCHAR" property="envMode" />
+    <result column="last_test_status" jdbcType="VARCHAR" property="lastTestStatus" />
+    <result column="last_test_at" jdbcType="TIMESTAMP" property="lastTestAt" />
+    <result column="last_test_error" jdbcType="VARCHAR" property="lastTestError" />
+    <result column="is_enabled" jdbcType="TINYINT" property="enabled" />
+    <result column="is_collection_active" jdbcType="TINYINT" property="collectionActive" />
+    <result column="is_delete" jdbcType="TINYINT" property="delete" />
+    <result column="creator" jdbcType="VARCHAR" property="creator" />
+    <result column="modifier" jdbcType="VARCHAR" property="modifier" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, merchant_name, app_id, key_mode, app_private_key, alipay_public_key, app_cert_public_key, alipay_cert_public_key, alipay_root_cert, app_cert_sn, alipay_root_cert_sn, sign_type, charset, gateway_url, notify_url, return_url, env_mode, last_test_status, last_test_at, last_test_error, is_enabled, is_collection_active, is_delete, creator, modifier, gmt_create, gmt_modified
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.AlipayConfigExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <choose>
+      <when test="selectColumns != null and selectColumns.length &gt; 0">
+        <foreach collection="selectColumns" item="col" separator=",">${col}</foreach>
+      </when>
+      <otherwise><include refid="Base_Column_List" /></otherwise>
+    </choose>
+    from alipay_config
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.AlipayConfigExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <choose>
+      <when test="selectColumns != null and selectColumns.length &gt; 0">
+        <foreach collection="selectColumns" item="col" separator=",">${col}</foreach>
+      </when>
+      <otherwise><include refid="Base_Column_List" /></otherwise>
+    </choose>
+    from alipay_config
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from alipay_config
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from alipay_config where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.AlipayConfigExample">
+    delete from alipay_config
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </delete>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.AlipayConfig" useGeneratedKeys="true" keyProperty="id">
+    insert into alipay_config (id, merchant_name, app_id, key_mode, app_private_key, alipay_public_key, app_cert_public_key, alipay_cert_public_key, alipay_root_cert, app_cert_sn, alipay_root_cert_sn, sign_type, charset, gateway_url, notify_url, return_url, env_mode, last_test_status, last_test_at, last_test_error, is_enabled, is_collection_active, is_delete, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{merchantName,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, #{keyMode,jdbcType=VARCHAR}, #{appPrivateKey,jdbcType=LONGVARCHAR}, #{alipayPublicKey,jdbcType=LONGVARCHAR}, #{appCertPublicKey,jdbcType=LONGVARCHAR}, #{alipayCertPublicKey,jdbcType=LONGVARCHAR}, #{alipayRootCert,jdbcType=LONGVARCHAR}, #{appCertSn,jdbcType=VARCHAR}, #{alipayRootCertSn,jdbcType=VARCHAR}, #{signType,jdbcType=VARCHAR}, #{charset,jdbcType=VARCHAR}, #{gatewayUrl,jdbcType=VARCHAR}, #{notifyUrl,jdbcType=VARCHAR}, #{returnUrl,jdbcType=VARCHAR}, #{envMode,jdbcType=VARCHAR}, #{lastTestStatus,jdbcType=VARCHAR}, #{lastTestAt,jdbcType=TIMESTAMP}, #{lastTestError,jdbcType=VARCHAR}, #{enabled,jdbcType=TINYINT}, #{collectionActive,jdbcType=TINYINT}, #{delete,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.AlipayConfig" useGeneratedKeys="true" keyProperty="id">
+    insert into alipay_config
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="merchantName != null">merchant_name,</if>
+      <if test="appId != null">app_id,</if>
+      <if test="keyMode != null">key_mode,</if>
+      <if test="appPrivateKey != null">app_private_key,</if>
+      <if test="alipayPublicKey != null">alipay_public_key,</if>
+      <if test="appCertPublicKey != null">app_cert_public_key,</if>
+      <if test="alipayCertPublicKey != null">alipay_cert_public_key,</if>
+      <if test="alipayRootCert != null">alipay_root_cert,</if>
+      <if test="appCertSn != null">app_cert_sn,</if>
+      <if test="alipayRootCertSn != null">alipay_root_cert_sn,</if>
+      <if test="signType != null">sign_type,</if>
+      <if test="charset != null">charset,</if>
+      <if test="gatewayUrl != null">gateway_url,</if>
+      <if test="notifyUrl != null">notify_url,</if>
+      <if test="returnUrl != null">return_url,</if>
+      <if test="envMode != null">env_mode,</if>
+      <if test="lastTestStatus != null">last_test_status,</if>
+      <if test="lastTestAt != null">last_test_at,</if>
+      <if test="lastTestError != null">last_test_error,</if>
+      <if test="enabled != null">is_enabled,</if>
+      <if test="collectionActive != null">is_collection_active,</if>
+      <if test="delete != null">is_delete,</if>
+      <if test="creator != null">creator,</if>
+      <if test="modifier != null">modifier,</if>
+      <if test="gmtCreate != null">gmt_create,</if>
+      <if test="gmtModified != null">gmt_modified,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="merchantName != null">#{merchantName,jdbcType=VARCHAR},</if>
+      <if test="appId != null">#{appId,jdbcType=VARCHAR},</if>
+      <if test="keyMode != null">#{keyMode,jdbcType=VARCHAR},</if>
+      <if test="appPrivateKey != null">#{appPrivateKey,jdbcType=LONGVARCHAR},</if>
+      <if test="alipayPublicKey != null">#{alipayPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="appCertPublicKey != null">#{appCertPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="alipayCertPublicKey != null">#{alipayCertPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="alipayRootCert != null">#{alipayRootCert,jdbcType=LONGVARCHAR},</if>
+      <if test="appCertSn != null">#{appCertSn,jdbcType=VARCHAR},</if>
+      <if test="alipayRootCertSn != null">#{alipayRootCertSn,jdbcType=VARCHAR},</if>
+      <if test="signType != null">#{signType,jdbcType=VARCHAR},</if>
+      <if test="charset != null">#{charset,jdbcType=VARCHAR},</if>
+      <if test="gatewayUrl != null">#{gatewayUrl,jdbcType=VARCHAR},</if>
+      <if test="notifyUrl != null">#{notifyUrl,jdbcType=VARCHAR},</if>
+      <if test="returnUrl != null">#{returnUrl,jdbcType=VARCHAR},</if>
+      <if test="envMode != null">#{envMode,jdbcType=VARCHAR},</if>
+      <if test="lastTestStatus != null">#{lastTestStatus,jdbcType=VARCHAR},</if>
+      <if test="lastTestAt != null">#{lastTestAt,jdbcType=TIMESTAMP},</if>
+      <if test="lastTestError != null">#{lastTestError,jdbcType=VARCHAR},</if>
+      <if test="enabled != null">#{enabled,jdbcType=TINYINT},</if>
+      <if test="collectionActive != null">#{collectionActive,jdbcType=TINYINT},</if>
+      <if test="delete != null">#{delete,jdbcType=TINYINT},</if>
+      <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
+      <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
+      <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
+      <if test="gmtModified != null">#{gmtModified,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.AlipayConfigExample" resultType="java.lang.Long">
+    select count(*) from alipay_config
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update alipay_config
+    <set>
+      <if test="row.id != null">id = #{row.id,jdbcType=BIGINT},</if>
+      <if test="row.merchantName != null">merchant_name = #{row.merchantName,jdbcType=VARCHAR},</if>
+      <if test="row.appId != null">app_id = #{row.appId,jdbcType=VARCHAR},</if>
+      <if test="row.keyMode != null">key_mode = #{row.keyMode,jdbcType=VARCHAR},</if>
+      <if test="row.appPrivateKey != null">app_private_key = #{row.appPrivateKey,jdbcType=LONGVARCHAR},</if>
+      <if test="row.alipayPublicKey != null">alipay_public_key = #{row.alipayPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="row.appCertPublicKey != null">app_cert_public_key = #{row.appCertPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="row.alipayCertPublicKey != null">alipay_cert_public_key = #{row.alipayCertPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="row.alipayRootCert != null">alipay_root_cert = #{row.alipayRootCert,jdbcType=LONGVARCHAR},</if>
+      <if test="row.appCertSn != null">app_cert_sn = #{row.appCertSn,jdbcType=VARCHAR},</if>
+      <if test="row.alipayRootCertSn != null">alipay_root_cert_sn = #{row.alipayRootCertSn,jdbcType=VARCHAR},</if>
+      <if test="row.signType != null">sign_type = #{row.signType,jdbcType=VARCHAR},</if>
+      <if test="row.charset != null">charset = #{row.charset,jdbcType=VARCHAR},</if>
+      <if test="row.gatewayUrl != null">gateway_url = #{row.gatewayUrl,jdbcType=VARCHAR},</if>
+      <if test="row.notifyUrl != null">notify_url = #{row.notifyUrl,jdbcType=VARCHAR},</if>
+      <if test="row.returnUrl != null">return_url = #{row.returnUrl,jdbcType=VARCHAR},</if>
+      <if test="row.envMode != null">env_mode = #{row.envMode,jdbcType=VARCHAR},</if>
+      <if test="row.lastTestStatus != null">last_test_status = #{row.lastTestStatus,jdbcType=VARCHAR},</if>
+      <if test="row.lastTestAt != null">last_test_at = #{row.lastTestAt,jdbcType=TIMESTAMP},</if>
+      <if test="row.lastTestError != null">last_test_error = #{row.lastTestError,jdbcType=VARCHAR},</if>
+      <if test="row.enabled != null">is_enabled = #{row.enabled,jdbcType=TINYINT},</if>
+      <if test="row.collectionActive != null">is_collection_active = #{row.collectionActive,jdbcType=TINYINT},</if>
+      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=TINYINT},</if>
+      <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
+      <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
+      <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
+      <if test="row.gmtModified != null">gmt_modified = #{row.gmtModified,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update alipay_config
+    set
+      id = #{row.id,jdbcType=BIGINT},
+      merchant_name = #{row.merchantName,jdbcType=VARCHAR},
+      app_id = #{row.appId,jdbcType=VARCHAR},
+      key_mode = #{row.keyMode,jdbcType=VARCHAR},
+      app_private_key = #{row.appPrivateKey,jdbcType=LONGVARCHAR},
+      alipay_public_key = #{row.alipayPublicKey,jdbcType=LONGVARCHAR},
+      app_cert_public_key = #{row.appCertPublicKey,jdbcType=LONGVARCHAR},
+      alipay_cert_public_key = #{row.alipayCertPublicKey,jdbcType=LONGVARCHAR},
+      alipay_root_cert = #{row.alipayRootCert,jdbcType=LONGVARCHAR},
+      app_cert_sn = #{row.appCertSn,jdbcType=VARCHAR},
+      alipay_root_cert_sn = #{row.alipayRootCertSn,jdbcType=VARCHAR},
+      sign_type = #{row.signType,jdbcType=VARCHAR},
+      charset = #{row.charset,jdbcType=VARCHAR},
+      gateway_url = #{row.gatewayUrl,jdbcType=VARCHAR},
+      notify_url = #{row.notifyUrl,jdbcType=VARCHAR},
+      return_url = #{row.returnUrl,jdbcType=VARCHAR},
+      env_mode = #{row.envMode,jdbcType=VARCHAR},
+      last_test_status = #{row.lastTestStatus,jdbcType=VARCHAR},
+      last_test_at = #{row.lastTestAt,jdbcType=TIMESTAMP},
+      last_test_error = #{row.lastTestError,jdbcType=VARCHAR},
+      is_enabled = #{row.enabled,jdbcType=TINYINT},
+      is_collection_active = #{row.collectionActive,jdbcType=TINYINT},
+      is_delete = #{row.delete,jdbcType=TINYINT},
+      creator = #{row.creator,jdbcType=VARCHAR},
+      modifier = #{row.modifier,jdbcType=VARCHAR},
+      gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},
+      gmt_modified = #{row.gmtModified,jdbcType=TIMESTAMP}
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.AlipayConfig">
+    update alipay_config
+    <set>
+      <if test="merchantName != null">merchant_name = #{merchantName,jdbcType=VARCHAR},</if>
+      <if test="appId != null">app_id = #{appId,jdbcType=VARCHAR},</if>
+      <if test="keyMode != null">key_mode = #{keyMode,jdbcType=VARCHAR},</if>
+      <if test="appPrivateKey != null">app_private_key = #{appPrivateKey,jdbcType=LONGVARCHAR},</if>
+      <if test="alipayPublicKey != null">alipay_public_key = #{alipayPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="appCertPublicKey != null">app_cert_public_key = #{appCertPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="alipayCertPublicKey != null">alipay_cert_public_key = #{alipayCertPublicKey,jdbcType=LONGVARCHAR},</if>
+      <if test="alipayRootCert != null">alipay_root_cert = #{alipayRootCert,jdbcType=LONGVARCHAR},</if>
+      <if test="appCertSn != null">app_cert_sn = #{appCertSn,jdbcType=VARCHAR},</if>
+      <if test="alipayRootCertSn != null">alipay_root_cert_sn = #{alipayRootCertSn,jdbcType=VARCHAR},</if>
+      <if test="signType != null">sign_type = #{signType,jdbcType=VARCHAR},</if>
+      <if test="charset != null">charset = #{charset,jdbcType=VARCHAR},</if>
+      <if test="gatewayUrl != null">gateway_url = #{gatewayUrl,jdbcType=VARCHAR},</if>
+      <if test="notifyUrl != null">notify_url = #{notifyUrl,jdbcType=VARCHAR},</if>
+      <if test="returnUrl != null">return_url = #{returnUrl,jdbcType=VARCHAR},</if>
+      <if test="envMode != null">env_mode = #{envMode,jdbcType=VARCHAR},</if>
+      <if test="lastTestStatus != null">last_test_status = #{lastTestStatus,jdbcType=VARCHAR},</if>
+      <if test="lastTestAt != null">last_test_at = #{lastTestAt,jdbcType=TIMESTAMP},</if>
+      <if test="lastTestError != null">last_test_error = #{lastTestError,jdbcType=VARCHAR},</if>
+      <if test="enabled != null">is_enabled = #{enabled,jdbcType=TINYINT},</if>
+      <if test="collectionActive != null">is_collection_active = #{collectionActive,jdbcType=TINYINT},</if>
+      <if test="delete != null">is_delete = #{delete,jdbcType=TINYINT},</if>
+      <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
+      <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
+      <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
+      <if test="gmtModified != null">gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.AlipayConfig">
+    update alipay_config
+    set
+      id = #{id,jdbcType=BIGINT},
+      merchant_name = #{merchantName,jdbcType=VARCHAR},
+      app_id = #{appId,jdbcType=VARCHAR},
+      key_mode = #{keyMode,jdbcType=VARCHAR},
+      app_private_key = #{appPrivateKey,jdbcType=LONGVARCHAR},
+      alipay_public_key = #{alipayPublicKey,jdbcType=LONGVARCHAR},
+      app_cert_public_key = #{appCertPublicKey,jdbcType=LONGVARCHAR},
+      alipay_cert_public_key = #{alipayCertPublicKey,jdbcType=LONGVARCHAR},
+      alipay_root_cert = #{alipayRootCert,jdbcType=LONGVARCHAR},
+      app_cert_sn = #{appCertSn,jdbcType=VARCHAR},
+      alipay_root_cert_sn = #{alipayRootCertSn,jdbcType=VARCHAR},
+      sign_type = #{signType,jdbcType=VARCHAR},
+      charset = #{charset,jdbcType=VARCHAR},
+      gateway_url = #{gatewayUrl,jdbcType=VARCHAR},
+      notify_url = #{notifyUrl,jdbcType=VARCHAR},
+      return_url = #{returnUrl,jdbcType=VARCHAR},
+      env_mode = #{envMode,jdbcType=VARCHAR},
+      last_test_status = #{lastTestStatus,jdbcType=VARCHAR},
+      last_test_at = #{lastTestAt,jdbcType=TIMESTAMP},
+      last_test_error = #{lastTestError,jdbcType=VARCHAR},
+      is_enabled = #{enabled,jdbcType=TINYINT},
+      is_collection_active = #{collectionActive,jdbcType=TINYINT},
+      is_delete = #{delete,jdbcType=TINYINT},
+      creator = #{creator,jdbcType=VARCHAR},
+      modifier = #{modifier,jdbcType=VARCHAR},
+      gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      gmt_modified = #{gmtModified,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

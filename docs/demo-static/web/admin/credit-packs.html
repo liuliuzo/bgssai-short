@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 加量包目录</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>平台管理端</span></div>
+    <div class="side-sec">运营</div>
+    <a class="side-link" href="usage-cost.html">用量与成本</a>
+    <a class="side-link" href="creators.html">创作者</a>
+    <a class="side-link active" href="credit-packs.html">加量包</a>
+    <a class="side-link" href="pay-merchants.html">收款商户</a>
+    <a class="side-link" href="login-logs.html">登录日志</a>
+    <div class="side-foot">
+      <div class="who">系统管理员</div>
+      <div class="bal">PLATFORM_ADMIN</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+  <main class="app-main">
+    <header class="app-top">
+      <span class="top-title">加量包目录</span>
+    </header>
+    <div class="app-page">
+      <div class="card">
+        <p>GET /bgssai/admin/credit-packs/list · POST /bgssai/admin/credit-packs/save。金额为分。</p>
+        <table>
+          <thead><tr><th>pack_code</th><th>名称</th><th>credit_cent</th><th>price_cent</th><th>启用</th></tr></thead>
+          <tbody>
+            <tr><td>pack_50</td><td>加量 50 元</td><td>5000</td><td>4900</td><td>是</td></tr>
+            <tr><td>pack_200</td><td>加量 200 元</td><td>20000</td><td>18900</td><td>是</td></tr>
+            <tr><td>pack_1000</td><td>加量 1000 元</td><td>100000</td><td>89900</td><td>是</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -31,10 +31,11 @@
      提交时返回 `4014` 并给出可读提示。
   4. 模型可标注 `quality_level`（`FAST` 快速 / `STANDARD` 标准 / `HIGH` 高质），
      用户端在提交生成时可在启用的模型中选择档位，价格随之变化（预估接口返回对应单价）。
-  5. 创作者配额：`user_quota` 维护 `balance_cent`（余额）与 `monthly_limit_cent`（月度上限，0 为不限）；
+  5. 创作者配额：`user_quota` 维护周期额度与加量钱包（`balance_cent` 为当前可用余额合计展示）；
      余额不足拒绝新任务（`4007`），月度上限触顶同样拒绝并提示。
-  6. 平台侧不做支付：充值由运营在管理端手工调整余额并留痕（`quota_change_log`），
-     线上支付渠道不在本轮范围（见 `PRODUCT_VISION.md` 范围边界）。
+  6. 商业化：订阅套餐发放周期余额；加量包入加量钱包（不随套餐到期清零）。用户端微信 Native /
+     支付宝当面付购买；运营仍可在管理端手工调整余额并留痕（`quota_change_log`）。
+     详见 `docs/feature/subscription-credit.md`。
 
 ### 用户端（`USER`）
 

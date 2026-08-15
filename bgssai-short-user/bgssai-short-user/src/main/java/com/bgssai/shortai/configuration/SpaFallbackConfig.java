@@ -34,7 +34,8 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
             "/oauth-callback",
             "/home",
             "/login-logs",
-            "/mcp-tokens"
+            "/mcp-tokens",
+            "/subscription"
     );
 
     @Override
