@@ -37,9 +37,7 @@ export function loadWxLoginScript() {
 }
 
 export function mountWechatFastLogin(containerId, params) {
-  // 注意：官方 wxLogin.js 把 onCleanup 挂在「传入的 options 对象」上，而不是 new 出来的实例上，
-  // 所以必须持有 options 引用才能解绑它注册的 message 监听器。
-  const options = {
+  const instance = new window.WxLogin({
     self_redirect: false,
     id: containerId,
     appid: params.appid,
@@ -47,10 +45,9 @@ export function mountWechatFastLogin(containerId, params) {
     redirect_uri: encodeURIComponent(params.redirectUri),
     state: params.state,
     stylelite: 1,
-  }
-  new window.WxLogin(options)
+  })
   return () => {
-    if (options.onCleanup) options.onCleanup()
+    if (instance.onCleanup) instance.onCleanup()
     const el = document.getElementById(containerId)
     if (el) el.innerHTML = ''
   }
