@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.bgssai.shortai.common.ApiResponse;
-import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.common.exception.UnauthorizedException;
 import com.bgssai.shortai.common.logging.MdcSupport;
 import com.bgssai.shortai.utils.JwtUtil;
 
@@ -25,12 +24,11 @@ public class JwtTokenAspect {
                 .getRequest();
         String jwtToken = request.getHeader("jwtToken");
 
+        // Throw instead of returning ApiResponse: controllers that return PageResponse
+        // (or other non-ApiResponse types) would ClassCastException on the CGLIB proxy
+        // and surface as system 500. GlobalExceptionHandler maps this to code 2002.
         if (jwtToken == null || !JwtUtil.validateToken(jwtToken)) {
-            ApiResponse response = new ApiResponse();
-            response.setCode(CommonErrorCode.UNAUTHORIZED.code());
-            response.setMessage(CommonErrorCode.UNAUTHORIZED.message());
-            response.setSuccess(false);
-            return response;
+            throw new UnauthorizedException();
         }
 
         String userId = JwtUtil.getUserIdFromToken(jwtToken);
