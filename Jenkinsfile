@@ -33,7 +33,10 @@
 // steps / when 块未必看得见（视 Jenkins 版本而定，症状是运行期报 No such property）。
 // 不加 def 则落进脚本 binding，各阶段一律可见。
 PRODUCT = [
-  product: 'short',
+  // Jenkins Job / 主机清单 / 目标机目录仍用 short-drama（SHORT_DRAMA_*_HOST、
+  // /opt/bgssai/bgssai-short-drama-{user,admin}）。仓内模块目录才是 bgssai-short-*，
+  // 由中央仓 remote-build.sh 做路径映射。写成 short 会去找不存在的 SHORT_USER_HOST。
+  product: 'short-drama',
   packageManager: 'npm',
   frontendScript: 'build:deploy',
   appPort: '443',
