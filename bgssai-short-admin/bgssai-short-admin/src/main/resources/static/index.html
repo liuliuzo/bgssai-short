@@ -2,16 +2,21 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI 短剧制作平台 管理控制台</title>
   </head>
   <body>
     <!--
       Placeholder page. The real SPA is built by bgssai-short-admin-react and synced here
-      by `npm run build:deploy` (scripts/sync-static.mjs writes index.html + assets/ into this
-      directory). Until then this static page is served at the root path.
+      by `npm run build:deploy` (scripts/sync-static.mjs writes the SPA, root icons, and
+      brand assets into this directory).
     -->
-    <div id="root">AI 短剧制作平台 管理控制台 — 前端产物尚未构建，请在 bgssai-short-admin-react 执行 npm run build:deploy。</div>
+    <main style="min-height:100vh;display:grid;place-content:center;gap:12px;padding:24px;text-align:center;font-family:sans-serif;color:#0f172a;background:#f8fafc">
+      <img src="/brand/bgss-mark.png" alt="" width="64" height="64" style="margin:auto" />
+      <div id="root" style="max-width:640px;line-height:1.6">AI 短剧制作平台 管理控制台 — 前端产物尚未构建，请在 bgssai-short-admin-react 执行 npm run build:deploy。</div>
+    </main>
   </body>
 </html>
