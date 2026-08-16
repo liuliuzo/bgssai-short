@@ -38,14 +38,14 @@ pipeline {
     stage('Stop user') {
       when { expression { params.target in ['both', 'user'] } }
       steps {
-        bgssaiStopService(product: 'short-drama', end: 'user', environment: env.BGSSAI_ENV)
+        bgssaiStopService(product: 'short', end: 'user', environment: env.BGSSAI_ENV)
       }
     }
 
     stage('Stop admin') {
       when { expression { params.target in ['both', 'admin'] } }
       steps {
-        bgssaiStopService(product: 'short-drama', end: 'admin', environment: env.BGSSAI_ENV)
+        bgssaiStopService(product: 'short', end: 'admin', environment: env.BGSSAI_ENV)
       }
     }
   }
