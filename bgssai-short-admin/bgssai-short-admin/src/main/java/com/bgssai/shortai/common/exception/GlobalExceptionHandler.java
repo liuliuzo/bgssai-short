@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.ratelimit.RateLimitExceededException;
@@ -162,6 +163,19 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse handleNoHandler(NoHandlerFoundException ex, HttpServletRequest request) {
         log.warn("[GlobalException] no_handler path={}", request.getRequestURI());
+        ApiResponse response = new ApiResponse();
+        response.setCode(CommonErrorCode.RESOURCE_NOT_FOUND.code());
+        response.setMessage("resource not found: " + request.getRequestURI());
+        response.setSuccess(false);
+        return response;
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiResponse handleNoResource(NoResourceFoundException ex, HttpServletRequest request) {
+        // Spring Boot 3 / Spring 6: unmapped paths surface as NoResourceFoundException,
+        // not NoHandlerFoundException. Without this handler they fall into system 500.
+        log.warn("[GlobalException] no_resource path={}", request.getRequestURI());
         ApiResponse response = new ApiResponse();
         response.setCode(CommonErrorCode.RESOURCE_NOT_FOUND.code());
         response.setMessage("resource not found: " + request.getRequestURI());
