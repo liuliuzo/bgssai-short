@@ -2,7 +2,7 @@ package com.bgssai.shortai.login.dto.req;
 
 import jakarta.validation.constraints.NotBlank;
 
-/** 请求三方授权跳转地址（FR-LOGIN-EXT）。platform ∈ wechat/alipay/douyin/weibo。 */
+/** 请求三方授权跳转地址（FR-LOGIN-EXT）。platform ∈ wechat/alipay/douyin。 */
 public class ReqOAuthAuthorizeUrl {
 
     @NotBlank(message = "platform must not be blank")

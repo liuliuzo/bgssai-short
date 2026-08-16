@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * FR-LOGIN-EXT 三方授权登录配置（bgssai.oauth.*）。四个平台的凭据按 Standards §1 以最终字面量
+ * FR-LOGIN-EXT 三方授权登录配置（bgssai.oauth.*）。三个平台的凭据按 Standards §1 以最终字面量
  * 写入各 profile，未开通环境留空；mock 关闭且凭据为空时该登录方式 fail-closed 返回 4403。
  */
 @Component
@@ -15,7 +15,6 @@ public class OAuthProperties {
     private Wechat wechat = new Wechat();
     private Alipay alipay = new Alipay();
     private Douyin douyin = new Douyin();
-    private Weibo weibo = new Weibo();
 
     public boolean isMockEnabled() { return mockEnabled; }
     public void setMockEnabled(boolean mockEnabled) { this.mockEnabled = mockEnabled; }
@@ -25,8 +24,6 @@ public class OAuthProperties {
     public void setAlipay(Alipay alipay) { this.alipay = alipay; }
     public Douyin getDouyin() { return douyin; }
     public void setDouyin(Douyin douyin) { this.douyin = douyin; }
-    public Weibo getWeibo() { return weibo; }
-    public void setWeibo(Weibo weibo) { this.weibo = weibo; }
 
     public static class Wechat {
         private String appId;
@@ -64,19 +61,6 @@ public class OAuthProperties {
 
         public String getClientKey() { return clientKey; }
         public void setClientKey(String clientKey) { this.clientKey = clientKey; }
-        public String getClientSecret() { return clientSecret; }
-        public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
-        public String getRedirectUri() { return redirectUri; }
-        public void setRedirectUri(String redirectUri) { this.redirectUri = redirectUri; }
-    }
-
-    public static class Weibo {
-        private String clientId;
-        private String clientSecret;
-        private String redirectUri;
-
-        public String getClientId() { return clientId; }
-        public void setClientId(String clientId) { this.clientId = clientId; }
         public String getClientSecret() { return clientSecret; }
         public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
         public String getRedirectUri() { return redirectUri; }

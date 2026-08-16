@@ -119,7 +119,6 @@ export default function Login() {
             { key: 'wechat', label: '微信' },
             { key: 'alipay', label: '支付宝' },
             { key: 'douyin', label: '抖音' },
-            { key: 'weibo', label: '微博' },
           ].map((p) => (
             <button
               key={p.key}
