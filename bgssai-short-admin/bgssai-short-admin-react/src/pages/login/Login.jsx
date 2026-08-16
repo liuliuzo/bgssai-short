@@ -54,7 +54,7 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-logo">
-          <img className="login-logo-mark" src="/brand/bgss-icon.svg" alt="BGSS" />
+          <img className="login-logo-mark" src="/brand/bgss-mark.png" alt="" />
           <div className="login-logo-name">AI 短剧制作平台 管理控制台</div>
           <div className="login-logo-sub">Admin Console</div>
           <div className="login-role-badge">仅限管理员登录</div>

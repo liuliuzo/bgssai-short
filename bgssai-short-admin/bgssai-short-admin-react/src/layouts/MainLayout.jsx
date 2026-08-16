@@ -39,11 +39,14 @@ export default function MainLayout() {
     <div className="pa-layout lg-bg">
       <aside className="pa-sidebar">
         <div className="pa-sidebar-brand">
-          <img
-            className="pa-sidebar-brand-logo"
-            src="/brand/bgss-logo-horizontal.svg"
-            alt="BGSS"
-          />
+          <div className="pa-sidebar-brand-main">
+            <img
+              className="pa-sidebar-brand-logo"
+              src="/brand/bgss-mark.png"
+              alt=""
+            />
+            <span className="pa-sidebar-brand-name">AI 短剧制作平台</span>
+          </div>
           <div className="pa-sidebar-brand-sub">管理控制台</div>
         </div>
 

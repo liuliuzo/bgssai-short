@@ -37,14 +37,13 @@
   margin-bottom: 32px;
 }
 
-/* 官方 logo 资产（/brand/bgss-icon.svg 自带白底圆角卡片） */
+/* 标准透明品牌图形；产品名由相邻文本提供。 */
 .login-logo-mark {
   display: block;
   width: 64px;
   height: 64px;
   margin: 0 auto 14px;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px var(--lg-accent-glow);
+  object-fit: contain;
 }
 
 .login-logo-name {
