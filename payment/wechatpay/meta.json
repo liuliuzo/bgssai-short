@@ -1,0 +1,12 @@
+{
+  "mch_id": "1112047784",
+  "merchant_serial_no": "4454FD7356E77501B46646970627E31DAA06114D",
+  "wechat_public_key_id": "PUB_KEY_ID_0111120477842026043000212367000401",
+  "api_v3_key": "bgssaiWxPayV3bgssaiWxPayV3bgssai",
+  "api_v2_key": "bgssaiWxPayV2bgssaiWxPayV2bgssai",
+  "oauth_app_id": "wx496f923c7d4ac64e",
+  "oauth_app_secret": "812fbfc6570dda328805ce87d8e7fbd4",
+  "pay_app_id": "wx496f923c7d4ac64e",
+  "source": "user paste + Desktop\\20260811\\1112047784_20260622_cert",
+  "updated_at": "2026-08-12T04:36:37.3793543+00:00"
+}

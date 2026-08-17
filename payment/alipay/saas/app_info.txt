@@ -1,0 +1,8 @@
+app_name=BGSSAISaaS
+app_id=2021006186639146
+website=https://dev.user.bgssai-saas.com
+oauth_callback=https://dev.user.bgssai-saas.com
+notify_url=https://dev.user.bgssai-saas.com/bgssai/payment/notify/ALIPAY/BGSSAISaaS
+sign_type=RSA2
+private_key_file=app_private_key_body.txt (blog: app_private_key_pkcs8.pem)
+alipay_public_key_file=alipay_public_key_body.txt

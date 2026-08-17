@@ -1,0 +1,38 @@
+{
+  "updated_at": "2026-08-12",
+  "douyin": {
+    "open_platform": {
+      "app": "bgss-blog",
+      "client_key": "aw59ctbcbd9mljzb",
+      "client_secret_saved_locally": true,
+      "callbacks": [
+        "https://dev.user.bgssai-blog.com/api/oauth/douyin/callback",
+        "https://dev.user.bgssai-geo.cn/api/douyin/callback",
+        "https://dev.user.bgssai-geo.com/api/douyin/callback"
+      ],
+      "count": "3/10",
+      "status": "测试应用"
+    },
+    "admin_push": {
+      "blog": "ok DOUYIN enabled",
+      "geo-cn": "ok channel=douyin secret_configured=true",
+      "geo": "pending"
+    }
+  },
+  "baidu": {
+    "status": "configured",
+    "console": "https://pan.baidu.com/union/console/app/124135739",
+    "docs": "https://openauth.baidu.com/doc/doc.html",
+    "note": "经典 developer.baidu.com/console 失效；用网盘开放平台建应用，协议仍为 openauth/passport",
+    "app": {
+      "name": "BGSSAIBlog",
+      "app_id": "124135739",
+      "app_key_saved_locally": true
+    },
+    "admin_push": {
+      "blog": "ok",
+      "geo-cn": "ok",
+      "geo": "ok"
+    }
+  }
+}

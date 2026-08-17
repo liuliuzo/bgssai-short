@@ -1,0 +1,8 @@
+app_name=BGSSAIMagic
+app_id=2021006186636165
+website=https://dev.user.bgssai-magic.com
+oauth_callback=https://dev.user.bgssai-magic.com
+notify_url=https://dev.user.bgssai-magic.com/bgssai/user/payment/alipay/notify
+sign_type=RSA2
+private_key_file=app_private_key_body.txt (blog: app_private_key_pkcs8.pem)
+alipay_public_key_file=alipay_public_key_body.txt

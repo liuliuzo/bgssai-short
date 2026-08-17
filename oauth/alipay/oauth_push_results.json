@@ -1,0 +1,53 @@
+[
+  {
+    "product": "blog",
+    "alipay": "ok 2021006159661313",
+    "note": "system-domain set",
+    "domain": "ok",
+    "wechat": "ok wx496f923c7d4ac64e"
+  },
+  {
+    "product": "geo-cn",
+    "alipay": "ok 2021006185686182 secret=true enabled=true",
+    "note": "",
+    "domain": "ok",
+    "wechat": "ok wx496f923c7d4ac64e secret=true enabled=true"
+  },
+  {
+    "product": "geo",
+    "alipay": "n/a no admin api",
+    "note": "",
+    "domain": "ok",
+    "wechat": "ok wx496f923c7d4ac64e secret=true enabled=true frontend=dev.user.bgssai-geo.com"
+  },
+  {
+    "product": "builder",
+    "alipay": "no oauth admin api",
+    "wechat": "no oauth admin api"
+  },
+  {
+    "product": "saas",
+    "alipay": "n/a",
+    "wechat": "no wechat/alipay oauth admin"
+  },
+  {
+    "product": "magic",
+    "alipay": "no oauth admin api",
+    "wechat": "no oauth admin api"
+  },
+  {
+    "product": "marklens",
+    "alipay": "no oauth admin api",
+    "wechat": "no oauth admin api"
+  },
+  {
+    "product": "publish",
+    "alipay": "no oauth admin api",
+    "wechat": "no oauth admin api"
+  },
+  {
+    "product": "voiceunion",
+    "alipay": "properties only",
+    "wechat": "properties only (empty in repo)"
+  }
+]

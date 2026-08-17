@@ -1,0 +1,83 @@
+﻿[
+    {
+        "product":  "blog",
+        "appId":  "2021006159661313",
+        "login":  "ok",
+        "domain":  "ok",
+        "merchant":  "fail:The remote server returned an error: (409) Conflict.",
+        "oauth":  "ok",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "builder",
+        "appId":  "2021006185674173",
+        "login":  "ok",
+        "domain":  "n/a",
+        "merchant":  "fail:The remote server returned an error: (409) Conflict.",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "geo-cn",
+        "appId":  "2021006185686182",
+        "login":  "ok",
+        "domain":  "ok",
+        "merchant":  "fail:{\"code\":400,\"data\":null,\"message\":\"must not be blank\",\"request_id\":\"eaa12a2b-1dc1-443d-a867-c4c4e7495e25\"}",
+        "oauth":  "ok",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "geo",
+        "appId":  "2021006185698192",
+        "login":  "ok",
+        "domain":  "ok",
+        "merchant":  "ok",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "saas",
+        "appId":  "2021006186639146",
+        "login":  "ok",
+        "domain":  "ok",
+        "merchant":  "ok",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "magic",
+        "appId":  "2021006186636165",
+        "login":  "ok",
+        "domain":  "n/a",
+        "merchant":  "ok",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "marklens",
+        "appId":  "2021006185681180",
+        "login":  "ok",
+        "domain":  "n/a",
+        "merchant":  "fail:{\"code\":\"404000\",\"message\":\"resource not found: /bgssai/admin/pay/alipay-configs/save\",\"success\":false,\"result\":null}",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "publish",
+        "appId":  "2021006186687014",
+        "login":  "ok",
+        "domain":  "fail:The remote server returned an error: (500) Internal Server Error.",
+        "merchant":  "fail:The remote server returned an error: (500) Internal Server Error.",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    },
+    {
+        "product":  "voiceunion",
+        "appId":  "2021006185633244",
+        "login":  "ok",
+        "domain":  "n/a",
+        "merchant":  "fail:{\"code\":\"404000\",\"message\":\"resource not found: /bgssai/admin/pay/alipay-configs/save\",\"success\":false,\"result\":null}",
+        "oauth":  "n/a",
+        "note":  "alipay_pub=platform_key_uploaded"
+    }
+]
