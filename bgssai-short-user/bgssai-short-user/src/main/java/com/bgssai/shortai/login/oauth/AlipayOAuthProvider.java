@@ -33,8 +33,7 @@ public class AlipayOAuthProvider implements OAuthProvider {
     private static final String GATEWAY_URL = "https://openapi.alipay.com/gateway.do";
 
     @Autowired private OAuthProperties oauthProperties;
-
-    private volatile AlipayClient alipayClient;
+    @Autowired private LoginOAuthSecrets loginOAuthSecrets;
 
     @Override
     public String platformCode() {
@@ -44,24 +43,23 @@ public class AlipayOAuthProvider implements OAuthProvider {
     @Override
     public String buildAuthorizeUrl(String state) {
         OAuthProperties.Alipay cfg = oauthProperties.getAlipay();
-        if (oauthProperties.isMockEnabled()) {
-            return cfg.getRedirectUri() + "?code=mock-code&state=" + encode(state);
-        }
-        requireCredentials(cfg.getAppId(), cfg.getAppPrivateKey());
-        return AUTHORIZE_URL + "?app_id=" + cfg.getAppId()
+        String appId = loginOAuthSecrets.alipayAppId();
+        String appPrivateKey = loginOAuthSecrets.alipayAppPrivateKey();
+        requireCredentials(appId, appPrivateKey);
+        return AUTHORIZE_URL + "?app_id=" + appId
                 + "&scope=auth_user&redirect_uri=" + encode(cfg.getRedirectUri())
                 + "&state=" + encode(state);
     }
 
     @Override
     public OAuthUserInfo fetchUserInfo(String code) {
-        if (oauthProperties.isMockEnabled()) {
-            return new OAuthUserInfo("mock-alipay-userid", null, "mock支付宝用户", null);
-        }
-        OAuthProperties.Alipay cfg = oauthProperties.getAlipay();
-        requireCredentials(cfg.getAppId(), cfg.getAppPrivateKey());
+        String appId = loginOAuthSecrets.alipayAppId();
+        String appPrivateKey = loginOAuthSecrets.alipayAppPrivateKey();
+        String alipayPublicKey = loginOAuthSecrets.alipayPublicKey();
+        requireCredentials(appId, appPrivateKey);
         try {
-            AlipayClient client = client(cfg);
+            AlipayClient client = new DefaultAlipayClient(GATEWAY_URL, appId,
+                    appPrivateKey, "json", "UTF-8", alipayPublicKey, "RSA2");
 
             AlipaySystemOauthTokenRequest tokenRequest = new AlipaySystemOauthTokenRequest();
             tokenRequest.setGrantType("authorization_code");
@@ -87,19 +85,6 @@ public class AlipayOAuthProvider implements OAuthProvider {
         }
     }
 
-    private AlipayClient client(OAuthProperties.Alipay cfg) {
-        AlipayClient client = alipayClient;
-        if (client == null) {
-            synchronized (this) {
-                if (alipayClient == null) {
-                    alipayClient = new DefaultAlipayClient(GATEWAY_URL, cfg.getAppId(),
-                            cfg.getAppPrivateKey(), "json", "UTF-8", cfg.getAlipayPublicKey(), "RSA2");
-                }
-                client = alipayClient;
-            }
-        }
-        return client;
-    }
 
     private static void requireCredentials(String appId, String appPrivateKey) {
         if (OAuthIds.blank(appId) || OAuthIds.blank(appPrivateKey)) {

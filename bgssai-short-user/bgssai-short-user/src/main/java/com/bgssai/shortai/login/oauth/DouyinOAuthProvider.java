@@ -31,6 +31,7 @@ public class DouyinOAuthProvider implements OAuthProvider {
     private static final String USERINFO_URL = "https://open.douyin.com/oauth/userinfo/";
 
     @Autowired private OAuthProperties oauthProperties;
+    @Autowired private LoginOAuthSecrets loginOAuthSecrets;
     @Autowired private RestTemplate restTemplate;
 
     @Override
@@ -41,11 +42,10 @@ public class DouyinOAuthProvider implements OAuthProvider {
     @Override
     public String buildAuthorizeUrl(String state) {
         OAuthProperties.Douyin cfg = oauthProperties.getDouyin();
-        if (oauthProperties.isMockEnabled()) {
-            return cfg.getRedirectUri() + "?code=mock-code&state=" + encode(state);
-        }
-        requireCredentials(cfg.getClientKey(), cfg.getClientSecret());
-        return AUTHORIZE_URL + "?client_key=" + cfg.getClientKey()
+        String clientKey = loginOAuthSecrets.douyinClientKey();
+        String clientSecret = loginOAuthSecrets.douyinClientSecret();
+        requireCredentials(clientKey, clientSecret);
+        return AUTHORIZE_URL + "?client_key=" + clientKey
                 + "&response_type=code&scope=user_info&redirect_uri=" + encode(cfg.getRedirectUri())
                 + "&state=" + encode(state);
     }
@@ -53,15 +53,13 @@ public class DouyinOAuthProvider implements OAuthProvider {
     @Override
     @SuppressWarnings("unchecked")
     public OAuthUserInfo fetchUserInfo(String code) {
-        if (oauthProperties.isMockEnabled()) {
-            return new OAuthUserInfo("mock-douyin-openid", "mock-douyin-unionid", "mock抖音用户", null);
-        }
-        OAuthProperties.Douyin cfg = oauthProperties.getDouyin();
-        requireCredentials(cfg.getClientKey(), cfg.getClientSecret());
+        String clientKey = loginOAuthSecrets.douyinClientKey();
+        String clientSecret = loginOAuthSecrets.douyinClientSecret();
+        requireCredentials(clientKey, clientSecret);
         try {
             Map<String, String> tokenForm = new HashMap<>();
-            tokenForm.put("client_key", cfg.getClientKey());
-            tokenForm.put("client_secret", cfg.getClientSecret());
+            tokenForm.put("client_key", clientKey);
+            tokenForm.put("client_secret", clientSecret);
             tokenForm.put("code", code);
             tokenForm.put("grant_type", "authorization_code");
             Map<String, Object> tokenResp = restTemplate.postForObject(TOKEN_URL, tokenForm, Map.class);

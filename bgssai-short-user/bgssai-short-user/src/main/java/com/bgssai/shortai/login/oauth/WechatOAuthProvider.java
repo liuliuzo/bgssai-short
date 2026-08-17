@@ -18,7 +18,7 @@ import com.bgssai.shortai.common.exception.BizException;
  * <a href="https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html">
  * 网站应用微信登录文档</a>。
  *
- * <p><b>已知边界</b>：本仓库无真实 AppID/AppSecret，未做过真实联调；接入真实凭证前须在微信开放平台
+ * <p><b>已知边界</b>：AppID / Secret 读 LoginOAuthSecrets（库）。redirect_uri 写在 application-*.properties；须在微信开放平台
  * 控制台走一遍完整授权流程核对字段。</p>
  */
 @Component
@@ -30,6 +30,7 @@ public class WechatOAuthProvider implements OAuthProvider {
     private static final String USERINFO_URL = "https://api.weixin.qq.com/sns/userinfo";
 
     @Autowired private OAuthProperties oauthProperties;
+    @Autowired private LoginOAuthSecrets loginOAuthSecrets;
     @Autowired private RestTemplate restTemplate;
 
     @Override
@@ -40,13 +41,10 @@ public class WechatOAuthProvider implements OAuthProvider {
     @Override
     public String buildAuthorizeUrl(String state) {
         OAuthProperties.Wechat cfg = oauthProperties.getWechat();
-        // mock 模式直接拼一个指向本应用回调地址、带假 code 的 URL——开发环境没有真实账号可跳转到
-        // 微信授权页，让前端点击后直接落到 callback 页面即可跑通整条登录链路。
-        if (oauthProperties.isMockEnabled()) {
-            return cfg.getRedirectUri() + "?code=mock-code&state=" + encode(state);
-        }
-        requireCredentials(cfg.getAppId(), cfg.getAppSecret());
-        return AUTHORIZE_URL + "?appid=" + cfg.getAppId()
+        String appId = loginOAuthSecrets.wechatAppId();
+        String appSecret = loginOAuthSecrets.wechatAppSecret();
+        requireCredentials(appId, appSecret);
+        return AUTHORIZE_URL + "?appid=" + appId
                 + "&redirect_uri=" + encode(cfg.getRedirectUri())
                 + "&response_type=code&scope=snsapi_login&state=" + encode(state)
                 + "#wechat_redirect";
@@ -54,13 +52,11 @@ public class WechatOAuthProvider implements OAuthProvider {
 
     @Override
     public OAuthUserInfo fetchUserInfo(String code) {
-        if (oauthProperties.isMockEnabled()) {
-            return new OAuthUserInfo("mock-wechat-openid", "mock-wechat-unionid", "mock微信用户", null);
-        }
-        OAuthProperties.Wechat cfg = oauthProperties.getWechat();
-        requireCredentials(cfg.getAppId(), cfg.getAppSecret());
+        String appId = loginOAuthSecrets.wechatAppId();
+        String appSecret = loginOAuthSecrets.wechatAppSecret();
+        requireCredentials(appId, appSecret);
         try {
-            String tokenUrl = TOKEN_URL + "?appid=" + cfg.getAppId() + "&secret=" + cfg.getAppSecret()
+            String tokenUrl = TOKEN_URL + "?appid=" + appId + "&secret=" + appSecret
                     + "&code=" + encode(code) + "&grant_type=authorization_code";
             Map<String, Object> tokenResp = restTemplate.getForObject(tokenUrl, Map.class);
             if (tokenResp == null || tokenResp.get("openid") == null || tokenResp.containsKey("errcode")) {

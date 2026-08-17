@@ -15,6 +15,6 @@ public interface OAuthProvider {
      */
     String buildAuthorizeUrl(String state);
 
-    /** 用授权码换用户信息；mock 模式下不发起外部调用，直接返回固定假数据。 */
+    /** 用授权码换用户信息；向开放平台换 token 并拉取资料。 */
     OAuthUserInfo fetchUserInfo(String code);
 }

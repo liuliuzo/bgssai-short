@@ -69,6 +69,17 @@ CREATE TABLE `login_log`  (
   INDEX `idx_del_flag`(`del_flag`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '登录记录表' ROW_FORMAT = Dynamic;
 
+DROP TABLE IF EXISTS `sys_secret`;
+CREATE TABLE `sys_secret` (
+  `secret_key`   VARCHAR(128) NOT NULL                           COMMENT '密钥标识,对应代码中原配置键',
+  `secret_value` TEXT         NOT NULL                           COMMENT '密钥值(明文存储)',
+  `description`  VARCHAR(255) DEFAULT NULL                       COMMENT '说明',
+  `enabled`      TINYINT(1)   NOT NULL DEFAULT 1                 COMMENT '0=停用,1=启用',
+  `updated_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by`   VARCHAR(64)  DEFAULT NULL                       COMMENT '最后修改人',
+  PRIMARY KEY (`secret_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='第三方密钥配置';
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 DROP TABLE IF EXISTS `oauth_binding`;
