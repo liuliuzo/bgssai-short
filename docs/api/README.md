@@ -58,6 +58,7 @@
 | MCP 令牌创建 / 列表 / 吊销 | POST | `/bgssai/mcp-tokens/create` · `/list` · `/revoke` | `MCP.md` |
 | 套餐 / 加量 / 支付回调 | GET/POST | `/bgssai/user/subscription/**` · `/credit-packs/**` · `/bgssai/user/payment/*/notify` | `SUBSCRIPTION-CREDIT.md` |
 | 管理端商户与加量包 | GET/POST | `/bgssai/admin/pay/**` · `/bgssai/admin/credit-packs/**` · `/bgssai/admin/creators/adjust-quota` | `SUBSCRIPTION-CREDIT.md` |
+| 短剧制作闭环（MVP） | GET/POST | `/bgssai/user/short-works/**` · `/scripts/**` · `/characters/**` · `/shots/**` · `/ai-tasks/**` · `/films/**` · `/reviews/**` · `/bgssai/admin/reviews/**` · `/bgssai/admin/creators/**` | `SHORT-PRODUCTION.md` |
 
 > 健康检查三端点是**全产品线共用契约**（Standards §13），不带 `/admin` · `/user` 端前缀、不需要
 > `Jwttoken`，且 `code` / `success` 恒表达「接口调用成功」——健康结论只看 `result.status` 与 HTTP 状态码。

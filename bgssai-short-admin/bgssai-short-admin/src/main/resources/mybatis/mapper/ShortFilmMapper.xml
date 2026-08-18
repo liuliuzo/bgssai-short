@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortFilmMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortFilm">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="film_id" jdbcType="VARCHAR" property="filmId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="film_asset_id" jdbcType="VARCHAR" property="filmAssetId" />
+    <result column="film_duration_sec" jdbcType="INTEGER" property="filmDurationSec" />
+    <result column="compose_status" jdbcType="VARCHAR" property="composeStatus" />
+    <result column="expired_flag" jdbcType="TINYINT" property="expiredFlag" />
+    <result column="subtitle_stale_flag" jdbcType="TINYINT" property="subtitleStaleFlag" />
+    <result column="compose_task_id" jdbcType="VARCHAR" property="composeTaskId" />
+    <result column="composed_time" jdbcType="TIMESTAMP" property="composedTime" />
+    <result column="export_json" jdbcType="LONGVARCHAR" property="exportJson" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, film_id, episode_id, work_id, user_id, film_asset_id, film_duration_sec, compose_status, expired_flag, subtitle_stale_flag, compose_task_id, composed_time, export_json, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortFilmExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_film
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortFilmExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_film
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_film where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortFilmExample" resultType="java.lang.Long">
+    select count(*) from short_film
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortFilm" useGeneratedKeys="true" keyProperty="id">
+    insert into short_film (
+      id,
+      film_id,
+      episode_id,
+      work_id,
+      user_id,
+      film_asset_id,
+      film_duration_sec,
+      compose_status,
+      expired_flag,
+      subtitle_stale_flag,
+      compose_task_id,
+      composed_time,
+      export_json,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{filmId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{filmAssetId,jdbcType=VARCHAR},
+      #{filmDurationSec,jdbcType=INTEGER},
+      #{composeStatus,jdbcType=VARCHAR},
+      #{expiredFlag,jdbcType=TINYINT},
+      #{subtitleStaleFlag,jdbcType=TINYINT},
+      #{composeTaskId,jdbcType=VARCHAR},
+      #{composedTime,jdbcType=TIMESTAMP},
+      #{exportJson,jdbcType=LONGVARCHAR},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortFilm" useGeneratedKeys="true" keyProperty="id">
+    insert into short_film
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="filmId != null">film_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="filmAssetId != null">film_asset_id,</if>
+      <if test="filmDurationSec != null">film_duration_sec,</if>
+      <if test="composeStatus != null">compose_status,</if>
+      <if test="expiredFlag != null">expired_flag,</if>
+      <if test="subtitleStaleFlag != null">subtitle_stale_flag,</if>
+      <if test="composeTaskId != null">compose_task_id,</if>
+      <if test="composedTime != null">composed_time,</if>
+      <if test="exportJson != null">export_json,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="filmId != null">#{filmId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="filmAssetId != null">#{filmAssetId,jdbcType=VARCHAR},</if>
+      <if test="filmDurationSec != null">#{filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="composeStatus != null">#{composeStatus,jdbcType=VARCHAR},</if>
+      <if test="expiredFlag != null">#{expiredFlag,jdbcType=TINYINT},</if>
+      <if test="subtitleStaleFlag != null">#{subtitleStaleFlag,jdbcType=TINYINT},</if>
+      <if test="composeTaskId != null">#{composeTaskId,jdbcType=VARCHAR},</if>
+      <if test="composedTime != null">#{composedTime,jdbcType=TIMESTAMP},</if>
+      <if test="exportJson != null">#{exportJson,jdbcType=LONGVARCHAR},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_film
+    <set>
+      <if test="row.filmId != null">film_id = #{row.filmId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.filmAssetId != null">film_asset_id = #{row.filmAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.filmDurationSec != null">film_duration_sec = #{row.filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="row.composeStatus != null">compose_status = #{row.composeStatus,jdbcType=VARCHAR},</if>
+      <if test="row.expiredFlag != null">expired_flag = #{row.expiredFlag,jdbcType=TINYINT},</if>
+      <if test="row.subtitleStaleFlag != null">subtitle_stale_flag = #{row.subtitleStaleFlag,jdbcType=TINYINT},</if>
+      <if test="row.composeTaskId != null">compose_task_id = #{row.composeTaskId,jdbcType=VARCHAR},</if>
+      <if test="row.composedTime != null">composed_time = #{row.composedTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.exportJson != null">export_json = #{row.exportJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortFilm">
+    update short_film
+    <set>
+      <if test="filmId != null">film_id = #{filmId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="filmAssetId != null">film_asset_id = #{filmAssetId,jdbcType=VARCHAR},</if>
+      <if test="filmDurationSec != null">film_duration_sec = #{filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="composeStatus != null">compose_status = #{composeStatus,jdbcType=VARCHAR},</if>
+      <if test="expiredFlag != null">expired_flag = #{expiredFlag,jdbcType=TINYINT},</if>
+      <if test="subtitleStaleFlag != null">subtitle_stale_flag = #{subtitleStaleFlag,jdbcType=TINYINT},</if>
+      <if test="composeTaskId != null">compose_task_id = #{composeTaskId,jdbcType=VARCHAR},</if>
+      <if test="composedTime != null">composed_time = #{composedTime,jdbcType=TIMESTAMP},</if>
+      <if test="exportJson != null">export_json = #{exportJson,jdbcType=LONGVARCHAR},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

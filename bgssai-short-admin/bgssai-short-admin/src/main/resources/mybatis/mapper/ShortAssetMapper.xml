@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortAssetMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortAsset">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="asset_id" jdbcType="VARCHAR" property="assetId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
+    <result column="asset_type" jdbcType="VARCHAR" property="assetType" />
+    <result column="storage_key" jdbcType="LONGVARCHAR" property="storageKey" />
+    <result column="file_url" jdbcType="VARCHAR" property="fileUrl" />
+    <result column="file_size_byte" jdbcType="INTEGER" property="fileSizeByte" />
+    <result column="duration_sec" jdbcType="INTEGER" property="durationSec" />
+    <result column="width" jdbcType="INTEGER" property="width" />
+    <result column="height" jdbcType="INTEGER" property="height" />
+    <result column="source_task_id" jdbcType="VARCHAR" property="sourceTaskId" />
+    <result column="selected_flag" jdbcType="TINYINT" property="selectedFlag" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, asset_id, user_id, work_id, episode_id, shot_id, asset_type, storage_key, file_url, file_size_byte, duration_sec, width, height, source_task_id, selected_flag, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortAssetExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_asset
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortAssetExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_asset
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_asset where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortAssetExample" resultType="java.lang.Long">
+    select count(*) from short_asset
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortAsset" useGeneratedKeys="true" keyProperty="id">
+    insert into short_asset (
+      id,
+      asset_id,
+      user_id,
+      work_id,
+      episode_id,
+      shot_id,
+      asset_type,
+      storage_key,
+      file_url,
+      file_size_byte,
+      duration_sec,
+      width,
+      height,
+      source_task_id,
+      selected_flag,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{assetId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{shotId,jdbcType=VARCHAR},
+      #{assetType,jdbcType=VARCHAR},
+      #{storageKey,jdbcType=LONGVARCHAR},
+      #{fileUrl,jdbcType=VARCHAR},
+      #{fileSizeByte,jdbcType=INTEGER},
+      #{durationSec,jdbcType=INTEGER},
+      #{width,jdbcType=INTEGER},
+      #{height,jdbcType=INTEGER},
+      #{sourceTaskId,jdbcType=VARCHAR},
+      #{selectedFlag,jdbcType=TINYINT},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortAsset" useGeneratedKeys="true" keyProperty="id">
+    insert into short_asset
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="assetId != null">asset_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="shotId != null">shot_id,</if>
+      <if test="assetType != null">asset_type,</if>
+      <if test="storageKey != null">storage_key,</if>
+      <if test="fileUrl != null">file_url,</if>
+      <if test="fileSizeByte != null">file_size_byte,</if>
+      <if test="durationSec != null">duration_sec,</if>
+      <if test="width != null">width,</if>
+      <if test="height != null">height,</if>
+      <if test="sourceTaskId != null">source_task_id,</if>
+      <if test="selectedFlag != null">selected_flag,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="assetId != null">#{assetId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
+      <if test="assetType != null">#{assetType,jdbcType=VARCHAR},</if>
+      <if test="storageKey != null">#{storageKey,jdbcType=LONGVARCHAR},</if>
+      <if test="fileUrl != null">#{fileUrl,jdbcType=VARCHAR},</if>
+      <if test="fileSizeByte != null">#{fileSizeByte,jdbcType=INTEGER},</if>
+      <if test="durationSec != null">#{durationSec,jdbcType=INTEGER},</if>
+      <if test="width != null">#{width,jdbcType=INTEGER},</if>
+      <if test="height != null">#{height,jdbcType=INTEGER},</if>
+      <if test="sourceTaskId != null">#{sourceTaskId,jdbcType=VARCHAR},</if>
+      <if test="selectedFlag != null">#{selectedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_asset
+    <set>
+      <if test="row.assetId != null">asset_id = #{row.assetId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
+      <if test="row.assetType != null">asset_type = #{row.assetType,jdbcType=VARCHAR},</if>
+      <if test="row.storageKey != null">storage_key = #{row.storageKey,jdbcType=LONGVARCHAR},</if>
+      <if test="row.fileUrl != null">file_url = #{row.fileUrl,jdbcType=VARCHAR},</if>
+      <if test="row.fileSizeByte != null">file_size_byte = #{row.fileSizeByte,jdbcType=INTEGER},</if>
+      <if test="row.durationSec != null">duration_sec = #{row.durationSec,jdbcType=INTEGER},</if>
+      <if test="row.width != null">width = #{row.width,jdbcType=INTEGER},</if>
+      <if test="row.height != null">height = #{row.height,jdbcType=INTEGER},</if>
+      <if test="row.sourceTaskId != null">source_task_id = #{row.sourceTaskId,jdbcType=VARCHAR},</if>
+      <if test="row.selectedFlag != null">selected_flag = #{row.selectedFlag,jdbcType=TINYINT},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortAsset">
+    update short_asset
+    <set>
+      <if test="assetId != null">asset_id = #{assetId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
+      <if test="assetType != null">asset_type = #{assetType,jdbcType=VARCHAR},</if>
+      <if test="storageKey != null">storage_key = #{storageKey,jdbcType=LONGVARCHAR},</if>
+      <if test="fileUrl != null">file_url = #{fileUrl,jdbcType=VARCHAR},</if>
+      <if test="fileSizeByte != null">file_size_byte = #{fileSizeByte,jdbcType=INTEGER},</if>
+      <if test="durationSec != null">duration_sec = #{durationSec,jdbcType=INTEGER},</if>
+      <if test="width != null">width = #{width,jdbcType=INTEGER},</if>
+      <if test="height != null">height = #{height,jdbcType=INTEGER},</if>
+      <if test="sourceTaskId != null">source_task_id = #{sourceTaskId,jdbcType=VARCHAR},</if>
+      <if test="selectedFlag != null">selected_flag = #{selectedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

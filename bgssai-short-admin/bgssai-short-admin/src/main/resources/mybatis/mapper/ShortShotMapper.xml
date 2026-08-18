@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortShotMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortShot">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="shot_no" jdbcType="INTEGER" property="shotNo" />
+    <result column="scene_no" jdbcType="INTEGER" property="sceneNo" />
+    <result column="shot_size" jdbcType="VARCHAR" property="shotSize" />
+    <result column="camera_move" jdbcType="VARCHAR" property="cameraMove" />
+    <result column="shot_duration_sec" jdbcType="INTEGER" property="shotDurationSec" />
+    <result column="shot_desc" jdbcType="VARCHAR" property="shotDesc" />
+    <result column="dialogue_text" jdbcType="VARCHAR" property="dialogueText" />
+    <result column="emotion" jdbcType="VARCHAR" property="emotion" />
+    <result column="lighting" jdbcType="VARCHAR" property="lighting" />
+    <result column="character_ref_json" jdbcType="LONGVARCHAR" property="characterRefJson" />
+    <result column="scene_card_id" jdbcType="VARCHAR" property="sceneCardId" />
+    <result column="extra_prompt" jdbcType="VARCHAR" property="extraPrompt" />
+    <result column="image_prompt" jdbcType="LONGVARCHAR" property="imagePrompt" />
+    <result column="previz_text" jdbcType="LONGVARCHAR" property="previzText" />
+    <result column="shot_status" jdbcType="VARCHAR" property="shotStatus" />
+    <result column="blocked_flag" jdbcType="TINYINT" property="blockedFlag" />
+    <result column="risk_level" jdbcType="VARCHAR" property="riskLevel" />
+    <result column="first_frame_asset_id" jdbcType="VARCHAR" property="firstFrameAssetId" />
+    <result column="video_asset_id" jdbcType="VARCHAR" property="videoAssetId" />
+    <result column="retry_count" jdbcType="INTEGER" property="retryCount" />
+    <result column="cost_spent_cent" jdbcType="INTEGER" property="costSpentCent" />
+    <result column="shot_version" jdbcType="INTEGER" property="shotVersion" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, extra_prompt, image_prompt, previz_text, shot_status, blocked_flag, risk_level, first_frame_asset_id, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortShotExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_shot
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortShotExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_shot
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_shot where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortShotExample" resultType="java.lang.Long">
+    select count(*) from short_shot
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortShot" useGeneratedKeys="true" keyProperty="id">
+    insert into short_shot (
+      id,
+      shot_id,
+      episode_id,
+      work_id,
+      user_id,
+      shot_no,
+      scene_no,
+      shot_size,
+      camera_move,
+      shot_duration_sec,
+      shot_desc,
+      dialogue_text,
+      emotion,
+      lighting,
+      character_ref_json,
+      scene_card_id,
+      extra_prompt,
+      image_prompt,
+      previz_text,
+      shot_status,
+      blocked_flag,
+      risk_level,
+      first_frame_asset_id,
+      video_asset_id,
+      retry_count,
+      cost_spent_cent,
+      shot_version,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{shotId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{shotNo,jdbcType=INTEGER},
+      #{sceneNo,jdbcType=INTEGER},
+      #{shotSize,jdbcType=VARCHAR},
+      #{cameraMove,jdbcType=VARCHAR},
+      #{shotDurationSec,jdbcType=INTEGER},
+      #{shotDesc,jdbcType=VARCHAR},
+      #{dialogueText,jdbcType=VARCHAR},
+      #{emotion,jdbcType=VARCHAR},
+      #{lighting,jdbcType=VARCHAR},
+      #{characterRefJson,jdbcType=LONGVARCHAR},
+      #{sceneCardId,jdbcType=VARCHAR},
+      #{extraPrompt,jdbcType=VARCHAR},
+      #{imagePrompt,jdbcType=LONGVARCHAR},
+      #{previzText,jdbcType=LONGVARCHAR},
+      #{shotStatus,jdbcType=VARCHAR},
+      #{blockedFlag,jdbcType=TINYINT},
+      #{riskLevel,jdbcType=VARCHAR},
+      #{firstFrameAssetId,jdbcType=VARCHAR},
+      #{videoAssetId,jdbcType=VARCHAR},
+      #{retryCount,jdbcType=INTEGER},
+      #{costSpentCent,jdbcType=INTEGER},
+      #{shotVersion,jdbcType=INTEGER},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortShot" useGeneratedKeys="true" keyProperty="id">
+    insert into short_shot
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="shotId != null">shot_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="shotNo != null">shot_no,</if>
+      <if test="sceneNo != null">scene_no,</if>
+      <if test="shotSize != null">shot_size,</if>
+      <if test="cameraMove != null">camera_move,</if>
+      <if test="shotDurationSec != null">shot_duration_sec,</if>
+      <if test="shotDesc != null">shot_desc,</if>
+      <if test="dialogueText != null">dialogue_text,</if>
+      <if test="emotion != null">emotion,</if>
+      <if test="lighting != null">lighting,</if>
+      <if test="characterRefJson != null">character_ref_json,</if>
+      <if test="sceneCardId != null">scene_card_id,</if>
+      <if test="extraPrompt != null">extra_prompt,</if>
+      <if test="imagePrompt != null">image_prompt,</if>
+      <if test="previzText != null">previz_text,</if>
+      <if test="shotStatus != null">shot_status,</if>
+      <if test="blockedFlag != null">blocked_flag,</if>
+      <if test="riskLevel != null">risk_level,</if>
+      <if test="firstFrameAssetId != null">first_frame_asset_id,</if>
+      <if test="videoAssetId != null">video_asset_id,</if>
+      <if test="retryCount != null">retry_count,</if>
+      <if test="costSpentCent != null">cost_spent_cent,</if>
+      <if test="shotVersion != null">shot_version,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="shotNo != null">#{shotNo,jdbcType=INTEGER},</if>
+      <if test="sceneNo != null">#{sceneNo,jdbcType=INTEGER},</if>
+      <if test="shotSize != null">#{shotSize,jdbcType=VARCHAR},</if>
+      <if test="cameraMove != null">#{cameraMove,jdbcType=VARCHAR},</if>
+      <if test="shotDurationSec != null">#{shotDurationSec,jdbcType=INTEGER},</if>
+      <if test="shotDesc != null">#{shotDesc,jdbcType=VARCHAR},</if>
+      <if test="dialogueText != null">#{dialogueText,jdbcType=VARCHAR},</if>
+      <if test="emotion != null">#{emotion,jdbcType=VARCHAR},</if>
+      <if test="lighting != null">#{lighting,jdbcType=VARCHAR},</if>
+      <if test="characterRefJson != null">#{characterRefJson,jdbcType=LONGVARCHAR},</if>
+      <if test="sceneCardId != null">#{sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="extraPrompt != null">#{extraPrompt,jdbcType=VARCHAR},</if>
+      <if test="imagePrompt != null">#{imagePrompt,jdbcType=LONGVARCHAR},</if>
+      <if test="previzText != null">#{previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="shotStatus != null">#{shotStatus,jdbcType=VARCHAR},</if>
+      <if test="blockedFlag != null">#{blockedFlag,jdbcType=TINYINT},</if>
+      <if test="riskLevel != null">#{riskLevel,jdbcType=VARCHAR},</if>
+      <if test="firstFrameAssetId != null">#{firstFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="videoAssetId != null">#{videoAssetId,jdbcType=VARCHAR},</if>
+      <if test="retryCount != null">#{retryCount,jdbcType=INTEGER},</if>
+      <if test="costSpentCent != null">#{costSpentCent,jdbcType=INTEGER},</if>
+      <if test="shotVersion != null">#{shotVersion,jdbcType=INTEGER},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_shot
+    <set>
+      <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.shotNo != null">shot_no = #{row.shotNo,jdbcType=INTEGER},</if>
+      <if test="row.sceneNo != null">scene_no = #{row.sceneNo,jdbcType=INTEGER},</if>
+      <if test="row.shotSize != null">shot_size = #{row.shotSize,jdbcType=VARCHAR},</if>
+      <if test="row.cameraMove != null">camera_move = #{row.cameraMove,jdbcType=VARCHAR},</if>
+      <if test="row.shotDurationSec != null">shot_duration_sec = #{row.shotDurationSec,jdbcType=INTEGER},</if>
+      <if test="row.shotDesc != null">shot_desc = #{row.shotDesc,jdbcType=VARCHAR},</if>
+      <if test="row.dialogueText != null">dialogue_text = #{row.dialogueText,jdbcType=VARCHAR},</if>
+      <if test="row.emotion != null">emotion = #{row.emotion,jdbcType=VARCHAR},</if>
+      <if test="row.lighting != null">lighting = #{row.lighting,jdbcType=VARCHAR},</if>
+      <if test="row.characterRefJson != null">character_ref_json = #{row.characterRefJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.sceneCardId != null">scene_card_id = #{row.sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="row.extraPrompt != null">extra_prompt = #{row.extraPrompt,jdbcType=VARCHAR},</if>
+      <if test="row.imagePrompt != null">image_prompt = #{row.imagePrompt,jdbcType=LONGVARCHAR},</if>
+      <if test="row.previzText != null">previz_text = #{row.previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="row.shotStatus != null">shot_status = #{row.shotStatus,jdbcType=VARCHAR},</if>
+      <if test="row.blockedFlag != null">blocked_flag = #{row.blockedFlag,jdbcType=TINYINT},</if>
+      <if test="row.riskLevel != null">risk_level = #{row.riskLevel,jdbcType=VARCHAR},</if>
+      <if test="row.firstFrameAssetId != null">first_frame_asset_id = #{row.firstFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.videoAssetId != null">video_asset_id = #{row.videoAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.retryCount != null">retry_count = #{row.retryCount,jdbcType=INTEGER},</if>
+      <if test="row.costSpentCent != null">cost_spent_cent = #{row.costSpentCent,jdbcType=INTEGER},</if>
+      <if test="row.shotVersion != null">shot_version = #{row.shotVersion,jdbcType=INTEGER},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortShot">
+    update short_shot
+    <set>
+      <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="shotNo != null">shot_no = #{shotNo,jdbcType=INTEGER},</if>
+      <if test="sceneNo != null">scene_no = #{sceneNo,jdbcType=INTEGER},</if>
+      <if test="shotSize != null">shot_size = #{shotSize,jdbcType=VARCHAR},</if>
+      <if test="cameraMove != null">camera_move = #{cameraMove,jdbcType=VARCHAR},</if>
+      <if test="shotDurationSec != null">shot_duration_sec = #{shotDurationSec,jdbcType=INTEGER},</if>
+      <if test="shotDesc != null">shot_desc = #{shotDesc,jdbcType=VARCHAR},</if>
+      <if test="dialogueText != null">dialogue_text = #{dialogueText,jdbcType=VARCHAR},</if>
+      <if test="emotion != null">emotion = #{emotion,jdbcType=VARCHAR},</if>
+      <if test="lighting != null">lighting = #{lighting,jdbcType=VARCHAR},</if>
+      <if test="characterRefJson != null">character_ref_json = #{characterRefJson,jdbcType=LONGVARCHAR},</if>
+      <if test="sceneCardId != null">scene_card_id = #{sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="extraPrompt != null">extra_prompt = #{extraPrompt,jdbcType=VARCHAR},</if>
+      <if test="imagePrompt != null">image_prompt = #{imagePrompt,jdbcType=LONGVARCHAR},</if>
+      <if test="previzText != null">previz_text = #{previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="shotStatus != null">shot_status = #{shotStatus,jdbcType=VARCHAR},</if>
+      <if test="blockedFlag != null">blocked_flag = #{blockedFlag,jdbcType=TINYINT},</if>
+      <if test="riskLevel != null">risk_level = #{riskLevel,jdbcType=VARCHAR},</if>
+      <if test="firstFrameAssetId != null">first_frame_asset_id = #{firstFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="videoAssetId != null">video_asset_id = #{videoAssetId,jdbcType=VARCHAR},</if>
+      <if test="retryCount != null">retry_count = #{retryCount,jdbcType=INTEGER},</if>
+      <if test="costSpentCent != null">cost_spent_cent = #{costSpentCent,jdbcType=INTEGER},</if>
+      <if test="shotVersion != null">shot_version = #{shotVersion,jdbcType=INTEGER},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

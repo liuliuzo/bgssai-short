@@ -1,9 +1,7 @@
 -- =====================================================================
 -- DDL.sql — AI 短剧制作平台建库脚本（单一真值，仓库根 sql/DDL.sql）
 -- =====================================================================
--- 管理端与用户端共用同一个库 bgssai_short。当前仅含两张基础表：
---   sys_user   用户表（登录鉴权）
---   login_log  登录记录表（示例分页接口的数据源）
+-- 管理端与用户端共用同一个库 bgssai_short。含登录基础表、订阅支付表与短剧制作闭环表。
 --
 -- 约定：
 --   - 应用启动期不自动执行任何 DDL；schema 由部署方手动执行本文件建立（Standards §9）。
@@ -342,3 +340,302 @@ CREATE TABLE alipay_config (
   KEY idx_alipay_config_collect (is_collection_active, is_enabled, is_delete),
   KEY idx_alipay_config_routing (app_id, env_mode, is_enabled, is_delete)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付宝商户配置';
+
+-- ----------------------------
+-- 短剧制作闭环 MVP
+-- ----------------------------
+DROP TABLE IF EXISTS `short_work`;
+CREATE TABLE `short_work` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `work_id` VARCHAR(64) NOT NULL COMMENT '作品ID',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '创作者',
+  `work_title` VARCHAR(255) NOT NULL COMMENT '剧名',
+  `one_line_pitch` VARCHAR(512) NOT NULL COMMENT '一句话梗概',
+  `genre` VARCHAR(32) NOT NULL DEFAULT 'REVENGE',
+  `work_status` VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
+  `episode_count` INT NOT NULL DEFAULT 24,
+  `episode_duration_sec` INT NOT NULL DEFAULT 90,
+  `visual_style` VARCHAR(32) NOT NULL DEFAULT 'MODERN_URBAN',
+  `aspect_ratio` VARCHAR(32) NOT NULL DEFAULT 'VERTICAL_9_16',
+  `cover_asset_id` VARCHAR(64) DEFAULT NULL,
+  `cost_budget_cent` INT DEFAULT NULL,
+  `cost_spent_cent` INT NOT NULL DEFAULT 0,
+  `skip_level_check_flag` TINYINT NOT NULL DEFAULT 0,
+  `quality_threshold_score` INT DEFAULT NULL,
+  `outline_json` LONGTEXT,
+  `compose_setting_json` LONGTEXT,
+  `archived_flag` TINYINT NOT NULL DEFAULT 0,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_work_work_id` (`work_id`),
+  KEY `idx_short_work_user_status` (`user_id`, `work_status`, `updated_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='短剧作品';
+
+DROP TABLE IF EXISTS `short_episode`;
+CREATE TABLE `short_episode` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `episode_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `episode_no` INT NOT NULL,
+  `episode_title` VARCHAR(255) DEFAULT NULL,
+  `episode_synopsis` VARCHAR(1024) DEFAULT NULL,
+  `ending_hook` VARCHAR(512) DEFAULT NULL,
+  `script_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
+  `storyboard_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
+  `dubbing_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
+  `compose_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
+  `review_status` VARCHAR(32) NOT NULL DEFAULT 'NOT_SUBMITTED',
+  `film_asset_id` VARCHAR(64) DEFAULT NULL,
+  `film_duration_sec` INT DEFAULT NULL,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_episode_id` (`episode_id`),
+  UNIQUE KEY `uk_short_episode_no` (`work_id`, `episode_no`, `deleted_flag`),
+  KEY `idx_short_episode_work` (`work_id`, `episode_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='短剧剧集';
+
+DROP TABLE IF EXISTS `short_script`;
+CREATE TABLE `short_script` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `script_id` VARCHAR(64) NOT NULL,
+  `episode_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `script_version` INT NOT NULL DEFAULT 1,
+  `script_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
+  `scene_json` LONGTEXT,
+  `estimated_total_sec` INT DEFAULT NULL,
+  `rhythm_json` LONGTEXT,
+  `total_score` INT DEFAULT NULL,
+  `force_ready_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_script_id` (`script_id`),
+  UNIQUE KEY `uk_short_script_episode` (`episode_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='单集剧本';
+
+DROP TABLE IF EXISTS `short_script_version`;
+CREATE TABLE `short_script_version` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `version_id` VARCHAR(64) NOT NULL,
+  `script_id` VARCHAR(64) NOT NULL,
+  `script_version` INT NOT NULL,
+  `scene_json` LONGTEXT,
+  `total_score` INT DEFAULT NULL,
+  `change_summary` VARCHAR(255) DEFAULT NULL,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_script_version_id` (`version_id`),
+  KEY `idx_short_script_version` (`script_id`, `script_version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='剧本历史版本';
+
+DROP TABLE IF EXISTS `short_character`;
+CREATE TABLE `short_character` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `character_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `character_name` VARCHAR(64) NOT NULL,
+  `character_role` VARCHAR(32) DEFAULT NULL,
+  `card_status` VARCHAR(32) NOT NULL DEFAULT 'CANDIDATE',
+  `appearance_prompt` VARCHAR(1024) DEFAULT NULL,
+  `consistency_seed` BIGINT DEFAULT NULL,
+  `ref_image_asset_id` VARCHAR(64) DEFAULT NULL,
+  `default_outfit_code` VARCHAR(64) DEFAULT NULL,
+  `outfit_json` LONGTEXT,
+  `voice_id` VARCHAR(64) DEFAULT NULL,
+  `voice_speed` VARCHAR(16) DEFAULT NULL,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_character_id` (`character_id`),
+  KEY `idx_short_character_work` (`work_id`, `deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色卡';
+
+DROP TABLE IF EXISTS `short_scene_card`;
+CREATE TABLE `short_scene_card` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `scene_card_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `card_type` VARCHAR(16) NOT NULL DEFAULT 'SCENE',
+  `card_name` VARCHAR(128) NOT NULL,
+  `card_status` VARCHAR(32) NOT NULL DEFAULT 'CANDIDATE',
+  `appearance_prompt` VARCHAR(1024) DEFAULT NULL,
+  `ref_image_asset_id` VARCHAR(64) DEFAULT NULL,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_scene_card_id` (`scene_card_id`),
+  KEY `idx_short_scene_work` (`work_id`, `deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='场景卡';
+
+DROP TABLE IF EXISTS `short_shot`;
+CREATE TABLE `short_shot` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `shot_id` VARCHAR(64) NOT NULL,
+  `episode_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `shot_no` INT NOT NULL,
+  `scene_no` INT DEFAULT NULL,
+  `shot_size` VARCHAR(32) DEFAULT 'MEDIUM',
+  `camera_move` VARCHAR(32) DEFAULT 'FIXED',
+  `shot_duration_sec` INT DEFAULT 3,
+  `shot_desc` VARCHAR(1024) DEFAULT NULL,
+  `dialogue_text` VARCHAR(1024) DEFAULT NULL,
+  `emotion` VARCHAR(32) DEFAULT NULL,
+  `lighting` VARCHAR(64) DEFAULT NULL,
+  `character_ref_json` LONGTEXT,
+  `scene_card_id` VARCHAR(64) DEFAULT NULL,
+  `extra_prompt` VARCHAR(1024) DEFAULT NULL,
+  `image_prompt` LONGTEXT,
+  `previz_text` LONGTEXT,
+  `shot_status` VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  `blocked_flag` TINYINT NOT NULL DEFAULT 0,
+  `risk_level` VARCHAR(16) DEFAULT 'PASS',
+  `first_frame_asset_id` VARCHAR(64) DEFAULT NULL,
+  `video_asset_id` VARCHAR(64) DEFAULT NULL,
+  `retry_count` INT NOT NULL DEFAULT 0,
+  `cost_spent_cent` INT NOT NULL DEFAULT 0,
+  `shot_version` INT NOT NULL DEFAULT 1,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_shot_id` (`shot_id`),
+  KEY `idx_short_shot_episode` (`episode_id`, `shot_no`),
+  KEY `idx_short_shot_user_status` (`user_id`, `shot_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='镜头';
+
+DROP TABLE IF EXISTS `short_ai_task`;
+CREATE TABLE `short_ai_task` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `task_id` VARCHAR(64) NOT NULL,
+  `batch_id` VARCHAR(64) DEFAULT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) DEFAULT NULL,
+  `episode_id` VARCHAR(64) DEFAULT NULL,
+  `task_type` VARCHAR(16) NOT NULL,
+  `task_status` VARCHAR(16) NOT NULL DEFAULT 'QUEUED',
+  `target_type` VARCHAR(32) DEFAULT NULL,
+  `target_id` VARCHAR(64) DEFAULT NULL,
+  `model_code` VARCHAR(64) DEFAULT 'mock',
+  `request_json` LONGTEXT,
+  `result_json` LONGTEXT,
+  `progress_percent` INT NOT NULL DEFAULT 0,
+  `retry_count` INT NOT NULL DEFAULT 0,
+  `fail_reason` VARCHAR(512) DEFAULT NULL,
+  `fail_reason_code` VARCHAR(32) DEFAULT NULL,
+  `auto_next_flag` TINYINT NOT NULL DEFAULT 0,
+  `cost_cent` INT NOT NULL DEFAULT 0,
+  `queued_time` DATETIME DEFAULT NULL,
+  `started_time` DATETIME DEFAULT NULL,
+  `finished_time` DATETIME DEFAULT NULL,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_ai_task_id` (`task_id`),
+  KEY `idx_short_ai_task_user` (`user_id`, `task_status`),
+  KEY `idx_short_ai_task_batch` (`batch_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI任务';
+
+DROP TABLE IF EXISTS `short_asset`;
+CREATE TABLE `short_asset` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `asset_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) DEFAULT NULL,
+  `episode_id` VARCHAR(64) DEFAULT NULL,
+  `shot_id` VARCHAR(64) DEFAULT NULL,
+  `asset_type` VARCHAR(16) NOT NULL,
+  `storage_key` LONGTEXT,
+  `file_url` VARCHAR(1024) DEFAULT NULL,
+  `file_size_byte` INT DEFAULT NULL,
+  `duration_sec` INT DEFAULT NULL,
+  `width` INT DEFAULT NULL,
+  `height` INT DEFAULT NULL,
+  `source_task_id` VARCHAR(64) DEFAULT NULL,
+  `selected_flag` TINYINT NOT NULL DEFAULT 0,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_asset_id` (`asset_id`),
+  KEY `idx_short_asset_shot` (`shot_id`, `asset_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='素材';
+
+DROP TABLE IF EXISTS `short_film`;
+CREATE TABLE `short_film` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `film_id` VARCHAR(64) NOT NULL,
+  `episode_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `film_asset_id` VARCHAR(64) DEFAULT NULL,
+  `film_duration_sec` INT DEFAULT NULL,
+  `compose_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
+  `expired_flag` TINYINT NOT NULL DEFAULT 0,
+  `subtitle_stale_flag` TINYINT NOT NULL DEFAULT 0,
+  `compose_task_id` VARCHAR(64) DEFAULT NULL,
+  `composed_time` DATETIME DEFAULT NULL,
+  `export_json` LONGTEXT,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_film_id` (`film_id`),
+  KEY `idx_short_film_episode` (`episode_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='成片';
+
+DROP TABLE IF EXISTS `short_review_record`;
+CREATE TABLE `short_review_record` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `review_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `episode_id` VARCHAR(64) NOT NULL,
+  `creator_user_id` VARCHAR(64) NOT NULL,
+  `review_status` VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  `risk_level` VARCHAR(16) DEFAULT 'PASS',
+  `reviewer_user_id` VARCHAR(64) DEFAULT NULL,
+  `review_comment` VARCHAR(1024) DEFAULT NULL,
+  `reject_item_json` LONGTEXT,
+  `submitted_time` DATETIME DEFAULT NULL,
+  `reviewed_time` DATETIME DEFAULT NULL,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_review_id` (`review_id`),
+  KEY `idx_short_review_status` (`review_status`, `submitted_time`),
+  KEY `idx_short_review_episode` (`episode_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='内容审核';
+
+DROP TABLE IF EXISTS `short_compliance_hit`;
+CREATE TABLE `short_compliance_hit` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `hit_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) DEFAULT NULL,
+  `episode_id` VARCHAR(64) DEFAULT NULL,
+  `shot_id` VARCHAR(64) DEFAULT NULL,
+  `check_scope` VARCHAR(16) NOT NULL,
+  `risk_level` VARCHAR(16) NOT NULL,
+  `risk_category` VARCHAR(32) NOT NULL,
+  `hit_text` VARCHAR(512) DEFAULT NULL,
+  `suggestion` VARCHAR(512) DEFAULT NULL,
+  `scene_no` INT DEFAULT NULL,
+  `line_no` INT DEFAULT NULL,
+  `shot_no` INT DEFAULT NULL,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_compliance_hit_id` (`hit_id`),
+  KEY `idx_short_compliance_episode` (`episode_id`, `check_scope`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合规预检命中';

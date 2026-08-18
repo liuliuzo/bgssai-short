@@ -164,5 +164,5 @@
 
 - [x] 需求（本文件）
 - [x] 原型（用户端三页内嵌 + 管理端两页，及两端 `PAGE-FLOW.html`）
-- [ ] 设计与契约（本次仅同步 `page-api-mapping.md`；安全设计待 `docs/security` 补）
-- [ ] 代码与数据库
+- [x] 设计与契约（`docs/api/SHORT-PRODUCTION.md`；关键词预检 + 审核队列；安全设计待 `docs/security` 补供应商密钥）
+- [x] 代码与数据库

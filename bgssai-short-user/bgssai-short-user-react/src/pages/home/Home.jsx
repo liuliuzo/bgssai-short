@@ -1,10 +1,9 @@
-import { Card, Descriptions, Typography, Button } from 'antd'
+import { Card, Descriptions, Typography, Button, Space } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../../store/user'
 
 const { Title, Paragraph } = Typography
 
-// Sample landing page. Replace with the product home.
 export default function Home() {
   const userInfo = useUserStore((s) => s.userInfo)
   const navigate = useNavigate()
@@ -13,10 +12,13 @@ export default function Home() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>首页</Title>
       <Paragraph type="secondary">
-        这是 AI 短剧制作平台用户端的示例首页。登录、鉴权、统一响应封装、分页列表等基础链路已就绪，
-        按产品需求在此基础上新增页面与接口即可。
+        从建剧、写剧本、定妆、拆镜到模拟成片和提审。当前环境使用 Mock 生成，不调用真实大模型。
       </Paragraph>
-
+      <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={() => navigate('/works')}>我的作品</Button>
+        <Button onClick={() => navigate('/tasks')}>任务中心</Button>
+        <Button onClick={() => navigate('/subscription')}>套餐与加量</Button>
+      </Space>
       <Card title="当前登录身份" style={{ maxWidth: 640 }}>
         <Descriptions column={1} size="small">
           <Descriptions.Item label="用户名">{userInfo?.user_name || '-'}</Descriptions.Item>
@@ -26,9 +28,6 @@ export default function Home() {
           </Descriptions.Item>
           <Descriptions.Item label="用户 ID">{userInfo?.user_id || '-'}</Descriptions.Item>
         </Descriptions>
-        <Button type="link" style={{ paddingLeft: 0, marginTop: 8 }} onClick={() => navigate('/mcp-tokens')}>
-          MCP 接入
-        </Button>
       </Card>
     </div>
   )

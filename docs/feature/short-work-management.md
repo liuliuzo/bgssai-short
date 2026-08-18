@@ -202,5 +202,5 @@
 
 - [x] 需求（本文件 / `PRODUCT_VISION.md`）
 - [x] 原型（`docs/demo-static/web/user/**` 及其 `PAGE-FLOW.html`）
-- [ ] 设计与契约（`docs/architecture` / `docs/api`；本次仅同步 `page-api-mapping.md`，契约正文待详设阶段）
-- [ ] 代码与数据库（`src/**`、前端工程、`sql/**`）——待详设定稿后进入
+- [x] 设计与契约（`docs/architecture/short-production-design.md` / `docs/api/SHORT-PRODUCTION.md`）
+- [x] 代码与数据库（MVP 切片：作品 / 剧集 CRUD；AI 为 MockAiProvider）

@@ -2,6 +2,7 @@ package com.bgssai.shortai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * User-app backend (business plane). Remote deploy: HTTPS 443 + HTTP 80 redirect.
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Serves the normal user role; protected endpoints are guarded by @NeedAop.
  */
 @SpringBootApplication
+@EnableScheduling
 public class StartApplication {
 
     public static void main(String[] args) {

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortReviewRecordMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortReviewRecord">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="review_id" jdbcType="VARCHAR" property="reviewId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="creator_user_id" jdbcType="VARCHAR" property="creatorUserId" />
+    <result column="review_status" jdbcType="VARCHAR" property="reviewStatus" />
+    <result column="risk_level" jdbcType="VARCHAR" property="riskLevel" />
+    <result column="reviewer_user_id" jdbcType="VARCHAR" property="reviewerUserId" />
+    <result column="review_comment" jdbcType="VARCHAR" property="reviewComment" />
+    <result column="reject_item_json" jdbcType="LONGVARCHAR" property="rejectItemJson" />
+    <result column="submitted_time" jdbcType="TIMESTAMP" property="submittedTime" />
+    <result column="reviewed_time" jdbcType="TIMESTAMP" property="reviewedTime" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, review_id, work_id, episode_id, creator_user_id, review_status, risk_level, reviewer_user_id, review_comment, reject_item_json, submitted_time, reviewed_time, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortReviewRecordExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_review_record
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortReviewRecordExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_review_record
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_review_record where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortReviewRecordExample" resultType="java.lang.Long">
+    select count(*) from short_review_record
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortReviewRecord" useGeneratedKeys="true" keyProperty="id">
+    insert into short_review_record (
+      id,
+      review_id,
+      work_id,
+      episode_id,
+      creator_user_id,
+      review_status,
+      risk_level,
+      reviewer_user_id,
+      review_comment,
+      reject_item_json,
+      submitted_time,
+      reviewed_time,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{reviewId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{creatorUserId,jdbcType=VARCHAR},
+      #{reviewStatus,jdbcType=VARCHAR},
+      #{riskLevel,jdbcType=VARCHAR},
+      #{reviewerUserId,jdbcType=VARCHAR},
+      #{reviewComment,jdbcType=VARCHAR},
+      #{rejectItemJson,jdbcType=LONGVARCHAR},
+      #{submittedTime,jdbcType=TIMESTAMP},
+      #{reviewedTime,jdbcType=TIMESTAMP},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortReviewRecord" useGeneratedKeys="true" keyProperty="id">
+    insert into short_review_record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="reviewId != null">review_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="creatorUserId != null">creator_user_id,</if>
+      <if test="reviewStatus != null">review_status,</if>
+      <if test="riskLevel != null">risk_level,</if>
+      <if test="reviewerUserId != null">reviewer_user_id,</if>
+      <if test="reviewComment != null">review_comment,</if>
+      <if test="rejectItemJson != null">reject_item_json,</if>
+      <if test="submittedTime != null">submitted_time,</if>
+      <if test="reviewedTime != null">reviewed_time,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="reviewId != null">#{reviewId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="creatorUserId != null">#{creatorUserId,jdbcType=VARCHAR},</if>
+      <if test="reviewStatus != null">#{reviewStatus,jdbcType=VARCHAR},</if>
+      <if test="riskLevel != null">#{riskLevel,jdbcType=VARCHAR},</if>
+      <if test="reviewerUserId != null">#{reviewerUserId,jdbcType=VARCHAR},</if>
+      <if test="reviewComment != null">#{reviewComment,jdbcType=VARCHAR},</if>
+      <if test="rejectItemJson != null">#{rejectItemJson,jdbcType=LONGVARCHAR},</if>
+      <if test="submittedTime != null">#{submittedTime,jdbcType=TIMESTAMP},</if>
+      <if test="reviewedTime != null">#{reviewedTime,jdbcType=TIMESTAMP},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_review_record
+    <set>
+      <if test="row.reviewId != null">review_id = #{row.reviewId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.creatorUserId != null">creator_user_id = #{row.creatorUserId,jdbcType=VARCHAR},</if>
+      <if test="row.reviewStatus != null">review_status = #{row.reviewStatus,jdbcType=VARCHAR},</if>
+      <if test="row.riskLevel != null">risk_level = #{row.riskLevel,jdbcType=VARCHAR},</if>
+      <if test="row.reviewerUserId != null">reviewer_user_id = #{row.reviewerUserId,jdbcType=VARCHAR},</if>
+      <if test="row.reviewComment != null">review_comment = #{row.reviewComment,jdbcType=VARCHAR},</if>
+      <if test="row.rejectItemJson != null">reject_item_json = #{row.rejectItemJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.submittedTime != null">submitted_time = #{row.submittedTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.reviewedTime != null">reviewed_time = #{row.reviewedTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortReviewRecord">
+    update short_review_record
+    <set>
+      <if test="reviewId != null">review_id = #{reviewId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="creatorUserId != null">creator_user_id = #{creatorUserId,jdbcType=VARCHAR},</if>
+      <if test="reviewStatus != null">review_status = #{reviewStatus,jdbcType=VARCHAR},</if>
+      <if test="riskLevel != null">risk_level = #{riskLevel,jdbcType=VARCHAR},</if>
+      <if test="reviewerUserId != null">reviewer_user_id = #{reviewerUserId,jdbcType=VARCHAR},</if>
+      <if test="reviewComment != null">review_comment = #{reviewComment,jdbcType=VARCHAR},</if>
+      <if test="rejectItemJson != null">reject_item_json = #{rejectItemJson,jdbcType=LONGVARCHAR},</if>
+      <if test="submittedTime != null">submitted_time = #{submittedTime,jdbcType=TIMESTAMP},</if>
+      <if test="reviewedTime != null">reviewed_time = #{reviewedTime,jdbcType=TIMESTAMP},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

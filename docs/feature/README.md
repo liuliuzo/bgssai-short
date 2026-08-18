@@ -36,9 +36,8 @@
 | AI 能力配置与用量成本 | 换模型要改代码、单价无处统一维护、用量无法核账 | [`ai-capability-usage.md`](./ai-capability-usage.md) | [`flow-usage-billing.html`](./flow-usage-billing.html) | 管理端 `ai-models` / `usage-cost` / `creators` · 用户端 `usage-billing` |
 | 订阅套餐与加量 credit | 无支付、无套餐发放、无法加量 | [`subscription-credit.md`](./subscription-credit.md) | 用户端 `subscription` · 管理端 `credit-packs` / `pay-merchants` | 用户端 `subscription` · 管理端 `credit-packs` / `pay-merchants` |
 
-> **当前进度**：以上功能已完成「需求 → 原型」两步（Standards §0 功能研发必经顺序），
-> 详细设计（`docs/architecture` / `docs/api` 契约正文）与代码 / 数据库尚未启动。
-> 本轮已同步更新 `docs/api/page-api-mapping.md`（§9 要求：新增原型页须刷映射表）。
+> **当前进度**：制作主线 MVP（作品 / 剧本 / 角色卡 / 分镜 / 模拟生成 / 成片提审）已完成需求 → 原型 → 详设与契约 → 代码与数据库。
+> AI 为 MockAiProvider，可替换。剧情图谱、质量流水线、配音字幕、用量账单仍停在需求 → 原型。
 
 ## 仓库内置的基础功能（自骨架继承）
 

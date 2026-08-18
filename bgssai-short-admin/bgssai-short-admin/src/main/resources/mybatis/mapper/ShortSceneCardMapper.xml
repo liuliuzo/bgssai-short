@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortSceneCardMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortSceneCard">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="scene_card_id" jdbcType="VARCHAR" property="sceneCardId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="card_type" jdbcType="VARCHAR" property="cardType" />
+    <result column="card_name" jdbcType="VARCHAR" property="cardName" />
+    <result column="card_status" jdbcType="VARCHAR" property="cardStatus" />
+    <result column="appearance_prompt" jdbcType="VARCHAR" property="appearancePrompt" />
+    <result column="ref_image_asset_id" jdbcType="VARCHAR" property="refImageAssetId" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, scene_card_id, work_id, user_id, card_type, card_name, card_status, appearance_prompt, ref_image_asset_id, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortSceneCardExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_scene_card
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortSceneCardExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_scene_card
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_scene_card where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortSceneCardExample" resultType="java.lang.Long">
+    select count(*) from short_scene_card
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortSceneCard" useGeneratedKeys="true" keyProperty="id">
+    insert into short_scene_card (
+      id,
+      scene_card_id,
+      work_id,
+      user_id,
+      card_type,
+      card_name,
+      card_status,
+      appearance_prompt,
+      ref_image_asset_id,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{sceneCardId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{cardType,jdbcType=VARCHAR},
+      #{cardName,jdbcType=VARCHAR},
+      #{cardStatus,jdbcType=VARCHAR},
+      #{appearancePrompt,jdbcType=VARCHAR},
+      #{refImageAssetId,jdbcType=VARCHAR},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortSceneCard" useGeneratedKeys="true" keyProperty="id">
+    insert into short_scene_card
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="sceneCardId != null">scene_card_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="cardType != null">card_type,</if>
+      <if test="cardName != null">card_name,</if>
+      <if test="cardStatus != null">card_status,</if>
+      <if test="appearancePrompt != null">appearance_prompt,</if>
+      <if test="refImageAssetId != null">ref_image_asset_id,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="sceneCardId != null">#{sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="cardType != null">#{cardType,jdbcType=VARCHAR},</if>
+      <if test="cardName != null">#{cardName,jdbcType=VARCHAR},</if>
+      <if test="cardStatus != null">#{cardStatus,jdbcType=VARCHAR},</if>
+      <if test="appearancePrompt != null">#{appearancePrompt,jdbcType=VARCHAR},</if>
+      <if test="refImageAssetId != null">#{refImageAssetId,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_scene_card
+    <set>
+      <if test="row.sceneCardId != null">scene_card_id = #{row.sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.cardType != null">card_type = #{row.cardType,jdbcType=VARCHAR},</if>
+      <if test="row.cardName != null">card_name = #{row.cardName,jdbcType=VARCHAR},</if>
+      <if test="row.cardStatus != null">card_status = #{row.cardStatus,jdbcType=VARCHAR},</if>
+      <if test="row.appearancePrompt != null">appearance_prompt = #{row.appearancePrompt,jdbcType=VARCHAR},</if>
+      <if test="row.refImageAssetId != null">ref_image_asset_id = #{row.refImageAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortSceneCard">
+    update short_scene_card
+    <set>
+      <if test="sceneCardId != null">scene_card_id = #{sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="cardType != null">card_type = #{cardType,jdbcType=VARCHAR},</if>
+      <if test="cardName != null">card_name = #{cardName,jdbcType=VARCHAR},</if>
+      <if test="cardStatus != null">card_status = #{cardStatus,jdbcType=VARCHAR},</if>
+      <if test="appearancePrompt != null">appearance_prompt = #{appearancePrompt,jdbcType=VARCHAR},</if>
+      <if test="refImageAssetId != null">ref_image_asset_id = #{refImageAssetId,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

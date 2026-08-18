@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortWorkMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortWork">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="work_title" jdbcType="VARCHAR" property="workTitle" />
+    <result column="one_line_pitch" jdbcType="VARCHAR" property="oneLinePitch" />
+    <result column="genre" jdbcType="VARCHAR" property="genre" />
+    <result column="work_status" jdbcType="VARCHAR" property="workStatus" />
+    <result column="episode_count" jdbcType="INTEGER" property="episodeCount" />
+    <result column="episode_duration_sec" jdbcType="INTEGER" property="episodeDurationSec" />
+    <result column="visual_style" jdbcType="VARCHAR" property="visualStyle" />
+    <result column="aspect_ratio" jdbcType="VARCHAR" property="aspectRatio" />
+    <result column="cover_asset_id" jdbcType="VARCHAR" property="coverAssetId" />
+    <result column="cost_budget_cent" jdbcType="INTEGER" property="costBudgetCent" />
+    <result column="cost_spent_cent" jdbcType="INTEGER" property="costSpentCent" />
+    <result column="skip_level_check_flag" jdbcType="TINYINT" property="skipLevelCheckFlag" />
+    <result column="quality_threshold_score" jdbcType="INTEGER" property="qualityThresholdScore" />
+    <result column="outline_json" jdbcType="LONGVARCHAR" property="outlineJson" />
+    <result column="compose_setting_json" jdbcType="LONGVARCHAR" property="composeSettingJson" />
+    <result column="archived_flag" jdbcType="TINYINT" property="archivedFlag" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, work_id, user_id, work_title, one_line_pitch, genre, work_status, episode_count, episode_duration_sec, visual_style, aspect_ratio, cover_asset_id, cost_budget_cent, cost_spent_cent, skip_level_check_flag, quality_threshold_score, outline_json, compose_setting_json, archived_flag, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortWorkExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_work
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortWorkExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_work
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_work where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortWorkExample" resultType="java.lang.Long">
+    select count(*) from short_work
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortWork" useGeneratedKeys="true" keyProperty="id">
+    insert into short_work (
+      id,
+      work_id,
+      user_id,
+      work_title,
+      one_line_pitch,
+      genre,
+      work_status,
+      episode_count,
+      episode_duration_sec,
+      visual_style,
+      aspect_ratio,
+      cover_asset_id,
+      cost_budget_cent,
+      cost_spent_cent,
+      skip_level_check_flag,
+      quality_threshold_score,
+      outline_json,
+      compose_setting_json,
+      archived_flag,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{workTitle,jdbcType=VARCHAR},
+      #{oneLinePitch,jdbcType=VARCHAR},
+      #{genre,jdbcType=VARCHAR},
+      #{workStatus,jdbcType=VARCHAR},
+      #{episodeCount,jdbcType=INTEGER},
+      #{episodeDurationSec,jdbcType=INTEGER},
+      #{visualStyle,jdbcType=VARCHAR},
+      #{aspectRatio,jdbcType=VARCHAR},
+      #{coverAssetId,jdbcType=VARCHAR},
+      #{costBudgetCent,jdbcType=INTEGER},
+      #{costSpentCent,jdbcType=INTEGER},
+      #{skipLevelCheckFlag,jdbcType=TINYINT},
+      #{qualityThresholdScore,jdbcType=INTEGER},
+      #{outlineJson,jdbcType=LONGVARCHAR},
+      #{composeSettingJson,jdbcType=LONGVARCHAR},
+      #{archivedFlag,jdbcType=TINYINT},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortWork" useGeneratedKeys="true" keyProperty="id">
+    insert into short_work
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="workTitle != null">work_title,</if>
+      <if test="oneLinePitch != null">one_line_pitch,</if>
+      <if test="genre != null">genre,</if>
+      <if test="workStatus != null">work_status,</if>
+      <if test="episodeCount != null">episode_count,</if>
+      <if test="episodeDurationSec != null">episode_duration_sec,</if>
+      <if test="visualStyle != null">visual_style,</if>
+      <if test="aspectRatio != null">aspect_ratio,</if>
+      <if test="coverAssetId != null">cover_asset_id,</if>
+      <if test="costBudgetCent != null">cost_budget_cent,</if>
+      <if test="costSpentCent != null">cost_spent_cent,</if>
+      <if test="skipLevelCheckFlag != null">skip_level_check_flag,</if>
+      <if test="qualityThresholdScore != null">quality_threshold_score,</if>
+      <if test="outlineJson != null">outline_json,</if>
+      <if test="composeSettingJson != null">compose_setting_json,</if>
+      <if test="archivedFlag != null">archived_flag,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="workTitle != null">#{workTitle,jdbcType=VARCHAR},</if>
+      <if test="oneLinePitch != null">#{oneLinePitch,jdbcType=VARCHAR},</if>
+      <if test="genre != null">#{genre,jdbcType=VARCHAR},</if>
+      <if test="workStatus != null">#{workStatus,jdbcType=VARCHAR},</if>
+      <if test="episodeCount != null">#{episodeCount,jdbcType=INTEGER},</if>
+      <if test="episodeDurationSec != null">#{episodeDurationSec,jdbcType=INTEGER},</if>
+      <if test="visualStyle != null">#{visualStyle,jdbcType=VARCHAR},</if>
+      <if test="aspectRatio != null">#{aspectRatio,jdbcType=VARCHAR},</if>
+      <if test="coverAssetId != null">#{coverAssetId,jdbcType=VARCHAR},</if>
+      <if test="costBudgetCent != null">#{costBudgetCent,jdbcType=INTEGER},</if>
+      <if test="costSpentCent != null">#{costSpentCent,jdbcType=INTEGER},</if>
+      <if test="skipLevelCheckFlag != null">#{skipLevelCheckFlag,jdbcType=TINYINT},</if>
+      <if test="qualityThresholdScore != null">#{qualityThresholdScore,jdbcType=INTEGER},</if>
+      <if test="outlineJson != null">#{outlineJson,jdbcType=LONGVARCHAR},</if>
+      <if test="composeSettingJson != null">#{composeSettingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="archivedFlag != null">#{archivedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_work
+    <set>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.workTitle != null">work_title = #{row.workTitle,jdbcType=VARCHAR},</if>
+      <if test="row.oneLinePitch != null">one_line_pitch = #{row.oneLinePitch,jdbcType=VARCHAR},</if>
+      <if test="row.genre != null">genre = #{row.genre,jdbcType=VARCHAR},</if>
+      <if test="row.workStatus != null">work_status = #{row.workStatus,jdbcType=VARCHAR},</if>
+      <if test="row.episodeCount != null">episode_count = #{row.episodeCount,jdbcType=INTEGER},</if>
+      <if test="row.episodeDurationSec != null">episode_duration_sec = #{row.episodeDurationSec,jdbcType=INTEGER},</if>
+      <if test="row.visualStyle != null">visual_style = #{row.visualStyle,jdbcType=VARCHAR},</if>
+      <if test="row.aspectRatio != null">aspect_ratio = #{row.aspectRatio,jdbcType=VARCHAR},</if>
+      <if test="row.coverAssetId != null">cover_asset_id = #{row.coverAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.costBudgetCent != null">cost_budget_cent = #{row.costBudgetCent,jdbcType=INTEGER},</if>
+      <if test="row.costSpentCent != null">cost_spent_cent = #{row.costSpentCent,jdbcType=INTEGER},</if>
+      <if test="row.skipLevelCheckFlag != null">skip_level_check_flag = #{row.skipLevelCheckFlag,jdbcType=TINYINT},</if>
+      <if test="row.qualityThresholdScore != null">quality_threshold_score = #{row.qualityThresholdScore,jdbcType=INTEGER},</if>
+      <if test="row.outlineJson != null">outline_json = #{row.outlineJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.composeSettingJson != null">compose_setting_json = #{row.composeSettingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.archivedFlag != null">archived_flag = #{row.archivedFlag,jdbcType=TINYINT},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortWork">
+    update short_work
+    <set>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="workTitle != null">work_title = #{workTitle,jdbcType=VARCHAR},</if>
+      <if test="oneLinePitch != null">one_line_pitch = #{oneLinePitch,jdbcType=VARCHAR},</if>
+      <if test="genre != null">genre = #{genre,jdbcType=VARCHAR},</if>
+      <if test="workStatus != null">work_status = #{workStatus,jdbcType=VARCHAR},</if>
+      <if test="episodeCount != null">episode_count = #{episodeCount,jdbcType=INTEGER},</if>
+      <if test="episodeDurationSec != null">episode_duration_sec = #{episodeDurationSec,jdbcType=INTEGER},</if>
+      <if test="visualStyle != null">visual_style = #{visualStyle,jdbcType=VARCHAR},</if>
+      <if test="aspectRatio != null">aspect_ratio = #{aspectRatio,jdbcType=VARCHAR},</if>
+      <if test="coverAssetId != null">cover_asset_id = #{coverAssetId,jdbcType=VARCHAR},</if>
+      <if test="costBudgetCent != null">cost_budget_cent = #{costBudgetCent,jdbcType=INTEGER},</if>
+      <if test="costSpentCent != null">cost_spent_cent = #{costSpentCent,jdbcType=INTEGER},</if>
+      <if test="skipLevelCheckFlag != null">skip_level_check_flag = #{skipLevelCheckFlag,jdbcType=TINYINT},</if>
+      <if test="qualityThresholdScore != null">quality_threshold_score = #{qualityThresholdScore,jdbcType=INTEGER},</if>
+      <if test="outlineJson != null">outline_json = #{outlineJson,jdbcType=LONGVARCHAR},</if>
+      <if test="composeSettingJson != null">compose_setting_json = #{composeSettingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="archivedFlag != null">archived_flag = #{archivedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

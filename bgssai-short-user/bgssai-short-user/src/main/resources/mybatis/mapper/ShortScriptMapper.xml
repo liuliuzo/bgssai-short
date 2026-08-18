@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortScriptMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortScript">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="script_id" jdbcType="VARCHAR" property="scriptId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="script_version" jdbcType="INTEGER" property="scriptVersion" />
+    <result column="script_status" jdbcType="VARCHAR" property="scriptStatus" />
+    <result column="scene_json" jdbcType="LONGVARCHAR" property="sceneJson" />
+    <result column="estimated_total_sec" jdbcType="INTEGER" property="estimatedTotalSec" />
+    <result column="rhythm_json" jdbcType="LONGVARCHAR" property="rhythmJson" />
+    <result column="total_score" jdbcType="INTEGER" property="totalScore" />
+    <result column="force_ready_flag" jdbcType="TINYINT" property="forceReadyFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, script_id, episode_id, work_id, user_id, script_version, script_status, scene_json, estimated_total_sec, rhythm_json, total_score, force_ready_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortScriptExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_script
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortScriptExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_script
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_script where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortScriptExample" resultType="java.lang.Long">
+    select count(*) from short_script
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortScript" useGeneratedKeys="true" keyProperty="id">
+    insert into short_script (
+      id,
+      script_id,
+      episode_id,
+      work_id,
+      user_id,
+      script_version,
+      script_status,
+      scene_json,
+      estimated_total_sec,
+      rhythm_json,
+      total_score,
+      force_ready_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{scriptId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{scriptVersion,jdbcType=INTEGER},
+      #{scriptStatus,jdbcType=VARCHAR},
+      #{sceneJson,jdbcType=LONGVARCHAR},
+      #{estimatedTotalSec,jdbcType=INTEGER},
+      #{rhythmJson,jdbcType=LONGVARCHAR},
+      #{totalScore,jdbcType=INTEGER},
+      #{forceReadyFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortScript" useGeneratedKeys="true" keyProperty="id">
+    insert into short_script
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="scriptId != null">script_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="scriptVersion != null">script_version,</if>
+      <if test="scriptStatus != null">script_status,</if>
+      <if test="sceneJson != null">scene_json,</if>
+      <if test="estimatedTotalSec != null">estimated_total_sec,</if>
+      <if test="rhythmJson != null">rhythm_json,</if>
+      <if test="totalScore != null">total_score,</if>
+      <if test="forceReadyFlag != null">force_ready_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="scriptId != null">#{scriptId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="scriptVersion != null">#{scriptVersion,jdbcType=INTEGER},</if>
+      <if test="scriptStatus != null">#{scriptStatus,jdbcType=VARCHAR},</if>
+      <if test="sceneJson != null">#{sceneJson,jdbcType=LONGVARCHAR},</if>
+      <if test="estimatedTotalSec != null">#{estimatedTotalSec,jdbcType=INTEGER},</if>
+      <if test="rhythmJson != null">#{rhythmJson,jdbcType=LONGVARCHAR},</if>
+      <if test="totalScore != null">#{totalScore,jdbcType=INTEGER},</if>
+      <if test="forceReadyFlag != null">#{forceReadyFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_script
+    <set>
+      <if test="row.scriptId != null">script_id = #{row.scriptId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.scriptVersion != null">script_version = #{row.scriptVersion,jdbcType=INTEGER},</if>
+      <if test="row.scriptStatus != null">script_status = #{row.scriptStatus,jdbcType=VARCHAR},</if>
+      <if test="row.sceneJson != null">scene_json = #{row.sceneJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.estimatedTotalSec != null">estimated_total_sec = #{row.estimatedTotalSec,jdbcType=INTEGER},</if>
+      <if test="row.rhythmJson != null">rhythm_json = #{row.rhythmJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.totalScore != null">total_score = #{row.totalScore,jdbcType=INTEGER},</if>
+      <if test="row.forceReadyFlag != null">force_ready_flag = #{row.forceReadyFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortScript">
+    update short_script
+    <set>
+      <if test="scriptId != null">script_id = #{scriptId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="scriptVersion != null">script_version = #{scriptVersion,jdbcType=INTEGER},</if>
+      <if test="scriptStatus != null">script_status = #{scriptStatus,jdbcType=VARCHAR},</if>
+      <if test="sceneJson != null">scene_json = #{sceneJson,jdbcType=LONGVARCHAR},</if>
+      <if test="estimatedTotalSec != null">estimated_total_sec = #{estimatedTotalSec,jdbcType=INTEGER},</if>
+      <if test="rhythmJson != null">rhythm_json = #{rhythmJson,jdbcType=LONGVARCHAR},</if>
+      <if test="totalScore != null">total_score = #{totalScore,jdbcType=INTEGER},</if>
+      <if test="forceReadyFlag != null">force_ready_flag = #{forceReadyFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

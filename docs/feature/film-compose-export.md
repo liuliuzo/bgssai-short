@@ -124,5 +124,5 @@
 
 - [x] 需求（本文件）
 - [x] 原型（`docs/demo-static/web/user/compose-export.html` 及 `PAGE-FLOW.html`）
-- [ ] 设计与契约（本次仅同步 `page-api-mapping.md`）
-- [ ] 代码与数据库
+- [x] 设计与契约（`docs/api/SHORT-PRODUCTION.md`；AI 为 MockAiProvider）
+- [x] 代码与数据库

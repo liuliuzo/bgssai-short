@@ -1,12 +1,16 @@
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, AuditOutlined, TeamOutlined, GiftOutlined, PayCircleOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import './main-layout.css'
 
 // Navigation items — two sample sections ship with the scaffold; add product routes here.
 const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
+  { key: '/reviews', label: '内容审核', icon: <AuditOutlined /> },
+  { key: '/creators', label: '创作者', icon: <TeamOutlined /> },
+  { key: '/credit-packs', label: '加量包', icon: <GiftOutlined /> },
+  { key: '/pay-merchants', label: '支付商户', icon: <PayCircleOutlined /> },
   { key: '/login-logs', label: '登录日志', icon: <ProfileOutlined /> },
 ]
 

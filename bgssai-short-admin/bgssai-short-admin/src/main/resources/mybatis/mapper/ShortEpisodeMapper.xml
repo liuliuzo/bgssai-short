@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortEpisodeMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortEpisode">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="episode_no" jdbcType="INTEGER" property="episodeNo" />
+    <result column="episode_title" jdbcType="VARCHAR" property="episodeTitle" />
+    <result column="episode_synopsis" jdbcType="VARCHAR" property="episodeSynopsis" />
+    <result column="ending_hook" jdbcType="VARCHAR" property="endingHook" />
+    <result column="script_status" jdbcType="VARCHAR" property="scriptStatus" />
+    <result column="storyboard_status" jdbcType="VARCHAR" property="storyboardStatus" />
+    <result column="dubbing_status" jdbcType="VARCHAR" property="dubbingStatus" />
+    <result column="compose_status" jdbcType="VARCHAR" property="composeStatus" />
+    <result column="review_status" jdbcType="VARCHAR" property="reviewStatus" />
+    <result column="film_asset_id" jdbcType="VARCHAR" property="filmAssetId" />
+    <result column="film_duration_sec" jdbcType="INTEGER" property="filmDurationSec" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, episode_id, work_id, user_id, episode_no, episode_title, episode_synopsis, ending_hook, script_status, storyboard_status, dubbing_status, compose_status, review_status, film_asset_id, film_duration_sec, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortEpisodeExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_episode
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortEpisodeExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_episode
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_episode where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortEpisodeExample" resultType="java.lang.Long">
+    select count(*) from short_episode
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortEpisode" useGeneratedKeys="true" keyProperty="id">
+    insert into short_episode (
+      id,
+      episode_id,
+      work_id,
+      user_id,
+      episode_no,
+      episode_title,
+      episode_synopsis,
+      ending_hook,
+      script_status,
+      storyboard_status,
+      dubbing_status,
+      compose_status,
+      review_status,
+      film_asset_id,
+      film_duration_sec,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{episodeNo,jdbcType=INTEGER},
+      #{episodeTitle,jdbcType=VARCHAR},
+      #{episodeSynopsis,jdbcType=VARCHAR},
+      #{endingHook,jdbcType=VARCHAR},
+      #{scriptStatus,jdbcType=VARCHAR},
+      #{storyboardStatus,jdbcType=VARCHAR},
+      #{dubbingStatus,jdbcType=VARCHAR},
+      #{composeStatus,jdbcType=VARCHAR},
+      #{reviewStatus,jdbcType=VARCHAR},
+      #{filmAssetId,jdbcType=VARCHAR},
+      #{filmDurationSec,jdbcType=INTEGER},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortEpisode" useGeneratedKeys="true" keyProperty="id">
+    insert into short_episode
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="episodeNo != null">episode_no,</if>
+      <if test="episodeTitle != null">episode_title,</if>
+      <if test="episodeSynopsis != null">episode_synopsis,</if>
+      <if test="endingHook != null">ending_hook,</if>
+      <if test="scriptStatus != null">script_status,</if>
+      <if test="storyboardStatus != null">storyboard_status,</if>
+      <if test="dubbingStatus != null">dubbing_status,</if>
+      <if test="composeStatus != null">compose_status,</if>
+      <if test="reviewStatus != null">review_status,</if>
+      <if test="filmAssetId != null">film_asset_id,</if>
+      <if test="filmDurationSec != null">film_duration_sec,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="episodeNo != null">#{episodeNo,jdbcType=INTEGER},</if>
+      <if test="episodeTitle != null">#{episodeTitle,jdbcType=VARCHAR},</if>
+      <if test="episodeSynopsis != null">#{episodeSynopsis,jdbcType=VARCHAR},</if>
+      <if test="endingHook != null">#{endingHook,jdbcType=VARCHAR},</if>
+      <if test="scriptStatus != null">#{scriptStatus,jdbcType=VARCHAR},</if>
+      <if test="storyboardStatus != null">#{storyboardStatus,jdbcType=VARCHAR},</if>
+      <if test="dubbingStatus != null">#{dubbingStatus,jdbcType=VARCHAR},</if>
+      <if test="composeStatus != null">#{composeStatus,jdbcType=VARCHAR},</if>
+      <if test="reviewStatus != null">#{reviewStatus,jdbcType=VARCHAR},</if>
+      <if test="filmAssetId != null">#{filmAssetId,jdbcType=VARCHAR},</if>
+      <if test="filmDurationSec != null">#{filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_episode
+    <set>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeNo != null">episode_no = #{row.episodeNo,jdbcType=INTEGER},</if>
+      <if test="row.episodeTitle != null">episode_title = #{row.episodeTitle,jdbcType=VARCHAR},</if>
+      <if test="row.episodeSynopsis != null">episode_synopsis = #{row.episodeSynopsis,jdbcType=VARCHAR},</if>
+      <if test="row.endingHook != null">ending_hook = #{row.endingHook,jdbcType=VARCHAR},</if>
+      <if test="row.scriptStatus != null">script_status = #{row.scriptStatus,jdbcType=VARCHAR},</if>
+      <if test="row.storyboardStatus != null">storyboard_status = #{row.storyboardStatus,jdbcType=VARCHAR},</if>
+      <if test="row.dubbingStatus != null">dubbing_status = #{row.dubbingStatus,jdbcType=VARCHAR},</if>
+      <if test="row.composeStatus != null">compose_status = #{row.composeStatus,jdbcType=VARCHAR},</if>
+      <if test="row.reviewStatus != null">review_status = #{row.reviewStatus,jdbcType=VARCHAR},</if>
+      <if test="row.filmAssetId != null">film_asset_id = #{row.filmAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.filmDurationSec != null">film_duration_sec = #{row.filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortEpisode">
+    update short_episode
+    <set>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="episodeNo != null">episode_no = #{episodeNo,jdbcType=INTEGER},</if>
+      <if test="episodeTitle != null">episode_title = #{episodeTitle,jdbcType=VARCHAR},</if>
+      <if test="episodeSynopsis != null">episode_synopsis = #{episodeSynopsis,jdbcType=VARCHAR},</if>
+      <if test="endingHook != null">ending_hook = #{endingHook,jdbcType=VARCHAR},</if>
+      <if test="scriptStatus != null">script_status = #{scriptStatus,jdbcType=VARCHAR},</if>
+      <if test="storyboardStatus != null">storyboard_status = #{storyboardStatus,jdbcType=VARCHAR},</if>
+      <if test="dubbingStatus != null">dubbing_status = #{dubbingStatus,jdbcType=VARCHAR},</if>
+      <if test="composeStatus != null">compose_status = #{composeStatus,jdbcType=VARCHAR},</if>
+      <if test="reviewStatus != null">review_status = #{reviewStatus,jdbcType=VARCHAR},</if>
+      <if test="filmAssetId != null">film_asset_id = #{filmAssetId,jdbcType=VARCHAR},</if>
+      <if test="filmDurationSec != null">film_duration_sec = #{filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

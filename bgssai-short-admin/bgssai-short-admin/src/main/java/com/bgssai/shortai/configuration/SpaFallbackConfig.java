@@ -32,7 +32,11 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
     private static final List<String> SPA_ROUTE_PREFIXES = Arrays.asList(
             "/login",
             "/home",
-            "/login-logs"
+            "/login-logs",
+            "/reviews",
+            "/creators",
+            "/credit-packs",
+            "/pay-merchants"
     );
 
     @Override

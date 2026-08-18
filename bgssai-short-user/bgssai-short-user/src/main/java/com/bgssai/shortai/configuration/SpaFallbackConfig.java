@@ -35,7 +35,9 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
             "/home",
             "/login-logs",
             "/mcp-tokens",
-            "/subscription"
+            "/subscription",
+            "/works",
+            "/tasks"
     );
 
     @Override

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortComplianceHitMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortComplianceHit">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="hit_id" jdbcType="VARCHAR" property="hitId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
+    <result column="check_scope" jdbcType="VARCHAR" property="checkScope" />
+    <result column="risk_level" jdbcType="VARCHAR" property="riskLevel" />
+    <result column="risk_category" jdbcType="VARCHAR" property="riskCategory" />
+    <result column="hit_text" jdbcType="VARCHAR" property="hitText" />
+    <result column="suggestion" jdbcType="VARCHAR" property="suggestion" />
+    <result column="scene_no" jdbcType="INTEGER" property="sceneNo" />
+    <result column="line_no" jdbcType="INTEGER" property="lineNo" />
+    <result column="shot_no" jdbcType="INTEGER" property="shotNo" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, hit_id, work_id, episode_id, shot_id, check_scope, risk_level, risk_category, hit_text, suggestion, scene_no, line_no, shot_no, created_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortComplianceHitExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_compliance_hit
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortComplianceHitExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_compliance_hit
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_compliance_hit where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortComplianceHitExample" resultType="java.lang.Long">
+    select count(*) from short_compliance_hit
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortComplianceHit" useGeneratedKeys="true" keyProperty="id">
+    insert into short_compliance_hit (
+      id,
+      hit_id,
+      work_id,
+      episode_id,
+      shot_id,
+      check_scope,
+      risk_level,
+      risk_category,
+      hit_text,
+      suggestion,
+      scene_no,
+      line_no,
+      shot_no,
+      created_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{hitId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{shotId,jdbcType=VARCHAR},
+      #{checkScope,jdbcType=VARCHAR},
+      #{riskLevel,jdbcType=VARCHAR},
+      #{riskCategory,jdbcType=VARCHAR},
+      #{hitText,jdbcType=VARCHAR},
+      #{suggestion,jdbcType=VARCHAR},
+      #{sceneNo,jdbcType=INTEGER},
+      #{lineNo,jdbcType=INTEGER},
+      #{shotNo,jdbcType=INTEGER},
+      #{createdTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortComplianceHit" useGeneratedKeys="true" keyProperty="id">
+    insert into short_compliance_hit
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="hitId != null">hit_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="shotId != null">shot_id,</if>
+      <if test="checkScope != null">check_scope,</if>
+      <if test="riskLevel != null">risk_level,</if>
+      <if test="riskCategory != null">risk_category,</if>
+      <if test="hitText != null">hit_text,</if>
+      <if test="suggestion != null">suggestion,</if>
+      <if test="sceneNo != null">scene_no,</if>
+      <if test="lineNo != null">line_no,</if>
+      <if test="shotNo != null">shot_no,</if>
+      <if test="createdTime != null">created_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="hitId != null">#{hitId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
+      <if test="checkScope != null">#{checkScope,jdbcType=VARCHAR},</if>
+      <if test="riskLevel != null">#{riskLevel,jdbcType=VARCHAR},</if>
+      <if test="riskCategory != null">#{riskCategory,jdbcType=VARCHAR},</if>
+      <if test="hitText != null">#{hitText,jdbcType=VARCHAR},</if>
+      <if test="suggestion != null">#{suggestion,jdbcType=VARCHAR},</if>
+      <if test="sceneNo != null">#{sceneNo,jdbcType=INTEGER},</if>
+      <if test="lineNo != null">#{lineNo,jdbcType=INTEGER},</if>
+      <if test="shotNo != null">#{shotNo,jdbcType=INTEGER},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_compliance_hit
+    <set>
+      <if test="row.hitId != null">hit_id = #{row.hitId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
+      <if test="row.checkScope != null">check_scope = #{row.checkScope,jdbcType=VARCHAR},</if>
+      <if test="row.riskLevel != null">risk_level = #{row.riskLevel,jdbcType=VARCHAR},</if>
+      <if test="row.riskCategory != null">risk_category = #{row.riskCategory,jdbcType=VARCHAR},</if>
+      <if test="row.hitText != null">hit_text = #{row.hitText,jdbcType=VARCHAR},</if>
+      <if test="row.suggestion != null">suggestion = #{row.suggestion,jdbcType=VARCHAR},</if>
+      <if test="row.sceneNo != null">scene_no = #{row.sceneNo,jdbcType=INTEGER},</if>
+      <if test="row.lineNo != null">line_no = #{row.lineNo,jdbcType=INTEGER},</if>
+      <if test="row.shotNo != null">shot_no = #{row.shotNo,jdbcType=INTEGER},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortComplianceHit">
+    update short_compliance_hit
+    <set>
+      <if test="hitId != null">hit_id = #{hitId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
+      <if test="checkScope != null">check_scope = #{checkScope,jdbcType=VARCHAR},</if>
+      <if test="riskLevel != null">risk_level = #{riskLevel,jdbcType=VARCHAR},</if>
+      <if test="riskCategory != null">risk_category = #{riskCategory,jdbcType=VARCHAR},</if>
+      <if test="hitText != null">hit_text = #{hitText,jdbcType=VARCHAR},</if>
+      <if test="suggestion != null">suggestion = #{suggestion,jdbcType=VARCHAR},</if>
+      <if test="sceneNo != null">scene_no = #{sceneNo,jdbcType=INTEGER},</if>
+      <if test="lineNo != null">line_no = #{lineNo,jdbcType=INTEGER},</if>
+      <if test="shotNo != null">shot_no = #{shotNo,jdbcType=INTEGER},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>
