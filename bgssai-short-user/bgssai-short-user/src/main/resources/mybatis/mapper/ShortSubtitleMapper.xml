@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortSubtitleMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortSubtitle">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="subtitle_id" jdbcType="VARCHAR" property="subtitleId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="subtitle_no" jdbcType="INTEGER" property="subtitleNo" />
+    <result column="start_ms" jdbcType="INTEGER" property="startMs" />
+    <result column="end_ms" jdbcType="INTEGER" property="endMs" />
+    <result column="subtitle_text" jdbcType="VARCHAR" property="subtitleText" />
+    <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, subtitle_id, episode_id, work_id, user_id, subtitle_no, start_ms, end_ms, subtitle_text, shot_id, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortSubtitleExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_subtitle
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortSubtitleExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_subtitle
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_subtitle where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortSubtitleExample" resultType="java.lang.Long">
+    select count(*) from short_subtitle
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortSubtitle" useGeneratedKeys="true" keyProperty="id">
+    insert into short_subtitle (
+      id,
+      subtitle_id,
+      episode_id,
+      work_id,
+      user_id,
+      subtitle_no,
+      start_ms,
+      end_ms,
+      subtitle_text,
+      shot_id,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{subtitleId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{subtitleNo,jdbcType=INTEGER},
+      #{startMs,jdbcType=INTEGER},
+      #{endMs,jdbcType=INTEGER},
+      #{subtitleText,jdbcType=VARCHAR},
+      #{shotId,jdbcType=VARCHAR},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortSubtitle" useGeneratedKeys="true" keyProperty="id">
+    insert into short_subtitle
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="subtitleId != null">subtitle_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="subtitleNo != null">subtitle_no,</if>
+      <if test="startMs != null">start_ms,</if>
+      <if test="endMs != null">end_ms,</if>
+      <if test="subtitleText != null">subtitle_text,</if>
+      <if test="shotId != null">shot_id,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="subtitleId != null">#{subtitleId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="subtitleNo != null">#{subtitleNo,jdbcType=INTEGER},</if>
+      <if test="startMs != null">#{startMs,jdbcType=INTEGER},</if>
+      <if test="endMs != null">#{endMs,jdbcType=INTEGER},</if>
+      <if test="subtitleText != null">#{subtitleText,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_subtitle
+    <set>
+      <if test="row.subtitleId != null">subtitle_id = #{row.subtitleId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.subtitleNo != null">subtitle_no = #{row.subtitleNo,jdbcType=INTEGER},</if>
+      <if test="row.startMs != null">start_ms = #{row.startMs,jdbcType=INTEGER},</if>
+      <if test="row.endMs != null">end_ms = #{row.endMs,jdbcType=INTEGER},</if>
+      <if test="row.subtitleText != null">subtitle_text = #{row.subtitleText,jdbcType=VARCHAR},</if>
+      <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortSubtitle">
+    update short_subtitle
+    <set>
+      <if test="subtitleId != null">subtitle_id = #{subtitleId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="subtitleNo != null">subtitle_no = #{subtitleNo,jdbcType=INTEGER},</if>
+      <if test="startMs != null">start_ms = #{startMs,jdbcType=INTEGER},</if>
+      <if test="endMs != null">end_ms = #{endMs,jdbcType=INTEGER},</if>
+      <if test="subtitleText != null">subtitle_text = #{subtitleText,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

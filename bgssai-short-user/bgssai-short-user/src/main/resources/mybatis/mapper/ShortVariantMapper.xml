@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortVariantMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortVariant">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="variant_id" jdbcType="VARCHAR" property="variantId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="variant_node" jdbcType="VARCHAR" property="variantNode" />
+    <result column="target_id" jdbcType="VARCHAR" property="targetId" />
+    <result column="variant_no" jdbcType="INTEGER" property="variantNo" />
+    <result column="content_json" jdbcType="LONGVARCHAR" property="contentJson" />
+    <result column="score" jdbcType="INTEGER" property="score" />
+    <result column="selected_flag" jdbcType="TINYINT" property="selectedFlag" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, variant_id, work_id, episode_id, variant_node, target_id, variant_no, content_json, score, selected_flag, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortVariantExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_variant
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortVariantExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_variant
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_variant where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortVariantExample" resultType="java.lang.Long">
+    select count(*) from short_variant
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortVariant" useGeneratedKeys="true" keyProperty="id">
+    insert into short_variant (
+      id,
+      variant_id,
+      work_id,
+      episode_id,
+      variant_node,
+      target_id,
+      variant_no,
+      content_json,
+      score,
+      selected_flag,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{variantId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{variantNode,jdbcType=VARCHAR},
+      #{targetId,jdbcType=VARCHAR},
+      #{variantNo,jdbcType=INTEGER},
+      #{contentJson,jdbcType=LONGVARCHAR},
+      #{score,jdbcType=INTEGER},
+      #{selectedFlag,jdbcType=TINYINT},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortVariant" useGeneratedKeys="true" keyProperty="id">
+    insert into short_variant
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="variantId != null">variant_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="variantNode != null">variant_node,</if>
+      <if test="targetId != null">target_id,</if>
+      <if test="variantNo != null">variant_no,</if>
+      <if test="contentJson != null">content_json,</if>
+      <if test="score != null">score,</if>
+      <if test="selectedFlag != null">selected_flag,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="variantId != null">#{variantId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="variantNode != null">#{variantNode,jdbcType=VARCHAR},</if>
+      <if test="targetId != null">#{targetId,jdbcType=VARCHAR},</if>
+      <if test="variantNo != null">#{variantNo,jdbcType=INTEGER},</if>
+      <if test="contentJson != null">#{contentJson,jdbcType=LONGVARCHAR},</if>
+      <if test="score != null">#{score,jdbcType=INTEGER},</if>
+      <if test="selectedFlag != null">#{selectedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_variant
+    <set>
+      <if test="row.variantId != null">variant_id = #{row.variantId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.variantNode != null">variant_node = #{row.variantNode,jdbcType=VARCHAR},</if>
+      <if test="row.targetId != null">target_id = #{row.targetId,jdbcType=VARCHAR},</if>
+      <if test="row.variantNo != null">variant_no = #{row.variantNo,jdbcType=INTEGER},</if>
+      <if test="row.contentJson != null">content_json = #{row.contentJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.score != null">score = #{row.score,jdbcType=INTEGER},</if>
+      <if test="row.selectedFlag != null">selected_flag = #{row.selectedFlag,jdbcType=TINYINT},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortVariant">
+    update short_variant
+    <set>
+      <if test="variantId != null">variant_id = #{variantId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="variantNode != null">variant_node = #{variantNode,jdbcType=VARCHAR},</if>
+      <if test="targetId != null">target_id = #{targetId,jdbcType=VARCHAR},</if>
+      <if test="variantNo != null">variant_no = #{variantNo,jdbcType=INTEGER},</if>
+      <if test="contentJson != null">content_json = #{contentJson,jdbcType=LONGVARCHAR},</if>
+      <if test="score != null">score = #{score,jdbcType=INTEGER},</if>
+      <if test="selectedFlag != null">selected_flag = #{selectedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

@@ -38,9 +38,19 @@ public class ShortWork implements Serializable {
 
     private Integer qualityThresholdScore;
 
+    private Integer overallQualityScore;
+
     private String outlineJson;
 
     private String composeSettingJson;
+
+    private String narratorVoiceId;
+
+    private String subtitleStyleJson;
+
+    private String templateId;
+
+    private String templateOverrideJson;
 
     private Integer archivedFlag;
 
@@ -178,6 +188,14 @@ public class ShortWork implements Serializable {
         this.qualityThresholdScore = qualityThresholdScore;
     }
 
+    public Integer getOverallQualityScore() {
+        return overallQualityScore;
+    }
+
+    public void setOverallQualityScore(Integer overallQualityScore) {
+        this.overallQualityScore = overallQualityScore;
+    }
+
     public String getOutlineJson() {
         return outlineJson;
     }
@@ -192,6 +210,38 @@ public class ShortWork implements Serializable {
 
     public void setComposeSettingJson(String composeSettingJson) {
         this.composeSettingJson = composeSettingJson == null ? null : composeSettingJson.trim();
+    }
+
+    public String getNarratorVoiceId() {
+        return narratorVoiceId;
+    }
+
+    public void setNarratorVoiceId(String narratorVoiceId) {
+        this.narratorVoiceId = narratorVoiceId == null ? null : narratorVoiceId.trim();
+    }
+
+    public String getSubtitleStyleJson() {
+        return subtitleStyleJson;
+    }
+
+    public void setSubtitleStyleJson(String subtitleStyleJson) {
+        this.subtitleStyleJson = subtitleStyleJson == null ? null : subtitleStyleJson.trim();
+    }
+
+    public String getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId == null ? null : templateId.trim();
+    }
+
+    public String getTemplateOverrideJson() {
+        return templateOverrideJson;
+    }
+
+    public void setTemplateOverrideJson(String templateOverrideJson) {
+        this.templateOverrideJson = templateOverrideJson == null ? null : templateOverrideJson.trim();
     }
 
     public Integer getArchivedFlag() {

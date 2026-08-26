@@ -20,6 +20,8 @@ public class ShortAsset implements Serializable {
 
     private String assetType;
 
+    private String mimeType;
+
     private String storageKey;
 
     private String fileUrl;
@@ -35,6 +37,8 @@ public class ShortAsset implements Serializable {
     private String sourceTaskId;
 
     private Integer selectedFlag;
+
+    private Integer draftFlag;
 
     private Integer deletedFlag;
 
@@ -96,6 +100,14 @@ public class ShortAsset implements Serializable {
 
     public void setAssetType(String assetType) {
         this.assetType = assetType == null ? null : assetType.trim();
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType == null ? null : mimeType.trim();
     }
 
     public String getStorageKey() {
@@ -160,6 +172,14 @@ public class ShortAsset implements Serializable {
 
     public void setSelectedFlag(Integer selectedFlag) {
         this.selectedFlag = selectedFlag;
+    }
+
+    public Integer getDraftFlag() {
+        return draftFlag;
+    }
+
+    public void setDraftFlag(Integer draftFlag) {
+        this.draftFlag = draftFlag;
     }
 
     public Integer getDeletedFlag() {

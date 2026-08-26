@@ -194,6 +194,7 @@ public class ProductionDtos {
         private String taskId;
         private String batchId;
         private String taskType;
+        private String modelCode;
         private List<String> shotIds;
         private Integer autoNextFlag;
         private Integer fallbackModelFlag;
@@ -207,6 +208,8 @@ public class ProductionDtos {
         public void setBatchId(String batchId) { this.batchId = batchId; }
         public String getTaskType() { return taskType; }
         public void setTaskType(String taskType) { this.taskType = taskType; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
         public List<String> getShotIds() { return shotIds; }
         public void setShotIds(List<String> shotIds) { this.shotIds = shotIds; }
         public Integer getAutoNextFlag() { return autoNextFlag; }

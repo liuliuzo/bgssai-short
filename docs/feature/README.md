@@ -36,8 +36,9 @@
 | AI 能力配置与用量成本 | 换模型要改代码、单价无处统一维护、用量无法核账 | [`ai-capability-usage.md`](./ai-capability-usage.md) | [`flow-usage-billing.html`](./flow-usage-billing.html) | 管理端 `ai-models` / `usage-cost` / `creators` · 用户端 `usage-billing` |
 | 订阅套餐与加量 credit | 无支付、无套餐发放、无法加量 | [`subscription-credit.md`](./subscription-credit.md) | 用户端 `subscription` · 管理端 `credit-packs` / `pay-merchants` | 用户端 `subscription` · 管理端 `credit-packs` / `pay-merchants` |
 
-> **当前进度**：制作主线 MVP（作品 / 剧本 / 角色卡 / 分镜 / 模拟生成 / 成片提审）已完成需求 → 原型 → 详设与契约 → 代码与数据库。
-> AI 为 MockAiProvider，可替换。剧情图谱、质量流水线、配音字幕、用量账单仍停在需求 → 原型。
+> **当前进度**：本轮功能（作品 / 剧本 / 角色 / 分镜 / 预演 / 图谱 / 生成 / 配音字幕 / 成片 / 质量 /
+> 合规 / 用量与模型配置 / 三问体验 / 订阅加量）已完成需求 → 原型 → 详设与契约 → 代码与数据库。
+> AI 默认 MOCK，可经 `ai_model_config` + `sys_secret` 切换 OpenAI 兼容供应商；素材走 OBS 或本地回退。
 
 ## 仓库内置的基础功能（自骨架继承）
 

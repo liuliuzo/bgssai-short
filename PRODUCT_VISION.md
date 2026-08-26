@@ -3,10 +3,9 @@
 > 本文件是产品「AI 短剧制作平台」的愿景与定位，是需求（`docs/feature/**`）的上位背景；需求版本变更时
 > 同步回顾本文件受影响处（Standards §0）。
 >
-> **当前状态**：M1 需求与原型已定稿（见 `docs/project/milestones.md`）。产品定位、目标人群优先级与关键
-> 场景已在本文件锁定；全链路功能需求落在 `docs/feature/**`，原型落在 `docs/demo-static/**`。
-> 详细设计（`docs/architecture` / `docs/api` 契约正文）与代码尚未启动——功能研发一律按
-> 「需求 → 原型 → 详设 → 代码」顺序推进（Standards §0）。
+> **当前状态**：M0–M3 本轮范围已完成（见 `docs/project/milestones.md`）。产品定位、需求与原型、
+> 详设与契约、双端代码与业务表均已落地；AI 默认 MOCK，配置 `sys_secret` 与 `ai_model_config` 后可切
+> OpenAI 兼容网关，素材默认本地回退或华为云 OBS。
 
 ## 一、产品定位
 
@@ -94,6 +93,6 @@ P2 人群本轮只借助通用能力满足，不做品牌定制化功能。
 | 里程碑 | 目标 | 状态 |
 | --- | --- | --- |
 | M0 | 仓库初始化：按骨架落双端可运行工程、文档骨架与基础链路 | 已完成 |
-| M1 | 产品需求与原型定稿：13 份功能需求进 `docs/feature/**`，双端 27 个原型页进 `docs/demo-static/**` | 已完成 |
-| M2 | 详细设计与契约：数据模型 / 状态机进 `docs/architecture`，REST 契约进 `docs/api`，安全设计进 `docs/security` | 未开始 |
-| M3 | 代码与数据库：`sql/DDL.sql` 业务表与双端前后端实现，按可运行里程碑拆 PR | 未开始 |
+| M1 | 产品需求与原型定稿：功能需求进 `docs/feature/**`，双端原型进 `docs/demo-static/**` | 已完成 |
+| M2 | 详细设计与契约：数据模型 / 状态机进 `docs/architecture`，REST 契约进 `docs/api`，安全设计进 `docs/security` | 已完成 |
+| M3 | 代码与数据库：`sql/DDL.sql` 业务表与双端前后端实现 | 已完成 |

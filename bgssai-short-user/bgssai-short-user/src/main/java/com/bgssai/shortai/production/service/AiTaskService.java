@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.Responses;
@@ -22,6 +23,7 @@ import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
 import com.bgssai.shortai.mapper.UserSubscriptionMapper;
+import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
 import com.bgssai.shortai.model.ShortEpisode;
@@ -60,17 +62,35 @@ public class AiTaskService {
     private UserSubscriptionMapper userSubscriptionMapper;
     @Autowired
     private SubscriptionPlanMapper subscriptionPlanMapper;
+    @Autowired
+    private AiModelResolveService aiModelResolveService;
 
     public ApiResponse estimate(AiTaskReq req) {
         List<ShortShot> shots = resolveShots(req);
         String type = req.getTaskType() == null ? "IMAGE" : req.getTaskType();
-        int unit = TaskPrices.cost(type);
-        if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
-            unit += TaskPrices.cost("VIDEO");
+        AiModelConfig model = aiModelResolveService.resolve(type, req.getModelCode());
+        int unit = aiModelResolveService.costCent(model, 1);
+        if (unit <= 0) {
+            unit = TaskPrices.cost(type);
         }
+        if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
+            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", null);
+            int videoUnit = aiModelResolveService.costCent(videoModel, 1);
+            unit += videoUnit > 0 ? videoUnit : TaskPrices.cost("VIDEO");
+        }
+        int estimated = shots.size() * unit;
+        String userId = workAccessService.requireUser();
+        UserQuota quota = quotaWalletService.requireWallet(userId);
+        quotaWalletService.resetMonthIfNeeded(quota);
+        int available = (quota.getBalanceCent() == null ? 0 : quota.getBalanceCent())
+                + (quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent());
+        int affordable = estimated <= 0 ? 0 : available / estimated;
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_count", shots.size());
-        result.put("estimated_cost_cent", shots.size() * unit);
+        result.put("estimated_cost_cent", estimated);
+        result.put("affordable_episode_count", affordable);
+        result.put("model_code", model.getModelCode());
+        result.put("unit_price_cent", model.getUnitPriceCent());
         return Responses.ok(result);
     }
 
@@ -92,8 +112,11 @@ public class AiTaskService {
             }
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("shot_id", shot.getShotId());
+            if (req.getModelCode() != null && !req.getModelCode().isBlank()) {
+                request.put("model_code", req.getModelCode().trim());
+            }
             ShortAiTask task = aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), type, "SHOT",
-                    shot.getShotId(), request, batchId, autoNext);
+                    shot.getShotId(), request, batchId, autoNext, req.getModelCode());
             ids.add(task.getTaskId());
             patchShotStatus(shot, "IMAGE".equals(type) ? "IMAGE_GENERATING" : "VIDEO_GENERATING");
         }

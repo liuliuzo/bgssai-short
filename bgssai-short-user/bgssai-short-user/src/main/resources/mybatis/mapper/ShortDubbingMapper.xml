@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortDubbingMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortDubbing">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="dubbing_id" jdbcType="VARCHAR" property="dubbingId" />
+    <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="line_no" jdbcType="INTEGER" property="lineNo" />
+    <result column="character_id" jdbcType="VARCHAR" property="characterId" />
+    <result column="voice_id" jdbcType="VARCHAR" property="voiceId" />
+    <result column="voice_speed" jdbcType="VARCHAR" property="voiceSpeed" />
+    <result column="emotion" jdbcType="VARCHAR" property="emotion" />
+    <result column="line_text" jdbcType="VARCHAR" property="lineText" />
+    <result column="audio_asset_id" jdbcType="VARCHAR" property="audioAssetId" />
+    <result column="audio_duration_sec" jdbcType="INTEGER" property="audioDurationSec" />
+    <result column="align_status" jdbcType="VARCHAR" property="alignStatus" />
+    <result column="align_gap_sec" jdbcType="VARCHAR" property="alignGapSec" />
+    <result column="auto_fixed_flag" jdbcType="TINYINT" property="autoFixedFlag" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, dubbing_id, shot_id, episode_id, work_id, user_id, line_no, character_id, voice_id, voice_speed, emotion, line_text, audio_asset_id, audio_duration_sec, align_status, align_gap_sec, auto_fixed_flag, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortDubbingExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_dubbing
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortDubbingExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_dubbing
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_dubbing where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortDubbingExample" resultType="java.lang.Long">
+    select count(*) from short_dubbing
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortDubbing" useGeneratedKeys="true" keyProperty="id">
+    insert into short_dubbing (
+      id,
+      dubbing_id,
+      shot_id,
+      episode_id,
+      work_id,
+      user_id,
+      line_no,
+      character_id,
+      voice_id,
+      voice_speed,
+      emotion,
+      line_text,
+      audio_asset_id,
+      audio_duration_sec,
+      align_status,
+      align_gap_sec,
+      auto_fixed_flag,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{dubbingId,jdbcType=VARCHAR},
+      #{shotId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{lineNo,jdbcType=INTEGER},
+      #{characterId,jdbcType=VARCHAR},
+      #{voiceId,jdbcType=VARCHAR},
+      #{voiceSpeed,jdbcType=VARCHAR},
+      #{emotion,jdbcType=VARCHAR},
+      #{lineText,jdbcType=VARCHAR},
+      #{audioAssetId,jdbcType=VARCHAR},
+      #{audioDurationSec,jdbcType=INTEGER},
+      #{alignStatus,jdbcType=VARCHAR},
+      #{alignGapSec,jdbcType=VARCHAR},
+      #{autoFixedFlag,jdbcType=TINYINT},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortDubbing" useGeneratedKeys="true" keyProperty="id">
+    insert into short_dubbing
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="dubbingId != null">dubbing_id,</if>
+      <if test="shotId != null">shot_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="lineNo != null">line_no,</if>
+      <if test="characterId != null">character_id,</if>
+      <if test="voiceId != null">voice_id,</if>
+      <if test="voiceSpeed != null">voice_speed,</if>
+      <if test="emotion != null">emotion,</if>
+      <if test="lineText != null">line_text,</if>
+      <if test="audioAssetId != null">audio_asset_id,</if>
+      <if test="audioDurationSec != null">audio_duration_sec,</if>
+      <if test="alignStatus != null">align_status,</if>
+      <if test="alignGapSec != null">align_gap_sec,</if>
+      <if test="autoFixedFlag != null">auto_fixed_flag,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="dubbingId != null">#{dubbingId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="lineNo != null">#{lineNo,jdbcType=INTEGER},</if>
+      <if test="characterId != null">#{characterId,jdbcType=VARCHAR},</if>
+      <if test="voiceId != null">#{voiceId,jdbcType=VARCHAR},</if>
+      <if test="voiceSpeed != null">#{voiceSpeed,jdbcType=VARCHAR},</if>
+      <if test="emotion != null">#{emotion,jdbcType=VARCHAR},</if>
+      <if test="lineText != null">#{lineText,jdbcType=VARCHAR},</if>
+      <if test="audioAssetId != null">#{audioAssetId,jdbcType=VARCHAR},</if>
+      <if test="audioDurationSec != null">#{audioDurationSec,jdbcType=INTEGER},</if>
+      <if test="alignStatus != null">#{alignStatus,jdbcType=VARCHAR},</if>
+      <if test="alignGapSec != null">#{alignGapSec,jdbcType=VARCHAR},</if>
+      <if test="autoFixedFlag != null">#{autoFixedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_dubbing
+    <set>
+      <if test="row.dubbingId != null">dubbing_id = #{row.dubbingId,jdbcType=VARCHAR},</if>
+      <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.lineNo != null">line_no = #{row.lineNo,jdbcType=INTEGER},</if>
+      <if test="row.characterId != null">character_id = #{row.characterId,jdbcType=VARCHAR},</if>
+      <if test="row.voiceId != null">voice_id = #{row.voiceId,jdbcType=VARCHAR},</if>
+      <if test="row.voiceSpeed != null">voice_speed = #{row.voiceSpeed,jdbcType=VARCHAR},</if>
+      <if test="row.emotion != null">emotion = #{row.emotion,jdbcType=VARCHAR},</if>
+      <if test="row.lineText != null">line_text = #{row.lineText,jdbcType=VARCHAR},</if>
+      <if test="row.audioAssetId != null">audio_asset_id = #{row.audioAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.audioDurationSec != null">audio_duration_sec = #{row.audioDurationSec,jdbcType=INTEGER},</if>
+      <if test="row.alignStatus != null">align_status = #{row.alignStatus,jdbcType=VARCHAR},</if>
+      <if test="row.alignGapSec != null">align_gap_sec = #{row.alignGapSec,jdbcType=VARCHAR},</if>
+      <if test="row.autoFixedFlag != null">auto_fixed_flag = #{row.autoFixedFlag,jdbcType=TINYINT},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortDubbing">
+    update short_dubbing
+    <set>
+      <if test="dubbingId != null">dubbing_id = #{dubbingId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="lineNo != null">line_no = #{lineNo,jdbcType=INTEGER},</if>
+      <if test="characterId != null">character_id = #{characterId,jdbcType=VARCHAR},</if>
+      <if test="voiceId != null">voice_id = #{voiceId,jdbcType=VARCHAR},</if>
+      <if test="voiceSpeed != null">voice_speed = #{voiceSpeed,jdbcType=VARCHAR},</if>
+      <if test="emotion != null">emotion = #{emotion,jdbcType=VARCHAR},</if>
+      <if test="lineText != null">line_text = #{lineText,jdbcType=VARCHAR},</if>
+      <if test="audioAssetId != null">audio_asset_id = #{audioAssetId,jdbcType=VARCHAR},</if>
+      <if test="audioDurationSec != null">audio_duration_sec = #{audioDurationSec,jdbcType=INTEGER},</if>
+      <if test="alignStatus != null">align_status = #{alignStatus,jdbcType=VARCHAR},</if>
+      <if test="alignGapSec != null">align_gap_sec = #{alignGapSec,jdbcType=VARCHAR},</if>
+      <if test="autoFixedFlag != null">auto_fixed_flag = #{autoFixedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

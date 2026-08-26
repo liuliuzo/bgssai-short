@@ -92,7 +92,7 @@
             <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
-        <!-- BCrypt (spring-security-crypto; version managed by the SB4 BOM) -->
+        <!-- spring-security-crypto (version managed by the SB4 BOM) -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
@@ -130,6 +130,13 @@
             <groupId>com.alipay.sdk</groupId>
             <artifactId>alipay-sdk-java</artifactId>
             <version>4.39.79.ALL</version>
+        </dependency>
+
+        <!-- Huawei Cloud OBS -->
+        <dependency>
+            <groupId>com.huaweicloud</groupId>
+            <artifactId>esdk-obs-java</artifactId>
+            <version>3.24.12</version>
         </dependency>
 
         <!-- test -->

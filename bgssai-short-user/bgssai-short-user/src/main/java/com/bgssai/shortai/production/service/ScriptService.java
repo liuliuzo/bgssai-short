@@ -278,6 +278,11 @@ public class ScriptService {
     }
 
     public void persistRewrite(ShortEpisode ep, Integer sceneNo, Integer lineNo, String instruction) {
+        persistRewrite(ep, sceneNo, lineNo, instruction, null);
+    }
+
+    public void persistRewrite(ShortEpisode ep, Integer sceneNo, Integer lineNo, String instruction,
+            java.util.function.BiFunction<String, String, String> rewriter) {
         ShortScript script = requireScript(ep);
         List<Map<String, Object>> scenes = ShortJson.list(script.getSceneJson());
         for (Map<String, Object> scene : scenes) {
@@ -294,8 +299,13 @@ public class ScriptService {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> line = (Map<String, Object>) item;
                     if (lineNo == null || lineNo.equals(ShortJson.integer(line.get("line_no"), -1))) {
-                        line.put("line_text", com.bgssai.shortai.production.support.MockAiProvider.rewriteLine(
-                                ShortJson.text(line.get("line_text")), instruction));
+                        String original = ShortJson.text(line.get("line_text"));
+                        if (rewriter != null) {
+                            line.put("line_text", rewriter.apply(original, instruction));
+                        } else {
+                            line.put("line_text", com.bgssai.shortai.production.support.MockAiProvider.rewriteLine(
+                                    original, instruction));
+                        }
                     }
                     lines.add(line);
                 }

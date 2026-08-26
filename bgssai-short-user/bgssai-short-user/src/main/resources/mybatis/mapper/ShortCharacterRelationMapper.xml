@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortCharacterRelationMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortCharacterRelation">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="relation_id" jdbcType="VARCHAR" property="relationId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="from_character_id" jdbcType="VARCHAR" property="fromCharacterId" />
+    <result column="to_character_id" jdbcType="VARCHAR" property="toCharacterId" />
+    <result column="relation_type" jdbcType="VARCHAR" property="relationType" />
+    <result column="as_of_episode_no" jdbcType="INTEGER" property="asOfEpisodeNo" />
+    <result column="relation_desc" jdbcType="VARCHAR" property="relationDesc" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, relation_id, work_id, user_id, from_character_id, to_character_id, relation_type, as_of_episode_no, relation_desc, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortCharacterRelationExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_character_relation
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortCharacterRelationExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_character_relation
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_character_relation where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortCharacterRelationExample" resultType="java.lang.Long">
+    select count(*) from short_character_relation
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortCharacterRelation" useGeneratedKeys="true" keyProperty="id">
+    insert into short_character_relation (
+      id,
+      relation_id,
+      work_id,
+      user_id,
+      from_character_id,
+      to_character_id,
+      relation_type,
+      as_of_episode_no,
+      relation_desc,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{relationId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{fromCharacterId,jdbcType=VARCHAR},
+      #{toCharacterId,jdbcType=VARCHAR},
+      #{relationType,jdbcType=VARCHAR},
+      #{asOfEpisodeNo,jdbcType=INTEGER},
+      #{relationDesc,jdbcType=VARCHAR},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortCharacterRelation" useGeneratedKeys="true" keyProperty="id">
+    insert into short_character_relation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="relationId != null">relation_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="fromCharacterId != null">from_character_id,</if>
+      <if test="toCharacterId != null">to_character_id,</if>
+      <if test="relationType != null">relation_type,</if>
+      <if test="asOfEpisodeNo != null">as_of_episode_no,</if>
+      <if test="relationDesc != null">relation_desc,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="relationId != null">#{relationId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="fromCharacterId != null">#{fromCharacterId,jdbcType=VARCHAR},</if>
+      <if test="toCharacterId != null">#{toCharacterId,jdbcType=VARCHAR},</if>
+      <if test="relationType != null">#{relationType,jdbcType=VARCHAR},</if>
+      <if test="asOfEpisodeNo != null">#{asOfEpisodeNo,jdbcType=INTEGER},</if>
+      <if test="relationDesc != null">#{relationDesc,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_character_relation
+    <set>
+      <if test="row.relationId != null">relation_id = #{row.relationId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.fromCharacterId != null">from_character_id = #{row.fromCharacterId,jdbcType=VARCHAR},</if>
+      <if test="row.toCharacterId != null">to_character_id = #{row.toCharacterId,jdbcType=VARCHAR},</if>
+      <if test="row.relationType != null">relation_type = #{row.relationType,jdbcType=VARCHAR},</if>
+      <if test="row.asOfEpisodeNo != null">as_of_episode_no = #{row.asOfEpisodeNo,jdbcType=INTEGER},</if>
+      <if test="row.relationDesc != null">relation_desc = #{row.relationDesc,jdbcType=VARCHAR},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortCharacterRelation">
+    update short_character_relation
+    <set>
+      <if test="relationId != null">relation_id = #{relationId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="fromCharacterId != null">from_character_id = #{fromCharacterId,jdbcType=VARCHAR},</if>
+      <if test="toCharacterId != null">to_character_id = #{toCharacterId,jdbcType=VARCHAR},</if>
+      <if test="relationType != null">relation_type = #{relationType,jdbcType=VARCHAR},</if>
+      <if test="asOfEpisodeNo != null">as_of_episode_no = #{asOfEpisodeNo,jdbcType=INTEGER},</if>
+      <if test="relationDesc != null">relation_desc = #{relationDesc,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

@@ -1,6 +1,6 @@
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import './main-layout.css'
 
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
   { key: '/works', label: '我的作品', icon: <VideoCameraOutlined /> },
   { key: '/tasks', label: '任务中心', icon: <ThunderboltOutlined /> },
+  { key: '/usage', label: '用量与账单', icon: <WalletOutlined /> },
   { key: '/subscription', label: '套餐与加量', icon: <AccountBookOutlined /> },
   { key: '/mcp-tokens', label: 'MCP 接入', icon: <ApiOutlined /> },
   { key: '/login-logs', label: '我的登录日志', icon: <ProfileOutlined /> },

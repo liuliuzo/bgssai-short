@@ -24,6 +24,7 @@ public enum CommonErrorCode implements ErrorCode {
     QUOTA_INSUFFICIENT("4007", "insufficient quota"),
     VERSION_CONFLICT("4009", "version conflict"),
     DUPLICATE_SUBMIT("4013", "already submitted for review"),
+    ABILITY_UNAVAILABLE("4014", "no enabled model for ability"),
     MONTHLY_LIMIT("4015", "monthly usage cap reached"),
     UNSUPPORTED_PAY_CHANNEL("60004", "unsupported pay channel"),
     NOTIFY_VERIFY_FAILED("60005", "notify signature verify failed"),

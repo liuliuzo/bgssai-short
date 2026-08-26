@@ -92,7 +92,7 @@
             <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
-        <!-- BCrypt (spring-security-crypto; version managed by the SB4 BOM) -->
+        <!-- spring-security-crypto (version managed by the SB4 BOM) -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>

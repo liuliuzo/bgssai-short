@@ -149,6 +149,13 @@ public class ShortWorkExample {
         public Criteria andQualityThresholdScoreGreaterThan(Integer value) { addCriterion("quality_threshold_score >", value, "qualityThresholdScore"); return (Criteria) this; }
         public Criteria andQualityThresholdScoreLessThan(Integer value) { addCriterion("quality_threshold_score <", value, "qualityThresholdScore"); return (Criteria) this; }
         public Criteria andQualityThresholdScoreIn(List<Integer> values) { addCriterion("quality_threshold_score in", values, "qualityThresholdScore"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreIsNull() { addCriterion("overall_quality_score is null"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreIsNotNull() { addCriterion("overall_quality_score is not null"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreEqualTo(Integer value) { addCriterion("overall_quality_score =", value, "overallQualityScore"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreNotEqualTo(Integer value) { addCriterion("overall_quality_score <>", value, "overallQualityScore"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreGreaterThan(Integer value) { addCriterion("overall_quality_score >", value, "overallQualityScore"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreLessThan(Integer value) { addCriterion("overall_quality_score <", value, "overallQualityScore"); return (Criteria) this; }
+        public Criteria andOverallQualityScoreIn(List<Integer> values) { addCriterion("overall_quality_score in", values, "overallQualityScore"); return (Criteria) this; }
         public Criteria andOutlineJsonIsNull() { addCriterion("outline_json is null"); return (Criteria) this; }
         public Criteria andOutlineJsonIsNotNull() { addCriterion("outline_json is not null"); return (Criteria) this; }
         public Criteria andOutlineJsonEqualTo(String value) { addCriterion("outline_json =", value, "outlineJson"); return (Criteria) this; }
@@ -165,6 +172,38 @@ public class ShortWorkExample {
         public Criteria andComposeSettingJsonLessThan(String value) { addCriterion("compose_setting_json <", value, "composeSettingJson"); return (Criteria) this; }
         public Criteria andComposeSettingJsonLike(String value) { addCriterion("compose_setting_json like", value, "composeSettingJson"); return (Criteria) this; }
         public Criteria andComposeSettingJsonIn(List<String> values) { addCriterion("compose_setting_json in", values, "composeSettingJson"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdIsNull() { addCriterion("narrator_voice_id is null"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdIsNotNull() { addCriterion("narrator_voice_id is not null"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdEqualTo(String value) { addCriterion("narrator_voice_id =", value, "narratorVoiceId"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdNotEqualTo(String value) { addCriterion("narrator_voice_id <>", value, "narratorVoiceId"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdGreaterThan(String value) { addCriterion("narrator_voice_id >", value, "narratorVoiceId"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdLessThan(String value) { addCriterion("narrator_voice_id <", value, "narratorVoiceId"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdLike(String value) { addCriterion("narrator_voice_id like", value, "narratorVoiceId"); return (Criteria) this; }
+        public Criteria andNarratorVoiceIdIn(List<String> values) { addCriterion("narrator_voice_id in", values, "narratorVoiceId"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonIsNull() { addCriterion("subtitle_style_json is null"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonIsNotNull() { addCriterion("subtitle_style_json is not null"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonEqualTo(String value) { addCriterion("subtitle_style_json =", value, "subtitleStyleJson"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonNotEqualTo(String value) { addCriterion("subtitle_style_json <>", value, "subtitleStyleJson"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonGreaterThan(String value) { addCriterion("subtitle_style_json >", value, "subtitleStyleJson"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonLessThan(String value) { addCriterion("subtitle_style_json <", value, "subtitleStyleJson"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonLike(String value) { addCriterion("subtitle_style_json like", value, "subtitleStyleJson"); return (Criteria) this; }
+        public Criteria andSubtitleStyleJsonIn(List<String> values) { addCriterion("subtitle_style_json in", values, "subtitleStyleJson"); return (Criteria) this; }
+        public Criteria andTemplateIdIsNull() { addCriterion("template_id is null"); return (Criteria) this; }
+        public Criteria andTemplateIdIsNotNull() { addCriterion("template_id is not null"); return (Criteria) this; }
+        public Criteria andTemplateIdEqualTo(String value) { addCriterion("template_id =", value, "templateId"); return (Criteria) this; }
+        public Criteria andTemplateIdNotEqualTo(String value) { addCriterion("template_id <>", value, "templateId"); return (Criteria) this; }
+        public Criteria andTemplateIdGreaterThan(String value) { addCriterion("template_id >", value, "templateId"); return (Criteria) this; }
+        public Criteria andTemplateIdLessThan(String value) { addCriterion("template_id <", value, "templateId"); return (Criteria) this; }
+        public Criteria andTemplateIdLike(String value) { addCriterion("template_id like", value, "templateId"); return (Criteria) this; }
+        public Criteria andTemplateIdIn(List<String> values) { addCriterion("template_id in", values, "templateId"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonIsNull() { addCriterion("template_override_json is null"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonIsNotNull() { addCriterion("template_override_json is not null"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonEqualTo(String value) { addCriterion("template_override_json =", value, "templateOverrideJson"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonNotEqualTo(String value) { addCriterion("template_override_json <>", value, "templateOverrideJson"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonGreaterThan(String value) { addCriterion("template_override_json >", value, "templateOverrideJson"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonLessThan(String value) { addCriterion("template_override_json <", value, "templateOverrideJson"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonLike(String value) { addCriterion("template_override_json like", value, "templateOverrideJson"); return (Criteria) this; }
+        public Criteria andTemplateOverrideJsonIn(List<String> values) { addCriterion("template_override_json in", values, "templateOverrideJson"); return (Criteria) this; }
         public Criteria andArchivedFlagIsNull() { addCriterion("archived_flag is null"); return (Criteria) this; }
         public Criteria andArchivedFlagIsNotNull() { addCriterion("archived_flag is not null"); return (Criteria) this; }
         public Criteria andArchivedFlagEqualTo(Integer value) { addCriterion("archived_flag =", value, "archivedFlag"); return (Criteria) this; }

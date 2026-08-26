@@ -1,19 +1,19 @@
-# 短剧制作闭环详设（MVP 切片）
+# 短剧制作闭环详设
 
 对齐需求：`docs/feature/short-work-management.md`、`script-studio.md`、`character-bible.md`、
-`storyboard-workbench.md`、`shot-generation.md`、`film-compose-export.md`、`content-compliance.md`。
+`storyboard-workbench.md`、`shot-generation.md`、`film-compose-export.md`、`content-compliance.md`
+及后续扩展功能（配音、预演、剧情图谱、质量门、三问体验）。
 
-本切片把创作者从建剧走到成片提审跑通。AI 接入走 **MockAiProvider**（规则模板 + 进程内任务），
-接口与表结构按需求字段落库，后续替换为真实模型时不改契约。
+创作者从建剧走到成片提审。AI 与素材存储横切见 **`ai-provider-obs-design.md`**
+（`AiProvider` SPI + 华为云 OBS；`provider_code=MOCK` 仅作无密钥回退）。
+用量与模型目录见 **`ai-capability-usage-design.md`**。
 
 ## 1. 范围
 
-用户端：作品 / 剧集 / 大纲与剧本 / 角色与场景卡 / 拆镜 / 模拟生成 / 成片 / 提审 / 关键词预检。
+用户端：作品 / 剧集 / 大纲与剧本 / 角色与场景卡 / 拆镜 / 生成 / 配音字幕 / 成片 / 提审 / 预检 /
+预演 / 剧情图谱 / 质量报告 / 样片与连贯性。
 
-管理端：审核队列、创作者列表与冻结、已有加量包与支付商户页。
-
-本切片不实现：剧情图谱、连贯性中心、质量门与模板、配音字幕、用量账单、真实对象存储与视频编码。
-对应接口在契约中标「本切片未实现」。
+管理端：审核队列、创作者、加量包与支付商户、AI 模型、用量、质量模板、充值申请。
 
 ## 2. 数据模型
 
@@ -28,7 +28,7 @@
 | `short_character` / `short_scene_card` | 作品级资产卡 |
 | `short_shot` | 镜头；`image_prompt` 为派生字段 |
 | `short_ai_task` | 统一异步任务 |
-| `short_asset` | 占位图 / 成片元数据，`storage_key` 存 SVG 或时间轴 JSON |
+| `short_asset` | 素材元数据；`storage_key` 为 OBS object key（本地回退可为文件路径） |
 | `short_film` | 成片记录 |
 | `short_review_record` | 审核留痕 |
 | `short_compliance_hit` | 预检命中 |
@@ -52,22 +52,23 @@
 
 审核：`NOT_SUBMITTED` → `PENDING` → `APPROVED` / `REJECTED`。全部剧集 `APPROVED` 则作品 `COMPLETED`。
 
-## 4. 模拟任务时序
+## 4. 任务时序
 
 ```
-submit / outline-generate / scripts-generate / portrait-generate / films-compose
-  -> 插入 short_ai_task (QUEUED)
+submit / outline-generate / scripts-generate / portrait-generate / dubbing / films-compose
+  -> AiModelResolveService 解析 model_code 与单价（无启用模型 → 4014）
+  -> 插入 short_ai_task (QUEUED)，快照 model_code / cost_cent
   -> 返回 task_id / batch_id
-  -> ShortAiTaskWorker 每秒拉取一条 QUEUED
-  -> RUNNING，MockAiProvider 写结果
-  -> 成功则 QuotaConsumeService.consume；失败写 fail_reason_code
+  -> ShortAiTaskWorker 拉取 QUEUED
+  -> RUNNING，AiProviderRegistry 执行，产物写入 OBS
+  -> 成功：ai_usage_record + QuotaConsumeService.consume；失败写 fail_reason_code
   -> 前端轮询 list / batch-progress
 ```
 
-扣费单价（分）：TEXT 15、IMAGE 50、VOICE 20、VIDEO 150、COMPOSE 80；定妆候选每张按 IMAGE。
+单价来自 `ai_model_config.unit_price_cent`（按次 `PER_CALL` 时 `usage_amount=1`）。
 余额不足 `4007`，月度触顶 `4015`。提交前若无订阅则按 FREE 惰性建档（与套餐 `me` 一致）。
 
-素材不进对象存储：`GET /bgssai/user/assets/{asset_id}` 输出 `image/svg+xml`（公开，id 不可猜测）。
+`GET /bgssai/user/assets/{asset_id}`：需登录且校验归属，返回 30 分钟预签名 `download_url`（见 OBS 详设）。
 
 ## 5. 所有权与错误码
 

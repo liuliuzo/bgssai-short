@@ -9,6 +9,7 @@
     <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
     <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
     <result column="asset_type" jdbcType="VARCHAR" property="assetType" />
+    <result column="mime_type" jdbcType="VARCHAR" property="mimeType" />
     <result column="storage_key" jdbcType="LONGVARCHAR" property="storageKey" />
     <result column="file_url" jdbcType="VARCHAR" property="fileUrl" />
     <result column="file_size_byte" jdbcType="INTEGER" property="fileSizeByte" />
@@ -17,6 +18,7 @@
     <result column="height" jdbcType="INTEGER" property="height" />
     <result column="source_task_id" jdbcType="VARCHAR" property="sourceTaskId" />
     <result column="selected_flag" jdbcType="TINYINT" property="selectedFlag" />
+    <result column="draft_flag" jdbcType="TINYINT" property="draftFlag" />
     <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
     <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
     <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
@@ -65,7 +67,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, asset_id, user_id, work_id, episode_id, shot_id, asset_type, storage_key, file_url, file_size_byte, duration_sec, width, height, source_task_id, selected_flag, deleted_flag, created_time, updated_time
+    id, asset_id, user_id, work_id, episode_id, shot_id, asset_type, mime_type, storage_key, file_url, file_size_byte, duration_sec, width, height, source_task_id, selected_flag, draft_flag, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortAssetExample" resultMap="BaseResultMap">
     select
@@ -99,6 +101,7 @@
       episode_id,
       shot_id,
       asset_type,
+      mime_type,
       storage_key,
       file_url,
       file_size_byte,
@@ -107,6 +110,7 @@
       height,
       source_task_id,
       selected_flag,
+      draft_flag,
       deleted_flag,
       created_time,
       updated_time
@@ -118,6 +122,7 @@
       #{episodeId,jdbcType=VARCHAR},
       #{shotId,jdbcType=VARCHAR},
       #{assetType,jdbcType=VARCHAR},
+      #{mimeType,jdbcType=VARCHAR},
       #{storageKey,jdbcType=LONGVARCHAR},
       #{fileUrl,jdbcType=VARCHAR},
       #{fileSizeByte,jdbcType=INTEGER},
@@ -126,6 +131,7 @@
       #{height,jdbcType=INTEGER},
       #{sourceTaskId,jdbcType=VARCHAR},
       #{selectedFlag,jdbcType=TINYINT},
+      #{draftFlag,jdbcType=TINYINT},
       #{deletedFlag,jdbcType=TINYINT},
       #{createdTime,jdbcType=TIMESTAMP},
       #{updatedTime,jdbcType=TIMESTAMP}
@@ -141,6 +147,7 @@
       <if test="episodeId != null">episode_id,</if>
       <if test="shotId != null">shot_id,</if>
       <if test="assetType != null">asset_type,</if>
+      <if test="mimeType != null">mime_type,</if>
       <if test="storageKey != null">storage_key,</if>
       <if test="fileUrl != null">file_url,</if>
       <if test="fileSizeByte != null">file_size_byte,</if>
@@ -149,6 +156,7 @@
       <if test="height != null">height,</if>
       <if test="sourceTaskId != null">source_task_id,</if>
       <if test="selectedFlag != null">selected_flag,</if>
+      <if test="draftFlag != null">draft_flag,</if>
       <if test="deletedFlag != null">deleted_flag,</if>
       <if test="createdTime != null">created_time,</if>
       <if test="updatedTime != null">updated_time,</if>
@@ -161,6 +169,7 @@
       <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
       <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
       <if test="assetType != null">#{assetType,jdbcType=VARCHAR},</if>
+      <if test="mimeType != null">#{mimeType,jdbcType=VARCHAR},</if>
       <if test="storageKey != null">#{storageKey,jdbcType=LONGVARCHAR},</if>
       <if test="fileUrl != null">#{fileUrl,jdbcType=VARCHAR},</if>
       <if test="fileSizeByte != null">#{fileSizeByte,jdbcType=INTEGER},</if>
@@ -169,6 +178,7 @@
       <if test="height != null">#{height,jdbcType=INTEGER},</if>
       <if test="sourceTaskId != null">#{sourceTaskId,jdbcType=VARCHAR},</if>
       <if test="selectedFlag != null">#{selectedFlag,jdbcType=TINYINT},</if>
+      <if test="draftFlag != null">#{draftFlag,jdbcType=TINYINT},</if>
       <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
       <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
@@ -183,6 +193,7 @@
       <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
       <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
       <if test="row.assetType != null">asset_type = #{row.assetType,jdbcType=VARCHAR},</if>
+      <if test="row.mimeType != null">mime_type = #{row.mimeType,jdbcType=VARCHAR},</if>
       <if test="row.storageKey != null">storage_key = #{row.storageKey,jdbcType=LONGVARCHAR},</if>
       <if test="row.fileUrl != null">file_url = #{row.fileUrl,jdbcType=VARCHAR},</if>
       <if test="row.fileSizeByte != null">file_size_byte = #{row.fileSizeByte,jdbcType=INTEGER},</if>
@@ -191,6 +202,7 @@
       <if test="row.height != null">height = #{row.height,jdbcType=INTEGER},</if>
       <if test="row.sourceTaskId != null">source_task_id = #{row.sourceTaskId,jdbcType=VARCHAR},</if>
       <if test="row.selectedFlag != null">selected_flag = #{row.selectedFlag,jdbcType=TINYINT},</if>
+      <if test="row.draftFlag != null">draft_flag = #{row.draftFlag,jdbcType=TINYINT},</if>
       <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
       <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
       <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
@@ -206,6 +218,7 @@
       <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
       <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
       <if test="assetType != null">asset_type = #{assetType,jdbcType=VARCHAR},</if>
+      <if test="mimeType != null">mime_type = #{mimeType,jdbcType=VARCHAR},</if>
       <if test="storageKey != null">storage_key = #{storageKey,jdbcType=LONGVARCHAR},</if>
       <if test="fileUrl != null">file_url = #{fileUrl,jdbcType=VARCHAR},</if>
       <if test="fileSizeByte != null">file_size_byte = #{fileSizeByte,jdbcType=INTEGER},</if>
@@ -214,6 +227,7 @@
       <if test="height != null">height = #{height,jdbcType=INTEGER},</if>
       <if test="sourceTaskId != null">source_task_id = #{sourceTaskId,jdbcType=VARCHAR},</if>
       <if test="selectedFlag != null">selected_flag = #{selectedFlag,jdbcType=TINYINT},</if>
+      <if test="draftFlag != null">draft_flag = #{draftFlag,jdbcType=TINYINT},</if>
       <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
       <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>

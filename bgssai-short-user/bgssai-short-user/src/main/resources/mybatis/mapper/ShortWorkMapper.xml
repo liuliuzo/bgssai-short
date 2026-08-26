@@ -18,8 +18,13 @@
     <result column="cost_spent_cent" jdbcType="INTEGER" property="costSpentCent" />
     <result column="skip_level_check_flag" jdbcType="TINYINT" property="skipLevelCheckFlag" />
     <result column="quality_threshold_score" jdbcType="INTEGER" property="qualityThresholdScore" />
+    <result column="overall_quality_score" jdbcType="INTEGER" property="overallQualityScore" />
     <result column="outline_json" jdbcType="LONGVARCHAR" property="outlineJson" />
     <result column="compose_setting_json" jdbcType="LONGVARCHAR" property="composeSettingJson" />
+    <result column="narrator_voice_id" jdbcType="VARCHAR" property="narratorVoiceId" />
+    <result column="subtitle_style_json" jdbcType="LONGVARCHAR" property="subtitleStyleJson" />
+    <result column="template_id" jdbcType="VARCHAR" property="templateId" />
+    <result column="template_override_json" jdbcType="LONGVARCHAR" property="templateOverrideJson" />
     <result column="archived_flag" jdbcType="TINYINT" property="archivedFlag" />
     <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
     <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
@@ -69,7 +74,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, work_id, user_id, work_title, one_line_pitch, genre, work_status, episode_count, episode_duration_sec, visual_style, aspect_ratio, cover_asset_id, cost_budget_cent, cost_spent_cent, skip_level_check_flag, quality_threshold_score, outline_json, compose_setting_json, archived_flag, deleted_flag, created_time, updated_time
+    id, work_id, user_id, work_title, one_line_pitch, genre, work_status, episode_count, episode_duration_sec, visual_style, aspect_ratio, cover_asset_id, cost_budget_cent, cost_spent_cent, skip_level_check_flag, quality_threshold_score, overall_quality_score, outline_json, compose_setting_json, narrator_voice_id, subtitle_style_json, template_id, template_override_json, archived_flag, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortWorkExample" resultMap="BaseResultMap">
     select
@@ -112,8 +117,13 @@
       cost_spent_cent,
       skip_level_check_flag,
       quality_threshold_score,
+      overall_quality_score,
       outline_json,
       compose_setting_json,
+      narrator_voice_id,
+      subtitle_style_json,
+      template_id,
+      template_override_json,
       archived_flag,
       deleted_flag,
       created_time,
@@ -135,8 +145,13 @@
       #{costSpentCent,jdbcType=INTEGER},
       #{skipLevelCheckFlag,jdbcType=TINYINT},
       #{qualityThresholdScore,jdbcType=INTEGER},
+      #{overallQualityScore,jdbcType=INTEGER},
       #{outlineJson,jdbcType=LONGVARCHAR},
       #{composeSettingJson,jdbcType=LONGVARCHAR},
+      #{narratorVoiceId,jdbcType=VARCHAR},
+      #{subtitleStyleJson,jdbcType=LONGVARCHAR},
+      #{templateId,jdbcType=VARCHAR},
+      #{templateOverrideJson,jdbcType=LONGVARCHAR},
       #{archivedFlag,jdbcType=TINYINT},
       #{deletedFlag,jdbcType=TINYINT},
       #{createdTime,jdbcType=TIMESTAMP},
@@ -162,8 +177,13 @@
       <if test="costSpentCent != null">cost_spent_cent,</if>
       <if test="skipLevelCheckFlag != null">skip_level_check_flag,</if>
       <if test="qualityThresholdScore != null">quality_threshold_score,</if>
+      <if test="overallQualityScore != null">overall_quality_score,</if>
       <if test="outlineJson != null">outline_json,</if>
       <if test="composeSettingJson != null">compose_setting_json,</if>
+      <if test="narratorVoiceId != null">narrator_voice_id,</if>
+      <if test="subtitleStyleJson != null">subtitle_style_json,</if>
+      <if test="templateId != null">template_id,</if>
+      <if test="templateOverrideJson != null">template_override_json,</if>
       <if test="archivedFlag != null">archived_flag,</if>
       <if test="deletedFlag != null">deleted_flag,</if>
       <if test="createdTime != null">created_time,</if>
@@ -186,8 +206,13 @@
       <if test="costSpentCent != null">#{costSpentCent,jdbcType=INTEGER},</if>
       <if test="skipLevelCheckFlag != null">#{skipLevelCheckFlag,jdbcType=TINYINT},</if>
       <if test="qualityThresholdScore != null">#{qualityThresholdScore,jdbcType=INTEGER},</if>
+      <if test="overallQualityScore != null">#{overallQualityScore,jdbcType=INTEGER},</if>
       <if test="outlineJson != null">#{outlineJson,jdbcType=LONGVARCHAR},</if>
       <if test="composeSettingJson != null">#{composeSettingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="narratorVoiceId != null">#{narratorVoiceId,jdbcType=VARCHAR},</if>
+      <if test="subtitleStyleJson != null">#{subtitleStyleJson,jdbcType=LONGVARCHAR},</if>
+      <if test="templateId != null">#{templateId,jdbcType=VARCHAR},</if>
+      <if test="templateOverrideJson != null">#{templateOverrideJson,jdbcType=LONGVARCHAR},</if>
       <if test="archivedFlag != null">#{archivedFlag,jdbcType=TINYINT},</if>
       <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
@@ -212,8 +237,13 @@
       <if test="row.costSpentCent != null">cost_spent_cent = #{row.costSpentCent,jdbcType=INTEGER},</if>
       <if test="row.skipLevelCheckFlag != null">skip_level_check_flag = #{row.skipLevelCheckFlag,jdbcType=TINYINT},</if>
       <if test="row.qualityThresholdScore != null">quality_threshold_score = #{row.qualityThresholdScore,jdbcType=INTEGER},</if>
+      <if test="row.overallQualityScore != null">overall_quality_score = #{row.overallQualityScore,jdbcType=INTEGER},</if>
       <if test="row.outlineJson != null">outline_json = #{row.outlineJson,jdbcType=LONGVARCHAR},</if>
       <if test="row.composeSettingJson != null">compose_setting_json = #{row.composeSettingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.narratorVoiceId != null">narrator_voice_id = #{row.narratorVoiceId,jdbcType=VARCHAR},</if>
+      <if test="row.subtitleStyleJson != null">subtitle_style_json = #{row.subtitleStyleJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.templateId != null">template_id = #{row.templateId,jdbcType=VARCHAR},</if>
+      <if test="row.templateOverrideJson != null">template_override_json = #{row.templateOverrideJson,jdbcType=LONGVARCHAR},</if>
       <if test="row.archivedFlag != null">archived_flag = #{row.archivedFlag,jdbcType=TINYINT},</if>
       <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
       <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
@@ -239,8 +269,13 @@
       <if test="costSpentCent != null">cost_spent_cent = #{costSpentCent,jdbcType=INTEGER},</if>
       <if test="skipLevelCheckFlag != null">skip_level_check_flag = #{skipLevelCheckFlag,jdbcType=TINYINT},</if>
       <if test="qualityThresholdScore != null">quality_threshold_score = #{qualityThresholdScore,jdbcType=INTEGER},</if>
+      <if test="overallQualityScore != null">overall_quality_score = #{overallQualityScore,jdbcType=INTEGER},</if>
       <if test="outlineJson != null">outline_json = #{outlineJson,jdbcType=LONGVARCHAR},</if>
       <if test="composeSettingJson != null">compose_setting_json = #{composeSettingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="narratorVoiceId != null">narrator_voice_id = #{narratorVoiceId,jdbcType=VARCHAR},</if>
+      <if test="subtitleStyleJson != null">subtitle_style_json = #{subtitleStyleJson,jdbcType=LONGVARCHAR},</if>
+      <if test="templateId != null">template_id = #{templateId,jdbcType=VARCHAR},</if>
+      <if test="templateOverrideJson != null">template_override_json = #{templateOverrideJson,jdbcType=LONGVARCHAR},</if>
       <if test="archivedFlag != null">archived_flag = #{archivedFlag,jdbcType=TINYINT},</if>
       <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>

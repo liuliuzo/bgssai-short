@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortShotPrevizMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortShotPreviz">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="previz_id" jdbcType="VARCHAR" property="previzId" />
+    <result column="shot_id" jdbcType="VARCHAR" property="shotId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="previz_level" jdbcType="VARCHAR" property="previzLevel" />
+    <result column="previz_text" jdbcType="LONGVARCHAR" property="previzText" />
+    <result column="draft_asset_id" jdbcType="VARCHAR" property="draftAssetId" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, previz_id, shot_id, episode_id, work_id, user_id, previz_level, previz_text, draft_asset_id, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortShotPrevizExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_shot_previz
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortShotPrevizExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_shot_previz
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_shot_previz where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortShotPrevizExample" resultType="java.lang.Long">
+    select count(*) from short_shot_previz
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortShotPreviz" useGeneratedKeys="true" keyProperty="id">
+    insert into short_shot_previz (
+      id,
+      previz_id,
+      shot_id,
+      episode_id,
+      work_id,
+      user_id,
+      previz_level,
+      previz_text,
+      draft_asset_id,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{previzId,jdbcType=VARCHAR},
+      #{shotId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{previzLevel,jdbcType=VARCHAR},
+      #{previzText,jdbcType=LONGVARCHAR},
+      #{draftAssetId,jdbcType=VARCHAR},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortShotPreviz" useGeneratedKeys="true" keyProperty="id">
+    insert into short_shot_previz
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="previzId != null">previz_id,</if>
+      <if test="shotId != null">shot_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="previzLevel != null">previz_level,</if>
+      <if test="previzText != null">previz_text,</if>
+      <if test="draftAssetId != null">draft_asset_id,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="previzId != null">#{previzId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">#{shotId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="previzLevel != null">#{previzLevel,jdbcType=VARCHAR},</if>
+      <if test="previzText != null">#{previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="draftAssetId != null">#{draftAssetId,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_shot_previz
+    <set>
+      <if test="row.previzId != null">previz_id = #{row.previzId,jdbcType=VARCHAR},</if>
+      <if test="row.shotId != null">shot_id = #{row.shotId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.previzLevel != null">previz_level = #{row.previzLevel,jdbcType=VARCHAR},</if>
+      <if test="row.previzText != null">previz_text = #{row.previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="row.draftAssetId != null">draft_asset_id = #{row.draftAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortShotPreviz">
+    update short_shot_previz
+    <set>
+      <if test="previzId != null">previz_id = #{previzId,jdbcType=VARCHAR},</if>
+      <if test="shotId != null">shot_id = #{shotId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="previzLevel != null">previz_level = #{previzLevel,jdbcType=VARCHAR},</if>
+      <if test="previzText != null">previz_text = #{previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="draftAssetId != null">draft_asset_id = #{draftAssetId,jdbcType=VARCHAR},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

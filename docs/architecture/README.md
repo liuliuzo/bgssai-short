@@ -31,7 +31,11 @@ forward 到 `/index.html`。
 | CORS | `configuration/CorsConfig`：显式白名单（禁 `*`），按 profile 配置 allowed-origins |
 | 健康检查 | `health/**` + `configuration/AsyncConfig` 的 `healthProbeExecutor`：三个公开端点（存活 / 就绪 / 全量）+ 组件化探针 + 单检查硬超时 + 整批 TTL 缓存。全产品线统一口径见 Standards §13，详设见 `health-check-design.md` |
 | MCP | 用户端 `mcp/**`：`POST /api/mcp` PAT 自校验 + JSON-RPC；令牌管理 `POST /bgssai/mcp-tokens/*`。详设见 `mcp-server.md` |
-| 短剧制作闭环（MVP） | 作品 → 剧本 → 角色卡 → 分镜 → 模拟 AI 任务 → 成片提审。详设见 `short-production-design.md`，契约见 `../api/SHORT-PRODUCTION.md` |
+| 短剧制作闭环 | 作品 → 剧本 → 角色卡 → 分镜 → AI 任务 → 配音/成片提审。详设见 `short-production-design.md`，契约见 `../api/SHORT-PRODUCTION.md` |
+| AI Provider + OBS | 能力 SPI、OpenAI 兼容适配、华为云 OBS、计费快照。详设见 `ai-provider-obs-design.md` |
+| AI 模型与用量 | 模型目录、用量流水、充值申请。详设见 `ai-capability-usage-design.md` |
+| 配音字幕 | 见 `voice-subtitle-design.md` |
+| 预演 / 图谱 / 质量 / 三问 | 见 `previz-story-quality-ux-design.md` |
 
 ### 请求处理链（示例：GET /bgssai/admin/login-logs）
 

@@ -1,6 +1,6 @@
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, AuditOutlined, TeamOutlined, GiftOutlined, PayCircleOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, AuditOutlined, TeamOutlined, GiftOutlined, PayCircleOutlined, RobotOutlined, FundOutlined, ExperimentOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import './main-layout.css'
 
@@ -8,9 +8,12 @@ import './main-layout.css'
 const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
   { key: '/reviews', label: '内容审核', icon: <AuditOutlined /> },
+  { key: '/ai-models', label: 'AI 模型', icon: <RobotOutlined /> },
+  { key: '/usage-cost', label: '用量与成本', icon: <FundOutlined /> },
   { key: '/creators', label: '创作者', icon: <TeamOutlined /> },
   { key: '/credit-packs', label: '加量包', icon: <GiftOutlined /> },
   { key: '/pay-merchants', label: '支付商户', icon: <PayCircleOutlined /> },
+  { key: '/quality-templates', label: '质量模板', icon: <ExperimentOutlined /> },
   { key: '/login-logs', label: '登录日志', icon: <ProfileOutlined /> },
 ]
 

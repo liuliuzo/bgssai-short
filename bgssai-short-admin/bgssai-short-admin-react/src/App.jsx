@@ -8,6 +8,9 @@ import ReviewsPage from './pages/reviews/ReviewsPage'
 import CreatorsPage from './pages/creators/CreatorsPage'
 import CreditPacksPage from './pages/creditPacks/CreditPacksPage'
 import PayMerchantsPage from './pages/payMerchants/PayMerchantsPage'
+import QualityTemplatesPage from './pages/qualityTemplates/QualityTemplatesPage'
+import AiModelsPage from './pages/aiModels/AiModelsPage'
+import UsageCostPage from './pages/usageCost/UsageCostPage'
 
 function RequireAuth({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
@@ -55,6 +58,9 @@ export default function App() {
         <Route path="/creators" element={<CreatorsPage />} />
         <Route path="/credit-packs" element={<CreditPacksPage />} />
         <Route path="/pay-merchants" element={<PayMerchantsPage />} />
+        <Route path="/ai-models" element={<AiModelsPage />} />
+        <Route path="/usage-cost" element={<UsageCostPage />} />
+        <Route path="/quality-templates" element={<QualityTemplatesPage />} />
         <Route path="/" element={<Navigate to="/home" replace />} />
       </Route>
 

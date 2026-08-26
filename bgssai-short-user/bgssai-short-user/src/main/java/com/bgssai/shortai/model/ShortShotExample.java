@@ -176,6 +176,43 @@ public class ShortShotExample {
         public Criteria andPrevizTextLessThan(String value) { addCriterion("previz_text <", value, "previzText"); return (Criteria) this; }
         public Criteria andPrevizTextLike(String value) { addCriterion("previz_text like", value, "previzText"); return (Criteria) this; }
         public Criteria andPrevizTextIn(List<String> values) { addCriterion("previz_text in", values, "previzText"); return (Criteria) this; }
+        public Criteria andBlockingJsonIsNull() { addCriterion("blocking_json is null"); return (Criteria) this; }
+        public Criteria andBlockingJsonIsNotNull() { addCriterion("blocking_json is not null"); return (Criteria) this; }
+        public Criteria andBlockingJsonEqualTo(String value) { addCriterion("blocking_json =", value, "blockingJson"); return (Criteria) this; }
+        public Criteria andBlockingJsonNotEqualTo(String value) { addCriterion("blocking_json <>", value, "blockingJson"); return (Criteria) this; }
+        public Criteria andBlockingJsonGreaterThan(String value) { addCriterion("blocking_json >", value, "blockingJson"); return (Criteria) this; }
+        public Criteria andBlockingJsonLessThan(String value) { addCriterion("blocking_json <", value, "blockingJson"); return (Criteria) this; }
+        public Criteria andBlockingJsonLike(String value) { addCriterion("blocking_json like", value, "blockingJson"); return (Criteria) this; }
+        public Criteria andBlockingJsonIn(List<String> values) { addCriterion("blocking_json in", values, "blockingJson"); return (Criteria) this; }
+        public Criteria andAxisFlagIsNull() { addCriterion("axis_flag is null"); return (Criteria) this; }
+        public Criteria andAxisFlagIsNotNull() { addCriterion("axis_flag is not null"); return (Criteria) this; }
+        public Criteria andAxisFlagEqualTo(Integer value) { addCriterion("axis_flag =", value, "axisFlag"); return (Criteria) this; }
+        public Criteria andAxisFlagNotEqualTo(Integer value) { addCriterion("axis_flag <>", value, "axisFlag"); return (Criteria) this; }
+        public Criteria andAxisFlagGreaterThan(Integer value) { addCriterion("axis_flag >", value, "axisFlag"); return (Criteria) this; }
+        public Criteria andAxisFlagLessThan(Integer value) { addCriterion("axis_flag <", value, "axisFlag"); return (Criteria) this; }
+        public Criteria andAxisFlagIn(List<Integer> values) { addCriterion("axis_flag in", values, "axisFlag"); return (Criteria) this; }
+        public Criteria andPrevizLevelIsNull() { addCriterion("previz_level is null"); return (Criteria) this; }
+        public Criteria andPrevizLevelIsNotNull() { addCriterion("previz_level is not null"); return (Criteria) this; }
+        public Criteria andPrevizLevelEqualTo(String value) { addCriterion("previz_level =", value, "previzLevel"); return (Criteria) this; }
+        public Criteria andPrevizLevelNotEqualTo(String value) { addCriterion("previz_level <>", value, "previzLevel"); return (Criteria) this; }
+        public Criteria andPrevizLevelGreaterThan(String value) { addCriterion("previz_level >", value, "previzLevel"); return (Criteria) this; }
+        public Criteria andPrevizLevelLessThan(String value) { addCriterion("previz_level <", value, "previzLevel"); return (Criteria) this; }
+        public Criteria andPrevizLevelLike(String value) { addCriterion("previz_level like", value, "previzLevel"); return (Criteria) this; }
+        public Criteria andPrevizLevelIn(List<String> values) { addCriterion("previz_level in", values, "previzLevel"); return (Criteria) this; }
+        public Criteria andStaleFlagIsNull() { addCriterion("stale_flag is null"); return (Criteria) this; }
+        public Criteria andStaleFlagIsNotNull() { addCriterion("stale_flag is not null"); return (Criteria) this; }
+        public Criteria andStaleFlagEqualTo(Integer value) { addCriterion("stale_flag =", value, "staleFlag"); return (Criteria) this; }
+        public Criteria andStaleFlagNotEqualTo(Integer value) { addCriterion("stale_flag <>", value, "staleFlag"); return (Criteria) this; }
+        public Criteria andStaleFlagGreaterThan(Integer value) { addCriterion("stale_flag >", value, "staleFlag"); return (Criteria) this; }
+        public Criteria andStaleFlagLessThan(Integer value) { addCriterion("stale_flag <", value, "staleFlag"); return (Criteria) this; }
+        public Criteria andStaleFlagIn(List<Integer> values) { addCriterion("stale_flag in", values, "staleFlag"); return (Criteria) this; }
+        public Criteria andPromptVersionIsNull() { addCriterion("prompt_version is null"); return (Criteria) this; }
+        public Criteria andPromptVersionIsNotNull() { addCriterion("prompt_version is not null"); return (Criteria) this; }
+        public Criteria andPromptVersionEqualTo(Integer value) { addCriterion("prompt_version =", value, "promptVersion"); return (Criteria) this; }
+        public Criteria andPromptVersionNotEqualTo(Integer value) { addCriterion("prompt_version <>", value, "promptVersion"); return (Criteria) this; }
+        public Criteria andPromptVersionGreaterThan(Integer value) { addCriterion("prompt_version >", value, "promptVersion"); return (Criteria) this; }
+        public Criteria andPromptVersionLessThan(Integer value) { addCriterion("prompt_version <", value, "promptVersion"); return (Criteria) this; }
+        public Criteria andPromptVersionIn(List<Integer> values) { addCriterion("prompt_version in", values, "promptVersion"); return (Criteria) this; }
         public Criteria andShotStatusIsNull() { addCriterion("shot_status is null"); return (Criteria) this; }
         public Criteria andShotStatusIsNotNull() { addCriterion("shot_status is not null"); return (Criteria) this; }
         public Criteria andShotStatusEqualTo(String value) { addCriterion("shot_status =", value, "shotStatus"); return (Criteria) this; }

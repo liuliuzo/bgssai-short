@@ -44,6 +44,16 @@ public class ShortShot implements Serializable {
 
     private String previzText;
 
+    private String blockingJson;
+
+    private Integer axisFlag;
+
+    private String previzLevel;
+
+    private Integer staleFlag;
+
+    private Integer promptVersion;
+
     private String shotStatus;
 
     private Integer blockedFlag;
@@ -216,6 +226,46 @@ public class ShortShot implements Serializable {
 
     public void setPrevizText(String previzText) {
         this.previzText = previzText == null ? null : previzText.trim();
+    }
+
+    public String getBlockingJson() {
+        return blockingJson;
+    }
+
+    public void setBlockingJson(String blockingJson) {
+        this.blockingJson = blockingJson == null ? null : blockingJson.trim();
+    }
+
+    public Integer getAxisFlag() {
+        return axisFlag;
+    }
+
+    public void setAxisFlag(Integer axisFlag) {
+        this.axisFlag = axisFlag;
+    }
+
+    public String getPrevizLevel() {
+        return previzLevel;
+    }
+
+    public void setPrevizLevel(String previzLevel) {
+        this.previzLevel = previzLevel == null ? null : previzLevel.trim();
+    }
+
+    public Integer getStaleFlag() {
+        return staleFlag;
+    }
+
+    public void setStaleFlag(Integer staleFlag) {
+        this.staleFlag = staleFlag;
+    }
+
+    public Integer getPromptVersion() {
+        return promptVersion;
+    }
+
+    public void setPromptVersion(Integer promptVersion) {
+        this.promptVersion = promptVersion;
     }
 
     public String getShotStatus() {

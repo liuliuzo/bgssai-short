@@ -20,44 +20,39 @@
 
 M0 结束时仓库仅有骨架继承的登录鉴权、登录日志分页示例与健康检查，无任何短剧业务功能。
 
-## M1 产品需求与原型定稿（进行中）
-
-按「需求 → 原型 → 详设 → 代码」顺序推进，上游未定稿不得启动下游（Standards §0）。
-本里程碑覆盖前两步。
+## M1 产品需求与原型定稿（已完成）
 
 | 事项 | 状态 | 落点 |
 | --- | --- | --- |
-| 目标人群优先级与关键场景定稿 | 已完成 | `../../PRODUCT_VISION.md` 第二、三节 |
-| 制作全链路拆解为功能需求（13 份） | 已完成 | `../feature/*.md`（作品 / 剧本 / 剧情图谱 / 三问体验 / 角色卡 / 分镜 / 文字预演 / 生成 / 配音 / 合成 / 质量 / 合规 / 用量） |
-| 各功能详细设计配图（12 张自包含 HTML + 内联 SVG） | 已完成 | `../feature/flow-*.html`、`../feature/state-*.html` |
-| 统一枚举字典（单一登记处） | 已完成 | `../feature/short-work-management.md` 第八节 |
-| web 用户端原型（18 页，含骨架继承 3 页；分镜与文字预演已合并为创作台一页）与跳转真值 | 已完成 | `../demo-static/web/user/**`（含 `index.html`、`PAGE-FLOW.html`） |
-| web 管理端原型（9 页）与跳转真值 | 已完成 | `../demo-static/web/admin/**`（含 `index.html`、`PAGE-FLOW.html`） |
-| 原型界面系统（应用外壳 + 业务组件） | 已完成 | `../demo-static/web/assets/short.css`（theme.css 为骨架同步副本，不改本体） |
-| 页面 → API 映射主表同步 | 已完成 | `../api/page-api-mapping.md`（Standards §9 要求） |
-| AI 能力接入方式、素材存储、长耗时任务机制 | 需求层已定口径，待详设定稿 | 能力经 `ai_model_config` 抽象、素材存对象存储只落 `storage_key`、长耗时统一走 `short_ai_task` 任务体系 |
-| 移动端（iOS / Android）原型 | 未开始 | 本轮不含移动端工程，`../demo-static/ios|android/` 仍为占位页 |
+| 目标人群优先级与关键场景定稿 | 已完成 | `../../PRODUCT_VISION.md` |
+| 制作全链路功能需求 | 已完成 | `../feature/*.md` |
+| web 用户端 / 管理端原型与跳转真值 | 已完成 | `../demo-static/web/**` |
+| 移动端（iOS / Android）原型 | 未开始 | 本轮不含，仍为占位页 |
 
-## M2 详细设计与契约（制作闭环 MVP 已完成；其余功能未开始）
+## M2 详细设计与契约（本轮范围已完成）
 
 | 事项 | 状态 | 说明 |
 | --- | --- | --- |
-| 数据模型与状态机 | MVP 已完成 | `../architecture/short-production-design.md` |
-| REST 契约正文 | MVP 已完成 | `../api/SHORT-PRODUCTION.md`；映射表已改指契约 |
-| 安全设计 | 部分 | 越权 4003 与审核留痕已随代码落地；供应商密钥保管待补 |
+| 制作闭环 + AI/OBS 横切 | 已完成 | `short-production-design.md`、`ai-provider-obs-design.md` |
+| AI 模型与用量 | 已完成 | `ai-capability-usage-design.md`、`AI-CAPABILITY-USAGE.md` |
+| 配音字幕 / 预演 / 图谱 / 质量 / 三问 | 已完成 | `voice-subtitle-design.md`、`previz-story-quality-ux-design.md` |
+| 安全（AI/OBS 密钥） | 已完成 | `ai-provider-secrets.md` |
 
-## M3 代码与数据库（制作闭环 MVP 已完成）
+## M3 代码与数据库（本轮范围已完成）
 
 | 事项 | 状态 | 说明 |
 | --- | --- | --- |
-| `sql/DDL.sql` 业务表 | MVP 已完成 | 作品 / 剧本 / 角色 / 镜头 / 任务 / 成片 / 审核；存量库跑 `UPGRADE-20260818-short-production.sql` |
-| 双端后端与前端工程 | MVP 已完成 | 用户端闭环 + 管理端审核 / 创作者 / 加量包 / 支付商户；AI 为 MockAiProvider |
+| `sql/DDL.sql` + `UPGRADE-20260826-full-features.sql` | 已完成 | 模型/用量/配音/预演/图谱/质量/三问表 |
+| 用户端制作全链路 + 用量/充值 | 已完成 | Provider SPI、OBS/本地存储、配音、预演、图谱、质量、样片/连贯性 |
+| 管理端审核 / 创作者 / 模型 / 用量 / 质量模板 | 已完成 | 含加量包与支付商户 |
+| AI 默认种子 | MOCK 启用 | 配 `sys_secret` + `OPENAI_COMPAT` 可切真实网关；OBS 未配时走本地目录 |
 
-## 已知待办（跨仓）
+## 已知待办（跨仓 / 运维）
 
 | 事项 | 归属仓 | 说明 |
 | --- | --- | --- |
-| 在产品线拓扑中登记本仓 | `bgssai-skeleton` | 骨架仓 `CLAUDE.md` / `AGENTS.md` 拓扑表与「9 个产品仓」计数、Standards §13 及健康检查各文档的仓数 / 后端数尚未含本仓，需在骨架仓侧同步 |
-| 数据库脚本归档 | `bgssai-database` | 本产品 schema 权威在本仓 `sql/`，批次归档与建库 / 清库执行在 database 仓 |
-| 部署与启停编排 | `bgssai-workflows` | Jenkins / Actions Job 登记 |
+| 在产品线拓扑中登记本仓 | `bgssai-skeleton` | 拓扑表与仓数尚未含本仓 |
+| 数据库脚本归档 | `bgssai-database` | 本仓 `sql/` 权威，执行在 database 仓 |
+| 部署与启停编排 | `bgssai-workflows` | Jenkins Job 登记 |
 | 日志采集接入 | `bgssai-logs` | 主机清单与采集配置 |
+| 生产密钥与 OBS 桶 | 运维 | 写入 `sys_secret` 并启用；安装 ffmpeg 以启用真实合成 |

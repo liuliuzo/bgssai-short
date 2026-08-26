@@ -17,6 +17,7 @@ import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.ShortAiTask;
@@ -310,6 +311,42 @@ public class WorkService {
     public ApiResponse emptyTemplates(String genre) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("template_list", new ArrayList<>());
+        return Responses.ok(result);
+    }
+
+    @Transactional
+    public ApiResponse batchEpisodes(com.bgssai.shortai.production.dto.FeatureDtos.EpisodeBatchReq req) {
+        ShortWork work = workAccessService.requireWork(req == null ? null : req.getWorkId());
+        if (req.getEpisodeIdList() == null || req.getEpisodeIdList().isEmpty()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "episode_id_list required");
+        }
+        String action = req.getAction() == null ? "ARCHIVE" : req.getAction().trim();
+        int updated = 0;
+        for (String episodeId : req.getEpisodeIdList()) {
+            ShortEpisode ep = workAccessService.requireEpisode(episodeId);
+            if (!work.getWorkId().equals(ep.getWorkId())) {
+                throw new ForbiddenException("episode not found");
+            }
+            ShortEpisode patch = new ShortEpisode();
+            patch.setUpdatedTime(new Date());
+            if ("ARCHIVE".equals(action) || "DELETE".equals(action)) {
+                patch.setDeletedFlag(1);
+            } else if ("RESET_COMPOSE".equals(action)) {
+                patch.setComposeStatus("NONE");
+            } else if ("MARK_READY".equals(action)) {
+                patch.setStoryboardStatus("READY");
+            } else {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "unsupported batch action");
+            }
+            ShortEpisodeExample up = new ShortEpisodeExample();
+            up.createCriteria().andIdEqualTo(ep.getId());
+            shortEpisodeMapper.updateByExampleSelective(patch, up);
+            updated++;
+        }
+        workStatusService.refresh(work.getWorkId());
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("updated_count", updated);
+        result.put("action", action);
         return Responses.ok(result);
     }
 

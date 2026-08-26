@@ -83,6 +83,14 @@ public class ShortAssetExample {
         public Criteria andAssetTypeLessThan(String value) { addCriterion("asset_type <", value, "assetType"); return (Criteria) this; }
         public Criteria andAssetTypeLike(String value) { addCriterion("asset_type like", value, "assetType"); return (Criteria) this; }
         public Criteria andAssetTypeIn(List<String> values) { addCriterion("asset_type in", values, "assetType"); return (Criteria) this; }
+        public Criteria andMimeTypeIsNull() { addCriterion("mime_type is null"); return (Criteria) this; }
+        public Criteria andMimeTypeIsNotNull() { addCriterion("mime_type is not null"); return (Criteria) this; }
+        public Criteria andMimeTypeEqualTo(String value) { addCriterion("mime_type =", value, "mimeType"); return (Criteria) this; }
+        public Criteria andMimeTypeNotEqualTo(String value) { addCriterion("mime_type <>", value, "mimeType"); return (Criteria) this; }
+        public Criteria andMimeTypeGreaterThan(String value) { addCriterion("mime_type >", value, "mimeType"); return (Criteria) this; }
+        public Criteria andMimeTypeLessThan(String value) { addCriterion("mime_type <", value, "mimeType"); return (Criteria) this; }
+        public Criteria andMimeTypeLike(String value) { addCriterion("mime_type like", value, "mimeType"); return (Criteria) this; }
+        public Criteria andMimeTypeIn(List<String> values) { addCriterion("mime_type in", values, "mimeType"); return (Criteria) this; }
         public Criteria andStorageKeyIsNull() { addCriterion("storage_key is null"); return (Criteria) this; }
         public Criteria andStorageKeyIsNotNull() { addCriterion("storage_key is not null"); return (Criteria) this; }
         public Criteria andStorageKeyEqualTo(String value) { addCriterion("storage_key =", value, "storageKey"); return (Criteria) this; }
@@ -142,6 +150,13 @@ public class ShortAssetExample {
         public Criteria andSelectedFlagGreaterThan(Integer value) { addCriterion("selected_flag >", value, "selectedFlag"); return (Criteria) this; }
         public Criteria andSelectedFlagLessThan(Integer value) { addCriterion("selected_flag <", value, "selectedFlag"); return (Criteria) this; }
         public Criteria andSelectedFlagIn(List<Integer> values) { addCriterion("selected_flag in", values, "selectedFlag"); return (Criteria) this; }
+        public Criteria andDraftFlagIsNull() { addCriterion("draft_flag is null"); return (Criteria) this; }
+        public Criteria andDraftFlagIsNotNull() { addCriterion("draft_flag is not null"); return (Criteria) this; }
+        public Criteria andDraftFlagEqualTo(Integer value) { addCriterion("draft_flag =", value, "draftFlag"); return (Criteria) this; }
+        public Criteria andDraftFlagNotEqualTo(Integer value) { addCriterion("draft_flag <>", value, "draftFlag"); return (Criteria) this; }
+        public Criteria andDraftFlagGreaterThan(Integer value) { addCriterion("draft_flag >", value, "draftFlag"); return (Criteria) this; }
+        public Criteria andDraftFlagLessThan(Integer value) { addCriterion("draft_flag <", value, "draftFlag"); return (Criteria) this; }
+        public Criteria andDraftFlagIn(List<Integer> values) { addCriterion("draft_flag in", values, "draftFlag"); return (Criteria) this; }
         public Criteria andDeletedFlagIsNull() { addCriterion("deleted_flag is null"); return (Criteria) this; }
         public Criteria andDeletedFlagIsNotNull() { addCriterion("deleted_flag is not null"); return (Criteria) this; }
         public Criteria andDeletedFlagEqualTo(Integer value) { addCriterion("deleted_flag =", value, "deletedFlag"); return (Criteria) this; }

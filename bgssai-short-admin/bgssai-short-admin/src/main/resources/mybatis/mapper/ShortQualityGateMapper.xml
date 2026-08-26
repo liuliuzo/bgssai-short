@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortQualityGateMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortQualityGate">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="gate_id" jdbcType="VARCHAR" property="gateId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="gate_code" jdbcType="VARCHAR" property="gateCode" />
+    <result column="gate_status" jdbcType="VARCHAR" property="gateStatus" />
+    <result column="score" jdbcType="INTEGER" property="score" />
+    <result column="threshold_score" jdbcType="INTEGER" property="thresholdScore" />
+    <result column="force_pass_flag" jdbcType="TINYINT" property="forcePassFlag" />
+    <result column="force_pass_reason" jdbcType="VARCHAR" property="forcePassReason" />
+    <result column="result_json" jdbcType="LONGVARCHAR" property="resultJson" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, gate_id, work_id, episode_id, user_id, gate_code, gate_status, score, threshold_score, force_pass_flag, force_pass_reason, result_json, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortQualityGateExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_quality_gate
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortQualityGateExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_quality_gate
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_quality_gate where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortQualityGateExample" resultType="java.lang.Long">
+    select count(*) from short_quality_gate
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortQualityGate" useGeneratedKeys="true" keyProperty="id">
+    insert into short_quality_gate (
+      id,
+      gate_id,
+      work_id,
+      episode_id,
+      user_id,
+      gate_code,
+      gate_status,
+      score,
+      threshold_score,
+      force_pass_flag,
+      force_pass_reason,
+      result_json,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{gateId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{gateCode,jdbcType=VARCHAR},
+      #{gateStatus,jdbcType=VARCHAR},
+      #{score,jdbcType=INTEGER},
+      #{thresholdScore,jdbcType=INTEGER},
+      #{forcePassFlag,jdbcType=TINYINT},
+      #{forcePassReason,jdbcType=VARCHAR},
+      #{resultJson,jdbcType=LONGVARCHAR},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortQualityGate" useGeneratedKeys="true" keyProperty="id">
+    insert into short_quality_gate
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="gateId != null">gate_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="gateCode != null">gate_code,</if>
+      <if test="gateStatus != null">gate_status,</if>
+      <if test="score != null">score,</if>
+      <if test="thresholdScore != null">threshold_score,</if>
+      <if test="forcePassFlag != null">force_pass_flag,</if>
+      <if test="forcePassReason != null">force_pass_reason,</if>
+      <if test="resultJson != null">result_json,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="gateId != null">#{gateId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="gateCode != null">#{gateCode,jdbcType=VARCHAR},</if>
+      <if test="gateStatus != null">#{gateStatus,jdbcType=VARCHAR},</if>
+      <if test="score != null">#{score,jdbcType=INTEGER},</if>
+      <if test="thresholdScore != null">#{thresholdScore,jdbcType=INTEGER},</if>
+      <if test="forcePassFlag != null">#{forcePassFlag,jdbcType=TINYINT},</if>
+      <if test="forcePassReason != null">#{forcePassReason,jdbcType=VARCHAR},</if>
+      <if test="resultJson != null">#{resultJson,jdbcType=LONGVARCHAR},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_quality_gate
+    <set>
+      <if test="row.gateId != null">gate_id = #{row.gateId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.gateCode != null">gate_code = #{row.gateCode,jdbcType=VARCHAR},</if>
+      <if test="row.gateStatus != null">gate_status = #{row.gateStatus,jdbcType=VARCHAR},</if>
+      <if test="row.score != null">score = #{row.score,jdbcType=INTEGER},</if>
+      <if test="row.thresholdScore != null">threshold_score = #{row.thresholdScore,jdbcType=INTEGER},</if>
+      <if test="row.forcePassFlag != null">force_pass_flag = #{row.forcePassFlag,jdbcType=TINYINT},</if>
+      <if test="row.forcePassReason != null">force_pass_reason = #{row.forcePassReason,jdbcType=VARCHAR},</if>
+      <if test="row.resultJson != null">result_json = #{row.resultJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortQualityGate">
+    update short_quality_gate
+    <set>
+      <if test="gateId != null">gate_id = #{gateId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="gateCode != null">gate_code = #{gateCode,jdbcType=VARCHAR},</if>
+      <if test="gateStatus != null">gate_status = #{gateStatus,jdbcType=VARCHAR},</if>
+      <if test="score != null">score = #{score,jdbcType=INTEGER},</if>
+      <if test="thresholdScore != null">threshold_score = #{thresholdScore,jdbcType=INTEGER},</if>
+      <if test="forcePassFlag != null">force_pass_flag = #{forcePassFlag,jdbcType=TINYINT},</if>
+      <if test="forcePassReason != null">force_pass_reason = #{forcePassReason,jdbcType=VARCHAR},</if>
+      <if test="resultJson != null">result_json = #{resultJson,jdbcType=LONGVARCHAR},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

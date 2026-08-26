@@ -21,6 +21,11 @@
     <result column="extra_prompt" jdbcType="VARCHAR" property="extraPrompt" />
     <result column="image_prompt" jdbcType="LONGVARCHAR" property="imagePrompt" />
     <result column="previz_text" jdbcType="LONGVARCHAR" property="previzText" />
+    <result column="blocking_json" jdbcType="LONGVARCHAR" property="blockingJson" />
+    <result column="axis_flag" jdbcType="TINYINT" property="axisFlag" />
+    <result column="previz_level" jdbcType="VARCHAR" property="previzLevel" />
+    <result column="stale_flag" jdbcType="TINYINT" property="staleFlag" />
+    <result column="prompt_version" jdbcType="INTEGER" property="promptVersion" />
     <result column="shot_status" jdbcType="VARCHAR" property="shotStatus" />
     <result column="blocked_flag" jdbcType="TINYINT" property="blockedFlag" />
     <result column="risk_level" jdbcType="VARCHAR" property="riskLevel" />
@@ -77,7 +82,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, extra_prompt, image_prompt, previz_text, shot_status, blocked_flag, risk_level, first_frame_asset_id, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
+    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, extra_prompt, image_prompt, previz_text, blocking_json, axis_flag, previz_level, stale_flag, prompt_version, shot_status, blocked_flag, risk_level, first_frame_asset_id, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortShotExample" resultMap="BaseResultMap">
     select
@@ -123,6 +128,11 @@
       extra_prompt,
       image_prompt,
       previz_text,
+      blocking_json,
+      axis_flag,
+      previz_level,
+      stale_flag,
+      prompt_version,
       shot_status,
       blocked_flag,
       risk_level,
@@ -154,6 +164,11 @@
       #{extraPrompt,jdbcType=VARCHAR},
       #{imagePrompt,jdbcType=LONGVARCHAR},
       #{previzText,jdbcType=LONGVARCHAR},
+      #{blockingJson,jdbcType=LONGVARCHAR},
+      #{axisFlag,jdbcType=TINYINT},
+      #{previzLevel,jdbcType=VARCHAR},
+      #{staleFlag,jdbcType=TINYINT},
+      #{promptVersion,jdbcType=INTEGER},
       #{shotStatus,jdbcType=VARCHAR},
       #{blockedFlag,jdbcType=TINYINT},
       #{riskLevel,jdbcType=VARCHAR},
@@ -189,6 +204,11 @@
       <if test="extraPrompt != null">extra_prompt,</if>
       <if test="imagePrompt != null">image_prompt,</if>
       <if test="previzText != null">previz_text,</if>
+      <if test="blockingJson != null">blocking_json,</if>
+      <if test="axisFlag != null">axis_flag,</if>
+      <if test="previzLevel != null">previz_level,</if>
+      <if test="staleFlag != null">stale_flag,</if>
+      <if test="promptVersion != null">prompt_version,</if>
       <if test="shotStatus != null">shot_status,</if>
       <if test="blockedFlag != null">blocked_flag,</if>
       <if test="riskLevel != null">risk_level,</if>
@@ -221,6 +241,11 @@
       <if test="extraPrompt != null">#{extraPrompt,jdbcType=VARCHAR},</if>
       <if test="imagePrompt != null">#{imagePrompt,jdbcType=LONGVARCHAR},</if>
       <if test="previzText != null">#{previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="blockingJson != null">#{blockingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="axisFlag != null">#{axisFlag,jdbcType=TINYINT},</if>
+      <if test="previzLevel != null">#{previzLevel,jdbcType=VARCHAR},</if>
+      <if test="staleFlag != null">#{staleFlag,jdbcType=TINYINT},</if>
+      <if test="promptVersion != null">#{promptVersion,jdbcType=INTEGER},</if>
       <if test="shotStatus != null">#{shotStatus,jdbcType=VARCHAR},</if>
       <if test="blockedFlag != null">#{blockedFlag,jdbcType=TINYINT},</if>
       <if test="riskLevel != null">#{riskLevel,jdbcType=VARCHAR},</if>
@@ -255,6 +280,11 @@
       <if test="row.extraPrompt != null">extra_prompt = #{row.extraPrompt,jdbcType=VARCHAR},</if>
       <if test="row.imagePrompt != null">image_prompt = #{row.imagePrompt,jdbcType=LONGVARCHAR},</if>
       <if test="row.previzText != null">previz_text = #{row.previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="row.blockingJson != null">blocking_json = #{row.blockingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.axisFlag != null">axis_flag = #{row.axisFlag,jdbcType=TINYINT},</if>
+      <if test="row.previzLevel != null">previz_level = #{row.previzLevel,jdbcType=VARCHAR},</if>
+      <if test="row.staleFlag != null">stale_flag = #{row.staleFlag,jdbcType=TINYINT},</if>
+      <if test="row.promptVersion != null">prompt_version = #{row.promptVersion,jdbcType=INTEGER},</if>
       <if test="row.shotStatus != null">shot_status = #{row.shotStatus,jdbcType=VARCHAR},</if>
       <if test="row.blockedFlag != null">blocked_flag = #{row.blockedFlag,jdbcType=TINYINT},</if>
       <if test="row.riskLevel != null">risk_level = #{row.riskLevel,jdbcType=VARCHAR},</if>
@@ -290,6 +320,11 @@
       <if test="extraPrompt != null">extra_prompt = #{extraPrompt,jdbcType=VARCHAR},</if>
       <if test="imagePrompt != null">image_prompt = #{imagePrompt,jdbcType=LONGVARCHAR},</if>
       <if test="previzText != null">previz_text = #{previzText,jdbcType=LONGVARCHAR},</if>
+      <if test="blockingJson != null">blocking_json = #{blockingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="axisFlag != null">axis_flag = #{axisFlag,jdbcType=TINYINT},</if>
+      <if test="previzLevel != null">previz_level = #{previzLevel,jdbcType=VARCHAR},</if>
+      <if test="staleFlag != null">stale_flag = #{staleFlag,jdbcType=TINYINT},</if>
+      <if test="promptVersion != null">prompt_version = #{promptVersion,jdbcType=INTEGER},</if>
       <if test="shotStatus != null">shot_status = #{shotStatus,jdbcType=VARCHAR},</if>
       <if test="blockedFlag != null">blocked_flag = #{blockedFlag,jdbcType=TINYINT},</if>
       <if test="riskLevel != null">risk_level = #{riskLevel,jdbcType=VARCHAR},</if>
