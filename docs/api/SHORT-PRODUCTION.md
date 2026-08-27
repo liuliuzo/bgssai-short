@@ -138,6 +138,8 @@ lock：`{ "character_id", "asset_id" }`
 
 ### GET /bgssai/user/shots/list?episode_id=&page_num=&page_size=&shot_status=
 
+`GET /bgssai/user/shots/list` 每镜另回 `look_plain`（这一镜观众会看到什么）、`prompt_score`、`previz_level`。
+
 ### POST /bgssai/user/shots/update|lock|unlock
 
 update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_duration_sec` `extra_prompt`，

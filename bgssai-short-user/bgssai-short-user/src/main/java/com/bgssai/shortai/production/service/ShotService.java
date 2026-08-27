@@ -162,8 +162,19 @@ public class ShotService {
         String desc = req.getShotDesc() == null ? shot.getShotDesc() : req.getShotDesc();
         String dialogue = req.getDialogueText() == null ? shot.getDialogueText() : req.getDialogueText();
         String extra = req.getExtraPrompt() == null ? shot.getExtraPrompt() : req.getExtraPrompt();
-        patch.setImagePrompt(PromptComposer.compose(desc, dialogue, extra, style));
-        patch.setPrevizText(desc);
+        patch.setShotDesc(desc);
+        patch.setDialogueText(dialogue);
+        patch.setExtraPrompt(extra);
+        ShortShot merged = new ShortShot();
+        merged.setShotDesc(desc);
+        merged.setDialogueText(dialogue);
+        merged.setExtraPrompt(extra);
+        merged.setShotSize(req.getShotSize() == null ? shot.getShotSize() : req.getShotSize());
+        merged.setCameraMove(req.getCameraMove() == null ? shot.getCameraMove() : req.getCameraMove());
+        merged.setEmotion(shot.getEmotion());
+        merged.setLighting(shot.getLighting());
+        patch.setImagePrompt(PromptComposer.compose(merged, style));
+        patch.setPrevizText(PromptComposer.previzText(merged));
         patch.setUpdatedTime(new Date());
         ShortShotExample up = new ShortShotExample();
         up.createCriteria().andIdEqualTo(shot.getId());
@@ -212,8 +223,9 @@ public class ShotService {
         shot.setShotDesc(desc);
         shot.setDialogueText(dialogue);
         shot.setEmotion(ShortJson.text(line.get("emotion")));
-        shot.setPrevizText(desc);
-        shot.setImagePrompt(PromptComposer.compose(desc, dialogue, null, style));
+        shot.setPrevizText(PromptComposer.previzText(shot));
+        shot.setImagePrompt(PromptComposer.compose(shot, style));
+        shot.setPrevizLevel("TEXT");
         shot.setShotStatus("PENDING");
         shot.setBlockedFlag(0);
         shot.setRiskLevel("PASS");
@@ -271,6 +283,14 @@ public class ShotService {
         item.put("shot_duration_sec", row.getShotDurationSec());
         item.put("image_prompt", row.getImagePrompt());
         item.put("previz_text", row.getPrevizText());
+        item.put("look_plain", PromptComposer.lookPlain(row));
+        item.put("previz_level", row.getPrevizLevel() == null ? "NONE" : row.getPrevizLevel());
+        item.put("emotion", row.getEmotion());
+        item.put("lighting", row.getLighting());
+        item.put("extra_prompt", row.getExtraPrompt());
+        Map<String, Object> check = PromptComposer.check(row, row.getImagePrompt());
+        item.put("prompt_score", check.get("prompt_score"));
+        item.put("prompt_pass_flag", check.get("pass_flag"));
         item.put("first_frame_asset_id", row.getFirstFrameAssetId());
         item.put("video_asset_id", row.getVideoAssetId());
         item.put("first_frame_url", row.getFirstFrameAssetId() == null ? null

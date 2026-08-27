@@ -22,6 +22,7 @@ import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortShotPreviz;
 import com.bgssai.shortai.model.ShortShotPrevizExample;
+import com.bgssai.shortai.production.support.PromptComposer;
 
 @Service
 public class PreviewService {
@@ -72,7 +73,11 @@ public class PreviewService {
             frame.put("shot_no", shot.getShotNo());
             frame.put("duration_sec", dur);
             frame.put("first_frame_asset_id", shot.getFirstFrameAssetId());
-            frame.put("previz_level", shot.getPrevizLevel());
+            frame.put("first_frame_url", shot.getFirstFrameAssetId() == null ? null
+                    : "/bgssai/user/assets/" + shot.getFirstFrameAssetId());
+            frame.put("dialogue_text", shot.getDialogueText());
+            frame.put("look_plain", PromptComposer.lookPlain(shot));
+            frame.put("previz_level", shot.getPrevizLevel() == null ? "NONE" : shot.getPrevizLevel());
             ShortShotPreviz p = previz.get(shot.getShotId());
             frame.put("previz_text", p == null ? shot.getPrevizText() : p.getPrevizText());
             frames.add(frame);
@@ -81,8 +86,8 @@ public class PreviewService {
             }
         }
         List<String> answers = new ArrayList<>();
-        answers.add(withFrame > 0 ? "样片帧已可连看，覆盖 " + withFrame + "/" + shots.size() + " 镜"
-                : "尚无足够首帧，建议先做预演或生成");
+        answers.add(withFrame > 0 ? "样片已可连看：覆盖 " + withFrame + "/" + shots.size() + " 镜。还没出图的镜头用文字说明顶上，不花视频钱。"
+                : "还没有首帧。先在创作台用人话改画面，再出草图，最后才生成视频。");
         answers.add(openIssues == 0 ? "连贯性暂无明显待处理问题" : "连贯性待处理 " + openIssues + " 条");
         answers.add(misaligned == 0 ? "本集配音对齐正常" : "配音未对齐 " + misaligned + " 条，合成前需处理");
         Map<String, Object> result = new LinkedHashMap<>();

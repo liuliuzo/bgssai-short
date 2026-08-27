@@ -8,6 +8,7 @@
 表：`short_shot_previz`、`short_prompt_version`、`short_continuity_issue`；shot 列 `previz_level` / `stale_flag` / `prompt_version`；asset `draft_flag`。
 
 层级：`NONE` → `TEXT` → `DRAFT_IMAGE` → 正式 IMAGE/VIDEO。跳级需 `skip_level_check_flag` 或显式确认。
+镜头列表与预演列表回传 `look_plain`（观众会看到什么）和 `prompt_score`；创作台默认先出图确认构图，不自动接视频。
 API：`/previz/**`、prompt check/diff；生成提交校验层级。
 
 ## 2. 剧情图谱

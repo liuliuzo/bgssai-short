@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, Card, Collapse, Form, Input, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
+import { Alert, Button, Card, Collapse, Form, Input, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
+import featuresApi from '../../api/features'
 import VoiceStudioPage from './VoiceStudioPage'
 import StoryMapPage from './StoryMapPage'
 import QualityReportPage from './QualityReportPage'
@@ -9,6 +10,7 @@ import EpisodePreviewPage from './EpisodePreviewPage'
 import ContinuityCenterPage from './ContinuityCenterPage'
 
 const { Title, Paragraph, Text } = Typography
+const { TextArea } = Input
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -263,6 +265,7 @@ function StoryboardPane({ work, episodeId }) {
   const [rows, setRows] = useState([])
   const [selected, setSelected] = useState([])
   const [cost, setCost] = useState(null)
+  const [drafts, setDrafts] = useState({})
   const [imageModels, setImageModels] = useState([])
   const [videoModels, setVideoModels] = useState([])
   const [imageModelCode, setImageModelCode] = useState()
@@ -294,90 +297,184 @@ function StoryboardPane({ work, episodeId }) {
     return () => { cancelled = true }
   }, [])
 
+  const patchRow = (shotId, fields) => {
+    setRows((cur) => cur.map((r) => (r.shot_id === shotId ? { ...r, ...fields } : r)))
+  }
+
+  const selectedIds = selected.length ? selected : undefined
+
+  const submitLevel = async (taskType, autoNext) => {
+    const { data } = await productionApi.submitTasks({
+      episode_id: episodeId,
+      shot_ids: selectedIds,
+      task_type: taskType,
+      auto_next_flag: autoNext ? 1 : 0,
+      model_code: taskType === 'VIDEO' ? videoModelCode : imageModelCode,
+      next_model_code: autoNext ? videoModelCode : undefined,
+    })
+    if (data?.success) {
+      message.success(taskType === 'VIDEO' ? '视频已提交，可去任务页等结果' : '草图已提交，出图后先看构图对不对')
+      await waitTask(work.work_id, data.result.task_id_list?.[0])
+      load()
+    }
+  }
+
   return (
-    <Card title="分镜" extra={<Space wrap>
-      <Select
-        placeholder="画面模型"
-        value={imageModelCode}
-        onChange={setImageModelCode}
-        style={{ width: 240 }}
-        options={imageModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+    <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <Alert
+        type="info"
+        showIcon
+        message="先看懂这一镜，再花钱生成"
+        description="改人话分镜免费。出一张图只确认构图。构图没问题再生成视频。不要用视频去试错。"
       />
-      <Select
-        placeholder="视频模型"
-        value={videoModelCode}
-        onChange={setVideoModelCode}
-        style={{ width: 240 }}
-        options={videoModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
-      />
-      <Button onClick={async () => {
-        await productionApi.splitShots(episodeId)
-        message.success('已拆镜')
-        load()
-      }}>从剧本拆镜</Button>
-      <Button onClick={async () => {
-        const { data } = await productionApi.estimateTasks({
-          episode_id: episodeId,
-          shot_ids: selected,
-          task_type: 'IMAGE',
-          auto_next_flag: 1,
-          model_code: imageModelCode,
-          next_model_code: videoModelCode,
-        })
-        setCost(data?.result)
-      }}>估价</Button>
-      <Button type="primary" onClick={async () => {
-        const { data } = await productionApi.submitTasks({
-          episode_id: episodeId,
-          shot_ids: selected.length ? selected : undefined,
-          task_type: 'IMAGE',
-          auto_next_flag: 1,
-          model_code: imageModelCode,
-          next_model_code: videoModelCode,
-        })
-        if (data?.success) {
-          message.success(`已提交 ${data.result.task_id_list?.length || 0} 个任务`)
-          await waitTask(work.work_id, data.result.task_id_list?.[0])
+      <Card size="small" extra={<Space wrap>
+        <Button onClick={async () => {
+          await productionApi.splitShots(episodeId)
+          await featuresApi.previzGenerateText({ episode_id: episodeId })
+          message.success('已拆镜，并写好人话分镜')
           load()
-        }
-      }}>提交生成</Button>
-    </Space>}>
-      {cost ? (
-        <Paragraph>
-          约 {cost.task_count} 条 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
-          （模型 {cost.model_code || '-'} · 可先做 {cost.affordable_episode_count ?? 0} 集）
-        </Paragraph>
-      ) : null}
-      <Table
-        rowKey="shot_id"
-        size="small"
-        dataSource={rows}
-        rowSelection={{ selectedRowKeys: selected, onChange: setSelected }}
-        pagination={false}
-        columns={[
-          { title: '镜', dataIndex: 'shot_no', width: 60 },
-          { title: '状态', dataIndex: 'shot_status', width: 120 },
-          { title: '描述', dataIndex: 'shot_desc' },
-          { title: '对白', dataIndex: 'dialogue_text' },
-          {
-            title: '首帧',
-            width: 80,
-            render: (_, row) => row.first_frame_url ? <img alt="" src={row.first_frame_url} width={36} height={64} /> : '-',
-          },
-          {
-            title: '操作',
-            width: 140,
-            render: (_, row) => (
-              <Space>
-                {row.shot_status === 'LOCKED'
-                  ? <Button size="small" onClick={async () => { await productionApi.unlockShot(row.shot_id); load() }}>解锁</Button>
-                  : <Button size="small" onClick={async () => { await productionApi.lockShot(row.shot_id); load() }}>锁定</Button>}
+        }}>从剧本拆镜</Button>
+        <Button onClick={async () => {
+          await featuresApi.previzGenerateText({ episode_id: episodeId, shot_id_list: selectedIds })
+          message.success('已用人话写清每一镜')
+          load()
+        }}>生成人话分镜（免费）</Button>
+        <Select
+          placeholder="出图模型"
+          value={imageModelCode}
+          onChange={setImageModelCode}
+          style={{ width: 220 }}
+          options={imageModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+        />
+        <Select
+          placeholder="视频模型"
+          value={videoModelCode}
+          onChange={setVideoModelCode}
+          style={{ width: 220 }}
+          options={videoModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+        />
+        <Button onClick={async () => {
+          const { data } = await productionApi.estimateTasks({
+            episode_id: episodeId,
+            shot_ids: selectedIds,
+            task_type: 'IMAGE',
+            auto_next_flag: 0,
+            model_code: imageModelCode,
+          })
+          setCost(data?.result)
+        }}>估草图费用</Button>
+        <Button onClick={() => submitLevel('IMAGE', 0)}>出草图确认构图</Button>
+        <Button type="primary" onClick={() => submitLevel('VIDEO', 0)}>构图OK，生成视频</Button>
+      </Space>}>
+        {cost ? (
+          <Paragraph style={{ marginBottom: 0 }}>
+            约 {cost.task_count} 镜 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
+            （{cost.model_code || '-'}）。这是出图费用，还不包含视频。
+          </Paragraph>
+        ) : (
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            勾选镜头后估费用。默认先出图、不自动出视频。
+          </Paragraph>
+        )}
+      </Card>
+      {rows.map((row) => (
+        <Card
+          key={row.shot_id}
+          size="small"
+          title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${row.shot_status || 'PENDING'}`}
+          extra={<Space>
+            <Tag color={(row.prompt_score || 0) >= 70 ? 'green' : 'orange'}>提示词 {row.prompt_score ?? '-'} 分</Tag>
+            <Button size="small" onClick={() => {
+              setSelected((cur) => cur.includes(row.shot_id) ? cur.filter((id) => id !== row.shot_id) : cur.concat(row.shot_id))
+            }}>{selected.includes(row.shot_id) ? '取消勾选' : '勾选'}</Button>
+            {row.shot_status === 'LOCKED'
+              ? <Button size="small" onClick={async () => { await productionApi.unlockShot(row.shot_id); load() }}>解锁</Button>
+              : <Button size="small" onClick={async () => { await productionApi.lockShot(row.shot_id); load() }}>锁定</Button>}
+          </Space>}
+        >
+          <Space align="start" size="large" style={{ width: '100%' }}>
+            <div style={{ width: 90, flexShrink: 0 }}>
+              {row.first_frame_url
+                ? <img alt="" src={row.first_frame_url} width={90} style={{ borderRadius: 8, display: 'block' }} />
+                : <div style={{ width: 90, height: 160, background: '#f1f5f9', borderRadius: 8, padding: 8, fontSize: 12, color: '#64748b' }}>还没出图</div>}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Paragraph style={{ marginBottom: 8 }}>
+                <Text strong>这一镜会拍成：</Text>
+                {row.look_plain || '先写人话分镜，系统会告诉你观众将看到什么。'}
+              </Paragraph>
+              <Text type="secondary">人话分镜（改这里免费，不用写提示词）</Text>
+              <TextArea
+                rows={4}
+                style={{ marginTop: 6 }}
+                value={drafts[row.shot_id] ?? row.previz_text ?? ''}
+                onChange={(e) => setDrafts((cur) => ({ ...cur, [row.shot_id]: e.target.value }))}
+              />
+              <Space style={{ marginTop: 8 }} wrap>
+                <Button size="small" onClick={async () => {
+                  const text = drafts[row.shot_id] ?? row.previz_text
+                  const { data } = await featuresApi.previzSave({ shot_id: row.shot_id, previz_text: text })
+                  const saved = data?.result || {}
+                  patchRow(row.shot_id, {
+                    previz_text: saved.previz_text || text,
+                    look_plain: saved.look_plain,
+                    image_prompt: saved.image_prompt,
+                    prompt_score: saved.prompt_score,
+                  })
+                  message.success('已按人话更新这一镜')
+                }}>保存人话</Button>
+                <Button size="small" onClick={async () => {
+                  const { data } = await featuresApi.previzPromptCheck({ shot_id: row.shot_id })
+                  const check = data?.result || {}
+                  patchRow(row.shot_id, {
+                    look_plain: check.look_plain,
+                    prompt_score: check.prompt_score,
+                    prompt_issues: check.issue_list,
+                  })
+                }}>提示词会拍出什么</Button>
+                <Button size="small" onClick={async () => {
+                  const { data } = await productionApi.submitTasks({
+                    episode_id: episodeId,
+                    shot_ids: [row.shot_id],
+                    task_type: 'IMAGE',
+                    auto_next_flag: 0,
+                    model_code: imageModelCode,
+                  })
+                  if (data?.success) {
+                    message.success('正在出图确认构图')
+                    await waitTask(work.work_id, data.result.task_id_list?.[0])
+                    load()
+                  }
+                }}>出一张图看看</Button>
+                <Button size="small" type="primary" disabled={!row.first_frame_asset_id} onClick={async () => {
+                  const { data } = await productionApi.submitTasks({
+                    episode_id: episodeId,
+                    shot_ids: [row.shot_id],
+                    task_type: 'VIDEO',
+                    auto_next_flag: 0,
+                    model_code: videoModelCode,
+                  })
+                  if (data?.success) {
+                    message.success('构图已确认，开始生成视频')
+                    await waitTask(work.work_id, data.result.task_id_list?.[0])
+                    load()
+                  }
+                }}>生成视频</Button>
               </Space>
-            ),
-          },
-        ]}
-      />
-    </Card>
+              {(row.prompt_issues || []).length ? (
+                <div style={{ marginTop: 8 }}>
+                  {(row.prompt_issues || []).slice(0, 3).map((it, i) => (
+                    <Paragraph key={i} type="secondary" style={{ marginBottom: 2 }}>
+                      {it.issue_desc}{it.suggestion ? ` → ${it.suggestion}` : ''}
+                    </Paragraph>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </Space>
+        </Card>
+      ))}
+    </Space>
   )
 }
 
@@ -539,7 +636,7 @@ export default function WorkStudio() {
         items={[
           { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={load} /> },
           { key: 'characters', label: '角色与场景', children: <CharacterPane work={work} /> },
-          { key: 'storyboard', label: '分镜生成', children: <StoryboardPane work={work} episodeId={episodeId} /> },
+          { key: 'storyboard', label: '创作台', children: <StoryboardPane work={work} episodeId={episodeId} /> },
           { key: 'voice', label: '配音字幕', children: <VoiceStudioPage work={work} episodeId={episodeId} /> },
           { key: 'story-map', label: '剧情图谱', children: <StoryMapPage work={work} episodeId={episodeId} /> },
           { key: 'quality', label: '质量报告', children: <QualityReportPage work={work} episodeId={episodeId} /> },

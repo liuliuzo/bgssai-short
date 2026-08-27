@@ -31,6 +31,7 @@ import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.FeatureDtos.PrevizGenerateReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.PrevizPromptReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.PrevizSaveReq;
+import com.bgssai.shortai.production.support.PromptComposer;
 import com.bgssai.shortai.production.support.ShortIds;
 
 @Service
@@ -64,10 +65,14 @@ public class PrevizService {
             item.put("shot_no", shot.getShotNo());
             item.put("previz_level", shot.getPrevizLevel() == null ? "NONE" : shot.getPrevizLevel());
             item.put("previz_text", p == null ? shot.getPrevizText() : p.getPrevizText());
+            item.put("look_plain", PromptComposer.lookPlain(shot));
             item.put("draft_asset_id", p == null ? null : p.getDraftAssetId());
             item.put("image_prompt", shot.getImagePrompt());
             item.put("prompt_version", shot.getPromptVersion());
             item.put("stale_flag", shot.getStaleFlag());
+            Map<String, Object> check = PromptComposer.check(shot, shot.getImagePrompt());
+            item.put("prompt_score", check.get("prompt_score"));
+            item.put("prompt_pass_flag", check.get("pass_flag"));
             list.add(item);
         }
         Map<String, Object> result = new LinkedHashMap<>();
@@ -82,9 +87,10 @@ public class PrevizService {
         List<Map<String, Object>> updated = new ArrayList<>();
         ShortShot prev = null;
         for (ShortShot shot : shots) {
-            String text = buildPrevizText(shot);
+            String text = PromptComposer.previzText(shot);
+            String prompt = PromptComposer.compose(shot, null);
             upsertPreviz(shot, "TEXT", text, null);
-            patchShotLevel(shot, "TEXT", text, null);
+            patchShotLevel(shot, "TEXT", text, prompt);
             if (prev != null && obviousMismatch(prev, shot)) {
                 insertContinuity(ep, shot, prev, "PROP", "MAJOR",
                         "相邻镜头道具/场景描述可能不一致");
@@ -116,7 +122,7 @@ public class PrevizService {
             }
             String text = shot.getPrevizText();
             if (text == null || text.isBlank()) {
-                text = buildPrevizText(shot);
+                text = PromptComposer.previzText(shot);
             }
             String draftAssetId = ShortIds.id("a-draft-");
             upsertPreviz(shot, "DRAFT_IMAGE", text, draftAssetId);
@@ -140,9 +146,12 @@ public class PrevizService {
         }
         ShortShot shot = requireShot(req.getShotId());
         String text = req.getPrevizText() == null ? shot.getPrevizText() : req.getPrevizText();
+        if (text != null && !text.isBlank()) {
+            shot.setShotDesc(stripPrevizLabels(text));
+        }
         String prompt = req.getImagePrompt();
         if (prompt == null || prompt.isBlank()) {
-            prompt = text == null ? shot.getImagePrompt() : ("画面：" + text);
+            prompt = PromptComposer.compose(shot, null);
         }
         upsertPreviz(shot, shot.getPrevizLevel() == null || "NONE".equals(shot.getPrevizLevel()) ? "TEXT"
                 : shot.getPrevizLevel(), text, null);
@@ -168,8 +177,10 @@ public class PrevizService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("shot_id", shot.getShotId());
         result.put("previz_text", text);
+        result.put("look_plain", PromptComposer.lookPlain(shot));
         result.put("image_prompt", prompt);
         result.put("prompt_version", nextVer);
+        result.putAll(PromptComposer.check(shot, prompt));
         return Responses.ok(result);
     }
 
@@ -179,21 +190,8 @@ public class PrevizService {
         }
         ShortShot shot = requireShot(req.getShotId());
         String prompt = req.getImagePrompt() == null ? shot.getImagePrompt() : req.getImagePrompt();
-        List<Map<String, Object>> issues = new ArrayList<>();
-        if (prompt == null || prompt.isBlank()) {
-            issues.add(issue("EMPTY", "提示词为空"));
-        } else {
-            if (prompt.length() < 12) {
-                issues.add(issue("TOO_SHORT", "提示词过短，建议补充景别与情绪"));
-            }
-            if (!prompt.contains("景") && shot.getShotSize() != null) {
-                issues.add(issue("MISSING_SHOT_SIZE", "提示词未体现景别"));
-            }
-        }
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = PromptComposer.check(shot, prompt);
         result.put("shot_id", shot.getShotId());
-        result.put("pass_flag", issues.isEmpty() ? 1 : 0);
-        result.put("issue_list", issues);
         return Responses.ok(result);
     }
 
@@ -321,24 +319,11 @@ public class PrevizService {
         return shot;
     }
 
-    private static String buildPrevizText(ShortShot shot) {
-        StringBuilder sb = new StringBuilder();
-        if (shot.getShotSize() != null) {
-            sb.append(shot.getShotSize()).append("，");
-        }
-        if (shot.getCameraMove() != null) {
-            sb.append(shot.getCameraMove()).append("，");
-        }
-        if (shot.getShotDesc() != null) {
-            sb.append(shot.getShotDesc());
-        }
-        if (shot.getDialogueText() != null && !shot.getDialogueText().isBlank()) {
-            sb.append("。对白：").append(shot.getDialogueText());
-        }
-        if (shot.getEmotion() != null) {
-            sb.append("。情绪：").append(shot.getEmotion());
-        }
-        return sb.toString();
+    private static String stripPrevizLabels(String text) {
+        String t = text == null ? "" : text.trim();
+        t = t.replace("谁：", "").replace("在哪：", " ").replace("做什么：", " ").replace("怎么拍：", " ")
+                .replace("什么感觉：", " ").replace("台词：", " ");
+        return t.replaceAll("\\s+", " ").trim();
     }
 
     private static boolean obviousMismatch(ShortShot prev, ShortShot cur) {
@@ -347,10 +332,4 @@ public class PrevizService {
         return a.contains("室内") && b.contains("室外") || a.contains("室外") && b.contains("室内");
     }
 
-    private static Map<String, Object> issue(String code, String desc) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("issue_code", code);
-        m.put("issue_desc", desc);
-        return m;
-    }
 }
