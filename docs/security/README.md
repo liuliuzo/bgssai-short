@@ -6,7 +6,7 @@
 
 | 项 | 基线 |
 | --- | --- |
-| 密码存储 | BCrypt（`login/service/PasswordService`）；兼容历史明文，首次校验通过即在库内升级为 BCrypt |
+| 密码存储 | 哈希（`login/service/PasswordService`）；兼容历史明文，首次校验通过即在库内升级为 哈希 |
 | 身份令牌 | JWT（jjwt 0.12.x，HMAC-SHA256）；密钥 `jwt.secret` 须 >= 32 字符 |
 | 密钥管理 | dev 用占位密钥写在 `application-dev.properties`；test/prod 一律留空，由部署期 `application-secrets.properties` 经 `--spring.config.import` 注入；未注入时 `JwtUtil` 启动 fail-fast（详见 `secrets-checklist.md`） |
 | 零信任角色 | 角色取自 JWT 声明（`UserContext` / `AdminAuthGuard`），绝不取自请求参数 |

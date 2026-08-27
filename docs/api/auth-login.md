@@ -28,7 +28,7 @@
 
 - `login_type`：为契约对称保留，当前仅 `password` 生效。
 - `identifier`：登录账号（`sys_user.user_name`）。
-- `password`：密码（后端 BCrypt 校验，兼容历史明文并首登升级）。
+- `password`：密码（后端 哈希校验，兼容历史明文并首登升级）。
 
 ### 成功响应
 
