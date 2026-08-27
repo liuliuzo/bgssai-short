@@ -13,6 +13,14 @@ public class SysSecretReader {
 
     public static final String AI_OPENAI_COMPAT_API_KEY = "ai.openai_compat.api_key";
 
+    public static final String AI_KLING_API_KEY = "ai.kling.api_key";
+
+    public static final String AI_MINIMAX_API_KEY = "ai.minimax.api_key";
+
+    public static final String AI_SEEDANCE_API_KEY = "ai.seedance.api_key";
+
+    public static final String AI_VEO_API_KEY = "ai.veo.api_key";
+
     private final Function<String, String> lookup;
 
     @Autowired
@@ -20,7 +28,7 @@ public class SysSecretReader {
         this.lookup = key -> read(dataSource, key);
     }
 
-    SysSecretReader(Function<String, String> lookup) {
+    public SysSecretReader(Function<String, String> lookup) {
         this.lookup = lookup;
     }
 

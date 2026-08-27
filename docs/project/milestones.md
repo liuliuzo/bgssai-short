@@ -45,7 +45,7 @@ M0 结束时仓库仅有骨架继承的登录鉴权、登录日志分页示例�
 | `sql/DDL.sql` + `UPGRADE-20260826-full-features.sql` | 已完成 | 模型/用量/配音/预演/图谱/质量/三问表 |
 | 用户端制作全链路 + 用量/充值 | 已完成 | Provider SPI、OBS/本地存储、配音、预演、图谱、质量、样片/连贯性 |
 | 管理端审核 / 创作者 / 模型 / 用量 / 质量模板 | 已完成 | 含加量包与支付商户 |
-| AI 默认种子 | MOCK 启用 | 配 `sys_secret` + `OPENAI_COMPAT` 可切真实网关；OBS 未配时走本地目录 |
+| AI 默认种子 | IMAGE/VIDEO 默认可灵，并启用 MiniMax / Seedance / Veo | 创作者提交时点选 `model_code`；MiniMax / Seedance / Veo 需写入对应 `sys_secret` 后才真正出片；OBS 未配时走本地目录 |
 
 ## 已知待办（跨仓 / 运维）
 

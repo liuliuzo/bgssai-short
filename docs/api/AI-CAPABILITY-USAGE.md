@@ -26,10 +26,10 @@ Query：`ability_type`（可选）。需 `PLATFORM_ADMIN`。
 ```json
 { "result": { "model_list": [
   { "model_id": "m-90003", "ability_type": "VIDEO", "ability_type_name": "视频",
-    "provider_code": "OPENAI_COMPAT", "model_code": "vid-fast-v3", "model_name": "视频快速版 v3",
+    "provider_code": "KLING", "model_code": "kling-v2-6", "model_name": "可灵图生视频",
     "quality_level": "FAST", "price_unit": "PER_CALL", "unit_price_cent": 150,
     "default_flag": 1, "enabled_flag": 1, "timeout_sec": 600, "max_retry": 2,
-    "config_json": "{\"base_url\":\"https://api.x.ai/v1\",\"secret_ref\":\"ai.openai_compat.api_key\"}",
+    "config_json": "{\"base_url\":\"https://api-beijing.klingai.com\",\"secret_ref\":\"ai.kling.api_key\",\"aspect_ratio\":\"9:16\"}",
     "updated_time": "2026-08-10 15:02:31" } ] } }
 ```
 
@@ -132,4 +132,16 @@ Query：`page_num`、`page_size`、`work_id`、`episode_id`、`ability_type`、`
 - `affordable_episode_count`（按当前余额与预估单集成本）
 - 选用的 `model_code` / `unit_price_cent`（解析结果）
 
-`POST /bgssai/user/ai-tasks/submit` Body 可选 `model_code`。
+`POST /bgssai/user/ai-tasks/submit` Body 可选 `model_code`（本次任务）与 `next_model_code`（`auto_next_flag=1` 时自动接视频所用模型）。
+
+### GET /bgssai/user/ai-models/list
+
+Query：`ability_type`（可选）。需登录 `USER`。返回该能力下 **启用** 模型，供创作台点选；不含 `config_json` 与密钥。
+
+```json
+{ "result": { "model_list": [
+  { "model_id": "m-video-kling", "ability_type": "VIDEO", "provider_code": "KLING",
+    "model_code": "kling-v2-6", "model_name": "可灵图生视频", "quality_level": "STANDARD",
+    "price_unit": "PER_CALL", "unit_price_cent": 200, "default_flag": 1 }
+] } }
+```

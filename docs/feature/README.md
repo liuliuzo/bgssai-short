@@ -38,7 +38,8 @@
 
 > **当前进度**：本轮功能（作品 / 剧本 / 角色 / 分镜 / 预演 / 图谱 / 生成 / 配音字幕 / 成片 / 质量 /
 > 合规 / 用量与模型配置 / 三问体验 / 订阅加量）已完成需求 → 原型 → 详设与契约 → 代码与数据库。
-> AI 默认 MOCK，可经 `ai_model_config` + `sys_secret` 切换 OpenAI 兼容供应商；素材走 OBS 或本地回退。
+> TEXT / VOICE / COMPOSE 默认 MOCK；`IMAGE` / `VIDEO` 默认可灵，创作者可在可灵 / 海螺 / Seedance / Veo
+> 间点选（密钥进 `sys_secret`）；素材走 OBS 或本地回退。
 
 ## 仓库内置的基础功能（自骨架继承）
 

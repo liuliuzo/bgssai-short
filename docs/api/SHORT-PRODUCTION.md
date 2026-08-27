@@ -6,7 +6,7 @@ POST 走 JSON body。鉴权请求头 `Jwttoken`。金额单位分。详设见
 
 分页：`page_num` / `page_size` / `total_size`（`PageResponse`）。
 
-AI 本切片为 MockAiProvider，契约字段与需求一致，可替换实现。
+AI 按 `ai_model_config.provider_code` 路由：IMAGE/VIDEO 默认可灵，可选 MiniMax / Seedance / Veo；TEXT / VOICE / COMPOSE 默认 MOCK。契约字段与需求一致。
 
 ## 错误码
 
@@ -149,7 +149,7 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 
 ### POST /bgssai/user/ai-tasks/estimate
 
-`{ "episode_id", "shot_ids", "task_type", "auto_next_flag" }` → `{ "task_count", "estimated_cost_cent" }`
+`{ "episode_id", "shot_ids", "task_type", "auto_next_flag", "model_code?", "next_model_code?" }` → `{ "task_count", "estimated_cost_cent", "model_code", "unit_price_cent" }`
 
 ### POST /bgssai/user/ai-tasks/submit
 

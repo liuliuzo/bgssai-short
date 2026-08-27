@@ -34,6 +34,7 @@ const lockShot = (shotId) => http.post('/user/shots/lock', { shot_id: shotId })
 const unlockShot = (shotId) => http.post('/user/shots/unlock', { shot_id: shotId })
 const updateShot = (body) => http.post('/user/shots/update', body)
 
+const listAiModels = (abilityType) => http.get('/user/ai-models/list', { ability_type: abilityType })
 const estimateTasks = (body) => http.post('/user/ai-tasks/estimate', body)
 const submitTasks = (body) => http.post('/user/ai-tasks/submit', body)
 const listTasks = (params) => http.get('/user/ai-tasks/list', params)
@@ -75,6 +76,7 @@ export default {
   lockShot,
   unlockShot,
   updateShot,
+  listAiModels,
   estimateTasks,
   submitTasks,
   listTasks,

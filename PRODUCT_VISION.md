@@ -4,8 +4,8 @@
 > 同步回顾本文件受影响处（Standards §0）。
 >
 > **当前状态**：M0–M3 本轮范围已完成（见 `docs/project/milestones.md`）。产品定位、需求与原型、
-> 详设与契约、双端代码与业务表均已落地；AI 默认 MOCK，配置 `sys_secret` 与 `ai_model_config` 后可切
-> OpenAI 兼容网关，素材默认本地回退或华为云 OBS。
+> 详设与契约、双端代码与业务表均已落地。TEXT / VOICE / COMPOSE 默认 MOCK；`IMAGE` / `VIDEO` 默认可灵，
+> 并启用 MiniMax、Seedance、Veo 供创作者点选。其余供应商写入 `sys_secret` 后即可用。素材默认本地回退或华为云 OBS。
 
 ## 一、产品定位
 

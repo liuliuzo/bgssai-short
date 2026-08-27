@@ -23,6 +23,13 @@
   1. `ai_model_config` 按 `ability_type`（`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `COMPOSE`）分组，
      每组可配多个模型，其一为 `default_flag=1`；业务侧提交任务时只传 `task_type`，
      由平台解析为当前默认模型（用户可在允许范围内改选，见规则 4）。
+     本产品画面 / 视频支持多模型点选（类 Cursor）：`KLING`（可灵，IMAGE/VIDEO 默认）、
+     `MINIMAX`（海螺）、`SEEDANCE`（即梦）、`VEO`（Google Veo）；创作者提交时选 `model_code`，
+     两段式生成可另传 `next_model_code` 作为自动接视频的模型。密钥分别对应
+     `ai.kling.api_key` / `ai.minimax.api_key` / `ai.seedance.api_key` / `ai.veo.api_key`。
+     TEXT / VOICE / COMPOSE 本轮仍为 MOCK 或既有适配。
+     用户端只读目录：`GET /bgssai/user/ai-models/list?ability_type=` 返回该能力下启用模型
+     （不含 `config_json` / 密钥），供创作台下拉选择。
   2. 单价按计费单位配置：`price_unit` 取 `PER_CALL`（次）/ `PER_SECOND`（视频秒）/
      `PER_KILO_TOKEN`（千 token）/ `PER_MINUTE`（音频分钟）；`unit_price_cent` 为分。
      单价变更只对**变更后**创建的任务生效，历史任务按 `ai_usage_record` 快照的单价核算，不追溯。

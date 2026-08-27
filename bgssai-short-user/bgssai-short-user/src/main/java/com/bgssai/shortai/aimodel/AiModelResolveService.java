@@ -1,8 +1,15 @@
 package com.bgssai.shortai.aimodel;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.common.ApiResponse;
+import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.AiModelConfigMapper;
@@ -50,5 +57,32 @@ public class AiModelResolveService {
         int price = model.getUnitPriceCent() == null ? 0 : model.getUnitPriceCent();
         int amount = usageAmount <= 0 ? 1 : usageAmount;
         return price * amount;
+    }
+
+    public ApiResponse listEnabled(String abilityType) {
+        AiModelConfigExample ex = new AiModelConfigExample();
+        AiModelConfigExample.Criteria c = ex.createCriteria().andEnabledFlagEqualTo(1).andDeletedFlagEqualTo(0);
+        if (abilityType != null && !abilityType.isBlank()) {
+            c.andAbilityTypeEqualTo(abilityType.trim());
+        }
+        ex.setOrderByClause("ability_type asc, default_flag desc, quality_level asc, id asc");
+        List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (AiModelConfig row : rows) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("model_id", row.getModelId());
+            item.put("ability_type", row.getAbilityType());
+            item.put("provider_code", row.getProviderCode());
+            item.put("model_code", row.getModelCode());
+            item.put("model_name", row.getModelName());
+            item.put("quality_level", row.getQualityLevel());
+            item.put("price_unit", row.getPriceUnit());
+            item.put("unit_price_cent", row.getUnitPriceCent());
+            item.put("default_flag", row.getDefaultFlag());
+            list.add(item);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("model_list", list);
+        return Responses.ok(result);
     }
 }

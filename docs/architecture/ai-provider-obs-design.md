@@ -28,6 +28,10 @@
 | --- | --- |
 | `AiProvider` | SPI：按能力执行一次生成，返回字节或结构化文本 |
 | `OpenAiCompatibleAiProvider` | `provider_code=OPENAI_COMPAT`：HTTP 调 OpenAI 兼容网关（含 xAI） |
+| `KlingAiProvider` | `provider_code=KLING`：可灵官方异步任务，覆盖 `IMAGE` / `VIDEO`（有首帧则图生视频，否则文生视频） |
+| `MiniMaxAiProvider` | `provider_code=MINIMAX`：海螺 `IMAGE`（image-01）与 `VIDEO`（Hailuo 图生/文生） |
+| `SeedanceAiProvider` | `provider_code=SEEDANCE`：火山方舟 Seedance `VIDEO` |
+| `VeoAiProvider` | `provider_code=VEO`：Google Gemini API Veo `VIDEO` |
 | `MockAiProvider` | `provider_code=MOCK`：无密钥 / 本地联调回退 |
 | `FfmpegComposeProvider` | `provider_code=FFMPEG`：本机 FFmpeg 合成 9:16 成片 |
 | `AiProviderRegistry` | 按 `provider_code` 选实现 |
@@ -50,8 +54,25 @@
 }
 ```
 
+可灵（`provider_code=KLING`）`config_json` 示例：
+
+```json
+{
+  "base_url": "https://api-beijing.klingai.com",
+  "secret_ref": "ai.kling.api_key",
+  "image_path": "/v1/images/generations",
+  "text2video_path": "/v1/videos/text2video",
+  "image2video_path": "/v1/videos/image2video",
+  "aspect_ratio": "9:16",
+  "mode": "std",
+  "duration": "5",
+  "poll_interval_ms": 3000
+}
+```
+
 - `secret_ref` 对应 `sys_secret.secret_key`；**禁止**在 `config_json` 或 profile 明文存供应商 API Key（见 `docs/security/ai-provider-secrets.md`）。
-- OBS AK/SK 使用 `sys_secret`：`obs.access_key` / `obs.secret_key`；endpoint、bucket、region 可写在 `application-*.properties`（非密钥）。
+- 可灵走 Bearer API Key（`Authorization: Bearer <key>`），任务提交后在 `timeout_sec` 内轮询；`IMAGE` 调 `/v1/images/generations`，`VIDEO` 有首帧图则 `/v1/videos/image2video` 否则 `/v1/videos/text2video`。画幅默认 `9:16`。
+- OBS AK/SK 写在 `application-*.properties`（中间件，不入库）；供应商 API Key 仍走 `sys_secret`。
 
 解析规则：
 
@@ -102,4 +123,4 @@ submit
 
 - 不引入独立消息队列
 - 不实现 WebSocket 推送（继续轮询）
-- 不在本文件绑定唯一商业模型名；种子数据可给 MOCK + 一条 OPENAI_COMPAT 示例
+- 不在本文件绑定唯一商业模型名；种子数据给 MOCK（TEXT/VOICE/COMPOSE 默认）+ IMAGE/VIDEO 默认可灵，并启用 MiniMax / Seedance / Veo 供创作者在提交时点选

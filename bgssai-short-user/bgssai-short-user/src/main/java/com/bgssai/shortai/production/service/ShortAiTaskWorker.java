@@ -2,6 +2,7 @@ package com.bgssai.shortai.production.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import com.bgssai.shortai.model.AiUsageRecord;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
 import com.bgssai.shortai.model.ShortAsset;
+import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.model.ShortCharacter;
 import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortDubbing;
@@ -282,12 +284,17 @@ public class ShortAiTaskWorker {
             return;
         }
         int count = ShortJson.integer(req.get("candidate_count"), 4);
+        String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
+        String prompt = row.getCharacterName()
+                + (appearance.isBlank() ? "" : "，" + appearance)
+                + "，竖屏 9:16 电影感角色定妆照，真人写实，短剧人物卡";
         for (int i = 0; i < count; i++) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "PORTRAIT");
             request.getParams().put("title", row.getCharacterName());
             request.getParams().put("subtitle", "候选 " + (i + 1));
             request.getParams().put("color_index", i);
-            request.setPrompt(row.getCharacterName() + " portrait");
+            request.getParams().put("aspect_ratio", "9:16");
+            request.setPrompt(prompt);
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getCharacterId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
@@ -308,12 +315,17 @@ public class ShortAiTaskWorker {
             return;
         }
         int count = ShortJson.integer(req.get("candidate_count"), 4);
+        String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
+        String prompt = row.getCardName()
+                + (appearance.isBlank() ? "" : "，" + appearance)
+                + "，竖屏 9:16 电影感场景空镜，短剧场景卡";
         for (int i = 0; i < count; i++) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "SCENE_PORTRAIT");
             request.getParams().put("title", row.getCardName());
             request.getParams().put("subtitle", "场景候选 " + (i + 1));
             request.getParams().put("color_index", i);
-            request.setPrompt(row.getCardName() + " scene");
+            request.getParams().put("aspect_ratio", "9:16");
+            request.setPrompt(prompt);
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getSceneCardId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
@@ -332,7 +344,14 @@ public class ShortAiTaskWorker {
         request.getParams().put("title", "镜 " + shot.getShotNo());
         request.getParams().put("subtitle", shot.getShotDesc());
         request.getParams().put("color_index", Math.abs(shot.getShotNo() == null ? 0 : shot.getShotNo()));
-        request.setPrompt(shot.getImagePrompt() == null ? shot.getShotDesc() : shot.getImagePrompt());
+        request.getParams().put("aspect_ratio", "9:16");
+        if (shot.getShotDurationSec() != null) {
+            request.getParams().put("duration_sec", shot.getShotDurationSec());
+        }
+        request.setPrompt(shotPrompt(shot, ability));
+        if ("VIDEO".equals(ability)) {
+            attachFirstFrame(shot, request);
+        }
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), shot.getShotId(),
                 ability, result, task.getTaskId(), true);
@@ -348,8 +367,16 @@ public class ShortAiTaskWorker {
             patch.setFirstFrameAssetId(asset.getAssetId());
             patch.setShotStatus("IMAGE_READY");
             if (Integer.valueOf(1).equals(task.getAutoNextFlag())) {
+                Map<String, Object> origin = ShortJson.map(task.getRequestJson());
+                String nextModel = ShortJson.text(origin.get("next_model_code"));
+                Map<String, Object> nextReq = new LinkedHashMap<>();
+                nextReq.put("shot_id", shot.getShotId());
+                if (!nextModel.isBlank()) {
+                    nextReq.put("model_code", nextModel);
+                }
                 aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), "VIDEO", "SHOT",
-                        shot.getShotId(), Map.of("shot_id", shot.getShotId()), task.getBatchId(), 0);
+                        shot.getShotId(), nextReq, task.getBatchId(), 0,
+                        nextModel.isBlank() ? null : nextModel);
             }
         }
         patch.setUpdatedTime(new Date());
@@ -530,6 +557,66 @@ public class ShortAiTaskWorker {
     private AiProviderResult execute(AiModelConfig model, AiProviderRequest request) {
         AiProvider provider = aiProviderRegistry.get(model.getProviderCode());
         return provider.execute(request);
+    }
+
+    private static String shotPrompt(ShortShot shot, String ability) {
+        String imagePrompt = shot.getImagePrompt() == null ? "" : shot.getImagePrompt().trim();
+        String desc = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
+        String extra = shot.getExtraPrompt() == null ? "" : shot.getExtraPrompt().trim();
+        String camera = shot.getCameraMove() == null ? "" : shot.getCameraMove().trim();
+        if ("VIDEO".equals(ability)) {
+            StringBuilder sb = new StringBuilder();
+            String motion = extra.isBlank() ? desc : extra;
+            if (motion.isBlank()) {
+                motion = imagePrompt;
+            }
+            if (!motion.isBlank()) {
+                sb.append(motion);
+            }
+            if (!camera.isBlank()) {
+                if (sb.length() > 0) {
+                    sb.append("，");
+                }
+                sb.append("运镜：").append(camera);
+            }
+            if (sb.length() == 0) {
+                sb.append("镜头缓慢推进，人物自然动作，竖屏短剧");
+            }
+            return sb.toString();
+        }
+        if (!imagePrompt.isBlank()) {
+            return imagePrompt;
+        }
+        if (!desc.isBlank()) {
+            return desc + "，竖屏 9:16 电影感首帧，短剧画面";
+        }
+        return "竖屏 9:16 电影感短剧首帧";
+    }
+
+    private void attachFirstFrame(ShortShot shot, AiProviderRequest request) {
+        if (shot.getFirstFrameAssetId() == null || shot.getFirstFrameAssetId().isBlank()) {
+            return;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(shot.getFirstFrameAssetId()).andDeletedFlagEqualTo(0);
+        ShortAsset frame = shortAssetMapper.selectOneByExample(ax);
+        if (frame == null || frame.getStorageKey() == null || frame.getStorageKey().isBlank()) {
+            return;
+        }
+        String mime = frame.getMimeType() == null ? "" : frame.getMimeType().toLowerCase();
+        if (mime.contains("svg") || mime.contains("json")) {
+            return;
+        }
+        if (!(mime.contains("png") || mime.contains("jpeg") || mime.contains("jpg") || mime.contains("webp")
+                || mime.contains("image/"))) {
+            return;
+        }
+        byte[] bytes = objectStorage.get(frame.getStorageKey());
+        if (bytes == null || bytes.length == 0) {
+            return;
+        }
+        request.getParams().put("image_base64", Base64.getEncoder().encodeToString(bytes));
+        request.getParams().put("image_mime", frame.getMimeType());
     }
 
     private ShortEpisode episode(String episodeId) {

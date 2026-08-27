@@ -57,7 +57,7 @@
       <div class="card card-flush">
         <div class="card-hd">
           <h2>模型清单</h2>
-          <span class="chip active">全部 8</span>
+          <span class="chip active">全部 14</span>
           <span class="chip">TEXT</span><span class="chip">IMAGE</span>
           <span class="chip">VIDEO</span><span class="chip">VOICE</span><span class="chip">COMPOSE</span>
           <span class="spacer"></span>
@@ -94,8 +94,8 @@
                 <td><span class="st todo">IMAGE</span></td><td class="mono">img-std-v2</td>
                 <td>PROVIDER_A</td><td>STANDARD</td><td>PER_CALL</td>
                 <td>0.80 元 / 次</td><td>180s / 2</td>
-                <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
-                <td><a href="#">编辑</a></td>
+                <td class="text-muted">-</td><td><span class="st done">启用</span></td>
+                <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
               <tr>
                 <td><span class="st todo">IMAGE</span></td><td class="mono">img-hq-v1</td>
@@ -108,13 +108,48 @@
                 <td><span class="st doing">VIDEO</span></td><td class="mono">vid-fast-v3</td>
                 <td>PROVIDER_A</td><td>FAST</td><td>PER_SECOND</td>
                 <td>0.40 元 / 秒</td><td>600s / 2</td>
-                <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
-                <td><a href="#">编辑</a></td>
+                <td class="text-muted">-</td><td><span class="st done">启用</span></td>
+                <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
               <tr>
                 <td><span class="st doing">VIDEO</span></td><td class="mono">vid-hq-v2</td>
                 <td>PROVIDER_C</td><td>HIGH</td><td>PER_SECOND</td>
                 <td>1.20 元 / 秒</td><td>900s / 2</td>
+                <td class="text-muted">-</td><td><span class="st done">启用</span></td>
+                <td><a href="#">设默认</a> · <a href="#">停用</a></td>
+              </tr>
+              <tr>
+                <td><span class="st todo">IMAGE</span></td><td class="mono">kling-v2-1</td>
+                <td>KLING</td><td>STANDARD</td><td>PER_CALL</td>
+                <td>0.80 元 / 次</td><td>180s / 1</td>
+                <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
+                <td><a href="#">编辑</a></td>
+              </tr>
+              <tr>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">kling-v2-6</td>
+                <td>KLING</td><td>STANDARD</td><td>PER_CALL</td>
+                <td>2.00 元 / 次</td><td>600s / 2</td>
+                <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
+                <td><a href="#">编辑</a></td>
+              </tr>
+              <tr>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">MiniMax-Hailuo-2.3</td>
+                <td>MINIMAX</td><td>STANDARD</td><td>PER_CALL</td>
+                <td>2.20 元 / 次</td><td>600s / 2</td>
+                <td class="text-muted">-</td><td><span class="st done">启用</span></td>
+                <td><a href="#">设默认</a> · <a href="#">停用</a></td>
+              </tr>
+              <tr>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">doubao-seedance-2-0-260128</td>
+                <td>SEEDANCE</td><td>STANDARD</td><td>PER_CALL</td>
+                <td>2.40 元 / 次</td><td>600s / 2</td>
+                <td class="text-muted">-</td><td><span class="st done">启用</span></td>
+                <td><a href="#">设默认</a> · <a href="#">停用</a></td>
+              </tr>
+              <tr>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">veo-3.1-generate-preview</td>
+                <td>VEO</td><td>HIGH</td><td>PER_CALL</td>
+                <td>3.20 元 / 次</td><td>600s / 2</td>
                 <td class="text-muted">-</td><td><span class="st done">启用</span></td>
                 <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
@@ -180,8 +215,8 @@
           </div>
           <div class="field">
             <label>供应商端点与参数</label>
-            <textarea rows="3">{"endpoint":"https://api.provider-a.example/v1/video","resolution":"1080x1920","fps":30}</textarea>
-            <div class="hint">密钥不入库明文，按 docs/security 的密钥保管口径处理</div>
+            <textarea rows="3">{"base_url":"https://api-beijing.klingai.com","secret_ref":"ai.kling.api_key","aspect_ratio":"9:16","mode":"std","duration":"5"}</textarea>
+            <div class="hint">密钥不入库明文，只写 secret_ref（如 ai.kling.api_key），按 docs/security 的密钥保管口径处理</div>
           </div>
           <div class="toolbar">
             <button class="btn btn-primary">保存</button>

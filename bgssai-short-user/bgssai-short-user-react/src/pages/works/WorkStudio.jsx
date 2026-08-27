@@ -253,11 +253,20 @@ function CharacterPane({ work }) {
   )
 }
 
+function modelLabel(row) {
+  if (!row) return ''
+  const price = ((Number(row.unit_price_cent) || 0) / 100).toFixed(2)
+  return `${row.model_name} · ${row.provider_code} · ${price}元`
+}
+
 function StoryboardPane({ work, episodeId }) {
   const [rows, setRows] = useState([])
   const [selected, setSelected] = useState([])
   const [cost, setCost] = useState(null)
-  const [modelCode, setModelCode] = useState()
+  const [imageModels, setImageModels] = useState([])
+  const [videoModels, setVideoModels] = useState([])
+  const [imageModelCode, setImageModelCode] = useState()
+  const [videoModelCode, setVideoModelCode] = useState()
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -267,14 +276,39 @@ function StoryboardPane({ work, episodeId }) {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const [imageRes, videoRes] = await Promise.all([
+        productionApi.listAiModels('IMAGE'),
+        productionApi.listAiModels('VIDEO'),
+      ])
+      if (cancelled) return
+      const images = imageRes.data?.result?.model_list || []
+      const videos = videoRes.data?.result?.model_list || []
+      setImageModels(images)
+      setVideoModels(videos)
+      setImageModelCode((cur) => cur || images.find((m) => m.default_flag === 1)?.model_code || images[0]?.model_code)
+      setVideoModelCode((cur) => cur || videos.find((m) => m.default_flag === 1)?.model_code || videos[0]?.model_code)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   return (
-    <Card title="分镜" extra={<Space>
-      <Input
-        placeholder="model_code 可选"
-        value={modelCode}
-        onChange={(e) => setModelCode(e.target.value || undefined)}
-        style={{ width: 160 }}
-        allowClear
+    <Card title="分镜" extra={<Space wrap>
+      <Select
+        placeholder="画面模型"
+        value={imageModelCode}
+        onChange={setImageModelCode}
+        style={{ width: 240 }}
+        options={imageModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+      />
+      <Select
+        placeholder="视频模型"
+        value={videoModelCode}
+        onChange={setVideoModelCode}
+        style={{ width: 240 }}
+        options={videoModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
       />
       <Button onClick={async () => {
         await productionApi.splitShots(episodeId)
@@ -287,7 +321,8 @@ function StoryboardPane({ work, episodeId }) {
           shot_ids: selected,
           task_type: 'IMAGE',
           auto_next_flag: 1,
-          model_code: modelCode,
+          model_code: imageModelCode,
+          next_model_code: videoModelCode,
         })
         setCost(data?.result)
       }}>估价</Button>
@@ -297,7 +332,8 @@ function StoryboardPane({ work, episodeId }) {
           shot_ids: selected.length ? selected : undefined,
           task_type: 'IMAGE',
           auto_next_flag: 1,
-          model_code: modelCode,
+          model_code: imageModelCode,
+          next_model_code: videoModelCode,
         })
         if (data?.success) {
           message.success(`已提交 ${data.result.task_id_list?.length || 0} 个任务`)

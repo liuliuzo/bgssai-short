@@ -74,7 +74,7 @@ public class AiTaskService {
             unit = TaskPrices.cost(type);
         }
         if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
-            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", null);
+            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
             int videoUnit = aiModelResolveService.costCent(videoModel, 1);
             unit += videoUnit > 0 ? videoUnit : TaskPrices.cost("VIDEO");
         }
@@ -114,6 +114,9 @@ public class AiTaskService {
             request.put("shot_id", shot.getShotId());
             if (req.getModelCode() != null && !req.getModelCode().isBlank()) {
                 request.put("model_code", req.getModelCode().trim());
+            }
+            if (req.getNextModelCode() != null && !req.getNextModelCode().isBlank()) {
+                request.put("next_model_code", req.getNextModelCode().trim());
             }
             ShortAiTask task = aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), type, "SHOT",
                     shot.getShotId(), request, batchId, autoNext, req.getModelCode());

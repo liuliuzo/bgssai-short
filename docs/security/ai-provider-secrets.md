@@ -15,11 +15,15 @@
 | secret_key | 用途 |
 | --- | --- |
 | `ai.openai_compat.api_key` | OpenAI 兼容网关默认密钥（可多模型共用同一 ref） |
+| `ai.kling.api_key` | 可灵官方 API Key（Bearer；`provider_code=KLING` 的 IMAGE / VIDEO 共用） |
+| `ai.minimax.api_key` | MiniMax / 海螺 API Key（Bearer） |
+| `ai.seedance.api_key` | 火山方舟 Seedance API Key（Bearer） |
+| `ai.veo.api_key` | Google Gemini / Veo API Key（`x-goog-api-key`） |
 | `ai.{provider_code}.{model_code}.api_key` | 单模型覆盖（可选） |
 | `obs.access_key` | 华为云 OBS Access Key |
 | `obs.secret_key` | 华为云 OBS Secret Key |
 
-运营通过已有密钥运维手段或 SQL 写入 `sys_secret`；本仓 DML 只放 **空值或占位说明行**（`enabled=0`），避免真实密钥进 git。
+运营通过已有密钥运维手段或 SQL 写入 `sys_secret`。本仓 DML 对 MiniMax / Seedance / Veo / OpenAI 兼容网关放 **空值占位行**（`enabled=0`）；可灵 `ai.kling.api_key` 按联调要求写入真实 Bearer 并 `enabled=1`，作为 IMAGE / VIDEO 默认供应商。
 
 ## 3. 运行时读取
 
