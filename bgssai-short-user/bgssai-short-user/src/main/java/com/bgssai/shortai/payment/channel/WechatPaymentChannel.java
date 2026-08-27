@@ -135,6 +135,36 @@ public class WechatPaymentChannel implements PaymentChannel {
         return NotifyResult.rejected();
     }
 
+
+    @Override
+    public String queryPaidChannelTradeNo(String outTradeNo) {
+        if (outTradeNo == null || outTradeNo.isBlank()) {
+            return null;
+        }
+        if (paymentProperties.isSandboxEnabled()) {
+            return null;
+        }
+        try {
+            List<WechatMerchant> candidates = payMerchantReader.listVerifiableWechatMerchants();
+            for (WechatMerchant merchant : candidates) {
+                try {
+                    String tradeNo = wechatPayGateway.queryPaidTransactionId(merchant, outTradeNo);
+                    if (tradeNo != null && !tradeNo.isBlank()) {
+                        log.info("wechat order query paid outTradeNo={} mchId={}", outTradeNo, merchant.getMchId());
+                        return tradeNo;
+                    }
+                } catch (Exception e) {
+                    log.warn("wechat order query failed outTradeNo={} mchId={} error={}",
+                            outTradeNo, merchant.getMchId(), e.getClass().getSimpleName());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("wechat order query skipped outTradeNo={} error={}",
+                    outTradeNo, e.getClass().getSimpleName());
+        }
+        return null;
+    }
+
     private static String buildDescription(PaymentIntent intent) {
         String name = intent.getSubject();
         if (name == null || name.isBlank()) {

@@ -17,6 +17,12 @@
 5. 否则插入 `payment_order`（`created`，`expires_at` = now+30min），调用渠道 `createPayment`，回写 `code_url` / `pay_form` / `pay_merchant_no`。
 6. 生产模式无收款商户或凭据不全：`60013`。
 
+## 3. 查单补偿
+
+`POST /bgssai/user/subscription/order/status`：仅订单本人。`created` 且非沙箱、创建超过 5 秒时
+回查渠道；已支付则 `grantIfCreated` 后返回 `paid`。沙箱不查渠道。渠道异常只记 WARN，接口仍返回库状态。
+前端订阅页在展示 `code_url` 后每 2.5 秒轮询直至 `paid`。
+
 ## 3. 回调（验签永不删除）
 
 ```

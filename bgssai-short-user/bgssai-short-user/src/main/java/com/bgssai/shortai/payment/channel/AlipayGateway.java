@@ -18,6 +18,8 @@ import com.bgssai.shortai.payment.merchant.AlipayMerchant;
 import com.bgssai.shortai.payment.util.PemSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.alipay.api.request.AlipayTradeQueryRequest;
+import com.alipay.api.response.AlipayTradeQueryResponse;
 
 @Component
 public class AlipayGateway {
@@ -66,6 +68,28 @@ public class AlipayGateway {
         } catch (AlipayApiException e) {
             log.warn("alipay notify rsaCheckV1 error appId={}: {}", merchant.getAppId(), e.getErrMsg());
             return false;
+        }
+    }
+
+
+    public String queryPaidTradeNo(AlipayMerchant merchant, String outTradeNo) {
+        AlipayClient client = requireClient(merchant);
+        AlipayTradeQueryRequest request = new AlipayTradeQueryRequest();
+        try {
+            ObjectNode biz = objectMapper.createObjectNode();
+            biz.put("out_trade_no", outTradeNo);
+            request.setBizContent(objectMapper.writeValueAsString(biz));
+            AlipayTradeQueryResponse response = client.execute(request);
+            if (response != null && response.isSuccess()
+                    && ("TRADE_SUCCESS".equals(response.getTradeStatus())
+                    || "TRADE_FINISHED".equals(response.getTradeStatus()))) {
+                return response.getTradeNo();
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("alipay trade.query failed appId={} outTradeNo={} err={}",
+                    merchant.getAppId(), outTradeNo, e.getClass().getSimpleName());
+            return null;
         }
     }
 

@@ -63,6 +63,20 @@
 
 响应同下单，`order_type=credit_pack`。
 
+### POST /bgssai/user/subscription/order/status
+
+鉴权：需 JWT。仅订单本人可查。Body：`{ "order_no": "SUB..." }`。
+
+套餐与加量包共用此接口。`created` 且非沙箱、创建超过 5 秒时回查渠道（微信商户单号 /
+`alipay.trade.query`）；渠道已支付则发放后返回 `paid`。渠道查询异常不影响本接口（只读库）。
+
+```json
+{ "result": {
+  "order_no": "SUB...", "order_type": "subscription", "status": "paid",
+  "amount_cent": 9900, "payment_channel": "WECHAT"
+} }
+```
+
 ## 回调（公开）
 
 ### POST /bgssai/user/payment/wechat/notify

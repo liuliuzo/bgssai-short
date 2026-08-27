@@ -20,6 +20,7 @@ import com.wechat.pay.java.service.payments.nativepay.NativePayService;
 import com.wechat.pay.java.service.payments.nativepay.model.Amount;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayResponse;
+import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest;
 
 @Component
 public class WechatPayGateway {
@@ -70,6 +71,20 @@ public class WechatPayGateway {
                     merchant.getMchId(), e.getMessage());
             throw e;
         }
+    }
+
+
+    public String queryPaidTransactionId(WechatMerchant merchant, String outTradeNo) {
+        Config config = requireConfig(merchant);
+        NativePayService service = new NativePayService.Builder().config(config).build();
+        QueryOrderByOutTradeNoRequest request = new QueryOrderByOutTradeNoRequest();
+        request.setMchid(merchant.getMchId());
+        request.setOutTradeNo(outTradeNo);
+        Transaction transaction = service.queryOrderByOutTradeNo(request);
+        if (transaction != null && transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS) {
+            return transaction.getTransactionId();
+        }
+        return null;
     }
 
     public void invalidate() {

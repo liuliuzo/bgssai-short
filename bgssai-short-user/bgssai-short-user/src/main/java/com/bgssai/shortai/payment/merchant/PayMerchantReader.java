@@ -94,6 +94,24 @@ public class PayMerchantReader {
         return toAlipayMerchant(row);
     }
 
+    public List<AlipayMerchant> listVerifiableAlipayMerchants() {
+        AlipayConfigExample example = new AlipayConfigExample();
+        example.createCriteria()
+                .andDeleteEqualTo(0)
+                .andEnabledEqualTo(1);
+        example.setOrderByClause("is_collection_active desc, id asc");
+        List<AlipayConfig> rows = alipayConfigMapper.selectByExample(example);
+        List<AlipayMerchant> merchants = new ArrayList<>(rows.size());
+        for (AlipayConfig row : rows) {
+            AlipayMerchant merchant = toAlipayMerchant(row);
+            if (merchant.hasCompleteCredentials()) {
+                merchants.add(merchant);
+            }
+        }
+        log.info("alipay query/verify candidates count={}", merchants.size());
+        return merchants;
+    }
+
     public AlipayMerchant findAlipayMerchantByAppId(String appId) {
         if (appId == null || appId.isBlank()) {
             log.warn("alipay notify carries no app_id");

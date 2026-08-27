@@ -72,6 +72,7 @@
 - `GET /bgssai/user/subscription/plans`
 - `GET /bgssai/user/subscription/me`
 - `POST /bgssai/user/subscription/order/create` body：`plan_code`、`payment_channel`
+- `POST /bgssai/user/subscription/order/status` body：`order_no`（套餐与加量包共用；含查单补偿）
 - `GET /bgssai/user/credit-packs`
 - `POST /bgssai/user/credit-packs/orders` body：`pack_code`、`payment_channel`
 

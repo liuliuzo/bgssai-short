@@ -7,5 +7,7 @@ const createPlanOrder = (planCode, paymentChannel) =>
 const listPacks = () => http.get('/user/credit-packs')
 const createPackOrder = (packCode, paymentChannel) =>
   http.post('/user/credit-packs/orders', { pack_code: packCode, payment_channel: paymentChannel })
+const orderStatus = (orderNo) =>
+  http.post('/user/subscription/order/status', { order_no: orderNo })
 
-export default { listPlans, me, createPlanOrder, listPacks, createPackOrder }
+export default { listPlans, me, createPlanOrder, listPacks, createPackOrder, orderStatus }

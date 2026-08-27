@@ -12,6 +12,7 @@ import com.bgssai.shortai.payment.config.PaymentProperties;
 import com.bgssai.shortai.payment.merchant.AlipayMerchant;
 import com.bgssai.shortai.payment.merchant.PayMerchantReader;
 import com.bgssai.shortai.payment.util.AmountCent;
+import java.util.List;
 
 @Component
 public class AlipayPaymentChannel implements PaymentChannel {
@@ -99,6 +100,36 @@ public class AlipayPaymentChannel implements PaymentChannel {
         log.info("alipay {} notify parsed orderNo={} success={}",
                 sandbox ? "sandbox" : "prod", orderNo, success);
         return new NotifyResult(true, success, orderNo, channelTradeNo, amountCent);
+    }
+
+
+    @Override
+    public String queryPaidChannelTradeNo(String outTradeNo) {
+        if (outTradeNo == null || outTradeNo.isBlank()) {
+            return null;
+        }
+        if (paymentProperties.isSandboxEnabled()) {
+            return null;
+        }
+        try {
+            List<AlipayMerchant> candidates = payMerchantReader.listVerifiableAlipayMerchants();
+            for (AlipayMerchant merchant : candidates) {
+                try {
+                    String tradeNo = alipayGateway.queryPaidTradeNo(merchant, outTradeNo);
+                    if (tradeNo != null && !tradeNo.isBlank()) {
+                        log.info("alipay order query paid outTradeNo={} appId={}", outTradeNo, merchant.getAppId());
+                        return tradeNo;
+                    }
+                } catch (Exception e) {
+                    log.warn("alipay order query failed outTradeNo={} appId={} error={}",
+                            outTradeNo, merchant.getAppId(), e.getClass().getSimpleName());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("alipay order query skipped outTradeNo={} error={}",
+                    outTradeNo, e.getClass().getSimpleName());
+        }
+        return null;
     }
 
     private static String buildSubject(PaymentIntent intent) {

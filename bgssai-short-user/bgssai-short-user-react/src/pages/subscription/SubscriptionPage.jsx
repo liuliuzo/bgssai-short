@@ -14,6 +14,7 @@ export default function SubscriptionPage() {
   const [packs, setPacks] = useState([])
   const [loading, setLoading] = useState(false)
   const [codeUrl, setCodeUrl] = useState('')
+  const [pendingOrderNo, setPendingOrderNo] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -35,6 +36,24 @@ export default function SubscriptionPage() {
     load()
   }, [load])
 
+  useEffect(() => {
+    if (!pendingOrderNo) return undefined
+    const poll = setInterval(async () => {
+      try {
+        const { data } = await subscriptionApi.orderStatus(pendingOrderNo)
+        if (data?.success && data.result?.status === 'paid') {
+          message.success('支付成功，已开通')
+          setPendingOrderNo('')
+          setCodeUrl('')
+          load()
+        }
+      } catch {
+        // 轮询失败不打断扫码
+      }
+    }, 2500)
+    return () => clearInterval(poll)
+  }, [pendingOrderNo, load])
+
   const buy = async (fn) => {
     try {
       const { data } = await fn()
@@ -42,8 +61,10 @@ export default function SubscriptionPage() {
         setCodeUrl(data.result.code_url || '')
         if (data.result.status === 'paid') {
           message.success('已开通')
+          setPendingOrderNo('')
           load()
         } else {
+          setPendingOrderNo(data.result.order_no || '')
           message.success('请使用微信 / 支付宝扫描 code_url')
         }
       }
