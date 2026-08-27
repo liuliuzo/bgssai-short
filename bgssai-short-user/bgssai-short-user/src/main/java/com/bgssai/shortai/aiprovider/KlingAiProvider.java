@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
@@ -40,6 +41,7 @@ public class KlingAiProvider implements AiProvider {
     private final Transport transport;
     private final Sleeper sleeper;
 
+    @Autowired
     public KlingAiProvider(SysSecretReader secretReader) {
         this(secretReader, new JdkTransport(), ms -> {
             if (ms > 0) {

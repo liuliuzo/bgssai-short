@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
@@ -30,6 +31,7 @@ public class MiniMaxAiProvider implements AiProvider {
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
 
+    @Autowired
     public MiniMaxAiProvider(SysSecretReader secretReader) {
         this(secretReader, new ProviderHttp.JdkClient(), ms -> {
             if (ms > 0) {
