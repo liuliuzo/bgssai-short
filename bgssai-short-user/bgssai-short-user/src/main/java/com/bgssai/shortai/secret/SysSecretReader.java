@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class SysSecretReader {
 
-    public static final String OBS_ACCESS_KEY = "obs.access_key";
-    public static final String OBS_SECRET_KEY = "obs.secret_key";
     public static final String AI_OPENAI_COMPAT_API_KEY = "ai.openai_compat.api_key";
 
     private final Function<String, String> lookup;

@@ -2003,8 +2003,7 @@ INSERT INTO `short_script` (`script_id`, `episode_id`, `work_id`, `user_id`, `sc
 -- ===== END SHORT-BIZ-SEED =====
 -- AI 模型与密钥占位（全量种子；一行一条 INSERT）
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.openai_compat.api_key', '', 'OpenAI兼容网关 API Key', 0, 'system') ON DUPLICATE KEY UPDATE `description`=VALUES(`description`);
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('obs.access_key', '', '华为云 OBS AK', 0, 'system') ON DUPLICATE KEY UPDATE `description`=VALUES(`description`);
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('obs.secret_key', '', '华为云 OBS SK', 0, 'system') ON DUPLICATE KEY UPDATE `description`=VALUES(`description`);
+DELETE FROM `sys_secret` WHERE `secret_key` IN ('obs.access_key', 'obs.secret_key');
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-text-mock', 'TEXT', 'MOCK', 'mock-text', '模拟文本', 'STANDARD', 'PER_CALL', 15, 1, 1, 60, 1, '{}');
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-image-mock', 'IMAGE', 'MOCK', 'mock-image', '模拟图片', 'STANDARD', 'PER_CALL', 50, 1, 1, 120, 1, '{}');
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-video-mock', 'VIDEO', 'MOCK', 'mock-video', '模拟视频', 'STANDARD', 'PER_CALL', 150, 1, 1, 600, 1, '{}');

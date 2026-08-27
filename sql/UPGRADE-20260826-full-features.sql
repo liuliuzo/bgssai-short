@@ -350,13 +350,13 @@ CREATE TABLE IF NOT EXISTS `short_episode_gap` (
   KEY `idx_short_episode_gap_work` (`work_id`, `handle_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='集间缺口';
 
--- 密钥占位（enabled=0，需运维写入真实值后启用）
+-- 密钥占位（enabled=0，需运维写入真实值后启用；OBS 改走 application-*.properties）
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`)
 VALUES
-  ('ai.openai_compat.api_key', '', 'OpenAI兼容网关 API Key', 0, 'upgrade-20260826'),
-  ('obs.access_key', '', '华为云 OBS AK', 0, 'upgrade-20260826'),
-  ('obs.secret_key', '', '华为云 OBS SK', 0, 'upgrade-20260826')
+  ('ai.openai_compat.api_key', '', 'OpenAI兼容网关 API Key', 0, 'upgrade-20260826')
 ON DUPLICATE KEY UPDATE `description`=VALUES(`description`);
+
+DELETE FROM `sys_secret` WHERE `secret_key` IN ('obs.access_key', 'obs.secret_key');
 
 -- 默认 MOCK 模型（无外部密钥时可跑通计费与路由）
 INSERT INTO `ai_model_config` (

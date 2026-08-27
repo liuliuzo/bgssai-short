@@ -6,19 +6,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import com.bgssai.shortai.secret.SysSecretReader;
-
 @Configuration
 public class ObjectStorageConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(ObjectStorageConfiguration.class);
 
     @Bean
-    public ObjectStorage objectStorage(ObsProperties props, SysSecretReader secrets, Environment env) {
-        String ak = secrets.get(SysSecretReader.OBS_ACCESS_KEY);
-        String sk = secrets.get(SysSecretReader.OBS_SECRET_KEY);
-        String endpoint = props.getEndpoint() == null ? "" : props.getEndpoint().trim();
-        String bucket = props.getBucket() == null ? "" : props.getBucket().trim();
+    public ObjectStorage objectStorage(ObsProperties props, Environment env) {
+        String ak = trim(props.getAccessKey());
+        String sk = trim(props.getSecretKey());
+        String endpoint = trim(props.getEndpoint());
+        String bucket = trim(props.getBucket());
         if (!ak.isEmpty() && !sk.isEmpty() && !endpoint.isEmpty() && !bucket.isEmpty()) {
             try {
                 log.info("ObjectStorage=HuaweiObs bucket={}", bucket);
@@ -34,5 +32,9 @@ public class ObjectStorageConfiguration {
         log.info("ObjectStorage=LocalFile root={}", props.getLocalRoot());
         String sign = env.getProperty("jwt.secret", "bgssai-local-object-sign");
         return new LocalFileObjectStorage(props.getLocalRoot(), base, sign);
+    }
+
+    private static String trim(String value) {
+        return value == null ? "" : value.trim();
     }
 }

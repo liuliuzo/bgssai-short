@@ -10,6 +10,8 @@ public class ObsProperties {
     private String endpoint = "";
     private String bucket = "";
     private String region = "";
+    private String accessKey = "";
+    private String secretKey = "";
     private String localRoot = "./data/obs-local";
     private String publicBaseUrl = "";
 
@@ -35,6 +37,22 @@ public class ObsProperties {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(String accessKey) {
+        this.accessKey = accessKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 
     public String getLocalRoot() {
