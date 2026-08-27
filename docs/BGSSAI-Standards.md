@@ -104,7 +104,7 @@
     6. **键、值、注释**三处均禁——即便是 `# 示例：${VAR:default}` 这样的注释也禁止出现，避免误导后续维护者复制粘贴。
   * **正确做法（强制采用）**：
     1. **三环境共享、永不变化**的值（如 `spring.application.name=blog`、`mybatis.configuration.map-underscore-to-camel-case=true`）才允许写在 `application.properties` 主配置中，直接给最终字面量；
-    2. **任何会因环境变化的项**（数据库连接串 / Redis 主机 / OAuth 回调地址 / CORS 白名单 / S3 桶名 / MQTT broker 地址 / 第三方 API 密钥等）**一律下沉到对应的 profile 文件**（`application-dev.properties` / `application-test.properties` / `application-prod.properties`），在每份 profile 文件中直接写死本环境的真实值；
+    2. **任何会因环境变化的中间件 / 基础设施项**（数据库连接串 / Redis 主机 / ES / OBS·对象存储的 endpoint·AK/SK·bucket / MQTT broker 地址 / OAuth 回调地址 / CORS 白名单 / 服务端口等）**一律下沉到对应的 profile 文件**（`application-dev.properties` / `application-test.properties` / `application-prod.properties`），在每份 profile 文件中直接写死本环境的真实值；**业务第三方凭证（短信 / 支付 / OAuth AppSecret / LLM·业务 API Key 等）不在此列**——见本节「配置分层：中间件 vs 业务第三方凭证」条；
     3. 启动时通过 `--spring.profiles.active=prod` 或环境变量 `SPRING_PROFILES_ACTIVE=prod` 选定 profile，由 Spring Boot 加载对应的 `application-prod.properties` 覆盖主配置；
     4. 同一 key 在多个 profile 文件中重复出现是 profile 机制的**正常用法**，不算「重复键违规」，CR 不得据此打回。
   * **同步禁止的等价绕路**：
@@ -115,6 +115,13 @@
   * **CR 校验**：任何 properties / YAML 配置文件的提交，若 `grep` 命中 `${` 字符（无论出现在键、值还是注释），一律打回，**无论改动规模大小、无论是否"只是一个默认值"**。
   * **执行口径**：本条与「严禁使用 Lombok」、「JSON 强制 snake_case」、「全局禁用 emoji」同档次，是**配置层的全局硬红线**；任何「为了开发便利保留默认值占位符」的妥协请求一律不予接受——若开发期需要本地值，写在 `application-dev.properties` 即可，无需任何 `${}`。
   * **`@Value` 占位符允许使用（澄清，强制口径）**：本条只禁止 **properties / YAML 文件内容**（键 / 值 / 注释）出现 `${}` 占位符；Java 端用 `@Value("${some.key}")` 注入读取配置值是 Spring 消费端的**正常、必需用法，允许使用**，含 `@Value("${some.key:default}")` 带默认值形式。一句话——**禁的是「在 properties / yml 文件里写 `${}`」，不是「在 Java 里用 `@Value` 读取配置 key」**。CR **不得**以「用了 `@Value("${...}")`」为由打回；`@Value` 读取的 key，其值仍须在各 profile 文件里写死为最终字面量（不得在 properties 文件里再用 `${}` 串联）。
+
+* **配置分层：中间件 vs 业务第三方凭证（强制，违者代码不予合并）**：
+  1. **中间件 / 基础设施**（数据库、Redis、ES、OBS / 对象存储、MQTT、服务端口 / SSL、日志、MyBatis 等纯技术连接参数）——**只写** `application-dev.properties` / `application-test.properties` / `application-prod.properties`；**严禁**进 Admin 管理端，**严禁**写入 `sys_secret` / `system_config` / `platform_*_config` 等库表或对应 DML 种子。
+  2. **业务第三方凭证**（短信、业务邮件 SMTP、微信支付 / 支付宝支付、OAuth 授权登录密钥、LLM / 业务 API Key 等随业务变更的配置）——**由 Admin 管理端维护并落库**，运行时读库；**严禁**以 `application-*.properties` 为唯一或主配置来源。
+  3. **DML 种子强制（全量清库部署）**：部署链路为 `bgssai-all clean database` → `init database` → `deploy`（dev / prod），每次 clean 清空库数据；因此业务第三方凭证必须在对应产品 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护一份可用种子——Admin 是运行期改配入口，DML 是清库后的恢复来源。写法：一行数据一条 INSERT；`ON DUPLICATE KEY UPDATE` 仅空值回填，不覆盖 Admin 已写入的非空值。跨环境共享凭据放主 DML；环境差异（域名、回调 URL 等非密钥项）可放 `sql/dev` / `sql/prod` 或 profile。
+  4. **边界澄清**：OAuth **回调 URL**、CORS 白名单等环境相关非密钥项可留在 profile；OBS 的 endpoint / AK/SK / bucket 属中间件，走 profile 不进 Admin。
+  5. **CR 校验**：新增中间件配置若进 Admin / 库表一律打回；新增业务第三方凭证若只写 properties、或有 Admin 落库却无 DML 种子，一律打回。
 
 * **配置文件一律 `.properties`，全局禁用 `.yml` / `.yaml`（强制，违者代码不予合并）**：Spring Boot 配置只允许写在 `application.properties` 与 `application-{profile}.properties` 中；**严禁**新增或保留任何 `application*.yml` / `application*.yaml`，也严禁把配置拆一部分到 YAML。
   * **理由不只是「统一风格」，还有一处会真出事的编码差异**：Spring Boot 按 `java.util.Properties` 规范以 **ISO-8859-1** 解码 `.properties`，而 `.yml` 一律按 **UTF-8** 解码。两种文件混用时，同一段中文在一处正常、换到另一处变乱码，且**编译与启动都不报错**——只有等到它作为配置值出现在页面 / 日志 / 接口响应里才被发现。统一到 `.properties` 一种文件，就只剩一条编码规则要记。
