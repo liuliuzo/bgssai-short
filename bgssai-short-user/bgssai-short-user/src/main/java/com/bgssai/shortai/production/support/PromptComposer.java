@@ -215,9 +215,12 @@ public final class PromptComposer {
         if (code == null || code.isBlank()) {
             return "现代都市短剧";
         }
+        // 取值对齐原型 docs/demo-static/web/user/work-create.html 的画风下拉。
         return switch (code) {
-            case "MODERN_URBAN", "CINEMATIC" -> "现代都市电影感";
-            case "ANCIENT" -> "古装剧质感";
+            case "MODERN_URBAN" -> "现代都市写实";
+            case "CINEMATIC" -> "电影感质感";
+            case "ANCIENT_CHINESE", "ANCIENT" -> "古装剧质感";
+            case "ANIME" -> "动漫风格";
             case "SWEET" -> "甜宠柔光";
             default -> code;
         };
