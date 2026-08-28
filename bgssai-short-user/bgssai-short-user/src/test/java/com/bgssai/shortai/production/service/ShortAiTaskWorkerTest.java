@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
@@ -29,6 +30,7 @@ class ShortAiTaskWorkerTest {
         ShortAiTaskWorker worker = new ShortAiTaskWorker();
         ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
         ReflectionTestUtils.setField(worker, "quotaConsumeService", consume);
+        ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
         ShortAiTask task = new ShortAiTask();
         task.setId(9L);
         task.setTaskId("t-1");
@@ -54,6 +56,7 @@ class ShortAiTaskWorkerTest {
         ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
         ReflectionTestUtils.setField(worker, "aiUsageRecordMapper", usageMapper);
         ReflectionTestUtils.setField(worker, "objectStorage", storage);
+        ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
         ShortAiTask task = new ShortAiTask();
         task.setId(9L);
         task.setTaskId("t-1");
@@ -61,11 +64,11 @@ class ShortAiTaskWorkerTest {
         task.setTaskStatus("QUEUED");
         task.setTaskType("TEXT");
         task.setTargetType("UNKNOWN");
-        task.setModelCode("mock-text");
+        task.setModelCode("gpt-4o-mini");
         task.setCostCent(15);
         AiModelConfig model = new AiModelConfig();
-        model.setModelCode("mock-text");
-        model.setProviderCode("MOCK");
+        model.setModelCode("gpt-4o-mini");
+        model.setProviderCode("OPENAI_COMPAT");
         model.setUnitPriceCent(15);
         model.setQualityLevel("STANDARD");
         model.setPriceUnit("PER_CALL");
@@ -75,5 +78,61 @@ class ShortAiTaskWorkerTest {
         worker.tick();
         verify(consume).consume("u-1", 15);
         verify(usageMapper).insertSelective(any());
+    }
+
+    /** 超过「模型 timeout_sec + 宽限」仍在 RUNNING 的任务必须被判超时，否则会永远卡住。 */
+    @Test
+    void reapsStaleRunningTask() {
+        ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
+        AiModelResolveService resolve = org.mockito.Mockito.mock(AiModelResolveService.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+
+        AiModelConfig model = new AiModelConfig();
+        model.setTimeoutSec(120);
+        when(resolve.resolve(any(), any())).thenReturn(model);
+
+        ShortAiTask stale = new ShortAiTask();
+        stale.setId(1L);
+        stale.setTaskId("t-stale");
+        stale.setTaskStatus("RUNNING");
+        stale.setTaskType("IMAGE");
+        stale.setStartedTime(new java.util.Date(System.currentTimeMillis() - 3600_000L));
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(stale));
+
+        worker.reapStaleTasks();
+
+        org.mockito.ArgumentCaptor<ShortAiTask> patch =
+                org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
+        verify(mapper).updateByExampleSelective(patch.capture(), any());
+        org.junit.jupiter.api.Assertions.assertEquals("FAILED", patch.getValue().getTaskStatus());
+        org.junit.jupiter.api.Assertions.assertEquals("MODEL_TIMEOUT", patch.getValue().getFailReasonCode());
+    }
+
+    /** 还没到超时上限的 RUNNING 任务不能被误杀。 */
+    @Test
+    void keepsFreshRunningTask() {
+        ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
+        AiModelResolveService resolve = org.mockito.Mockito.mock(AiModelResolveService.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+
+        AiModelConfig model = new AiModelConfig();
+        model.setTimeoutSec(600);
+        when(resolve.resolve(any(), any())).thenReturn(model);
+
+        ShortAiTask fresh = new ShortAiTask();
+        fresh.setId(2L);
+        fresh.setTaskId("t-fresh");
+        fresh.setTaskStatus("RUNNING");
+        fresh.setTaskType("VIDEO");
+        fresh.setStartedTime(new java.util.Date(System.currentTimeMillis() - 5_000L));
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(fresh));
+
+        worker.reapStaleTasks();
+
+        verify(mapper, never()).updateByExampleSelective(any(), any());
     }
 }

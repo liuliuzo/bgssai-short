@@ -38,6 +38,9 @@ import com.github.pagehelper.PageHelper;
 public class ShotService {
 
     @Autowired
+    private AssetService assetService;
+
+    @Autowired
     private WorkAccessService workAccessService;
     @Autowired
     private WorkStatusService workStatusService;
@@ -293,8 +296,8 @@ public class ShotService {
         item.put("prompt_pass_flag", check.get("pass_flag"));
         item.put("first_frame_asset_id", row.getFirstFrameAssetId());
         item.put("video_asset_id", row.getVideoAssetId());
-        item.put("first_frame_url", row.getFirstFrameAssetId() == null ? null
-                : "/bgssai/user/assets/" + row.getFirstFrameAssetId());
+        item.put("first_frame_url", assetService.resolveUrl(row.getFirstFrameAssetId()));
+        item.put("video_url", assetService.resolveUrl(row.getVideoAssetId()));
         item.put("blocked_flag", row.getBlockedFlag());
         item.put("risk_level", row.getRiskLevel());
         return item;

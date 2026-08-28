@@ -33,6 +33,9 @@ import com.bgssai.shortai.production.dto.ProductionDtos.CharacterReq;
 public class CharacterService {
 
     @Autowired
+    private AssetService assetService;
+
+    @Autowired
     private WorkAccessService workAccessService;
     @Autowired
     private AiTaskQueue aiTaskQueue;
@@ -128,7 +131,7 @@ public class CharacterService {
         request.put("character_id", row.getCharacterId());
         request.put("candidate_count", count);
         ShortAiTask task = aiTaskQueue.enqueue(row.getUserId(), row.getWorkId(), null, "IMAGE", "PORTRAIT",
-                row.getCharacterId(), request, null, 0);
+                row.getCharacterId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         return Responses.ok(result);
@@ -189,7 +192,7 @@ public class CharacterService {
         request.put("scene_card_id", row.getSceneCardId());
         request.put("candidate_count", count);
         ShortAiTask task = aiTaskQueue.enqueue(row.getUserId(), row.getWorkId(), null, "IMAGE", "SCENE_PORTRAIT",
-                row.getSceneCardId(), request, null, 0);
+                row.getSceneCardId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         return Responses.ok(result);
@@ -242,7 +245,7 @@ public class CharacterService {
         for (ShortAsset asset : shortAssetMapper.selectByExample(ex)) {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("asset_id", asset.getAssetId());
-            item.put("file_url", asset.getFileUrl());
+            item.put("file_url", assetService.resolveUrl(asset.getAssetId()));
             item.put("selected_flag", asset.getSelectedFlag());
             list.add(item);
         }
@@ -250,7 +253,7 @@ public class CharacterService {
     }
 
     private String assetUrl(String assetId) {
-        return assetId == null ? null : "/bgssai/user/assets/" + assetId;
+        return assetService.resolveUrl(assetId);
     }
 
     private ShortCharacter requireCharacter(String characterId) {

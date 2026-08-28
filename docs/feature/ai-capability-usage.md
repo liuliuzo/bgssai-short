@@ -27,7 +27,12 @@
      `MINIMAX`（海螺）、`SEEDANCE`（即梦）、`VEO`（Google Veo）；创作者提交时选 `model_code`，
      两段式生成可另传 `next_model_code` 作为自动接视频的模型。密钥分别对应
      `ai.kling.api_key` / `ai.minimax.api_key` / `ai.seedance.api_key` / `ai.veo.api_key`。
-     TEXT / VOICE / COMPOSE 本轮仍为 MOCK 或既有适配。
+     TEXT / VOICE 走 `OPENAI_COMPAT`（OpenAI 兼容网关，密钥 `ai.openai_compat.api_key`）。
+     COMPOSE 走 `FFMPEG`（`FfmpegComposeProvider`，本机 ffmpeg 把各镜视频拼成 9:16 成片），
+     不调外部模型，但**部署机必须预装 ffmpeg**，否则合成任务报「本机未安装 ffmpeg」。
+     缺镜头视频时合成直接失败并点名缺哪几镜，不再退回占位成片。
+     **不再提供 `provider_code=MOCK` 的兜底实现**：能力没接通就明确报错，避免假成功让人
+     分不清哪些功能是真的通了。
      用户端只读目录：`GET /bgssai/user/ai-models/list?ability_type=` 返回该能力下启用模型
      （不含 `config_json` / 密钥），供创作台下拉选择。
   2. 单价按计费单位配置：`price_unit` 取 `PER_CALL`（次）/ `PER_SECOND`（视频秒）/

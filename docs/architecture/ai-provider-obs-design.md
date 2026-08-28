@@ -32,7 +32,6 @@
 | `MiniMaxAiProvider` | `provider_code=MINIMAX`：海螺 `IMAGE`（image-01）与 `VIDEO`（Hailuo 图生/文生） |
 | `SeedanceAiProvider` | `provider_code=SEEDANCE`：火山方舟 Seedance `VIDEO` |
 | `VeoAiProvider` | `provider_code=VEO`：Google Gemini API Veo `VIDEO` |
-| `MockAiProvider` | `provider_code=MOCK`：无密钥 / 本地联调回退 |
 | `FfmpegComposeProvider` | `provider_code=FFMPEG`：本机 FFmpeg 合成 9:16 成片 |
 | `AiProviderRegistry` | 按 `provider_code` 选实现 |
 | `ObjectStorage` | put / get bytes / delete / presignGet |
@@ -90,7 +89,7 @@ short/{env}/{user_id}/{work_id}/{asset_id}.{ext}
 - 内容类型：`image/png`、`image/jpeg`、`image/svg+xml`、`audio/mpeg`、`video/mp4`、`application/x-subrip`、`application/json`
 - `short_asset`：`storage_key` = 上述 key；`mime_type` / `byte_size` / `width` / `height` / `duration_sec` 按可得填写
 - 预签名 GET：有效期 **1800 秒**；`GET /bgssai/user/assets/{asset_id}` 对归属用户返回
-  `{ "download_url": "...", "expire_at": "ISO-8601" }`（需登录）；不再直接流式吐 SVG 明文（MOCK 本地回退除外可仍 inline）
+  `{ "download_url": "...", "expire_at": "ISO-8601" }`（需登录）；不再直接流式吐 SVG 明文。种子演示数据的 `storage_key` 以 `<svg` 开头时直接返回 data URL，不走 OBS 预签名
 
 ## 5. 任务与计费时序
 
@@ -123,4 +122,5 @@ submit
 
 - 不引入独立消息队列
 - 不实现 WebSocket 推送（继续轮询）
-- 不在本文件绑定唯一商业模型名；种子数据给 MOCK（TEXT/VOICE/COMPOSE 默认）+ IMAGE/VIDEO 默认可灵，并启用 MiniMax / Seedance / Veo 供创作者在提交时点选
+- 不在本文件绑定唯一商业模型名；种子数据给 TEXT / VOICE 默认 `OPENAI_COMPAT`、IMAGE / VIDEO 默认可灵，并启用 MiniMax / Seedance / Veo 供创作者在提交时点选
+- **不提供 MOCK 兜底 provider**：COMPOSE 由 `FfmpegComposeProvider` 在本机完成；ffmpeg 缺失或镜头视频不全时合成任务直接失败并说明原因，不用假成片掩盖未接通

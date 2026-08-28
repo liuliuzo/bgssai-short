@@ -14,6 +14,31 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class AsyncConfig {
 
     /**
+     * 执行 AI 生成任务（出图 / 出视频 / 配音 / 合成）。
+     * <p>
+     * 没有它 {@code ShortAiTaskWorker.tick()} 会把 provider 调用同步跑在调度线程上：上游一慢，
+     * 整条队列就跟着停摆；而且线程被占住时连「这条任务超时了」都没人去判。
+     * <p>
+     * 队列刻意留得浅：任务本来就落在 short_ai_task 表里，排队归数据库管，内存队列只是取任务的
+     * 缓冲。满了就让 tick() 把任务退回 QUEUED，下一轮再取，不要在内存里堆积。
+     * 关停时不等待卡住的上游调用，未完成的任务由 reapStaleTasks() 判超时。
+     */
+    @Bean("aiTaskExecutor")
+    public ThreadPoolTaskExecutor aiTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(8);
+        executor.setKeepAliveSeconds(120);
+        executor.setAllowCoreThreadTimeOut(true);
+        executor.setThreadNamePrefix("bgssai-ai-task-");
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.setAwaitTerminationSeconds(5);
+        executor.initialize();
+        return executor;
+    }
+
+    /**
      * 执行健康组件检查，使每次检查都能被赋予一个硬截止时间（Standards §13.5）。
      * <p>
      * 没有它探针可能永久挂住：Druid 的 {@code maxWait} 默认「无限等待」，数据库不可达时

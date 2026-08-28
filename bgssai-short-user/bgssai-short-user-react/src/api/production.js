@@ -18,13 +18,14 @@ const readyScript = (episodeId, forceReadyFlag) =>
 
 const listCharacters = (workId) => http.get('/user/characters/list', { work_id: workId })
 const createCharacter = (body) => http.post('/user/characters/create', body)
-const portraitCharacter = (characterId) => http.post('/user/characters/portrait-generate', { character_id: characterId })
+const portraitCharacter = (characterId, modelCode) =>
+  http.post('/user/characters/portrait-generate', { character_id: characterId, model_code: modelCode })
 const lockCharacter = (characterId, assetId) =>
   http.post('/user/characters/lock', { character_id: characterId, asset_id: assetId })
 const listScenes = (workId) => http.get('/user/scene-cards/list', { work_id: workId })
 const createScene = (body) => http.post('/user/scene-cards/create', body)
-const portraitScene = (sceneCardId) =>
-  http.post('/user/scene-cards/portrait-generate', { scene_card_id: sceneCardId })
+const portraitScene = (sceneCardId, modelCode) =>
+  http.post('/user/scene-cards/portrait-generate', { scene_card_id: sceneCardId, model_code: modelCode })
 const lockScene = (sceneCardId, assetId) =>
   http.post('/user/scene-cards/lock', { scene_card_id: sceneCardId, asset_id: assetId })
 

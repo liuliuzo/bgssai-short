@@ -175,6 +175,8 @@ function ScriptPane({ work, episodeId, onReload }) {
 function CharacterPane({ work }) {
   const [chars, setChars] = useState([])
   const [scenes, setScenes] = useState([])
+  const [imageModels, setImageModels] = useState([])
+  const [imageModelCode, setImageModelCode] = useState()
   const [form] = Form.useForm()
 
   const load = useCallback(async () => {
@@ -188,9 +190,31 @@ function CharacterPane({ work }) {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await productionApi.listAiModels('IMAGE')
+      if (cancelled) return
+      const models = data?.result?.model_list || []
+      setImageModels(models)
+      setImageModelCode((cur) => cur || models.find((m) => m.default_flag === 1)?.model_code || models[0]?.model_code)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const modelSelect = (
+    <Select
+      placeholder="出图模型"
+      value={imageModelCode}
+      onChange={setImageModelCode}
+      style={{ width: 220 }}
+      options={imageModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+    />
+  )
+
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <Card title="角色卡" extra={<Button onClick={load}>刷新</Button>}>
+      <Card title="角色卡" extra={<Space>{modelSelect}<Button onClick={load}>刷新</Button></Space>}>
         <Form form={form} layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
           await productionApi.createCharacter({ work_id: work.work_id, ...v })
           form.resetFields()
@@ -203,8 +227,12 @@ function CharacterPane({ work }) {
         {chars.map((row) => (
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name} (${row.card_status})`} extra={<Space>
             <Button size="small" onClick={async () => {
-              const { data } = await productionApi.portraitCharacter(row.character_id)
-              await waitTask(work.work_id, data.result.task_id)
+              const { data } = await productionApi.portraitCharacter(row.character_id, imageModelCode)
+              if (!data?.success) return
+              const done = await waitTask(work.work_id, data.result.task_id)
+              if (done && done.task_status !== 'SUCCEEDED') {
+                message.error(`定妆失败：${done.fail_reason || done.fail_reason_code || '未知原因'}`)
+              }
               load()
             }}>定妆</Button>
           </Space>}>
@@ -235,7 +263,7 @@ function CharacterPane({ work }) {
         {scenes.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name} (${row.card_status})`} extra={
             <Button size="small" onClick={async () => {
-              const { data } = await productionApi.portraitScene(row.scene_card_id)
+              const { data } = await productionApi.portraitScene(row.scene_card_id, imageModelCode)
               await waitTask(work.work_id, data.result.task_id)
               load()
             }}>生成参考图</Button>

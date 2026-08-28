@@ -19,8 +19,12 @@ public class ObjectStorageConfiguration {
         String bucket = trim(props.getBucket());
         if (!ak.isEmpty() && !sk.isEmpty() && !endpoint.isEmpty() && !bucket.isEmpty()) {
             try {
-                log.info("ObjectStorage=HuaweiObs bucket={}", bucket);
-                return new HuaweiObsObjectStorage(endpoint, ak, sk, bucket);
+                log.info("ObjectStorage=HuaweiObs bucket={} connectMs={} socketMs={} retry={}",
+                        bucket, props.getConnectTimeoutMs(), props.getSocketTimeoutMs(),
+                        props.getMaxErrorRetry());
+                return new HuaweiObsObjectStorage(endpoint, ak, sk, bucket,
+                        props.getConnectTimeoutMs(), props.getSocketTimeoutMs(),
+                        props.getMaxErrorRetry());
             } catch (Throwable ex) {
                 log.warn("Huawei OBS init failed, fallback to LocalFile: {}", ex.toString());
             }

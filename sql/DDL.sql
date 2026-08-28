@@ -538,7 +538,7 @@ CREATE TABLE `short_ai_task` (
   `task_status` VARCHAR(16) NOT NULL DEFAULT 'QUEUED',
   `target_type` VARCHAR(32) DEFAULT NULL,
   `target_id` VARCHAR(64) DEFAULT NULL,
-  `model_code` VARCHAR(64) DEFAULT 'mock',
+  `model_code` VARCHAR(64) DEFAULT NULL,
   `request_json` LONGTEXT,
   `result_json` LONGTEXT,
   `progress_percent` INT NOT NULL DEFAULT 0,

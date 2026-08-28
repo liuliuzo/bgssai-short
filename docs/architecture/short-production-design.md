@@ -5,7 +5,7 @@
 及后续扩展功能（配音、预演、剧情图谱、质量门、三问体验）。
 
 创作者从建剧走到成片提审。AI 与素材存储横切见 **`ai-provider-obs-design.md`**
-（`AiProvider` SPI + 华为云 OBS；`provider_code=MOCK` 仅作无密钥回退）。
+（`AiProvider` SPI + 华为云 OBS；无 MOCK 兜底，能力未接通即明确报错）。
 用量与模型目录见 **`ai-capability-usage-design.md`**。
 
 ## 1. 范围

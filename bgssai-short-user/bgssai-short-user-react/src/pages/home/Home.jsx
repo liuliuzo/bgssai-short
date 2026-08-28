@@ -12,7 +12,8 @@ export default function Home() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>首页</Title>
       <Paragraph type="secondary">
-        从建剧、写剧本、定妆、拆镜到模拟成片和提审。当前环境使用 Mock 生成，不调用真实大模型。
+        从建剧、写剧本、定妆、拆镜到成片和提审。平台不再提供 Mock 兜底：某个能力没接通会直接报错，
+        不会返回假结果。想先看完整流程长什么样，可以打开示例作品《悬疑法医手记》。
       </Paragraph>
       <Space style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={() => navigate('/works')}>我的作品</Button>

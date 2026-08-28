@@ -6,7 +6,7 @@ POST 走 JSON body。鉴权请求头 `Jwttoken`。金额单位分。详设见
 
 分页：`page_num` / `page_size` / `total_size`（`PageResponse`）。
 
-AI 按 `ai_model_config.provider_code` 路由：IMAGE/VIDEO 默认可灵，可选 MiniMax / Seedance / Veo；TEXT / VOICE / COMPOSE 默认 MOCK。契约字段与需求一致。
+AI 按 `ai_model_config.provider_code` 路由：IMAGE/VIDEO 默认可灵，可选 MiniMax / Seedance / Veo；TEXT / VOICE 默认 `OPENAI_COMPAT`；COMPOSE 走本机 `FFMPEG`（部署机需预装 ffmpeg，缺失时返回 `ABILITY_UNAVAILABLE`）。无 MOCK 兜底。契约字段与需求一致。
 
 ## 错误码
 
@@ -165,9 +165,14 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 `{ "total", "queued", "running", "succeeded", "failed", "canceled", "progress_percent" }`
 
+### POST /bgssai/user/characters/portrait-generate | /bgssai/user/scene-cards/portrait-generate
+
+`{ "character_id" | "scene_card_id", "candidate_count", "model_code" }`。
+`model_code` 可选，缺省用该能力的默认模型；取值来自 `GET /bgssai/user/ai-models/list?ability_type=IMAGE`。
+
 ### POST /bgssai/user/ai-tasks/retry|cancel
 
-`{ "task_id" }`。retry 可带 `fallback_model_flag`（Mock 忽略）。
+`{ "task_id" }`。retry 可带 `fallback_model_flag`。
 
 ---
 
@@ -208,7 +213,12 @@ submit：`{ "episode_id" }`。成片须 READY。
 
 ### GET /bgssai/user/assets/{asset_id}
 
-公开，返回 SVG。
+需鉴权（`Jwttoken`），且只返回归属本人的资产。返回 `{ "download_url", "expire_at" }`：
+内联 SVG 种子返回 `data:` URL，其余返回对象存储预签名 URL（1800 秒）。
+
+注意本接口**返回 JSON、不返回图片字节**，因此不能直接塞进 `<img src>`。
+列表类接口（`shots/list`、`preview/summary`、`characters/list` 的候选图）已直接返回
+可渲染的 `first_frame_url` / `video_url` / `file_url`，前端渲染图片一律用这些字段。
 
 ---
 

@@ -15,6 +15,15 @@ public class ObsProperties {
     private String localRoot = "./data/obs-local";
     private String publicBaseUrl = "";
 
+    /** 建连超时（毫秒）。中间件参数走 properties 分层，不入库。 */
+    private int connectTimeoutMs = 10000;
+
+    /** 读写超时（毫秒）。没有它 OBS 不可达时上传会永久挂住，任务停在 RUNNING 不再前进。 */
+    private int socketTimeoutMs = 30000;
+
+    /** SDK 自身重试次数，配合上面两个超时把一次上传的最坏耗时钉死。 */
+    private int maxErrorRetry = 2;
+
     public String getEndpoint() {
         return endpoint;
     }
@@ -69,5 +78,29 @@ public class ObsProperties {
 
     public void setPublicBaseUrl(String publicBaseUrl) {
         this.publicBaseUrl = publicBaseUrl;
+    }
+
+    public int getConnectTimeoutMs() {
+        return connectTimeoutMs;
+    }
+
+    public void setConnectTimeoutMs(int connectTimeoutMs) {
+        this.connectTimeoutMs = connectTimeoutMs;
+    }
+
+    public int getSocketTimeoutMs() {
+        return socketTimeoutMs;
+    }
+
+    public void setSocketTimeoutMs(int socketTimeoutMs) {
+        this.socketTimeoutMs = socketTimeoutMs;
+    }
+
+    public int getMaxErrorRetry() {
+        return maxErrorRetry;
+    }
+
+    public void setMaxErrorRetry(int maxErrorRetry) {
+        this.maxErrorRetry = maxErrorRetry;
     }
 }

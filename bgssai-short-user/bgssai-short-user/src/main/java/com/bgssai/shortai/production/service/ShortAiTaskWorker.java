@@ -7,12 +7,15 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
@@ -20,7 +23,9 @@ import com.bgssai.shortai.aiprovider.AiProvider;
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
 import com.bgssai.shortai.aiprovider.AiProviderRequest;
 import com.bgssai.shortai.aiprovider.AiProviderResult;
+import com.bgssai.shortai.aiprovider.FfmpegComposeProvider;
 import com.bgssai.shortai.common.exception.BizException;
+import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.AiUsageRecordMapper;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
@@ -99,6 +104,15 @@ public class ShortAiTaskWorker {
     private ObjectStorage objectStorage;
     @Autowired
     private Environment environment;
+    @Autowired
+    @Qualifier("aiTaskExecutor")
+    private TaskExecutor aiTaskExecutor;
+
+    /** 判定 RUNNING 卡死的宽限秒数：模型 timeout_sec 之上再留这么久仍无结果就判超时。 */
+    private static final int STALE_GRACE_SEC = 120;
+
+    /** 模型没配 timeout_sec 时的兜底上限。 */
+    private static final int DEFAULT_TIMEOUT_SEC = 600;
 
     @Scheduled(fixedDelay = 800)
     public void tick() {
@@ -121,25 +135,85 @@ public class ShortAiTaskWorker {
             return;
         }
         try {
+            aiTaskExecutor.execute(() -> run(task));
+        } catch (RejectedExecutionException rejected) {
+            // 池子满了就把任务退回排队，交给下一轮 tick，不在内存里堆积。
+            requeue(task);
+        }
+    }
+
+    /**
+     * 回收卡死的任务。上游调用即便挂住，任务也不会永远停在 RUNNING：
+     * 超过「模型 timeout_sec + 宽限」仍未结束的行会被判 MODEL_TIMEOUT。
+     * 进程重启后遗留的 RUNNING 行同样由这里兜底。
+     */
+    @Scheduled(fixedDelay = 30_000)
+    public void reapStaleTasks() {
+        ShortAiTaskExample ex = new ShortAiTaskExample();
+        ex.createCriteria().andTaskStatusEqualTo("RUNNING");
+        for (ShortAiTask task : shortAiTaskMapper.selectByExample(ex)) {
+            Date started = task.getStartedTime() == null ? task.getQueuedTime() : task.getStartedTime();
+            if (started == null) {
+                continue;
+            }
+            int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
+            long ageSec = (System.currentTimeMillis() - started.getTime()) / 1000L;
+            if (ageSec < limit) {
+                continue;
+            }
+            log.warn("ai task stale taskId={} type={} model={} ageSec={} limitSec={}",
+                    task.getTaskId(), task.getTaskType(), task.getModelCode(), ageSec, limit);
+            failIfRunning(task, "MODEL_TIMEOUT",
+                    "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）");
+        }
+    }
+
+    private int timeoutSecOf(ShortAiTask task) {
+        try {
+            AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
+            Integer t = model.getTimeoutSec();
+            return t == null || t <= 0 ? DEFAULT_TIMEOUT_SEC : t;
+        } catch (RuntimeException ex) {
+            // 模型行被停用 / 删除时仍要能回收，走兜底上限。
+            return DEFAULT_TIMEOUT_SEC;
+        }
+    }
+
+    private void run(ShortAiTask task) {
+        try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             complete(task, model);
-            insertUsage(task, model, 1);
-            quotaConsumeService.consume(task.getUserId(), task.getCostCent() == null ? 0 : task.getCostCent());
             ShortAiTask ok = new ShortAiTask();
             ok.setTaskStatus("SUCCEEDED");
             ok.setProgressPercent(100);
             ok.setFinishedTime(new Date());
             ok.setUpdatedTime(new Date());
             ShortAiTaskExample up = new ShortAiTaskExample();
-            up.createCriteria().andIdEqualTo(task.getId());
-            shortAiTaskMapper.updateByExampleSelective(ok, up);
+            up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+            if (shortAiTaskMapper.updateByExampleSelective(ok, up) != 1) {
+                // 已被回收器判超时或被用户取消：不再记账，避免为作废的任务扣费。
+                log.warn("ai task finished after reap/cancel, skip billing taskId={}", task.getTaskId());
+                return;
+            }
+            insertUsage(task, model, 1);
+            quotaConsumeService.consume(task.getUserId(), task.getCostCent() == null ? 0 : task.getCostCent());
             addSpent(task);
         } catch (BizException exBiz) {
-            fail(task, exBiz.getCode(), exBiz.getMessage());
+            failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
-            fail(task, "MODEL_TIMEOUT", exAll.getMessage());
+            failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage());
         }
+    }
+
+    private void requeue(ShortAiTask task) {
+        ShortAiTask back = new ShortAiTask();
+        back.setTaskStatus("QUEUED");
+        back.setProgressPercent(0);
+        back.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+        shortAiTaskMapper.updateByExampleSelective(back, up);
     }
 
     private void complete(ShortAiTask task, AiModelConfig model) {
@@ -414,22 +488,12 @@ public class ShortAiTaskWorker {
         timelineMap.put("duration_sec", duration);
         String timeline = ShortJson.toJson(timelineMap);
 
-        AiProviderResult result;
-        byte[] ffmpegBytes = tryFfmpegCompose(shots);
-        if (ffmpegBytes != null && ffmpegBytes.length > 0) {
-            result = AiProviderResult.binary(ffmpegBytes, "video/mp4");
-            result.setDurationSec(duration);
-        } else {
-            AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
-            request.getParams().put("title", ep.getEpisodeTitle());
-            request.getParams().put("subtitle", "成片 " + duration + "s");
-            request.getParams().put("duration_sec", duration);
-            request.setPrompt(timeline);
-            result = execute(model, request);
-            if (result.getMimeType() == null || result.getMimeType().isBlank()) {
-                result.setMimeType("image/svg+xml");
-            }
-        }
+        AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
+        request.getParams().put("title", ep.getEpisodeTitle());
+        request.getParams().put("duration_sec", duration);
+        request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
+        request.setPrompt(timeline);
+        AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
                 result, task.getTaskId(), true);
         asset.setDurationSec(duration);
@@ -470,20 +534,48 @@ public class ShortAiTaskWorker {
         workStatusService.refresh(ep.getWorkId());
     }
 
-    private byte[] tryFfmpegCompose(List<ShortShot> shots) {
-        try {
-            Process probe = new ProcessBuilder("ffmpeg", "-version").redirectErrorStream(true).start();
-            int code = probe.waitFor();
-            if (code != 0) {
-                return null;
+    /**
+     * 取每个镜头已生成的视频字节。缺片就直接失败并点名是哪几镜——以前这里静默退回假成片，
+     * 结果是「明明没出视频却提示合成成功」。
+     */
+    private List<byte[]> loadClips(List<ShortShot> shots) {
+        List<byte[]> clips = new ArrayList<>();
+        List<String> missing = new ArrayList<>();
+        for (ShortShot shot : shots) {
+            byte[] bytes = clipBytes(shot);
+            if (bytes == null) {
+                missing.add("镜" + shot.getShotNo());
+                continue;
             }
-        } catch (Exception ex) {
+            clips.add(bytes);
+        }
+        if (!missing.isEmpty()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "以下镜头还没有可用视频，无法合成：" + String.join("、", missing));
+        }
+        return clips;
+    }
+
+    private byte[] clipBytes(ShortShot shot) {
+        String assetId = shot.getVideoAssetId();
+        if (assetId == null || assetId.isBlank()) {
             return null;
         }
-        // Runtime present but image/audio concat is environment-specific; keep null to use mock path.
-        // Presence check satisfies COMPOSE_RUNTIME detection without failing the task.
-        log.info("ffmpeg available; using provider mock compose for {} shots", shots == null ? 0 : shots.size());
-        return null;
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        String key = asset == null ? null : asset.getStorageKey();
+        // 内联 SVG 是演示种子占位，不是真视频，不能拿去拼接。
+        if (key == null || key.isBlank() || key.startsWith("<svg")) {
+            return null;
+        }
+        try {
+            byte[] bytes = objectStorage.get(key);
+            return bytes == null || bytes.length == 0 ? null : bytes;
+        } catch (RuntimeException ex) {
+            log.warn("compose clip fetch failed shotId={} assetId={}", shot.getShotId(), assetId, ex);
+            return null;
+        }
     }
 
     private ShortAsset saveBinary(String userId, String workId, String episodeId, String shotId, String type,
@@ -655,6 +747,19 @@ public class ShortAiTaskWorker {
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();
         up.createCriteria().andIdEqualTo(task.getId());
+        shortAiTaskMapper.updateByExampleSelective(patch, up);
+    }
+
+    /** 只有仍在 RUNNING 的任务才置失败，避免覆盖已取消 / 已回收的终态。 */
+    private void failIfRunning(ShortAiTask task, String code, String message) {
+        ShortAiTask patch = new ShortAiTask();
+        patch.setTaskStatus("FAILED");
+        patch.setFailReasonCode(code);
+        patch.setFailReason(message == null ? "" : message);
+        patch.setFinishedTime(new Date());
+        patch.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
         shortAiTaskMapper.updateByExampleSelective(patch, up);
     }
 

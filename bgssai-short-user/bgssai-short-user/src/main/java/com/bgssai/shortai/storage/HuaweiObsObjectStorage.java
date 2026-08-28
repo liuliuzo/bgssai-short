@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.obs.services.ObsClient;
+import com.obs.services.ObsConfiguration;
 import com.obs.services.model.HttpMethodEnum;
 import com.obs.services.model.ObjectMetadata;
 import com.obs.services.model.ObsObject;
@@ -25,8 +26,17 @@ public class HuaweiObsObjectStorage implements ObjectStorage {
     private final ObsClient client;
     private final String bucket;
 
-    public HuaweiObsObjectStorage(String endpoint, String accessKey, String secretKey, String bucket) {
-        this.client = new ObsClient(accessKey, secretKey, endpoint);
+    public HuaweiObsObjectStorage(String endpoint, String accessKey, String secretKey, String bucket,
+            int connectTimeoutMs, int socketTimeoutMs, int maxErrorRetry) {
+        // 必须显式设超时：SDK 默认值在 OBS 不可达时会让 putObject 长时间不返回，
+        // 调用它的 AI 任务就一直停在 RUNNING。
+        ObsConfiguration config = new ObsConfiguration();
+        config.setEndPoint(endpoint);
+        config.setConnectionTimeout(connectTimeoutMs);
+        config.setSocketTimeout(socketTimeoutMs);
+        config.setConnectionRequestTimeout(connectTimeoutMs);
+        config.setMaxErrorRetry(maxErrorRetry);
+        this.client = new ObsClient(accessKey, secretKey, config);
         this.bucket = bucket;
     }
 

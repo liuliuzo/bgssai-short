@@ -28,6 +28,9 @@ import com.bgssai.shortai.production.support.PromptComposer;
 public class PreviewService {
 
     @Autowired
+    private AssetService assetService;
+
+    @Autowired
     private WorkAccessService workAccessService;
     @Autowired
     private ShortShotMapper shortShotMapper;
@@ -73,8 +76,7 @@ public class PreviewService {
             frame.put("shot_no", shot.getShotNo());
             frame.put("duration_sec", dur);
             frame.put("first_frame_asset_id", shot.getFirstFrameAssetId());
-            frame.put("first_frame_url", shot.getFirstFrameAssetId() == null ? null
-                    : "/bgssai/user/assets/" + shot.getFirstFrameAssetId());
+            frame.put("first_frame_url", assetService.resolveUrl(shot.getFirstFrameAssetId()));
             frame.put("dialogue_text", shot.getDialogueText());
             frame.put("look_plain", PromptComposer.lookPlain(shot));
             frame.put("previz_level", shot.getPrevizLevel() == null ? "NONE" : shot.getPrevizLevel());

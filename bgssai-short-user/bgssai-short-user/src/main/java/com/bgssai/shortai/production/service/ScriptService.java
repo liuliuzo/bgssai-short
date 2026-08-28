@@ -277,10 +277,6 @@ public class ScriptService {
         workStatusService.refresh(ep.getWorkId());
     }
 
-    public void persistRewrite(ShortEpisode ep, Integer sceneNo, Integer lineNo, String instruction) {
-        persistRewrite(ep, sceneNo, lineNo, instruction, null);
-    }
-
     public void persistRewrite(ShortEpisode ep, Integer sceneNo, Integer lineNo, String instruction,
             java.util.function.BiFunction<String, String, String> rewriter) {
         ShortScript script = requireScript(ep);
@@ -300,12 +296,10 @@ public class ScriptService {
                     Map<String, Object> line = (Map<String, Object>) item;
                     if (lineNo == null || lineNo.equals(ShortJson.integer(line.get("line_no"), -1))) {
                         String original = ShortJson.text(line.get("line_text"));
-                        if (rewriter != null) {
-                            line.put("line_text", rewriter.apply(original, instruction));
-                        } else {
-                            line.put("line_text", com.bgssai.shortai.production.support.MockAiProvider.rewriteLine(
-                                    original, instruction));
+                        if (rewriter == null) {
+                            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE);
                         }
+                        line.put("line_text", rewriter.apply(original, instruction));
                     }
                     lines.add(line);
                 }

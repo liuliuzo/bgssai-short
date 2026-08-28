@@ -139,6 +139,7 @@ public class ProductionDtos {
         private String cardType;
         private String assetId;
         private Integer candidateCount;
+        private String modelCode;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
         public String getCharacterId() { return characterId; }
@@ -159,6 +160,8 @@ public class ProductionDtos {
         public void setAssetId(String assetId) { this.assetId = assetId; }
         public Integer getCandidateCount() { return candidateCount; }
         public void setCandidateCount(Integer candidateCount) { this.candidateCount = candidateCount; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
     }
 
     public static class ShotReq {
