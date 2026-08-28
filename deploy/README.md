@@ -59,7 +59,7 @@ Jenkins 侧实现：本仓 `Jenkinsfile`（部署）与 `jenkins/Jenkinsfile.sto
 | Environment | `SHORT_ADMIN_HOST` | admin 端口 | `SHORT_USER_HOST` | user 端口 | 共机 |
 | --- | --- | --- | --- | --- | --- |
 | `dev` | `101.44.189.190` | **443** HTTPS | `101.44.26.229` | 443 HTTPS | admin 与 Jenkins 共机（Jenkins 占 8080，不占 443）；user 与应用网关-境外 / 注册中心-境外共机 |
-| `prod` | `121.37.142.152` | 443 HTTPS | `121.37.158.8` | 443 HTTPS | admin 与 EMQX-MQTT-境内共机；user 与 REDIS-境内共机 |
+| `prod` | `121.37.158.8` | 443 HTTPS | `121.37.142.152` | 443 HTTPS | admin 与 REDIS-境内共机；user 与 EMQX-MQTT-境内共机 |
 
 域名：`dev.admin.bgssai-short.com` / `dev.user.bgssai-short.com` / `admin.bgssai-short.com` / `www.bgssai-short.com`。
 生产落点以这组域名角色为准（用户端 www、管理端 admin）。
