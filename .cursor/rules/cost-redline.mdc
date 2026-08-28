@@ -1,0 +1,24 @@
+---
+description: AI 成本红线 — 禁止 PR 后持续唤醒任务（Standards §12）
+alwaysApply: true
+---
+
+# AI 成本红线（Standards §12）
+
+## 禁止
+
+创建、建议、启用或维持会在**当前交互结束后**再次自动唤醒 AI 的任务，包括：
+
+- Scheduled Task / recurring automation / heartbeat
+- PR 后后台轮询直到 MERGED
+- 自我续期的状态监控
+
+## 允许
+
+- 当前前台会话内的**单次** PR/CI 状态查询
+- 用户**下次主动交互**时再查询 PR 状态
+- 编写业务代码中的 cron/healthcheck（不调用 AI）
+
+## 与 Git 工作流的关系
+
+GitHub 分支/PR 流程仍适用，但 PR 监控不得用持续唤醒的 automation 实现。

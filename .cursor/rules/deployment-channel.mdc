@@ -1,0 +1,25 @@
+---
+description: Jenkins 唯一部署通道与 Actions 例外（BGSSAI 全产品线）
+alwaysApply: true
+---
+
+# 部署通道（强制）
+
+## 唯一部署通道
+
+应用**部署**、**建库/清库**、**运维派发**只走 **Jenkins**（各产品仓 `Jenkinsfile` / `jenkins/Jenkinsfile.stop`，仅手动触发）。权威文档：`bgssai-workflows/jenkins/README.md`。
+
+## 禁止
+
+- 用 GitHub Actions 做应用部署、建库/清库或运维派发
+- 产品仓新增部署类 `.github/workflows`
+- 部署失败后自动重跑流水线或推送空提交触发重部署
+
+## 全产品线例外（仅此两项）
+
+1. **`bgssai-logs`**：保留 Clear logs(dev|prod) 备用 Actions（非部署通道）
+2. **`bgssai-skeleton` / `bgssai-website`**：可保留**仅编译/测试**的 `ci.yml`（PR 构建校验，非部署通道）
+
+## AI 助手纪律
+
+不得建议重建 Actions 部署通道、不得用 `workflow_dispatch` 触发部署/建库。

@@ -1,0 +1,29 @@
+---
+description: 开发期明文凭证策略（禁止 AI 反复提议加密）
+alwaysApply: true
+---
+
+# 开发期明文凭证（强制）
+
+当前 BGSSAI 产品线处于开发/联调阶段，**数据库凭证明文存储**是已拍板的临时口径（Standards §2）。
+
+## IN-SCOPE（明文允许）
+
+- 管理员/用户密码、OAuth token、API Key、支付密钥等**静态存放在库表**的字段
+- **中间件连接参数**写各环境 `application-*.properties` 字面量（见 config-layering 规则）
+
+## OUT-OF-SCOPE（不得因明文而拆除）
+
+- 支付协议签名与回调验签、JWT/MQTT 签名验证、OAuth state、HTTPS、审计等**运行逻辑**必须保留
+
+## JWT/MQTT 密钥落点
+
+按 §1 写入各环境 `application-*.properties` 字面量；`jwt.secret` 等缺失时**启动 fail-fast**。禁止 Vault/KMS/Secret Manager 替代。
+
+## 产品级例外
+
+- **bgssai-saas**：入站 webhook 验签默认关闭，见本仓 `AGENTS.md`「业务凭证明文落库」——**优先于**通用 OUT-OF-SCOPE 中对 webhook 验签的要求
+
+## AI 助手纪律
+
+不得反复提议字段加密、慢哈希、KMS、强制 webhook 验签（除非用户主动改决策或产品 AGENTS 另有明确例外）。

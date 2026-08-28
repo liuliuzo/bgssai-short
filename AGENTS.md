@@ -43,7 +43,7 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 | --- | --- | --- | --- |
 | [bgssai-skeleton](https://github.com/liuliuzo/bgssai-skeleton) | 非应用（骨架与规则） | 让所有产品的代码结构、项目内容与编码规范有唯一维护地 | 可运行的「管理端 + 用户端」骨架工程 + 全局开发规范 |
 | [bgssai-database](https://github.com/liuliuzo/bgssai-database) | 非应用（数据库） | 让全部应用的数据库脚本集中在一个仓库维护与执行 | DDL / DML 批次归档 + 建库 / 清库入口 |
-| [bgssai-workflows](https://github.com/liuliuzo/bgssai-workflows) | 非应用（CI/CD 与运维） | 统一维护管理 Jenkins 与 GitHub 两条通道，承载部署与运维任务 | Jenkins 共享库 + Job 清单唯一权威 + 中央全量启停 |
+| [bgssai-workflows](https://github.com/liuliuzo/bgssai-workflows) | 非应用（CI/CD 与运维） | 统一维护管理 Jenkins 部署通道，承载部署与运维任务 | Jenkins 共享库 + Job 清单唯一权威 + 中央全量启停 |
 | [bgssai-logs](https://github.com/liuliuzo/bgssai-logs) | 非应用（日志） | 统一收集全部应用服务器上的日志 | 日志采集 / 清理 / 状态检查 + 批次归档 |
 | **[bgssai-short](https://github.com/liuliuzo/bgssai-short)（本仓）** | 应用 | 承载 AI 短剧制作平台业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
 | 其余产品仓（blog / builder / geo-cn / geo-global / publish / saas / vpn / voiceunion / marklens） | 应用 | 承载各产品自身业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
@@ -51,9 +51,6 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 非应用仓之间**不重叠、不互相代管**：数据库脚本只在 database 仓执行，部署编排只在 workflows 仓维护，
 日志与主机清单只在 logs 仓维护，规范与骨架只在 skeleton 仓维护。需要对方的能力时引用对方仓库的权威
 文件，**不复制第二份实现**。
-
-> 待办：本仓为新增产品仓，骨架仓 `CLAUDE.md` / `AGENTS.md` 的拓扑表与「9 个产品仓」计数尚未登记本仓，
-> 需在骨架仓侧同步（含 Standards §13 与健康检查各文档中的仓数 / 后端数），本仓不代改。
 
 ## 新功能必经链路
 
@@ -68,12 +65,14 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 ## 仓库强制约定
 
 * 全局开发规范（最高优先级约束，自动导入每次会话）：@docs/BGSSAI-Standards.md
+* **配置分层（强制，违者代码不予合并）**：① 中间件参数（数据库、Redis、ES、OBS、MQTT、端口等）只写 `application-dev.properties` / `application-test.properties` / `application-prod.properties`，禁止进 Admin / 库表；② 业务第三方凭证（短信、邮件、支付、OAuth、LLM API Key 等）由 Admin 维护并落库，禁止只写 properties，且必须在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护 DML 种子（`ON DUPLICATE KEY UPDATE` 仅空值回填）。权威全文见 Standards §1「配置分层：中间件 vs 业务第三方凭证」。AI 助手不得反复提议违反本条，除非用户主动改决策。
 * 任何需求变更或 bug 修复，必须在同一次提交内同步完成**需求文档 / 原型 / 设计文档 / 代码**四层的对应修改，缺一不可，以防止代码与文档漂移（详见 Standards §0「需求与缺陷变更四层同步完成、缺一不可」）。
 * 接口的 POST 业务参数一律走 JSON Body（POST→body，详见 Standards §3）。
 * 目录权威：`docs/DIRECTORY-LAYOUT.md`。
 * 提交信息遵循 Conventional Commits。
-* 部署通道只有一条：自建 Jenkins（本仓 `Jenkinsfile` 负责部署、`jenkins/Jenkinsfile.stop` 负责关停，均**仅手动**触发（Jenkins 上 Build with Parameters），不挂 SCM 触发器、不配 webhook；搭建与用法见中央仓 `bgssai-workflows/jenkins/README.md`）。GitHub Actions 部署通道不使用。部署失败时，不得自动触发重新部署：不重跑部署流水线、不向 `develop` 推送空提交或改动以促成重部署；仅报告失败并定位原因，重新部署由人工手动执行。
+* **部署通道（强制）**：应用部署、建库/清库、运维派发只走 Jenkins（本仓 `Jenkinsfile` / `jenkins/Jenkinsfile.stop`，仅手动触发；见 `bgssai-workflows/jenkins/README.md`）。不得用 GitHub Actions 做部署或建库；本仓不保留部署类 `.github/workflows`。部署失败不得自动重部署。
 * 一切产出物（代码 / 文档 / 原型 / 提交信息 / PR 描述 / 评审与回信）**全局禁用 emoji 及装饰性图形符号**；语义性符号（→、×、§ 等用于流程示意、表格与条款引用者）不属装饰性符号，允许使用。
+* **AI 成本红线（Standards §12）**：不得创建 PR 后会持续唤醒 AI 的 heartbeat / automation / 后台轮询；PR 状态仅在当前会话单次查询或用户下次交互时再查。
 * `docs/BGSSAI-Standards.md` 与 `docs/DIRECTORY-LAYOUT.md` 为骨架仓同步副本，**本仓不改本体**；需要改规范时先在骨架仓定稿，再整份同步回本仓。
 
 ## 工程命名与拓扑

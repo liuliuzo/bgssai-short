@@ -1,0 +1,29 @@
+---
+description: 中间件配置 vs 业务第三方凭证的配置分层（全产品线强制）
+alwaysApply: true
+---
+
+# 配置分层（强制）
+
+与用户已澄清的全产品线口径对齐。权威全文见本仓 `docs/BGSSAI-Standards.md` §1「配置分层：中间件 vs 业务第三方凭证」。
+
+## 1. 中间件参数 — 只写 application-*.properties
+
+- **范围**：数据库、Redis、ES、OBS 及同类纯技术中间件连接参数（endpoint、AK/SK、bucket、host、port 等）。
+- **落点**：`application-dev.properties` / `application-test.properties` / `application-prod.properties`（及 local 如有）。
+- **禁止**：为中间件做 Admin 配置页，或写入 `sys_secret` / `system_config` / `platform_*_config`。
+
+## 2. 业务第三方凭证 — Admin + 落库 + DML 种子
+
+- **范围**：短信、邮件、微信支付、支付宝、OAuth 授权、业务 API Key 等（随业务变更，非纯技术中间件）。
+- **禁止**：只写在 `application-*.properties`。
+- **必须**：运行期由 Admin 管理并落库；同时在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护可用种子。
+- **DML**：一行一条 INSERT；`ON DUPLICATE KEY UPDATE` 仅空值回填；跨环境共享凭据放主 DML，环境差异放 `sql/dev` / `sql/prod`。
+
+## 边界
+
+OAuth 回调 URL、CORS 白名单等非密钥项可留 profile。OBS endpoint / AK/SK / bucket 属中间件，走 profile。
+
+## AI 助手纪律
+
+不得反复提议违反本条（如业务密钥写 properties、中间件进 Admin），除非用户主动改决策。

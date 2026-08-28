@@ -91,6 +91,8 @@ API（账号、内容审核、AI 能力与用量管理），用户端承载创�
 
 前置：JDK 21、Maven 3.9+、Node 18+、MySQL 8。
 
+成片合成走本机 FFmpeg（`provider_code=FFMPEG`），**运行 / 部署机需预装 ffmpeg 并在 PATH 中**，否则合成任务会明确失败并提示「本机未安装 ffmpeg」。文本 / 配音走 OpenAI 兼容网关，API Key 由管理端写入 `sys_secret.ai.openai_compat.api_key`（业务第三方凭证不入 properties）。
+
 ```bash
 # 1. 建库并导入 schema 与种子数据
 mysql < sql/DDL.sql
