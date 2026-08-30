@@ -1,90 +1,116 @@
-/* 登录页样式（扁平风格，对齐 blog 设计真值）：浅灰背景 + 白色卡片 + 细边框 */
-.login-page {
+/* 管理后台登录：深色居中卡片，对齐 bgssai-blog AdminLogin.tsx。无 OAuth / 注册入口。 */
+
+.admin-login-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #0f172a;
   padding: 24px;
-  position: relative;
 }
 
-.login-card {
-  position: relative;
-  z-index: 1;
-  width: 400px;
-  padding: 44px 44px 36px;
-
-  background: #ffffff;
-  border: 1px solid var(--lg-border);
-  box-shadow: var(--lg-shadow-lg);
-  border-radius: var(--lg-radius-card);
-  animation: loginCardIn 0.45s var(--lg-easing) both;
+.admin-login-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4);
 }
 
-@keyframes loginCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.login-logo {
+.admin-login-head {
+  margin-bottom: 28px;
   text-align: center;
-  margin-bottom: 32px;
 }
 
-/* 标准透明品牌图形；产品名由相邻文本提供。 */
-.login-logo-mark {
+.admin-login-mark {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   margin: 0 auto 14px;
+  border-radius: 12px;
   object-fit: contain;
+  background: #fff;
 }
 
-.login-logo-name {
-  font-size: 22px;
+.admin-login-title {
+  color: #f1f5f9;
+  font-size: 20px;
   font-weight: 700;
-  color: var(--lg-text);
-  letter-spacing: -0.5px;
-  margin-bottom: 4px;
+  margin: 0;
 }
 
-.login-logo-sub {
-  font-size: 12px;
-  color: var(--lg-text-muted);
-  line-height: 1.5;
+.admin-login-sub {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 6px 0 0;
 }
 
-.login-btn {
-  height: 44px !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.03em;
+.admin-login-field {
+  margin-bottom: 16px;
 }
 
-.login-copyright {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 11px;
-  color: var(--lg-text-faint);
-  line-height: 1.6;
+.admin-login-field.admin-login-field-password {
+  margin-bottom: 20px;
 }
 
-.login-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--lg-accent-soft);
-  border: 1px solid #bfdbfe;
-  font-size: 11px;
-  color: var(--lg-accent);
-  font-weight: 500;
+.admin-login-field label {
+  display: block;
+  color: #cbd5e1;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.admin-login-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #f1f5f9;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.admin-login-field input:focus {
+  border-color: #2563eb;
+}
+
+.admin-login-field input:disabled {
+  opacity: 0.6;
+}
+
+.admin-login-error {
+  background: #450a0a;
+  border: 1px solid #991b1b;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #fca5a5;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.admin-login-submit {
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-login-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.admin-login-submit:disabled {
+  background: #1d4ed8;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
