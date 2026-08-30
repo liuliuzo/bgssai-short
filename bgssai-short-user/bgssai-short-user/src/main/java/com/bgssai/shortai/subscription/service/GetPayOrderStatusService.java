@@ -65,7 +65,7 @@ public class GetPayOrderStatusService {
 
     private PaymentOrder loadOwned(String userId, String orderNo) {
         PaymentOrderExample ex = new PaymentOrderExample();
-        ex.createCriteria().andOrderNoEqualTo(orderNo).andDeleteEqualTo(0);
+        ex.createCriteria().andOrderNoEqualTo(orderNo).andDelFlagEqualTo(0);
         PaymentOrder order = paymentOrderMapper.selectOneByExample(ex);
         if (order == null || !userId.equals(order.getUserId())) {
             throw new BizException(CommonErrorCode.RESOURCE_NOT_FOUND, "order not found");

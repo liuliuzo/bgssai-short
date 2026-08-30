@@ -41,7 +41,7 @@ public class PaymentNotifyService {
             return channelConfirm(channelCode);
         }
         PaymentOrderExample orderEx = new PaymentOrderExample();
-        orderEx.createCriteria().andOrderNoEqualTo(result.getOrderNo()).andDeleteEqualTo(0);
+        orderEx.createCriteria().andOrderNoEqualTo(result.getOrderNo()).andDelFlagEqualTo(0);
         PaymentOrder order = paymentOrderMapper.selectOneByExample(orderEx);
         if (order == null) {
             log.warn("payment notify order not found channel={} orderNo={}", channelCode, result.getOrderNo());

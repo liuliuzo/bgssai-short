@@ -36,7 +36,7 @@ public class CreditPackAdminService {
             throw new ForbiddenException("only admin can list credit packs");
         }
         CreditPackExample ex = new CreditPackExample();
-        ex.createCriteria().andDeleteEqualTo(0);
+        ex.createCriteria().andDelFlagEqualTo(0);
         ex.setOrderByClause("sort_order asc, id asc");
         List<CreditPack> rows = creditPackMapper.selectByExample(ex);
         List<Map<String, Object>> packList = new ArrayList<>();
@@ -76,7 +76,7 @@ public class CreditPackAdminService {
         row.setPriceCent(req.getPriceCent());
         row.setActive(req.getActive() == null ? 1 : req.getActive());
         row.setSortOrder(req.getSortOrder() == null ? 0 : req.getSortOrder());
-        row.setDelete(0);
+        row.setDelFlag(0);
         row.setModifier(operator);
         row.setGmtModified(now);
         if (existing == null) {

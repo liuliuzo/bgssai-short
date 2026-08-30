@@ -9,7 +9,7 @@
     <result column="current_period_start" jdbcType="TIMESTAMP" property="currentPeriodStart" />
     <result column="current_period_end" jdbcType="TIMESTAMP" property="currentPeriodEnd" />
     <result column="source" jdbcType="VARCHAR" property="source" />
-    <result column="is_delete" jdbcType="TINYINT" property="delete" />
+    <result column="del_flag" jdbcType="TINYINT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -59,7 +59,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, user_id, plan_code, status, current_period_start, current_period_end, source, is_delete, creator, modifier, gmt_create, gmt_modified
+    id, user_id, plan_code, status, current_period_start, current_period_end, source, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.UserSubscriptionExample" resultMap="BaseResultMap">
     select
@@ -99,8 +99,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.UserSubscription" useGeneratedKeys="true" keyProperty="id">
-    insert into user_subscription (id, user_id, plan_code, status, current_period_start, current_period_end, source, is_delete, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{currentPeriodStart,jdbcType=TIMESTAMP}, #{currentPeriodEnd,jdbcType=TIMESTAMP}, #{source,jdbcType=VARCHAR}, #{delete,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into user_subscription (id, user_id, plan_code, status, current_period_start, current_period_end, source, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{currentPeriodStart,jdbcType=TIMESTAMP}, #{currentPeriodEnd,jdbcType=TIMESTAMP}, #{source,jdbcType=VARCHAR}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.UserSubscription" useGeneratedKeys="true" keyProperty="id">
     insert into user_subscription
@@ -112,7 +112,7 @@
       <if test="currentPeriodStart != null">current_period_start,</if>
       <if test="currentPeriodEnd != null">current_period_end,</if>
       <if test="source != null">source,</if>
-      <if test="delete != null">is_delete,</if>
+      <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
       <if test="gmtCreate != null">gmt_create,</if>
@@ -126,7 +126,7 @@
       <if test="currentPeriodStart != null">#{currentPeriodStart,jdbcType=TIMESTAMP},</if>
       <if test="currentPeriodEnd != null">#{currentPeriodEnd,jdbcType=TIMESTAMP},</if>
       <if test="source != null">#{source,jdbcType=VARCHAR},</if>
-      <if test="delete != null">#{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">#{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -147,7 +147,7 @@
       <if test="row.currentPeriodStart != null">current_period_start = #{row.currentPeriodStart,jdbcType=TIMESTAMP},</if>
       <if test="row.currentPeriodEnd != null">current_period_end = #{row.currentPeriodEnd,jdbcType=TIMESTAMP},</if>
       <if test="row.source != null">source = #{row.source,jdbcType=VARCHAR},</if>
-      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=TINYINT},</if>
+      <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=TINYINT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
       <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -165,7 +165,7 @@
       current_period_start = #{row.currentPeriodStart,jdbcType=TIMESTAMP},
       current_period_end = #{row.currentPeriodEnd,jdbcType=TIMESTAMP},
       source = #{row.source,jdbcType=VARCHAR},
-      is_delete = #{row.delete,jdbcType=TINYINT},
+      del_flag = #{row.delFlag,jdbcType=TINYINT},
       creator = #{row.creator,jdbcType=VARCHAR},
       modifier = #{row.modifier,jdbcType=VARCHAR},
       gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},
@@ -181,7 +181,7 @@
       <if test="currentPeriodStart != null">current_period_start = #{currentPeriodStart,jdbcType=TIMESTAMP},</if>
       <if test="currentPeriodEnd != null">current_period_end = #{currentPeriodEnd,jdbcType=TIMESTAMP},</if>
       <if test="source != null">source = #{source,jdbcType=VARCHAR},</if>
-      <if test="delete != null">is_delete = #{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">del_flag = #{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -199,7 +199,7 @@
       current_period_start = #{currentPeriodStart,jdbcType=TIMESTAMP},
       current_period_end = #{currentPeriodEnd,jdbcType=TIMESTAMP},
       source = #{source,jdbcType=VARCHAR},
-      is_delete = #{delete,jdbcType=TINYINT},
+      del_flag = #{delFlag,jdbcType=TINYINT},
       creator = #{creator,jdbcType=VARCHAR},
       modifier = #{modifier,jdbcType=VARCHAR},
       gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},

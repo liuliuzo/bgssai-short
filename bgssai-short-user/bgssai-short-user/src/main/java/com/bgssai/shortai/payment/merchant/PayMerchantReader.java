@@ -30,7 +30,7 @@ public class PayMerchantReader {
     public WechatMerchant requireActiveWechatMerchant() {
         WechatPayConfigExample example = new WechatPayConfigExample();
         example.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1)
                 .andCollectionActiveEqualTo(1);
         example.setOrderByClause("id asc");
@@ -46,7 +46,7 @@ public class PayMerchantReader {
     public boolean hasActiveCollectionMerchant() {
         WechatPayConfigExample we = new WechatPayConfigExample();
         we.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1)
                 .andCollectionActiveEqualTo(1);
         if (wechatPayConfigMapper.selectOneByExample(we) != null) {
@@ -54,7 +54,7 @@ public class PayMerchantReader {
         }
         AlipayConfigExample ae = new AlipayConfigExample();
         ae.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1)
                 .andCollectionActiveEqualTo(1);
         return alipayConfigMapper.selectOneByExample(ae) != null;
@@ -63,7 +63,7 @@ public class PayMerchantReader {
     public List<WechatMerchant> listVerifiableWechatMerchants() {
         WechatPayConfigExample example = new WechatPayConfigExample();
         example.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1);
         example.setOrderByClause("is_collection_active desc, id asc");
         List<WechatPayConfig> rows = wechatPayConfigMapper.selectByExample(example);
@@ -81,7 +81,7 @@ public class PayMerchantReader {
     public AlipayMerchant requireActiveAlipayMerchant() {
         AlipayConfigExample example = new AlipayConfigExample();
         example.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1)
                 .andCollectionActiveEqualTo(1);
         example.setOrderByClause("id asc");
@@ -97,7 +97,7 @@ public class PayMerchantReader {
     public List<AlipayMerchant> listVerifiableAlipayMerchants() {
         AlipayConfigExample example = new AlipayConfigExample();
         example.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1);
         example.setOrderByClause("is_collection_active desc, id asc");
         List<AlipayConfig> rows = alipayConfigMapper.selectByExample(example);
@@ -120,7 +120,7 @@ public class PayMerchantReader {
         AlipayConfigExample example = new AlipayConfigExample();
         example.createCriteria()
                 .andAppIdEqualTo(appId.trim())
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andEnabledEqualTo(1);
         AlipayConfig row = alipayConfigMapper.selectOneByExample(example);
         if (row == null) {

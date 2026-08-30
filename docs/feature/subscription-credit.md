@@ -102,7 +102,7 @@
 
 ## 六、数据模型影响
 
-新增表（canonical 审计列 `id` / `is_delete` / `creator` / `modifier` / `gmt_create` / `gmt_modified`）：
+新增表（canonical 审计列 `id` / `del_flag` / `creator` / `modifier` / `gmt_create` / `gmt_modified`）：
 
 - `subscription_plan`
 - `user_subscription`

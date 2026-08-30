@@ -45,7 +45,7 @@ public class AdjustQuotaService {
         String operator = UserContext.getUserId() == null ? "admin" : UserContext.getUserId();
         Date now = new Date();
         UserQuotaExample ex = new UserQuotaExample();
-        ex.createCriteria().andUserIdEqualTo(req.getUserId().trim()).andDeleteEqualTo(0);
+        ex.createCriteria().andUserIdEqualTo(req.getUserId().trim()).andDelFlagEqualTo(0);
         UserQuota quota = userQuotaMapper.selectOneByExample(ex);
         if (quota == null) {
             quota = new UserQuota();
@@ -55,7 +55,7 @@ public class AdjustQuotaService {
             quota.setMonthlyLimitCent(0);
             quota.setMonthSpentCent(0);
             quota.setMonthResetDate(now);
-            quota.setDelete(0);
+            quota.setDelFlag(0);
             quota.setCreator(operator);
             quota.setModifier(operator);
             userQuotaMapper.insertSelective(quota);
@@ -73,7 +73,7 @@ public class AdjustQuotaService {
         patch.setModifier(operator);
         patch.setGmtModified(now);
         UserQuotaExample up = new UserQuotaExample();
-        up.createCriteria().andIdEqualTo(quota.getId()).andDeleteEqualTo(0);
+        up.createCriteria().andIdEqualTo(quota.getId()).andDelFlagEqualTo(0);
         userQuotaMapper.updateByExampleSelective(patch, up);
         QuotaChangeLog logRow = new QuotaChangeLog();
         logRow.setUserId(req.getUserId().trim());
@@ -85,7 +85,7 @@ public class AdjustQuotaService {
         logRow.setExtraAfterCent(newExtra);
         logRow.setMonthlyLimitCent(req.getMonthlyLimitCent() != null ? req.getMonthlyLimitCent() : quota.getMonthlyLimitCent());
         logRow.setRemark(req.getRemark().trim());
-        logRow.setDelete(0);
+        logRow.setDelFlag(0);
         logRow.setCreator(operator);
         quotaChangeLogMapper.insertSelective(logRow);
         log.info("admin adjust quota userId={} balDelta={} extraDelta={}", req.getUserId(), balDelta, extraDelta);

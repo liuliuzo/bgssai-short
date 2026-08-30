@@ -287,12 +287,12 @@ public class AiTaskService {
 
     private void ensureWallet(String userId) {
         UserSubscriptionExample ex = new UserSubscriptionExample();
-        ex.createCriteria().andUserIdEqualTo(userId).andDeleteEqualTo(0);
+        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
         UserSubscription sub = userSubscriptionMapper.selectOneByExample(ex);
         if (sub == null) {
             int grant = 10000;
             SubscriptionPlanExample pex = new SubscriptionPlanExample();
-            pex.createCriteria().andPlanCodeEqualTo("FREE").andDeleteEqualTo(0);
+            pex.createCriteria().andPlanCodeEqualTo("FREE").andDelFlagEqualTo(0);
             SubscriptionPlan plan = subscriptionPlanMapper.selectOneByExample(pex);
             if (plan != null && plan.getMonthlyBalanceCent() != null) {
                 grant = plan.getMonthlyBalanceCent();

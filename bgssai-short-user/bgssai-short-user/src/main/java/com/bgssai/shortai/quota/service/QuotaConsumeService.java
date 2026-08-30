@@ -59,7 +59,7 @@ public class QuotaConsumeService {
         UserQuotaExample cas = new UserQuotaExample();
         cas.createCriteria()
                 .andIdEqualTo(quota.getId())
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andBalanceCentEqualTo(balance)
                 .andExtraBalanceCentEqualTo(extra);
         int n = userQuotaMapper.updateByExampleSelective(patch, cas);
@@ -75,7 +75,7 @@ public class QuotaConsumeService {
         logRow.setExtraAfterCent(patch.getExtraBalanceCent());
         logRow.setMonthlyLimitCent(limit);
         logRow.setRemark("task success");
-        logRow.setDelete(0);
+        logRow.setDelFlag(0);
         logRow.setCreator(userId);
         quotaChangeLogMapper.insertSelective(logRow);
         log.info("quota consumed userId={} cost={} balanceAfter={} extraAfter={}",

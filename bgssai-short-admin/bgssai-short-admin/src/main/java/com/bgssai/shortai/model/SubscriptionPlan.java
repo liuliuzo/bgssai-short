@@ -11,7 +11,7 @@ public class SubscriptionPlan {
     private Integer monthlyLimitCent;
     private Integer active;
     private Integer sortOrder;
-    private Integer delete;
+    private Integer delFlag;
     private String creator;
     private String modifier;
     private Date gmtCreate;
@@ -81,12 +81,12 @@ public class SubscriptionPlan {
         this.sortOrder = sortOrder;
     }
 
-    public Integer getDelete() {
-        return delete;
+    public Integer getDelFlag() {
+        return delFlag;
     }
 
-    public void setDelete(Integer delete) {
-        this.delete = delete;
+    public void setDelFlag(Integer delFlag) {
+        this.delFlag = delFlag;
     }
 
     public String getCreator() {

@@ -134,7 +134,7 @@
   `film_asset_id`、`film_duration_sec`、`deleted_flag`、`created_time`、`updated_time`。
 - 索引：`short_work(user_id, work_status, updated_time)`；`short_episode(work_id, episode_no)` 唯一
   （软删除后需允许同号重建，唯一键含 `deleted_flag`）。
-- 同步 `sql/DDL.sql` 与 MyBatis Generator 产物（代码阶段执行）。
+- 同步 `sql/DDL.sql` 与 MyBatis 持久层三件套（代码阶段执行）。
 
 ## 七、原型
 

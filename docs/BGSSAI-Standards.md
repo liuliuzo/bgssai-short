@@ -137,8 +137,8 @@
 ## 2. 数据库与持久层限制 (严格 Example 模式)
 
 * **禁用自定义 SQL**：严禁在 Mapper XML 中手写复杂的连表查询、自定义 SQL 标签或使用 SELECT *（一律不要使用 * 作为查询字段列表，必须明确写明所需字段）。
-* **方法白名单**：MyBatis 的交互被严格限制为只允许使用 Generator 生成的 Example 通用方法，即且仅即：countByExample, deleteByExample, deleteByPrimaryKey, insert, insertSelective, selectByExample, selectOneByExample, selectByPrimaryKey, updateByExampleSelective, updateByExample, updateByPrimaryKeySelective, updateByPrimaryKey。
-  * Example 对象自身的辅助方法（`createCriteria()` / `andXxxEqualTo()` / `andXxxIn()` / `andXxxIsNull()` / `setOrderByClause("col ASC")` 等 Generator 输出 API）允许使用——这些只是构造查询条件 / 排序的对象操作，不是新增 SQL 语句。
+* **方法白名单**：MyBatis 的交互被严格限制为只允许使用 Example 通用方法，即且仅即：countByExample, deleteByExample, deleteByPrimaryKey, insert, insertSelective, selectByExample, selectOneByExample, selectByPrimaryKey, updateByExampleSelective, updateByExample, updateByPrimaryKeySelective, updateByPrimaryKey。
+  * Example 对象自身的辅助方法（`createCriteria()` / `andXxxEqualTo()` / `andXxxIn()` / `andXxxIsNull()` / `setOrderByClause("col ASC")` 等 Example API）允许使用——这些只是构造查询条件 / 排序的对象操作，不是新增 SQL 语句。
   * **严禁**通过 `setOrderByClause` 拼接 `LIMIT/OFFSET` 等 SQL 片段绕过白名单。
 * **分页强制使用 PageHelper 插件（强制，违者代码不予合并）**：所有列表 / 分页查询必须使用 MyBatis 物理分页插件 `pagehelper-spring-boot-starter`。使用范式：
   ```java
@@ -150,16 +150,16 @@
   * `PageHelper.startPage` 必须紧贴在对应 `selectByExample` / `selectOneByExample` 调用前一行；中间不得插入任何其它 SQL 调用，否则插件会把分页强加给错误的 select。
   * 分页参数命名建议：HTTP 入参用 `page`（0-based）+ `size`，传入 PageHelper 前自行 `+1` 转 1-based。`size` 必须经过 `EntityConverters.clampPageSize(...)` 截断到 ≤100，防止 DoS。
   * 仅用 `selectByPrimaryKey` 的精准查询不需要分页插件。
-* **按需列查询（强制，违者代码不予合并）**：所有 `XxxExample` 类必须包含 `selectColumns(String... cols)` 扩展能力（由 Generator-extended 输出统一注入；XML 中的 `selectByExample` / `selectOneByExample` 在该字段非空时用 `<foreach>` 替代 `<include refid="Base_Column_List"/>`）。Service 在以下两种场景**必须**显式指定返回列：
+* **按需列查询（强制，违者代码不予合并）**：所有 `XxxExample` 类必须包含 `selectColumns(String... cols)` 扩展能力（由 Example 基类统一提供；XML 中的 `selectByExample` / `selectOneByExample` 在该字段非空时用 `<foreach>` 替代 `<include refid="Base_Column_List"/>`）。Service 在以下两种场景**必须**显式指定返回列：
   * "ID 列表 + 内存 join" 场景（如取 article_tag 表的 article_id 集合）：`example.selectColumns("id", "article_id")`
   * "存在性 / 计数" 路径中需要少量字段判定（如取 owner_id 校验权限）：仅查 owner_id
   默认（不调用 `selectColumns`）走 `Base_Column_List`，行为不变；调用后仅查指定列，减少 IO + 网络 + 反序列化开销，对大宽表（含 TEXT/MEDIUMTEXT 内容列）效果尤其显著。**严禁**为绕过本规约把 `selectColumns` 作为"模糊列名拼接"接口使用——参数必须是字段名常量字符串，不接受任何外部输入。
-* **表必备基础字段（精确列定义，强制，违者代码不予合并）**：每张数据表必备 `id`、`is_delete`、`creator`、`modifier`、`gmt_create`、`gmt_modified` 六个公共字段，**所有表逐字使用以下 canonical 列定义**——类型 / 是否为空（NULL）/ 默认值 / `ON UPDATE` 行为必须完全一致，不得逐表各写一套：
+* **表必备基础字段（精确列定义，强制，违者代码不予合并）**：每张数据表必备 `id`、`del_flag`、`creator`、`modifier`、`gmt_create`、`gmt_modified` 六个公共字段，**所有表逐字使用以下 canonical 列定义**——类型 / 是否为空（NULL）/ 默认值 / `ON UPDATE` 行为必须完全一致，不得逐表各写一套：
 
   ```sql
   id           BIGINT       NOT NULL AUTO_INCREMENT                                COMMENT '主键',
   -- ... 业务字段（自顶向下，审计字段统一收口在末尾、PRIMARY KEY 之前）...
-  is_delete    TINYINT(1)   NOT NULL DEFAULT 0                                     COMMENT '逻辑删除字段',
+  del_flag     TINYINT(1)   NOT NULL DEFAULT 0                                     COMMENT '逻辑删除字段',
   creator      VARCHAR(64)  DEFAULT NULL                                           COMMENT '创建者标识',
   modifier     VARCHAR(64)  DEFAULT NULL                                           COMMENT '最后修改者标识',
   gmt_create   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP                     COMMENT '创建时间',
@@ -168,13 +168,13 @@
   ```
 
   * **id**：主键，`BIGINT NOT NULL AUTO_INCREMENT`，单表自增；所有表统一 `PRIMARY KEY (id)`。
-  * **is_delete**：逻辑删除标记，`TINYINT(1) NOT NULL DEFAULT 0`（0=正常 / 1=已删）。查询默认带 `is_delete = 0` 过滤，删除走逻辑删除（置 1）而非物理删行。呼应 §4「数据库建表表达是与否概念的字段用 is_xxx 命名；POJO Java 字段去 is 前缀」。
+  * **del_flag**：逻辑删除标记，`TINYINT(1) NOT NULL DEFAULT 0`（0=正常 / 1=已删）。查询默认带 `del_flag = 0` 过滤，删除走逻辑删除（置 1）而非物理删行。**本列是 §4「数据库布尔列用 is_xxx 命名」的唯一例外**：`is_` 前缀在 ORM 与序列化两侧会被反复剥离与还原（`is_delete` 被映射成属性 `delete`），而 `delete` 既贴近 SQL 保留字、又与集合删除语义冲突；故逻辑删除列统一定名 `del_flag`，Java 属性 `delFlag`。其余布尔列仍按 §4 用 `is_xxx`。
   * **creator / modifier**：操作者标识，`VARCHAR(64) DEFAULT NULL`，记录创建者 / 最后修改者（用户名或系统标识，可空）。
   * **gmt_create**：创建时间，`DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`——插入时若未显式赋值，由 DB 默认值兜底为当前时间。
   * **gmt_modified**：修改时间，`DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`——插入时兜底为当前时间，且**每次行更新时由 DB 自动刷新**为当前时间（无需业务代码手动维护）。
   * **与持久层的衔接**：Java 端统一用 `insertSelective`（见本节「方法白名单」），未显式 set 的 `gmt_create` / `gmt_modified` 会被省略、由 DB 默认值兜底；服务如需指定时间可显式 `setGmtCreate` / `setGmtModified` 覆盖。**严禁**对 `gmt_modified` 显式插入 `NULL`（违反 NOT NULL 约束，连 DML 种子脚本也不例外）。
-  * **注释文案**：上表注释为默认文案；个别表的 `gmt_create` / `is_delete` 若带领域语义（如 `gmt_create` 实为「快照时间 / 打赏时间 / 发送时间」、`is_delete` 标注「取消关注=1」等），允许保留领域注释，但**列定义本身必须逐字一致**。
-  * **新增 / 改表强制项**：新建任何表必须逐字带齐上述六字段的 canonical 定义；结构性改列须按本节「Generator 同步更新契约」改 `sql/DDL.sql` 后重跑 Generator。**CR 校验**：发现缺字段、`gmt_create` 缺 `DEFAULT CURRENT_TIMESTAMP`、或 `gmt_modified` 非 `NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` 的提交一律打回，无论改动规模大小。
+  * **注释文案**：上表注释为默认文案；个别表的 `gmt_create` / `del_flag` 若带领域语义（如 `gmt_create` 实为「快照时间 / 打赏时间 / 发送时间」、`del_flag` 标注「取消关注=1」等），允许保留领域注释，但**列定义本身必须逐字一致**。
+  * **新增 / 改表强制项**：新建任何表必须逐字带齐上述六字段的 canonical 定义；结构性改列须按本节「持久层三件套同步更新契约」先改 `sql/DDL.sql`，再同步手工更新 Entity / Example / Mapper XML。**CR 校验**：发现缺字段、`gmt_create` 缺 `DEFAULT CURRENT_TIMESTAMP`、或 `gmt_modified` 非 `NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` 的提交一律打回，无论改动规模大小。
 * **数据库与持久层命名一律单数（强制，违者代码不予合并）**：表名 / 列名 / 索引名 / 外键名一律用**单数 + snake_case**；对应的 Java Entity / Example / Mapper 接口 / Mapper XML 文件名也**必须使用单数 UpperCamelCase**。例：`article` 不是 `articles`、`payment_order` 不是 `payment_orders`、`article_tag` 不是 `article_tags`、`audit_log` 不是 `audit_logs`、`appeal` 不是 `appeals`、`report` 不是 `reports`、`comment_like` 不是 `comment_likes`、`system_config` 不是 `system_configs`。
   * **唯一例外**：表名与 SQL 保留字（`column` / `order` / `user` / `group` 等）冲突时，必须在表名前加领域前缀消歧义。本项目落地的示例：`users` → `app_user`、`columns` → `blog_column`。严禁用反引号兜底（影响所有 SQL 可读性 + 跨方言迁移风险）。
   * **持久层三件套命名链（强制对齐）**：单数表名 → 单数 Entity → 单数 Example → 单数 Mapper → 单数 XML，**全链路单数无复数**。一旦中间任何一环出现复数（如 `Articles.java` / `ArticlesExample.java` / `ArticlesMapper.java` / `ArticlesMapper.xml`），即视为违规，CR 阶段必须打回。命名映射示例：
@@ -185,32 +185,31 @@
     | `audit_log` | `AuditLog` | `AuditLogExample` | `AuditLogMapper` | `AuditLogMapper.xml` |
     | `article_tag` | `ArticleTag` | `ArticleTagExample` | `ArticleTagMapper` | `ArticleTagMapper.xml` |
     | `payment_order` | `PaymentOrder` | `PaymentOrderExample` | `PaymentOrderMapper` | `PaymentOrderMapper.xml` |
-  * **禁止"单复数双 Entity"并存**：每张表只允许存在**一个** Entity 类（即 Generator 输出的单数版本）；严禁同时保留旧 JPA 时代的"富领域单数"和"Generator 复数"两套实体，必须二选一并彻底删除另一套。Service / Controller / DTO 一律 import 单数 Entity。
-  * **MyBatis Generator 配置要求**：`generatorConfig.xml` 中每张表必须显式声明 `<table tableName="..." domainObjectName="..."/>`，`domainObjectName` 必须为**单数 UpperCamelCase**（如 `tableName="audit_log" domainObjectName="AuditLog"`），不允许让 Generator 按表名自动复数化。
+  * **禁止"单复数双 Entity"并存**：每张表只允许存在**一个** Entity 类（单数版本）；严禁同时保留旧 JPA 时代的"富领域单数"和"复数"两套实体，必须二选一并彻底删除另一套。Service / Controller / DTO 一律 import 单数 Entity。
   * 本规约**仅约束数据库层 / 持久层**；REST API 路径的资源集合名按 §3 路由命名规范保留复数（如 `GET /api/articles`、`POST /api/articles/take-down`），与表名 `article` 不冲突 —— 一个是"集合资源"语义，一个是"实体类型"语义。
 * **关联查询降级 (In-memory Join)**：遇到复杂的业务关联，严禁使用数据库 Join（超过三个表禁止 join）。必须在 Service 层通过多次调用上述单表通用方法，在 Java 内存中完成数据组装。
-* **Generator 同步更新契约**：Mapper XML / Example / Entity 三件套是 MyBatis Generator 输出物，**禁止手工修改**。当表结构发生变更（加列 / 改列 / 改索引）时，正确流程是：
+* **持久层三件套同步更新契约**：Mapper XML / Example / Entity 三件套是仓库内的普通源码，由开发者手工维护（本仓已下线 MyBatis Generator，不引入任何代码生成工具）。当表结构发生变更（加列 / 改列 / 改索引）时，正确流程是：
   1. 改 `sql/DDL.sql`
-  2. 重跑 Generator（见 `docs/architecture/mybatis-generator-guide.md`）
+  2. 手工同步 Entity 字段、Example 条件方法、Mapper XML 的 resultMap / Base_Column_List / insert / update 片段
   3. 提交 entity / example / mapper / xml 一次性更新
-  禁止只改 Java 端不改 DDL，或只改 DDL 不重跑 Generator。
+  禁止只改 Java 端不改 DDL，或只改 DDL 不同步三件套。三件套与 `sql/DDL.sql` 必须逐列一致，CR 阶段按列比对。
 * **事务范围最小化**：@Transactional 注解仅用于包含多表写操作的核心 Service 方法 。严禁将耗时的网络 I/O（如调用外部 HTTP 接口或 RPC）包裹在数据库事务中 。
 * **DML 种子 / 数据维护脚本写法：一行数据一条 INSERT（强制，违者代码不予合并）**：所有 DML 脚本（基础种子数据 Seed Data、日常数据维护 / 修订脚本）中，**每一行数据必须是一条独立的 `INSERT` 语句**，**严禁**使用「单条 `INSERT` 携带多组 `VALUES`」的批量多值写法。
   * **正例（强制：一行数据一条 INSERT，显式列清单）**：
     ```sql
-    INSERT INTO app_user (id, username, is_delete, gmt_create, gmt_modified) VALUES (1, 'alice', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
-    INSERT INTO app_user (id, username, is_delete, gmt_create, gmt_modified) VALUES (2, 'bob', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
-    INSERT INTO app_user (id, username, is_delete, gmt_create, gmt_modified) VALUES (3, 'carol', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
+    INSERT INTO app_user (id, username, del_flag, gmt_create, gmt_modified) VALUES (1, 'alice', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
+    INSERT INTO app_user (id, username, del_flag, gmt_create, gmt_modified) VALUES (2, 'bob', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
+    INSERT INTO app_user (id, username, del_flag, gmt_create, gmt_modified) VALUES (3, 'carol', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
     ```
   * **反例（禁止：单条 INSERT 多组 VALUES 批量拼接）**：
     ```sql
-    INSERT INTO app_user (id, username, is_delete, gmt_create, gmt_modified) VALUES
+    INSERT INTO app_user (id, username, del_flag, gmt_create, gmt_modified) VALUES
       (1, 'alice', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00'),
       (2, 'bob', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00'),
       (3, 'carol', 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
     ```
   * **理由**：逐行独立 INSERT 便于 Code Review 逐条审查、便于精确定位执行失败 / 报错的具体行、便于单行增删改与幂等重跑，并显著降低多分支并行编辑同一 DML 文件时的合并冲突与坏合并风险（呼应 §11「同区域并行改动规约」）。
-  * **覆盖范围**：本条适用于 `sql/DML.sql`（§9 数据库脚本收敛规约，DML / 种子数据唯一落点）；结构性 DDL 不在本条约束内（DDL 按本节「Generator 同步更新契约」与 §9 目录规约管理）。
+  * **覆盖范围**：本条适用于 `sql/DML.sql`（§9 数据库脚本收敛规约，DML / 种子数据唯一落点）；结构性 DDL 不在本条约束内（DDL 按本节「持久层三件套同步更新契约」与 §9 目录规约管理）。
   * **CR 校验**：DML / 种子脚本中出现「单条 INSERT 多组 VALUES」的批量写法一律打回，无论涉及行数多少。
 
 * **现阶段数据库一律明文存储（强制）**：当前处于开发 / 联调 / 内部演示阶段，**所有入库数据一律明文落库、明文比对，一律不做任何哈希 / 加密**——此为用户拍板的临时开发期口径，目的是在 MVP / 联调阶段降低实现复杂度、令数据在库中可读可调试。
@@ -254,7 +253,7 @@
 ## 4. 编码规约与防御性编程
 
 * **命名规范**：类名必须使用 UpperCamelCase 风格 ，方法名、参数名、成员变量和局部变量统一使用 lowerCamelCase 风格 。
-* **布尔值命名契约**：POJO 类中的任何布尔类型变量都**严禁加 is 前缀**，以规避部分框架解析引起的序列化错误 ；但在数据库建表时，表达是与否概念的字段必须使用 is_xxx 方式命名 。
+* **布尔值命名契约**：POJO 类中的任何布尔类型变量都**严禁加 is 前缀**，以规避部分框架解析引起的序列化错误 ；但在数据库建表时，表达是与否概念的字段必须使用 is_xxx 方式命名 。**唯一例外**：逻辑删除列定名 `del_flag`（不写 `is_delete`），Java 属性 `delFlag`，理由见 §2 六公共字段。
 * **空指针与包装类防御 (NPE Prevention)**：
   * 所有整型包装类对象之间值的比较，**全部且必须使用 equals() 方法**，严禁使用 == 运算符。
   * 判断所有集合内部的元素是否为空，**必须使用 isEmpty() 方法**，而不是 size() == 0 的方式。
@@ -323,7 +322,7 @@
   * **允许的例外边界（明确不禁止，须在方法注释显式标注用途）**：
     1. **第三方原始报文透传 / 存档**：与外部系统对接时无法预知字段、仅做「原样转发 / 落库存档」而不消费其业务语义的场景，可用 `Map` / `JsonNode` 暂存，但**不得**借此承载本系统自身的业务语义字段；
     2. **业务语义本就是任意 KV 的字段**：如用户自定义 `extra` / `metadata` / `tags` 等，应作为**强类型 DTO 里一个有名字的字段**出现（值类型尽量收窄，如 `Map<String, String>`，而非 `Map<String, Object>`），而非让整个传输载体退化为 `Map`；
-    3. **框架生成物 / 框架回调签名**：MyBatis Generator 输出物、框架强制的回调方法签名等非业务自定义代码，不在本条约束内。
+    3. **持久层三件套 / 框架回调签名**：Entity / Example / Mapper XML 三件套、框架强制的回调方法签名等非业务自定义代码，不在本条约束内。
   * **CR 校验**：Controller / Service 方法签名出现 `Map<String, Object>` / `JSONObject` / `ObjectNode` / `JsonNode` 作业务入参 / 出参，或用 `HashMap` / `Map.of` 现场拼装业务响应的提交，一律打回，**无论改动规模大小**；属上述「允许例外」者须在注释中标注用途，否则按违规处理。
 * **层级隔离 (DTO/Entity/VO)**：
   * 接口请求参数必须使用专属的 Request DTO 对象。

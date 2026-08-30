@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `oauth_binding` (
   `user_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '绑定的本平台账号',
   `nickname` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '第三方昵称快照',
   `avatar_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '第三方头像快照',
-  `is_delete` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   `creator` varchar(64) NULL DEFAULT NULL COMMENT '创建者标识',
   `modifier` varchar(64) NULL DEFAULT NULL COMMENT '最后修改者标识',
   `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

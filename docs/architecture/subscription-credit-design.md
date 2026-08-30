@@ -11,7 +11,7 @@
 ## 2. 下单
 
 1. 校验 JWT `user_id`。
-2. 按 `plan_code` / `pack_code` 读目录行（`is_delete=0` 且 `is_active=1`）。
+2. 按 `plan_code` / `pack_code` 读目录行（`del_flag=0` 且 `is_active=1`）。
 3. `amount_cent` = 目录 `price_cent`；`grant_cent` = 套餐 `monthly_balance_cent` 或加量包 `credit_cent`。
 4. FREE 或 `price_cent=0`：订单直接 `paid` 并发放，不调渠道。
 5. 否则插入 `payment_order`（`created`，`expires_at` = now+30min），调用渠道 `createPayment`，回写 `code_url` / `pay_form` / `pay_merchant_no`。

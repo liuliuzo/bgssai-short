@@ -154,15 +154,15 @@ public class UserSubscriptionExample {
         public Criteria andSourceIn(List<String> values) { addCriterion("source in", values, "source"); return (Criteria) this; }
         public Criteria andSourceLike(String value) { addCriterion("source like", value, "source"); return (Criteria) this; }
 
-        public Criteria andDeleteIsNull() { addCriterion("is_delete is null"); return (Criteria) this; }
-        public Criteria andDeleteIsNotNull() { addCriterion("is_delete is not null"); return (Criteria) this; }
-        public Criteria andDeleteEqualTo(Integer value) { addCriterion("is_delete =", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteNotEqualTo(Integer value) { addCriterion("is_delete <>", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteGreaterThan(Integer value) { addCriterion("is_delete >", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteGreaterThanOrEqualTo(Integer value) { addCriterion("is_delete >=", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteLessThan(Integer value) { addCriterion("is_delete <", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteLessThanOrEqualTo(Integer value) { addCriterion("is_delete <=", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteIn(List<Integer> values) { addCriterion("is_delete in", values, "delete"); return (Criteria) this; }
+        public Criteria andDelFlagIsNull() { addCriterion("del_flag is null"); return (Criteria) this; }
+        public Criteria andDelFlagIsNotNull() { addCriterion("del_flag is not null"); return (Criteria) this; }
+        public Criteria andDelFlagEqualTo(Integer value) { addCriterion("del_flag =", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagNotEqualTo(Integer value) { addCriterion("del_flag <>", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagGreaterThan(Integer value) { addCriterion("del_flag >", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagGreaterThanOrEqualTo(Integer value) { addCriterion("del_flag >=", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagLessThan(Integer value) { addCriterion("del_flag <", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagLessThanOrEqualTo(Integer value) { addCriterion("del_flag <=", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagIn(List<Integer> values) { addCriterion("del_flag in", values, "delFlag"); return (Criteria) this; }
 
         public Criteria andCreatorIsNull() { addCriterion("creator is null"); return (Criteria) this; }
         public Criteria andCreatorIsNotNull() { addCriterion("creator is not null"); return (Criteria) this; }

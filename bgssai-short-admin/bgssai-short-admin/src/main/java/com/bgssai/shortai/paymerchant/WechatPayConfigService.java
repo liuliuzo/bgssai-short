@@ -67,7 +67,7 @@ public class WechatPayConfigService {
         log.info("admin list wechat pay configs");
 
         WechatPayConfigExample example = new WechatPayConfigExample();
-        example.createCriteria().andDeleteEqualTo(0);
+        example.createCriteria().andDelFlagEqualTo(0);
         example.setOrderByClause("is_collection_active desc, is_enabled desc, id asc");
         List<WechatPayConfig> rows = wechatPayConfigMapper.selectByExample(example);
 
@@ -146,14 +146,14 @@ public class WechatPayConfigService {
         }
 
         // uk_wechat_pay_config_mch_id covers mch_id alone, so a soft-deleted row still occupies the
-        // number: the lookup must span is_delete=0 and is_delete=1 or the insert below would hit a
+        // number: the lookup must span del_flag=0 and del_flag=1 or the insert below would hit a
         // duplicate-key error the admin cannot resolve from the console.
         WechatPayConfigExample dupExample = new WechatPayConfigExample();
         dupExample.createCriteria().andMchIdEqualTo(mchId);
         WechatPayConfig sameNumber = wechatPayConfigMapper.selectOneByExample(dupExample);
         WechatPayConfig revivable = null;
         if (sameNumber != null && !sameNumber.getId().equals(req.getId())) {
-            if (!Integer.valueOf(1).equals(sameNumber.getDelete())) {
+            if (!Integer.valueOf(1).equals(sameNumber.getDelFlag())) {
                 log.warn("admin save wechat pay config rejected-duplicate mchId={} existingId={}",
                         mchId, sameNumber.getId());
                 throw new BizException("60014", "mch_id already exists: " + mchId);
@@ -239,7 +239,7 @@ public class WechatPayConfigService {
             // may leak into the new one. The result must be indistinguishable from a fresh insert.
             row.setId(revivable.getId());
             row.setCollectionActive(0);
-            row.setDelete(0);
+            row.setDelFlag(0);
             // Connectivity state belongs to the previous merchant: this one has never been tested.
             row.setLastTestStatus("UNTESTED");
             row.setLastTestAt(null);
@@ -254,7 +254,7 @@ public class WechatPayConfigService {
                     targetId, mchId);
         } else if (req.getId() == null) {
             row.setCollectionActive(0);
-            row.setDelete(0);
+            row.setDelFlag(0);
             row.setCreator(operator);
             wechatPayConfigMapper.insertSelective(row);
             targetId = row.getId();
@@ -332,7 +332,7 @@ public class WechatPayConfigService {
         clear.setGmtModified(now);
         WechatPayConfigExample clearExample = new WechatPayConfigExample();
         clearExample.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andCollectionActiveEqualTo(1);
         int cleared = wechatPayConfigMapper.updateByExampleSelective(clear, clearExample);
 
@@ -365,7 +365,7 @@ public class WechatPayConfigService {
 
         WechatPayConfig update = new WechatPayConfig();
         update.setId(existing.getId());
-        update.setDelete(1);
+        update.setDelFlag(1);
         update.setModifier(resolveOperator());
         update.setGmtModified(new Date());
         wechatPayConfigMapper.updateByPrimaryKeySelective(update);
@@ -381,7 +381,7 @@ public class WechatPayConfigService {
             throw new BizException("60009", "id must not be null");
         }
         WechatPayConfig row = wechatPayConfigMapper.selectByPrimaryKey(id);
-        if (row == null || Integer.valueOf(1).equals(row.getDelete())) {
+        if (row == null || Integer.valueOf(1).equals(row.getDelFlag())) {
             throw new BizException("60009", "wechat pay config not found: " + id);
         }
         return row;

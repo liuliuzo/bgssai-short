@@ -17,6 +17,7 @@
     <result column="status" jdbcType="BIT" property="status" />
     <result column="company_id" jdbcType="INTEGER" property="companyId" />
     <result column="online" jdbcType="BIT" property="online" />
+    <result column="current_session_id" jdbcType="VARCHAR" property="currentSessionId" />
     <result column="del_flag" jdbcType="BIT" property="delFlag" />
     <result column="create_by" jdbcType="VARCHAR" property="createBy" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
@@ -136,14 +137,14 @@
       avatar, birthday, sex, 
       email, phone, org_code, 
       status, company_id, online, 
-      del_flag, create_by, create_time, 
+      current_session_id, del_flag, create_by, create_time, 
       update_by, update_time)
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR}, 
       #{realName,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{salt,jdbcType=VARCHAR}, 
       #{avatar,jdbcType=VARCHAR}, #{birthday,jdbcType=TIMESTAMP}, #{sex,jdbcType=BIT}, 
       #{email,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR}, #{orgCode,jdbcType=VARCHAR}, 
       #{status,jdbcType=BIT}, #{companyId,jdbcType=INTEGER}, #{online,jdbcType=BIT}, 
-      #{delFlag,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{currentSessionId,jdbcType=VARCHAR}, #{delFlag,jdbcType=BIT}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
       #{updateBy,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.SysUser">
@@ -193,6 +194,9 @@
       </if>
       <if test="online != null">
         online,
+      </if>
+      <if test="currentSessionId != null">
+        current_session_id,
       </if>
       <if test="delFlag != null">
         del_flag,
@@ -255,6 +259,9 @@
       </if>
       <if test="online != null">
         #{online,jdbcType=BIT},
+      </if>
+      <if test="currentSessionId != null">
+        #{currentSessionId,jdbcType=VARCHAR},
       </if>
       <if test="delFlag != null">
         #{delFlag,jdbcType=BIT},
@@ -327,8 +334,12 @@
       <if test="record.online != null">
         online = #{record.online,jdbcType=BIT},
       </if>
+      <if test="record.currentSessionId != null">
+        current_session_id = #{record.currentSessionId,jdbcType=VARCHAR},
+      </if>
       <if test="record.delFlag != null">
-        del_flag = #{record.delFlag,jdbcType=BIT},
+        current_session_id = #{record.currentSessionId,jdbcType=VARCHAR},
+      del_flag = #{record.delFlag,jdbcType=BIT},
       </if>
       <if test="record.createBy != null">
         create_by = #{record.createBy,jdbcType=VARCHAR},
@@ -418,8 +429,12 @@
       <if test="online != null">
         online = #{online,jdbcType=BIT},
       </if>
+      <if test="currentSessionId != null">
+        current_session_id = #{currentSessionId,jdbcType=VARCHAR},
+      </if>
       <if test="delFlag != null">
-        del_flag = #{delFlag,jdbcType=BIT},
+        current_session_id = #{currentSessionId,jdbcType=VARCHAR},
+      del_flag = #{delFlag,jdbcType=BIT},
       </if>
       <if test="createBy != null">
         create_by = #{createBy,jdbcType=VARCHAR},
@@ -458,5 +473,16 @@
       update_by = #{updateBy,jdbcType=VARCHAR},
       update_time = #{updateTime,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=INTEGER}
+  </update>
+  <!--
+    单会话登出：把 current_session_id 置为 SQL NULL，只写这一列。
+    形态与 deleteByExample 一致（同表、同 Example_Where_Clause），仅把 delete 换成 set 一列。
+  -->
+  <update id="clearCurrentSessionIdByExample" parameterType="com.bgssai.shortai.model.SysUserExample">
+    update sys_user
+    set current_session_id = null
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
   </update>
 </mapper>

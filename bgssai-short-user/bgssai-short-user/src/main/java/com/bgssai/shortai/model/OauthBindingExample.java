@@ -64,11 +64,11 @@ public class OauthBindingExample {
         public Criteria andAvatarUrlIsNull() { addCriterion("avatar_url is null"); return (Criteria) this; }
         public Criteria andAvatarUrlIsNotNull() { addCriterion("avatar_url is not null"); return (Criteria) this; }
         public Criteria andAvatarUrlEqualTo(String value) { addCriterion("avatar_url =", value, "avatarUrl"); return (Criteria) this; }
-        public Criteria andDeleteIsNull() { addCriterion("is_delete is null"); return (Criteria) this; }
-        public Criteria andDeleteIsNotNull() { addCriterion("is_delete is not null"); return (Criteria) this; }
-        public Criteria andDeleteEqualTo(Boolean value) { addCriterion("is_delete =", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteNotEqualTo(Boolean value) { addCriterion("is_delete <>", value, "delete"); return (Criteria) this; }
-        public Criteria andDeleteIn(List<Boolean> values) { addCriterion("is_delete in", values, "delete"); return (Criteria) this; }
+        public Criteria andDelFlagIsNull() { addCriterion("del_flag is null"); return (Criteria) this; }
+        public Criteria andDelFlagIsNotNull() { addCriterion("del_flag is not null"); return (Criteria) this; }
+        public Criteria andDelFlagEqualTo(Boolean value) { addCriterion("del_flag =", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagNotEqualTo(Boolean value) { addCriterion("del_flag <>", value, "delFlag"); return (Criteria) this; }
+        public Criteria andDelFlagIn(List<Boolean> values) { addCriterion("del_flag in", values, "delFlag"); return (Criteria) this; }
         public Criteria andCreatorIsNull() { addCriterion("creator is null"); return (Criteria) this; }
         public Criteria andCreatorIsNotNull() { addCriterion("creator is not null"); return (Criteria) this; }
         public Criteria andCreatorEqualTo(String value) { addCriterion("creator =", value, "creator"); return (Criteria) this; }

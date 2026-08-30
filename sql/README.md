@@ -46,7 +46,7 @@ mysql -h <host> -u <user> -p bgssai_short < sql/dev/DML.sql
 
 ## 结构性变更约定
 
-任何加 / 改 / 删列后须同步：更新 `DDL.sql`、重跑 MyBatis Generator 更新后端 `model/**` / `mapper/**` /
+任何加 / 改 / 删列后须同步：更新 `DDL.sql`、手工同步持久层三件套 更新后端 `model/**` / `mapper/**` /
 Mapper XML，并保持需求 / 原型 / 设计 / 代码四层一致（Standards §0、§9）。应用启动期不自动执行 DDL，
 schema 由部署方手动执行。
 

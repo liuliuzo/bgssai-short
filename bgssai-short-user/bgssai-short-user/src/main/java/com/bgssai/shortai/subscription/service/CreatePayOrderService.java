@@ -59,7 +59,7 @@ public class CreatePayOrderService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "plan_code is required");
         }
         SubscriptionPlanExample ex = new SubscriptionPlanExample();
-        ex.createCriteria().andPlanCodeEqualTo(planCode.trim()).andDeleteEqualTo(0).andActiveEqualTo(1);
+        ex.createCriteria().andPlanCodeEqualTo(planCode.trim()).andDelFlagEqualTo(0).andActiveEqualTo(1);
         SubscriptionPlan plan = subscriptionPlanMapper.selectOneByExample(ex);
         if (plan == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "unknown plan_code");
@@ -77,7 +77,7 @@ public class CreatePayOrderService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "pack_code is required");
         }
         CreditPackExample ex = new CreditPackExample();
-        ex.createCriteria().andPackCodeEqualTo(packCode.trim()).andDeleteEqualTo(0).andActiveEqualTo(1);
+        ex.createCriteria().andPackCodeEqualTo(packCode.trim()).andDelFlagEqualTo(0).andActiveEqualTo(1);
         CreditPack pack = creditPackMapper.selectOneByExample(ex);
         if (pack == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "unknown pack_code");
@@ -108,7 +108,7 @@ public class CreatePayOrderService {
         row.setGrantCent(grantCent);
         row.setStatus("created");
         row.setExpiresAt(cal.getTime());
-        row.setDelete(0);
+        row.setDelFlag(0);
         row.setCreator(userId);
         row.setModifier(userId);
         row.setGmtCreate(now);
@@ -135,7 +135,7 @@ public class CreatePayOrderService {
         patch.setPayMerchantNo(prepay.getPayMerchantNo());
         patch.setGmtModified(new Date());
         com.bgssai.shortai.model.PaymentOrderExample up = new com.bgssai.shortai.model.PaymentOrderExample();
-        up.createCriteria().andOrderNoEqualTo(orderNo).andDeleteEqualTo(0);
+        up.createCriteria().andOrderNoEqualTo(orderNo).andDelFlagEqualTo(0);
         paymentOrderMapper.updateByExampleSelective(patch, up);
         row.setCodeUrl(prepay.getPrepayInfo());
         row.setPayMerchantNo(prepay.getPayMerchantNo());

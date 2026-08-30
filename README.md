@@ -64,7 +64,7 @@ API（账号、内容审核、AI 能力与用量管理），用户端承载创�
 | 全局异常 | `common/exception/GlobalExceptionHandler` | 统一错误码与 HTTP 状态映射 |
 | 全链路 traceId | `common/filter/RequestTraceFilter`、`common/logging/MdcSupport` | logback pattern 自动输出 traceId/userId |
 | 限流 | `common/ratelimit/**`（Bucket4j 令牌桶） | `@RateLimit` 注解按 IP/USER 维度限流 |
-| 持久层范式 | `mapper/**`、`model/**`（MyBatis Generator 产物） | 仅用 Example 白名单方法；分页走 PageHelper |
+| 持久层范式 | `mapper/**`、`model/**`（MyBatis 持久层三件套） | 仅用 Example 白名单方法；分页走 PageHelper |
 | snake_case | `configuration/BgssConfig` | Jackson 2 全局 snake_case 序列化 |
 | 健康检查 | `health/**`、`configuration/AsyncConfig` | 全产品线统一口径：`GET /bgssai/health/liveness` · `/readiness` · `/bgssai/health`，组件化探针 + 硬超时 + TTL 缓存。口径见 Standards §13 |
 | 示例功能 | `loginlog/**` | 登录日志分页列表，演示 `@NeedAop` + `PageResponse` + PageHelper 全链路 |
@@ -118,6 +118,6 @@ cd bgssai-short-user/bgssai-short-user-react   && npm install && npm run dev   #
 1. 需求：`docs/feature/**`（照 `_TEMPLATE-feature.md` 落盘，含详细设计与图示）。
 2. 原型：`docs/demo-static/**`（涉及的每个端目录，并更新该端 `PAGE-FLOW.html`）。
 3. 详设与契约：`docs/architecture` / `docs/api`（含 `docs/api/page-api-mapping.md`）/ `docs/security`。
-4. 代码与数据库：`src/**`、前端工程与 `sql/**`；改表后重跑 MyBatis Generator。
+4. 代码与数据库：`src/**`、前端工程与 `sql/**`；改表后手工同步持久层三件套。
 
 顺序不可颠倒、不可跳跃；同一次变更四层同步完成、当次交清（详见 `docs/BGSSAI-Standards.md` §0）。

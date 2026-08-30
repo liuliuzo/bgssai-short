@@ -21,7 +21,7 @@ public class ListSubscriptionPlansService {
 
     public ApiResponse list() {
         SubscriptionPlanExample ex = new SubscriptionPlanExample();
-        ex.createCriteria().andDeleteEqualTo(0).andActiveEqualTo(1);
+        ex.createCriteria().andDelFlagEqualTo(0).andActiveEqualTo(1);
         ex.setOrderByClause("sort_order asc, id asc");
         List<SubscriptionPlan> rows = subscriptionPlanMapper.selectByExample(ex);
         List<Map<String, Object>> planList = new ArrayList<>();

@@ -21,7 +21,7 @@ public class ListUserCreditPacksService {
 
     public ApiResponse list() {
         CreditPackExample ex = new CreditPackExample();
-        ex.createCriteria().andDeleteEqualTo(0).andActiveEqualTo(1);
+        ex.createCriteria().andDelFlagEqualTo(0).andActiveEqualTo(1);
         ex.setOrderByClause("sort_order asc, id asc");
         List<CreditPack> rows = creditPackMapper.selectByExample(ex);
         List<Map<String, Object>> packList = new ArrayList<>();

@@ -53,7 +53,7 @@ public class OAuthLoginService {
         newBinding.setUserId(user.getUserId());
         newBinding.setNickname(userInfo.getNickname());
         newBinding.setAvatarUrl(userInfo.getAvatarUrl());
-        newBinding.setDelete(Boolean.FALSE);
+        newBinding.setDelFlag(Boolean.FALSE);
         newBinding.setCreator(user.getUserId());
         newBinding.setModifier(user.getUserId());
         try {
@@ -77,7 +77,7 @@ public class OAuthLoginService {
 
     private OauthBinding findBinding(String platform, String openId) {
         OauthBindingExample ex = new OauthBindingExample();
-        ex.createCriteria().andPlatformEqualTo(platform).andOpenIdEqualTo(openId).andDeleteEqualTo(Boolean.FALSE);
+        ex.createCriteria().andPlatformEqualTo(platform).andOpenIdEqualTo(openId).andDelFlagEqualTo(Boolean.FALSE);
         return oauthBindingMapper.selectOneByExample(ex);
     }
 

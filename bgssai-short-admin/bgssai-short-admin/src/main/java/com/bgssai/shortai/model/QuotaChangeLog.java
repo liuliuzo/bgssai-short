@@ -13,7 +13,7 @@ public class QuotaChangeLog {
     private Integer extraAfterCent;
     private Integer monthlyLimitCent;
     private String remark;
-    private Integer delete;
+    private Integer delFlag;
     private String creator;
     private String modifier;
     private Date gmtCreate;
@@ -99,12 +99,12 @@ public class QuotaChangeLog {
         this.remark = remark == null ? null : remark.trim();
     }
 
-    public Integer getDelete() {
-        return delete;
+    public Integer getDelFlag() {
+        return delFlag;
     }
 
-    public void setDelete(Integer delete) {
-        this.delete = delete;
+    public void setDelFlag(Integer delFlag) {
+        this.delFlag = delFlag;
     }
 
     public String getCreator() {

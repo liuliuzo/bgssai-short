@@ -35,6 +35,7 @@ CREATE TABLE `sys_user`  (
   `status` tinyint(1) NULL DEFAULT NULL COMMENT '状态(1-正常,2-冻结)',
   `company_id` int(11) NULL DEFAULT NULL COMMENT '公司ID',
   `online` tinyint(1) NULL DEFAULT NULL COMMENT '在线状态(0-在线,1-不在线)',
+  `current_session_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '当前有效会话标识；登录时覆盖写入，登出置 NULL，旧会话凭此判定失效',
   `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除状态(0-正常,1-已删除)',
   `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '创建人',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -90,7 +91,7 @@ CREATE TABLE `oauth_binding` (
   `user_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '绑定的本平台账号',
   `nickname` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '第三方昵称快照',
   `avatar_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '第三方头像快照',
-  `is_delete` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   `creator` varchar(64) NULL DEFAULT NULL COMMENT '创建者标识',
   `modifier` varchar(64) NULL DEFAULT NULL COMMENT '最后修改者标识',
   `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -142,7 +143,7 @@ CREATE TABLE subscription_plan (
 
   is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否上架',
   sort_order INT NOT NULL DEFAULT 0 COMMENT '排序',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -162,7 +163,7 @@ CREATE TABLE user_subscription (
   current_period_start DATETIME DEFAULT NULL COMMENT '本期开始',
   current_period_end DATETIME DEFAULT NULL COMMENT '本期结束',
   source VARCHAR(32) DEFAULT NULL COMMENT 'order / grant / free',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -182,7 +183,7 @@ CREATE TABLE user_quota (
   extra_balance_cent INT NOT NULL DEFAULT 0 COMMENT '加量钱包(分)',
   month_spent_cent INT NOT NULL DEFAULT 0 COMMENT '本期已消耗(分)',
   month_reset_date DATE DEFAULT NULL COMMENT '月度重置日',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -203,7 +204,7 @@ CREATE TABLE credit_pack (
   
   is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否上架',
   sort_order INT NOT NULL DEFAULT 0 COMMENT '排序',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -233,14 +234,14 @@ CREATE TABLE payment_order (
   channel_trade_no VARCHAR(64) DEFAULT NULL COMMENT '渠道交易号',
   paid_at DATETIME DEFAULT NULL COMMENT '支付成功时间',
   expires_at DATETIME DEFAULT NULL COMMENT '过期时间',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   gmt_modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (id),
   UNIQUE KEY uk_payment_order_no (order_no),
-  KEY idx_payment_order_user (user_id, status, is_delete)
+  KEY idx_payment_order_user (user_id, status, del_flag)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付订单';
 -- ----------------------------
 -- quota_change_log
@@ -257,7 +258,7 @@ CREATE TABLE quota_change_log (
   extra_after_cent INT DEFAULT NULL COMMENT '变化后加量余额',
   monthly_limit_cent INT DEFAULT NULL COMMENT '调整后月度上限',
   remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -293,15 +294,15 @@ CREATE TABLE wechat_pay_config (
   last_test_error         VARCHAR(512) DEFAULT NULL                           COMMENT '最近连通测试失败摘要',
   is_enabled              TINYINT(1)   NOT NULL DEFAULT 1                     COMMENT '是否启用',
   is_collection_active    TINYINT(1)   NOT NULL DEFAULT 0                     COMMENT '是否当前收款商户',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   gmt_modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (id),
   UNIQUE KEY uk_wechat_pay_config_mch_id (mch_id),
-  KEY idx_wechat_pay_config_collect (is_collection_active, is_enabled, is_delete),
-  KEY idx_wechat_pay_config_routing (mch_id, env_mode, is_enabled, is_delete)
+  KEY idx_wechat_pay_config_collect (is_collection_active, is_enabled, del_flag),
+  KEY idx_wechat_pay_config_routing (mch_id, env_mode, is_enabled, del_flag)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='微信支付商户配置';
 -- ----------------------------
 -- alipay_config
@@ -330,15 +331,15 @@ CREATE TABLE alipay_config (
   last_test_error        VARCHAR(512) DEFAULT NULL                            COMMENT '最近连通测试失败摘要',
   is_enabled             TINYINT(1)   NOT NULL DEFAULT 1                      COMMENT '是否启用',
   is_collection_active   TINYINT(1)   NOT NULL DEFAULT 0                      COMMENT '是否当前收款商户',
-  is_delete TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   creator VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   modifier VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
   gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   gmt_modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (id),
   UNIQUE KEY uk_alipay_config_app_id (app_id),
-  KEY idx_alipay_config_collect (is_collection_active, is_enabled, is_delete),
-  KEY idx_alipay_config_routing (app_id, env_mode, is_enabled, is_delete)
+  KEY idx_alipay_config_collect (is_collection_active, is_enabled, del_flag),
+  KEY idx_alipay_config_routing (app_id, env_mode, is_enabled, del_flag)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付宝商户配置';
 
 -- ----------------------------

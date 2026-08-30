@@ -12,7 +12,7 @@
     <result column="extra_after_cent" jdbcType="INTEGER" property="extraAfterCent" />
     <result column="monthly_limit_cent" jdbcType="INTEGER" property="monthlyLimitCent" />
     <result column="remark" jdbcType="VARCHAR" property="remark" />
-    <result column="is_delete" jdbcType="TINYINT" property="delete" />
+    <result column="del_flag" jdbcType="TINYINT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -62,7 +62,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, user_id, operator_user_id, change_type, balance_delta_cent, extra_delta_cent, balance_after_cent, extra_after_cent, monthly_limit_cent, remark, is_delete, creator, modifier, gmt_create, gmt_modified
+    id, user_id, operator_user_id, change_type, balance_delta_cent, extra_delta_cent, balance_after_cent, extra_after_cent, monthly_limit_cent, remark, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.QuotaChangeLogExample" resultMap="BaseResultMap">
     select
@@ -102,8 +102,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.QuotaChangeLog" useGeneratedKeys="true" keyProperty="id">
-    insert into quota_change_log (id, user_id, operator_user_id, change_type, balance_delta_cent, extra_delta_cent, balance_after_cent, extra_after_cent, monthly_limit_cent, remark, is_delete, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{operatorUserId,jdbcType=VARCHAR}, #{changeType,jdbcType=VARCHAR}, #{balanceDeltaCent,jdbcType=INTEGER}, #{extraDeltaCent,jdbcType=INTEGER}, #{balanceAfterCent,jdbcType=INTEGER}, #{extraAfterCent,jdbcType=INTEGER}, #{monthlyLimitCent,jdbcType=INTEGER}, #{remark,jdbcType=VARCHAR}, #{delete,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into quota_change_log (id, user_id, operator_user_id, change_type, balance_delta_cent, extra_delta_cent, balance_after_cent, extra_after_cent, monthly_limit_cent, remark, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{operatorUserId,jdbcType=VARCHAR}, #{changeType,jdbcType=VARCHAR}, #{balanceDeltaCent,jdbcType=INTEGER}, #{extraDeltaCent,jdbcType=INTEGER}, #{balanceAfterCent,jdbcType=INTEGER}, #{extraAfterCent,jdbcType=INTEGER}, #{monthlyLimitCent,jdbcType=INTEGER}, #{remark,jdbcType=VARCHAR}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.QuotaChangeLog" useGeneratedKeys="true" keyProperty="id">
     insert into quota_change_log
@@ -118,7 +118,7 @@
       <if test="extraAfterCent != null">extra_after_cent,</if>
       <if test="monthlyLimitCent != null">monthly_limit_cent,</if>
       <if test="remark != null">remark,</if>
-      <if test="delete != null">is_delete,</if>
+      <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
       <if test="gmtCreate != null">gmt_create,</if>
@@ -135,7 +135,7 @@
       <if test="extraAfterCent != null">#{extraAfterCent,jdbcType=INTEGER},</if>
       <if test="monthlyLimitCent != null">#{monthlyLimitCent,jdbcType=INTEGER},</if>
       <if test="remark != null">#{remark,jdbcType=VARCHAR},</if>
-      <if test="delete != null">#{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">#{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -159,7 +159,7 @@
       <if test="row.extraAfterCent != null">extra_after_cent = #{row.extraAfterCent,jdbcType=INTEGER},</if>
       <if test="row.monthlyLimitCent != null">monthly_limit_cent = #{row.monthlyLimitCent,jdbcType=INTEGER},</if>
       <if test="row.remark != null">remark = #{row.remark,jdbcType=VARCHAR},</if>
-      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=TINYINT},</if>
+      <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=TINYINT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
       <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -180,7 +180,7 @@
       extra_after_cent = #{row.extraAfterCent,jdbcType=INTEGER},
       monthly_limit_cent = #{row.monthlyLimitCent,jdbcType=INTEGER},
       remark = #{row.remark,jdbcType=VARCHAR},
-      is_delete = #{row.delete,jdbcType=TINYINT},
+      del_flag = #{row.delFlag,jdbcType=TINYINT},
       creator = #{row.creator,jdbcType=VARCHAR},
       modifier = #{row.modifier,jdbcType=VARCHAR},
       gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},
@@ -199,7 +199,7 @@
       <if test="extraAfterCent != null">extra_after_cent = #{extraAfterCent,jdbcType=INTEGER},</if>
       <if test="monthlyLimitCent != null">monthly_limit_cent = #{monthlyLimitCent,jdbcType=INTEGER},</if>
       <if test="remark != null">remark = #{remark,jdbcType=VARCHAR},</if>
-      <if test="delete != null">is_delete = #{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">del_flag = #{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -220,7 +220,7 @@
       extra_after_cent = #{extraAfterCent,jdbcType=INTEGER},
       monthly_limit_cent = #{monthlyLimitCent,jdbcType=INTEGER},
       remark = #{remark,jdbcType=VARCHAR},
-      is_delete = #{delete,jdbcType=TINYINT},
+      del_flag = #{delFlag,jdbcType=TINYINT},
       creator = #{creator,jdbcType=VARCHAR},
       modifier = #{modifier,jdbcType=VARCHAR},
       gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},

@@ -10,7 +10,7 @@
     <result column="monthly_limit_cent" jdbcType="INTEGER" property="monthlyLimitCent" />
     <result column="is_active" jdbcType="TINYINT" property="active" />
     <result column="sort_order" jdbcType="INTEGER" property="sortOrder" />
-    <result column="is_delete" jdbcType="TINYINT" property="delete" />
+    <result column="del_flag" jdbcType="TINYINT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -60,7 +60,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator, modifier, gmt_create, gmt_modified
+    id, plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.SubscriptionPlanExample" resultMap="BaseResultMap">
     select
@@ -100,8 +100,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.SubscriptionPlan" useGeneratedKeys="true" keyProperty="id">
-    insert into subscription_plan (id, plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, is_delete, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{planCode,jdbcType=VARCHAR}, #{planName,jdbcType=VARCHAR}, #{priceCent,jdbcType=INTEGER}, #{monthlyBalanceCent,jdbcType=INTEGER}, #{monthlyLimitCent,jdbcType=INTEGER}, #{active,jdbcType=TINYINT}, #{sortOrder,jdbcType=INTEGER}, #{delete,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into subscription_plan (id, plan_code, plan_name, price_cent, monthly_balance_cent, monthly_limit_cent, is_active, sort_order, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{planCode,jdbcType=VARCHAR}, #{planName,jdbcType=VARCHAR}, #{priceCent,jdbcType=INTEGER}, #{monthlyBalanceCent,jdbcType=INTEGER}, #{monthlyLimitCent,jdbcType=INTEGER}, #{active,jdbcType=TINYINT}, #{sortOrder,jdbcType=INTEGER}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.SubscriptionPlan" useGeneratedKeys="true" keyProperty="id">
     insert into subscription_plan
@@ -114,7 +114,7 @@
       <if test="monthlyLimitCent != null">monthly_limit_cent,</if>
       <if test="active != null">is_active,</if>
       <if test="sortOrder != null">sort_order,</if>
-      <if test="delete != null">is_delete,</if>
+      <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
       <if test="gmtCreate != null">gmt_create,</if>
@@ -129,7 +129,7 @@
       <if test="monthlyLimitCent != null">#{monthlyLimitCent,jdbcType=INTEGER},</if>
       <if test="active != null">#{active,jdbcType=TINYINT},</if>
       <if test="sortOrder != null">#{sortOrder,jdbcType=INTEGER},</if>
-      <if test="delete != null">#{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">#{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -151,7 +151,7 @@
       <if test="row.monthlyLimitCent != null">monthly_limit_cent = #{row.monthlyLimitCent,jdbcType=INTEGER},</if>
       <if test="row.active != null">is_active = #{row.active,jdbcType=TINYINT},</if>
       <if test="row.sortOrder != null">sort_order = #{row.sortOrder,jdbcType=INTEGER},</if>
-      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=TINYINT},</if>
+      <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=TINYINT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
       <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -170,7 +170,7 @@
       monthly_limit_cent = #{row.monthlyLimitCent,jdbcType=INTEGER},
       is_active = #{row.active,jdbcType=TINYINT},
       sort_order = #{row.sortOrder,jdbcType=INTEGER},
-      is_delete = #{row.delete,jdbcType=TINYINT},
+      del_flag = #{row.delFlag,jdbcType=TINYINT},
       creator = #{row.creator,jdbcType=VARCHAR},
       modifier = #{row.modifier,jdbcType=VARCHAR},
       gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},
@@ -187,7 +187,7 @@
       <if test="monthlyLimitCent != null">monthly_limit_cent = #{monthlyLimitCent,jdbcType=INTEGER},</if>
       <if test="active != null">is_active = #{active,jdbcType=TINYINT},</if>
       <if test="sortOrder != null">sort_order = #{sortOrder,jdbcType=INTEGER},</if>
-      <if test="delete != null">is_delete = #{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">del_flag = #{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -206,7 +206,7 @@
       monthly_limit_cent = #{monthlyLimitCent,jdbcType=INTEGER},
       is_active = #{active,jdbcType=TINYINT},
       sort_order = #{sortOrder,jdbcType=INTEGER},
-      is_delete = #{delete,jdbcType=TINYINT},
+      del_flag = #{delFlag,jdbcType=TINYINT},
       creator = #{creator,jdbcType=VARCHAR},
       modifier = #{modifier,jdbcType=VARCHAR},
       gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},

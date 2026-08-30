@@ -14,7 +14,7 @@ public class OauthBinding implements Serializable {
     private String userId;
     private String nickname;
     private String avatarUrl;
-    private Boolean delete;
+    private Boolean delFlag;
     private String creator;
     private String modifier;
     private Date gmtCreate;
@@ -44,8 +44,8 @@ public class OauthBinding implements Serializable {
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
-    public Boolean getDelete() { return delete; }
-    public void setDelete(Boolean delete) { this.delete = delete; }
+    public Boolean getDelFlag() { return delFlag; }
+    public void setDelFlag(Boolean delFlag) { this.delFlag = delFlag; }
 
     public String getCreator() { return creator; }
     public void setCreator(String creator) { this.creator = creator; }

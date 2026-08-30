@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.bgssai.shortai.common.AdminAuthGuard;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.common.session.SingleSessionGuard;
 import com.bgssai.shortai.login.dto.req.ReqAdminLogin;
 import com.bgssai.shortai.login.dto.resp.RespAdminLogin;
 import com.bgssai.shortai.mapper.LoginLogMapper;
@@ -40,6 +41,9 @@ public class AdminLoginService {
     @Autowired
     private LoginLogMapper loginLogMapper;
 
+    @Autowired
+    private SingleSessionGuard singleSessionGuard;
+
     /**
      * Authenticate and return a token.
      *
@@ -52,7 +56,9 @@ public class AdminLoginService {
         log.info("admin login attempt identifier={}", req.getIdentifier());
 
         SysUserExample example = new SysUserExample();
-        example.createCriteria().andUserNameEqualTo(req.getIdentifier());
+        // 逻辑删除的账号不是账号：不带 del_flag=0 过滤的话，被删账号仍能通过密码校验拿到 token，
+        // 随后每个业务请求都被会话闸门拦掉，用户看到的是「登录成功却处处失效」的误导文案。
+        example.createCriteria().andUserNameEqualTo(req.getIdentifier()).andDelFlagEqualTo(false);
         SysUser user = sysUserMapper.selectOneByExample(example);
 
         if (user == null) {
@@ -73,13 +79,19 @@ public class AdminLoginService {
             throw new BizException(CommonErrorCode.FORBIDDEN, "access denied: only admin may use this console");
         }
 
+        // 单会话：先生成并覆盖写入新的会话标识，再把它签进 token。顺序不可颠倒——先签后写会在
+        // 写库失败时留下一个库里对不上的 token。覆盖写入即刻使该账号此前签发的所有 token 失效。
+        String sessionId = singleSessionGuard.newSessionId();
+        singleSessionGuard.bindSession(user.getUserId(), sessionId);
+
         String token = JwtUtil.generateToken(
                 user.getUserId(),
                 user.getRealName(),
                 "01",
                 null,
                 null,
-                AdminAuthGuard.ADMIN_ROLE);
+                AdminAuthGuard.ADMIN_ROLE,
+                sessionId);
 
         appendLoginLog(user.getUserId(), "LOGIN_SUCCESS", httpReq);
         log.info("admin login success userId={}", user.getUserId());

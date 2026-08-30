@@ -54,11 +54,27 @@ public class JwtUtil {
 
     public static String generateToken(String userId, String realName, String accountType,
                                        String companyCode, String companyName) {
-        return generateToken(userId, realName, accountType, companyCode, companyName, null);
+        return generateToken(userId, realName, accountType, companyCode, companyName, null, null);
     }
 
     public static String generateToken(String userId, String realName, String accountType,
                                        String companyCode, String companyName, String role) {
+        return generateToken(userId, realName, accountType, companyCode, companyName, role, null);
+    }
+
+    /**
+     * 签发 token，可选携带单会话标识作为 {@code sid} claim。
+     *
+     * <p>sid 就是登录刚写进 sys_user.current_session_id 的值。每个需鉴权的请求都会比对两者
+     * （见 JwtTokenAspect）；同一账号的后一次登录覆盖该列，于是此前签发的所有 token 全部失效
+     * （last-login-wins）。传 null 则整个 claim 不出现——本特性发布前签发的 token 正是这个样子，
+     * 切面对「缺 sid」必须回 2002 而不是 2003。</p>
+     *
+     * @param sessionId 单会话标识，最长 64 字符；null 或空串则不带该 claim
+     */
+    public static String generateToken(String userId, String realName, String accountType,
+                                       String companyCode, String companyName, String role,
+                                       String sessionId) {
         Date expirationDate = new Date(System.currentTimeMillis() + EXPIRATION_TIME_MS);
         var builder = Jwts.builder()
                           .subject(userId)
@@ -70,6 +86,9 @@ public class JwtUtil {
                           .signWith(key());
         if (role != null && !role.isEmpty()) {
             builder.claim("role", role);
+        }
+        if (sessionId != null && !sessionId.isEmpty()) {
+            builder.claim("sid", sessionId);
         }
         return builder.compact();
     }
@@ -105,6 +124,15 @@ public class JwtUtil {
 
     public static String getCompanyNameFromToken(String token) {
         return getClaims(token).get("companyName", String.class);
+    }
+
+    /**
+     * 读取 token 里的单会话标识。
+     *
+     * @return sid claim；本特性发布前签发的 token 返回 null
+     */
+    public static String getSessionIdFromToken(String token) {
+        return getClaims(token).get("sid", String.class);
     }
 
     public static String getRoleFromToken(String token) {

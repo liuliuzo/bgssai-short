@@ -125,7 +125,7 @@ def build() -> str:
     a(
         insert(
             "user_subscription",
-            ["user_id", "plan_code", "status", "current_period_start", "current_period_end", "source", "is_delete", "creator"],
+            ["user_id", "plan_code", "status", "current_period_start", "current_period_end", "source", "del_flag", "creator"],
             [
                 sql_str("u-demo-0001"),
                 sql_str("PRO"),
@@ -148,7 +148,7 @@ def build() -> str:
                 "extra_balance_cent",
                 "month_spent_cent",
                 "month_reset_date",
-                "is_delete",
+                "del_flag",
                 "creator",
             ],
             [
@@ -177,7 +177,7 @@ def build() -> str:
                 "payment_channel",
                 "status",
                 "paid_at",
-                "is_delete",
+                "del_flag",
                 "creator",
             ],
             [
@@ -210,7 +210,7 @@ def build() -> str:
                 "payment_channel",
                 "status",
                 "paid_at",
-                "is_delete",
+                "del_flag",
                 "creator",
             ],
             [
@@ -242,7 +242,7 @@ def build() -> str:
                 "extra_after_cent",
                 "monthly_limit_cent",
                 "remark",
-                "is_delete",
+                "del_flag",
                 "creator",
             ],
             [
@@ -273,7 +273,7 @@ def build() -> str:
                 "extra_after_cent",
                 "monthly_limit_cent",
                 "remark",
-                "is_delete",
+                "del_flag",
                 "creator",
             ],
             [
@@ -304,7 +304,7 @@ def build() -> str:
                 "extra_after_cent",
                 "monthly_limit_cent",
                 "remark",
-                "is_delete",
+                "del_flag",
                 "creator",
             ],
             [
@@ -339,7 +339,7 @@ def build() -> str:
                     "current_period_start",
                     "current_period_end",
                     "source",
-                    "is_delete",
+                    "del_flag",
                     "creator",
                 ],
                 [
@@ -364,7 +364,7 @@ def build() -> str:
                     "extra_balance_cent",
                     "month_spent_cent",
                     "month_reset_date",
-                    "is_delete",
+                    "del_flag",
                     "creator",
                 ],
                 [
@@ -394,7 +394,7 @@ def build() -> str:
                         "payment_channel",
                         "status",
                         "paid_at",
-                        "is_delete",
+                        "del_flag",
                         "creator",
                     ],
                     [

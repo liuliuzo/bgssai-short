@@ -59,7 +59,7 @@ public class PaidOrderGrantService {
         patch.setPaidAt(now);
         patch.setGmtModified(now);
         PaymentOrderExample cas = new PaymentOrderExample();
-        cas.createCriteria().andIdEqualTo(order.getId()).andStatusEqualTo("created").andDeleteEqualTo(0);
+        cas.createCriteria().andIdEqualTo(order.getId()).andStatusEqualTo("created").andDelFlagEqualTo(0);
         int n = paymentOrderMapper.updateByExampleSelective(patch, cas);
         if (n != 1) {
             log.info("payment grant skip concurrent or already paid orderNo={}", order.getOrderNo());
@@ -81,7 +81,7 @@ public class PaidOrderGrantService {
         cal.add(Calendar.MONTH, 1);
         Date end = cal.getTime();
         UserSubscriptionExample ex = new UserSubscriptionExample();
-        ex.createCriteria().andUserIdEqualTo(userId).andDeleteEqualTo(0);
+        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
         UserSubscription existing = userSubscriptionMapper.selectOneByExample(ex);
         if (existing == null) {
             UserSubscription row = new UserSubscription();
@@ -91,7 +91,7 @@ public class PaidOrderGrantService {
             row.setCurrentPeriodStart(now);
             row.setCurrentPeriodEnd(end);
             row.setSource("order");
-            row.setDelete(0);
+            row.setDelFlag(0);
             row.setCreator(userId);
             row.setModifier(userId);
             row.setGmtCreate(now);
@@ -106,12 +106,12 @@ public class PaidOrderGrantService {
             patch.setSource("order");
             patch.setGmtModified(now);
             UserSubscriptionExample up = new UserSubscriptionExample();
-            up.createCriteria().andIdEqualTo(existing.getId()).andDeleteEqualTo(0);
+            up.createCriteria().andIdEqualTo(existing.getId()).andDelFlagEqualTo(0);
             userSubscriptionMapper.updateByExampleSelective(patch, up);
         }
         int monthlyLimit = 0;
         SubscriptionPlanExample pex = new SubscriptionPlanExample();
-        pex.createCriteria().andPlanCodeEqualTo(planCode).andDeleteEqualTo(0);
+        pex.createCriteria().andPlanCodeEqualTo(planCode).andDelFlagEqualTo(0);
         SubscriptionPlan plan = subscriptionPlanMapper.selectOneByExample(pex);
         if (plan != null && plan.getMonthlyLimitCent() != null) {
             monthlyLimit = plan.getMonthlyLimitCent();
@@ -125,7 +125,7 @@ public class PaidOrderGrantService {
         qPatch.setMonthResetDate(now);
         qPatch.setGmtModified(now);
         UserQuotaExample qex = new UserQuotaExample();
-        qex.createCriteria().andIdEqualTo(quota.getId()).andDeleteEqualTo(0);
+        qex.createCriteria().andIdEqualTo(quota.getId()).andDelFlagEqualTo(0);
         userQuotaMapper.updateByExampleSelective(qPatch, qex);
         insertLog(userId, "grant_plan", grant - nz(quota.getBalanceCent()), 0,
                 grant, nz(quota.getExtraBalanceCent()), monthlyLimit, "plan " + planCode);
@@ -139,7 +139,7 @@ public class PaidOrderGrantService {
         qPatch.setExtraBalanceCent(extra);
         qPatch.setGmtModified(new Date());
         UserQuotaExample qex = new UserQuotaExample();
-        qex.createCriteria().andIdEqualTo(quota.getId()).andDeleteEqualTo(0);
+        qex.createCriteria().andIdEqualTo(quota.getId()).andDelFlagEqualTo(0);
         userQuotaMapper.updateByExampleSelective(qPatch, qex);
         insertLog(userId, "grant_pack", 0, add, nz(quota.getBalanceCent()), extra,
                 quota.getMonthlyLimitCent(), "credit pack");
@@ -156,7 +156,7 @@ public class PaidOrderGrantService {
         row.setExtraAfterCent(extraAfter);
         row.setMonthlyLimitCent(limit);
         row.setRemark(remark);
-        row.setDelete(0);
+        row.setDelFlag(0);
         row.setCreator(userId);
         quotaChangeLogMapper.insertSelective(row);
     }

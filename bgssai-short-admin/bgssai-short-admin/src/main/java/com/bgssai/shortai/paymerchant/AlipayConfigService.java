@@ -64,7 +64,7 @@ public class AlipayConfigService {
         log.info("admin list alipay configs");
 
         AlipayConfigExample example = new AlipayConfigExample();
-        example.createCriteria().andDeleteEqualTo(0);
+        example.createCriteria().andDelFlagEqualTo(0);
         example.setOrderByClause("is_collection_active desc, is_enabled desc, id asc");
         List<AlipayConfig> rows = alipayConfigMapper.selectByExample(example);
 
@@ -154,14 +154,14 @@ public class AlipayConfigService {
         String alipayRootCertSn = optionalText(req.getAlipayRootCertSn(), "alipay_root_cert_sn", 255);
 
         // uk_alipay_config_app_id covers app_id alone, so a soft-deleted row still occupies the
-        // number: the lookup must span is_delete=0 and is_delete=1 or the insert below would hit a
+        // number: the lookup must span del_flag=0 and del_flag=1 or the insert below would hit a
         // duplicate-key error the admin cannot resolve from the console.
         AlipayConfigExample dupExample = new AlipayConfigExample();
         dupExample.createCriteria().andAppIdEqualTo(appId);
         AlipayConfig sameNumber = alipayConfigMapper.selectOneByExample(dupExample);
         AlipayConfig revivable = null;
         if (sameNumber != null && !sameNumber.getId().equals(req.getId())) {
-            if (!Integer.valueOf(1).equals(sameNumber.getDelete())) {
+            if (!Integer.valueOf(1).equals(sameNumber.getDelFlag())) {
                 log.warn("admin save alipay config rejected-duplicate appId={} existingId={}",
                         appId, sameNumber.getId());
                 throw new BizException("60014", "app_id already exists: " + appId);
@@ -240,7 +240,7 @@ public class AlipayConfigService {
             // may leak into the new one. The result must be indistinguishable from a fresh insert.
             row.setId(revivable.getId());
             row.setCollectionActive(0);
-            row.setDelete(0);
+            row.setDelFlag(0);
             // Connectivity state belongs to the previous merchant: this one has never been tested.
             row.setLastTestStatus("UNTESTED");
             row.setLastTestAt(null);
@@ -255,7 +255,7 @@ public class AlipayConfigService {
                     targetId, appId);
         } else if (req.getId() == null) {
             row.setCollectionActive(0);
-            row.setDelete(0);
+            row.setDelFlag(0);
             row.setCreator(operator);
             alipayConfigMapper.insertSelective(row);
             targetId = row.getId();
@@ -331,7 +331,7 @@ public class AlipayConfigService {
         clear.setGmtModified(now);
         AlipayConfigExample clearExample = new AlipayConfigExample();
         clearExample.createCriteria()
-                .andDeleteEqualTo(0)
+                .andDelFlagEqualTo(0)
                 .andCollectionActiveEqualTo(1);
         int cleared = alipayConfigMapper.updateByExampleSelective(clear, clearExample);
 
@@ -364,7 +364,7 @@ public class AlipayConfigService {
 
         AlipayConfig update = new AlipayConfig();
         update.setId(existing.getId());
-        update.setDelete(1);
+        update.setDelFlag(1);
         update.setModifier(resolveOperator());
         update.setGmtModified(new Date());
         alipayConfigMapper.updateByPrimaryKeySelective(update);
@@ -379,7 +379,7 @@ public class AlipayConfigService {
             throw new BizException("60009", "id must not be null");
         }
         AlipayConfig row = alipayConfigMapper.selectByPrimaryKey(id);
-        if (row == null || Integer.valueOf(1).equals(row.getDelete())) {
+        if (row == null || Integer.valueOf(1).equals(row.getDelFlag())) {
             throw new BizException("60009", "alipay config not found: " + id);
         }
         return row;

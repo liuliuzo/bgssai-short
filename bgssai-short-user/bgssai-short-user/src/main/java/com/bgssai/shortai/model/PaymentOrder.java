@@ -20,7 +20,7 @@ public class PaymentOrder {
     private String channelTradeNo;
     private Date paidAt;
     private Date expiresAt;
-    private Integer delete;
+    private Integer delFlag;
     private String creator;
     private String modifier;
     private Date gmtCreate;
@@ -162,12 +162,12 @@ public class PaymentOrder {
         this.expiresAt = expiresAt;
     }
 
-    public Integer getDelete() {
-        return delete;
+    public Integer getDelFlag() {
+        return delFlag;
     }
 
-    public void setDelete(Integer delete) {
-        this.delete = delete;
+    public void setDelFlag(Integer delFlag) {
+        this.delFlag = delFlag;
     }
 
     public String getCreator() {

@@ -9,7 +9,7 @@
     <result column="extra_balance_cent" jdbcType="INTEGER" property="extraBalanceCent" />
     <result column="month_spent_cent" jdbcType="INTEGER" property="monthSpentCent" />
     <result column="month_reset_date" jdbcType="DATE" property="monthResetDate" />
-    <result column="is_delete" jdbcType="TINYINT" property="delete" />
+    <result column="del_flag" jdbcType="TINYINT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -59,7 +59,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, user_id, balance_cent, monthly_limit_cent, extra_balance_cent, month_spent_cent, month_reset_date, is_delete, creator, modifier, gmt_create, gmt_modified
+    id, user_id, balance_cent, monthly_limit_cent, extra_balance_cent, month_spent_cent, month_reset_date, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.UserQuotaExample" resultMap="BaseResultMap">
     select
@@ -99,8 +99,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.UserQuota" useGeneratedKeys="true" keyProperty="id">
-    insert into user_quota (id, user_id, balance_cent, monthly_limit_cent, extra_balance_cent, month_spent_cent, month_reset_date, is_delete, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{balanceCent,jdbcType=INTEGER}, #{monthlyLimitCent,jdbcType=INTEGER}, #{extraBalanceCent,jdbcType=INTEGER}, #{monthSpentCent,jdbcType=INTEGER}, #{monthResetDate,jdbcType=DATE}, #{delete,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into user_quota (id, user_id, balance_cent, monthly_limit_cent, extra_balance_cent, month_spent_cent, month_reset_date, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{balanceCent,jdbcType=INTEGER}, #{monthlyLimitCent,jdbcType=INTEGER}, #{extraBalanceCent,jdbcType=INTEGER}, #{monthSpentCent,jdbcType=INTEGER}, #{monthResetDate,jdbcType=DATE}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.UserQuota" useGeneratedKeys="true" keyProperty="id">
     insert into user_quota
@@ -112,7 +112,7 @@
       <if test="extraBalanceCent != null">extra_balance_cent,</if>
       <if test="monthSpentCent != null">month_spent_cent,</if>
       <if test="monthResetDate != null">month_reset_date,</if>
-      <if test="delete != null">is_delete,</if>
+      <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
       <if test="gmtCreate != null">gmt_create,</if>
@@ -126,7 +126,7 @@
       <if test="extraBalanceCent != null">#{extraBalanceCent,jdbcType=INTEGER},</if>
       <if test="monthSpentCent != null">#{monthSpentCent,jdbcType=INTEGER},</if>
       <if test="monthResetDate != null">#{monthResetDate,jdbcType=DATE},</if>
-      <if test="delete != null">#{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">#{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -147,7 +147,7 @@
       <if test="row.extraBalanceCent != null">extra_balance_cent = #{row.extraBalanceCent,jdbcType=INTEGER},</if>
       <if test="row.monthSpentCent != null">month_spent_cent = #{row.monthSpentCent,jdbcType=INTEGER},</if>
       <if test="row.monthResetDate != null">month_reset_date = #{row.monthResetDate,jdbcType=DATE},</if>
-      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=TINYINT},</if>
+      <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=TINYINT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
       <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -165,7 +165,7 @@
       extra_balance_cent = #{row.extraBalanceCent,jdbcType=INTEGER},
       month_spent_cent = #{row.monthSpentCent,jdbcType=INTEGER},
       month_reset_date = #{row.monthResetDate,jdbcType=DATE},
-      is_delete = #{row.delete,jdbcType=TINYINT},
+      del_flag = #{row.delFlag,jdbcType=TINYINT},
       creator = #{row.creator,jdbcType=VARCHAR},
       modifier = #{row.modifier,jdbcType=VARCHAR},
       gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},
@@ -181,7 +181,7 @@
       <if test="extraBalanceCent != null">extra_balance_cent = #{extraBalanceCent,jdbcType=INTEGER},</if>
       <if test="monthSpentCent != null">month_spent_cent = #{monthSpentCent,jdbcType=INTEGER},</if>
       <if test="monthResetDate != null">month_reset_date = #{monthResetDate,jdbcType=DATE},</if>
-      <if test="delete != null">is_delete = #{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">del_flag = #{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -199,7 +199,7 @@
       extra_balance_cent = #{extraBalanceCent,jdbcType=INTEGER},
       month_spent_cent = #{monthSpentCent,jdbcType=INTEGER},
       month_reset_date = #{monthResetDate,jdbcType=DATE},
-      is_delete = #{delete,jdbcType=TINYINT},
+      del_flag = #{delFlag,jdbcType=TINYINT},
       creator = #{creator,jdbcType=VARCHAR},
       modifier = #{modifier,jdbcType=VARCHAR},
       gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},

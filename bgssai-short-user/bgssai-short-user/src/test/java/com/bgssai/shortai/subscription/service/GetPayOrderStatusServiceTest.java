@@ -134,7 +134,7 @@ class GetPayOrderStatusServiceTest {
         order.setStatus("created");
         order.setPaymentChannel("WECHAT");
         order.setAmountCent(9900);
-        order.setDelete(0);
+        order.setDelFlag(0);
         order.setGmtCreate(new Date());
         return order;
     }

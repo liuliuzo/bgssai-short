@@ -24,7 +24,7 @@
     <result column="last_test_error" jdbcType="VARCHAR" property="lastTestError" />
     <result column="is_enabled" jdbcType="TINYINT" property="enabled" />
     <result column="is_collection_active" jdbcType="TINYINT" property="collectionActive" />
-    <result column="is_delete" jdbcType="TINYINT" property="delete" />
+    <result column="del_flag" jdbcType="TINYINT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -74,7 +74,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, merchant_name, app_id, key_mode, app_private_key, alipay_public_key, app_cert_public_key, alipay_cert_public_key, alipay_root_cert, app_cert_sn, alipay_root_cert_sn, sign_type, charset, gateway_url, notify_url, return_url, env_mode, last_test_status, last_test_at, last_test_error, is_enabled, is_collection_active, is_delete, creator, modifier, gmt_create, gmt_modified
+    id, merchant_name, app_id, key_mode, app_private_key, alipay_public_key, app_cert_public_key, alipay_cert_public_key, alipay_root_cert, app_cert_sn, alipay_root_cert_sn, sign_type, charset, gateway_url, notify_url, return_url, env_mode, last_test_status, last_test_at, last_test_error, is_enabled, is_collection_active, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.AlipayConfigExample" resultMap="BaseResultMap">
     select
@@ -114,8 +114,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.AlipayConfig" useGeneratedKeys="true" keyProperty="id">
-    insert into alipay_config (id, merchant_name, app_id, key_mode, app_private_key, alipay_public_key, app_cert_public_key, alipay_cert_public_key, alipay_root_cert, app_cert_sn, alipay_root_cert_sn, sign_type, charset, gateway_url, notify_url, return_url, env_mode, last_test_status, last_test_at, last_test_error, is_enabled, is_collection_active, is_delete, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{merchantName,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, #{keyMode,jdbcType=VARCHAR}, #{appPrivateKey,jdbcType=LONGVARCHAR}, #{alipayPublicKey,jdbcType=LONGVARCHAR}, #{appCertPublicKey,jdbcType=LONGVARCHAR}, #{alipayCertPublicKey,jdbcType=LONGVARCHAR}, #{alipayRootCert,jdbcType=LONGVARCHAR}, #{appCertSn,jdbcType=VARCHAR}, #{alipayRootCertSn,jdbcType=VARCHAR}, #{signType,jdbcType=VARCHAR}, #{charset,jdbcType=VARCHAR}, #{gatewayUrl,jdbcType=VARCHAR}, #{notifyUrl,jdbcType=VARCHAR}, #{returnUrl,jdbcType=VARCHAR}, #{envMode,jdbcType=VARCHAR}, #{lastTestStatus,jdbcType=VARCHAR}, #{lastTestAt,jdbcType=TIMESTAMP}, #{lastTestError,jdbcType=VARCHAR}, #{enabled,jdbcType=TINYINT}, #{collectionActive,jdbcType=TINYINT}, #{delete,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into alipay_config (id, merchant_name, app_id, key_mode, app_private_key, alipay_public_key, app_cert_public_key, alipay_cert_public_key, alipay_root_cert, app_cert_sn, alipay_root_cert_sn, sign_type, charset, gateway_url, notify_url, return_url, env_mode, last_test_status, last_test_at, last_test_error, is_enabled, is_collection_active, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{merchantName,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, #{keyMode,jdbcType=VARCHAR}, #{appPrivateKey,jdbcType=LONGVARCHAR}, #{alipayPublicKey,jdbcType=LONGVARCHAR}, #{appCertPublicKey,jdbcType=LONGVARCHAR}, #{alipayCertPublicKey,jdbcType=LONGVARCHAR}, #{alipayRootCert,jdbcType=LONGVARCHAR}, #{appCertSn,jdbcType=VARCHAR}, #{alipayRootCertSn,jdbcType=VARCHAR}, #{signType,jdbcType=VARCHAR}, #{charset,jdbcType=VARCHAR}, #{gatewayUrl,jdbcType=VARCHAR}, #{notifyUrl,jdbcType=VARCHAR}, #{returnUrl,jdbcType=VARCHAR}, #{envMode,jdbcType=VARCHAR}, #{lastTestStatus,jdbcType=VARCHAR}, #{lastTestAt,jdbcType=TIMESTAMP}, #{lastTestError,jdbcType=VARCHAR}, #{enabled,jdbcType=TINYINT}, #{collectionActive,jdbcType=TINYINT}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.AlipayConfig" useGeneratedKeys="true" keyProperty="id">
     insert into alipay_config
@@ -142,7 +142,7 @@
       <if test="lastTestError != null">last_test_error,</if>
       <if test="enabled != null">is_enabled,</if>
       <if test="collectionActive != null">is_collection_active,</if>
-      <if test="delete != null">is_delete,</if>
+      <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
       <if test="gmtCreate != null">gmt_create,</if>
@@ -171,7 +171,7 @@
       <if test="lastTestError != null">#{lastTestError,jdbcType=VARCHAR},</if>
       <if test="enabled != null">#{enabled,jdbcType=TINYINT},</if>
       <if test="collectionActive != null">#{collectionActive,jdbcType=TINYINT},</if>
-      <if test="delete != null">#{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">#{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -207,7 +207,7 @@
       <if test="row.lastTestError != null">last_test_error = #{row.lastTestError,jdbcType=VARCHAR},</if>
       <if test="row.enabled != null">is_enabled = #{row.enabled,jdbcType=TINYINT},</if>
       <if test="row.collectionActive != null">is_collection_active = #{row.collectionActive,jdbcType=TINYINT},</if>
-      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=TINYINT},</if>
+      <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=TINYINT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
       <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -240,7 +240,7 @@
       last_test_error = #{row.lastTestError,jdbcType=VARCHAR},
       is_enabled = #{row.enabled,jdbcType=TINYINT},
       is_collection_active = #{row.collectionActive,jdbcType=TINYINT},
-      is_delete = #{row.delete,jdbcType=TINYINT},
+      del_flag = #{row.delFlag,jdbcType=TINYINT},
       creator = #{row.creator,jdbcType=VARCHAR},
       modifier = #{row.modifier,jdbcType=VARCHAR},
       gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},
@@ -271,7 +271,7 @@
       <if test="lastTestError != null">last_test_error = #{lastTestError,jdbcType=VARCHAR},</if>
       <if test="enabled != null">is_enabled = #{enabled,jdbcType=TINYINT},</if>
       <if test="collectionActive != null">is_collection_active = #{collectionActive,jdbcType=TINYINT},</if>
-      <if test="delete != null">is_delete = #{delete,jdbcType=TINYINT},</if>
+      <if test="delFlag != null">del_flag = #{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -304,7 +304,7 @@
       last_test_error = #{lastTestError,jdbcType=VARCHAR},
       is_enabled = #{enabled,jdbcType=TINYINT},
       is_collection_active = #{collectionActive,jdbcType=TINYINT},
-      is_delete = #{delete,jdbcType=TINYINT},
+      del_flag = #{delFlag,jdbcType=TINYINT},
       creator = #{creator,jdbcType=VARCHAR},
       modifier = #{modifier,jdbcType=VARCHAR},
       gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},

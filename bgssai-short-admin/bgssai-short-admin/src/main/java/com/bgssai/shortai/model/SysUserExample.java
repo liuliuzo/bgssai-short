@@ -1095,6 +1095,76 @@ public class SysUserExample {
             return (Criteria) this;
         }
 
+        public Criteria andCurrentSessionIdIsNull() {
+            addCriterion("current_session_id is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdIsNotNull() {
+            addCriterion("current_session_id is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdEqualTo(String value) {
+            addCriterion("current_session_id =", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdNotEqualTo(String value) {
+            addCriterion("current_session_id <>", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdGreaterThan(String value) {
+            addCriterion("current_session_id >", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdGreaterThanOrEqualTo(String value) {
+            addCriterion("current_session_id >=", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdLessThan(String value) {
+            addCriterion("current_session_id <", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdLessThanOrEqualTo(String value) {
+            addCriterion("current_session_id <=", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdLike(String value) {
+            addCriterion("current_session_id like", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdNotLike(String value) {
+            addCriterion("current_session_id not like", value, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdIn(List<String> values) {
+            addCriterion("current_session_id in", values, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdNotIn(List<String> values) {
+            addCriterion("current_session_id not in", values, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdBetween(String value1, String value2) {
+            addCriterion("current_session_id between", value1, value2, "currentSessionId");
+            return (Criteria) this;
+        }
+
+        public Criteria andCurrentSessionIdNotBetween(String value1, String value2) {
+            addCriterion("current_session_id not between", value1, value2, "currentSessionId");
+            return (Criteria) this;
+        }
+
         public Criteria andDelFlagIsNull() {
             addCriterion("del_flag is null");
             return (Criteria) this;

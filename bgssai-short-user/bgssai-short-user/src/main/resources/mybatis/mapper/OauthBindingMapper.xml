@@ -10,7 +10,7 @@
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
     <result column="nickname" jdbcType="VARCHAR" property="nickname" />
     <result column="avatar_url" jdbcType="VARCHAR" property="avatarUrl" />
-    <result column="is_delete" jdbcType="BIT" property="delete" />
+    <result column="del_flag" jdbcType="BIT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -57,7 +57,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, binding_id, platform, open_id, union_id, user_id, nickname, avatar_url, is_delete, creator, modifier, gmt_create, gmt_modified
+    id, binding_id, platform, open_id, union_id, user_id, nickname, avatar_url, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.OauthBindingExample" resultMap="BaseResultMap">
     select <if test="distinct">distinct</if>
@@ -86,7 +86,7 @@
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">delete from oauth_binding where id = #{id,jdbcType=BIGINT}</delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.OauthBindingExample">delete from oauth_binding<if test="_parameter != null"><include refid="Example_Where_Clause" /></if></delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.OauthBinding">
-    insert into oauth_binding (id, binding_id, platform, open_id, union_id, user_id, nickname, avatar_url, is_delete, creator, modifier, gmt_create, gmt_modified) values (#{id,jdbcType=BIGINT}, #{bindingId,jdbcType=VARCHAR}, #{platform,jdbcType=VARCHAR}, #{openId,jdbcType=VARCHAR}, #{unionId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{nickname,jdbcType=VARCHAR}, #{avatarUrl,jdbcType=VARCHAR}, #{delete,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into oauth_binding (id, binding_id, platform, open_id, union_id, user_id, nickname, avatar_url, del_flag, creator, modifier, gmt_create, gmt_modified) values (#{id,jdbcType=BIGINT}, #{bindingId,jdbcType=VARCHAR}, #{platform,jdbcType=VARCHAR}, #{openId,jdbcType=VARCHAR}, #{unionId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{nickname,jdbcType=VARCHAR}, #{avatarUrl,jdbcType=VARCHAR}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.OauthBinding">
     insert into oauth_binding
@@ -99,7 +99,7 @@
       <if test="userId != null">user_id,</if>
       <if test="nickname != null">nickname,</if>
       <if test="avatarUrl != null">avatar_url,</if>
-      <if test="delete != null">is_delete,</if>
+      <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
       <if test="gmtCreate != null">gmt_create,</if>
@@ -114,7 +114,7 @@
       <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
       <if test="nickname != null">#{nickname,jdbcType=VARCHAR},</if>
       <if test="avatarUrl != null">#{avatarUrl,jdbcType=VARCHAR},</if>
-      <if test="delete != null">#{delete,jdbcType=BIT},</if>
+      <if test="delFlag != null">#{delFlag,jdbcType=BIT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -135,7 +135,7 @@
       <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
       <if test="row.nickname != null">nickname = #{row.nickname,jdbcType=VARCHAR},</if>
       <if test="row.avatarUrl != null">avatar_url = #{row.avatarUrl,jdbcType=VARCHAR},</if>
-      <if test="row.delete != null">is_delete = #{row.delete,jdbcType=BIT},</if>
+      <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=BIT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
       <if test="row.gmtCreate != null">gmt_create = #{row.gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -144,7 +144,7 @@
     <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
   </update>
   <update id="updateByExample" parameterType="map">
-    update oauth_binding set binding_id=#{row.bindingId,jdbcType=VARCHAR}, platform=#{row.platform,jdbcType=VARCHAR}, open_id=#{row.openId,jdbcType=VARCHAR}, union_id=#{row.unionId,jdbcType=VARCHAR}, user_id=#{row.userId,jdbcType=VARCHAR}, nickname=#{row.nickname,jdbcType=VARCHAR}, avatar_url=#{row.avatarUrl,jdbcType=VARCHAR}, is_delete=#{row.delete,jdbcType=BIT}, creator=#{row.creator,jdbcType=VARCHAR}, modifier=#{row.modifier,jdbcType=VARCHAR}, gmt_create=#{row.gmtCreate,jdbcType=TIMESTAMP}, gmt_modified=#{row.gmtModified,jdbcType=TIMESTAMP}
+    update oauth_binding set binding_id=#{row.bindingId,jdbcType=VARCHAR}, platform=#{row.platform,jdbcType=VARCHAR}, open_id=#{row.openId,jdbcType=VARCHAR}, union_id=#{row.unionId,jdbcType=VARCHAR}, user_id=#{row.userId,jdbcType=VARCHAR}, nickname=#{row.nickname,jdbcType=VARCHAR}, avatar_url=#{row.avatarUrl,jdbcType=VARCHAR}, del_flag=#{row.delFlag,jdbcType=BIT}, creator=#{row.creator,jdbcType=VARCHAR}, modifier=#{row.modifier,jdbcType=VARCHAR}, gmt_create=#{row.gmtCreate,jdbcType=TIMESTAMP}, gmt_modified=#{row.gmtModified,jdbcType=TIMESTAMP}
     <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.OauthBinding">
@@ -157,7 +157,7 @@
       <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
       <if test="nickname != null">nickname = #{nickname,jdbcType=VARCHAR},</if>
       <if test="avatarUrl != null">avatar_url = #{avatarUrl,jdbcType=VARCHAR},</if>
-      <if test="delete != null">is_delete = #{delete,jdbcType=BIT},</if>
+      <if test="delFlag != null">del_flag = #{delFlag,jdbcType=BIT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
       <if test="gmtCreate != null">gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},</if>
@@ -166,7 +166,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.OauthBinding">
-    update oauth_binding set binding_id=#{bindingId,jdbcType=VARCHAR}, platform=#{platform,jdbcType=VARCHAR}, open_id=#{openId,jdbcType=VARCHAR}, union_id=#{unionId,jdbcType=VARCHAR}, user_id=#{userId,jdbcType=VARCHAR}, nickname=#{nickname,jdbcType=VARCHAR}, avatar_url=#{avatarUrl,jdbcType=VARCHAR}, is_delete=#{delete,jdbcType=BIT}, creator=#{creator,jdbcType=VARCHAR}, modifier=#{modifier,jdbcType=VARCHAR}, gmt_create=#{gmtCreate,jdbcType=TIMESTAMP}, gmt_modified=#{gmtModified,jdbcType=TIMESTAMP}
+    update oauth_binding set binding_id=#{bindingId,jdbcType=VARCHAR}, platform=#{platform,jdbcType=VARCHAR}, open_id=#{openId,jdbcType=VARCHAR}, union_id=#{unionId,jdbcType=VARCHAR}, user_id=#{userId,jdbcType=VARCHAR}, nickname=#{nickname,jdbcType=VARCHAR}, avatar_url=#{avatarUrl,jdbcType=VARCHAR}, del_flag=#{delFlag,jdbcType=BIT}, creator=#{creator,jdbcType=VARCHAR}, modifier=#{modifier,jdbcType=VARCHAR}, gmt_create=#{gmtCreate,jdbcType=TIMESTAMP}, gmt_modified=#{gmtModified,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

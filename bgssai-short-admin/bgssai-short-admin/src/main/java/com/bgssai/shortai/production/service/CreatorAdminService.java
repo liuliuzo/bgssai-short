@@ -90,7 +90,7 @@ public class CreatorAdminService {
         item.put("enabled_flag", status == 1 ? 1 : 0);
         item.put("create_time", row.getCreateTime());
         UserQuotaExample qx = new UserQuotaExample();
-        qx.createCriteria().andUserIdEqualTo(row.getUserId()).andDeleteEqualTo(0);
+        qx.createCriteria().andUserIdEqualTo(row.getUserId()).andDelFlagEqualTo(0);
         UserQuota quota = userQuotaMapper.selectOneByExample(qx);
         item.put("balance_cent", quota == null ? 0 : quota.getBalanceCent());
         item.put("extra_balance_cent", quota == null ? 0 : quota.getExtraBalanceCent());

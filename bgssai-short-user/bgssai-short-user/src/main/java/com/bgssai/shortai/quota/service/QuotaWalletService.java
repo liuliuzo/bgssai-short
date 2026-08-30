@@ -18,7 +18,7 @@ public class QuotaWalletService {
 
     public UserQuota requireWallet(String userId) {
         UserQuotaExample ex = new UserQuotaExample();
-        ex.createCriteria().andUserIdEqualTo(userId).andDeleteEqualTo(0);
+        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
         UserQuota row = userQuotaMapper.selectOneByExample(ex);
         if (row != null) {
             return row;
@@ -31,7 +31,7 @@ public class QuotaWalletService {
         created.setMonthlyLimitCent(0);
         created.setMonthSpentCent(0);
         created.setMonthResetDate(now);
-        created.setDelete(0);
+        created.setDelFlag(0);
         created.setCreator(userId);
         created.setModifier(userId);
         created.setGmtCreate(now);
@@ -49,7 +49,7 @@ public class QuotaWalletService {
         patch.setMonthResetDate(new Date());
         patch.setGmtModified(new Date());
         UserQuotaExample ex = new UserQuotaExample();
-        ex.createCriteria().andIdEqualTo(quota.getId()).andDeleteEqualTo(0);
+        ex.createCriteria().andIdEqualTo(quota.getId()).andDelFlagEqualTo(0);
         userQuotaMapper.updateByExampleSelective(patch, ex);
         quota.setMonthSpentCent(0);
         quota.setMonthResetDate(patch.getMonthResetDate());

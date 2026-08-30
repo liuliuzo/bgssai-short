@@ -10,7 +10,7 @@ public class UserSubscription {
     private Date currentPeriodStart;
     private Date currentPeriodEnd;
     private String source;
-    private Integer delete;
+    private Integer delFlag;
     private String creator;
     private String modifier;
     private Date gmtCreate;
@@ -72,12 +72,12 @@ public class UserSubscription {
         this.source = source == null ? null : source.trim();
     }
 
-    public Integer getDelete() {
-        return delete;
+    public Integer getDelFlag() {
+        return delFlag;
     }
 
-    public void setDelete(Integer delete) {
-        this.delete = delete;
+    public void setDelFlag(Integer delFlag) {
+        this.delFlag = delFlag;
     }
 
     public String getCreator() {

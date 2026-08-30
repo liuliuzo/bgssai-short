@@ -34,6 +34,8 @@ public class SysUser implements Serializable {
 
     private Boolean online;
 
+    private String currentSessionId;
+
     private Boolean delFlag;
 
     private String createBy;
@@ -166,6 +168,14 @@ public class SysUser implements Serializable {
         this.online = online;
     }
 
+    public String getCurrentSessionId() {
+        return currentSessionId;
+    }
+
+    public void setCurrentSessionId(String currentSessionId) {
+        this.currentSessionId = currentSessionId == null ? null : currentSessionId.trim();
+    }
+
     public Boolean getDelFlag() {
         return delFlag;
     }
@@ -227,6 +237,7 @@ public class SysUser implements Serializable {
         sb.append(", status=").append(status);
         sb.append(", companyId=").append(companyId);
         sb.append(", online=").append(online);
+        sb.append(", currentSessionId=").append(currentSessionId);
         sb.append(", delFlag=").append(delFlag);
         sb.append(", createBy=").append(createBy);
         sb.append(", createTime=").append(createTime);
