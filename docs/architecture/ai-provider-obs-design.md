@@ -1,11 +1,12 @@
 # AI 能力适配与华为云 OBS 详设
 
 对齐：`docs/feature/ai-capability-usage.md`、`shot-generation.md`、`film-compose-export.md`、
-`PRODUCT_VISION.md` §五。本文件定稿「真实 AI + 对象存储」横切实现，供制作闭环与后续功能共用。
+`PRODUCT_VISION.md` §五。TokenHub 的模型与端点映射见 `tokenhub-model-integration-design.md`。
+本文件定稿「真实 AI + 对象存储」横切实现，供制作闭环与后续功能共用。
 
 ## 1. 目标
 
-- 业务代码只认 `ability_type`：`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `COMPOSE`。
+- 业务代码只认 `ability_type`：`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` / `COMPOSE`。
 - 具体供应商、模型码、单价、开关、超时与重试由 `ai_model_config` 解析；换供应商不改业务编排。
 - 创作者提交任务时可传 `model_code`；省略则用该能力下 `default_flag=1` 且 `enabled_flag=1` 的模型。
 - 图 / 视频 / 音频 / 字幕 / 成片文件进 **华为云 OBS**；库表 `short_asset.storage_key` 只存 object key。
@@ -32,6 +33,7 @@
 | `MiniMaxAiProvider` | `provider_code=MINIMAX`：海螺 `IMAGE`（image-01）与 `VIDEO`（Hailuo 图生/文生） |
 | `SeedanceAiProvider` | `provider_code=SEEDANCE`：火山方舟 Seedance `VIDEO` |
 | `VeoAiProvider` | `provider_code=VEO`：Google Gemini API Veo `VIDEO` |
+| `TencentTokenHubAiProvider` | `provider_code=TENCENT_TOKENHUB`：TEXT / VIDEO / VOICE / ASR / MUSIC 统一协议适配 |
 | `FfmpegComposeProvider` | `provider_code=FFMPEG`：本机 FFmpeg 合成 9:16 成片 |
 | `AiProviderRegistry` | 按 `provider_code` 选实现 |
 | `ObjectStorage` | put / get bytes / delete / presignGet |
@@ -77,7 +79,8 @@
 
 1. 请求带 `model_code` → 查启用行；禁用或不存在 → `4006`。
 2. 未带 → 该 `ability_type` 下默认启用行；没有 → `4014`。
-3. `estimate` / `submit` 均走同一解析；`cost_cent` 按快照 `unit_price_cent * usage_amount`（本轮 TEXT/IMAGE/VOICE/VIDEO/COMPOSE 的 `usage_amount` 默认 1，除非供应商回传用量）。
+3. `estimate` / `submit` 均走同一解析；`cost_cent` 按快照 `unit_price_cent * usage_amount`，
+   TEXT / VIDEO / VOICE / ASR / MUSIC 优先使用供应商返回用量，缺失时按模型计费配置的一次调用快照计算。
 
 ## 4. OBS 对象键规范
 
@@ -122,5 +125,5 @@ submit
 
 - 不引入独立消息队列
 - 不实现 WebSocket 推送（继续轮询）
-- 不在本文件绑定唯一商业模型名；种子数据给 TEXT / VOICE 默认 `OPENAI_COMPAT`、IMAGE / VIDEO 默认可灵，并启用 MiniMax / Seedance / Veo 供创作者在提交时点选
+- 首批生产模型目录与默认值由 `tokenhub-model-integration-design.md` 绑定；既有直连 Provider 继续保留为备用
 - **不提供 MOCK 兜底 provider**：COMPOSE 由 `FfmpegComposeProvider` 在本机完成；ffmpeg 缺失或镜头视频不全时合成任务直接失败并说明原因，不用假成片掩盖未接通

@@ -89,7 +89,7 @@
             <tr>
               <td><a href="script-studio.html">总剧本</a></td>
               <td><code>/works/:work_id/script</code></td>
-              <td>侧栏「当前工作 - 总剧本」；作品工作台剧集看板</td>
+              <td>侧栏「当前工作 - 总剧本」；作品工作台剧集看板；TEXT 模型选择器</td>
               <td>创作台（定稿后）· 质量报告 · 作品工作台 · 历史版本抽屉（展开集内：
                 <code>/scripts/versions</code> 版本列表 + <code>/scripts/rollback</code> 回滚）</td>
               <td>作品内子导航</td>
@@ -130,7 +130,7 @@
             <tr>
               <td><a href="voice-studio.html">配音与字幕</a></td>
               <td><code>/works/:work_id/voice</code></td>
-              <td>侧栏「更多 - 配音与字幕」；作品工作台剧集看板</td>
+              <td>侧栏「更多 - 配音与字幕」；作品工作台剧集看板；VOICE 模型选择与 ASR 校准</td>
               <td>合成与导出 · 角色与场景卡 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -138,7 +138,7 @@
             <tr>
               <td><a href="compose-export.html">合成与导出</a></td>
               <td><code>/works/:work_id/compose</code></td>
-              <td>侧栏「更多 - 合成与导出」；配音完成后；作品工作台剧集看板</td>
+              <td>侧栏「更多 - 合成与导出」；配音完成后；作品工作台剧集看板；MUSIC 生成 BGM 候选</td>
               <td>创作台（时间轴点镜头）· 配音与字幕 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -240,8 +240,8 @@
         <div class="node"><div class="n-title">任务中心</div><div class="n-route">/tasks</div></div>
         <div class="arrow">→<small>画面出齐并定稿</small></div>
         <div class="node"><div class="n-title">配音与字幕</div><div class="n-route">/voice</div></div>
-        <div class="arrow">→<small>音画对齐完成</small></div>
-        <div class="node"><div class="n-title">合成与导出</div><div class="n-route">/compose</div></div>
+        <div class="arrow">→<small>音画对齐并用 ASR 校准</small></div>
+        <div class="node"><div class="n-title">合成与导出</div><div class="n-route">AI BGM /compose</div></div>
         <div class="arrow">→<small>提交审核</small></div>
         <div class="node"><div class="n-title">作品工作台</div><div class="n-route">/works/:id</div></div>
       </div>

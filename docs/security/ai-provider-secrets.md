@@ -5,8 +5,9 @@
 
 ## 1. 原则
 
-- 供应商 API Key、OBS AK/SK **禁止**写入 `ai_model_config.config_json`、前端包、仓库明文示例以外的真实值。
-- 密钥落点：表 `sys_secret`（`secret_key` / `secret_value` / `enabled`），与现有 OAuth 读库凭据同一通道。
+- AI 供应商 API Key **禁止**写入 `ai_model_config.config_json`、properties、前端包或仓库明文。
+- AI 供应商密钥落点：表 `sys_secret`（`secret_key` / `secret_value` / `enabled`），与现有 OAuth
+  读库凭据同一通道；OBS 属中间件，AK/SK 只进 `application-*.properties`，不进本表。
 - `ai_model_config.config_json` 只存非密钥参数，并通过 `secret_ref` 引用 `sys_secret.secret_key`。
 - 管理端模型配置接口的请求/响应 **不得回显** 密钥明文；编辑模型时只读写 `secret_ref` 字符串。
 
@@ -14,22 +15,24 @@
 
 | secret_key | 用途 |
 | --- | --- |
+| `ai.tencent_tokenhub.api_key` | TokenHub 共用 Bearer Key（TEXT / VIDEO / VOICE / ASR / MUSIC） |
 | `ai.openai_compat.api_key` | OpenAI 兼容网关默认密钥（可多模型共用同一 ref） |
 | `ai.kling.api_key` | 可灵官方 API Key（Bearer；`provider_code=KLING` 的 IMAGE / VIDEO 共用） |
 | `ai.minimax.api_key` | MiniMax / 海螺 API Key（Bearer） |
 | `ai.seedance.api_key` | 火山方舟 Seedance API Key（Bearer） |
 | `ai.veo.api_key` | Google Gemini / Veo API Key（`x-goog-api-key`） |
 | `ai.{provider_code}.{model_code}.api_key` | 单模型覆盖（可选） |
-| `obs.access_key` | 华为云 OBS Access Key |
-| `obs.secret_key` | 华为云 OBS Secret Key |
 
-运营通过已有密钥运维手段或 SQL 写入 `sys_secret`。本仓 DML 对 MiniMax / Seedance / Veo / OpenAI 兼容网关放 **空值占位行**（`enabled=0`）；可灵 `ai.kling.api_key` 按联调要求写入真实 Bearer 并 `enabled=1`，作为 IMAGE / VIDEO 默认供应商。
+本仓 DML 对所有 AI 供应商只放空值占位行；真实值由 Admin 或受控 SQL 写入。TokenHub 行使用
+`ON DUPLICATE KEY UPDATE` 的仅空值回填规则，禁止提交真实 Bearer Key。九个生产模型可以保持启用，
+但密钥为空或停用时任务必须明确失败。
 
 ## 3. 运行时读取
 
 1. `AiModelResolveService` / Provider 读取 `config_json.secret_ref`。
-2. 查 `sys_secret`：`enabled=1` 且非空；否则任务失败或回退 MOCK（仅 `provider_code=MOCK` 允许无密钥）。
-3. OBS：启动或首次 put/presign 时解析 `obs.*`；缺失时 `local` profile 可回退 `LocalFileObjectStorage`，非 local 档 fail-fast 或任务级失败（见详设）。
+2. 查 `sys_secret`：`enabled=1` 且非空；否则任务失败。任何 AI Provider 均无 MOCK 密钥回退。
+3. OBS：启动或首次 put/presign 时解析 properties 中的 `obs.*`；缺失时 `local` profile 可回退
+   `LocalFileObjectStorage`，非 local 档 fail-fast 或任务级失败（见详设）。
 
 ## 4. 日志与审计
 
@@ -40,4 +43,5 @@
 ## 5. 与 secrets-checklist 的关系
 
 `secrets-checklist.md` 覆盖数据源 / JWT / TLS 等随 profile 打包项。
-本文件覆盖 **第三方 AI 与 OBS** 的库表密钥通道，二者并存：profile 不承担供应商 API Key。
+本文件覆盖第三方 AI 的库表密钥通道；profile 不承担供应商 API Key，OBS 中间件参数仍遵循
+Standards §1 写入分环境 properties。

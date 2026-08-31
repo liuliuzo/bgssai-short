@@ -58,7 +58,7 @@
 | MCP 令牌创建 / 列表 / 吊销 | POST | `/bgssai/mcp-tokens/create` · `/list` · `/revoke` | `MCP.md` |
 | 套餐 / 加量 / 支付回调 | GET/POST | `/bgssai/user/subscription/**` · `/credit-packs/**` · `/bgssai/user/payment/*/notify` | `SUBSCRIPTION-CREDIT.md` |
 | 管理端商户与加量包 | GET/POST | `/bgssai/admin/pay/**` · `/bgssai/admin/credit-packs/**` · `/bgssai/admin/creators/adjust-quota` | `SUBSCRIPTION-CREDIT.md` |
-| 短剧制作闭环 | GET/POST | `/bgssai/user/short-works/**` · `/scripts/**` · `/characters/**` · `/shots/**` · `/ai-tasks/**` · `/films/**` · `/reviews/**` · `/dubbings/**` · `/previz/**` · `/story-map/**` · `/quality/**` · `/preview/**` · `/continuity/**` · `/bgssai/admin/reviews/**` · `/bgssai/admin/creators/**` · `/bgssai/admin/quality/**` | `SHORT-PRODUCTION.md` |
+| 短剧制作闭环 | GET/POST | `/bgssai/user/short-works/**` · `/scripts/**` · `/characters/**` · `/shots/**` · `/ai-tasks/**` · `/films/**` · `/reviews/**` · `/dubbings/**` · `/subtitles/**` · `/previz/**` · `/story-map/**` · `/quality/**` · `/preview/**` · `/continuity/**` · `/bgssai/admin/reviews/**` · `/bgssai/admin/creators/**` · `/bgssai/admin/quality/**` | `SHORT-PRODUCTION.md` |
 | AI 模型与用量 | GET/POST | `/bgssai/admin/ai-models/**` · `/bgssai/admin/usage/**` · `/bgssai/admin/recharge/**` · `/bgssai/user/usage/**` · `/bgssai/user/recharge/**` | `AI-CAPABILITY-USAGE.md` |
 
 > 健康检查三端点是**全产品线共用契约**（Standards §13），不带 `/admin` · `/user` 端前缀、不需要

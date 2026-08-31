@@ -6,6 +6,7 @@
 
 创作者从建剧走到成片提审。AI 与素材存储横切见 **`ai-provider-obs-design.md`**
 （`AiProvider` SPI + 华为云 OBS；无 MOCK 兜底，能力未接通即明确报错）。
+首批 TEXT / VIDEO / VOICE / ASR / MUSIC 模型映射见 **`tokenhub-model-integration-design.md`**。
 用量与模型目录见 **`ai-capability-usage-design.md`**。
 
 ## 1. 范围
@@ -55,7 +56,8 @@
 ## 4. 任务时序
 
 ```
-submit / outline-generate / scripts-generate / portrait-generate / dubbing / films-compose
+submit / outline-generate / scripts-generate / portrait-generate / dubbing / subtitles-transcribe /
+films-bgm-generate / films-compose
   -> AiModelResolveService 解析 model_code 与单价（无启用模型 → 4014）
   -> 插入 short_ai_task (QUEUED)，快照 model_code / cost_cent
   -> 返回 task_id / batch_id

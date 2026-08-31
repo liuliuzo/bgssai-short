@@ -6,7 +6,10 @@ POST 走 JSON body。鉴权请求头 `Jwttoken`。金额单位分。详设见
 
 分页：`page_num` / `page_size` / `total_size`（`PageResponse`）。
 
-AI 按 `ai_model_config.provider_code` 路由：IMAGE/VIDEO 默认可灵，可选 MiniMax / Seedance / Veo；TEXT / VOICE 默认 `OPENAI_COMPAT`；COMPOSE 走本机 `FFMPEG`（部署机需预装 ffmpeg，缺失时返回 `ABILITY_UNAVAILABLE`）。无 MOCK 兜底。契约字段与需求一致。
+AI 按 `ai_model_config.provider_code` 路由：首批 TEXT / VIDEO / VOICE / ASR / MUSIC 生产模型统一走
+`TENCENT_TOKENHUB`，IMAGE 保留既有直连 Provider，COMPOSE 走本机 `FFMPEG`（部署机需预装
+ffmpeg，缺失时返回 `ABILITY_UNAVAILABLE`）。无 MOCK 兜底。端点映射见
+[`../architecture/tokenhub-model-integration-design.md`](../architecture/tokenhub-model-integration-design.md)。
 
 ## 错误码
 
@@ -23,7 +26,7 @@ AI 按 `ai_model_config.provider_code` 路由：IMAGE/VIDEO 默认可灵，可�
 
 ## 本切片未实现（映射表仍指向需求，调用返回 `4006`）
 
-`POST /bgssai/user/episodes/batch`、质量门 / 剧情图谱 / 配音字幕 / 用量 / AI 模型配置 /
+`POST /bgssai/user/episodes/batch`、质量门 / 剧情图谱 / 用量 / AI 模型配置 /
 充值申请 / `ai-tasks/pause` / `ai-tasks/resume` / 提示词 check-diff / 场景卡批量定妆以外的扩展接口。
 
 `GET /bgssai/user/quality/templates` 返回空 `template_list`，创建作品不依赖模板。
@@ -75,7 +78,8 @@ delete：已合成（`compose_status=READY`）返回 `4006`。
 
 ### POST /bgssai/user/scripts/outline-generate
 
-`{ "work_id" }` → `{ "task_id" }`。完成后写 `short_work.outline_json` 并回写各集标题/梗概/钩子。
+`{ "work_id", "model_code": "hy4-preview" }` → `{ "task_id" }`。`model_code` 可选，省略时使用
+TEXT 默认模型。完成后写 `short_work.outline_json` 并回写各集标题/梗概/钩子。
 
 ### GET /bgssai/user/scripts/outline?work_id=
 
@@ -85,7 +89,8 @@ delete：已合成（`compose_status=READY`）返回 `4006`。
 
 ### POST /bgssai/user/scripts/generate
 
-`{ "episode_id", "extra_prompt" }` → `{ "task_id" }`。大纲未出返回 `4006`。
+`{ "episode_id", "extra_prompt", "model_code": "kimi-k3" }` → `{ "task_id" }`。
+`model_code` 可选；大纲未出返回 `4006`。
 
 ### GET /bgssai/user/scripts/detail?episode_id=
 
@@ -97,7 +102,8 @@ delete：已合成（`compose_status=READY`）返回 `4006`。
 
 ### POST /bgssai/user/scripts/rewrite
 
-`{ "episode_id", "scene_no", "line_no", "instruction" }`。`line_no` 可空表示整场。入队 TEXT 任务。
+`{ "episode_id", "scene_no", "line_no", "instruction", "model_code": "deepseek-v4-pro" }`。
+`line_no`、`model_code` 可空，分别表示整场和使用 TEXT 默认模型。入队 TEXT 任务。
 
 ### POST /bgssai/user/scripts/ready
 
@@ -161,6 +167,8 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 
 query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id` `work_id`
 
+任务完成后可返回脱敏的 `result_json`；MUSIC 任务仅含 `bgm_asset_id`，不含供应商临时 URL。
+
 ### GET /bgssai/user/ai-tasks/batch-progress?batch_id=
 
 `{ "total", "queued", "running", "succeeded", "failed", "canceled", "progress_percent" }`
@@ -176,6 +184,40 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ---
 
+## 配音与字幕
+
+### POST /bgssai/user/dubbings/submit
+
+```json
+{ "episode_id": "e-20001", "model_code": "minimax-speech-2.8-hd" }
+```
+
+按有台词且存在音色绑定的镜头入队 VOICE，`model_code` 可选。返回
+`{ "batch_id", "task_id_list", "task_count" }`。
+
+### POST /bgssai/user/dubbings/regenerate
+
+`{ "dubbing_id", "model_code" }` → `{ "task_id" }`。重新生成后以供应商返回音频时长重新计算对齐。
+
+### GET /bgssai/user/dubbings/list?episode_id=
+
+### POST /bgssai/user/subtitles/transcribe
+
+```json
+{ "episode_id": "e-20001", "model_code": "hy-asr-3.0-preview", "confirm_overwrite_flag": 1 }
+```
+
+仅为已有配音素材创建 ASR 任务。检测到人工修改字幕且未确认覆盖时返回 `4006`；无配音素材时同样拒绝且
+不扣费。返回 `{ "batch_id", "task_id_list", "task_count" }`。
+
+### GET /bgssai/user/subtitles/detail?episode_id=
+
+### POST /bgssai/user/subtitles/update|regenerate|style-save
+
+沿用现有字幕编辑、按台词重建与作品级样式契约。
+
+---
+
 ## 成片与审核
 
 ### GET /bgssai/user/films/precheck?episode_id=
@@ -188,7 +230,30 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 `{ "episode_id" }` → `{ "task_id" }`
 
+### POST /bgssai/user/films/bgm-generate
+
+```json
+{
+  "work_id": "w-10001",
+  "episode_id": "e-20001",
+  "model_code": "minimax-music-v2.6",
+  "prompt": "悬疑、克制、低频弦乐，适合都市复仇短剧",
+  "is_instrumental": 1
+}
+```
+
+返回 `{ "task_id" }`。任务成功后的 `result_json` 含 `bgm_asset_id`；生成只增加候选，不自动删除或
+覆盖已选 BGM。
+
+### POST /bgssai/user/films/settings-save
+
+`{ "work_id", "episode_id", "compose_setting": { "bgm_asset_id", "bgm_volume", "duck_flag" } }`。
+选用的 BGM 必须是当前用户、当前作品、当前剧集下的 AUDIO 候选。
+
 ### GET /bgssai/user/films/detail?episode_id=
+
+增加 `bgm_asset_id`、`bgm_url` 与
+`bgm_candidate_list[{ "asset_id", "file_url", "duration_sec", "created_time", "selected_flag" }]`。
 
 ### GET /bgssai/user/films/download-url?asset_id=
 

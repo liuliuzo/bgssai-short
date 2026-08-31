@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import productionApi from '../../api/production'
 
 const { Paragraph } = Typography
 
@@ -9,6 +10,10 @@ export default function VoiceStudioPage({ work, episodeId }) {
   const [misaligned, setMisaligned] = useState(0)
   const [subtitles, setSubtitles] = useState([])
   const [voices, setVoices] = useState([])
+  const [voiceModels, setVoiceModels] = useState([])
+  const [voiceModelCode, setVoiceModelCode] = useState()
+  const [asrModels, setAsrModels] = useState([])
+  const [asrModelCode, setAsrModelCode] = useState()
   const [loading, setLoading] = useState(false)
   const [styleForm] = Form.useForm()
 
@@ -34,14 +39,39 @@ export default function VoiceStudioPage({ work, episodeId }) {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const [voiceRes, asrRes] = await Promise.all([
+        productionApi.listAiModels('VOICE'),
+        productionApi.listAiModels('ASR'),
+      ])
+      if (cancelled) return
+      const nextVoiceModels = voiceRes.data?.result?.model_list || []
+      const nextAsrModels = asrRes.data?.result?.model_list || []
+      setVoiceModels(nextVoiceModels)
+      setAsrModels(nextAsrModels)
+      setVoiceModelCode(nextVoiceModels.find((m) => m.default_flag === 1)?.model_code || nextVoiceModels[0]?.model_code)
+      setAsrModelCode(nextAsrModels.find((m) => m.default_flag === 1)?.model_code || nextAsrModels[0]?.model_code)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <Card
         loading={loading}
         title="配音"
         extra={<Space>
+          <Select
+            placeholder="配音模型"
+            value={voiceModelCode}
+            onChange={setVoiceModelCode}
+            style={{ width: 220 }}
+            options={voiceModels.map((m) => ({ value: m.model_code, label: m.model_name || m.model_code }))}
+          />
           <Button type="primary" onClick={async () => {
-            const { data } = await featuresApi.submitDubbing({ episode_id: episodeId })
+            const { data } = await featuresApi.submitDubbing({ episode_id: episodeId, model_code: voiceModelCode })
             if (data?.success) {
               message.success(`已提交 ${data.result?.task_count || 0} 个配音任务`)
               await load()
@@ -79,7 +109,7 @@ export default function VoiceStudioPage({ work, episodeId }) {
               render: (_, row) => (
                 <Space>
                   <Button size="small" onClick={async () => {
-                    await featuresApi.regenerateDubbing({ shot_id: row.shot_id })
+                    await featuresApi.regenerateDubbing({ shot_id: row.shot_id, model_code: voiceModelCode })
                     message.success('已重配')
                     await load()
                   }}>重配</Button>
@@ -99,6 +129,24 @@ export default function VoiceStudioPage({ work, episodeId }) {
       <Card
         title="字幕"
         extra={<Space>
+          <Select
+            placeholder="语音识别模型"
+            value={asrModelCode}
+            onChange={setAsrModelCode}
+            style={{ width: 220 }}
+            options={asrModels.map((m) => ({ value: m.model_code, label: m.model_name || m.model_code }))}
+          />
+          <Button type="primary" onClick={async () => {
+            const { data } = await featuresApi.subtitleTranscribe({
+              episode_id: episodeId,
+              model_code: asrModelCode,
+              confirm_overwrite_flag: 1,
+            })
+            if (data?.success) {
+              message.success(`已提交 ${data.result?.task_count || 0} 个语音识别任务`)
+              await load()
+            }
+          }}>语音识别生成字幕</Button>
           <Button onClick={async () => {
             await featuresApi.subtitleRegen(episodeId)
             message.success('字幕已重生')

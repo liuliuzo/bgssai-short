@@ -236,6 +236,29 @@
 
         <div>
           <div class="card">
+            <div class="card-hd"><h2>AI 生成 BGM</h2>
+              <span class="spacer"></span><span class="text-muted" style="font-size:11px">生成候选，不删除旧素材</span>
+            </div>
+            <div class="field">
+              <label>音乐模型</label>
+              <select><option value="minimax-music-v2.6" selected>MiniMax-Music-v2.6</option></select>
+            </div>
+            <div class="field">
+              <label>音乐描述</label>
+              <textarea rows="3">悬疑、克制、低频弦乐，适合都市复仇短剧；不要人声</textarea>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <span class="chip active">纯音乐</span><span class="spacer"></span>
+              <button class="btn btn-primary btn-sm">生成 BGM 候选</button>
+            </div>
+            <div class="note">
+              当前候选：<strong>bgm-tension-04</strong> · 88 秒 · MiniMax-Music-v2.6
+              <button class="btn btn-default btn-sm" style="margin-left:8px">试听</button>
+              <button class="btn btn-primary btn-sm">选用</button>
+            </div>
+          </div>
+
+          <div class="card">
             <div class="card-hd"><h2>合成设置</h2>
               <span class="spacer"></span>
               <span class="text-muted" style="font-size:11px">作品级</span>
@@ -330,7 +353,9 @@
         <div class="spec-t">字段口径</div>
         接口：<code>GET /bgssai/user/films/precheck?episode_id</code> · <code>/timeline?episode_id</code> ·
         <code>/detail?episode_id</code> · <code>/download-url?asset_id</code>（重新获取链接同此接口）；
-        <code>POST /bgssai/user/films/compose</code> · <code>/rebake-subtitle</code>
+        <code>POST /bgssai/user/films/compose</code> · <code>/bgm-generate</code>（提交
+        <code>model_code</code> / <code>prompt</code> / <code>is_instrumental</code>，成功结果含
+        <code>bgm_asset_id</code>）· <code>/rebake-subtitle</code>
         （<code>compose_mode=SUBTITLE_ONLY</code>，仅重烧字幕）· <code>/settings-save</code> ·
         <code>/export</code>；审核 <code>POST /bgssai/user/reviews/submit</code> · <code>/withdraw</code>，
         审核队列展示 <code>queue_position</code> · <code>estimated_review_hours</code>
@@ -339,6 +364,8 @@
         <code>NONE</code>、审核回落 <code>NOT_SUBMITTED</code>，过期成片下载返回 <code>4012</code>；
         仅字幕文本 / 样式变更置 <code>subtitle_stale_flag=1</code>，重烧后清零，审核结论保留。
         字幕样式与配音字幕页共用 <code>subtitle_style_json</code>（<code>POST /bgssai/user/subtitles/style-save</code>）。
+        MUSIC 模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=MUSIC</code>；生成结果进入 AUDIO
+        候选，用户选用后由 <code>/settings-save</code> 写入 <code>compose_setting_json.bgm_asset_id</code>。
         时间轴：<code>track_list</code>[<code>track_type</code>（<code>VIDEO</code> / <code>AUDIO</code> /
         <code>SUBTITLE</code> / <code>BGM</code>）· <code>clip_list</code>[<code>start_ms</code> ·
         <code>end_ms</code> · <code>asset_id</code>]]；成片：<code>compose_status</code> ·

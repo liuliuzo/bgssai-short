@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>后期管线：配音对齐、字幕与合成 — bgssai short feature</title>
+<title>后期管线：配音、ASR 字幕、AI 音乐与合成 — bgssai short feature</title>
 <style>
   :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
           --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
@@ -33,11 +33,11 @@
 </head>
 <body>
 
-<h1>后期管线：配音时长对齐、字幕派生与成片合成</h1>
+<h1>后期管线：配音、ASR 字幕、AI 音乐与成片合成</h1>
 <dl class="meta">
-  <dt>作用域</dt><dd>配音 / 字幕 / 四轨合成 / 过期回落</dd>
-  <dt>关联</dt><dd>voice-subtitle.md · film-compose-export.md</dd>
-  <dt>更新</dt><dd>2026-08-13</dd>
+  <dt>作用域</dt><dd>配音 / ASR 字幕 / AI 音乐 / 四轨合成 / 过期回落</dd>
+  <dt>关联</dt><dd>voice-subtitle.md · film-compose-export.md · ai-model-integration.md</dd>
+  <dt>更新</dt><dd>2026-08-31</dd>
 </dl>
 
 <h2>一、配音时长对齐：三种解法各自的代价</h2>
@@ -92,7 +92,44 @@
   <text class="small" x="515" y="282" text-anchor="middle">但阻塞该集合成，合成入口禁用并列出待处理数</text>
 </svg>
 
-<h2>二、四轨时间轴与合成</h2>
+<h2>二、字幕校准与 AI 背景音乐</h2>
+<svg viewBox="0 0 1040 190" width="1040" height="190">
+  <rect class="box" x="20" y="30" width="180" height="50" rx="6"/>
+  <text class="lbl" x="110" y="52" text-anchor="middle">已生成配音素材</text>
+  <text class="small" x="110" y="68" text-anchor="middle">短时临时访问 URL</text>
+
+  <rect class="run" x="250" y="30" width="210" height="50" rx="6"/>
+  <text class="lbl" x="355" y="52" text-anchor="middle">Hy-ASR 识别</text>
+  <text class="small" x="355" y="68" text-anchor="middle">异步返回句段与时间码</text>
+
+  <rect class="done" x="510" y="30" width="210" height="50" rx="6"/>
+  <text class="lbl" x="615" y="52" text-anchor="middle">字幕草稿校准</text>
+  <text class="small" x="615" y="68" text-anchor="middle">用户确认后进入合成</text>
+
+  <path class="arr accent" d="M 200 55 L 250 55"/>
+  <path class="arr accent" d="M 460 55 L 510 55"/>
+
+  <rect class="box" x="20" y="115" width="180" height="50" rx="6"/>
+  <text class="lbl" x="110" y="137" text-anchor="middle">音乐描述</text>
+  <text class="small" x="110" y="153" text-anchor="middle">氛围 / 节奏 / 是否纯音乐</text>
+
+  <rect class="run" x="250" y="115" width="210" height="50" rx="6"/>
+  <text class="lbl" x="355" y="137" text-anchor="middle">MiniMax-Music 生成</text>
+  <text class="small" x="355" y="153" text-anchor="middle">写入 AUDIO 候选素材</text>
+
+  <rect class="done" x="510" y="115" width="210" height="50" rx="6"/>
+  <text class="lbl" x="615" y="137" text-anchor="middle">选择 BGM 候选</text>
+  <text class="small" x="615" y="153" text-anchor="middle">保存到 compose_setting_json</text>
+
+  <path class="arr accent" d="M 200 140 L 250 140"/>
+  <path class="arr accent" d="M 460 140 L 510 140"/>
+
+  <rect class="warnbox" x="770" y="73" width="250" height="50" rx="6"/>
+  <text class="lbl" x="895" y="95" text-anchor="middle">模型不可用则明确失败</text>
+  <text class="small" x="895" y="111" text-anchor="middle">不生成占位音频或假字幕</text>
+</svg>
+
+<h2>三、四轨时间轴与合成</h2>
 <svg viewBox="0 0 1040 260" width="1040" height="260">
   <text class="small" x="20" y="34">VIDEO</text>
   <rect class="track" x="80" y="20" width="880" height="26" rx="3"/>
@@ -130,14 +167,14 @@
   <text class="small" x="20" y="160">BGM</text>
   <rect class="track" x="80" y="146" width="880" height="26" rx="3"/>
   <rect class="clip" x="82" y="148" width="876" height="22" rx="2" opacity="0.5"/>
-  <text class="small" x="520" y="164" text-anchor="middle">整集贯穿，有台词处自动闪避 duck_flag=1</text>
+  <text class="small" x="520" y="164" text-anchor="middle">上传或 MUSIC 生成候选，选用后整集贯穿；有台词处自动闪避 duck_flag=1</text>
 
   <rect class="box" x="80" y="196" width="880" height="48" rx="6"/>
   <text class="small" x="520" y="216" text-anchor="middle">时间轴为只读预览：镜头时长与顺序只能回分镜工作台修改，避免同一事实两处可改而漂移</text>
   <text class="small" x="520" y="234" text-anchor="middle">合成走 COMPOSE 任务，产出 1080x1920 / 30fps 成片，可导出 WITH_SUBTITLE / NO_SUBTITLE / SRT_ONLY</text>
 </svg>
 
-<h2>三、过期回落：上游一变，成片即标过期</h2>
+<h2>四、过期回落：上游一变，成片即标过期</h2>
 <svg viewBox="0 0 1040 150" width="1040" height="150">
   <rect class="box" x="20" y="40" width="200" height="50" rx="6"/>
   <text class="small" x="120" y="62" text-anchor="middle">上游变更</text>

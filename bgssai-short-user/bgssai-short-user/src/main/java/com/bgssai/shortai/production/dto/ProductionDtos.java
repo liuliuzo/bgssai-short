@@ -110,6 +110,7 @@ public class ProductionDtos {
         private String instruction;
         private Integer forceReadyFlag;
         private Integer scriptVersion;
+        private String modelCode;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
         public String getEpisodeId() { return episodeId; }
@@ -126,6 +127,8 @@ public class ProductionDtos {
         public void setForceReadyFlag(Integer forceReadyFlag) { this.forceReadyFlag = forceReadyFlag; }
         public Integer getScriptVersion() { return scriptVersion; }
         public void setScriptVersion(Integer scriptVersion) { this.scriptVersion = scriptVersion; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
     }
 
     public static class CharacterReq {

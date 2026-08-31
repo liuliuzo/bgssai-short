@@ -51,6 +51,9 @@
       </span>
       <span class="top-title">配音与字幕 · 第 12 集</span>
       <span class="spacer"></span>
+      <select style="width:230px" title="配音模型">
+        <option value="minimax-speech-2.8-hd" selected>配音：MiniMax-Speech-2.8-HD</option>
+      </select>
       <button class="btn btn-default btn-sm">整集连续试听</button>
       <button class="btn btn-primary">批量配音（34 镜 · 4.08 元）</button>
     </header>
@@ -227,8 +230,12 @@
           <div class="card card-flush" style="margin-top:14px">
             <div class="card-hd">
               <h2>字幕轨</h2>
-              <span class="text-muted" style="font-size:12px">按对齐后的时间轴自动生成</span>
+              <span class="text-muted" style="font-size:12px">可按配音原文生成，也可用 ASR 校准</span>
               <span class="spacer"></span>
+              <select style="width:190px" title="语音识别模型">
+                <option value="hy-asr-3.0-preview" selected>ASR：Hy-ASR-3.0</option>
+              </select>
+              <button class="btn btn-primary btn-sm">AI 转写校准</button>
               <button class="btn btn-default btn-sm">重新生成</button>
               <button class="btn btn-default btn-sm">导出 SRT</button>
             </div>
@@ -248,7 +255,8 @@
             </div>
             <div class="card-body" style="padding-top:10px">
               <div class="text-muted" style="font-size:11px">
-                第 4、5 条由一句长旁白自动断句而来（单条上限 15 字）。
+                第 4、5 条由一句长旁白自动断句而来（单条上限 15 字）。AI 转写会用供应商返回的句级时间码；
+                检测到人工修改时先弹出覆盖确认，不静默改写。
               </div>
             </div>
           </div>
@@ -346,10 +354,13 @@
         接口：<code>POST /bgssai/user/dubbings/submit</code> · <code>/regenerate</code> ·
         <code>/align</code> · <code>/align-batch</code>（一键处理：免费项按 <code>suggest_action</code>
         执行，<code>EXTEND_SHOT</code> 项返回清单与 <code>estimated_cost_cent</code> 等确认）·
-        <code>/apply-voice-to-character</code>；
+        <code>/apply-voice-to-character</code>；配音提交可选 <code>model_code</code>，模型来自
+        <code>GET /bgssai/user/ai-models/list?ability_type=VOICE</code>；
         <code>GET /bgssai/user/dubbings/list?episode_id</code> · <code>GET /bgssai/user/voices/list</code>；
         字幕 <code>GET /bgssai/user/subtitles/detail?episode_id</code> · <code>POST /regenerate</code> ·
-        <code>/update</code> · <code>/style-save</code>。
+        <code>/update</code> · <code>/style-save</code> · <code>/transcribe</code>，转写提交
+        <code>model_code</code> 与 <code>confirm_overwrite_flag</code>，模型来自
+        <code>GET /bgssai/user/ai-models/list?ability_type=ASR</code>。
         对齐字段：<code>audio_duration_sec</code> · <code>shot_duration_sec</code> ·
         <code>align_gap_sec</code> · <code>align_status</code>（<code>PENDING</code> /
         <code>ALIGNED</code> / <code>MISALIGNED</code>）· <code>suggest_action</code> ·

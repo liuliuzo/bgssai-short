@@ -4,6 +4,8 @@
 
 详设：`docs/architecture/ai-capability-usage-design.md`。密钥：`docs/security/ai-provider-secrets.md`。
 
+`ability_type` 枚举：`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` / `COMPOSE`。
+
 ## 错误码（本域）
 
 | code | 含义 |
@@ -25,12 +27,12 @@ Query：`ability_type`（可选）。需 `PLATFORM_ADMIN`。
 
 ```json
 { "result": { "model_list": [
-  { "model_id": "m-90003", "ability_type": "VIDEO", "ability_type_name": "视频",
-    "provider_code": "KLING", "model_code": "kling-v2-6", "model_name": "可灵图生视频",
-    "quality_level": "FAST", "price_unit": "PER_CALL", "unit_price_cent": 150,
+  { "model_id": "m-tokenhub-video-minimax", "ability_type": "VIDEO", "ability_type_name": "视频",
+    "provider_code": "TENCENT_TOKENHUB", "model_code": "minimax-video-h3", "model_name": "MiniMax-Video-H3",
+    "quality_level": "STANDARD", "price_unit": "PER_SECOND", "unit_price_cent": 50,
     "default_flag": 1, "enabled_flag": 1, "timeout_sec": 600, "max_retry": 2,
-    "config_json": "{\"base_url\":\"https://api-beijing.klingai.com\",\"secret_ref\":\"ai.kling.api_key\",\"aspect_ratio\":\"9:16\"}",
-    "updated_time": "2026-08-10 15:02:31" } ] } }
+    "config_json": "{\"base_url\":\"https://tokenhub.tencentmaas.com\",\"secret_ref\":\"ai.tencent_tokenhub.api_key\",\"submit_path\":\"/v1/wand/minimax-video-v2/generation\"}",
+    "updated_time": "2026-08-31 15:02:31" } ] } }
 ```
 
 响应不含任何密钥明文。
@@ -140,8 +142,12 @@ Query：`ability_type`（可选）。需登录 `USER`。返回该能力下 **启
 
 ```json
 { "result": { "model_list": [
-  { "model_id": "m-video-kling", "ability_type": "VIDEO", "provider_code": "KLING",
-    "model_code": "kling-v2-6", "model_name": "可灵图生视频", "quality_level": "STANDARD",
-    "price_unit": "PER_CALL", "unit_price_cent": 200, "default_flag": 1 }
+  { "model_id": "m-tokenhub-video-minimax", "ability_type": "VIDEO", "provider_code": "TENCENT_TOKENHUB",
+    "model_code": "minimax-video-h3", "model_name": "MiniMax-Video-H3", "quality_level": "STANDARD",
+    "price_unit": "PER_SECOND", "unit_price_cent": 50, "default_flag": 1 }
 ] } }
 ```
+
+首批生产目录：TEXT `hy4-preview` / `kimi-k3` / `deepseek-v4-pro`；VIDEO
+`minimax-video-h3` / `pixverse-video-v6.0` / `kling-video-v3`；VOICE
+`minimax-speech-2.8-hd`；ASR `hy-asr-3.0-preview`；MUSIC `minimax-music-v2.6`。

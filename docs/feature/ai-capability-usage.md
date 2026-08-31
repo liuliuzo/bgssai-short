@@ -20,14 +20,18 @@
 - 用户故事三：作为 `PLATFORM_ADMIN`，我希望给创作者账号设置余额与月度用量上限。
 
 - 业务规则：
-  1. `ai_model_config` 按 `ability_type`（`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `COMPOSE`）分组，
+  1. `ai_model_config` 按 `ability_type`（`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` /
+     `COMPOSE`）分组，
      每组可配多个模型，其一为 `default_flag=1`；业务侧提交任务时只传 `task_type`，
      由平台解析为当前默认模型（用户可在允许范围内改选，见规则 4）。
-     本产品画面 / 视频支持多模型点选（类 Cursor）：`KLING`（可灵，IMAGE/VIDEO 默认）、
-     `MINIMAX`（海螺）、`SEEDANCE`（即梦）、`VEO`（Google Veo）；创作者提交时选 `model_code`，
-     两段式生成可另传 `next_model_code` 作为自动接视频的模型。密钥分别对应
-     `ai.kling.api_key` / `ai.minimax.api_key` / `ai.seedance.api_key` / `ai.veo.api_key`。
-     TEXT / VOICE 走 `OPENAI_COMPAT`（OpenAI 兼容网关，密钥 `ai.openai_compat.api_key`）。
+     本产品生成能力支持多模型点选（类 Cursor），创作者提交时选 `model_code`，两段式视频生成可另传
+     `next_model_code` 作为自动接视频的模型。首批生产目录统一走 `TENCENT_TOKENHUB`（密钥
+     `ai.tencent_tokenhub.api_key`）：TEXT 为
+     `hy4-preview` / `kimi-k3` / `deepseek-v4-pro`，VIDEO 为 `minimax-video-h3` /
+     `pixverse-video-v6.0` / `kling-video-v3`，VOICE 为 `minimax-speech-2.8-hd`，ASR 为
+     `hy-asr-3.0-preview`，MUSIC 为 `minimax-music-v2.6`。完整目录、默认值与用户落点见
+     `ai-model-integration.md`。IMAGE 继续使用既有直连 Provider；既有 KLING / MINIMAX / SEEDANCE /
+     VEO 视频直连 Provider 保留为备用，不再作为首批 VIDEO 默认目录。
      COMPOSE 走 `FFMPEG`（`FfmpegComposeProvider`，本机 ffmpeg 把各镜视频拼成 9:16 成片），
      不调外部模型，但**部署机必须预装 ffmpeg**，否则合成任务报「本机未安装 ffmpeg」。
      缺镜头视频时合成直接失败并点名缺哪几镜，不再退回占位成片。
@@ -73,7 +77,8 @@
 
 ## 三、验收标准
 
-1. 管理端新增一个 `VIDEO` 模型并设为默认后，用户端新提交的视频任务落到该模型，无需发版。
+1. 管理端新增一个 `VIDEO` 模型并设为默认后，用户端新提交的视频任务落到该模型，无需发版；
+   `VOICE`、`ASR`、`MUSIC` 默认模型彼此独立。
 2. 调整单价后，历史任务的账单金额不变，新任务按新价计费。
 3. 停用当前默认模型且组内无其它启用模型时，用户端提交该类任务返回 `4014` 且提示可读原因。
 4. 用户端账单页金额合计与管理端该用户用量合计一致（同一时间区间口径下逐分相等）。
@@ -147,7 +152,8 @@
 
 ## 六、数据模型影响
 
-- 新增表 `ai_model_config`：`model_id`(PK)、`ability_type`、`provider_code`、`model_code`、`model_name`、
+- 新增表 `ai_model_config`：`model_id`(PK)、`ability_type`（含 `ASR` / `MUSIC`）、`provider_code`、
+  `model_code`、`model_name`、
   `quality_level`、`price_unit`、`unit_price_cent`、`default_flag`、`enabled_flag`、`timeout_sec`、
   `max_retry`、`config_json`（端点与参数，密钥不入库明文，见 `docs/security`）、`deleted_flag`、时间戳。
 - 新增表 `ai_usage_record`：`record_id`(PK)、`user_id`、`work_id`、`episode_id`、`shot_id`、`task_id`、

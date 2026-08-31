@@ -44,6 +44,8 @@
      （如「重新生成 30 集大纲 约 0.15 元，已写好的 15 集剧本不会被覆盖」）；
      梗概修改触发重新生成大纲时同样先给出该说明。
      空态语义：无大纲时入口文案为「生成大纲」，已有大纲时才是「重新生成大纲」。
+  9. 大纲、单集剧本与局部重写均可从启用的 `TEXT` 模型中选择 `model_code`；省略时使用当前默认模型。
+     首批可选 Hy4 / Kimi K3 / DeepSeek-V4-Pro，模型切换只影响本次新任务，不追溯历史版本。
 
 ## 三、验收标准
 
@@ -56,18 +58,20 @@
    仅错别字级文字修改（不改变场次与台词切分）时 `storyboard_status` 保持不变。
 7. 已有大纲时点「重新生成大纲」，先展示影响范围与费用说明（集数、约多少元、
    已写好的 N 集剧本不会被覆盖），确认后执行且已定稿集正文逐字不变；无大纲时入口文案为「生成大纲」。
+8. 三个文本模型均能独立提交任务，任务中心记录所选 `model_code`；未选模型时使用 Hy4 默认配置。
 
 ## 四、接口契约（snake_case）
 
 - `POST /bgssai/user/scripts/outline-generate`
   ```json
   { "work_id": "w-10001", "one_line_pitch": "被退婚的落魄千金三年后带资本回归",
-    "episode_count": 30, "episode_duration_sec": 90, "genre": "REVENGE" }
+    "episode_count": 30, "episode_duration_sec": 90, "genre": "REVENGE",
+    "model_code": "hy4-preview" }
   ```
   返回 `task_id`（`task_type=TEXT`），结果异步回写，前端按 `task_id` 轮询（见 `shot-generation.md` 任务中心口径）。
 - `GET /bgssai/user/scripts/outline?work_id=w-10001`
 - `POST /bgssai/user/scripts/outline-save`（整份大纲保存，含各集 `episode_title` / `episode_synopsis` / `ending_hook`）
-- `POST /bgssai/user/scripts/generate`（单集剧本生成：`episode_id` + `extra_prompt`）
+- `POST /bgssai/user/scripts/generate`（单集剧本生成：`episode_id` + `extra_prompt` + 可选 `model_code`）
 - `GET /bgssai/user/scripts/detail?episode_id=e-20001`
   ```json
   { "result": {
@@ -87,7 +91,8 @@
             "suggestion": "把第 4 场的身份揭露提前到此处" } ] } } }
   ```
 - `POST /bgssai/user/scripts/save`（整集保存，含 `script_version` 乐观锁）
-- `POST /bgssai/user/scripts/rewrite`（局部重写：`episode_id` + `scene_no` + 可选 `line_no` + `rewrite_instruction`）
+- `POST /bgssai/user/scripts/rewrite`（局部重写：`episode_id` + `scene_no` + 可选 `line_no` +
+  `rewrite_instruction` + 可选 `model_code`）
 - `POST /bgssai/user/scripts/ready`（定稿：`episode_id` + `force_ready_flag`）
 - `GET /bgssai/user/scripts/versions?episode_id=e-20001` · `POST /bgssai/user/scripts/rollback`
 - 鉴权：全部需 `Jwttoken`；作品归属校验按 JWT `user_id`。

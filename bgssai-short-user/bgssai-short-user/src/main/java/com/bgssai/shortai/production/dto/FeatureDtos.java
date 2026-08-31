@@ -8,10 +8,13 @@ public class FeatureDtos {
     public static class DubbingSubmitReq {
         private String episodeId;
         private List<String> shotIdList;
+        private String modelCode;
         public String getEpisodeId() { return episodeId; }
         public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
         public List<String> getShotIdList() { return shotIdList; }
         public void setShotIdList(List<String> shotIdList) { this.shotIdList = shotIdList; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
     }
 
     public static class DubbingRegenReq {
@@ -20,6 +23,7 @@ public class FeatureDtos {
         private String voiceId;
         private String voiceSpeed;
         private String emotion;
+        private String modelCode;
         public String getShotId() { return shotId; }
         public void setShotId(String shotId) { this.shotId = shotId; }
         public Integer getLineNo() { return lineNo; }
@@ -30,6 +34,8 @@ public class FeatureDtos {
         public void setVoiceSpeed(String voiceSpeed) { this.voiceSpeed = voiceSpeed; }
         public String getEmotion() { return emotion; }
         public void setEmotion(String emotion) { this.emotion = emotion; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
     }
 
     public static class DubbingAlignReq {
@@ -68,6 +74,18 @@ public class FeatureDtos {
         public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
     }
 
+    public static class SubtitleTranscribeReq {
+        private String episodeId;
+        private String modelCode;
+        private Integer confirmOverwriteFlag;
+        public String getEpisodeId() { return episodeId; }
+        public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
+        public Integer getConfirmOverwriteFlag() { return confirmOverwriteFlag; }
+        public void setConfirmOverwriteFlag(Integer confirmOverwriteFlag) { this.confirmOverwriteFlag = confirmOverwriteFlag; }
+    }
+
     public static class SubtitleUpdateReq {
         private String subtitleId;
         private String subtitleText;
@@ -103,17 +121,41 @@ public class FeatureDtos {
 
     public static class FilmSettingsSaveReq {
         private String workId;
+        private String episodeId;
         private Map<String, Object> composeSetting;
         private Integer burnSubtitleFlag;
         private String aspectRatio;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
+        public String getEpisodeId() { return episodeId; }
+        public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
         public Map<String, Object> getComposeSetting() { return composeSetting; }
         public void setComposeSetting(Map<String, Object> composeSetting) { this.composeSetting = composeSetting; }
         public Integer getBurnSubtitleFlag() { return burnSubtitleFlag; }
         public void setBurnSubtitleFlag(Integer burnSubtitleFlag) { this.burnSubtitleFlag = burnSubtitleFlag; }
         public String getAspectRatio() { return aspectRatio; }
         public void setAspectRatio(String aspectRatio) { this.aspectRatio = aspectRatio; }
+    }
+
+    public static class BgmGenerateReq {
+        private String workId;
+        private String episodeId;
+        private String modelCode;
+        private String prompt;
+        private Integer isInstrumental;
+        private String lyrics;
+        public String getWorkId() { return workId; }
+        public void setWorkId(String workId) { this.workId = workId; }
+        public String getEpisodeId() { return episodeId; }
+        public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
+        public String getPrompt() { return prompt; }
+        public void setPrompt(String prompt) { this.prompt = prompt; }
+        public Integer getIsInstrumental() { return isInstrumental; }
+        public void setIsInstrumental(Integer isInstrumental) { this.isInstrumental = isInstrumental; }
+        public String getLyrics() { return lyrics; }
+        public void setLyrics(String lyrics) { this.lyrics = lyrics; }
     }
 
     public static class FilmExportReq {

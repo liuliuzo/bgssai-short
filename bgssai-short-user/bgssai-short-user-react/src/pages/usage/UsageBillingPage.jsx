@@ -81,6 +81,8 @@ export default function UsageBillingPage() {
             { value: 'IMAGE', label: '图像' },
             { value: 'VIDEO', label: '视频' },
             { value: 'VOICE', label: '配音' },
+            { value: 'ASR', label: '语音识别' },
+            { value: 'MUSIC', label: '音乐生成' },
             { value: 'COMPOSE', label: '合成' },
           ]}
         />

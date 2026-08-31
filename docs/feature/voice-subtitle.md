@@ -38,6 +38,10 @@
   5. **试听**：镜头级与整集连续试听（按镜头顺序拼接播放），无需等待合成。
   6. 配音走统一任务体系（`task_type=VOICE`），费用、重试、批量、断点续跑口径与 `shot-generation.md` 一致。
   7. `dialogue_text` 为空的镜头（空镜）不产生配音任务，但参与整集时间轴排布。
+  8. 配音提交与逐句重配可选 `VOICE` 模型 `model_code`，省略时使用默认模型；首批默认
+     `minimax-speech-2.8-hd`，供应商返回的音频时长是对齐计算真值。
+  9. 字幕支持 Hy-ASR 校准：对本集已有配音音频逐条提交 `ASR` 任务，按识别结果更新文本与句级时间戳；
+     已有人工作业时须传 `confirm_overwrite_flag=1`，无音频镜头跳过且不扣费。
 
 ## 三、验收标准
 
@@ -54,10 +58,12 @@
    待处理镜头数；免费可解项自动处理完成后合成入口即放开。
 8. 点「按建议一键处理全部未对齐」：免费项全部按建议执行完毕，需付费的 `EXTEND_SHOT` 项
    单独列出并显示各镜预估费用，等用户确认。
+9. 选择 MiniMax-Speech 配音后得到可播放音频与真实时长；选择 Hy-ASR 执行校准后，字幕文本和时间戳
+   与识别结果一致，未确认时不覆盖人工字幕。
 
 ## 四、接口契约（snake_case）
 
-- `POST /bgssai/user/dubbings/submit`（`episode_id` + 可选 `shot_id_list`；返回 `batch_id`，走统一任务体系）
+- `POST /bgssai/user/dubbings/submit`（`episode_id` + 可选 `shot_id_list` / `model_code`；返回 `batch_id`，走统一任务体系）
 - `GET /bgssai/user/dubbings/list?episode_id=e-20001`
   ```json
   { "result": { "dubbing_list": [
@@ -72,7 +78,8 @@
         "align_gap_sec": -0.8, "suggest_action": "PAD_SILENCE", "auto_fixed_flag": 1 } ],
       "misaligned_count": 0 } }
   ```
-- `POST /bgssai/user/dubbings/regenerate`（`shot_id` + 可选 `line_no` + `voice_id` / `voice_speed` / `emotion`）
+- `POST /bgssai/user/dubbings/regenerate`（`shot_id` + 可选 `line_no` + `voice_id` / `voice_speed` /
+  `emotion` / `model_code`）
 - `POST /bgssai/user/dubbings/align`（`shot_id` + `align_action`：`ADJUST_SPEED` / `EXTEND_SHOT` / `PAD_SILENCE`）
 - `POST /bgssai/user/dubbings/align-batch`（`episode_id`；按各镜 `suggest_action` 执行全部免费未对齐项，
   返回已处理清单与待确认的 `EXTEND_SHOT` 清单及各镜 `estimated_cost_cent`）
@@ -81,6 +88,8 @@
 - `GET /bgssai/user/subtitles/detail?episode_id=e-20001`（字幕条目 + 时间轴）
 - `POST /bgssai/user/subtitles/regenerate` · `POST /bgssai/user/subtitles/update`（单条文本 / 时间微调）
 - `POST /bgssai/user/subtitles/style-save`（作品级字幕样式：`font_size`、`font_color`、`stroke_color`、`position`）
+- `POST /bgssai/user/subtitles/transcribe`（`episode_id` + 可选 `model_code` +
+  `confirm_overwrite_flag`；返回 `batch_id` 与任务清单）
 - 鉴权：需 `Jwttoken`；按 JWT `user_id` 校验归属。
 - 错误码：`4003` 越权 / `4006` 剧本或分镜未就绪即配音 / `4007` 余额不足 / `429` 限流。
 

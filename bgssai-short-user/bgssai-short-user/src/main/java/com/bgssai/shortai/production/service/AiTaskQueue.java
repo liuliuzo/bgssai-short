@@ -61,7 +61,7 @@ public class AiTaskQueue {
         task.setProgressPercent(0);
         task.setRetryCount(0);
         task.setAutoNextFlag(autoNext);
-        task.setCostCent(aiModelResolveService.costCent(model, 1));
+        task.setCostCent(aiModelResolveService.costCent(model, estimatedUsage(model, req)));
         Date now = new Date();
         task.setQueuedTime(now);
         task.setCreatedTime(now);
@@ -70,5 +70,21 @@ public class AiTaskQueue {
         log.info("enqueue ai task taskId={} type={} model={} target={}", task.getTaskId(), taskType,
                 model.getModelCode(), targetId);
         return task;
+    }
+
+    private static int estimatedUsage(AiModelConfig model, Map<String, Object> request) {
+        String unit = model.getPriceUnit();
+        if ("PER_SECOND".equals(unit)) {
+            int seconds = ShortJson.integer(request.get("duration_sec"), 0);
+            if (seconds <= 0) {
+                seconds = ShortJson.integer(ShortJson.map(model.getConfigJson()).get("duration"), 1);
+            }
+            return Math.max(1, seconds);
+        }
+        if ("PER_MINUTE".equals(unit)) {
+            int seconds = ShortJson.integer(request.get("duration_sec"), 0);
+            return seconds <= 0 ? 1 : Math.max(1, (seconds + 59) / 60);
+        }
+        return 1;
     }
 }

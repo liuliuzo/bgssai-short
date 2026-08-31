@@ -34,6 +34,9 @@ public class FfmpegComposeProvider implements AiProvider {
     /** params 中承载片段字节的键。 */
     public static final String PARAM_CLIPS = "clip_list";
 
+    /** params 中承载可选背景音乐字节的键。 */
+    public static final String PARAM_BGM = "bgm_audio";
+
     private static final Logger log = LoggerFactory.getLogger(FfmpegComposeProvider.class);
 
     private static final int PROBE_TIMEOUT_SEC = 10;
@@ -76,16 +79,26 @@ public class FfmpegComposeProvider implements AiProvider {
             }
             Files.write(dir.resolve("concat.txt"), listFile.toString().getBytes(StandardCharsets.UTF_8));
 
+            byte[] bgm = binaryParam(request, PARAM_BGM);
             Path out = dir.resolve("film.mp4");
+            Path concatOut = bgm == null ? out : dir.resolve("video.mp4");
             // 先试无损拼接；片段编码参数不一致时 concat 会失败，再退到统一重编码。
             if (!run(dir, timeoutSec, "ffmpeg", "-y", "-f", "concat", "-safe", "0",
-                    "-i", "concat.txt", "-c", "copy", out.getFileName().toString())) {
+                    "-i", "concat.txt", "-c", "copy", concatOut.getFileName().toString())) {
                 log.info("ffmpeg stream copy concat failed, re-encoding {} clips", clips.size());
                 if (!run(dir, timeoutSec, "ffmpeg", "-y", "-f", "concat", "-safe", "0",
                         "-i", "concat.txt", "-c:v", "libx264", "-preset", "veryfast",
-                        "-pix_fmt", "yuv420p", "-c:a", "aac", out.getFileName().toString())) {
+                        "-pix_fmt", "yuv420p", "-c:a", "aac", concatOut.getFileName().toString())) {
                     throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
                             "ffmpeg 合成失败，请检查镜头视频是否可解码");
+                }
+            }
+            if (bgm != null) {
+                Files.write(dir.resolve("bgm-audio"), bgm);
+                if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", concatOut.getFileName().toString(),
+                        "-stream_loop", "-1", "-i", "bgm-audio", "-map", "0:v:0", "-map", "1:a:0",
+                        "-c:v", "copy", "-c:a", "aac", "-shortest", out.getFileName().toString())) {
+                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 背景音乐混流失败");
                 }
             }
             byte[] mp4 = Files.readAllBytes(out);
@@ -122,6 +135,11 @@ public class FfmpegComposeProvider implements AiProvider {
             }
         }
         return clips;
+    }
+
+    private static byte[] binaryParam(AiProviderRequest request, String name) {
+        Object raw = request.param(name);
+        return raw instanceof byte[] bytes && bytes.length > 0 ? bytes : null;
     }
 
     private static void requireFfmpeg() {

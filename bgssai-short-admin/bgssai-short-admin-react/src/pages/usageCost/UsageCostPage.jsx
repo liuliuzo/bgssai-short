@@ -72,6 +72,8 @@ export default function UsageCostPage() {
             { value: 'IMAGE', label: 'IMAGE' },
             { value: 'VIDEO', label: 'VIDEO' },
             { value: 'VOICE', label: 'VOICE' },
+            { value: 'ASR', label: 'ASR' },
+            { value: 'MUSIC', label: 'MUSIC' },
             { value: 'COMPOSE', label: 'COMPOSE' },
           ]}
         />

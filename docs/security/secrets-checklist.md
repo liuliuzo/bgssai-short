@@ -5,6 +5,9 @@
 
 ## 敏感项清单（均已在各 profile 文件中落为最终字面量）
 
+本表只列中间件与应用运行参数。业务第三方凭证不进入 properties：TokenHub 等 AI Key 由 Admin
+维护并落 `sys_secret`，详见 `ai-provider-secrets.md`。
+
 | key | 说明 | 生成 / 来源 |
 | --- | --- | --- |
 | `spring.datasource.url` | 数据库连接串（指向 `bgssai_short` 库） | 环境 DBA 提供 |

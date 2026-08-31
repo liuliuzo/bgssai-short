@@ -10,6 +10,7 @@ import com.bgssai.shortai.common.aop.NeedAop;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmExportReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmRebakeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmSettingsSaveReq;
+import com.bgssai.shortai.production.dto.FeatureDtos.BgmGenerateReq;
 import com.bgssai.shortai.production.service.FilmService;
 
 @RestController
@@ -34,5 +35,11 @@ public class FilmExtraControllers {
     @PostMapping("/bgssai/user/films/export")
     public ApiResponse export(@RequestBody FilmExportReq req) {
         return service.export(req);
+    }
+
+    @NeedAop
+    @PostMapping("/bgssai/user/films/bgm-generate")
+    public ApiResponse generateBgm(@RequestBody BgmGenerateReq req) {
+        return service.generateBgm(req);
     }
 }
