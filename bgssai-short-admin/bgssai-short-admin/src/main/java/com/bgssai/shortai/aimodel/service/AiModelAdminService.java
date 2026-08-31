@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bgssai.shortai.aimodel.ModelUsageMeta;
 import com.bgssai.shortai.aimodel.dto.ReqAiModel;
 import com.bgssai.shortai.common.AdminAuthGuard;
 import com.bgssai.shortai.common.ApiResponse;
@@ -247,6 +248,12 @@ public class AiModelAdminService {
         item.put("max_retry", row.getMaxRetry());
         item.put("config_json", row.getConfigJson());
         item.put("updated_time", row.getUpdatedTime());
+        String region = ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
+        int weight = ModelUsageMeta.pointWeight(row.getModelCode(), row.getProviderCode());
+        item.put("region", region);
+        item.put("region_label", ModelUsageMeta.regionLabel(region));
+        item.put("point_weight", weight);
+        item.put("usage_hint", ModelUsageMeta.usageHint(weight));
         return item;
     }
 

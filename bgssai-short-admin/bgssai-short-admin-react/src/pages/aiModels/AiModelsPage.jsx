@@ -83,6 +83,7 @@ export default function AiModelsPage() {
             { title: '模型', dataIndex: 'model_code' },
             { title: '名称', dataIndex: 'model_name' },
             { title: '供应商', dataIndex: 'provider_code', width: 120 },
+            { title: '区域', dataIndex: 'region_label', width: 80, render: (v, row) => v || (row.region === 'intl' ? '国外' : '国内') },
             { title: '档位', dataIndex: 'quality_level', width: 100 },
             { title: '计费', dataIndex: 'price_unit', width: 120 },
             { title: '单价(元)', dataIndex: 'unit_price_cent', width: 100, render: yuan },

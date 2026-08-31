@@ -68,7 +68,10 @@ export default function VoiceStudioPage({ work, episodeId }) {
             value={voiceModelCode}
             onChange={setVoiceModelCode}
             style={{ width: 220 }}
-            options={voiceModels.map((m) => ({ value: m.model_code, label: m.model_name || m.model_code }))}
+            options={voiceModels.map((m) => ({
+              value: m.model_code,
+              label: `${m.model_name || m.model_code} · ${m.region_label || (m.region === 'intl' ? '国外' : '国内')}`,
+            }))}
           />
           <Button type="primary" onClick={async () => {
             const { data } = await featuresApi.submitDubbing({ episode_id: episodeId, model_code: voiceModelCode })
@@ -134,7 +137,10 @@ export default function VoiceStudioPage({ work, episodeId }) {
             value={asrModelCode}
             onChange={setAsrModelCode}
             style={{ width: 220 }}
-            options={asrModels.map((m) => ({ value: m.model_code, label: m.model_name || m.model_code }))}
+            options={asrModels.map((m) => ({
+              value: m.model_code,
+              label: `${m.model_name || m.model_code} · ${m.region_label || (m.region === 'intl' ? '国外' : '国内')}`,
+            }))}
           />
           <Button type="primary" onClick={async () => {
             const { data } = await featuresApi.subtitleTranscribe({

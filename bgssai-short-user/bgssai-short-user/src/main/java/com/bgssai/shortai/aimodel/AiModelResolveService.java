@@ -79,6 +79,12 @@ public class AiModelResolveService {
             item.put("price_unit", row.getPriceUnit());
             item.put("unit_price_cent", row.getUnitPriceCent());
             item.put("default_flag", row.getDefaultFlag());
+            String region = ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
+            int weight = ModelUsageMeta.pointWeight(row.getModelCode(), row.getProviderCode());
+            item.put("region", region);
+            item.put("region_label", ModelUsageMeta.regionLabel(region));
+            item.put("point_weight", weight);
+            item.put("usage_hint", ModelUsageMeta.usageHint(weight));
             list.add(item);
         }
         Map<String, Object> result = new LinkedHashMap<>();
