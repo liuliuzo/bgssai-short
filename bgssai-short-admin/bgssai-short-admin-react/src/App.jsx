@@ -7,6 +7,7 @@ import LoginLogsPage from './pages/loginLogs/LoginLogsPage'
 import ReviewsPage from './pages/reviews/ReviewsPage'
 import CreatorsPage from './pages/creators/CreatorsPage'
 import CreditPacksPage from './pages/creditPacks/CreditPacksPage'
+import SubscriptionPlansPage from './pages/subscriptionPlans/SubscriptionPlansPage'
 import PayMerchantsPage from './pages/payMerchants/PayMerchantsPage'
 import QualityTemplatesPage from './pages/qualityTemplates/QualityTemplatesPage'
 import AiModelsPage from './pages/aiModels/AiModelsPage'
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/creators" element={<CreatorsPage />} />
         <Route path="/credit-packs" element={<CreditPacksPage />} />
+        <Route path="/subscription-plans" element={<SubscriptionPlansPage />} />
         <Route path="/pay-merchants" element={<PayMerchantsPage />} />
         <Route path="/ai-models" element={<AiModelsPage />} />
         <Route path="/usage-cost" element={<UsageCostPage />} />

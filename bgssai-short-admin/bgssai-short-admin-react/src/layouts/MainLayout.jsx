@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { key: '/usage-cost', label: '用量与成本', icon: <FundOutlined /> },
   { key: '/creators', label: '创作者', icon: <TeamOutlined /> },
   { key: '/credit-packs', label: '加量包', icon: <GiftOutlined /> },
+  { key: '/subscription-plans', label: '订阅套餐', icon: <PayCircleOutlined /> },
   { key: '/pay-merchants', label: '支付商户', icon: <PayCircleOutlined /> },
   { key: '/quality-templates', label: '质量模板', icon: <ExperimentOutlined /> },
   { key: '/login-logs', label: '登录日志', icon: <ProfileOutlined /> },

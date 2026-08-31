@@ -12,6 +12,7 @@ export default function SubscriptionPage() {
   const [me, setMe] = useState(null)
   const [plans, setPlans] = useState([])
   const [packs, setPacks] = useState([])
+  const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(false)
   const [codeUrl, setCodeUrl] = useState('')
   const [pendingOrderNo, setPendingOrderNo] = useState('')
@@ -19,14 +20,16 @@ export default function SubscriptionPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [meRes, planRes, packRes] = await Promise.all([
+      const [meRes, planRes, packRes, orderRes] = await Promise.all([
         subscriptionApi.me(),
         subscriptionApi.listPlans(),
         subscriptionApi.listPacks(),
+        subscriptionApi.listOrders(),
       ])
       setMe(meRes.data?.result || null)
       setPlans(planRes.data?.result?.plan_list || [])
       setPacks(packRes.data?.result?.pack_list || [])
+      setOrders(orderRes.data?.result?.order_list || [])
     } finally {
       setLoading(false)
     }
@@ -132,6 +135,22 @@ export default function SubscriptionPage() {
           ]}
         />
         {codeUrl ? <Paragraph style={{ marginTop: 12 }} copyable>{codeUrl}</Paragraph> : null}
+      </Card>
+      <Card title="订单记录" style={{ marginTop: 16 }}>
+        <Table
+          rowKey="order_no"
+          size="small"
+          pagination={false}
+          dataSource={orders}
+          columns={[
+            { title: '订单号', dataIndex: 'order_no' },
+            { title: '名称', dataIndex: 'biz_name' },
+            { title: '类型', dataIndex: 'order_type' },
+            { title: '金额(元)', dataIndex: 'amount_cent', render: yuan },
+            { title: '状态', dataIndex: 'status' },
+            { title: '时间', dataIndex: 'created_at' },
+          ]}
+        />
       </Card>
     </div>
   )
