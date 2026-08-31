@@ -66,6 +66,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 
 * 全局开发规范（最高优先级约束，自动导入每次会话）：@docs/BGSSAI-Standards.md
 * **配置分层（强制，违者代码不予合并）**：① 中间件参数（数据库、Redis、ES、OBS、MQTT、端口等）只写 `application-dev.properties` / `application-test.properties` / `application-prod.properties`，禁止进 Admin / 库表；② 业务第三方凭证（短信、邮件、支付、OAuth、LLM API Key 等）由 Admin 维护并落库，禁止只写 properties，且必须在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护 DML 种子（`ON DUPLICATE KEY UPDATE` 仅空值回填）。权威全文见 Standards §1「配置分层：中间件 vs 业务第三方凭证」。AI 助手不得反复提议违反本条，除非用户主动改决策。
+* **持久层三件套手工维护（强制）**：Mapper XML / Example / Entity 是仓库内普通源码，由开发者手工维护。本产品线已下线 MyBatis Generator，不引入任何代码生成工具。改表先改 `sql/DDL.sql`，再手工同步三件套，一次提交。禁止只改 Java 不改 DDL，或只改 DDL 不同步三件套。权威见 Standards §2。
 * 任何需求变更或 bug 修复，必须在同一次提交内同步完成**需求文档 / 原型 / 设计文档 / 代码**四层的对应修改，缺一不可，以防止代码与文档漂移（详见 Standards §0「需求与缺陷变更四层同步完成、缺一不可」）。
 * 接口的 POST 业务参数一律走 JSON Body（POST→body，详见 Standards §3）。
 * 目录权威：`docs/DIRECTORY-LAYOUT.md`。
@@ -81,4 +82,21 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 * 管理端 `bgssai-short-admin`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3001，`role_code=PLATFORM_ADMIN`，登录 `POST /bgssai/admin/login`）——运营与内容管理控制面。dev 管理端与 Jenkins 共机，避开其 8080。
 * 用户端 `bgssai-short-user`（远程 HTTPS 443 + HTTP 80 跳转 / 本地前端 3002，`role_code=USER`，登录 `POST /bgssai/user/login`）——创作者制作短剧的业务面。
 * 两后端共用同一 MySQL 库 `bgssai_short`；当前仅有 `sys_user`、`login_log` 两张基础表，业务表随需求逐个落地。
-* 新增 / 变更表结构后，用 MyBatis Generator 按新库表重新生成 `model/**`、`mapper/**` 与 Mapper XML（Standards §2「Generator 同步更新契约」），**禁止**手改这三件套。
+* 新增 / 变更表结构后，先改 `sql/DDL.sql`，再按 Standards §2 **手工**同步 Entity / Example / Mapper XML，一次提交。已下线 MyBatis Generator，禁止用代码生成工具生成或覆盖三件套。
+
+## 登录与账号（产品线强制，禁止反复纠结）
+
+* **用户端登录能力对齐 blog**：用户侧登录能力以 `bgssai-blog` 用户端为基准（密码登录、短信登录即注册、邮箱验证码注册、OAuth、退出、后登踢先登）。中国区 OAuth 为微信 / 支付宝 / 抖音 / 百度。blog SPA 无忘记密码页，不主动补「忘记密码」能力。不得在其它产品仓另起一套登录语义，除非用户主动改决策。
+* **管理端不开放注册**：管理端禁止自助注册 / 开放注册入口与注册接口；管理员账号只通过 `sql/DML.sql`（及 `sql/<env>/DML.sql`）种子写入。不得实现、不得提议管理端注册页或注册 API，除非用户主动改决策。
+* **单会话（后登踢先登）**：登录签发 JWT 携带 `sid`，账户表写入 `current_session_id`；新登录使旧会话失效。被踢请求返回 HTTP 401、body `code=2003`、文案「账号已在其他设备登录」。用户端与管理端均适用。
+
+## GitHub 分支与合并工作流
+
+- 对需要交付文件修改的 GitHub 仓库，先在独立工作分支上完成修改、验证、提交并推送。
+- 合并任何分支前，必须先向用户明确询问是否合并；只有用户明确同意后，才能执行合并。
+- 用户未明确同意时，不得合并、开启 auto-merge，或直接推送到 `develop`、`main`、`master`、`Master` 等受保护分支。
+- 用户明确同意合并后，才可以将指定工作分支合并到目标分支并推送远端；合并前应确认目标分支、源分支和待合并 commit。
+- 本地 commit、远端工作分支 push、GitHub PR 创建和分支合并是四个不同状态，不得混淆或省略。
+- 创建或更新 PR 后，最终回复必须显示：仓库、commit SHA、PR 编号与链接、目标分支、`DRAFT` / `OPEN` / `MERGED` / `CLOSED` 状态，以及“等待用户确认合并”或“PR 已合并”。
+- PR 状态查询遵守 **AI 成本红线**：不创建 PR 后持续唤醒的后台监控；在用户下一次交互开始时查询 PR 最新状态即可。
+
