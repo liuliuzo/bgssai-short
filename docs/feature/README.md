@@ -34,12 +34,13 @@
 | **优秀短剧质量流水线（主线）** | 做得出但做得平庸，不知道差在哪、该改哪一句 | [`quality-pipeline.md`](./quality-pipeline.md) | [`flow-quality-pipeline.html`](./flow-quality-pipeline.html) | 用户端 `quality-report` · 管理端 `quality-templates` |
 | 合规预检与内容审核 | 花完生成费才发现过不了审 | [`content-compliance.md`](./content-compliance.md) | [`state-review-compliance.html`](./state-review-compliance.html) | 管理端 `content-review` / `review-detail`（用户端内嵌预检） |
 | AI 能力配置与用量成本 | 换模型要改代码、单价无处统一维护、用量无法核账 | [`ai-capability-usage.md`](./ai-capability-usage.md) | [`flow-usage-billing.html`](./flow-usage-billing.html) | 管理端 `ai-models` / `usage-cost` / `creators` · 用户端 `usage-billing` |
+| TokenHub 多模型接入 | 文本、视频、配音、ASR、音乐模型未形成统一生产目录 | [`ai-model-integration.md`](./ai-model-integration.md) | [`flow-generation-task.html`](./flow-generation-task.html) · [`flow-post-production.html`](./flow-post-production.html) | 管理端 `ai-models` · 用户端 `script-studio` / `storyboard` / `voice-studio` / `compose-export` |
 | 订阅套餐与加量 credit | 无支付、无套餐发放、无法加量 | [`subscription-credit.md`](./subscription-credit.md) | 用户端 `subscription` · 管理端 `credit-packs` / `pay-merchants` | 用户端 `subscription` · 管理端 `credit-packs` / `pay-merchants` |
 
 > **当前进度**：本轮功能（作品 / 剧本 / 角色 / 分镜 / 预演 / 图谱 / 生成 / 配音字幕 / 成片 / 质量 /
 > 合规 / 用量与模型配置 / 三问体验 / 订阅加量）已完成需求 → 原型 → 详设与契约 → 代码与数据库。
-> TEXT / VOICE / COMPOSE 默认 MOCK；`IMAGE` / `VIDEO` 默认可灵，创作者可在可灵 / 海螺 / Seedance / Veo
-> 间点选（密钥进 `sys_secret`）；素材走 OBS 或本地回退。
+> 首批生产模型统一走 TokenHub：TEXT 为 Hy4 / Kimi K3 / DeepSeek-V4-Pro，VIDEO 为 MiniMax / PixVerse /
+> Kling，声音为 Hy-ASR / MiniMax-Speech / MiniMax-Music；密钥进 `sys_secret`，素材走 OBS 或本地回退。
 
 ## 仓库内置的基础功能（自骨架继承）
 

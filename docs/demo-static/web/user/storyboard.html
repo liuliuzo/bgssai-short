@@ -94,12 +94,9 @@
         <option value="image-01">画面：海螺 image-01</option>
       </select>
       <select style="width:230px" title="视频模型">
-        <option value="kling-v2-6" selected>视频：可灵 kling-v2-6</option>
-        <option value="kling-v2-5-turbo">视频：可灵极速</option>
-        <option value="MiniMax-Hailuo-2.3">视频：海螺 Hailuo 2.3</option>
-        <option value="MiniMax-Hailuo-2.3-Fast">视频：海螺 Hailuo 极速</option>
-        <option value="doubao-seedance-2-0-260128">视频：即梦 Seedance 2.0</option>
-        <option value="veo-3.1-generate-preview">视频：Google Veo 3.1</option>
+        <option value="minimax-video-h3" selected>视频：MiniMax-Video-H3</option>
+        <option value="pixverse-video-v6.0">视频：PixVerse-Video-v6</option>
+        <option value="kling-video-v3">视频：Kling-Video-V3</option>
       </select>
       <select style="width:170px" title="全部生成的目标级别">
         <option value="DRAFT_IMAGE" selected>目标级别：草图 0.10 / 镜</option>
@@ -237,6 +234,8 @@
         命中片段高亮 + <code>risk_category</code> 中文 + 改写建议 + 「采纳改写」），仅在有问题时出现。
         连贯性提示不阻塞生成（该镜生成按钮不禁用），可「忽略这条」——忽略留痕并计入分镜门
         <code>G2_STORYBOARD</code> 评分；未定妆角色的镜头仍禁用生成（<code>blocked_flag=1</code>）。
+        顶部 VIDEO 模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
+        <code>model_code</code> 随单镜或批量任务提交；存在首帧时由 Provider 走图生视频，否则走文生视频。
         顶部展示剧本门（<code>G1_SCRIPT</code>）与预检状态徽标（中文）。
         列表 <code>GET /bgssai/user/shots/list?episode_id</code>。
         进阶能力（剧本工作台 / 图谱 / 质量门 / 走位等）全部收在侧栏「更多」，

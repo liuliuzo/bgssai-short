@@ -3,9 +3,9 @@
 > 本文件是产品「AI 短剧制作平台」的愿景与定位，是需求（`docs/feature/**`）的上位背景；需求版本变更时
 > 同步回顾本文件受影响处（Standards §0）。
 >
-> **当前状态**：M0–M3 本轮范围已完成（见 `docs/project/milestones.md`）。产品定位、需求与原型、
-> 详设与契约、双端代码与业务表均已落地。TEXT / VOICE / COMPOSE 默认 MOCK；`IMAGE` / `VIDEO` 默认可灵，
-> 并启用 MiniMax、Seedance、Veo 供创作者点选。其余供应商写入 `sys_secret` 后即可用。素材默认本地回退或华为云 OBS。
+> **当前状态**：M0–M3 基础范围已完成（见 `docs/project/milestones.md`）。生产模型统一通过腾讯云
+> TokenHub 接入：文本为 Hy4 / Kimi K3 / DeepSeek-V4-Pro，视频为 MiniMax / PixVerse / Kling，
+> 声音为 Hy-ASR / MiniMax-Speech / MiniMax-Music；既有直连 Provider 保留为可选通道。素材默认本地回退或华为云 OBS。
 
 ## 一、产品定位
 
@@ -78,15 +78,16 @@ P2 人群本轮只借助通用能力满足，不做品牌定制化功能。
 - 工程基线：自骨架仓 `bgssai-skeleton` 初始化，鉴权 / 统一响应 / 分页 / traceId / 限流 / CORS /
   健康检查等基础链路开箱可用（清单见 `README.md`）。
 - 约束：遵循 `docs/BGSSAI-Standards.md` 全部强制条款。
-- AI 能力接入（M1 定口径）：业务侧只认能力类型（`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `COMPOSE`），
+- AI 能力接入（M1 定口径）：业务侧只认能力类型（`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` /
+  `MUSIC` / `COMPOSE`），
   具体供应商与模型、单价、开关由管理端 `ai_model_config` 配置解析，换供应商不改业务代码
-  （见 `docs/feature/ai-capability-usage.md`）。
+  （见 `docs/feature/ai-capability-usage.md`、`docs/feature/ai-model-integration.md`）。
 - 素材存储（M1 定口径）：图 / 视频 / 音频 / 字幕 / 成片统一进 `short_asset`，文件存对象存储，
   库内只存 `storage_key`；对外下载走 30 分钟有效的签名 URL，不暴露永久地址。
 - 长耗时任务（M1 定口径）：全部生成类动作统一走 `short_ai_task` 任务体系（排队 / 执行 / 重试 /
   断点续跑 / 计费），前端按 `task_id` 与 `batch_id` 恢复视图（见 `docs/feature/shot-generation.md`）。
-- 待详设定稿：具体供应商选型与端点参数、对象存储厂商与桶策略、任务调度实现（线程池 / 消息队列）
-  与状态回传机制（轮询 / 回调）——三项不改变上述对外口径，属详设阶段技术选型。
+- 供应商选型：首批生产模型统一走 `TENCENT_TOKENHUB`，端点参数与异步轮询由模型 `config_json` 驱动；
+  对象存储继续使用华为云 OBS（本地 profile 可回退），任务调度继续复用当前线程池 Worker。
 
 ## 六、里程碑
 

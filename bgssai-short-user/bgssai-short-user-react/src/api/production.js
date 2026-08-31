@@ -7,10 +7,11 @@ const updateWork = (body) => http.post('/user/short-works/update', body)
 const archiveWork = (workId) => http.post('/user/short-works/archive', { work_id: workId, archived_flag: 1 })
 
 const getOutline = (workId) => http.get('/user/scripts/outline', { work_id: workId })
-const generateOutline = (workId) => http.post('/user/scripts/outline-generate', { work_id: workId })
+const generateOutline = (workId, modelCode) =>
+  http.post('/user/scripts/outline-generate', { work_id: workId, model_code: modelCode })
 const saveOutline = (body) => http.post('/user/scripts/outline-save', body)
-const generateScript = (episodeId, extraPrompt) =>
-  http.post('/user/scripts/generate', { episode_id: episodeId, extra_prompt: extraPrompt })
+const generateScript = (episodeId, extraPrompt, modelCode) =>
+  http.post('/user/scripts/generate', { episode_id: episodeId, extra_prompt: extraPrompt, model_code: modelCode })
 const getScript = (episodeId) => http.get('/user/scripts/detail', { episode_id: episodeId })
 const saveScript = (body) => http.post('/user/scripts/save', body)
 const readyScript = (episodeId, forceReadyFlag) =>

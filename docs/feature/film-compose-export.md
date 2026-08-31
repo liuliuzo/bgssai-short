@@ -26,6 +26,9 @@
      字幕样式（与 `voice-subtitle.md` 共用同一份 `subtitle_style_json`，合成设置卡内可直接修改，
      两处编辑的是同一事实，不构成漂移）。
   4. **BGM 闪避**：有台词处 BGM 自动降低音量（`duck_flag=1`，默认开），避免压住人声。
+     BGM 可上传已有素材，也可输入音乐描述选择 `MUSIC` 模型生成；首批默认
+     `minimax-music-v2.6` 且默认 `is_instrumental=1`。生成成功后只更新候选素材，用户选用后才写入
+     `compose_setting_json.bgm_asset_id` 并参与合成。
   5. **导出规格**：分辨率固定 1080×1920（`VERTICAL_9_16`），帧率 30；导出版本可多选：
      `WITH_SUBTITLE`（烧录字幕）、`NO_SUBTITLE`（纯净版，便于二次发行）、`SRT_ONLY`（仅字幕文件）。
      整剧打包导出按集编号命名（`{work_title}_E{episode_no}_{version}.mp4`）。
@@ -59,6 +62,7 @@
    （低价、不重编码画面与音频）；重烧完成后已通过的审核结论保留并标注「仅字幕变更」。
 7. 整剧打包导出仅包含已合成且未过期的剧集，过期集在打包前明确列出并要求确认。
 8. 下载链接 30 分钟后失效，点「重新获取链接」重取新签名 URL 即可下载，无需重新导出。
+9. 输入 BGM 描述生成音乐后出现可试听候选；选用候选后时间轴 BGM 轨展示对应素材，重新生成不删除旧候选。
 
 ## 四、接口契约（snake_case）
 
@@ -92,6 +96,8 @@
 - `POST /bgssai/user/films/rebake-subtitle`（`episode_id`；返回 `task_id`，`compose_mode=SUBTITLE_ONLY`，
   仅重烧字幕、不重编码画面与音频，审核结论保留并标注「仅字幕变更」）
 - `POST /bgssai/user/films/settings-save`（作品级合成设置，`work_id` + 上述设置字段）
+- `POST /bgssai/user/films/bgm-generate`（`work_id` + `episode_id` + `prompt` + 可选 `model_code` /
+  `is_instrumental`；返回 `task_id`，成功后 `result_json` 含 `bgm_asset_id`）
 - `POST /bgssai/user/films/export`（`episode_id_list` + `version_list`；返回 `task_id` 或直接给下载项）
 - `GET /bgssai/user/films/download-url?asset_id=a-53001`（返回 30 分钟有效签名 URL）
 - 鉴权：需 `Jwttoken`；下载 URL 生成前校验素材归属。
@@ -113,7 +119,7 @@
   `composed_time`、
   `export_json`（各版本导出产物）、`deleted_flag`、时间戳。
 - 作品级新增列：`short_work.compose_setting_json`（转场 / BGM / 片头片尾 / 闪避开关）。
-- 成片与导出文件复用 `short_asset`（`asset_type=FILM`）。
+- 成片与导出文件复用 `short_asset`（`asset_type=FILM`）；AI BGM 复用 `short_asset(asset_type=AUDIO)`。
 
 ## 七、原型
 

@@ -13,6 +13,8 @@ public class SysSecretReader {
 
     public static final String AI_OPENAI_COMPAT_API_KEY = "ai.openai_compat.api_key";
 
+    public static final String AI_TENCENT_TOKENHUB_API_KEY = "ai.tencent_tokenhub.api_key";
+
     public static final String AI_KLING_API_KEY = "ai.kling.api_key";
 
     public static final String AI_MINIMAX_API_KEY = "ai.minimax.api_key";

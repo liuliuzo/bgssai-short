@@ -16,9 +16,12 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.ShortDubbingMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortFilmMapper;
+import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.ShortAiTask;
+import com.bgssai.shortai.model.ShortAsset;
+import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.model.ShortDubbing;
 import com.bgssai.shortai.model.ShortDubbingExample;
 import com.bgssai.shortai.model.ShortEpisode;
@@ -30,6 +33,7 @@ import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmExportReq;
+import com.bgssai.shortai.production.dto.FeatureDtos.BgmGenerateReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmRebakeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmSettingsSaveReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmReq;
@@ -55,6 +59,8 @@ public class FilmService {
     private ShortDubbingMapper shortDubbingMapper;
     @Autowired
     private ShortWorkMapper shortWorkMapper;
+    @Autowired
+    private ShortAssetMapper shortAssetMapper;
 
     public ApiResponse precheck(String episodeId) {
         ShortEpisode ep = workAccessService.requireEpisode(episodeId);
@@ -136,6 +142,11 @@ public class FilmService {
         result.put("clip_list", clips);
         result.put("audio_track", audioTrack);
         result.put("subtitle_track", subtitleTrack);
+        ShortWork work = workAccessService.requireWork(ep.getWorkId());
+        Map<String, Object> composeSetting = ShortJson.map(work.getComposeSettingJson());
+        String bgmAssetId = ShortJson.text(composeSetting.get("bgm_asset_id"));
+        result.put("bgm_asset_id", bgmAssetId.isBlank() ? null : bgmAssetId);
+        result.put("bgm_url", bgmAssetId.isBlank() ? null : assetService.resolveUrl(bgmAssetId));
         result.put("total_sec", t);
         return Responses.ok(result);
     }
@@ -175,13 +186,19 @@ public class FilmService {
 
     public ApiResponse settingsSave(FilmSettingsSaveReq req) {
         ShortWork work = workAccessService.requireWork(req == null ? null : req.getWorkId());
-        Map<String, Object> setting = req.getComposeSetting() == null ? new LinkedHashMap<>()
-                : new LinkedHashMap<>(req.getComposeSetting());
+        Map<String, Object> setting = new LinkedHashMap<>(ShortJson.map(work.getComposeSettingJson()));
+        if (req.getComposeSetting() != null) {
+            setting.putAll(req.getComposeSetting());
+        }
         if (req.getBurnSubtitleFlag() != null) {
             setting.put("burn_subtitle_flag", req.getBurnSubtitleFlag());
         }
         if (req.getAspectRatio() != null) {
             setting.put("aspect_ratio", req.getAspectRatio());
+        }
+        String bgmAssetId = ShortJson.text(setting.get("bgm_asset_id"));
+        if (!bgmAssetId.isBlank()) {
+            validateBgmAsset(work, req.getEpisodeId(), bgmAssetId);
         }
         ShortWork patch = new ShortWork();
         patch.setComposeSettingJson(ShortJson.toJson(setting));
@@ -195,6 +212,25 @@ public class FilmService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("compose_setting", setting);
         return Responses.ok(result);
+    }
+
+    public ApiResponse generateBgm(BgmGenerateReq req) {
+        if (req == null || req.getPrompt() == null || req.getPrompt().isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "prompt required");
+        }
+        ShortWork work = workAccessService.requireWork(req.getWorkId());
+        ShortEpisode ep = workAccessService.requireEpisode(req.getEpisodeId());
+        if (!work.getWorkId().equals(ep.getWorkId())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "episode does not belong to work");
+        }
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("prompt", req.getPrompt().trim());
+        request.put("lyrics", req.getLyrics());
+        request.put("is_instrumental", req.getIsInstrumental() == null ? 1 : req.getIsInstrumental());
+        request.put("model_code", req.getModelCode());
+        ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "MUSIC", "BGM",
+                ep.getEpisodeId(), request, null, 0, req.getModelCode());
+        return Responses.ok(Map.of("task_id", task.getTaskId()));
     }
 
     public ApiResponse export(FilmExportReq req) {
@@ -236,12 +272,18 @@ public class FilmService {
 
     public ApiResponse detail(String episodeId) {
         ShortEpisode ep = workAccessService.requireEpisode(episodeId);
+        ShortWork work = workAccessService.requireWork(ep.getWorkId());
         ShortFilmExample ex = new ShortFilmExample();
         ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         ShortFilm film = shortFilmMapper.selectOneByExample(ex);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("episode_id", ep.getEpisodeId());
         result.put("compose_status", ep.getComposeStatus());
+        Map<String, Object> composeSetting = ShortJson.map(work.getComposeSettingJson());
+        String selectedBgm = ShortJson.text(composeSetting.get("bgm_asset_id"));
+        result.put("bgm_asset_id", selectedBgm.isBlank() ? null : selectedBgm);
+        result.put("bgm_url", selectedBgm.isBlank() ? null : assetService.resolveUrl(selectedBgm));
+        result.put("bgm_candidate_list", bgmCandidates(ep, selectedBgm));
         if (film != null) {
             result.put("film_id", film.getFilmId());
             result.put("film_asset_id", film.getFilmAssetId());
@@ -250,6 +292,38 @@ public class FilmService {
                     : "/bgssai/user/films/download-url?asset_id=" + film.getFilmAssetId());
         }
         return Responses.ok(result);
+    }
+
+    private List<Map<String, Object>> bgmCandidates(ShortEpisode ep, String selectedBgm) {
+        ShortAssetExample ex = new ShortAssetExample();
+        ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andAssetTypeEqualTo("AUDIO")
+                .andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("created_time desc, id desc");
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (ShortAsset asset : shortAssetMapper.selectByExample(ex)) {
+            if (asset.getShotId() != null && !asset.getShotId().isBlank()) {
+                continue;
+            }
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("asset_id", asset.getAssetId());
+            item.put("file_url", assetService.resolveUrl(asset.getAssetId()));
+            item.put("duration_sec", asset.getDurationSec());
+            item.put("created_time", asset.getCreatedTime());
+            item.put("selected_flag", asset.getAssetId().equals(selectedBgm) ? 1 : 0);
+            result.add(item);
+        }
+        return result;
+    }
+
+    private void validateBgmAsset(ShortWork work, String episodeId, String assetId) {
+        ShortAssetExample ex = new ShortAssetExample();
+        ex.createCriteria().andAssetIdEqualTo(assetId).andUserIdEqualTo(work.getUserId())
+                .andWorkIdEqualTo(work.getWorkId()).andAssetTypeEqualTo("AUDIO").andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ex);
+        if (asset == null || (asset.getShotId() != null && !asset.getShotId().isBlank())
+                || (episodeId != null && !episodeId.isBlank() && !episodeId.equals(asset.getEpisodeId()))) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "BGM asset not found in this episode");
+        }
     }
 
     public ApiResponse downloadUrl(String assetId) {

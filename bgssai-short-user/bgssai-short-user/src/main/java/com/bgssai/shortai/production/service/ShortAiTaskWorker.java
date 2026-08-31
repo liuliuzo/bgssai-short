@@ -24,6 +24,7 @@ import com.bgssai.shortai.aiprovider.AiProviderRegistry;
 import com.bgssai.shortai.aiprovider.AiProviderRequest;
 import com.bgssai.shortai.aiprovider.AiProviderResult;
 import com.bgssai.shortai.aiprovider.FfmpegComposeProvider;
+import com.bgssai.shortai.aiprovider.TencentTokenHubAiProvider;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.AiUsageRecordMapper;
@@ -108,6 +109,8 @@ public class ShortAiTaskWorker {
     @Qualifier("aiTaskExecutor")
     private TaskExecutor aiTaskExecutor;
 
+    private final ThreadLocal<Integer> executionUsage = ThreadLocal.withInitial(() -> 0);
+
     /** 判定 RUNNING 卡死的宽限秒数：模型 timeout_sec 之上再留这么久仍无结果就判超时。 */
     private static final int STALE_GRACE_SEC = 120;
 
@@ -180,6 +183,7 @@ public class ShortAiTaskWorker {
     }
 
     private void run(ShortAiTask task) {
+        executionUsage.set(0);
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             complete(task, model);
@@ -195,7 +199,7 @@ public class ShortAiTaskWorker {
                 log.warn("ai task finished after reap/cancel, skip billing taskId={}", task.getTaskId());
                 return;
             }
-            insertUsage(task, model, 1);
+            insertUsage(task, model, Math.max(1, executionUsage.get()));
             quotaConsumeService.consume(task.getUserId(), task.getCostCent() == null ? 0 : task.getCostCent());
             addSpent(task);
         } catch (BizException exBiz) {
@@ -203,6 +207,8 @@ public class ShortAiTaskWorker {
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
             failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage());
+        } finally {
+            executionUsage.remove();
         }
     }
 
@@ -248,6 +254,14 @@ public class ShortAiTaskWorker {
         }
         if ("DUBBING".equals(task.getTargetType())) {
             finishDubbing(task, model);
+            return;
+        }
+        if ("SUBTITLE_TRANSCRIBE".equals(task.getTargetType())) {
+            finishSubtitleTranscribe(task, model);
+            return;
+        }
+        if ("BGM".equals(task.getTargetType())) {
+            finishBgm(task, req, model);
         }
     }
 
@@ -267,29 +281,77 @@ public class ShortAiTaskWorker {
         AiProviderRequest request = baseRequest(model, "VOICE", "DUBBING");
         request.getParams().put("title", row.getLineText());
         request.getParams().put("voice_id", row.getVoiceId());
+        request.getParams().put("speed", row.getVoiceSpeed());
         request.getParams().put("emotion", row.getEmotion());
         request.setPrompt(row.getLineText());
         AiProviderResult result = execute(model, request);
         byte[] bytes = result.getBinaryContent();
         String mime = result.getMimeType();
         if (bytes == null || bytes.length == 0) {
-            String placeholder = "VOICE:" + (row.getLineText() == null ? "" : row.getLineText());
-            bytes = placeholder.getBytes(StandardCharsets.UTF_8);
-            mime = "audio/mpeg";
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "voice provider returned empty audio");
         }
         if (mime == null || mime.isBlank()) {
             mime = "audio/mpeg";
         }
+        int durationSec = result.getDurationSec() == null ? 0 : result.getDurationSec();
+        if (durationSec <= 0 && TencentTokenHubAiProvider.CODE.equals(model.getProviderCode())) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "voice provider returned no audio duration");
+        }
+        if (durationSec <= 0) {
+            durationSec = Math.max(1, (row.getLineText() == null ? 0 : row.getLineText().length() + 3) / 4);
+        }
         AiProviderResult packed = AiProviderResult.binary(bytes, mime);
+        packed.setDurationSec(durationSec);
         ShortAsset asset = saveBinary(row.getUserId(), row.getWorkId(), row.getEpisodeId(), row.getShotId(), "AUDIO",
                 packed, task.getTaskId(), true);
-        int approx = Math.max(1, (row.getLineText() == null ? 4 : row.getLineText().length()) / 4);
-        if (shot.getShotDurationSec() != null && approx > shot.getShotDurationSec() * 2) {
-            approx = shot.getShotDurationSec() + 1;
-        }
-        asset.setDurationSec(approx);
+        asset.setDurationSec(durationSec);
         shortAssetMapper.updateByPrimaryKeySelective(asset);
-        dubbingService.finishDubbingAlign(row, shot, asset.getAssetId(), approx);
+        dubbingService.finishDubbingAlign(row, shot, asset.getAssetId(), durationSec);
+    }
+
+    private void finishSubtitleTranscribe(ShortAiTask task, AiModelConfig model) {
+        ShortDubbingExample ex = new ShortDubbingExample();
+        ex.createCriteria().andDubbingIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
+        ShortDubbing dubbing = shortDubbingMapper.selectOneByExample(ex);
+        if (dubbing == null || dubbing.getAudioAssetId() == null || dubbing.getAudioAssetId().isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "dubbing audio not found");
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(dubbing.getAudioAssetId()).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null || asset.getStorageKey() == null || asset.getStorageKey().isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "dubbing audio asset missing");
+        }
+        String inputUrl = objectStorage.presignGet(asset.getStorageKey(), 3600).downloadUrl();
+        AiProviderRequest request = baseRequest(model, "ASR", "SUBTITLE_TRANSCRIBE");
+        request.getParams().put("input_url", inputUrl);
+        request.setPrompt("Transcribe dubbing " + dubbing.getDubbingId());
+        AiProviderResult result = execute(model, request);
+        Map<String, Object> output = ShortJson.map(result.getTextContent());
+        dubbingService.finishTranscription(dubbing, output);
+        Map<String, Object> taskResult = new LinkedHashMap<>();
+        taskResult.put("dubbing_id", dubbing.getDubbingId());
+        taskResult.put("text", output.get("text"));
+        taskResult.put("duration_sec", result.getDurationSec());
+        patchTaskResult(task, taskResult);
+    }
+
+    private void finishBgm(ShortAiTask task, Map<String, Object> req, AiModelConfig model) {
+        ShortEpisode ep = episode(task.getEpisodeId());
+        if (ep == null) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "episode not found");
+        }
+        AiProviderRequest request = baseRequest(model, "MUSIC", "BGM");
+        request.setPrompt(ShortJson.text(req.get("prompt")));
+        request.getParams().put("lyrics", req.get("lyrics"));
+        request.getParams().put("is_instrumental", req.get("is_instrumental"));
+        AiProviderResult result = execute(model, request);
+        if (result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "music provider returned empty audio");
+        }
+        ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), null, "AUDIO",
+                result, task.getTaskId(), false);
+        patchTaskResult(task, Map.of("bgm_asset_id", asset.getAssetId()));
     }
 
     private void finishOutline(ShortAiTask task, AiModelConfig model) {
@@ -305,9 +367,15 @@ public class ShortAiTaskWorker {
         params.put("pitch", work.getOneLinePitch());
         params.put("episode_count", work.getEpisodeCount() == null ? 24 : work.getEpisodeCount());
         params.put("genre", work.getGenre());
-        request.setPrompt("Generate outline for " + work.getWorkTitle());
+        request.setPrompt("请为短剧《" + work.getWorkTitle() + "》生成 "
+                + (work.getEpisodeCount() == null ? 24 : work.getEpisodeCount())
+                + " 集大纲。只返回 JSON 数组，不要 Markdown。每项字段必须为 episode_no、episode_title、"
+                + "episode_synopsis、ending_hook。故事梗概：" + work.getOneLinePitch());
         AiProviderResult result = execute(model, request);
-        List<Map<String, Object>> outline = ShortJson.list(result.getTextContent());
+        List<Map<String, Object>> outline = jsonList(result.getTextContent());
+        if (outline.isEmpty()) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "text model returned invalid outline JSON");
+        }
         ShortWork patch = new ShortWork();
         patch.setOutlineJson(ShortJson.toJson(outline));
         patch.setUpdatedTime(new Date());
@@ -327,9 +395,16 @@ public class ShortAiTaskWorker {
         request.getParams().put("episode_title", ep.getEpisodeTitle());
         request.getParams().put("synopsis", ep.getEpisodeSynopsis());
         request.getParams().put("extra_prompt", ShortJson.text(req.get("extra_prompt")));
-        request.setPrompt("Generate script for " + ep.getEpisodeTitle());
+        request.setPrompt("请为短剧本集生成可拍摄剧本。只返回 JSON 数组，不要 Markdown。每项是场景，字段为"
+                + "scene_no、scene_location、scene_summary、line_list；line_list 每项字段为 line_no、"
+                + "character_name、line_text、emotion、estimated_sec。本集标题：" + ep.getEpisodeTitle()
+                + "。本集梗概：" + ep.getEpisodeSynopsis() + "。额外要求：" + ShortJson.text(req.get("extra_prompt")));
         AiProviderResult result = execute(model, request);
-        scriptService.persistGeneratedScript(ep, ShortJson.list(result.getTextContent()));
+        List<Map<String, Object>> scenes = jsonList(result.getTextContent());
+        if (scenes.isEmpty()) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "text model returned invalid script JSON");
+        }
+        scriptService.persistGeneratedScript(ep, scenes);
     }
 
     private void finishRewrite(ShortAiTask task, Map<String, Object> req, AiModelConfig model) {
@@ -445,6 +520,7 @@ public class ShortAiTaskWorker {
                 String nextModel = ShortJson.text(origin.get("next_model_code"));
                 Map<String, Object> nextReq = new LinkedHashMap<>();
                 nextReq.put("shot_id", shot.getShotId());
+                nextReq.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
                 if (!nextModel.isBlank()) {
                     nextReq.put("model_code", nextModel);
                 }
@@ -492,6 +568,10 @@ public class ShortAiTaskWorker {
         request.getParams().put("title", ep.getEpisodeTitle());
         request.getParams().put("duration_sec", duration);
         request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
+        byte[] bgm = loadSelectedBgm(ep);
+        if (bgm != null) {
+            request.getParams().put(FfmpegComposeProvider.PARAM_BGM, bgm);
+        }
         request.setPrompt(timeline);
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
@@ -578,6 +658,29 @@ public class ShortAiTaskWorker {
         }
     }
 
+    private byte[] loadSelectedBgm(ShortEpisode ep) {
+        ShortWorkExample wx = new ShortWorkExample();
+        wx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
+        ShortWork work = shortWorkMapper.selectOneByExample(wx);
+        String assetId = work == null ? ""
+                : ShortJson.text(ShortJson.map(work.getComposeSettingJson()).get("bgm_asset_id"));
+        if (assetId.isBlank()) {
+            return null;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andEpisodeIdEqualTo(ep.getEpisodeId())
+                .andAssetTypeEqualTo("AUDIO").andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null || asset.getStorageKey() == null || asset.getStorageKey().isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "selected BGM asset is unavailable");
+        }
+        byte[] bytes = objectStorage.get(asset.getStorageKey());
+        if (bytes == null || bytes.length == 0) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "selected BGM content is empty");
+        }
+        return bytes;
+    }
+
     private ShortAsset saveBinary(String userId, String workId, String episodeId, String shotId, String type,
             AiProviderResult result, String taskId, boolean selected) {
         ShortAsset asset = new ShortAsset();
@@ -603,8 +706,16 @@ public class ShortAiTaskWorker {
         asset.setStorageKey(objectKey);
         asset.setFileUrl("/bgssai/user/assets/" + asset.getAssetId());
         asset.setFileSizeByte(bytes.length);
-        asset.setWidth(result.getWidth() == null ? 1080 : result.getWidth());
-        asset.setHeight(result.getHeight() == null ? 1920 : result.getHeight());
+        if (result.getWidth() != null) {
+            asset.setWidth(result.getWidth());
+        } else if ("IMAGE".equals(type) || "VIDEO".equals(type) || "FILM".equals(type)) {
+            asset.setWidth(1080);
+        }
+        if (result.getHeight() != null) {
+            asset.setHeight(result.getHeight());
+        } else if ("IMAGE".equals(type) || "VIDEO".equals(type) || "FILM".equals(type)) {
+            asset.setHeight(1920);
+        }
         if (result.getDurationSec() != null) {
             asset.setDurationSec(result.getDurationSec());
         }
@@ -648,7 +759,10 @@ public class ShortAiTaskWorker {
 
     private AiProviderResult execute(AiModelConfig model, AiProviderRequest request) {
         AiProvider provider = aiProviderRegistry.get(model.getProviderCode());
-        return provider.execute(request);
+        AiProviderResult result = provider.execute(request);
+        int usage = result == null || result.getUsageAmount() == null ? 1 : Math.max(1, result.getUsageAmount());
+        executionUsage.set(executionUsage.get() + usage);
+        return result;
     }
 
     private static String shotPrompt(ShortShot shot, String ability) {
@@ -703,12 +817,49 @@ public class ShortAiTaskWorker {
                 || mime.contains("image/"))) {
             return;
         }
+        if (TencentTokenHubAiProvider.CODE.equals(request.getModel().getProviderCode())) {
+            try {
+                request.getParams().put("image_url", objectStorage.presignGet(frame.getStorageKey(), 3600).downloadUrl());
+                return;
+            } catch (RuntimeException ex) {
+                log.warn("presign first frame failed, falling back to base64 assetId={}", frame.getAssetId(), ex);
+            }
+        }
         byte[] bytes = objectStorage.get(frame.getStorageKey());
         if (bytes == null || bytes.length == 0) {
             return;
         }
         request.getParams().put("image_base64", Base64.getEncoder().encodeToString(bytes));
         request.getParams().put("image_mime", frame.getMimeType());
+    }
+
+    private void patchTaskResult(ShortAiTask task, Map<String, Object> result) {
+        ShortAiTask patch = new ShortAiTask();
+        patch.setResultJson(ShortJson.toJson(result));
+        patch.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+        shortAiTaskMapper.updateByExampleSelective(patch, up);
+    }
+
+    private static List<Map<String, Object>> jsonList(String content) {
+        if (content == null) {
+            return new ArrayList<>();
+        }
+        String text = content.trim();
+        if (text.startsWith("```")) {
+            int firstLine = text.indexOf('\n');
+            int lastFence = text.lastIndexOf("```");
+            if (firstLine >= 0 && lastFence > firstLine) {
+                text = text.substring(firstLine + 1, lastFence).trim();
+            }
+        }
+        int start = text.indexOf('[');
+        int end = text.lastIndexOf(']');
+        if (start >= 0 && end > start) {
+            text = text.substring(start, end + 1);
+        }
+        return ShortJson.list(text);
     }
 
     private ShortEpisode episode(String episodeId) {

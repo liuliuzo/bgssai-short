@@ -29,6 +29,8 @@ async function waitTask(workId, taskId) {
 function ScriptPane({ work, episodeId, onReload }) {
   const [outline, setOutline] = useState([])
   const [script, setScript] = useState(null)
+  const [textModels, setTextModels] = useState([])
+  const [textModelCode, setTextModelCode] = useState()
   const [loading, setLoading] = useState(false)
 
   const load = useCallback(async () => {
@@ -48,8 +50,20 @@ function ScriptPane({ work, episodeId, onReload }) {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await productionApi.listAiModels('TEXT')
+      if (cancelled) return
+      const models = data?.result?.model_list || []
+      setTextModels(models)
+      setTextModelCode(models.find((m) => m.default_flag === 1)?.model_code || models[0]?.model_code)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   const runOutline = async () => {
-    const { data } = await productionApi.generateOutline(work.work_id)
+    const { data } = await productionApi.generateOutline(work.work_id, textModelCode)
     if (!data?.success) return
     message.success('大纲任务已提交')
     await waitTask(work.work_id, data.result.task_id)
@@ -64,7 +78,7 @@ function ScriptPane({ work, episodeId, onReload }) {
   }
 
   const runScript = async () => {
-    const { data } = await productionApi.generateScript(episodeId)
+    const { data } = await productionApi.generateScript(episodeId, undefined, textModelCode)
     if (!data?.success) return
     message.success('剧本任务已提交')
     await waitTask(work.work_id, data.result.task_id)
@@ -97,6 +111,13 @@ function ScriptPane({ work, episodeId, onReload }) {
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <Card loading={loading} title="全集大纲" extra={<Space>
+        <Select
+          placeholder="文本模型"
+          value={textModelCode}
+          onChange={setTextModelCode}
+          style={{ width: 220 }}
+          options={textModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+        />
         <Button onClick={runOutline}>生成大纲</Button>
         <Button type="primary" onClick={saveOutline}>保存大纲</Button>
       </Space>}>
@@ -138,6 +159,13 @@ function ScriptPane({ work, episodeId, onReload }) {
         />
       </Card>
       <Card title={`第${work.episode_list?.find((e) => e.episode_id === episodeId)?.episode_no || ''}集剧本`} extra={<Space>
+        <Select
+          placeholder="文本模型"
+          value={textModelCode}
+          onChange={setTextModelCode}
+          style={{ width: 220 }}
+          options={textModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+        />
         <Button onClick={runScript}>生成剧本</Button>
         <Button onClick={saveScript}>保存</Button>
         <Button type="primary" onClick={() => ready(0)}>定稿</Button>
@@ -564,6 +592,9 @@ function TasksPane({ workId, episodeId }) {
 function ComposePane({ work, episodeId, onReload }) {
   const [precheck, setPrecheck] = useState(null)
   const [film, setFilm] = useState(null)
+  const [musicModels, setMusicModels] = useState([])
+  const [musicModelCode, setMusicModelCode] = useState()
+  const [musicPrompt, setMusicPrompt] = useState('电影感纯音乐，情绪递进，适合作为短剧背景音乐')
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -577,9 +608,64 @@ function ComposePane({ work, episodeId, onReload }) {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await productionApi.listAiModels('MUSIC')
+      if (cancelled) return
+      const models = data?.result?.model_list || []
+      setMusicModels(models)
+      setMusicModelCode(models.find((m) => m.default_flag === 1)?.model_code || models[0]?.model_code)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <Card title="成片与提审">
       <Paragraph>合成状态 {film?.compose_status || '-'} / 预检 {precheck?.ready ? '可合成' : '未就绪'} / 风险 {precheck?.risk_level || '-'}</Paragraph>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Select
+          placeholder="音乐模型"
+          value={musicModelCode}
+          onChange={setMusicModelCode}
+          style={{ width: 220 }}
+          options={musicModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+        />
+        <Input value={musicPrompt} onChange={(e) => setMusicPrompt(e.target.value)} style={{ width: 360 }} />
+        <Button onClick={async () => {
+          const { data } = await featuresApi.filmBgmGenerate({
+            work_id: work.work_id,
+            episode_id: episodeId,
+            model_code: musicModelCode,
+            prompt: musicPrompt,
+            is_instrumental: 1,
+          })
+          if (data?.success) {
+            message.success('背景音乐任务已提交')
+            await waitTask(work.work_id, data.result.task_id)
+            await load()
+          }
+        }}>生成背景音乐</Button>
+        <Select
+          allowClear
+          placeholder="选择背景音乐"
+          value={film?.bgm_asset_id}
+          style={{ width: 260 }}
+          options={(film?.bgm_candidate_list || []).map((item, index) => ({
+            value: item.asset_id,
+            label: `候选 ${index + 1} / ${item.duration_sec || '-'}秒`,
+          }))}
+          onChange={async (assetId) => {
+            await featuresApi.filmSettingsSave({
+              work_id: work.work_id,
+              episode_id: episodeId,
+              compose_setting: { bgm_asset_id: assetId || '' },
+            })
+            message.success('背景音乐已选择')
+            await load()
+          }}
+        />
+      </Space>
       <Space>
         <Button onClick={load}>刷新</Button>
         <Button type="primary" onClick={async () => {

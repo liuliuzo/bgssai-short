@@ -41,6 +41,7 @@ import com.bgssai.shortai.production.dto.FeatureDtos.DubbingRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.DubbingSubmitReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleStyleSaveReq;
+import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleTranscribeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleUpdateReq;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -112,8 +113,9 @@ public class DubbingService {
             request.put("voice_id", voiceId);
             request.put("voice_speed", row.getVoiceSpeed());
             request.put("emotion", row.getEmotion());
+            request.put("model_code", req.getModelCode());
             ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "VOICE",
-                    "DUBBING", row.getDubbingId(), request, batchId, 0);
+                    "DUBBING", row.getDubbingId(), request, batchId, 0, req.getModelCode());
             taskIds.add(task.getTaskId());
         }
         if (taskIds.isEmpty()) {
@@ -169,8 +171,9 @@ public class DubbingService {
             request.put("voice_id", req.getVoiceId() == null ? row.getVoiceId() : req.getVoiceId());
             request.put("voice_speed", req.getVoiceSpeed() == null ? row.getVoiceSpeed() : req.getVoiceSpeed());
             request.put("emotion", req.getEmotion() == null ? row.getEmotion() : req.getEmotion());
+            request.put("model_code", req.getModelCode());
             ShortAiTask task = aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), "VOICE",
-                    "DUBBING", row.getDubbingId(), request, batchId, 0);
+                    "DUBBING", row.getDubbingId(), request, batchId, 0, req.getModelCode());
             taskIds.add(task.getTaskId());
         }
         ShortEpisode ep = workAccessService.requireEpisode(shot.getEpisodeId());
@@ -375,6 +378,44 @@ public class DubbingService {
     }
 
     @Transactional
+    public ApiResponse transcribe(SubtitleTranscribeReq req) {
+        ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
+        if (hasManualSubtitleEdits(ep.getEpisodeId())
+                && !Integer.valueOf(1).equals(req.getConfirmOverwriteFlag())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "subtitles contain manual edits; set confirm_overwrite_flag=1 to continue");
+        }
+        ShortDubbingExample ex = new ShortDubbingExample();
+        ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("line_no asc");
+        List<ShortDubbing> rows = shortDubbingMapper.selectByExample(ex).stream()
+                .filter(row -> row.getAudioAssetId() != null && !row.getAudioAssetId().isBlank())
+                .toList();
+        if (rows.isEmpty()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "no dubbing audio to transcribe");
+        }
+        softDeleteSubtitles(ep.getEpisodeId());
+        String batchId = ShortIds.id("b-");
+        List<String> taskIds = new ArrayList<>();
+        for (ShortDubbing row : rows) {
+            Map<String, Object> request = new LinkedHashMap<>();
+            request.put("dubbing_id", row.getDubbingId());
+            request.put("audio_asset_id", row.getAudioAssetId());
+            request.put("duration_sec", row.getAudioDurationSec());
+            request.put("confirm_overwrite_flag", req.getConfirmOverwriteFlag());
+            request.put("model_code", req.getModelCode());
+            ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "ASR",
+                    "SUBTITLE_TRANSCRIBE", row.getDubbingId(), request, batchId, 0, req.getModelCode());
+            taskIds.add(task.getTaskId());
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("batch_id", batchId);
+        result.put("task_id_list", taskIds);
+        result.put("task_count", taskIds.size());
+        return Responses.ok(result);
+    }
+
+    @Transactional
     public ApiResponse subtitleUpdate(SubtitleUpdateReq req) {
         if (req == null || req.getSubtitleId() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "subtitle_id required");
@@ -449,6 +490,108 @@ public class DubbingService {
         up.createCriteria().andIdEqualTo(row.getId());
         shortDubbingMapper.updateByExampleSelective(patch, up);
         refreshEpisodeStatus(shot.getEpisodeId());
+    }
+
+    @Transactional
+    public void finishTranscription(ShortDubbing dubbing, Map<String, Object> output) {
+        if (dubbing == null) {
+            return;
+        }
+        ShortShotExample shotExample = new ShortShotExample();
+        shotExample.createCriteria().andShotIdEqualTo(dubbing.getShotId()).andDeletedFlagEqualTo(0);
+        ShortShot shot = shortShotMapper.selectOneByExample(shotExample);
+        if (shot == null || !dubbing.getUserId().equals(shot.getUserId())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "shot not found for transcription");
+        }
+        int episodeOffsetMs = 0;
+        for (ShortShot candidate : listShots(dubbing.getEpisodeId())) {
+            if (candidate.getShotId().equals(shot.getShotId())) {
+                break;
+            }
+            episodeOffsetMs += (candidate.getShotDurationSec() == null ? 3 : candidate.getShotDurationSec()) * 1000;
+        }
+        String subtitlePrefix = "asr-" + dubbing.getDubbingId() + "-";
+        ShortSubtitleExample delete = new ShortSubtitleExample();
+        delete.createCriteria().andSubtitleIdLike(subtitlePrefix + "%").andDeletedFlagEqualTo(0);
+        ShortSubtitle deleted = new ShortSubtitle();
+        deleted.setDeletedFlag(1);
+        deleted.setUpdatedTime(new Date());
+        shortSubtitleMapper.updateByExampleSelective(deleted, delete);
+
+        List<Map<String, Object>> sentences = maps(output == null ? null : output.get("sentences"));
+        if (sentences.isEmpty()) {
+            String text = ShortJson.text(output == null ? null : output.get("text"));
+            if (!text.isBlank()) {
+                int end = (dubbing.getAudioDurationSec() == null ? 1 : dubbing.getAudioDurationSec()) * 1000;
+                sentences = List.of(Map.of("begin_ms", 0, "end_ms", end, "text", text));
+            }
+        }
+        int sequence = 1;
+        int shotDurationMs = (shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec()) * 1000;
+        int dubbingOffsetMs = precedingDubbingDurationMs(dubbing);
+        for (Map<String, Object> sentence : sentences) {
+            String text = ShortJson.text(sentence.get("text")).trim();
+            if (text.isBlank()) {
+                continue;
+            }
+            int relativeBegin = ShortJson.integer(sentence.get("begin_ms"),
+                    ShortJson.integer(sentence.get("start_ms"), 0));
+            int begin = Math.max(0, dubbingOffsetMs + relativeBegin);
+            begin = Math.min(begin, Math.max(0, shotDurationMs - 100));
+            int relativeEnd = ShortJson.integer(sentence.get("end_ms"),
+                    (dubbing.getAudioDurationSec() == null ? 1 : dubbing.getAudioDurationSec()) * 1000);
+            int end = Math.max(begin + 100, dubbingOffsetMs + relativeEnd);
+            end = Math.min(Math.max(begin + 100, end), shotDurationMs);
+            List<String> chunks = splitSubtitle(text, 15);
+            int part = Math.max(100, (end - begin) / Math.max(1, chunks.size()));
+            for (int i = 0; i < chunks.size(); i++) {
+                ShortSubtitle sub = new ShortSubtitle();
+                sub.setSubtitleId(subtitlePrefix + sequence);
+                sub.setEpisodeId(dubbing.getEpisodeId());
+                sub.setWorkId(dubbing.getWorkId());
+                sub.setUserId(dubbing.getUserId());
+                int shotNo = shot.getShotNo() == null ? 0 : shot.getShotNo();
+                int lineNo = dubbing.getLineNo() == null ? shotNo * 100 : dubbing.getLineNo();
+                sub.setSubtitleNo(lineNo * 100 + sequence++);
+                sub.setStartMs(episodeOffsetMs + begin + i * part);
+                sub.setEndMs(episodeOffsetMs + Math.min(end, begin + (i + 1) * part));
+                sub.setSubtitleText(chunks.get(i));
+                sub.setShotId(shot.getShotId());
+                sub.setDeletedFlag(0);
+                sub.setCreatedTime(new Date());
+                sub.setUpdatedTime(new Date());
+                upsertTranscribedSubtitle(sub);
+            }
+        }
+    }
+
+    private int precedingDubbingDurationMs(ShortDubbing current) {
+        ShortDubbingExample ex = new ShortDubbingExample();
+        ex.createCriteria().andShotIdEqualTo(current.getShotId()).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("line_no asc");
+        int total = 0;
+        for (ShortDubbing row : shortDubbingMapper.selectByExample(ex)) {
+            if (row.getDubbingId().equals(current.getDubbingId())) {
+                break;
+            }
+            total += (row.getAudioDurationSec() == null ? 0 : row.getAudioDurationSec()) * 1000;
+        }
+        return total;
+    }
+
+    private void upsertTranscribedSubtitle(ShortSubtitle subtitle) {
+        ShortSubtitleExample ex = new ShortSubtitleExample();
+        ex.createCriteria().andSubtitleIdEqualTo(subtitle.getSubtitleId());
+        ShortSubtitle existing = shortSubtitleMapper.selectOneByExample(ex);
+        if (existing == null) {
+            shortSubtitleMapper.insertSelective(subtitle);
+            return;
+        }
+        subtitle.setId(null);
+        subtitle.setCreatedTime(null);
+        ShortSubtitleExample up = new ShortSubtitleExample();
+        up.createCriteria().andIdEqualTo(existing.getId());
+        shortSubtitleMapper.updateByExampleSelective(subtitle, up);
     }
 
     public void regenerateSubtitles(ShortEpisode ep) {
@@ -595,6 +738,37 @@ public class DubbingService {
         patch.setDeletedFlag(1);
         patch.setUpdatedTime(new Date());
         shortSubtitleMapper.updateByExampleSelective(patch, ex);
+    }
+
+    private boolean hasManualSubtitleEdits(String episodeId) {
+        ShortSubtitleExample ex = new ShortSubtitleExample();
+        ex.createCriteria().andEpisodeIdEqualTo(episodeId).andDeletedFlagEqualTo(0);
+        for (ShortSubtitle row : shortSubtitleMapper.selectByExample(ex)) {
+            if (row.getCreatedTime() != null && row.getUpdatedTime() != null
+                    && row.getUpdatedTime().getTime() - row.getCreatedTime().getTime() > 1000L) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<Map<String, Object>> maps(Object value) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (!(value instanceof List<?> list)) {
+            return result;
+        }
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> raw) {
+                Map<String, Object> mapped = new LinkedHashMap<>();
+                for (Map.Entry<?, ?> entry : raw.entrySet()) {
+                    if (entry.getKey() != null) {
+                        mapped.put(String.valueOf(entry.getKey()), entry.getValue());
+                    }
+                }
+                result.add(mapped);
+            }
+        }
+        return result;
     }
 
     private List<ShortShot> listShots(String episodeId) {

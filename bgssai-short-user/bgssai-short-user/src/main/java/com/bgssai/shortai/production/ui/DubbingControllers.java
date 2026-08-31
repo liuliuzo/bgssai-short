@@ -16,6 +16,7 @@ import com.bgssai.shortai.production.dto.FeatureDtos.DubbingRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.DubbingSubmitReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleStyleSaveReq;
+import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleTranscribeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleUpdateReq;
 import com.bgssai.shortai.production.service.DubbingService;
 
@@ -89,5 +90,11 @@ public class DubbingControllers {
     @PostMapping("/bgssai/user/subtitles/style-save")
     public ApiResponse styleSave(@RequestBody SubtitleStyleSaveReq req) {
         return service.styleSave(req);
+    }
+
+    @NeedAop
+    @PostMapping("/bgssai/user/subtitles/transcribe")
+    public ApiResponse transcribe(@RequestBody SubtitleTranscribeReq req) {
+        return service.transcribe(req);
     }
 }

@@ -54,12 +54,23 @@
         </div>
       </div>
 
+      <div class="card" style="border-color:#bfdbfe; background:#eff6ff; margin-bottom:14px">
+        <div class="row">
+          <span class="badge badge-info">生产目录</span>
+          <div style="font-size:13px">
+            首批文本、视频、语音、ASR 与音乐模型统一走 <code>TENCENT_TOKENHUB</code>，共用
+            <code>ai.tencent_tokenhub.api_key</code>；配置页只保存 <code>secret_ref</code>，不保存密钥明文。
+          </div>
+        </div>
+      </div>
+
       <div class="card card-flush">
         <div class="card-hd">
           <h2>模型清单</h2>
           <span class="chip active">全部 14</span>
           <span class="chip">TEXT</span><span class="chip">IMAGE</span>
-          <span class="chip">VIDEO</span><span class="chip">VOICE</span><span class="chip">COMPOSE</span>
+          <span class="chip">VIDEO</span><span class="chip">VOICE</span><span class="chip">ASR</span>
+          <span class="chip">MUSIC</span><span class="chip">COMPOSE</span>
           <span class="spacer"></span>
           <span class="text-muted" style="font-size:12px">每个能力类型有且仅有一个默认模型</span>
         </div>
@@ -77,9 +88,9 @@
             </thead>
             <tbody>
               <tr>
-                <td><span class="st todo">TEXT</span></td><td class="mono">txt-std-v4</td>
-                <td>PROVIDER_A</td><td>STANDARD</td><td>PER_KILO_TOKEN</td>
-                <td>0.05 元 / 千 token</td><td>120s / 2</td>
+                <td><span class="st todo">TEXT</span></td><td class="mono">hy4-preview</td>
+                <td>TENCENT_TOKENHUB</td><td>STANDARD</td><td>PER_KILO_TOKEN</td>
+                <td>以管理端配置为准</td><td>120s / 2</td>
                 <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
                 <td><a href="#">编辑</a></td>
               </tr>
@@ -105,16 +116,16 @@
                 <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
               <tr style="background:#f8faff">
-                <td><span class="st doing">VIDEO</span></td><td class="mono">vid-fast-v3</td>
-                <td>PROVIDER_A</td><td>FAST</td><td>PER_SECOND</td>
-                <td>0.40 元 / 秒</td><td>600s / 2</td>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">pixverse-video-v6.0</td>
+                <td>TENCENT_TOKENHUB</td><td>FAST</td><td>PER_SECOND</td>
+                <td>以管理端配置为准</td><td>600s / 2</td>
                 <td class="text-muted">-</td><td><span class="st done">启用</span></td>
                 <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
               <tr>
-                <td><span class="st doing">VIDEO</span></td><td class="mono">vid-hq-v2</td>
-                <td>PROVIDER_C</td><td>HIGH</td><td>PER_SECOND</td>
-                <td>1.20 元 / 秒</td><td>900s / 2</td>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">kling-video-v3</td>
+                <td>TENCENT_TOKENHUB</td><td>HIGH</td><td>PER_SECOND</td>
+                <td>以管理端配置为准</td><td>900s / 2</td>
                 <td class="text-muted">-</td><td><span class="st done">启用</span></td>
                 <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
@@ -126,46 +137,46 @@
                 <td><a href="#">编辑</a></td>
               </tr>
               <tr>
-                <td><span class="st doing">VIDEO</span></td><td class="mono">kling-v2-6</td>
-                <td>KLING</td><td>STANDARD</td><td>PER_CALL</td>
-                <td>2.00 元 / 次</td><td>600s / 2</td>
+                <td><span class="st doing">VIDEO</span></td><td class="mono">minimax-video-h3</td>
+                <td>TENCENT_TOKENHUB</td><td>STANDARD</td><td>PER_SECOND</td>
+                <td>以管理端配置为准</td><td>600s / 2</td>
                 <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
                 <td><a href="#">编辑</a></td>
               </tr>
               <tr>
-                <td><span class="st doing">VIDEO</span></td><td class="mono">MiniMax-Hailuo-2.3</td>
-                <td>MINIMAX</td><td>STANDARD</td><td>PER_CALL</td>
-                <td>2.20 元 / 次</td><td>600s / 2</td>
+                <td><span class="st todo">TEXT</span></td><td class="mono">kimi-k3</td>
+                <td>TENCENT_TOKENHUB</td><td>STANDARD</td><td>PER_KILO_TOKEN</td>
+                <td>以管理端配置为准</td><td>120s / 2</td>
                 <td class="text-muted">-</td><td><span class="st done">启用</span></td>
                 <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
               <tr>
-                <td><span class="st doing">VIDEO</span></td><td class="mono">doubao-seedance-2-0-260128</td>
-                <td>SEEDANCE</td><td>STANDARD</td><td>PER_CALL</td>
-                <td>2.40 元 / 次</td><td>600s / 2</td>
+                <td><span class="st todo">TEXT</span></td><td class="mono">deepseek-v4-pro</td>
+                <td>TENCENT_TOKENHUB</td><td>HIGH</td><td>PER_KILO_TOKEN</td>
+                <td>以管理端配置为准</td><td>120s / 2</td>
                 <td class="text-muted">-</td><td><span class="st done">启用</span></td>
                 <td><a href="#">设默认</a> · <a href="#">停用</a></td>
               </tr>
               <tr>
-                <td><span class="st doing">VIDEO</span></td><td class="mono">veo-3.1-generate-preview</td>
-                <td>VEO</td><td>HIGH</td><td>PER_CALL</td>
-                <td>3.20 元 / 次</td><td>600s / 2</td>
-                <td class="text-muted">-</td><td><span class="st done">启用</span></td>
-                <td><a href="#">设默认</a> · <a href="#">停用</a></td>
-              </tr>
-              <tr>
-                <td><span class="st todo">VOICE</span></td><td class="mono">tts-std-v2</td>
-                <td>PROVIDER_D</td><td>STANDARD</td><td>PER_MINUTE</td>
-                <td>0.30 元 / 分钟</td><td>120s / 2</td>
+                <td><span class="st todo">ASR</span></td><td class="mono">hy-asr-3.0-preview</td>
+                <td>TENCENT_TOKENHUB</td><td>STANDARD</td><td>PER_MINUTE</td>
+                <td>以管理端配置为准</td><td>600s / 2</td>
                 <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
                 <td><a href="#">编辑</a></td>
               </tr>
               <tr>
-                <td><span class="st todo">VOICE</span></td><td class="mono">tts-old-v1</td>
-                <td>PROVIDER_D</td><td>FAST</td><td>PER_MINUTE</td>
-                <td>0.15 元 / 分钟</td><td>120s / 2</td>
-                <td class="text-muted">-</td><td><span class="st fail">已停用</span></td>
-                <td><a href="#">启用</a></td>
+                <td><span class="st todo">VOICE</span></td><td class="mono">minimax-speech-2.8-hd</td>
+                <td>TENCENT_TOKENHUB</td><td>HIGH</td><td>PER_MINUTE</td>
+                <td>以管理端配置为准</td><td>120s / 2</td>
+                <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
+                <td><a href="#">编辑</a></td>
+              </tr>
+              <tr>
+                <td><span class="st todo">MUSIC</span></td><td class="mono">minimax-music-v2.6</td>
+                <td>TENCENT_TOKENHUB</td><td>HIGH</td><td>PER_MINUTE</td>
+                <td>以管理端配置为准</td><td>180s / 2</td>
+                <td><span class="st done">默认</span></td><td><span class="st done">启用</span></td>
+                <td><a href="#">编辑</a></td>
               </tr>
               <tr>
                 <td><span class="st todo">COMPOSE</span></td><td class="mono">compose-v1</td>
@@ -181,11 +192,11 @@
 
       <div class="split" style="margin-top:14px">
         <div class="card">
-          <div class="card-hd"><h2>编辑模型 · vid-fast-v3</h2></div>
+          <div class="card-hd"><h2>编辑模型 · minimax-video-h3</h2></div>
           <div class="grid grid-2">
             <div class="field">
               <label>能力类型</label>
-              <select><option>VIDEO 视频</option></select>
+              <select><option>VIDEO 视频</option><option>ASR 语音识别</option><option>MUSIC 音乐</option></select>
             </div>
             <div class="field">
               <label>质量档</label>
@@ -215,7 +226,7 @@
           </div>
           <div class="field">
             <label>供应商端点与参数</label>
-            <textarea rows="3">{"base_url":"https://api-beijing.klingai.com","secret_ref":"ai.kling.api_key","aspect_ratio":"9:16","mode":"std","duration":"5"}</textarea>
+            <textarea rows="3">{"base_url":"https://tokenhub.tencentmaas.com","secret_ref":"ai.tencent_tokenhub.api_key","submit_path":"/v1/wand/minimax-video-v2/generation","task_path":"/v1/wand/minimax-video-v2/tasks/{task_id}"}</textarea>
             <div class="hint">密钥不入库明文，只写 secret_ref（如 ai.kling.api_key），按 docs/security 的密钥保管口径处理</div>
           </div>
           <div class="toolbar">
@@ -234,7 +245,7 @@
               提交时返回 <code>4014</code> 并给出可读提示。
             </div>
             <div class="note note-danger" style="margin:10px 0 0">
-              当前 VOICE 组只有 tts-std-v2 一个启用模型。把它也停用，全平台配音功能立即不可用。
+              当前 ASR 与 MUSIC 各只有一个启用模型。停用前必须明确知晓对应的字幕校准或 AI 音乐功能会立即不可用。
             </div>
           </div>
 
@@ -247,10 +258,10 @@
               <table>
                 <thead><tr><th>级别</th><th>模型</th><th>单价</th></tr></thead>
                 <tbody>
-                  <tr><td>文字稿</td><td class="mono">txt-std-v4</td><td>约 0.02 / 镜</td></tr>
+                  <tr><td>文字稿</td><td class="mono">hy4-preview</td><td>按配置预估</td></tr>
                   <tr><td>草图</td><td class="mono">img-draft-v1</td><td>0.10 / 次</td></tr>
                   <tr><td>首帧</td><td class="mono">img-std-v2</td><td>0.80 / 次</td></tr>
-                  <tr><td>视频</td><td class="mono">vid-fast-v3</td><td>0.40 / 秒</td></tr>
+                  <tr><td>视频</td><td class="mono">minimax-video-h3</td><td>按配置预估</td></tr>
                 </tbody>
               </table>
             </div>

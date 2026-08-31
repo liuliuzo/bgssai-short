@@ -38,6 +38,7 @@ import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.TaskPrices;
+import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
 import com.github.pagehelper.PageHelper;
 
@@ -69,16 +70,11 @@ public class AiTaskService {
         List<ShortShot> shots = resolveShots(req);
         String type = req.getTaskType() == null ? "IMAGE" : req.getTaskType();
         AiModelConfig model = aiModelResolveService.resolve(type, req.getModelCode());
-        int unit = aiModelResolveService.costCent(model, 1);
-        if (unit <= 0) {
-            unit = TaskPrices.cost(type);
-        }
+        int estimated = shots.stream().mapToInt(shot -> costForShot(model, type, shot)).sum();
         if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
             AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
-            int videoUnit = aiModelResolveService.costCent(videoModel, 1);
-            unit += videoUnit > 0 ? videoUnit : TaskPrices.cost("VIDEO");
+            estimated += shots.stream().mapToInt(shot -> costForShot(videoModel, "VIDEO", shot)).sum();
         }
-        int estimated = shots.size() * unit;
         String userId = workAccessService.requireUser();
         UserQuota quota = quotaWalletService.requireWallet(userId);
         quotaWalletService.resetMonthIfNeeded(quota);
@@ -112,6 +108,7 @@ public class AiTaskService {
             }
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("shot_id", shot.getShotId());
+            request.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
             if (req.getModelCode() != null && !req.getModelCode().isBlank()) {
                 request.put("model_code", req.getModelCode().trim());
             }
@@ -274,6 +271,13 @@ public class AiTaskService {
         shortShotMapper.updateByExampleSelective(patch, up);
     }
 
+    private int costForShot(AiModelConfig model, String type, ShortShot shot) {
+        int usage = "PER_SECOND".equals(model.getPriceUnit())
+                ? Math.max(1, shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec()) : 1;
+        int cost = aiModelResolveService.costCent(model, usage);
+        return cost > 0 ? cost : TaskPrices.cost(type);
+    }
+
     private ShortAiTask requireTask(String taskId) {
         String userId = workAccessService.requireUser();
         ShortAiTaskExample ex = new ShortAiTaskExample();
@@ -314,6 +318,8 @@ public class AiTaskService {
         item.put("progress_percent", row.getProgressPercent());
         item.put("fail_reason_code", row.getFailReasonCode());
         item.put("fail_reason", row.getFailReason());
+        item.put("model_code", row.getModelCode());
+        item.put("result_json", ShortJson.map(row.getResultJson()));
         item.put("cost_cent", row.getCostCent());
         item.put("created_time", row.getCreatedTime());
         return item;

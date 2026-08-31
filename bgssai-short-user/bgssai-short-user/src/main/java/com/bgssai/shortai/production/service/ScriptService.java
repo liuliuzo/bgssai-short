@@ -71,8 +71,9 @@ public class ScriptService {
         ShortWork work = workAccessService.requireWork(req == null ? null : req.getWorkId());
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("work_id", work.getWorkId());
+        request.put("model_code", req.getModelCode());
         ShortAiTask task = aiTaskQueue.enqueue(work.getUserId(), work.getWorkId(), null, "TEXT", "OUTLINE",
-                work.getWorkId(), request, null, 0);
+                work.getWorkId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         return Responses.ok(result);
@@ -110,8 +111,9 @@ public class ScriptService {
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("episode_id", ep.getEpisodeId());
         request.put("extra_prompt", req.getExtraPrompt());
+        request.put("model_code", req.getModelCode());
         ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "TEXT", "SCRIPT",
-                ep.getEpisodeId(), request, null, 0);
+                ep.getEpisodeId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         return Responses.ok(result);
@@ -162,8 +164,9 @@ public class ScriptService {
         request.put("scene_no", req.getSceneNo());
         request.put("line_no", req.getLineNo());
         request.put("instruction", req.getInstruction());
+        request.put("model_code", req.getModelCode());
         ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "TEXT", "REWRITE",
-                ep.getEpisodeId(), request, null, 0);
+                ep.getEpisodeId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         return Responses.ok(result);

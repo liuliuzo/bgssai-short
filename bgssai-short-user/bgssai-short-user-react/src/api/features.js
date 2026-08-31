@@ -9,6 +9,7 @@ const applyVoice = (body) => http.post('/user/dubbings/apply-voice-to-character'
 const listVoices = () => http.get('/user/voices/list')
 const subtitleDetail = (episodeId) => http.get('/user/subtitles/detail', { episode_id: episodeId })
 const subtitleRegen = (episodeId) => http.post('/user/subtitles/regenerate', { episode_id: episodeId })
+const subtitleTranscribe = (body) => http.post('/user/subtitles/transcribe', body)
 const subtitleUpdate = (body) => http.post('/user/subtitles/update', body)
 const subtitleStyleSave = (body) => http.post('/user/subtitles/style-save', body)
 
@@ -51,6 +52,7 @@ const continuityRecheck = (body) => http.post('/user/continuity/recheck', body)
 
 const filmRebakeSubtitle = (episodeId) => http.post('/user/films/rebake-subtitle', { episode_id: episodeId })
 const filmSettingsSave = (body) => http.post('/user/films/settings-save', body)
+const filmBgmGenerate = (body) => http.post('/user/films/bgm-generate', body)
 const filmExport = (body) => http.post('/user/films/export', body)
 
 export default {
@@ -63,6 +65,7 @@ export default {
   listVoices,
   subtitleDetail,
   subtitleRegen,
+  subtitleTranscribe,
   subtitleUpdate,
   subtitleStyleSave,
   previzList,
@@ -98,5 +101,6 @@ export default {
   continuityRecheck,
   filmRebakeSubtitle,
   filmSettingsSave,
+  filmBgmGenerate,
   filmExport,
 }

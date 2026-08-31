@@ -263,6 +263,12 @@ public class AiModelAdminService {
         if ("VOICE".equals(ability)) {
             return "配音";
         }
+        if ("ASR".equals(ability)) {
+            return "语音识别";
+        }
+        if ("MUSIC".equals(ability)) {
+            return "音乐生成";
+        }
         if ("COMPOSE".equals(ability)) {
             return "合成";
         }

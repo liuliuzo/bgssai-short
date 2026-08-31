@@ -33,6 +33,7 @@ forward 到 `/index.html`。
 | MCP | 用户端 `mcp/**`：`POST /api/mcp` PAT 自校验 + JSON-RPC；令牌管理 `POST /bgssai/mcp-tokens/*`。详设见 `mcp-server.md` |
 | 短剧制作闭环 | 作品 → 剧本 → 角色卡 → 分镜 → AI 任务 → 配音/成片提审。详设见 `short-production-design.md`，契约见 `../api/SHORT-PRODUCTION.md` |
 | AI Provider + OBS | 能力 SPI、OpenAI 兼容、可灵 / MiniMax / Seedance / Veo、华为云 OBS、计费快照。详设见 `ai-provider-obs-design.md` |
+| TokenHub 多模型 | Hy4 / Kimi / DeepSeek、MiniMax / PixVerse / Kling 视频、Hy-ASR、MiniMax Speech / Music。详设见 `tokenhub-model-integration-design.md` |
 | AI 模型与用量 | 模型目录、用量流水、充值申请。详设见 `ai-capability-usage-design.md` |
 | 配音字幕 | 见 `voice-subtitle-design.md` |
 | 预演 / 图谱 / 质量 / 三问 | 见 `previz-story-quality-ux-design.md` |

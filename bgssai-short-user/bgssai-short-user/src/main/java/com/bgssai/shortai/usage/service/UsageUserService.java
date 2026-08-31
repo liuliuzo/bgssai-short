@@ -40,6 +40,8 @@ public class UsageUserService {
             "IMAGE", "图像",
             "VIDEO", "视频",
             "VOICE", "配音",
+            "ASR", "语音识别",
+            "MUSIC", "音乐生成",
             "COMPOSE", "合成");
     private static final Map<String, String> QUALITY_NAME = Map.of(
             "FAST", "快速",
