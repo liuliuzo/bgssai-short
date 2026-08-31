@@ -11,6 +11,11 @@
 | `DML.sql` | 种子数据：示例账号、套餐目录、OAuth 密钥、用户端铺底、短剧业务样例。 |
 | `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）。 |
 | `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）。 |
+| `UPGRADE-20260813-oauth-binding.sql` | 存量库：`oauth_binding` |
+| `UPGRADE-20260814-subscription-credit.sql` | 存量库：订阅 / 加量包 |
+| `UPGRADE-20260817-login-oauth.sql` | 存量库：登录 OAuth |
+| `UPGRADE-20260818-short-production.sql` | 存量库：短剧制作闭环 |
+| `UPGRADE-20260826-full-features.sql` | 存量库：后续全量特性对齐 |
 
 ## 导入
 

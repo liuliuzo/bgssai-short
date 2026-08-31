@@ -6,7 +6,7 @@
 -- 约定：
 --   - 应用启动期不自动执行任何 DDL；schema 由部署方手动执行本文件建立（Standards §9）。
 --   - 列命名保持现网风格（del_flag / create_by / create_time / update_by / update_time）。
---   - 新增 / 变更表结构后，用 MyBatis Generator 按新库表重新生成 model/mapper/XML。
+--   - 新增 / 变更表结构后，手工同步持久层三件套（entity / mapper / XML），不引入代码生成工具。
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS `bgssai_short` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
