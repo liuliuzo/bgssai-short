@@ -17,4 +17,4 @@ Shared platform public key: `alipay_public_key_body.txt`
 | marklens | 2021006185681180 |
 | publish | 2021006186687014 |
 | voiceunion | 2021006185633244 |
-| short-drama | PENDING（控制台尚未创建 BGSSAIShortDrama） |
+| short | PENDING（控制台尚未创建短剧支付宝应用） |

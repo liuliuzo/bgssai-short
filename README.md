@@ -11,12 +11,7 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 
 ## 当前状态
 
-**M1 产品需求与原型定稿完成**：AI 短剧制作全链路已拆为 13 份功能需求（`docs/feature/**`，含 12 张
-自包含 HTML 配图）与双端 27 个原型页面（`docs/demo-static/web/**`），页面 → API 映射主表已同步。
-
-**代码侧尚未落任何短剧业务功能**：仓库现有的仍是骨架继承来的可运行基线（登录鉴权、登录日志分页示例、
-健康检查三端点）。下一步是 M2 详细设计与契约（`docs/architecture` / `docs/api` / `docs/security`），
-之后才进入 M3 代码与数据库。
+**M0–M3 已完成**（明细见 [`docs/project/milestones.md`](docs/project/milestones.md)）：需求与原型、详细设计与契约、用户端制作全链路和管理端审核 / 模型 / 用量均已落地。生产密钥、OBS 桶与 ffmpeg 真合成仍待运维接入。
 
 业务功能一律按 **需求 → 原型 → 详设 → 代码** 顺序推进（Standards §0），不得跳过上游直接编码。
 

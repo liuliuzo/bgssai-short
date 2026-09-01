@@ -789,7 +789,7 @@ docs/architecture/            ← 设计规范 / PRD-vs-原型差异清单等非
 
 ## 13. 健康检查统一方案（全产品线唯一口径，强制，违者代码不予合并）
 
-BGSSAI 产品线有 9 个应用仓、18 个可部署后端，外加集中巡检平台 `bgssai-healthcheck` 按接口逐个巡检它们。
+BGSSAI 产品线有 10 个产品仓、20 个可部署后端，外加集中巡检平台 `bgssai-healthcheck` 按接口逐个巡检它们。
 在本节立规之前，各仓各自实现了一套健康检查：端点路径出现过 `/actuator/health` / `/api/health` /
 `/api/health/live` / `/bgssai/health/live` / `/bgssai/health/liveness` / `/bgssai/admin/health` 六种；
 状态枚举出现过 `UP/DEGRADED/DOWN`、`UP/WARN/DOWN`、`UP/DEGRADED/DOWN/DISABLED` 三套；时间字段出现过

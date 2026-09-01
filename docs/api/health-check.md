@@ -6,8 +6,8 @@
 [`../architecture/health-check-design.md`](../architecture/health-check-design.md)，
 全产品线强制口径见 [`../BGSSAI-Standards.md`](../BGSSAI-Standards.md) §13。
 
-> **本契约是全产品线共用的**：9 个产品仓 18 个后端的健康端点路径、字段集、枚举值与本文逐字一致，
-> 差异只允许出现在「组件清单」一节（各产品依赖不同）。改本文等于改 9 个仓，须按 Standards §13.8
+> **本契约是全产品线共用的**：10 个产品仓 20 个后端的健康端点路径、字段集、枚举值与本文逐字一致，
+> 差异只允许出现在「组件清单」一节（各产品依赖不同）。改本文等于改 10 个仓，须按 Standards §13.8
 > 先改 `bgssai-short` 的 Standards §13，再各仓同步。
 
 ## 0. 通用约定
