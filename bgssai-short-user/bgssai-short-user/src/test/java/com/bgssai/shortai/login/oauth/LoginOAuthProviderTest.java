@@ -12,7 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.bgssai.shortai.common.exception.BizException;
 
 /**
- * 登录页微信 / 支付宝 / 抖音授权 URL：库凭据为空必须拒绝，配齐后才能拼出平台授权地址。
+ * 登录页微信 / 支付宝 / 抖音 / BGSSAI 授权 URL：库凭据为空必须拒绝，配齐后才能拼出平台授权地址。
  */
 class LoginOAuthProviderTest {
 
@@ -42,6 +42,17 @@ class LoginOAuthProviderTest {
         ReflectionTestUtils.setField(provider, "loginOAuthSecrets", secretsWith(Map.of()));
         BizException ex = assertThrows(BizException.class, () -> provider.buildAuthorizeUrl("state-1"));
         assertEquals("4403", ex.getCode());
+    }
+
+    @Test
+    void bgssai_blank_credentials_throw() {
+        BgssaiOAuthProvider provider = new BgssaiOAuthProvider();
+        ReflectionTestUtils.setField(provider, "oauthProperties", redirectOnlyProperties());
+        ReflectionTestUtils.setField(provider, "loginOAuthSecrets", secretsWith(Map.of()));
+        ReflectionTestUtils.setField(provider, "idpBaseUrl", "https://www.bgssai.com");
+        BizException ex = assertThrows(BizException.class, () -> provider.buildAuthorizeUrl("state-1"));
+        assertEquals("4403", ex.getCode());
+        assertEquals("该登录方式暂不可用", ex.getMessage());
     }
 
     @Test
@@ -84,12 +95,30 @@ class LoginOAuthProviderTest {
         assertTrue(url.contains("oauth-callback"));
     }
 
+    @Test
+    void bgssai_configured_builds_authorize_url() {
+        BgssaiOAuthProvider provider = new BgssaiOAuthProvider();
+        ReflectionTestUtils.setField(provider, "oauthProperties", redirectOnlyProperties());
+        ReflectionTestUtils.setField(provider, "loginOAuthSecrets", secretsWith(Map.of(
+                LoginOAuthSecrets.BGSSAI_CLIENT_ID, "bgssai-short",
+                LoginOAuthSecrets.BGSSAI_CLIENT_SECRET, "demo-secret-change-me")));
+        ReflectionTestUtils.setField(provider, "idpBaseUrl", "https://www.bgssai.com");
+        String url = provider.buildAuthorizeUrl("csrf-state");
+        assertTrue(url.startsWith("https://www.bgssai.com/oauth/authorize?"));
+        assertTrue(url.contains("client_id=bgssai-short"));
+        assertTrue(url.contains("response_type=code"));
+        assertTrue(url.contains("scope=profile%20email"));
+        assertTrue(url.contains("oauth-callback"));
+        assertTrue(url.contains("state=csrf-state"));
+    }
+
     private static OAuthProperties redirectOnlyProperties() {
         OAuthProperties props = new OAuthProperties();
         String redirect = "https://dev.user.bgssai-short.com/oauth-callback";
         props.getWechat().setRedirectUri(redirect);
         props.getAlipay().setRedirectUri(redirect);
         props.getDouyin().setRedirectUri(redirect);
+        props.getBgssai().setRedirectUri(redirect);
         return props;
     }
 

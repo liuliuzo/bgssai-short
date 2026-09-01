@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.mapper.QuotaChangeLogMapper;
 import com.bgssai.shortai.mapper.UserQuotaMapper;
 import com.bgssai.shortai.model.QuotaChangeLog;
@@ -29,6 +30,9 @@ public class QuotaConsumeService {
 
     @Autowired
     private QuotaWalletService quotaWalletService;
+
+    @Autowired(required = false)
+    private BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient;
 
     @Transactional
     public void consume(String userId, int costCent) {
@@ -80,5 +84,8 @@ public class QuotaConsumeService {
         quotaChangeLogMapper.insertSelective(logRow);
         log.info("quota consumed userId={} cost={} balanceAfter={} extraAfter={}",
                 userId, costCent, patch.getBalanceCent(), patch.getExtraBalanceCent());
+        if (bgssaiWebsiteLedgerClient != null) {
+            bgssaiWebsiteLedgerClient.reportDebit(userId, costCent, "quota_cent");
+        }
     }
 }
