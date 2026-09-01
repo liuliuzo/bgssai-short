@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.aop.UserContext;
 import com.bgssai.shortai.common.exception.UnauthorizedException;
+import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
 import com.bgssai.shortai.mapper.UserSubscriptionMapper;
 import com.bgssai.shortai.model.SubscriptionPlan;
@@ -31,6 +32,8 @@ public class GetMySubscriptionService {
     private PaidOrderGrantService paidOrderGrantService;
     @Autowired
     private SubscriptionPlanMapper subscriptionPlanMapper;
+    @Autowired(required = false)
+    private BgssaiWebsiteLedgerClient websiteLedgerClient;
 
     public ApiResponse me() {
         String userId = UserContext.getUserId();
@@ -57,7 +60,13 @@ public class GetMySubscriptionService {
         int extra = quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent();
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("plan_code", sub == null ? "FREE" : sub.getPlanCode());
+        String planCode = sub == null ? "FREE" : sub.getPlanCode();
+        boolean entitled = websiteLedgerClient != null && websiteLedgerClient.isEntitled(userId);
+        if ("FREE".equals(planCode) && entitled) {
+            planCode = "PRO";
+        }
+        result.put("plan_code", planCode);
+        result.put("entitled", entitled);
         result.put("status", sub == null ? "active" : sub.getStatus());
         result.put("current_period_start", sub == null || sub.getCurrentPeriodStart() == null
                 ? null : fmt.format(sub.getCurrentPeriodStart()));

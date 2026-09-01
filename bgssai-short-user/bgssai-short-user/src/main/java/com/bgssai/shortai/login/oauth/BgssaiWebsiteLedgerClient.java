@@ -40,6 +40,22 @@ public class BgssaiWebsiteLedgerClient {
         this.idpBaseUrl = BgssaiOAuthProvider.trimSlash(idpBaseUrl);
     }
 
+    public boolean isEntitled(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return false;
+        }
+        OauthBindingExample ex = new OauthBindingExample();
+        ex.createCriteria()
+                .andUserIdEqualTo(userId)
+                .andPlatformEqualTo("bgssai")
+                .andDelFlagEqualTo(Boolean.FALSE);
+        OauthBinding binding = oauthBindingMapper.selectOneByExample(ex);
+        if (binding == null || OAuthIds.blank(binding.getOpenId())) {
+            return false;
+        }
+        return queryEntitled(binding.getOpenId(), loginOAuthSecrets.bgssaiClientId(), loginOAuthSecrets.bgssaiClientSecret());
+    }
+
     public void reportDebit(String userId, long amount, String usageKind) {
         if (userId == null || userId.isBlank() || amount < 1 || amount > Integer.MAX_VALUE) {
             return;
@@ -87,6 +103,32 @@ public class BgssaiWebsiteLedgerClient {
             log.warn("BGSSAI 中央账本上报失败 userId={} error={}", userId, e.getMessage());
         } catch (Exception e) {
             log.warn("BGSSAI 中央账本上报异常 userId={} error={}", userId, e.getMessage());
+        }
+    }
+
+    private boolean queryEntitled(String websiteUserId, String clientId, String clientSecret) {
+        if (OAuthIds.blank(websiteUserId) || OAuthIds.blank(clientId) || OAuthIds.blank(clientSecret)) {
+            return false;
+        }
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("client_id", clientId);
+            body.put("client_secret", clientSecret);
+            body.put("user_id", websiteUserId);
+            String resp = HTTP.post()
+                    .uri(URI.create(idpBaseUrl + "/api/user/oauth/quota"))
+                    .header("Content-Type", "application/json;charset=UTF-8")
+                    .body(JSON.writeValueAsString(body))
+                    .retrieve()
+                    .body(String.class);
+            JsonNode wrap = resp == null ? null : JSON.readTree(resp);
+            if (wrap == null || wrap.path("code").asInt(0) != 200) {
+                return false;
+            }
+            return wrap.path("data").path("entitled").asBoolean(false);
+        } catch (Exception e) {
+            log.warn("BGSSAI 权益查询失败 websiteUserId={} error={}", websiteUserId, e.getMessage());
+            return false;
         }
     }
 }
