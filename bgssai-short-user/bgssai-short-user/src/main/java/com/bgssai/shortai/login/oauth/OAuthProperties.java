@@ -15,6 +15,7 @@ public class OAuthProperties {
     private Wechat wechat = new Wechat();
     private Alipay alipay = new Alipay();
     private Douyin douyin = new Douyin();
+    private Bgssai bgssai = new Bgssai();
 
     public Wechat getWechat() { return wechat; }
     public void setWechat(Wechat wechat) { this.wechat = wechat; }
@@ -22,6 +23,8 @@ public class OAuthProperties {
     public void setAlipay(Alipay alipay) { this.alipay = alipay; }
     public Douyin getDouyin() { return douyin; }
     public void setDouyin(Douyin douyin) { this.douyin = douyin; }
+    public Bgssai getBgssai() { return bgssai; }
+    public void setBgssai(Bgssai bgssai) { this.bgssai = bgssai; }
 
     public static class Wechat {
         private String redirectUri;
@@ -38,6 +41,13 @@ public class OAuthProperties {
     }
 
     public static class Douyin {
+        private String redirectUri;
+
+        public String getRedirectUri() { return redirectUri; }
+        public void setRedirectUri(String redirectUri) { this.redirectUri = redirectUri; }
+    }
+
+    public static class Bgssai {
         private String redirectUri;
 
         public String getRedirectUri() { return redirectUri; }

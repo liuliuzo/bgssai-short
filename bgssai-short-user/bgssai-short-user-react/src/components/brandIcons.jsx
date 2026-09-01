@@ -58,9 +58,37 @@ export function BrandDouyin({ size = 18, className, style, title = '抖音' }) {
   )
 }
 
-// OAuth 第三方登录渠道：单一事实来源。本产品仅微信 / 支付宝 / 抖音（无 Google / 百度 / 微博）。
+export function BrandBgssai({ size = 18, className, style, title = 'BGSSAI 账号' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      className={className}
+      style={style}
+      role="img"
+      aria-label={title}
+    >
+      <rect width="24" height="24" rx="5" fill="#071d49" />
+      <text
+        x="12"
+        y="17"
+        textAnchor="middle"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="14"
+        fontWeight="700"
+        fill="#ffffff"
+      >
+        B
+      </text>
+    </svg>
+  )
+}
+
+// OAuth 第三方登录渠道：单一事实来源。本产品微信 / 支付宝 / 抖音 / BGSSAI。
 export const OAUTH_PROVIDERS = [
   { key: 'wechat', label: '微信', color: '#07c160', Icon: BrandWechat },
   { key: 'alipay', label: '支付宝', color: '#1677ff', Icon: BrandAlipay },
   { key: 'douyin', label: '抖音', color: '#161823', Icon: BrandDouyin },
+  { key: 'bgssai', label: 'BGSSAI 账号', color: '#071d49', Icon: BrandBgssai },
 ]

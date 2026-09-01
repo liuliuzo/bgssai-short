@@ -42,7 +42,7 @@ INSERT INTO credit_pack (pack_code, name, credit_cent, price_cent, is_active, so
 INSERT INTO credit_pack (pack_code, name, credit_cent, price_cent, is_active, sort_order, del_flag, creator) VALUES ('pack_1000', '加量 1000 元', 100000, 89900, 1, 3, 0, 'system');
 
 -- ##################################################################
--- STEP LOGIN-OAUTH-1: 登录页微信 / 支付宝 / 抖音凭证
+-- STEP LOGIN-OAUTH-1: 登录页微信 / 支付宝 / 抖音 / BGSSAI 官网凭证
 -- ##################################################################
 -- 本段只种「密钥位」，一律空值：真实密钥由管理端录入并落库，代码仓不承载任何密钥值。
 -- ON DUPLICATE KEY UPDATE 仅做空值回填，绝不覆盖库里已录入的值——否则每次重跑
@@ -57,6 +57,8 @@ INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.alipay.alipay-public-key', '', '登录页支付宝公钥', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.douyin.client-key', '', '登录页抖音开放平台网站应用 Client Key', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.douyin.client-secret', '', '登录页抖音开放平台网站应用 Client Secret', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.bgssai.client-id', 'bgssai-short', '登录页 BGSSAI 官网开放授权 client_id', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.bgssai.client-secret', 'demo-secret-change-me', '登录页 BGSSAI 官网开放授权 client_secret', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 -- STEP LOGIN-OAUTH-1 END
 
 -- §B 用户端铺底数据（仅 dev / 联调；禁止生产执行）
