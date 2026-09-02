@@ -122,7 +122,7 @@ public class CentralLedgerService {
      * 先扣套餐双窗口（5 小时 / 7 天，到点归零），窗口不够再扣加量包；乐观锁 quota_version。
      * 带 idempotencyKey 时同一键只入账一次。
      *
-     * @return true 已入账；false 未入账（重复、用量不足、钱包缺失、并发重试耗尽）
+     * @return true 已入账或命中幂等重放；false 未入账（用量不足、钱包缺失、并发重试耗尽）
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean consume(String websiteUserId, int points, String usageKind, String idempotencyKey, String remark) {
@@ -146,7 +146,7 @@ public class CentralLedgerService {
                 websiteUsageIdempotencyMapper.insertSelective(idem);
             } catch (DuplicateKeyException ex) {
                 log.info("中央账本用量已入账过，跳过 product={} websiteUserId={} key={}", PRODUCT_CODE, websiteUserId, key);
-                return false;
+                return true;
             }
         }
         boolean applied = false;

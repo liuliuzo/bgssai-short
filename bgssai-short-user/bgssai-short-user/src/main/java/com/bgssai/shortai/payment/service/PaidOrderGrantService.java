@@ -81,7 +81,7 @@ public class PaidOrderGrantService {
                 order.getOrderNo(), order.getOrderType(), order.getGrantCent());
     }
 
-    /** 本产品卖出的订阅同事务写进官网中央账本（bgssai_website.external_subscription）。 */
+    /** 本地订阅发放完成后，以独立事务同步官网中央账本；失败不回滚本地发放。 */
     private void reportToCentralLedger(PaymentOrder order) {
         if (websiteLedgerClient == null) {
             return;

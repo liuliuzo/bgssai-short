@@ -153,7 +153,7 @@ class CentralLedgerServiceTest {
         when(idempotencyMapper.insertSelective(any(WebsiteUsageIdempotency.class)))
                 .thenThrow(new DuplicateKeyException("dup"));
 
-        assertFalse(service.consume(WEBSITE_USER, 5, null, "k-1", null));
+        assertTrue(service.consume(WEBSITE_USER, 5, null, "k-1", null));
 
         verify(quotaMapper, never()).selectOneByExample(any(WebsiteUserQuotaExample.class));
     }
