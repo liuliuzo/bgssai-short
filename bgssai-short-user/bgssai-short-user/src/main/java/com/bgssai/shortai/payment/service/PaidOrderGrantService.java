@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bgssai.shortai.centralledger.dto.OwnSubscriptionReport;
+import com.bgssai.shortai.centralledger.service.CentralLedgerService;
+import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.mapper.PaymentOrderMapper;
 import com.bgssai.shortai.mapper.QuotaChangeLogMapper;
 import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
@@ -42,6 +45,9 @@ public class PaidOrderGrantService {
     private QuotaChangeLogMapper quotaChangeLogMapper;
     @Autowired
     private QuotaWalletService quotaWalletService;
+    /** 中央账本直连；单测不装配时为空，跳过上报。 */
+    @Autowired(required = false)
+    private BgssaiWebsiteLedgerClient websiteLedgerClient;
 
     @Transactional
     public void grantIfCreated(PaymentOrder order, String channelTradeNo) {
@@ -67,11 +73,35 @@ public class PaidOrderGrantService {
         }
         if ("subscription".equals(order.getOrderType())) {
             grantSubscription(order.getUserId(), order.getBizCode(), order.getGrantCent());
+            reportToCentralLedger(order);
         } else if ("credit_pack".equals(order.getOrderType())) {
             grantPack(order.getUserId(), order.getGrantCent());
         }
         log.info("payment granted orderNo={} type={} grantCent={}",
                 order.getOrderNo(), order.getOrderType(), order.getGrantCent());
+    }
+
+    /** 本产品卖出的订阅同事务写进官网中央账本（bgssai_website.external_subscription）。 */
+    private void reportToCentralLedger(PaymentOrder order) {
+        if (websiteLedgerClient == null) {
+            return;
+        }
+        UserSubscriptionExample ex = new UserSubscriptionExample();
+        ex.createCriteria().andUserIdEqualTo(order.getUserId()).andDelFlagEqualTo(0);
+        UserSubscription current = userSubscriptionMapper.selectOneByExample(ex);
+        SubscriptionPlanExample pex = new SubscriptionPlanExample();
+        pex.createCriteria().andPlanCodeEqualTo(order.getBizCode()).andDelFlagEqualTo(0);
+        SubscriptionPlan plan = subscriptionPlanMapper.selectOneByExample(pex);
+        OwnSubscriptionReport report = new OwnSubscriptionReport();
+        report.setExternalOrderNo(order.getOrderNo());
+        report.setPlanCode(order.getBizCode());
+        report.setPlanName(plan == null ? order.getBizCode() : plan.getPlanName());
+        report.setAmountCent(order.getAmountCent());
+        report.setStatus(CentralLedgerService.SUB_ACTIVE);
+        report.setPeriodStart(current == null ? null : current.getCurrentPeriodStart());
+        report.setPeriodEnd(current == null ? null : current.getCurrentPeriodEnd());
+        report.setRemark("grantCent=" + order.getGrantCent());
+        websiteLedgerClient.reportOwnSubscription(order.getUserId(), report);
     }
 
     public void grantSubscription(String userId, String planCode, Integer grantCent) {

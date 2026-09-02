@@ -1,134 +1,104 @@
 package com.bgssai.shortai.login.oauth;
 
-import java.net.URI;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
+import com.bgssai.shortai.centralledger.dto.OwnSubscriptionReport;
+import com.bgssai.shortai.centralledger.service.CentralLedgerService;
 import com.bgssai.shortai.mapper.OauthBindingMapper;
 import com.bgssai.shortai.model.OauthBinding;
 import com.bgssai.shortai.model.OauthBindingExample;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * 已绑定 BGSSAI 官网身份的用户：本地额度扣减成功后，向官网中央账本上报用量。
- * 未绑定则跳过。官网不可达时只打日志，不回滚本地扣减。
+ * 本产品账号与官网中央账本之间的桥：把本地 userId 解析成已绑定的官网 user_id（oauth_binding.open_id），
+ * 再委托 CentralLedgerService 直连官网库读写，不再经 HTTP 调官网接口。
+ * 未绑定则跳过；中央账本任何失败只打日志，不回滚本地扣减。
  */
 @Component
 public class BgssaiWebsiteLedgerClient {
 
     private static final Logger log = LoggerFactory.getLogger(BgssaiWebsiteLedgerClient.class);
-    private static final RestClient HTTP = RestClient.create();
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String PLATFORM_BGSSAI = "bgssai";
 
     private final OauthBindingMapper oauthBindingMapper;
-    private final LoginOAuthSecrets loginOAuthSecrets;
-    private final String idpBaseUrl;
+    private final CentralLedgerService centralLedger;
 
     public BgssaiWebsiteLedgerClient(OauthBindingMapper oauthBindingMapper,
-                                     LoginOAuthSecrets loginOAuthSecrets,
-                                     @Value("${bgssai.idp.base-url}") String idpBaseUrl) {
+                                     CentralLedgerService centralLedger) {
         this.oauthBindingMapper = oauthBindingMapper;
-        this.loginOAuthSecrets = loginOAuthSecrets;
-        this.idpBaseUrl = BgssaiOAuthProvider.trimSlash(idpBaseUrl);
+        this.centralLedger = centralLedger;
     }
 
     public boolean isEntitled(String userId) {
-        if (userId == null || userId.isBlank()) {
+        String websiteUserId = websiteUserIdOf(userId);
+        if (websiteUserId == null) {
             return false;
         }
-        OauthBindingExample ex = new OauthBindingExample();
-        ex.createCriteria()
-                .andUserIdEqualTo(userId)
-                .andPlatformEqualTo("bgssai")
-                .andDelFlagEqualTo(Boolean.FALSE);
-        OauthBinding binding = oauthBindingMapper.selectOneByExample(ex);
-        if (binding == null || OAuthIds.blank(binding.getOpenId())) {
+        try {
+            return centralLedger.isEntitled(websiteUserId);
+        } catch (Exception e) {
+            log.warn("BGSSAI 权益查询失败 userId={} error={}", userId, e.getMessage());
             return false;
         }
-        return queryEntitled(binding.getOpenId(), loginOAuthSecrets.bgssaiClientId(), loginOAuthSecrets.bgssaiClientSecret());
     }
 
     public void reportDebit(String userId, long amount, String usageKind) {
-        if (userId == null || userId.isBlank() || amount < 1 || amount > Integer.MAX_VALUE) {
+        if (amount < 1 || amount > Integer.MAX_VALUE) {
             return;
         }
-        OauthBindingExample ex = new OauthBindingExample();
-        ex.createCriteria()
-                .andUserIdEqualTo(userId)
-                .andPlatformEqualTo("bgssai")
-                .andDelFlagEqualTo(Boolean.FALSE);
-        OauthBinding binding = oauthBindingMapper.selectOneByExample(ex);
-        if (binding == null || OAuthIds.blank(binding.getOpenId())) {
+        String websiteUserId = websiteUserIdOf(userId);
+        if (websiteUserId == null) {
             return;
         }
-        String clientId = loginOAuthSecrets.bgssaiClientId();
-        String clientSecret = loginOAuthSecrets.bgssaiClientSecret();
-        if (OAuthIds.blank(clientId) || OAuthIds.blank(clientSecret)) {
-            log.warn("BGSSAI 中央账本跳过：oauth.bgssai 凭证未配置 userId={}", userId);
-            return;
-        }
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("client_id", clientId);
-        body.put("client_secret", clientSecret);
-        body.put("user_id", binding.getOpenId());
-        body.put("usage_points", (int) amount);
-        if (usageKind != null && !usageKind.isBlank()) {
-            body.put("usage_kind", usageKind);
-        }
-        body.put("remark", "short debit " + (usageKind == null ? "" : usageKind));
         try {
-            String json = JSON.writeValueAsString(body);
-            String resp = HTTP.post()
-                    .uri(URI.create(idpBaseUrl + "/api/user/oauth/usage"))
-                    .header("Content-Type", "application/json;charset=UTF-8")
-                    .body(json)
-                    .retrieve()
-                    .body(String.class);
-            JsonNode wrap = resp == null ? null : JSON.readTree(resp);
-            if (wrap != null && wrap.has("code") && wrap.get("code").asInt(0) != 200) {
-                log.warn("BGSSAI 中央账本上报被拒 userId={} code={} message={}",
-                        userId, wrap.get("code").asInt(), wrap.path("message").asText(""));
-                return;
-            }
-            log.info("BGSSAI 中央账本已上报 userId={} points={} kind={}", userId, amount, usageKind);
-        } catch (RestClientException e) {
-            log.warn("BGSSAI 中央账本上报失败 userId={} error={}", userId, e.getMessage());
+            centralLedger.consume(websiteUserId, (int) amount, usageKind, null,
+                    "short debit " + (usageKind == null ? "" : usageKind));
         } catch (Exception e) {
             log.warn("BGSSAI 中央账本上报异常 userId={} error={}", userId, e.getMessage());
         }
     }
 
-    private boolean queryEntitled(String websiteUserId, String clientId, String clientSecret) {
-        if (OAuthIds.blank(websiteUserId) || OAuthIds.blank(clientId) || OAuthIds.blank(clientSecret)) {
-            return false;
+    /** 本产品卖出 / 续费一笔订阅后，让中央账本看得见。 */
+    public void reportOwnSubscription(String userId, OwnSubscriptionReport report) {
+        if (OAuthIds.blank(userId) || report == null) {
+            return;
+        }
+        report.setExternalUserId(userId);
+        report.setWebsiteUserId(websiteUserIdOf(userId));
+        try {
+            centralLedger.reportOwnSubscription(report);
+        } catch (Exception e) {
+            log.warn("BGSSAI 自有订阅上报异常 userId={} orderNo={} error={}",
+                    userId, report.getExternalOrderNo(), e.getMessage());
+        }
+    }
+
+    /** 用户刚绑定官网账号：回填此前上报、尚未关联官网账号的订阅归属。 */
+    public void linkWebsiteUser(String userId, String websiteUserId) {
+        if (OAuthIds.blank(userId) || OAuthIds.blank(websiteUserId)) {
+            return;
         }
         try {
-            Map<String, Object> body = new LinkedHashMap<>();
-            body.put("client_id", clientId);
-            body.put("client_secret", clientSecret);
-            body.put("user_id", websiteUserId);
-            String resp = HTTP.post()
-                    .uri(URI.create(idpBaseUrl + "/api/user/oauth/quota"))
-                    .header("Content-Type", "application/json;charset=UTF-8")
-                    .body(JSON.writeValueAsString(body))
-                    .retrieve()
-                    .body(String.class);
-            JsonNode wrap = resp == null ? null : JSON.readTree(resp);
-            if (wrap == null || wrap.path("code").asInt(0) != 200) {
-                return false;
-            }
-            return wrap.path("data").path("entitled").asBoolean(false);
+            centralLedger.linkWebsiteUser(userId, websiteUserId);
         } catch (Exception e) {
-            log.warn("BGSSAI 权益查询失败 websiteUserId={} error={}", websiteUserId, e.getMessage());
-            return false;
+            log.warn("BGSSAI 订阅归属回填异常 userId={} error={}", userId, e.getMessage());
         }
+    }
+
+    private String websiteUserIdOf(String userId) {
+        if (OAuthIds.blank(userId)) {
+            return null;
+        }
+        OauthBindingExample ex = new OauthBindingExample();
+        ex.createCriteria()
+                .andUserIdEqualTo(userId)
+                .andPlatformEqualTo(PLATFORM_BGSSAI)
+                .andDelFlagEqualTo(Boolean.FALSE);
+        OauthBinding binding = oauthBindingMapper.selectOneByExample(ex);
+        if (binding == null || OAuthIds.blank(binding.getOpenId())) {
+            return null;
+        }
+        return binding.getOpenId();
     }
 }

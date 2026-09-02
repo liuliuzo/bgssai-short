@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.login.dto.req.ReqOAuthCallback;
 import com.bgssai.shortai.login.dto.resp.RespUserLogin;
+import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.login.oauth.OAuthIds;
 import com.bgssai.shortai.login.oauth.OAuthProvider;
 import com.bgssai.shortai.login.oauth.OAuthProviderFactory;
@@ -31,6 +32,8 @@ public class OAuthLoginService {
     @Autowired private OAuthProviderFactory oauthProviderFactory;
     @Autowired private OauthBindingMapper oauthBindingMapper;
     @Autowired private SysUserMapper sysUserMapper;
+    /** 中央账本直连：首次绑定 BGSSAI 账号时回填本产品订阅归属；单测不装配时为空。 */
+    @Autowired(required = false) private BgssaiWebsiteLedgerClient websiteLedgerClient;
 
     public RespUserLogin loginOrRegister(ReqOAuthCallback req) {
         oauthStateUtil.verify(req.getState(), req.getPlatform());
@@ -41,6 +44,7 @@ public class OAuthLoginService {
         if (binding != null) {
             SysUser user = findUser(binding.getUserId());
             log.info("三方授权登录命中已绑定账号 platform={} userId={}", req.getPlatform(), binding.getUserId());
+            linkCentralLedger(req.getPlatform(), binding.getUserId(), userInfo.getOpenId());
             return withNewUser(issue(user), Boolean.FALSE);
         }
 
@@ -63,11 +67,19 @@ public class OAuthLoginService {
             if (existing == null) throw e;
             SysUser existingUser = findUser(existing.getUserId());
             log.warn("三方授权登录并发命中唯一索引 platform={} userId={}", req.getPlatform(), existing.getUserId());
+            linkCentralLedger(req.getPlatform(), existing.getUserId(), userInfo.getOpenId());
             return withNewUser(issue(existingUser), Boolean.FALSE);
         }
 
         log.info("三方授权登录首次建号 platform={} userId={}", req.getPlatform(), user.getUserId());
+        linkCentralLedger(req.getPlatform(), user.getUserId(), userInfo.getOpenId());
         return withNewUser(issue(user), Boolean.TRUE);
+    }
+
+    private void linkCentralLedger(String platform, String localUserId, String websiteUserId) {
+        if ("bgssai".equals(platform) && websiteLedgerClient != null) {
+            websiteLedgerClient.linkWebsiteUser(localUserId, websiteUserId);
+        }
     }
 
     private static RespUserLogin withNewUser(RespUserLogin resp, Boolean newUser) {
