@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-开发服务器运行在 `http://localhost:3002`，`/bgssai` 代理到 `http://localhost:8081`（user 后端）。
+开发服务器运行在 `http://localhost:3002`，`/bgssai` 代理到 `http://localhost:8080`（user 后端）。
 
 ## 构建与部署
 

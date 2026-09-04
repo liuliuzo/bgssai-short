@@ -38,7 +38,7 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 | 功能需求（版本基准） | `docs/feature/**` | 每个功能的需求澄清 + 详细设计；一切下游产出对齐需求当前版本 |
 | 原型与跳转真值 | `docs/demo-static/**` | 字段命名 / 响应结构 / 枚举 / 页面跳转的权威参照；按端分目录 |
 | 设计与接口契约 | `docs/architecture`、`docs/api`、`docs/security` | 数据模型、状态机、REST 契约、页面 → API 映射、安全设计 |
-| 可运行的双端工程 | `bgssai-short-admin/**`、`bgssai-short-user/**` | 管理端（8080 / 3001）与用户端（8081 / 3002），Java 21 + Spring Boot 4 + MyBatis + React 18 + Vite + Ant Design 5，共用同一 MySQL 库 |
+| 可运行的双端工程 | `bgssai-short-admin/**`、`bgssai-short-user/**` | 管理端（8080 / 3001）与用户端（8080 / 3002），Java 21 + Spring Boot 4 + MyBatis + React 18 + Vite + Ant Design 5，共用同一 MySQL 库 |
 | 基础链路（自骨架继承） | `common/**`、`configuration/**`、`utils/**` | 统一响应与分页、JWT 登录鉴权与 `@NeedAop` 切面、角色守卫、全局异常与错误码、全链路 traceId、Bucket4j 限流、CORS、SPA 回退。逐项清单见 `README.md`「内置的基础链路」 |
 | 健康检查 | `health/**` + `configuration/AsyncConfig` + 对应四层产出 | 全产品线唯一口径（Standards §13）：`/bgssai/health/liveness` · `/readiness` · `/bgssai/health` 三端点、组件化探针、单检查硬超时、整批 TTL 缓存。只对齐、不发明 |
 | 本产品 schema 权威 | `sql/DDL.sql`、`sql/DML.sql` | 收敛到仓库根、目录扁平，不用 `migration/` 与 `V*__xxx.sql`；当前仅 `sys_user`、`login_log` 两张基础表 |
@@ -81,7 +81,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 ## 仓库强制约定
 
 * 全局开发规范（最高优先级约束，自动导入每次会话）：@docs/BGSSAI-Standards.md
-* **配置分层（强制，违者代码不予合并）**：① 中间件参数（数据库、Redis、ES、OBS、MQTT、端口等）只写 `application-dev.properties` / `application-test.properties` / `application-prod.properties`，禁止进 Admin / 库表；② 业务第三方凭证（短信、邮件、支付、OAuth、LLM API Key 等）由 Admin 维护并落库，禁止只写 properties，且必须在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护 DML 种子（`ON DUPLICATE KEY UPDATE` 仅空值回填）。权威全文见 Standards §1「配置分层：中间件 vs 业务第三方凭证」。AI 助手不得反复提议违反本条，除非用户主动改决策。
+* **配置分层（强制，违者代码不予合并）**：① 中间件参数（数据库、Redis、ES、OBS、MQTT、端口等）只写 `application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`，禁止进 Admin / 库表；② 业务第三方凭证（短信、邮件、支付、OAuth、LLM API Key 等）由 Admin 维护并落库，禁止只写 properties，且必须在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护 DML 种子（`ON DUPLICATE KEY UPDATE` 仅空值回填）。权威全文见 Standards §1「配置分层：中间件 vs 业务第三方凭证」。AI 助手不得反复提议违反本条，除非用户主动改决策。
 * **持久层三件套手工维护（强制）**：Mapper XML / Example / Entity 是仓库内普通源码，由开发者手工维护。本产品线已下线 MyBatis Generator，不引入任何代码生成工具。改表先改 `sql/DDL.sql`，再手工同步三件套，一次提交。禁止只改 Java 不改 DDL，或只改 DDL 不同步三件套。权威见 Standards §2。
 * 任何需求变更或 bug 修复，必须在同一次提交内同步完成**需求文档 / 原型 / 设计文档 / 代码**四层的对应修改，缺一不可，以防止代码与文档漂移（详见 Standards §0「需求与缺陷变更四层同步完成、缺一不可」）。
 * 接口的 POST 业务参数一律走 JSON Body（POST→body，详见 Standards §3）。

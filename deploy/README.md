@@ -3,9 +3,9 @@
 两个后端均为 Java 21 + Spring Boot 4，以可执行 jar 运行（`java -jar`），不使用 Docker。前端为静态产物，
 由对应后端作为 SPA 提供。管理端与用户端**分机独立部署**，共享同一 MySQL 库 `bgssai_short`。
 
-两端走 HTTPS 443 + HTTP 80 跳转（SslConfig），与其它产品一致。两端与中间件 / Jenkins 共机：
-Jenkins 占 8080、Redis 占 6379、EMQX 占 1883/8883 等，均不占 80/443。
-证书为 classpath 内置 JKS，文件名（不含 `.jks`）= 应用域名。
+两端均监听 HTTP 8080。
+**冲突：** 开发管理端与 Jenkins 控制器共机（`101.44.189.190`），Jenkins 已占用 8080。在迁走 short-admin 或改 Jenkins 监听端口之前，不要把 short-admin 部署到这台机。
+keystore 文件仍在 classpath，但 `server.ssl.enabled=false`，应用不再自己终止 TLS。
 
 `deploy/scripts/ship.sh` 与 `deploy/remote-deploy.sh` 须与中央仓 `bgssai-workflows` **逐字节一致**。
 
@@ -58,13 +58,13 @@ Jenkins 侧实现：本仓 `Jenkinsfile`（部署）与 `jenkins/Jenkinsfile.sto
 
 | Environment | `SHORT_ADMIN_HOST` | admin 端口 | `SHORT_USER_HOST` | user 端口 | 共机 |
 | --- | --- | --- | --- | --- | --- |
-| `dev` | `101.44.189.190` | **443** HTTPS | `101.44.26.229` | 443 HTTPS | admin 与 Jenkins 共机（Jenkins 占 8080，不占 443）；user 与应用网关-境外 / 注册中心-境外共机 |
-| `prod` | `121.37.158.8` | 443 HTTPS | `121.37.142.152` | 443 HTTPS | admin 与 REDIS-境内共机；user 与 EMQX-MQTT-境内共机 |
+| `dev` | `101.44.189.190` | **8080 HTTP（与 Jenkins 冲突，部署前须迁机）** | `101.44.26.229` | 8080 HTTP | admin 与 Jenkins 共机；user 与应用网关-境外 / 注册中心-境外共机 |
+| `prod` | `121.37.158.8` | 8080 HTTP | `121.37.142.152` | 8080 HTTP | admin 与 REDIS-境内共机；user 与 EMQX-MQTT-境内共机 |
 
 域名：`dev.admin.bgssai-short.com` / `dev.user.bgssai-short.com` / `admin.bgssai-short.com` / `www.bgssai-short.com`。
 生产落点以这组域名角色为准（用户端 www、管理端 admin）。
 
-健康检查：`https://127.0.0.1:443/bgssai/health/readiness`。部署与关停只作用于对应 systemd 服务，
+健康检查：`http://127.0.0.1:8080/bgssai/health/readiness`。部署与关停只作用于对应 systemd 服务，
 **不得**对共机执行整机级关停或重装。
 
 共享库：dev `192.168.0.217`（公网 `101.44.27.60`）/ prod 境内 `172.31.4.181`（公网 `121.36.230.185`）。
@@ -89,11 +89,11 @@ mvn -q -DskipTests clean package
 
 ## 三、环境与 profile
 
-三环境用 `spring.profiles.active` / `SPRING_PROFILES_ACTIVE` 选择：`dev` / `test` / `prod`。
+四环境用 `spring.profiles.active` / `SPRING_PROFILES_ACTIVE` 选择：`local` / `dev` / `test` / `prod`。
 环境差异分 profile 硬编码真实字面量，**禁用 `${}` 占位符**（Standards §1）。
 
-- `dev` / `prod`：连接串、`jwt.secret`、SSL keystore、监听端口均写死在 `application-<profile>.properties`，随 jar 打包。HTTPS 443 + HTTP 80 跳转。
-- `test`：本地 / CI 集成测试用，走 8080/8081 明文。
+- `dev` / `prod`：连接串、`jwt.secret`、监听端口均写死在 `application-<profile>.properties`，随 jar 打包。两端 HTTP 8080。
+- `test`：本地 / CI 集成测试用，走 8080 明文 HTTP。
 
 ## 四、服务器上不需要放任何配置文件
 

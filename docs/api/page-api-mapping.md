@@ -27,7 +27,7 @@
 | `credit-packs.html` | `/credit-packs` | `GET /bgssai/admin/credit-packs/list` · `POST /bgssai/admin/credit-packs/save` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 | `pay-merchants.html` | `/pay-merchants` | `GET /bgssai/admin/pay/wechat-configs` · `POST /bgssai/admin/pay/wechat-configs/save` · `/set-collection-active`；支付宝同构 `/alipay-configs` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 
-## web 用户端（`docs/demo-static/web/user/`，前端 3002 / 后端 8081，`role_code=USER`）
+## web 用户端（`docs/demo-static/web/user/`，前端 3002 / 后端 8080，`role_code=USER`）
 
 用户端接口一律只返回当前登录用户本人数据，`user_id` 取自 JWT，不从请求参数取。
 

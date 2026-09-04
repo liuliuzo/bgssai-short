@@ -9,7 +9,7 @@ public class PaymentProperties {
     @Value("${bgssai.payment.sandbox-enabled:true}")
     private boolean sandboxEnabled;
 
-    @Value("${bgssai.payment.notify-base-url:http://localhost:8081}")
+    @Value("${bgssai.payment.notify-base-url:http://localhost:8080}")
     private String notifyBaseUrl;
 
     @Value("${bgssai.payment.order-timeout-minutes:30}")

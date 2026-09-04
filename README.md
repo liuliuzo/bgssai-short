@@ -55,7 +55,7 @@ bgssai-short-parent/         # 本仓库根（Maven 聚合父工程，packaging=
 │   ├── bgssai-short-admin/       # 后端：Java 21 + Spring Boot 4 + MyBatis
 │   └── bgssai-short-admin-react/ # 前端：React 18 + Vite + Ant Design 5（端口 3001）
 │
-└── bgssai-short-user/       # 【用户端】端口 8081，role_code=USER
+└── bgssai-short-user/       # 【用户端】端口 8080，role_code=USER
     ├── bgssai-short-user/        # 后端：Java 21 + Spring Boot 4 + MyBatis
     └── bgssai-short-user-react/  # 前端：React 18 + Vite + Ant Design 5（端口 3002）
 ```
@@ -112,7 +112,7 @@ mysql bgssai_short < sql/DML.sql
 # 2. 编译后端（根聚合工程一次编译两个模块）
 mvn -q -DskipTests compile
 
-# 3. 启动后端（dev 档连境外开发库；远程 HTTPS 443。本机明文调试可加 --server.port=8080 --server.ssl.enabled=false）
+# 3. 启动后端（dev 档连境外开发库；四环境均为 HTTP 8080）
 mvn -pl bgssai-short-admin/bgssai-short-admin spring-boot:run   # 管理端
 mvn -pl bgssai-short-user/bgssai-short-user   spring-boot:run   # 用户端
 

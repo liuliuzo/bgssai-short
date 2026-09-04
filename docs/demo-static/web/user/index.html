@@ -11,7 +11,7 @@
   <div class="container">
     <h1 class="title">AI 短剧制作平台 web 用户端原型 — 概览</h1>
     <p class="subtitle">
-      本目录是 AI 短剧制作平台 <strong>web 用户端</strong>（bgssai-short-user，后端 8081 / 前端 3002，
+      本目录是 AI 短剧制作平台 <strong>web 用户端</strong>（bgssai-short-user，后端 8080 / 前端 3002，
       <code>role_code=USER</code>）原型与页面跳转的<strong>权威参照</strong>：接口 JSON 字段命名（snake_case）、
       响应结构、枚举 / 状态值与页面跳转关系，前后端实现逐字对齐。本端跳转真值见
       <a href="PAGE-FLOW.html">PAGE-FLOW.html</a>；管理端原型见
@@ -174,7 +174,7 @@
     <div class="card">
       <h2 class="card-title">本端约定</h2>
       <div class="kv">
-        <div class="k">工程</div><div>bgssai-short-user，后端 8081 / 前端 3002</div>
+        <div class="k">工程</div><div>bgssai-short-user，后端 8080 / 前端 3002</div>
         <div class="k">角色</div><div><code>role_code=USER</code></div>
         <div class="k">登录接口</div><div><code>POST /bgssai/user/login</code></div>
         <div class="k">数据可见范围</div><div>仅本人数据；<code>user_id</code> 一律取自 JWT，不从请求参数取</div>

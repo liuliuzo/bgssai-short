@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // User-app SPA build config.
 // base '/', assetsDir 'assets' — the product is served by bgssai-short-user Spring Boot from
-// the root path. The dev server proxies /bgssai to the user backend on port 8081.
+// the root path. The dev server proxies /bgssai to the user backend on port 8080.
 export default defineConfig({
   plugins: [react()],
   base: '/',
@@ -16,7 +16,7 @@ export default defineConfig({
     port: 3002,
     proxy: {
       '/bgssai': {
-        target: 'http://localhost:8081',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
     },

@@ -19,8 +19,7 @@
 // 代码、就地构建、就地部署。走哪条由共享库 bgssaiDeployEnd 按环境判断。
 // 目标机因此需要具备构建工具链，一次性准备见中央仓 jenkins/install/provision-build-host.sh。
 //
-// 本产品两端与中间件 / Jenkins 共机，但 80/443 空闲（Jenkins 占 8080，不占 443）。
-// 与其它产品一致：HTTPS 443 + HTTP 80 跳转。健康检查钉死 https / 443。
+// 本产品 admin 与 Jenkins 控制器共机（Jenkins 占 8080）。两端应用现统一 8080 HTTP；部署 short-admin 前须确认本机 8080 不被 Jenkins 占用，或把 short-admin 迁走。
 
 @Library('bgssai') _
 
@@ -38,8 +37,8 @@ PRODUCT = [
   product: 'short',
   packageManager: 'npm',
   frontendScript: 'build:deploy',
-  appPort: '443',
-  healthScheme: 'https',
+  appPort: '8080',
+  healthScheme: 'http',
 ]
 
 pipeline {

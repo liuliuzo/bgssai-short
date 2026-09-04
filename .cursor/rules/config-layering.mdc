@@ -10,7 +10,7 @@ alwaysApply: true
 ## 1. 中间件参数 — 只写 application-*.properties
 
 - **范围**：数据库、Redis、ES、OBS 及同类纯技术中间件连接参数（endpoint、AK/SK、bucket、host、port 等）。
-- **落点**：`application-dev.properties` / `application-test.properties` / `application-prod.properties`（及 local 如有）。
+- **落点**：`application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`。
 - **禁止**：为中间件做 Admin 配置页，或写入 `sys_secret` / `system_config` / `platform_*_config`。
 
 ## 2. 业务第三方凭证 — Admin + 落库 + DML 种子

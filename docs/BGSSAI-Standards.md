@@ -95,7 +95,7 @@
 * **全局禁用 properties 占位符 `${}`（强制，违者代码不予合并）**：本项目所有 properties 配置文件**严禁出现以 `${` 开头、`}` 闭合的占位符表达式**，环境差异统一通过 Spring Boot profile 文件（`application-{profile}.properties`）分环境硬编码真实值实现，启动时以 `spring.profiles.active=<profile>` 选定本环境配置。
   * **覆盖文件（穷举）**：
     1. `src/main/resources/application.properties`（主配置）；
-    2. `src/main/resources/application-*.properties`（所有 profile 分环境配置，如 `application-dev.properties` / `application-test.properties` / `application-prod.properties`）；
+    2. `src/main/resources/application-*.properties`（所有 profile 分环境配置，如 `application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`）；
     3. 任何被 Spring Boot `@PropertySource` / `@ConfigurationProperties` / `spring.config.import` 加载的额外 `*.properties` 文件，无论位于 `src/main/resources/` 还是 `src/main/resources/config/` 等子目录。
   * **禁止形式（穷举，不留模糊空间）**：
     1. `${ENV_VAR}`——纯环境变量注入；
@@ -105,8 +105,8 @@
     5. 任何形如 `${...}` 的 SpEL / PropertyPlaceholder / `${a:${b}}` 嵌套占位符表达式；
     6. **键、值、注释**三处均禁——即便是 `# 示例：${VAR:default}` 这样的注释也禁止出现，避免误导后续维护者复制粘贴。
   * **正确做法（强制采用）**：
-    1. **三环境共享、永不变化**的值（如 `spring.application.name=blog`、`mybatis.configuration.map-underscore-to-camel-case=true`）才允许写在 `application.properties` 主配置中，直接给最终字面量；
-    2. **任何会因环境变化的中间件 / 基础设施项**（数据库连接串 / Redis 主机 / ES / OBS·对象存储的 endpoint·AK/SK·bucket / MQTT broker 地址 / OAuth 回调地址 / CORS 白名单 / 服务端口等）**一律下沉到对应的 profile 文件**（`application-dev.properties` / `application-test.properties` / `application-prod.properties`），在每份 profile 文件中直接写死本环境的真实值；**业务第三方凭证（短信 / 支付 / OAuth AppSecret / LLM·业务 API Key 等）不在此列**——见本节「配置分层：中间件 vs 业务第三方凭证」条；
+    1. **四环境共享、永不变化**的值（如 `spring.application.name=blog`、`mybatis.configuration.map-underscore-to-camel-case=true`）才允许写在 `application.properties` 主配置中，直接给最终字面量；
+    2. **任何会因环境变化的中间件 / 基础设施项**（数据库连接串 / Redis 主机 / ES / OBS·对象存储的 endpoint·AK/SK·bucket / MQTT broker 地址 / OAuth 回调地址 / CORS 白名单 / 服务端口等）**一律下沉到对应的 profile 文件**（`application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`），在每份 profile 文件中直接写死本环境的真实值；**业务第三方凭证（短信 / 支付 / OAuth AppSecret / LLM·业务 API Key 等）不在此列**——见本节「配置分层：中间件 vs 业务第三方凭证」条；
     3. 启动时通过 `--spring.profiles.active=prod` 或环境变量 `SPRING_PROFILES_ACTIVE=prod` 选定 profile，由 Spring Boot 加载对应的 `application-prod.properties` 覆盖主配置；
     4. 同一 key 在多个 profile 文件中重复出现是 profile 机制的**正常用法**，不算「重复键违规」，CR 不得据此打回。
   * **同步禁止的等价绕路**：
@@ -115,11 +115,13 @@
     3. 严禁通过自定义 `PropertySource` / `EnvironmentPostProcessor` 在加载 properties 后注入 `${}` 风格表达式让 Spring 二次解析。
   * **历史遗留整改**：本条立规后，已存在的 `${...}` 表达在单独的存量整改 PR 中统一清理（不在本规范条款提交内同步动 properties 文件）；整改 PR 须确保每份 profile 文件给出本环境的完整最终值，且整改后 `grep -r '\${' src/main/resources/*.properties` 应零匹配。
   * **CR 校验**：任何 properties / YAML 配置文件的提交，若 `grep` 命中 `${` 字符（无论出现在键、值还是注释），一律打回，**无论改动规模大小、无论是否"只是一个默认值"**。
-  * **执行口径**：本条与「严禁使用 Lombok」、「JSON 强制 snake_case」、「全局禁用 emoji」同档次，是**配置层的全局硬红线**；任何「为了开发便利保留默认值占位符」的妥协请求一律不予接受——若开发期需要本地值，写在 `application-dev.properties` 即可，无需任何 `${}`。
+  * **执行口径**：本条与「严禁使用 Lombok」、「JSON 强制 snake_case」、「全局禁用 emoji」同档次，是**配置层的全局硬红线**；任何「为了开发便利保留默认值占位符」的妥协请求一律不予接受——若本机需要本地值，写在 `application-local.properties` 即可，无需任何 `${}`。
   * **`@Value` 占位符允许使用（澄清，强制口径）**：本条只禁止 **properties / YAML 文件内容**（键 / 值 / 注释）出现 `${}` 占位符；Java 端用 `@Value("${some.key}")` 注入读取配置值是 Spring 消费端的**正常、必需用法，允许使用**，含 `@Value("${some.key:default}")` 带默认值形式。一句话——**禁的是「在 properties / yml 文件里写 `${}`」，不是「在 Java 里用 `@Value` 读取配置 key」**。CR **不得**以「用了 `@Value("${...}")`」为由打回；`@Value` 读取的 key，其值仍须在各 profile 文件里写死为最终字面量（不得在 properties 文件里再用 `${}` 串联）。
 
+
+* **四套 Spring profile 与监听端口（强制）**：环境名为 `local`（本机 IDE）、`dev`（开发）、`test`（测试）、`prod`（生产）。主配置默认 `spring.profiles.active=local`；Jenkins 远端以 `--spring.profiles.active=<dev|test|prod>` 覆盖。`dev` / `test` / `prod` 的 user 与 admin 分开部署（各自独立主机），两端均监听 **8080**。`local` 本机一次只起一端，同样监听 **8080**，无端口冲突。服务端口四环境相同，写在 `application.properties`；profile 若覆盖端口必须仍是 8080。
 * **配置分层：中间件 vs 业务第三方凭证（强制，违者代码不予合并）**：
-  1. **中间件 / 基础设施**（数据库、Redis、ES、OBS / 对象存储、MQTT、服务端口 / SSL、日志、MyBatis 等纯技术连接参数）——**只写** `application-dev.properties` / `application-test.properties` / `application-prod.properties`；**严禁**进 Admin 管理端，**严禁**写入 `sys_secret` / `system_config` / `platform_*_config` 等库表或对应 DML 种子。
+  1. **中间件 / 基础设施**（数据库、Redis、ES、OBS / 对象存储、MQTT、服务端口 / SSL、日志、MyBatis 等纯技术连接参数）——**只写** `application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`；**严禁**进 Admin 管理端，**严禁**写入 `sys_secret` / `system_config` / `platform_*_config` 等库表或对应 DML 种子。
   2. **业务第三方凭证**（短信、业务邮件 SMTP、微信支付 / 支付宝支付、OAuth 授权登录密钥、LLM / 业务 API Key 等随业务变更的配置）——**由 Admin 管理端维护并落库**，运行时读库；**严禁**以 `application-*.properties` 为唯一或主配置来源。
   3. **DML 种子强制（全量清库部署）**：部署链路为 `bgssai-all clean database` → `init database` → `deploy`（dev / prod），每次 clean 清空库数据；因此业务第三方凭证必须在对应产品 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护一份可用种子——Admin 是运行期改配入口，DML 是清库后的恢复来源。写法：一行数据一条 INSERT；`ON DUPLICATE KEY UPDATE` 仅空值回填，不覆盖 Admin 已写入的非空值。跨环境共享凭据放主 DML；环境差异（域名、回调 URL 等非密钥项）可放 `sql/dev` / `sql/prod` 或 profile。
   4. **边界澄清**：OAuth **回调 URL**、CORS 白名单等环境相关非密钥项可留在 profile；OBS 的 endpoint / AK/SK / bucket 属中间件，走 profile 不进 Admin。
@@ -917,7 +919,7 @@ BGSSAI 产品线有 10 个产品仓、20 个可部署后端，外加集中巡检
 ### 13.6 配置口径
 
 配置前缀全产品线统一为 `bgssai.health.*`（**不得**改成 `app.health.*` / `bgss.health.*` / 产品名前缀）。
-阈值是三环境不变量，按 §1 归入 `application.properties` 主配置，不进 profile 文件，且不得使用 `${}` 占位符：
+阈值是四环境不变量，按 §1 归入 `application.properties` 主配置，不进 profile 文件，且不得使用 `${}` 占位符：
 
 ```properties
 bgssai.health.cache-ttl-ms=2000

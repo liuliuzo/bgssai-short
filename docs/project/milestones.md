@@ -9,7 +9,7 @@
 
 | 事项 | 状态 | 落点 |
 | --- | --- | --- |
-| 双端工程结构（管理端 8080 / 3001、用户端 8081 / 3002） | 已完成 | `bgssai-short-admin/**`、`bgssai-short-user/**` |
+| 双端工程结构（管理端 8080 / 3001、用户端 8080 / 3002） | 已完成 | `bgssai-short-admin/**`、`bgssai-short-user/**` |
 | 后端包名与聚合工程改为本产品命名（`com.bgssai.shortai`） | 已完成 | `pom.xml`、各模块 `pom.xml`、`src/main/java/**` |
 | 数据库改为本产品库 `bgssai_short` | 已完成 | `sql/DDL.sql`、`sql/DML.sql`、各 `application-*.properties` |
 | 基础链路（鉴权 / 统一响应 / 分页 / traceId / 限流 / CORS / SPA 回退） | 已完成 | `common/**`、`configuration/**`、`utils/**` |
