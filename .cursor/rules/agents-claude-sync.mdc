@@ -17,6 +17,7 @@ alwaysApply: true
 | 类型 | 文件 |
 |------|------|
 | 全局规范本体 | `bgssai-skeleton/docs/BGSSAI-Standards.md` |
+| 产品线愿景唯一权威 | `bgssai-skeleton/docs/PRODUCT-LINE-VISION.md` |
 | 产品规范副本 | `docs/BGSSAI-Standards.md` 或 `docs/architecture/BGSSAI-Standards.md` |
 | 产品注册表 | `bgssai-database/scripts/products.sh`（10 产品权威清单） |
 
