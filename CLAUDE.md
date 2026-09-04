@@ -106,13 +106,23 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 * **管理端不开放注册**：管理端禁止自助注册 / 开放注册入口与注册接口；管理员账号只通过 `sql/DML.sql`（及 `sql/<env>/DML.sql`）种子写入。不得实现、不得提议管理端注册页或注册 API，除非用户主动改决策。
 * **单会话（后登踢先登）**：登录签发 JWT 携带 `sid`，账户表写入 `current_session_id`；新登录使旧会话失效。被踢请求返回 HTTP 401、body `code=2003`、文案「账号已在其他设备登录」。用户端与管理端均适用。
 
-## GitHub 分支与合并工作流
+## Git 分支（Git Flow，强制）
 
-- 对需要交付文件修改的 GitHub 仓库，先在独立工作分支上完成修改、验证、提交并推送。
+本产品线严格遵循 Git Flow。GitHub 默认分支一律是 **`develop`**。
+
+| 分支 | 用途 | 发布环境 |
+| --- | --- | --- |
+| `feature/*` | Agent / 开发者的工作分支 | 不直接发布 |
+| `develop` | 集成分支（默认分支） | 开发环境 |
+| `release` | 测试冻结 | 测试环境 |
+| `master` | 生产冻结 | 生产环境 |
+
+- **AI Agent 必须先创建自己的 feature 分支再改文件**；禁止直接在 `develop` / `release` / `master` / `main` 上改。
+- Feature 合入 **`develop`**（先开 PR）。`develop` → `release`、`release` → `master` 的晋升同样先开 PR。
+- 开发环境发布 **`develop`**；测试环境发布 **`release`**；生产环境发布 **`master`**。
 - 合并任何分支前，必须先向用户明确询问是否合并；只有用户明确同意后，才能执行合并。
-- 用户未明确同意时，不得合并、开启 auto-merge，或直接推送到 `develop`、`main`、`master`、`Master` 等受保护分支。
+- 用户未明确同意时，不得合并、开启 auto-merge，或直接推送到 `develop`、`release`、`master`、`main`、`Master` 等受保护分支。
 - 用户明确同意合并后，才可以将指定工作分支合并到目标分支并推送远端；合并前应确认目标分支、源分支和待合并 commit。
 - 本地 commit、远端工作分支 push、GitHub PR 创建和分支合并是四个不同状态，不得混淆或省略。
 - 创建或更新 PR 后，最终回复必须显示：仓库、commit SHA、PR 编号与链接、目标分支、`DRAFT` / `OPEN` / `MERGED` / `CLOSED` 状态，以及“等待用户确认合并”或“PR 已合并”。
 - PR 状态查询遵守 **AI 成本红线**：不创建 PR 后持续唤醒的后台监控；在用户下一次交互开始时查询 PR 最新状态即可。
-
