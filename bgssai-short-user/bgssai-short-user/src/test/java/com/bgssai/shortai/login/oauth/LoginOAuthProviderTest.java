@@ -12,7 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.bgssai.shortai.common.exception.BizException;
 
 /**
- * 登录页微信 / 支付宝 / 抖音 / BGSSAI 授权 URL：库凭据为空必须拒绝，配齐后才能拼出平台授权地址。
+ * 登录页微信 / 支付宝 / 抖音 / 百度 / BGSSAI 授权 URL：库凭据为空必须拒绝，配齐后才能拼出平台授权地址。
  */
 class LoginOAuthProviderTest {
 
@@ -44,6 +44,15 @@ class LoginOAuthProviderTest {
         assertEquals("4403", ex.getCode());
     }
 
+    @Test
+    void baidu_blank_credentials_throw() {
+        BaiduOAuthProvider provider = new BaiduOAuthProvider();
+        ReflectionTestUtils.setField(provider, "oauthProperties", redirectOnlyProperties());
+        ReflectionTestUtils.setField(provider, "loginOAuthSecrets", secretsWith(Map.of()));
+        BizException ex = assertThrows(BizException.class, () -> provider.buildAuthorizeUrl("state-1"));
+        assertEquals("4403", ex.getCode());
+        assertEquals("该登录方式暂不可用", ex.getMessage());
+    }
     @Test
     void bgssai_blank_credentials_throw() {
         BgssaiOAuthProvider provider = new BgssaiOAuthProvider();
@@ -96,6 +105,19 @@ class LoginOAuthProviderTest {
     }
 
     @Test
+    void baidu_configured_builds_authorize_url() {
+        BaiduOAuthProvider provider = new BaiduOAuthProvider();
+        ReflectionTestUtils.setField(provider, "oauthProperties", redirectOnlyProperties());
+        ReflectionTestUtils.setField(provider, "loginOAuthSecrets", secretsWith(Map.of(
+                LoginOAuthSecrets.BAIDU_CLIENT_ID, "baidu_api_key",
+                LoginOAuthSecrets.BAIDU_CLIENT_SECRET, "baidu_secret")));
+        String url = provider.buildAuthorizeUrl("csrf-state");
+        assertTrue(url.startsWith("https://openapi.baidu.com/oauth/2.0/authorize?"));
+        assertTrue(url.contains("client_id=baidu_api_key"));
+        assertTrue(url.contains("oauth-callback"));
+        assertTrue(url.contains("state=csrf-state"));
+    }
+    @Test
     void bgssai_configured_builds_authorize_url() {
         BgssaiOAuthProvider provider = new BgssaiOAuthProvider();
         ReflectionTestUtils.setField(provider, "oauthProperties", redirectOnlyProperties());
@@ -118,6 +140,7 @@ class LoginOAuthProviderTest {
         props.getWechat().setRedirectUri(redirect);
         props.getAlipay().setRedirectUri(redirect);
         props.getDouyin().setRedirectUri(redirect);
+        props.getBaidu().setRedirectUri(redirect);
         props.getBgssai().setRedirectUri(redirect);
         return props;
     }
@@ -129,3 +152,4 @@ class LoginOAuthProviderTest {
         });
     }
 }
+

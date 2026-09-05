@@ -1,5 +1,4 @@
-/* 认证页样式：分屏布局（左品牌 Hero + 右认证面板），对齐 bgssai-blog login.css。
-   短剧用户端无短信 / 注册 Tab，本文件不含对应控件样式。 */
+/* 认证页样式：分屏布局（左品牌 Hero + 右认证面板），对齐 bgssai-blog login.css。 */
 
 .login-shell {
   min-height: 100vh;
@@ -267,6 +266,41 @@
   margin: 6px 0 0;
   font-size: 12px;
   color: var(--muted);
+}
+.login-seg {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.login-seg-btn {
+  flex: 1;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--sub);
+  font-size: 13px;
+  cursor: pointer;
+}
+.login-seg-btn.active {
+  border-color: #2563eb;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+.login-code-row {
+  display: flex;
+  gap: 8px;
+}
+.login-code-row .input {
+  flex: 1;
+}
+.login-code-btn {
+  flex: 0 0 auto;
+  min-width: 112px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  cursor: pointer;
 }
 .oauth-grid {
   display: grid;

@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * 登录页微信 / 支付宝 / 抖音 / BGSSAI 官网凭证。只读库（DML STEP LOGIN-OAUTH-1 种子 + 控制台可改），
+ * 登录页微信 / 支付宝 / 抖音 / 百度 / BGSSAI 官网凭证。只读库（DML STEP LOGIN-OAUTH-1 种子 + 控制台可改），
  * 不读 application-*.properties（Standards §1）。缺失时返回空串，由 Provider 转「该登录方式暂不可用」。
  */
 @Component
@@ -20,6 +20,8 @@ public class LoginOAuthSecrets {
     public static final String ALIPAY_PUBLIC_KEY = "bgssai.oauth.alipay.alipay-public-key";
     public static final String DOUYIN_CLIENT_KEY = "bgssai.oauth.douyin.client-key";
     public static final String DOUYIN_CLIENT_SECRET = "bgssai.oauth.douyin.client-secret";
+    public static final String BAIDU_CLIENT_ID = "bgssai.oauth.baidu.client-id";
+    public static final String BAIDU_CLIENT_SECRET = "bgssai.oauth.baidu.client-secret";
     public static final String BGSSAI_CLIENT_ID = "bgssai.oauth.bgssai.client-id";
     public static final String BGSSAI_CLIENT_SECRET = "bgssai.oauth.bgssai.client-secret";
 
@@ -79,6 +81,14 @@ public class LoginOAuthSecrets {
         return value(DOUYIN_CLIENT_SECRET);
     }
 
+    public String baiduClientId() {
+        return value(BAIDU_CLIENT_ID);
+    }
+
+    public String baiduClientSecret() {
+        return value(BAIDU_CLIENT_SECRET);
+    }
+
     public String bgssaiClientId() {
         return value(BGSSAI_CLIENT_ID);
     }
@@ -92,3 +102,4 @@ public class LoginOAuthSecrets {
         return raw == null ? "" : raw.trim();
     }
 }
+

@@ -26,9 +26,20 @@
 }
 ```
 
-- `login_type`：为契约对称保留，当前仅 `password` 生效。
+- `login_type`：密码登录为 `password`。短信 / 邮箱验证码走独立端点（见 §1.1）。
 - `identifier`：登录账号（`sys_user.user_name`）。
 - `password`：密码（后端 哈希校验，兼容历史明文并首登升级）。
+
+## 1.1 验证码登录即注册（仅用户端）
+
+公开接口（无需 token，无 `@NeedAop`）。未注册标识符现场建号。
+
+- `POST /bgssai/user/sms/send` `{ "phone": "13800138000" }` → `{ expires_in: 300 }`；凭据缺失 `5203`。
+- `POST /bgssai/user/login/sms` `{ "phone": "13800138000", "code": "123456" }`，成功形状与密码登录一致，可带 `is_new_user`。
+- `POST /bgssai/user/email/send` `{ "email": "buyer@example.com" }`；凭据缺失 `5204`。
+- `POST /bgssai/user/login/email` `{ "email": "buyer@example.com", "email_code": "123456" }`。
+
+短信 / SMTP 凭据读 `sys_secret`（DML STEP SMS-1 / SMTP-1），不新增 Admin 页。
 
 ### 成功响应
 

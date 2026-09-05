@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { message } from 'antd'
 import authApi from '../../api/auth'
@@ -32,11 +32,24 @@ function IconEye({ size = 18 }) {
 export default function Login() {
   const navigate = useNavigate()
   const setUserInfo = useUserStore((s) => s.setUserInfo)
+  const [loginMethod, setLoginMethod] = useState('password')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
+  const [smsCode, setSmsCode] = useState('')
+  const [email, setEmail] = useState('')
+  const [emailCode, setEmailCode] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const { startWechatFastLogin, wechatFastLoginDialog } = useWechatFastLogin()
+
+  useEffect(() => {
+    if (countdown <= 0) return undefined
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [countdown])
 
   const loginSucceed = (result) => {
     if (!isAllowedRole(result)) {
@@ -48,17 +61,69 @@ export default function Login() {
     navigate('/home', { replace: true })
   }
 
+  const sendCode = async () => {
+    if (countdown > 0 || sending) return
+    setSending(true)
+    try {
+      if (loginMethod === 'sms') {
+        const phoneTrim = phone.trim()
+        if (!/^1[3-9]\d{9}$/.test(phoneTrim)) {
+          message.warning('请输入正确的手机号')
+          return
+        }
+        const { data } = await authApi.sendSms({ phone: phoneTrim })
+        if (CODE_OK.has(data && data.code)) {
+          setCountdown(60)
+          message.success('验证码已发送')
+        }
+      } else if (loginMethod === 'email') {
+        const emailTrim = email.trim()
+        if (!emailTrim.includes('@')) {
+          message.warning('请输入正确的邮箱')
+          return
+        }
+        const { data } = await authApi.sendEmail({ email: emailTrim })
+        if (CODE_OK.has(data && data.code)) {
+          setCountdown(60)
+          message.success('验证码已发送')
+        }
+      }
+    } finally {
+      setSending(false)
+    }
+  }
+
   const submit = async () => {
-    if (!identifier.trim()) {
-      message.warning('请输入账号')
-      return
-    }
-    if (!password) {
-      message.warning('请输入密码')
-      return
-    }
     setBusy(true)
     try {
+      if (loginMethod === 'sms') {
+        if (!/^1[3-9]\d{9}$/.test(phone.trim()) || !/^\d{6}$/.test(smsCode.trim())) {
+          message.warning('请输入手机号和 6 位验证码')
+          return
+        }
+        const { data } = await authApi.loginSms({ phone: phone.trim(), code: smsCode.trim() })
+        const r = (data && data.result) || {}
+        if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
+        return
+      }
+      if (loginMethod === 'email') {
+        if (!email.trim().includes('@') || !/^\d{6}$/.test(emailCode.trim())) {
+          message.warning('请输入邮箱和 6 位验证码')
+          return
+        }
+        const { data } = await authApi.loginEmail({ email: email.trim(), email_code: emailCode.trim() })
+        const r = (data && data.result) || {}
+        if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
+        return
+      }
+      if (!identifier.trim()) {
+        message.warning('请输入账号')
+        return
+      }
+      if (!password) {
+        message.warning('请输入密码')
+        return
+      }
       const { data } = await authApi.login({
         login_type: 'password',
         identifier: identifier.trim(),
@@ -143,6 +208,52 @@ export default function Login() {
           <h2 className="login-head">欢迎回来</h2>
           <p className="login-sub">登录以继续你的短剧制作</p>
 
+          <div className="login-seg" role="tablist" aria-label="登录方式">
+            <button type="button" className={`login-seg-btn${loginMethod === 'password' ? ' active' : ''}`} onClick={() => setLoginMethod('password')}>密码登录</button>
+            <button type="button" className={`login-seg-btn${loginMethod === 'sms' ? ' active' : ''}`} onClick={() => setLoginMethod('sms')}>手机验证码</button>
+            <button type="button" className={`login-seg-btn${loginMethod === 'email' ? ' active' : ''}`} onClick={() => setLoginMethod('email')}>邮箱验证码</button>
+          </div>
+
+          {loginMethod === 'sms' && (
+            <>
+              <div className="field">
+                <label htmlFor="login-phone">手机号</label>
+                <input id="login-phone" className="input" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="11 位手机号" maxLength={11} />
+              </div>
+              <div className="field">
+                <label htmlFor="login-sms-code">短信验证码</label>
+                <div className="login-code-row">
+                  <input id="login-sms-code" className="input" value={smsCode} onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位验证码" maxLength={6} />
+                  <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
+                    {countdown > 0 ? `${countdown}s` : sending ? '发送中...' : '获取验证码'}
+                  </button>
+                </div>
+                <p className="login-note">未注册的手机号将自动创建账号</p>
+              </div>
+            </>
+          )}
+
+          {loginMethod === 'email' && (
+            <>
+              <div className="field">
+                <label htmlFor="login-email">邮箱</label>
+                <input id="login-email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
+              </div>
+              <div className="field">
+                <label htmlFor="login-email-code">邮箱验证码</label>
+                <div className="login-code-row">
+                  <input id="login-email-code" className="input" value={emailCode} onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位验证码" maxLength={6} />
+                  <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
+                    {countdown > 0 ? `${countdown}s` : sending ? '发送中...' : '获取验证码'}
+                  </button>
+                </div>
+                <p className="login-note">未注册的邮箱将自动创建账号</p>
+              </div>
+            </>
+          )}
+
+          {loginMethod === 'password' && (
+            <>
           <div className="field">
             <label htmlFor="login-identifier">账号</label>
             <input
@@ -184,6 +295,8 @@ export default function Login() {
               </button>
             </div>
           </div>
+            </>
+          )}
 
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
             {busy ? '处理中...' : '登录'}
