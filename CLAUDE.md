@@ -15,7 +15,7 @@ Tokenhub / Tokenhub-CN 是产品线模型中枢：对接主流模型原生 API�
 
 `bgssai-docmost` 与 `bgssai-build` 是研发解决方案，不是第 1 条工具，也不上官网。Build 写代码时把软件工程文档写入 Docmost；用户从 Docmost 站点下载 Build。
 
-有用户端的应用必须支持账号密码、手机验证码、邮箱验证码登录。境内授权登录：微信、抖音、百度、支付宝。境外（saas-global / geo-global / tokenhub-global）：Google、GitHub。官网无登录。管理端不开放注册。
+有用户端的应用必须支持账号密码、邮箱验证码、手机验证码登录。中国大陆境内应用另需微信、抖音、百度、支付宝登录。中国大陆境外应用另需 Google 账户与 GitHub 登录。中心账号（bgssai-chat）同时服务境内与境外，上述渠道都要有。官网无登录。管理端不开放注册。Tokenhub 不是业务 App，无用户登录。
 
 愿景唯一权威：`bgssai-skeleton/docs/PRODUCT-LINE-VISION.md`。本段是各仓副本，变更以该文件为准。
 
