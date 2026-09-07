@@ -1,9 +1,11 @@
 package com.bgssai.shortai.configuration;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -25,11 +27,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class SpaFallbackConfig implements WebMvcConfigurer {
 
+    private final Environment environment;
+
+    public SpaFallbackConfig(Environment environment) {
+        this.environment = environment;
+    }
+
     /**
      * Top-level front-end route prefix whitelist.
      * Never add {@code /bgssai} (API) or {@code /assets} (static resources).
      */
     private static final List<String> SPA_ROUTE_PREFIXES = Arrays.asList(
+            "/download",
             "/login",
             "/oauth-callback",
             "/home",
@@ -48,4 +57,13 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
             registry.addViewController(prefix + "/**").setViewName("forward:/index.html");
         }
     }
+
+    @Override
+    public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+        Path downloadDirectory = Path.of(environment.getProperty(
+                "bgssai.bot.download.directory", "downloads/bot")).toAbsolutePath().normalize();
+        registry.addResourceHandler("/downloads/bot/**")
+                .addResourceLocations(downloadDirectory.toUri().toString());
+    }
 }
+
