@@ -119,6 +119,19 @@ class TencentTokenHubAiProviderTest {
         assertTrue(http.postedUrls.isEmpty());
     }
 
+    @Test
+    void textPrefersBgssaiTokenhubWhenGatewayConfigured() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"choices\":[{\"message\":{\"content\":\"hub\"}}],\"usage\":{\"total_tokens\":3}}");
+        TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
+                new SysSecretReader(secretRef -> "native-key"), http, ms -> {
+                }, "https://www.bgssai-tokenhub-cn.com/", "sk-hub");
+        AiProviderResult result = provider.execute(request("TEXT", "hy4-preview", "写剧本"));
+        assertEquals("hub", result.getTextContent());
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub-cn.com/v1/chat/completions"));
+        assertEquals("Bearer sk-hub", http.postedHeaders.get(0).get("Authorization"));
+    }
+
     private static TencentTokenHubAiProvider provider(FakeClient http, String key) {
         return new TencentTokenHubAiProvider(new SysSecretReader(secretRef -> key), http, ms -> {
         });

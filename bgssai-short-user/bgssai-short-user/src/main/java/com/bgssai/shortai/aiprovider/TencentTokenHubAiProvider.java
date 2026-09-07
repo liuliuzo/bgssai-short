@@ -11,6 +11,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
@@ -47,21 +48,32 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private final SysSecretReader secretReader;
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
+    private final String gatewayBaseUrl;
+    private final String gatewayApiKey;
 
     @Autowired
-    public TencentTokenHubAiProvider(SysSecretReader secretReader) {
+    public TencentTokenHubAiProvider(SysSecretReader secretReader,
+            @Value("${bgssai.llm.gateway-base-url:}") String gatewayBaseUrl,
+            @Value("${bgssai.llm.gateway-api-key:}") String gatewayApiKey) {
         this(secretReader, new ProviderHttp.JdkClient(), ms -> {
             if (ms > 0) {
                 Thread.sleep(ms);
             }
-        });
+        }, gatewayBaseUrl, gatewayApiKey);
     }
 
     TencentTokenHubAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
             ProviderHttp.Sleeper sleeper) {
+        this(secretReader, http, sleeper, "", "");
+    }
+
+    TencentTokenHubAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
+            ProviderHttp.Sleeper sleeper, String gatewayBaseUrl, String gatewayApiKey) {
         this.secretReader = secretReader;
         this.http = http;
         this.sleeper = sleeper;
+        this.gatewayBaseUrl = ProviderHttp.trimSlash(gatewayBaseUrl == null ? "" : gatewayBaseUrl);
+        this.gatewayApiKey = gatewayApiKey == null ? "" : gatewayApiKey.trim();
     }
 
     @Override
@@ -80,11 +92,15 @@ public class TencentTokenHubAiProvider implements AiProvider {
         String ref = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
                 SysSecretReader.AI_TENCENT_TOKENHUB_API_KEY);
         String apiKey = secretReader.get(ref);
+        String ability = request.getAbilityType() == null ? "" : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
+        if ("TEXT".equals(ability) && !gatewayBaseUrl.isBlank() && !gatewayApiKey.isBlank()) {
+            base = gatewayBaseUrl;
+            apiKey = gatewayApiKey;
+        }
         if (apiKey.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "AI api key missing for " + ref);
         }
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
-        String ability = request.getAbilityType() == null ? "" : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
         try {
             return switch (ability) {
                 case "TEXT" -> text(base, apiKey, cfg, request, timeoutSec);
