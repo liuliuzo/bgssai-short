@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 原著导入与改编</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">原著改编 · 42 章已导入</div>
+    </div>
+
+    <a class="side-link" href="works.html" style="margin-top:8px">我的作品</a>
+    <a class="side-link active" href="script-studio.html">总剧本</a>
+    <a class="side-link" href="storyboard.html">创作台</a>
+    <a class="side-link" href="compose-export.html">出片</a>
+
+    <div class="side-sec">其它</div>
+    <a class="side-link" href="usage-billing.html">账单</a>
+    <a class="side-link" href="work-detail.html">更多功能</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+        <a href="script-studio.html">总剧本</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">原著导入与改编</span>
+      <span class="spacer"></span>
+      <a class="btn btn-default btn-sm" href="script-studio.html">回到总剧本</a>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot done"></span>剧集看板</a>
+      <a href="source-import.html" class="active"><span class="dot done"></span>原著导入</a>
+      <a href="script-studio.html"><span class="dot doing"></span>剧本</a>
+      <a href="story-map.html"><span class="dot"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot"></span>分镜</a>
+      <a href="task-center.html"><span class="dot"></span>画面生成</a>
+      <a href="compose-export.html"><span class="dot"></span>合成导出</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="note" style="margin-bottom:14px">
+        手里有网文、有写好的剧本、有做完的大纲，就不必再从「一句话梗概」重编一遍。
+        导进来自动分章，选几章、要几集，直接出大纲，每一集都标着取自原文哪几章。
+      </div>
+
+      <div class="grid grid-side">
+        <div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>导入原文</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">上限 100 万字符</span>
+            </div>
+
+            <div class="field">
+              <label>源类型</label>
+              <div class="opts">
+                <span class="chip active">小说全文</span>
+                <span class="chip">成品剧本</span>
+                <span class="chip">分集大纲</span>
+              </div>
+              <div class="hint">
+                小说要改编成大纲与剧本；成品剧本按场次直接落到剧本层，不再生成台词；
+                分集大纲直接落大纲层，跳过大纲生成这一步。
+              </div>
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label>作品名 / 原著名</label>
+                <input value="退婚三年后她成了首富" />
+              </div>
+              <div class="field">
+                <label>录入方式</label>
+                <div class="opts">
+                  <span class="chip active">粘贴文本</span>
+                  <span class="chip">选择文件（txt / md）</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>原文</label>
+              <textarea rows="7">第一章 退婚
+
+三年前那纸退婚书，是沈知微亲手签的。
+那天陆家老宅下着雨，陆时衍把笔推到她面前，一个字也没说……
+
+第二章 归来</textarea>
+              <div class="hint">已粘贴 121 840 字符 · 预计切出 42 章</div>
+            </div>
+
+            <div class="field">
+              <label>权利确认</label>
+              <div class="opts"><span class="chip active">我确认对本内容拥有合法使用权或已获授权</span></div>
+              <div class="hint">
+                不勾选无法导入。这一项不做成可跳过的提示：导入他人作品改编再发行是本产品最现实的
+                法律风险，勾选动作与时间会一并留痕。
+              </div>
+            </div>
+
+            <button class="btn btn-primary">导入并自动分章</button>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>分章结果</h2>
+              <span class="st done">42 章 · 121 840 字</span>
+              <span class="spacer"></span>
+              <button class="btn btn-default btn-sm">合并选中</button>
+              <button class="btn btn-default btn-sm">在此拆分</button>
+              <button class="btn btn-primary btn-sm">保存分章</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th style="width:46px">选</th><th style="width:70px">章号</th><th style="width:200px">章节标题</th><th>开头</th><th style="width:80px">字数</th></tr></thead>
+                <tbody>
+                  <tr><td><input type="checkbox" checked /></td><td class="mono">1</td><td>退婚</td><td class="text-sub">三年前那纸退婚书，是沈知微亲手签的……</td><td>3 240</td></tr>
+                  <tr><td><input type="checkbox" checked /></td><td class="mono">2</td><td>归来</td><td class="text-sub">机场落地那天，财经头条上是她的名字……</td><td>2 980</td></tr>
+                  <tr><td><input type="checkbox" checked /></td><td class="mono">3</td><td>会议室</td><td class="text-sub">这份收购案，谁批准的？全场死寂……</td><td>4 110</td></tr>
+                  <tr><td><input type="checkbox" checked /></td><td class="mono">4</td><td>旧账</td><td class="text-sub">陆时衍翻着那份三年前的转账记录……</td><td>3 620</td></tr>
+                  <tr><td><input type="checkbox" checked /></td><td class="mono">5</td><td>雨夜</td><td class="text-sub">雨又下起来了，和三年前那天一样大……</td><td>4 470</td></tr>
+                  <tr><td><input type="checkbox" /></td><td class="mono">6</td><td>宴会</td><td class="text-sub">沈宛如端着酒杯走过来时，笑得很稳……</td><td>3 050</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-body" style="padding-top:10px">
+              <div class="note note-warn" style="margin:0">
+                自动分章在网文里出错是常态——有人用「第一章」，有人用空行，有人两者都不用。
+                所以这张表是<strong>可改的</strong>：标题能改、相邻章能合并、长章能在光标处拆开。
+                不给纠正入口，等于逼你回去改原文再传一遍。
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>改编成分集大纲</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">费用先算后花</span>
+            </div>
+            <div class="grid grid-3">
+              <div class="field"><label>起始章</label><select><option>第 1 章 退婚</option></select></div>
+              <div class="field"><label>结束章</label><select><option>第 5 章 雨夜</option></select></div>
+              <div class="field"><label>改成几集</label><input value="6" /></div>
+            </div>
+            <div class="field">
+              <label>文本模型</label>
+              <select><option>Hy4</option><option>Kimi K3</option><option>DeepSeek-V4-Pro</option></select>
+            </div>
+            <div class="note" style="margin-bottom:10px">
+              本次涉及 <strong>18 420 字</strong>（第 1-5 章），改成 6 集，预计花费
+              <strong>0.12 元</strong>。已定稿的 3 集正文不会被覆盖，只更新大纲层。
+            </div>
+            <button class="btn btn-primary">确认改编</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>改编出的大纲</h2><span class="spacer"></span><span class="st doing">6 集</span></div>
+            <div style="font-size:12px; line-height:1.9">
+              <div class="row"><span class="st done" style="width:44px">E01</span> 退婚夜签字 <span class="text-muted">取自第 1 章</span></div>
+              <div class="row"><span class="st done" style="width:44px">E02</span> 三年后归来 <span class="text-muted">取自第 2 章</span></div>
+              <div class="row"><span class="st done" style="width:44px">E03</span> 会议室夺权 <span class="text-muted">取自第 3 章</span></div>
+              <div class="row"><span class="st doing" style="width:44px">E04</span> 旧账翻出 <span class="text-muted">取自第 4 章</span></div>
+              <div class="row"><span class="st doing" style="width:44px">E05</span> 雨夜对峙 上 <span class="text-muted">取自第 5 章</span></div>
+              <div class="row"><span class="st doing" style="width:44px">E06</span> 雨夜对峙 下 <span class="text-muted">取自第 5 章</span></div>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              每集都记着自己取自原文哪几章，改稿时点一下就能把原文调出来对照，
+              不用自己在几十万字里翻。
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd"><h2>改编稿一样要过节奏体检</h2></div>
+            <div class="kv" style="grid-template-columns:100px 1fr">
+              <div class="k">开场钩子</div><div><span class="text-warn font-bold">48</span> 前 3 秒在交代背景，没有冲突</div>
+              <div class="k">打点密度</div><div><span class="text-warn font-bold">52</span> 第 20-45 秒是平的</div>
+              <div class="k">台词口语度</div><div><span class="text-err font-bold">41</span> 书面词偏多，旁白占 38%</div>
+              <div class="k">结尾悬念</div><div><span class="text-ok font-bold">78</span> 末尾留了未解决问题</div>
+              <div class="k">总分</div><div><span class="text-err font-bold">55</span> 低于 60，不能直接定稿</div>
+            </div>
+            <div class="note note-warn" style="margin:10px 0 0">
+              这三个偏低的分不是偶然——<strong>它们正是「小说腔」的样子</strong>：铺垫长、对白书面、
+              一集讲不完一个爽点。有原著<strong>不是</strong>节奏合格的理由，
+              改编稿和原创稿走同一套体检；给改编开口子，这个功能就变成批量生产小说腔短剧的机器了。
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd"><h2>已导入的源</h2></div>
+            <div style="font-size:12px; line-height:2.1">
+              <div class="row"><span class="st done" style="width:60px">小说</span> 退婚三年后她成了首富 · 42 章 · 已改编</div>
+              <div class="row"><span class="st" style="width:60px">剧本</span> 都市奇缘 分场稿 · 18 场 · 未改编</div>
+              <div class="row"><span class="st" style="width:60px">大纲</span> 重生之我在古代卖奶茶 · 30 集 · 未改编</div>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              一份原文可以改编出多部作品——24 集爽剧版和 12 集精编版各试一版，互不影响。
+              删掉原文也不会毁掉已经做出来的片子，只是出处位置改显示「原文已删除」。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>POST /bgssai/user/sources/import</code>（<code>work_id</code> ·
+        <code>source_type</code>（<code>NOVEL</code> / <code>SCRIPT</code> / <code>OUTLINE</code>）·
+        <code>source_title</code> · <code>source_content</code> · <code>rights_confirm_flag</code>，
+        返回 <code>source_id</code> · <code>chapter_count</code> · <code>char_count</code>）；
+        <code>GET /bgssai/user/sources/list?work_id&amp;page_num&amp;page_size</code>；
+        <code>GET /bgssai/user/sources/detail?source_id&amp;page_num&amp;page_size</code>
+        （分页返回 <code>chapter_no</code> · <code>chapter_title</code> · <code>chapter_text</code> ·
+        <code>char_count</code>）；
+        <code>POST /bgssai/user/sources/chapters-save</code>（整份替换 <code>chapter_list</code>）；
+        <code>POST /bgssai/user/sources/adapt-estimate</code>（返回 <code>char_count</code> ·
+        <code>estimated_cost_cent</code>）；<code>POST /bgssai/user/sources/adapt</code>
+        （<code>chapter_no_from</code> · <code>chapter_no_to</code> · <code>target_episode_count</code> ·
+        可选 <code>model_code</code>，返回 <code>task_id</code>，<code>target_type=ADAPT_OUTLINE</code>）；
+        <code>POST /bgssai/user/sources/delete</code>。
+        出处：每集 <code>source_ref_json</code> = <code>{ source_id, chapter_no_list }</code>。
+        <code>import_status</code>：<code>IMPORTED</code> -&gt; <code>ADAPTED</code>。
+        错误码：<code>50000001</code> 未勾选权利确认 / 超字数 / 章节范围非法，<code>4003</code> 越权，
+        <code>4006</code> 源已删除或无可用章节，<code>4007</code> 余额不足，<code>429000</code> 限流。
+        需求见 source-import.md。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

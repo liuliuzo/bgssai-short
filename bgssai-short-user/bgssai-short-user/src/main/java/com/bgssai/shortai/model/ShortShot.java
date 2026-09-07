@@ -62,6 +62,12 @@ public class ShortShot implements Serializable {
 
     private String firstFrameAssetId;
 
+    private String lastFrameAssetId;
+
+    private String frameLinkMode;
+
+    private String lastFramePrompt;
+
     private String videoAssetId;
 
     private Integer retryCount;
@@ -298,6 +304,30 @@ public class ShortShot implements Serializable {
 
     public void setFirstFrameAssetId(String firstFrameAssetId) {
         this.firstFrameAssetId = firstFrameAssetId == null ? null : firstFrameAssetId.trim();
+    }
+
+    public String getLastFrameAssetId() {
+        return lastFrameAssetId;
+    }
+
+    public void setLastFrameAssetId(String lastFrameAssetId) {
+        this.lastFrameAssetId = lastFrameAssetId == null ? null : lastFrameAssetId.trim();
+    }
+
+    public String getFrameLinkMode() {
+        return frameLinkMode;
+    }
+
+    public void setFrameLinkMode(String frameLinkMode) {
+        this.frameLinkMode = frameLinkMode == null ? null : frameLinkMode.trim();
+    }
+
+    public String getLastFramePrompt() {
+        return lastFramePrompt;
+    }
+
+    public void setLastFramePrompt(String lastFramePrompt) {
+        this.lastFramePrompt = lastFramePrompt == null ? null : lastFramePrompt.trim();
     }
 
     public String getVideoAssetId() {

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>首尾帧衔接：同场次才接，换场本来就该跳 — bgssai short feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .frame { fill:#dbeafe; stroke:var(--accent); stroke-width:1; }
+  svg .frameEnd { fill:#dcfce7; stroke:var(--ok); stroke-width:1; }
+</style>
+</head>
+<body>
+
+<h1>首尾帧衔接：接哪里、不接哪里，以及为什么不接也是对的</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>尾帧来源 · 三种衔接模式 · 跨场降级 · 上游变更标记</dd>
+  <dt>关联</dt><dd>frame-continuity.md · shot-generation.md · previz-text-storyboard.md</dd>
+  <dt>更新</dt><dd>2026-09-07</dd>
+</dl>
+
+<h2>一、同一场次内接得上，跨场自动不接</h2>
+<svg viewBox="0 0 1040 260" width="1040" height="260">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <text class="lbl" x="20" y="30">场次 3（雨夜车内）</text>
+
+  <rect class="box" x="20" y="45" width="200" height="90" rx="4"/>
+  <text class="lbl" x="120" y="66" text-anchor="middle">镜 4</text>
+  <rect class="frame" x="34" y="78" width="80" height="44" rx="2"/>
+  <text class="small" x="74" y="104" text-anchor="middle">首帧</text>
+  <rect class="frameEnd" x="126" y="78" width="80" height="44" rx="2"/>
+  <text class="small" x="166" y="104" text-anchor="middle">尾帧</text>
+
+  <path class="arr accent" d="M 220 100 L 290 100"/>
+  <text class="small" x="255" y="92" text-anchor="middle">接</text>
+
+  <rect class="box" x="290" y="45" width="200" height="90" rx="4"/>
+  <text class="lbl" x="390" y="66" text-anchor="middle">镜 5（INHERIT_PREV）</text>
+  <rect class="frameEnd" x="304" y="78" width="80" height="44" rx="2"/>
+  <text class="small" x="344" y="98" text-anchor="middle">用镜 4 尾帧</text>
+  <text class="small" x="344" y="112" text-anchor="middle">作开头依据</text>
+  <rect class="frameEnd" x="396" y="78" width="80" height="44" rx="2"/>
+  <text class="small" x="436" y="104" text-anchor="middle">尾帧</text>
+
+  <path class="arr errline" d="M 490 100 L 560 100"/>
+  <text class="small" x="525" y="92" text-anchor="middle">不接</text>
+
+  <text class="lbl" x="560" y="30">场次 4（次日办公室）</text>
+
+  <rect class="warnbox" x="560" y="45" width="220" height="90" rx="4"/>
+  <text class="lbl" x="670" y="66" text-anchor="middle">镜 6（跨场）</text>
+  <text class="small" x="670" y="90" text-anchor="middle">即使设了 INHERIT_PREV</text>
+  <text class="small" x="670" y="106" text-anchor="middle">也降级为 NONE</text>
+  <text class="small" x="670" y="122" text-anchor="middle">界面标注「跨场不衔接」</text>
+
+  <rect class="box" x="800" y="45" width="220" height="90" rx="4"/>
+  <text class="lbl" x="910" y="70" text-anchor="middle">这不是缺陷</text>
+  <text class="small" x="910" y="94" text-anchor="middle">换场本来就该跳，这是剪辑语言</text>
+  <text class="small" x="910" y="112" text-anchor="middle">拿雨夜车内的尾帧当办公室开头</text>
+  <text class="small" x="910" y="128" text-anchor="middle">比不接更糟</text>
+
+  <text class="lbl" x="20" y="175">三种模式</text>
+  <rect class="box" x="20" y="190" width="320" height="55" rx="4"/>
+  <text class="lbl" x="180" y="212" text-anchor="middle">NONE（默认）</text>
+  <text class="small" x="180" y="232" text-anchor="middle">各拍各的，与现状一致</text>
+
+  <rect class="run" x="360" y="190" width="320" height="55" rx="4"/>
+  <text class="lbl" x="520" y="212" text-anchor="middle">INHERIT_PREV</text>
+  <text class="small" x="520" y="232" text-anchor="middle">上一镜尾帧作本镜首帧参考</text>
+
+  <rect class="done" x="700" y="190" width="320" height="55" rx="4"/>
+  <text class="lbl" x="860" y="212" text-anchor="middle">BOOKEND</text>
+  <text class="small" x="860" y="232" text-anchor="middle">首尾帧同时送模型，中间由模型补运动</text>
+</svg>
+
+<h2>二、尾帧从哪来：抽帧免费且必然一致，出图适合还没抽视频时先定方向</h2>
+<svg viewBox="0 0 1040 240" width="1040" height="240">
+  <rect class="box" x="20" y="40" width="200" height="60" rx="4"/>
+  <text class="lbl" x="120" y="64" text-anchor="middle">本镜视频生成成功</text>
+  <text class="small" x="120" y="84" text-anchor="middle">VIDEO 任务完成</text>
+
+  <path class="arr" d="M 220 70 L 300 70"/>
+
+  <rect class="done" x="300" y="40" width="260" height="60" rx="4"/>
+  <text class="lbl" x="430" y="64" text-anchor="middle">本机 ffmpeg 抽最后一帧</text>
+  <text class="small" x="430" y="84" text-anchor="middle">零费用，且与视频画面必然一致</text>
+
+  <rect class="run" x="20" y="140" width="200" height="60" rx="4"/>
+  <text class="lbl" x="120" y="164" text-anchor="middle">还没出视频</text>
+  <text class="small" x="120" y="184" text-anchor="middle">但想先定往哪收</text>
+
+  <path class="arr" d="M 220 170 L 300 170"/>
+
+  <rect class="warnbox" x="300" y="140" width="260" height="60" rx="4"/>
+  <text class="lbl" x="430" y="164" text-anchor="middle">按尾帧提示词单独出图</text>
+  <text class="small" x="430" y="184" text-anchor="middle">走 IMAGE 单价计费</text>
+
+  <path class="arr" d="M 560 70 L 640 105"/>
+  <path class="arr" d="M 560 170 L 640 135"/>
+
+  <rect class="box" x="640" y="90" width="380" height="60" rx="4"/>
+  <text class="lbl" x="830" y="114" text-anchor="middle">落 short_shot.last_frame_asset_id</text>
+  <text class="small" x="830" y="134" text-anchor="middle">下一镜的 INHERIT_PREV 从这里取参考</text>
+</svg>
+<p class="note">
+  ffmpeg 缺失时抽帧任务明确失败并提示「本机未安装 ffmpeg」，与成片合成同一条口径——
+  不静默跳过，否则用户会以为衔接开着，实际每一镜都在各拍各的。
+</p>
+
+<h2>三、模型不支持首尾帧时直接拒绝，不悄悄降级</h2>
+<svg viewBox="0 0 1040 200" width="1040" height="200">
+  <rect class="box" x="20" y="60" width="220" height="70" rx="4"/>
+  <text class="lbl" x="130" y="86" text-anchor="middle">设了 BOOKEND</text>
+  <text class="small" x="130" y="108" text-anchor="middle">提交视频生成</text>
+
+  <path class="arr" d="M 240 95 L 320 95"/>
+
+  <rect class="run" x="320" y="55" width="260" height="80" rx="4"/>
+  <text class="lbl" x="450" y="80" text-anchor="middle">查模型能力</text>
+  <text class="small" x="450" y="102" text-anchor="middle">config_json.support_last_frame</text>
+  <text class="small" x="450" y="120" text-anchor="middle">1 支持 / 缺省 0 不支持</text>
+
+  <path class="arr" d="M 580 78 L 660 60"/>
+  <path class="arr errline" d="M 580 112 L 660 140"/>
+
+  <rect class="done" x="660" y="30" width="360" height="60" rx="4"/>
+  <text class="lbl" x="840" y="54" text-anchor="middle">支持：首尾帧一起送</text>
+  <text class="small" x="840" y="74" text-anchor="middle">MiniMax role=last_frame · Kling type=last_frame</text>
+
+  <rect class="fail" x="660" y="110" width="360" height="70" rx="4"/>
+  <text class="lbl" x="840" y="134" text-anchor="middle">不支持：直接拒绝（4006）</text>
+  <text class="small" x="840" y="154" text-anchor="middle">提示换模型或改用 INHERIT_PREV</text>
+  <text class="small" x="840" y="172" text-anchor="middle">不做「悄悄丢掉尾帧照样出片」的兜底</text>
+</svg>
+<p class="note">
+  「以为按首尾帧生成、实际只用了首帧」是最难查的一类问题：片子出来了、也没报错，
+  只是接得不好，创作者会去怀疑提示词、怀疑模型、反复重抽，唯独想不到尾帧根本没送出去。
+  所以这里宁可拒绝。
+</p>
+
+<h2>四、上游尾帧变了，只标记不自动重抽</h2>
+<svg viewBox="0 0 1040 170" width="1040" height="170">
+  <rect class="box" x="20" y="55" width="220" height="60" rx="4"/>
+  <text class="lbl" x="130" y="79" text-anchor="middle">镜 4 重抽视频</text>
+  <text class="small" x="130" y="99" text-anchor="middle">尾帧随之变化</text>
+
+  <path class="arr warnline" d="M 240 85 L 320 85"/>
+
+  <rect class="warnbox" x="320" y="45" width="300" height="80" rx="4"/>
+  <text class="lbl" x="470" y="70" text-anchor="middle">镜 5 置 stale_flag=1</text>
+  <text class="small" x="470" y="92" text-anchor="middle">条件：同场次且 INHERIT_PREV</text>
+  <text class="small" x="470" y="110" text-anchor="middle">页面提示「上一镜尾帧已变，本镜可能接不上」</text>
+
+  <path class="arr" d="M 620 85 L 700 85"/>
+
+  <rect class="box" x="700" y="45" width="320" height="80" rx="4"/>
+  <text class="lbl" x="860" y="70" text-anchor="middle">不自动重抽</text>
+  <text class="small" x="860" y="92" text-anchor="middle">重抽要花钱，花不花由创作者定</text>
+  <text class="small" x="860" y="110" text-anchor="middle">与预算闸门、批量准入是同一条产品原则</text>
+</svg>
+
+</body>
+</html>

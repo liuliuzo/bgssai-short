@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 分镜画布</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+  <style>
+    .canvas { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; overflow-x:auto; }
+    .lane-row { display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; background:#fff;
+                border:1px solid #eef2f7; margin-bottom:10px; }
+    .lane-name { width:132px; flex-shrink:0; font-size:12px; color:#64748b; line-height:1.4; }
+    .node { width:78px; flex-shrink:0; border-radius:6px; border:1px solid #94a3b8; background:#f1f5f9;
+            padding:6px; font-size:11px; cursor:grab; }
+    .node .n-thumb { height:52px; border-radius:4px; background:#e2e8f0; margin-bottom:4px;
+                     display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:10px; }
+    .node .n-no { font-weight:700; }
+    .node .n-meta { color:#64748b; }
+    .n-text { background:#dbeafe; border-color:#2563eb; }
+    .n-draft { background:#ede9fe; border-color:#7c3aed; }
+    .n-image { background:#cffafe; border-color:#0891b2; }
+    .n-video { background:#dcfce7; border-color:#059669; }
+    .n-fail { background:#fee2e2; border-color:#dc2626; }
+    .n-stale { background:#dcfce7; border-color:#d97706; border-width:2px; }
+    .n-locked { opacity:.75; cursor:not-allowed; }
+    .n-selected { box-shadow:0 0 0 2px #2563eb inset; }
+    .legend { display:flex; flex-wrap:wrap; gap:14px; font-size:11px; color:#64748b; margin-top:8px; }
+    .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:4px;
+                vertical-align:-2px; border:1px solid #94a3b8; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 1 集 退婚 · 44 镜</div>
+    </div>
+
+    <a class="side-link" href="works.html" style="margin-top:8px">我的作品</a>
+    <a class="side-link" href="script-studio.html">总剧本</a>
+    <a class="side-link active" href="storyboard.html">创作台</a>
+    <a class="side-link" href="compose-export.html">出片</a>
+
+    <div class="side-sec">其它</div>
+    <a class="side-link" href="usage-billing.html">账单</a>
+    <a class="side-link" href="work-detail.html">更多功能</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">创作台 · 第 1 集</span>
+      <span class="opts" style="margin-left:10px">
+        <a class="chip" href="storyboard.html">列表</a>
+        <span class="chip active">画布</span>
+      </span>
+      <span class="spacer"></span>
+      <button class="btn btn-default btn-sm">已选 8 镜 · 估费用</button>
+      <button class="btn btn-primary btn-sm">批量生成 约 6.40 元</button>
+    </header>
+
+    <div class="app-page">
+
+      <div class="note" style="margin-bottom:12px">
+        画布是<strong>第二视图</strong>，不是替代：改一镜的文字还是列表顺手，看整集到哪了、
+        把一整场一起重跑，画布顺手。两个视图读写同一份数据、同一组接口——各存一份状态就是必然漂移。
+      </div>
+
+      <div class="canvas">
+        <div class="lane-row">
+          <div class="lane-name">场次 1<br /><span class="text-muted">会议室 · 日</span></div>
+          <div class="node n-video"><div class="n-thumb">视频</div><div class="n-no">镜 1</div><div class="n-meta">4s</div></div>
+          <div class="node n-video"><div class="n-thumb">视频</div><div class="n-no">镜 2</div><div class="n-meta">3s</div></div>
+          <div class="node n-video"><div class="n-thumb">视频</div><div class="n-no">镜 3</div><div class="n-meta">3s</div></div>
+          <div class="node n-image"><div class="n-thumb">首帧</div><div class="n-no">镜 4</div><div class="n-meta">4s</div></div>
+          <div class="node n-image"><div class="n-thumb">首帧</div><div class="n-no">镜 5</div><div class="n-meta">3s</div></div>
+          <div class="node n-fail"><div class="n-thumb">失败</div><div class="n-no">镜 6</div><div class="n-meta">重试</div></div>
+        </div>
+
+        <div class="lane-row">
+          <div class="lane-name">场次 2<br /><span class="text-muted">停车场 · 夜</span></div>
+          <div class="node n-draft n-selected"><div class="n-thumb">草图</div><div class="n-no">镜 7</div><div class="n-meta">3s</div></div>
+          <div class="node n-draft n-selected"><div class="n-thumb">草图</div><div class="n-no">镜 8</div><div class="n-meta">4s</div></div>
+          <div class="node n-draft n-selected"><div class="n-thumb">草图</div><div class="n-no">镜 9</div><div class="n-meta">3s</div></div>
+          <div class="node n-draft n-selected"><div class="n-thumb">草图</div><div class="n-no">镜 10</div><div class="n-meta">3s</div></div>
+          <div class="node n-stale"><div class="n-thumb">视频</div><div class="n-no">镜 11</div><div class="n-meta">上镜变了</div></div>
+        </div>
+
+        <div class="lane-row">
+          <div class="lane-name">场次 3<br /><span class="text-muted">雨夜车内</span></div>
+          <div class="node n-text"><div class="n-thumb">文字</div><div class="n-no">镜 12</div><div class="n-meta">3s</div></div>
+          <div class="node n-text"><div class="n-thumb">文字</div><div class="n-no">镜 13</div><div class="n-meta">4s</div></div>
+          <div class="node n-locked n-video"><div class="n-thumb">已锁定</div><div class="n-no">镜 14</div><div class="n-meta">拖不动</div></div>
+          <div class="node"><div class="n-thumb">未开始</div><div class="n-no">镜 15</div><div class="n-meta">3s</div></div>
+          <div class="node"><div class="n-thumb">未开始</div><div class="n-no">镜 16</div><div class="n-meta">3s</div></div>
+        </div>
+
+        <div class="lane-row">
+          <div class="lane-name">场次 4 至 7<br /><span class="text-muted">共 28 镜</span></div>
+          <div class="node"><div class="n-thumb">未开始</div><div class="n-no">镜 17</div><div class="n-meta">3s</div></div>
+          <div class="node"><div class="n-thumb">未开始</div><div class="n-no">镜 18</div><div class="n-meta">3s</div></div>
+          <div class="node"><div class="n-thumb">…</div><div class="n-no">…</div><div class="n-meta">展开</div></div>
+        </div>
+
+        <div class="legend">
+          <span><i style="background:#f1f5f9"></i>未开始</span>
+          <span><i style="background:#dbeafe; border-color:#2563eb"></i>文字稿</span>
+          <span><i style="background:#ede9fe; border-color:#7c3aed"></i>草图</span>
+          <span><i style="background:#cffafe; border-color:#0891b2"></i>首帧</span>
+          <span><i style="background:#dcfce7; border-color:#059669"></i>已出视频</span>
+          <span><i style="background:#fee2e2; border-color:#dc2626"></i>失败 / 阻断</span>
+          <span><i style="background:#dcfce7; border-color:#d97706; border-width:2px"></i>上游变了可能接不上</span>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:14px">
+        <div class="card">
+          <div class="card-hd"><h2>拖动就是改顺序</h2></div>
+          <div style="font-size:12px; line-height:1.9">
+            把节点拖到本场次内另一个位置，就是改镜号，整场重新连续编号。
+            <strong>重排只改顺序</strong>：不删素材、不改状态、不触发任何重抽。
+            <div style="margin-top:8px"><strong>跨场拖不动</strong>——跨场意味着这一镜换了场景，
+            那是剧本层的事（回剧本改场次划分再拆镜）。在画布上硬拖，只会让镜头的场次号
+            和它的画面内容、场景卡对不上。</div>
+            <div style="margin-top:8px"><strong>不存自由坐标</strong>：位置由场次与镜号算出来。
+            存了坐标就多出第二份「顺序」事实，它和镜号迟早对不上；而你拖动节点的本意本来就是改顺序。</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>框选批量，费用照旧先算</h2></div>
+          <div style="font-size:12px; line-height:1.9">
+            拖拽框住一整场，或点节点加选。批量估费用、批量提交走的是
+            <strong>和列表视图完全相同的接口与预算闸门</strong>，结果逐字一致。
+            <div style="margin-top:8px">画布不是绕过费用确认的后门——两个视图只是看法不同，
+            不是两套逻辑。</div>
+            <div class="note note-warn" style="margin:10px 0 0">
+              已选 <strong>8 镜</strong>（第 2 场全部）· 目标级别「首帧」· 预计 <strong>6.40 元</strong>。
+              确认后提交，可在任务中心看进度。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        画布不新增数据：节点位置由 <code>scene_no</code>（行）与 <code>shot_no</code>（列）推出，
+        <strong>不落坐标字段、不新增表</strong>。
+        数据来自 <code>GET /bgssai/user/shots/list?episode_id</code>
+        （<code>scene_no</code> · <code>shot_no</code> · <code>shot_status</code> ·
+        <code>previz_level</code> · <code>first_frame_url</code> · <code>video_url</code> ·
+        <code>stale_flag</code> · <code>blocked_flag</code> · <code>frame_link_mode</code>）。
+        批量操作复用 <code>POST /bgssai/user/ai-tasks/estimate</code> 与 <code>/submit</code>；
+        单镜编辑复用 <code>POST /bgssai/user/previz/save</code>。
+        唯一新增接口是重排：<code>POST /bgssai/user/shots/reorder</code>
+        （<code>episode_id</code> · <code>scene_no</code> · <code>shot_id_list</code>，
+        返回 <code>reordered_count</code> 与 <code>stale_shot_no_list</code>）。
+        <code>LOCKED</code> 镜头不可拖动；含锁定镜头的重排返回 <code>4006</code>；
+        镜头不属于该场次返回 <code>50000001</code>。
+        需求见 storyboard-canvas.md。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>原著导入与改编：三种源、分章纠正与节奏体检 — bgssai short feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+</style>
+</head>
+<body>
+
+<h1>原著导入与改编：三种源各走多远，哪一步不能省</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>小说 / 成品剧本 / 分集大纲导入 · 自动分章与纠正 · 按章改编 · 出处回查</dd>
+  <dt>关联</dt><dd>source-import.md · script-studio.md · quality-pipeline.md</dd>
+  <dt>更新</dt><dd>2026-09-07</dd>
+</dl>
+
+<h2>一、三种源进来后各自跳过哪几步</h2>
+<svg viewBox="0 0 1040 300" width="1040" height="300">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="30" width="150" height="50" rx="4"/>
+  <text class="lbl" x="95" y="52" text-anchor="middle">一句话梗概</text>
+  <text class="small" x="95" y="70" text-anchor="middle">原有入口</text>
+
+  <rect class="run" x="20" y="100" width="150" height="50" rx="4"/>
+  <text class="lbl" x="95" y="122" text-anchor="middle">NOVEL 小说全文</text>
+  <text class="small" x="95" y="140" text-anchor="middle">新入口</text>
+
+  <rect class="run" x="20" y="170" width="150" height="50" rx="4"/>
+  <text class="lbl" x="95" y="192" text-anchor="middle">SCRIPT 成品剧本</text>
+  <text class="small" x="95" y="210" text-anchor="middle">新入口</text>
+
+  <rect class="run" x="20" y="240" width="150" height="50" rx="4"/>
+  <text class="lbl" x="95" y="262" text-anchor="middle">OUTLINE 分集大纲</text>
+  <text class="small" x="95" y="280" text-anchor="middle">新入口</text>
+
+  <path class="arr" d="M 170 55 L 250 90"/>
+  <path class="arr accent" d="M 170 125 L 250 110"/>
+  <path class="arr accent" d="M 170 195 L 250 195"/>
+  <path class="arr accent" d="M 170 265 L 250 130"/>
+
+  <rect class="box" x="250" y="80" width="170" height="50" rx="4"/>
+  <text class="lbl" x="335" y="102" text-anchor="middle">分集大纲层</text>
+  <text class="small" x="335" y="120" text-anchor="middle">标题 / 梗概 / 结尾钩子</text>
+
+  <path class="arr" d="M 420 105 L 500 150"/>
+
+  <rect class="box" x="250" y="170" width="170" height="50" rx="4"/>
+  <text class="lbl" x="335" y="192" text-anchor="middle">按场次切分</text>
+  <text class="small" x="335" y="210" text-anchor="middle">SCRIPT 直接落剧本层</text>
+
+  <path class="arr" d="M 420 195 L 500 175"/>
+
+  <rect class="box" x="500" y="140" width="170" height="60" rx="4"/>
+  <text class="lbl" x="585" y="164" text-anchor="middle">单集剧本层</text>
+  <text class="small" x="585" y="184" text-anchor="middle">场次 + 台词 + 情绪</text>
+
+  <path class="arr warnline" d="M 670 170 L 750 170"/>
+
+  <rect class="warnbox" x="750" y="130" width="270" height="80" rx="4"/>
+  <text class="lbl" x="885" y="154" text-anchor="middle">节奏体检 rhythm_check</text>
+  <text class="small" x="885" y="174" text-anchor="middle">钩子 / 打点密度 / 台词口语度 / 结尾悬念</text>
+  <text class="small" x="885" y="194" text-anchor="middle">改编稿一样过，总分不足 60 禁止定稿</text>
+</svg>
+<p class="note">
+  这张图要守住的是最右边那一格：<strong>有原著不是节奏合格的理由</strong>。
+  小说改编最典型的翻车方式就是照搬小说节奏——铺垫长、对白书面、一集讲不完一个爽点，
+  而这正是体检拦的东西。给改编稿开体检的口子，等于把这个功能变成批量生产「小说腔短剧」的机器。
+</p>
+
+<h2>二、导入管线：分章必须可纠正，权利确认不可跳过</h2>
+<svg viewBox="0 0 1040 330" width="1040" height="330">
+  <rect class="box" x="20" y="30" width="180" height="60" rx="4"/>
+  <text class="lbl" x="110" y="54" text-anchor="middle">粘贴或选择文件</text>
+  <text class="small" x="110" y="74" text-anchor="middle">前端读成文本再提交，不走 multipart</text>
+
+  <path class="arr" d="M 200 60 L 270 60"/>
+
+  <rect class="warnbox" x="270" y="30" width="200" height="60" rx="4"/>
+  <text class="lbl" x="370" y="54" text-anchor="middle">权利确认（硬前置）</text>
+  <text class="small" x="370" y="74" text-anchor="middle">未勾选一律拒绝，勾选留痕</text>
+
+  <path class="arr" d="M 470 60 L 540 60"/>
+
+  <rect class="box" x="540" y="30" width="200" height="60" rx="4"/>
+  <text class="lbl" x="640" y="54" text-anchor="middle">字数闸门 100 万字符</text>
+  <text class="small" x="640" y="74" text-anchor="middle">超限直接告知实际字数与上限</text>
+
+  <path class="arr" d="M 740 60 L 810 60"/>
+
+  <rect class="run" x="810" y="30" width="200" height="60" rx="4"/>
+  <text class="lbl" x="910" y="54" text-anchor="middle">自动分章</text>
+  <text class="small" x="910" y="74" text-anchor="middle">第X章 / Chapter X / 标题</text>
+
+  <path class="arr" d="M 910 90 L 910 130"/>
+
+  <rect class="done" x="700" y="130" width="310" height="60" rx="4"/>
+  <text class="lbl" x="855" y="154" text-anchor="middle">分章结果可编辑（合并 / 拆分 / 改标题）</text>
+  <text class="small" x="855" y="176" text-anchor="middle">自动分章在网文里出错是常态，没有纠正入口就是逼用户改原文重传</text>
+
+  <path class="arr" d="M 700 160 L 620 160"/>
+
+  <rect class="box" x="400" y="130" width="220" height="60" rx="4"/>
+  <text class="lbl" x="510" y="154" text-anchor="middle">选章节范围与目标集数</text>
+  <text class="small" x="510" y="176" text-anchor="middle">第 1-5 章 改成 6 集</text>
+
+  <path class="arr" d="M 400 160 L 320 160"/>
+
+  <rect class="warnbox" x="120" y="130" width="200" height="60" rx="4"/>
+  <text class="lbl" x="220" y="154" text-anchor="middle">费用预估先给</text>
+  <text class="small" x="220" y="176" text-anchor="middle">涉及字数 + 预计花费</text>
+
+  <path class="arr" d="M 220 190 L 220 235"/>
+
+  <rect class="run" x="120" y="235" width="200" height="60" rx="4"/>
+  <text class="lbl" x="220" y="259" text-anchor="middle">TEXT 任务改编</text>
+  <text class="small" x="220" y="281" text-anchor="middle">target_type=ADAPT_OUTLINE</text>
+
+  <path class="arr" d="M 320 265 L 400 265"/>
+
+  <rect class="done" x="400" y="235" width="290" height="60" rx="4"/>
+  <text class="lbl" x="545" y="259" text-anchor="middle">大纲落地并带出处</text>
+  <text class="small" x="545" y="281" text-anchor="middle">每集写入 source_ref_json，页面标「取自第 3-5 章」</text>
+
+  <path class="arr" d="M 690 265 L 770 265"/>
+
+  <rect class="box" x="770" y="235" width="240" height="60" rx="4"/>
+  <text class="lbl" x="890" y="259" text-anchor="middle">已定稿集正文逐字保留</text>
+  <text class="small" x="890" y="281" text-anchor="middle">只更新大纲层，与 script-studio 规则 8 一致</text>
+</svg>
+
+<h2>三、源与作品是多对一，删源不级联</h2>
+<svg viewBox="0 0 1040 180" width="1040" height="180">
+  <rect class="box" x="40" y="60" width="200" height="60" rx="4"/>
+  <text class="lbl" x="140" y="84" text-anchor="middle">一份原文</text>
+  <text class="small" x="140" y="104" text-anchor="middle">short_source_doc + 章节</text>
+
+  <path class="arr accent" d="M 240 78 L 330 50"/>
+  <path class="arr accent" d="M 240 100 L 330 130"/>
+
+  <rect class="done" x="330" y="25" width="250" height="55" rx="4"/>
+  <text class="lbl" x="455" y="47" text-anchor="middle">作品 A：24 集竖屏爽剧</text>
+  <text class="small" x="455" y="67" text-anchor="middle">取第 1-20 章</text>
+
+  <rect class="done" x="330" y="105" width="250" height="55" rx="4"/>
+  <text class="lbl" x="455" y="127" text-anchor="middle">作品 B：12 集精编版</text>
+  <text class="small" x="455" y="147" text-anchor="middle">取第 1-40 章</text>
+
+  <path class="arr errline" d="M 140 120 L 140 155"/>
+  <text class="small" x="150" y="150">源被软删</text>
+
+  <rect class="box" x="640" y="55" width="360" height="70" rx="4"/>
+  <text class="lbl" x="820" y="79" text-anchor="middle">两部作品都不受影响</text>
+  <text class="small" x="820" y="99" text-anchor="middle">出处位置显示「原文已删除」，剧集照常可编辑</text>
+  <text class="small" x="820" y="117" text-anchor="middle">不做级联删除：删原文不该毁掉已经做出来的片子</text>
+</svg>
+
+</body>
+</html>

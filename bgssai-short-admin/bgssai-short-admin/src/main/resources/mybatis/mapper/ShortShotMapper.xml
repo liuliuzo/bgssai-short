@@ -30,6 +30,9 @@
     <result column="blocked_flag" jdbcType="TINYINT" property="blockedFlag" />
     <result column="risk_level" jdbcType="VARCHAR" property="riskLevel" />
     <result column="first_frame_asset_id" jdbcType="VARCHAR" property="firstFrameAssetId" />
+    <result column="last_frame_asset_id" jdbcType="VARCHAR" property="lastFrameAssetId" />
+    <result column="frame_link_mode" jdbcType="VARCHAR" property="frameLinkMode" />
+    <result column="last_frame_prompt" jdbcType="VARCHAR" property="lastFramePrompt" />
     <result column="video_asset_id" jdbcType="VARCHAR" property="videoAssetId" />
     <result column="retry_count" jdbcType="INTEGER" property="retryCount" />
     <result column="cost_spent_cent" jdbcType="INTEGER" property="costSpentCent" />
@@ -82,7 +85,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, extra_prompt, image_prompt, previz_text, blocking_json, axis_flag, previz_level, stale_flag, prompt_version, shot_status, blocked_flag, risk_level, first_frame_asset_id, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
+    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, extra_prompt, image_prompt, previz_text, blocking_json, axis_flag, previz_level, stale_flag, prompt_version, shot_status, blocked_flag, risk_level, first_frame_asset_id, last_frame_asset_id, frame_link_mode, last_frame_prompt, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortShotExample" resultMap="BaseResultMap">
     select
@@ -137,6 +140,9 @@
       blocked_flag,
       risk_level,
       first_frame_asset_id,
+      last_frame_asset_id,
+      frame_link_mode,
+      last_frame_prompt,
       video_asset_id,
       retry_count,
       cost_spent_cent,
@@ -173,6 +179,9 @@
       #{blockedFlag,jdbcType=TINYINT},
       #{riskLevel,jdbcType=VARCHAR},
       #{firstFrameAssetId,jdbcType=VARCHAR},
+      #{lastFrameAssetId,jdbcType=VARCHAR},
+      #{frameLinkMode,jdbcType=VARCHAR},
+      #{lastFramePrompt,jdbcType=VARCHAR},
       #{videoAssetId,jdbcType=VARCHAR},
       #{retryCount,jdbcType=INTEGER},
       #{costSpentCent,jdbcType=INTEGER},
@@ -213,6 +222,9 @@
       <if test="blockedFlag != null">blocked_flag,</if>
       <if test="riskLevel != null">risk_level,</if>
       <if test="firstFrameAssetId != null">first_frame_asset_id,</if>
+      <if test="lastFrameAssetId != null">last_frame_asset_id,</if>
+      <if test="frameLinkMode != null">frame_link_mode,</if>
+      <if test="lastFramePrompt != null">last_frame_prompt,</if>
       <if test="videoAssetId != null">video_asset_id,</if>
       <if test="retryCount != null">retry_count,</if>
       <if test="costSpentCent != null">cost_spent_cent,</if>
@@ -250,6 +262,9 @@
       <if test="blockedFlag != null">#{blockedFlag,jdbcType=TINYINT},</if>
       <if test="riskLevel != null">#{riskLevel,jdbcType=VARCHAR},</if>
       <if test="firstFrameAssetId != null">#{firstFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="lastFrameAssetId != null">#{lastFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="frameLinkMode != null">#{frameLinkMode,jdbcType=VARCHAR},</if>
+      <if test="lastFramePrompt != null">#{lastFramePrompt,jdbcType=VARCHAR},</if>
       <if test="videoAssetId != null">#{videoAssetId,jdbcType=VARCHAR},</if>
       <if test="retryCount != null">#{retryCount,jdbcType=INTEGER},</if>
       <if test="costSpentCent != null">#{costSpentCent,jdbcType=INTEGER},</if>
@@ -289,6 +304,9 @@
       <if test="row.blockedFlag != null">blocked_flag = #{row.blockedFlag,jdbcType=TINYINT},</if>
       <if test="row.riskLevel != null">risk_level = #{row.riskLevel,jdbcType=VARCHAR},</if>
       <if test="row.firstFrameAssetId != null">first_frame_asset_id = #{row.firstFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.lastFrameAssetId != null">last_frame_asset_id = #{row.lastFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="row.frameLinkMode != null">frame_link_mode = #{row.frameLinkMode,jdbcType=VARCHAR},</if>
+      <if test="row.lastFramePrompt != null">last_frame_prompt = #{row.lastFramePrompt,jdbcType=VARCHAR},</if>
       <if test="row.videoAssetId != null">video_asset_id = #{row.videoAssetId,jdbcType=VARCHAR},</if>
       <if test="row.retryCount != null">retry_count = #{row.retryCount,jdbcType=INTEGER},</if>
       <if test="row.costSpentCent != null">cost_spent_cent = #{row.costSpentCent,jdbcType=INTEGER},</if>
@@ -329,6 +347,9 @@
       <if test="blockedFlag != null">blocked_flag = #{blockedFlag,jdbcType=TINYINT},</if>
       <if test="riskLevel != null">risk_level = #{riskLevel,jdbcType=VARCHAR},</if>
       <if test="firstFrameAssetId != null">first_frame_asset_id = #{firstFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="lastFrameAssetId != null">last_frame_asset_id = #{lastFrameAssetId,jdbcType=VARCHAR},</if>
+      <if test="frameLinkMode != null">frame_link_mode = #{frameLinkMode,jdbcType=VARCHAR},</if>
+      <if test="lastFramePrompt != null">last_frame_prompt = #{lastFramePrompt,jdbcType=VARCHAR},</if>
       <if test="videoAssetId != null">video_asset_id = #{videoAssetId,jdbcType=VARCHAR},</if>
       <if test="retryCount != null">retry_count = #{retryCount,jdbcType=INTEGER},</if>
       <if test="costSpentCent != null">cost_spent_cent = #{costSpentCent,jdbcType=INTEGER},</if>

@@ -8,6 +8,9 @@ import StoryMapPage from './StoryMapPage'
 import QualityReportPage from './QualityReportPage'
 import EpisodePreviewPage from './EpisodePreviewPage'
 import ContinuityCenterPage from './ContinuityCenterPage'
+import EditExportPage from './EditExportPage'
+import SourceImportPage from './SourceImportPage'
+import StoryboardCanvas from './StoryboardCanvas'
 
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -319,6 +322,7 @@ function modelLabel(row) {
 }
 
 function StoryboardPane({ work, episodeId }) {
+  const [canvasView, setCanvasView] = useState(false)
   const [rows, setRows] = useState([])
   const [selected, setSelected] = useState([])
   const [cost, setCost] = useState(null)
@@ -360,6 +364,10 @@ function StoryboardPane({ work, episodeId }) {
 
   const selectedIds = selected.length ? selected : undefined
 
+  if (canvasView) {
+    return <StoryboardCanvas episodeId={episodeId} onSwitchToList={() => setCanvasView(false)} />
+  }
+
   const submitLevel = async (taskType, autoNext) => {
     const { data } = await productionApi.submitTasks({
       episode_id: episodeId,
@@ -385,6 +393,7 @@ function StoryboardPane({ work, episodeId }) {
         description="改人话分镜免费。出一张图只确认构图。构图没问题再生成视频。不要用视频去试错。"
       />
       <Card size="small" extra={<Space wrap>
+        <Button onClick={() => setCanvasView(true)}>切到画布</Button>
         <Button onClick={async () => {
           await productionApi.splitShots(episodeId)
           await featuresApi.previzGenerateText({ episode_id: episodeId })
@@ -421,6 +430,16 @@ function StoryboardPane({ work, episodeId }) {
           setCost(data?.result)
         }}>估草图费用</Button>
         <Button onClick={() => submitLevel('IMAGE', 0)}>出草图确认构图</Button>
+        <Button onClick={async () => {
+          const { data } = await featuresApi.frameLinkBatch({
+            episode_id: episodeId,
+            frame_link_mode: 'INHERIT_PREV',
+          })
+          if (data?.success) {
+            message.success(`已衔接 ${data.result.linked_count} 处，跨场 ${data.result.cross_scene_count} 处按剪辑语言保持不接`)
+            load()
+          }
+        }}>同场次首尾帧衔接</Button>
         <Button type="primary" onClick={() => submitLevel('VIDEO', 0)}>构图OK，生成视频</Button>
       </Space>}>
         {cost ? (
@@ -441,6 +460,27 @@ function StoryboardPane({ work, episodeId }) {
           title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${row.shot_status || 'PENDING'}`}
           extra={<Space>
             <Tag color={(row.prompt_score || 0) >= 70 ? 'green' : 'orange'}>提示词 {row.prompt_score ?? '-'} 分</Tag>
+            <Select
+              size="small"
+              style={{ width: 140 }}
+              value={row.frame_link_mode || 'NONE'}
+              onChange={async (mode) => {
+                await featuresApi.frameLinkSave({
+                  shot_id: row.shot_id,
+                  frame_link_mode: mode,
+                  model_code: videoModelCode,
+                })
+                load()
+              }}
+              options={[
+                { value: 'NONE', label: '不衔接' },
+                { value: 'INHERIT_PREV', label: '接上一镜' },
+                { value: 'BOOKEND', label: '首尾帧' },
+              ]}
+            />
+            {row.link_hint
+              ? <Tag color={row.link_effective_flag === 1 ? 'blue' : 'orange'}>{row.link_hint}</Tag>
+              : null}
             <Button size="small" onClick={() => {
               setSelected((cur) => cur.includes(row.shot_id) ? cur.filter((id) => id !== row.shot_id) : cur.concat(row.shot_id))
             }}>{selected.includes(row.shot_id) ? '取消勾选' : '勾选'}</Button>
@@ -454,6 +494,12 @@ function StoryboardPane({ work, episodeId }) {
               {row.first_frame_url
                 ? <img alt="" src={row.first_frame_url} width={90} style={{ borderRadius: 8, display: 'block' }} />
                 : <div style={{ width: 90, height: 160, background: '#f1f5f9', borderRadius: 8, padding: 8, fontSize: 12, color: '#64748b' }}>还没出图</div>}
+              {row.last_frame_url ? (
+                <div style={{ marginTop: 6 }}>
+                  <img alt="尾帧" src={row.last_frame_url} width={90} style={{ borderRadius: 8, display: 'block' }} />
+                  <Text type="secondary" style={{ fontSize: 11 }}>尾帧</Text>
+                </div>
+              ) : null}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <Paragraph style={{ marginBottom: 8 }}>
@@ -749,6 +795,7 @@ export default function WorkStudio() {
         activeKey={active}
         onChange={(key) => navigate(`/works/${workId}/${key}`)}
         items={[
+          { key: 'source', label: '原著导入', children: <SourceImportPage work={work} /> },
           { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={load} /> },
           { key: 'characters', label: '角色与场景', children: <CharacterPane work={work} /> },
           { key: 'storyboard', label: '创作台', children: <StoryboardPane work={work} episodeId={episodeId} /> },
@@ -759,6 +806,7 @@ export default function WorkStudio() {
           { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
           { key: 'tasks', label: '本剧任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
           { key: 'compose', label: '成片提审', children: <ComposePane work={work} episodeId={episodeId} onReload={load} /> },
+          { key: 'edit-export', label: '剪辑工程', children: <EditExportPage episodeId={episodeId} /> },
         ]}
       />
     </div>

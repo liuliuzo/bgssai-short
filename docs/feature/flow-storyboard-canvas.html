@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分镜画布：布局由数据算出，拖动就是改顺序 — bgssai short feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .lane { fill:#f8fafc; stroke:#e2e8f0; stroke-width:1; }
+  svg .nPend { fill:#f1f5f9; stroke:#94a3b8; stroke-width:1; }
+  svg .nText { fill:#dbeafe; stroke:#2563eb; stroke-width:1; }
+  svg .nDraft { fill:#ede9fe; stroke:#7c3aed; stroke-width:1; }
+  svg .nImage { fill:#cffafe; stroke:#0891b2; stroke-width:1; }
+  svg .nVideo { fill:#dcfce7; stroke:#059669; stroke-width:1; }
+  svg .nFail { fill:#fee2e2; stroke:#dc2626; stroke-width:1; }
+  svg .nStale { fill:#dcfce7; stroke:#d97706; stroke-width:2; }
+  svg .sel { fill:none; stroke:#2563eb; stroke-width:1.5; stroke-dasharray:5 3; }
+</style>
+</head>
+<body>
+
+<h1>分镜画布：整集一屏看完，框选一段整组重跑</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>画布布局推导 · 状态色 · 框选批量 · 场内拖拽重排</dd>
+  <dt>关联</dt><dd>storyboard-canvas.md · storyboard-workbench.md · previz-text-storyboard.md · frame-continuity.md</dd>
+  <dt>更新</dt><dd>2026-09-07</dd>
+</dl>
+
+<h2>一、布局由 scene_no 与 shot_no 推出，不存坐标</h2>
+<svg viewBox="0 0 1040 300" width="1040" height="300">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="lane" x="20" y="30" width="1000" height="66" rx="4"/>
+  <text class="small" x="32" y="50">场次 1 会议室</text>
+  <rect class="nVideo" x="120" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="151" y="67" text-anchor="middle">镜 1</text>
+  <rect class="nVideo" x="192" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="223" y="67" text-anchor="middle">镜 2</text>
+  <rect class="nImage" x="264" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="295" y="67" text-anchor="middle">镜 3</text>
+  <rect class="nDraft" x="336" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="367" y="67" text-anchor="middle">镜 4</text>
+  <rect class="nFail" x="408" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="439" y="67" text-anchor="middle">镜 5</text>
+
+  <rect class="lane" x="20" y="106" width="1000" height="66" rx="4"/>
+  <text class="small" x="32" y="126">场次 2 停车场</text>
+  <rect class="nText" x="120" y="118" width="62" height="42" rx="3"/>
+  <text class="small" x="151" y="143" text-anchor="middle">镜 6</text>
+  <rect class="nText" x="192" y="118" width="62" height="42" rx="3"/>
+  <text class="small" x="223" y="143" text-anchor="middle">镜 7</text>
+  <rect class="nPend" x="264" y="118" width="62" height="42" rx="3"/>
+  <text class="small" x="295" y="143" text-anchor="middle">镜 8</text>
+  <rect class="nStale" x="336" y="118" width="62" height="42" rx="3"/>
+  <text class="small" x="367" y="143" text-anchor="middle">镜 9</text>
+
+  <rect class="lane" x="20" y="182" width="1000" height="66" rx="4"/>
+  <text class="small" x="32" y="202">场次 3 雨夜车内</text>
+  <rect class="nPend" x="120" y="194" width="62" height="42" rx="3"/>
+  <text class="small" x="151" y="219" text-anchor="middle">镜 10</text>
+  <rect class="nPend" x="192" y="194" width="62" height="42" rx="3"/>
+  <text class="small" x="223" y="219" text-anchor="middle">镜 11</text>
+  <rect class="nPend" x="264" y="194" width="62" height="42" rx="3"/>
+  <text class="small" x="295" y="219" text-anchor="middle">镜 12</text>
+
+  <text class="small" x="560" y="200">状态色即进度：绿=已出视频 青=已出首帧 紫=草图 蓝=文字稿</text>
+  <text class="small" x="560" y="218">灰=未开始 红=失败或阻断 橙描边=上游变了可能接不上</text>
+  <text class="small" x="560" y="236">一屏看完整集到哪了，不用滚十几屏在脑子里拼</text>
+
+  <text class="small" x="20" y="275">节点位置 = 场次（行）+ 镜号（列）。不提供自由拖到任意位置，也不落任何坐标字段——</text>
+  <text class="small" x="20" y="291">存了坐标就多出第二份「顺序」事实，它和 shot_no 迟早对不上；而拖动节点的真实意图本来就是改顺序。</text>
+</svg>
+
+<h2>二、拖动 = 改顺序；跨场不吸附</h2>
+<svg viewBox="0 0 1040 260" width="1040" height="260">
+  <rect class="lane" x="20" y="30" width="620" height="66" rx="4"/>
+  <text class="small" x="32" y="50">场次 2</text>
+  <rect class="nText" x="120" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="151" y="67" text-anchor="middle">镜 9</text>
+  <rect class="nText" x="192" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="223" y="67" text-anchor="middle">镜 10</text>
+  <rect class="nDraft" x="264" y="42" width="62" height="42" rx="3"/>
+  <text class="small" x="295" y="67" text-anchor="middle">镜 12</text>
+  <path class="arr accent" d="M 380 63 L 340 63"/>
+  <text class="small" x="470" y="59">把镜 12 拖到镜 9 后面</text>
+  <text class="small" x="470" y="77">本场次重新连续编号，其余场次镜号不动</text>
+
+  <rect class="done" x="700" y="30" width="320" height="66" rx="4"/>
+  <text class="lbl" x="860" y="54" text-anchor="middle">重排只改顺序</text>
+  <text class="small" x="860" y="76" text-anchor="middle">不删素材、不改状态、不触发任何重抽</text>
+
+  <rect class="lane" x="20" y="120" width="620" height="66" rx="4"/>
+  <text class="small" x="32" y="140">场次 3</text>
+  <rect class="nPend" x="120" y="132" width="62" height="42" rx="3"/>
+  <text class="small" x="151" y="157" text-anchor="middle">镜 13</text>
+  <path class="arr errline" d="M 295 96 L 295 128"/>
+  <text class="small" x="330" y="120">跨场拖动不吸附</text>
+
+  <rect class="fail" x="700" y="120" width="320" height="66" rx="4"/>
+  <text class="lbl" x="860" y="144" text-anchor="middle">跨场是剧本层的事</text>
+  <text class="small" x="860" y="166" text-anchor="middle">硬拖会让 scene_no 与画面内容、场景卡对不上</text>
+
+  <rect class="warnbox" x="20" y="205" width="1000" height="40" rx="4"/>
+  <text class="small" x="520" y="230" text-anchor="middle">重排后开了「接上一镜」且上一镜变了的镜头置 stale 并提示，但不自动重抽——重抽要花钱</text>
+</svg>
+
+<h2>三、框选批量：走的还是那道预算闸门</h2>
+<svg viewBox="0 0 1040 210" width="1040" height="210">
+  <rect class="lane" x="20" y="30" width="480" height="66" rx="4"/>
+  <rect class="nDraft" x="60" y="42" width="62" height="42" rx="3"/>
+  <rect class="nDraft" x="132" y="42" width="62" height="42" rx="3"/>
+  <rect class="nDraft" x="204" y="42" width="62" height="42" rx="3"/>
+  <rect class="nDraft" x="276" y="42" width="62" height="42" rx="3"/>
+  <rect class="sel" x="50" y="34" width="298" height="58" rx="4"/>
+  <text class="small" x="199" y="110" text-anchor="middle">拖拽框选一整场</text>
+
+  <path class="arr" d="M 500 63 L 570 63"/>
+
+  <rect class="warnbox" x="570" y="30" width="200" height="66" rx="4"/>
+  <text class="lbl" x="670" y="54" text-anchor="middle">先估费用</text>
+  <text class="small" x="670" y="76" text-anchor="middle">/ai-tasks/estimate</text>
+
+  <path class="arr" d="M 770 63 L 840 63"/>
+
+  <rect class="run" x="840" y="30" width="180" height="66" rx="4"/>
+  <text class="lbl" x="930" y="54" text-anchor="middle">确认后提交</text>
+  <text class="small" x="930" y="76" text-anchor="middle">/ai-tasks/submit</text>
+
+  <rect class="box" x="20" y="130" width="1000" height="60" rx="4"/>
+  <text class="lbl" x="520" y="154" text-anchor="middle">画布不是绕过预算确认的后门</text>
+  <text class="small" x="520" y="176" text-anchor="middle">批量走的是列表视图同一组接口、同一道费用预估，结果逐字一致；两个视图只是看法不同，不是两套逻辑</text>
+</svg>
+
+</body>
+</html>

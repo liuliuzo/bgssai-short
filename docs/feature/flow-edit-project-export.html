@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>剪辑工程导出：三种格式与前置放宽 — bgssai short feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .warnline { stroke:var(--warn); color:var(--warn); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+  svg .track { fill:#f1f5f9; stroke:#cbd5e1; stroke-width:1; }
+  svg .clip { fill:#dbeafe; stroke:var(--accent); stroke-width:1; }
+  svg .gap { fill:#ffffff; stroke:#cbd5e1; stroke-width:1; stroke-dasharray:4 3; }
+</style>
+</head>
+<body>
+
+<h1>剪辑工程导出：为什么前置比合成更宽，三种格式各自交付什么</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>剪映草稿 / FCPXML / EDL 导出 · 素材打包模式 · 缺片留空</dd>
+  <dt>关联</dt><dd>edit-project-export.md · film-compose-export.md · voice-subtitle.md</dd>
+  <dt>更新</dt><dd>2026-09-07</dd>
+</dl>
+
+<h2>一、两个出口的前置条件对照：合成是为了发，导出是为了改</h2>
+<svg viewBox="0 0 1040 260" width="1040" height="260">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="20" width="200" height="200" rx="4"/>
+  <text class="lbl" x="120" y="44" text-anchor="middle">一集的素材现状</text>
+  <text class="small" x="120" y="66" text-anchor="middle">18 镜有视频 / 2 镜没出</text>
+  <text class="small" x="120" y="84" text-anchor="middle">配音部分未对齐</text>
+  <text class="small" x="120" y="102" text-anchor="middle">字幕未生成</text>
+  <text class="small" x="120" y="120" text-anchor="middle">合规预检有待确认项</text>
+  <text class="small" x="120" y="138" text-anchor="middle">审核未提交</text>
+  <text class="small" x="120" y="170" text-anchor="middle">这是创作过程中</text>
+  <text class="small" x="120" y="188" text-anchor="middle">最常见的中间状态</text>
+
+  <path class="arr" d="M 220 90 L 300 90"/>
+  <path class="arr accent" d="M 220 160 L 300 160"/>
+
+  <rect class="fail" x="300" y="40" width="320" height="100" rx="4"/>
+  <text class="lbl" x="460" y="64" text-anchor="middle">成片合成（film-compose）：不放行</text>
+  <text class="small" x="460" y="86" text-anchor="middle">要求全镜 LOCKED + 配音对齐 + 字幕就绪 + 无 BLOCK</text>
+  <text class="small" x="460" y="104" text-anchor="middle">前置为「可以发布」服务，卡得严是对的</text>
+  <text class="small" x="460" y="124" text-anchor="middle">此刻按钮禁用并列出五条缺口</text>
+
+  <rect class="done" x="300" y="150" width="320" height="90" rx="4"/>
+  <text class="lbl" x="460" y="174" text-anchor="middle">剪辑工程导出：放行</text>
+  <text class="small" x="460" y="196" text-anchor="middle">只要求「至少一镜有可用视频」</text>
+  <text class="small" x="460" y="214" text-anchor="middle">前置为「拿出去改」服务，卡严就等于废掉</text>
+  <text class="small" x="460" y="232" text-anchor="middle">缺的 2 镜列名返回，时间轴留空档</text>
+
+  <path class="arr" d="M 620 90 L 700 90"/>
+  <path class="arr accent" d="M 620 195 L 700 195"/>
+
+  <rect class="warnbox" x="700" y="55" width="320" height="70" rx="4"/>
+  <text class="lbl" x="860" y="79" text-anchor="middle">创作者动作：回平台补齐</text>
+  <text class="small" x="860" y="101" text-anchor="middle">补 2 镜、对齐配音、生成字幕、清合规</text>
+
+  <rect class="done" x="700" y="160" width="320" height="70" rx="4"/>
+  <text class="lbl" x="860" y="184" text-anchor="middle">创作者动作：进剪映改节奏</text>
+  <text class="small" x="860" y="206" text-anchor="middle">改剪辑点 / 调语速 / 换转场 / 加花字</text>
+</svg>
+<p class="note">
+  这张图是本功能唯一要守住的判断：把导出的前置照抄合成，功能会在「已经不需要改」的时刻才可用，
+  等于没做。两个出口服务的是两件事，前置就必须不同。
+</p>
+
+<h2>二、导出管线：一次导出一种格式，缺片留空不补占位</h2>
+<svg viewBox="0 0 1040 420" width="1040" height="420">
+  <rect class="box" x="20" y="30" width="150" height="60" rx="4"/>
+  <text class="lbl" x="95" y="55" text-anchor="middle">precheck</text>
+  <text class="small" x="95" y="75" text-anchor="middle">可导镜数 / 缺片名单</text>
+
+  <path class="arr" d="M 170 60 L 230 60"/>
+
+  <rect class="run" x="230" y="30" width="170" height="60" rx="4"/>
+  <text class="lbl" x="315" y="55" text-anchor="middle">export 落记录</text>
+  <text class="small" x="315" y="75" text-anchor="middle">QUEUED，立即返回 export_id</text>
+
+  <path class="arr" d="M 400 60 L 460 60"/>
+
+  <rect class="run" x="460" y="30" width="170" height="60" rx="4"/>
+  <text class="lbl" x="545" y="55" text-anchor="middle">异步线程 RUNNING</text>
+  <text class="small" x="545" y="75" text-anchor="middle">不进 AI 任务体系 / 零计费</text>
+
+  <path class="arr" d="M 545 90 L 545 130"/>
+
+  <rect class="box" x="330" y="130" width="430" height="60" rx="4"/>
+  <text class="lbl" x="545" y="154" text-anchor="middle">取同一份时间轴（与 films/timeline 同源）</text>
+  <text class="small" x="545" y="176" text-anchor="middle">shot_no 升序累加起点 · 配音落所属镜区间 · BGM 铺满全集</text>
+
+  <path class="arr accent" d="M 400 190 L 250 235"/>
+  <path class="arr accent" d="M 545 190 L 545 235"/>
+  <path class="arr accent" d="M 690 190 L 840 235"/>
+
+  <rect class="box" x="90" y="235" width="320" height="90" rx="4"/>
+  <text class="lbl" x="250" y="259" text-anchor="middle">JIANYING（V6 / V5）</text>
+  <text class="small" x="250" y="281" text-anchor="middle">draft_info.json 或 draft_content.json</text>
+  <text class="small" x="250" y="299" text-anchor="middle">加 draft_meta_info.json 与 assets 目录</text>
+  <text class="small" x="250" y="317" text-anchor="middle">素材写绝对路径，需填 draft_dir</text>
+
+  <rect class="box" x="430" y="235" width="230" height="90" rx="4"/>
+  <text class="lbl" x="545" y="259" text-anchor="middle">FCPXML 1.9</text>
+  <text class="small" x="545" y="281" text-anchor="middle">达芬奇 / Final Cut</text>
+  <text class="small" x="545" y="299" text-anchor="middle">asset-clip 加 title 文本轨</text>
+  <text class="small" x="545" y="317" text-anchor="middle">相对路径</text>
+
+  <rect class="box" x="680" y="235" width="320" height="90" rx="4"/>
+  <text class="lbl" x="840" y="259" text-anchor="middle">EDL（CMX3600）</text>
+  <text class="small" x="840" y="281" text-anchor="middle">Premiere / 达芬奇通用交换</text>
+  <text class="small" x="840" y="299" text-anchor="middle">无文本轨，随包附 subtitle.srt</text>
+  <text class="small" x="840" y="317" text-anchor="middle">时间码 HH:MM:SS:FF 按 30 帧</text>
+
+  <path class="arr" d="M 250 325 L 400 360"/>
+  <path class="arr" d="M 545 325 L 545 360"/>
+  <path class="arr" d="M 840 325 L 690 360"/>
+
+  <rect class="done" x="360" y="360" width="370" height="50" rx="4"/>
+  <text class="lbl" x="545" y="382" text-anchor="middle">打 ZIP 落 short_asset（EDIT_PROJECT），READY</text>
+  <text class="small" x="545" y="402" text-anchor="middle">下载走 30 分钟签名 URL，每集每格式保留最近 10 条</text>
+</svg>
+
+<h2>三、缺片镜头的处理：留空档，不插黑场</h2>
+<svg viewBox="0 0 1040 200" width="1040" height="200">
+  <text class="lbl" x="20" y="30">正例：镜 7 未出视频，时间轴上后续镜头依次前移</text>
+
+  <rect class="track" x="20" y="45" width="980" height="34" rx="2"/>
+  <rect class="clip" x="24" y="49" width="120" height="26" rx="2"/>
+  <text class="small" x="84" y="66" text-anchor="middle">镜 5</text>
+  <rect class="clip" x="148" y="49" width="120" height="26" rx="2"/>
+  <text class="small" x="208" y="66" text-anchor="middle">镜 6</text>
+  <rect class="clip" x="272" y="49" width="120" height="26" rx="2"/>
+  <text class="small" x="332" y="66" text-anchor="middle">镜 8</text>
+  <rect class="clip" x="396" y="49" width="120" height="26" rx="2"/>
+  <text class="small" x="456" y="66" text-anchor="middle">镜 9</text>
+  <text class="small" x="620" y="66">导出结果里没有镜 7 这一段，missing_shot_list 点名它</text>
+
+  <text class="lbl" x="20" y="112">反例：插一段黑场占位</text>
+  <rect class="track" x="20" y="127" width="980" height="34" rx="2"/>
+  <rect class="clip" x="24" y="131" width="120" height="26" rx="2"/>
+  <text class="small" x="84" y="148" text-anchor="middle">镜 5</text>
+  <rect class="clip" x="148" y="131" width="120" height="26" rx="2"/>
+  <text class="small" x="208" y="148" text-anchor="middle">镜 6</text>
+  <rect class="gap" x="272" y="131" width="120" height="26" rx="2"/>
+  <text class="small" x="332" y="148" text-anchor="middle">黑场</text>
+  <rect class="clip" x="396" y="131" width="120" height="26" rx="2"/>
+  <text class="small" x="456" y="148" text-anchor="middle">镜 8</text>
+  <text class="small" x="620" y="148">创作者在剪映里看到一段黑，会以为是转场或生成失败，要回平台查</text>
+</svg>
+<p class="note">
+  与成片合成「缺片直接失败并点名缺哪几镜」是同一条口径的两面：合成阶段假成片会骗人，
+  导出阶段假素材同样会骗人。两处都不做兜底占位。
+</p>
+
+<h2>四、状态机：与合成、审核完全解耦</h2>
+<svg viewBox="0 0 1040 170" width="1040" height="170">
+  <rect class="box" x="30" y="60" width="130" height="50" rx="4"/>
+  <text class="lbl" x="95" y="90" text-anchor="middle">QUEUED</text>
+  <path class="arr" d="M 160 85 L 230 85"/>
+  <rect class="run" x="230" y="60" width="130" height="50" rx="4"/>
+  <text class="lbl" x="295" y="90" text-anchor="middle">RUNNING</text>
+  <path class="arr" d="M 360 75 L 430 55"/>
+  <path class="arr errline" d="M 360 95 L 430 118"/>
+  <rect class="done" x="430" y="30" width="130" height="50" rx="4"/>
+  <text class="lbl" x="495" y="60" text-anchor="middle">READY</text>
+  <rect class="fail" x="430" y="95" width="130" height="50" rx="4"/>
+  <text class="lbl" x="495" y="125" text-anchor="middle">FAILED</text>
+  <path class="arr" d="M 560 55 L 630 55"/>
+  <rect class="box" x="630" y="30" width="180" height="50" rx="4"/>
+  <text class="lbl" x="720" y="53" text-anchor="middle">被保留上限挤出</text>
+  <text class="small" x="720" y="71" text-anchor="middle">deleted_flag=1，产物同步软删</text>
+  <text class="small" x="830" y="125">导出不触碰 compose_status</text>
+  <text class="small" x="830" y="143">不回落 review_status / shot_status</text>
+</svg>
+
+</body>
+</html>

@@ -145,6 +145,14 @@ public class ShortEpisodeExample {
         public Criteria andFilmDurationSecGreaterThan(Integer value) { addCriterion("film_duration_sec >", value, "filmDurationSec"); return (Criteria) this; }
         public Criteria andFilmDurationSecLessThan(Integer value) { addCriterion("film_duration_sec <", value, "filmDurationSec"); return (Criteria) this; }
         public Criteria andFilmDurationSecIn(List<Integer> values) { addCriterion("film_duration_sec in", values, "filmDurationSec"); return (Criteria) this; }
+        public Criteria andSourceRefJsonIsNull() { addCriterion("source_ref_json is null"); return (Criteria) this; }
+        public Criteria andSourceRefJsonIsNotNull() { addCriterion("source_ref_json is not null"); return (Criteria) this; }
+        public Criteria andSourceRefJsonEqualTo(String value) { addCriterion("source_ref_json =", value, "sourceRefJson"); return (Criteria) this; }
+        public Criteria andSourceRefJsonNotEqualTo(String value) { addCriterion("source_ref_json <>", value, "sourceRefJson"); return (Criteria) this; }
+        public Criteria andSourceRefJsonGreaterThan(String value) { addCriterion("source_ref_json >", value, "sourceRefJson"); return (Criteria) this; }
+        public Criteria andSourceRefJsonLessThan(String value) { addCriterion("source_ref_json <", value, "sourceRefJson"); return (Criteria) this; }
+        public Criteria andSourceRefJsonLike(String value) { addCriterion("source_ref_json like", value, "sourceRefJson"); return (Criteria) this; }
+        public Criteria andSourceRefJsonIn(List<String> values) { addCriterion("source_ref_json in", values, "sourceRefJson"); return (Criteria) this; }
         public Criteria andDeletedFlagIsNull() { addCriterion("deleted_flag is null"); return (Criteria) this; }
         public Criteria andDeletedFlagIsNotNull() { addCriterion("deleted_flag is not null"); return (Criteria) this; }
         public Criteria andDeletedFlagEqualTo(Integer value) { addCriterion("deleted_flag =", value, "deletedFlag"); return (Criteria) this; }

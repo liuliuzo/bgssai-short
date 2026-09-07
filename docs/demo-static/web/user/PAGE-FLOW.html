@@ -144,6 +144,30 @@
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
+              <td><a href="storyboard-canvas.html">分镜画布</a></td>
+              <td><code>/works/:work_id/storyboard?view=canvas</code></td>
+              <td>创作台顶部「列表 / 画布」切换</td>
+              <td>创作台列表视图 · 任务中心 · 作品工作台</td>
+              <td>作品内子导航（同页视图切换）</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="source-import.html">原著导入与改编</a></td>
+              <td><code>/works/:work_id/source</code></td>
+              <td>新建作品页「我有原著」；总剧本页「导入原著」；作品工作台剧集看板</td>
+              <td>总剧本（改编出的大纲）· 作品工作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="edit-export.html">剪辑工程导出</a></td>
+              <td><code>/works/:work_id/edit-export</code></td>
+              <td>合成与导出页「导出剪辑工程」；无须成片已合成、无须过审即可进入</td>
+              <td>合成与导出 · 任务中心（补生成缺片镜头）· 创作台</td>
+              <td>作品内子导航</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
               <td><a href="episode-preview.html">看样片</a></td>
               <td><code>/works/:work_id/preview</code></td>
               <td>作品工作台三问卡；侧边「三个问题」分区；连贯性中心「回看样片」</td>
@@ -244,6 +268,28 @@
         <div class="node"><div class="n-title">合成与导出</div><div class="n-route">AI BGM /compose</div></div>
         <div class="arrow">→<small>提交审核</small></div>
         <div class="node"><div class="n-title">作品工作台</div><div class="n-route">/works/:id</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程一前置：手里已有原著时的入口</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">新建作品</div><div class="n-route">/works/create</div></div>
+        <div class="arrow">→<small>选「我有原著」</small></div>
+        <div class="node"><div class="n-title">原著导入</div><div class="n-route">/source</div></div>
+        <div class="arrow">→<small>自动分章并纠正</small></div>
+        <div class="node"><div class="n-title">选章节与集数</div><div class="n-route">费用先算后花</div></div>
+        <div class="arrow">→<small>改编出带出处的大纲</small></div>
+        <div class="node"><div class="n-title">总剧本</div><div class="n-route">/script</div></div>
+      </div>
+
+      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程一分叉：拿出去改（不必等合成与过审）</strong></p>
+      <div class="flow">
+        <div class="node"><div class="n-title">合成与导出</div><div class="n-route">/compose</div></div>
+        <div class="arrow">→<small>点「导出剪辑工程」</small></div>
+        <div class="node"><div class="n-title">剪辑工程导出</div><div class="n-route">/edit-export</div></div>
+        <div class="arrow">→<small>选格式与素材模式</small></div>
+        <div class="node"><div class="n-title">下载工程包</div><div class="n-route">剪映 / FCPXML / EDL</div></div>
+        <div class="arrow">→<small>在剪辑软件里精修</small></div>
+        <div class="node"><div class="n-title">任务中心</div><div class="n-route">补生成缺片镜头</div></div>
       </div>
 
       <p class="subtitle" style="margin:16px 0 4px"><strong>旅程二：质量返工闭环（贯穿主线，决定成片好坏）</strong></p>

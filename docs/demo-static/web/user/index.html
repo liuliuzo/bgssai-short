@@ -97,6 +97,27 @@
               <td>film-compose-export · content-compliance</td>
             </tr>
             <tr>
+              <td><a href="storyboard-canvas.html">分镜画布</a></td>
+              <td><code>/works/:work_id/storyboard?view=canvas</code></td>
+              <td><code>GET /bgssai/user/shots/list</code> · <code>POST /bgssai/user/shots/reorder</code></td>
+              <td>整集按场次分行一屏看完，颜色即状态；框选一段整组估费用与重跑；场内拖拽改镜号</td>
+              <td>storyboard-canvas</td>
+            </tr>
+            <tr>
+              <td><a href="source-import.html">原著导入与改编</a></td>
+              <td><code>/works/:work_id/source</code></td>
+              <td><code>POST /bgssai/user/sources/import</code> · <code>/adapt</code></td>
+              <td>小说 / 成品剧本 / 分集大纲三种源导入，自动分章可纠正，按章改编出带出处的大纲</td>
+              <td>source-import</td>
+            </tr>
+            <tr>
+              <td><a href="edit-export.html">剪辑工程导出</a></td>
+              <td><code>/works/:work_id/edit-export</code></td>
+              <td><code>GET /bgssai/user/edit-projects/precheck</code> · <code>POST /bgssai/user/edit-projects/export</code></td>
+              <td>剪映草稿 / FCPXML / EDL 三种工程格式，素材可打包可只出清单，缺片镜头列名并留空档</td>
+              <td>edit-project-export</td>
+            </tr>
+            <tr>
               <td><a href="episode-preview.html">看样片</a></td>
               <td><code>/works/:work_id/preview</code></td>
               <td><code>GET /bgssai/user/preview/summary</code>（帧序列复用 previz / shots 接口）</td>

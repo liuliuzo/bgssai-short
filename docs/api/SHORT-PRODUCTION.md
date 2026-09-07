@@ -259,6 +259,197 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 `{ "download_url", "expires_at" }`。download_url 为同源资产地址。
 
+## 分镜画布重排
+
+需求见 [`../feature/storyboard-canvas.md`](../feature/storyboard-canvas.md)。
+画布视图**不新增数据模型**，除本接口外全部复用既有接口。
+
+### POST /bgssai/user/shots/reorder
+
+```json
+{ "episode_id": "e-20001", "scene_no": 3, "shot_id_list": ["s-40012", "s-40009", "s-40010"] }
+```
+
+按数组顺序重排该场次镜号，从该场次原有最小镜号起连续编号；其余场次不受影响。
+重排只改顺序：不删素材、不改状态、不触发任何重抽。
+
+响应：
+
+```json
+{ "result": { "reordered_count": 3, "stale_shot_no_list": [13] } }
+```
+
+`stale_shot_no_list` 为因上一镜变化而被置 `stale_flag=1` 的镜号
+（仅 `frame_link_mode=INHERIT_PREV` 且同场次者），系统不自动为它们提交新任务。
+
+错误码：`50000001` 参数非法（列表为空 / 镜头不属于该场次）/ `4003` 越权 /
+`4006` 含锁定镜头不可重排 / `429000` 限流。
+
+## 首尾帧衔接
+
+需求见 [`../feature/frame-continuity.md`](../feature/frame-continuity.md)。全部需 `Jwttoken`。
+
+### POST /bgssai/user/shots/frame-link-save
+
+```json
+{ "shot_id": "s-40005", "frame_link_mode": "INHERIT_PREV" }
+```
+
+`frame_link_mode`：`NONE`（各拍各的）/ `INHERIT_PREV`（上一镜尾帧作本镜首帧参考）/
+`BOOKEND`（首尾帧同时送模型）。设 `BOOKEND` 时可带 `model_code`，服务端校验该视频模型的
+`config_json.support_last_frame`，不支持返回 `4006`。
+
+响应：
+
+```json
+{ "result": { "shot_id": "s-40005", "frame_link_mode": "INHERIT_PREV",
+    "link_effective_flag": 1, "downgrade_reason": null, "link_hint": "接镜 4 尾帧" } }
+```
+
+`downgrade_reason` 取值：`CROSS_SCENE`（跨场次，按设计不衔接）/ `PREV_NO_LAST_FRAME`
+（上一镜尚无尾帧）/ `NO_LAST_FRAME`（BOOKEND 但本镜无尾帧）。降级不阻断生成。
+
+### POST /bgssai/user/shots/frame-link-batch
+
+```json
+{ "episode_id": "e-20001", "frame_link_mode": "INHERIT_PREV" }
+```
+
+整集一次生效：同场次相邻镜头置为该模式，跨场处一律留 `NONE`。响应
+`{ "result": { "linked_count": 36, "cross_scene_count": 6 } }`。
+
+### POST /bgssai/user/shots/last-frame-generate
+
+```json
+{ "shot_id": "s-40005", "last_frame_prompt": "她转身推门，背影留在画面右侧" }
+```
+
+单独出一张尾帧图（`task_type=IMAGE`、`target_type=LAST_FRAME`，按 IMAGE 单价计费）。
+已出视频的镜头默认由本机 ffmpeg 抽帧生成尾帧，不必走这个接口。
+
+### GET /bgssai/user/shots/list?episode_id=
+
+元素新增 `last_frame_asset_id`、`last_frame_url`、`last_frame_prompt`、`frame_link_mode`、
+`link_effective_flag`、`downgrade_reason`、`link_hint`。
+
+错误码：`50000001` 参数非法 / `4003` 越权 / `4006` 所选模型不支持首尾帧 /
+`4007` 余额不足 / `429000` 限流。
+
+## 原著导入与改编
+
+需求见 [`../feature/source-import.md`](../feature/source-import.md)。全部需 `Jwttoken`，源归属校验到 `user_id`。
+
+### POST /bgssai/user/sources/import
+
+```json
+{ "work_id": "w-10001", "source_type": "NOVEL", "source_title": "退婚三年后她成了首富",
+  "source_content": "第一章 退婚
+三年前那纸退婚书...", "rights_confirm_flag": 1 }
+```
+
+- `source_type`：`NOVEL`（小说全文）/ `SCRIPT`（成品剧本）/ `OUTLINE`（分集大纲）。
+- `source_content`：纯文本，上限 100 万字符；前端读取 `.txt` / `.md` 后以文本提交，不走 multipart。
+- `rights_confirm_flag`：必须为 1，否则拒绝导入（`50000001`）；确认时间落 `rights_confirm_time`。
+
+返回 `{ "result": { "source_id": "src-70001", "chapter_count": 42, "char_count": 121840 } }`。
+
+### GET /bgssai/user/sources/list?work_id=&page_num=&page_size=
+
+分页返回 `source_id`、`source_type`、`source_title`、`char_count`、`chapter_count`、
+`import_status`、`adapted_flag`、`created_time`。
+
+### GET /bgssai/user/sources/detail?source_id=&page_num=&page_size=
+
+分页返回章节：`chapter_id`、`chapter_no`、`chapter_title`、`char_count`、`chapter_text`。
+
+### POST /bgssai/user/sources/chapters-save
+
+```json
+{ "source_id": "src-70001", "chapter_list": [
+    { "chapter_no": 1, "chapter_title": "退婚", "chapter_text": "..." } ] }
+```
+
+整份替换该源的章节（前端提交调整后的完整分章结果），旧章节软删。
+
+### POST /bgssai/user/sources/adapt-estimate
+
+```json
+{ "source_id": "src-70001", "chapter_no_from": 1, "chapter_no_to": 5, "target_episode_count": 6 }
+```
+
+返回 `{ "result": { "char_count": 18420, "estimated_cost_cent": 12, "model_code": "hy4" } }`。
+
+### POST /bgssai/user/sources/adapt
+
+参数同 `adapt-estimate`，另可带 `model_code`。返回 `{ "result": { "task_id": "t-..." } }`，
+任务 `task_type=TEXT`、`target_type=ADAPT_OUTLINE`。完成后写入作品 `outline_json` 与各集
+`source_ref_json`（`{"source_id","chapter_no_list"}`），已定稿集正文逐字保留。
+
+### POST /bgssai/user/sources/delete
+
+`{ "source_id": "src-70001" }`，软删。已改编出的作品与剧集不受影响，出处位置显示「原文已删除」。
+
+错误码：`50000001` 请求参数非法（未勾选权利确认 / 超字数 / 章节范围非法）/ `4003` 越权 /
+`4006` 源已删除或无可用章节 / `4007` 余额不足 / `429000` 限流。
+
+## 剪辑工程导出
+
+需求见 [`../feature/edit-project-export.md`](../feature/edit-project-export.md)。四个端点全部需 `Jwttoken`，
+资产归属校验到 `user_id`。本组接口**不调模型、不写用量、不扣配额**，也不进 `short_ai_task`。
+
+### GET /bgssai/user/edit-projects/precheck?episode_id=
+
+```json
+{ "result": { "episode_id": "e-20001", "exportable_flag": 1,
+    "ready_shot_count": 18, "total_shot_count": 20,
+    "missing_shot_list": [ { "shot_no": 7, "shot_desc": "女主推门" } ],
+    "estimated_media_byte": 486539264, "media_limit_byte": 2147483648,
+    "last_draft_dir": "C:\Users\demo\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft" } }
+```
+
+`exportable_flag=0` 表示该集没有任何镜头具备可用视频，此时提交导出返回 `4006`。
+`last_draft_dir` 取该用户最近一条导出记录的 `draft_dir`，无历史时为 `null`。
+
+### POST /bgssai/user/edit-projects/export
+
+```json
+{ "episode_id": "e-20001", "project_format": "JIANYING", "jianying_version": "V6",
+  "media_mode": "WITH_MEDIA", "draft_dir": "C:\Users\demo\...\com.lveditor.draft" }
+```
+
+- `project_format`：`JIANYING` / `FCPXML` / `EDL`，必填。
+- `jianying_version`：`V6`（默认，主文件 `draft_info.json`）/ `V5`（主文件 `draft_content.json`），
+  仅 `JIANYING` 有效。
+- `media_mode`：`WITH_MEDIA`（默认，媒体一并打包）/ `LINK_ONLY`（仅工程文件加 `manifest.csv`）。
+- `draft_dir`：`project_format=JIANYING` 时必填（剪映按绝对路径找素材），其余格式忽略。
+
+返回 `{ "result": { "export_id": "x-60001", "export_status": "QUEUED" } }`，打包异步执行。
+
+### GET /bgssai/user/edit-projects/detail?export_id=
+
+```json
+{ "result": { "export_id": "x-60001", "episode_id": "e-20001", "work_id": "w-10001",
+    "project_format": "JIANYING", "jianying_version": "V6", "media_mode": "WITH_MEDIA",
+    "export_status": "READY", "clip_count": 18,
+    "missing_shot_list": [ { "shot_no": 7, "shot_desc": "女主推门" } ],
+    "package_byte": 486539264, "asset_id": "a-54001",
+    "package_name": "退婚三年后她成了首富_E14_JIANYING.zip",
+    "download_url": "https://obs.example.com/...", "expire_at": "2026-09-07T09:30:00Z",
+    "fail_reason": null, "created_time": "2026-09-07T09:00:00",
+    "finished_time": "2026-09-07T09:00:21" } }
+```
+
+`export_status`：`QUEUED` / `RUNNING` / `READY` / `FAILED`。`download_url` 仅 `READY` 时非空，
+30 分钟有效；过期后重新调用本接口取新链接，无需重新导出。
+
+### GET /bgssai/user/edit-projects/list?episode_id=&page_num=&page_size=
+
+分页返回该集导出记录（`created_time` 倒序），元素字段同 `detail` 但不含 `download_url`。
+每集每格式仅保留最近 10 条 `READY` 记录，更旧的记录与其产物一并软删。
+
+错误码：`50000001` 请求参数非法（剪映格式未填 `draft_dir` 等）/ `4003` 越权 /
+`4006` 本集尚无已生成镜头视频 / `4017` 素材体积超限须改用 `LINK_ONLY` / `429000` 限流。
+
 ### POST /bgssai/user/reviews/submit|withdraw
 
 submit：`{ "episode_id" }`。成片须 READY。

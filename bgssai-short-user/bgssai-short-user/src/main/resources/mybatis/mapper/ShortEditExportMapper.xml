@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortEditExportMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortEditExport">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="export_id" jdbcType="VARCHAR" property="exportId" />
+    <result column="episode_id" jdbcType="VARCHAR" property="episodeId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="project_format" jdbcType="VARCHAR" property="projectFormat" />
+    <result column="jianying_version" jdbcType="VARCHAR" property="jianyingVersion" />
+    <result column="media_mode" jdbcType="VARCHAR" property="mediaMode" />
+    <result column="draft_dir" jdbcType="VARCHAR" property="draftDir" />
+    <result column="export_status" jdbcType="VARCHAR" property="exportStatus" />
+    <result column="clip_count" jdbcType="INTEGER" property="clipCount" />
+    <result column="package_byte" jdbcType="BIGINT" property="packageByte" />
+    <result column="asset_id" jdbcType="VARCHAR" property="assetId" />
+    <result column="package_name" jdbcType="VARCHAR" property="packageName" />
+    <result column="missing_json" jdbcType="LONGVARCHAR" property="missingJson" />
+    <result column="fail_reason" jdbcType="VARCHAR" property="failReason" />
+    <result column="finished_time" jdbcType="TIMESTAMP" property="finishedTime" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, export_id, episode_id, work_id, user_id, project_format, jianying_version, media_mode, draft_dir, export_status, clip_count, package_byte, asset_id, package_name, missing_json, fail_reason, finished_time, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortEditExportExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_edit_export
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortEditExportExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_edit_export
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_edit_export where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortEditExportExample" resultType="java.lang.Long">
+    select count(*) from short_edit_export
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortEditExport" useGeneratedKeys="true" keyProperty="id">
+    insert into short_edit_export (
+      id,
+      export_id,
+      episode_id,
+      work_id,
+      user_id,
+      project_format,
+      jianying_version,
+      media_mode,
+      draft_dir,
+      export_status,
+      clip_count,
+      package_byte,
+      asset_id,
+      package_name,
+      missing_json,
+      fail_reason,
+      finished_time,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{exportId,jdbcType=VARCHAR},
+      #{episodeId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{projectFormat,jdbcType=VARCHAR},
+      #{jianyingVersion,jdbcType=VARCHAR},
+      #{mediaMode,jdbcType=VARCHAR},
+      #{draftDir,jdbcType=VARCHAR},
+      #{exportStatus,jdbcType=VARCHAR},
+      #{clipCount,jdbcType=INTEGER},
+      #{packageByte,jdbcType=BIGINT},
+      #{assetId,jdbcType=VARCHAR},
+      #{packageName,jdbcType=VARCHAR},
+      #{missingJson,jdbcType=LONGVARCHAR},
+      #{failReason,jdbcType=VARCHAR},
+      #{finishedTime,jdbcType=TIMESTAMP},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortEditExport" useGeneratedKeys="true" keyProperty="id">
+    insert into short_edit_export
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="exportId != null">export_id,</if>
+      <if test="episodeId != null">episode_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="projectFormat != null">project_format,</if>
+      <if test="jianyingVersion != null">jianying_version,</if>
+      <if test="mediaMode != null">media_mode,</if>
+      <if test="draftDir != null">draft_dir,</if>
+      <if test="exportStatus != null">export_status,</if>
+      <if test="clipCount != null">clip_count,</if>
+      <if test="packageByte != null">package_byte,</if>
+      <if test="assetId != null">asset_id,</if>
+      <if test="packageName != null">package_name,</if>
+      <if test="missingJson != null">missing_json,</if>
+      <if test="failReason != null">fail_reason,</if>
+      <if test="finishedTime != null">finished_time,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="exportId != null">#{exportId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">#{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="projectFormat != null">#{projectFormat,jdbcType=VARCHAR},</if>
+      <if test="jianyingVersion != null">#{jianyingVersion,jdbcType=VARCHAR},</if>
+      <if test="mediaMode != null">#{mediaMode,jdbcType=VARCHAR},</if>
+      <if test="draftDir != null">#{draftDir,jdbcType=VARCHAR},</if>
+      <if test="exportStatus != null">#{exportStatus,jdbcType=VARCHAR},</if>
+      <if test="clipCount != null">#{clipCount,jdbcType=INTEGER},</if>
+      <if test="packageByte != null">#{packageByte,jdbcType=BIGINT},</if>
+      <if test="assetId != null">#{assetId,jdbcType=VARCHAR},</if>
+      <if test="packageName != null">#{packageName,jdbcType=VARCHAR},</if>
+      <if test="missingJson != null">#{missingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="failReason != null">#{failReason,jdbcType=VARCHAR},</if>
+      <if test="finishedTime != null">#{finishedTime,jdbcType=TIMESTAMP},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_edit_export
+    <set>
+      <if test="row.exportId != null">export_id = #{row.exportId,jdbcType=VARCHAR},</if>
+      <if test="row.episodeId != null">episode_id = #{row.episodeId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.projectFormat != null">project_format = #{row.projectFormat,jdbcType=VARCHAR},</if>
+      <if test="row.jianyingVersion != null">jianying_version = #{row.jianyingVersion,jdbcType=VARCHAR},</if>
+      <if test="row.mediaMode != null">media_mode = #{row.mediaMode,jdbcType=VARCHAR},</if>
+      <if test="row.draftDir != null">draft_dir = #{row.draftDir,jdbcType=VARCHAR},</if>
+      <if test="row.exportStatus != null">export_status = #{row.exportStatus,jdbcType=VARCHAR},</if>
+      <if test="row.clipCount != null">clip_count = #{row.clipCount,jdbcType=INTEGER},</if>
+      <if test="row.packageByte != null">package_byte = #{row.packageByte,jdbcType=BIGINT},</if>
+      <if test="row.assetId != null">asset_id = #{row.assetId,jdbcType=VARCHAR},</if>
+      <if test="row.packageName != null">package_name = #{row.packageName,jdbcType=VARCHAR},</if>
+      <if test="row.missingJson != null">missing_json = #{row.missingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.failReason != null">fail_reason = #{row.failReason,jdbcType=VARCHAR},</if>
+      <if test="row.finishedTime != null">finished_time = #{row.finishedTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortEditExport">
+    update short_edit_export
+    <set>
+      <if test="exportId != null">export_id = #{exportId,jdbcType=VARCHAR},</if>
+      <if test="episodeId != null">episode_id = #{episodeId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="projectFormat != null">project_format = #{projectFormat,jdbcType=VARCHAR},</if>
+      <if test="jianyingVersion != null">jianying_version = #{jianyingVersion,jdbcType=VARCHAR},</if>
+      <if test="mediaMode != null">media_mode = #{mediaMode,jdbcType=VARCHAR},</if>
+      <if test="draftDir != null">draft_dir = #{draftDir,jdbcType=VARCHAR},</if>
+      <if test="exportStatus != null">export_status = #{exportStatus,jdbcType=VARCHAR},</if>
+      <if test="clipCount != null">clip_count = #{clipCount,jdbcType=INTEGER},</if>
+      <if test="packageByte != null">package_byte = #{packageByte,jdbcType=BIGINT},</if>
+      <if test="assetId != null">asset_id = #{assetId,jdbcType=VARCHAR},</if>
+      <if test="packageName != null">package_name = #{packageName,jdbcType=VARCHAR},</if>
+      <if test="missingJson != null">missing_json = #{missingJson,jdbcType=LONGVARCHAR},</if>
+      <if test="failReason != null">fail_reason = #{failReason,jdbcType=VARCHAR},</if>
+      <if test="finishedTime != null">finished_time = #{finishedTime,jdbcType=TIMESTAMP},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

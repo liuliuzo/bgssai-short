@@ -107,6 +107,10 @@ public class MiniMaxAiProvider implements AiProvider {
         String image = ProviderHttp.imagePayload(request);
         if (!image.isBlank()) {
             body.put("first_frame_image", image);
+            String lastImage = ProviderHttp.lastImagePayload(request);
+            if (!lastImage.isBlank()) {
+                body.put("last_frame_image", lastImage);
+            }
         }
         String raw = http.postJson(base + "/v1/video_generation", bearer(apiKey), ShortJson.toJson(body),
                 Math.min(60, timeoutSec));

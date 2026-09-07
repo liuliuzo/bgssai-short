@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortSourceDocMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortSourceDoc">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="source_id" jdbcType="VARCHAR" property="sourceId" />
+    <result column="work_id" jdbcType="VARCHAR" property="workId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="source_type" jdbcType="VARCHAR" property="sourceType" />
+    <result column="source_title" jdbcType="VARCHAR" property="sourceTitle" />
+    <result column="char_count" jdbcType="INTEGER" property="charCount" />
+    <result column="chapter_count" jdbcType="INTEGER" property="chapterCount" />
+    <result column="rights_confirm_flag" jdbcType="TINYINT" property="rightsConfirmFlag" />
+    <result column="rights_confirm_time" jdbcType="TIMESTAMP" property="rightsConfirmTime" />
+    <result column="import_status" jdbcType="VARCHAR" property="importStatus" />
+    <result column="adapted_flag" jdbcType="TINYINT" property="adaptedFlag" />
+    <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">and ${criterion.condition}</when>
+                <when test="criterion.singleValue">and ${criterion.condition} #{criterion.value}</when>
+                <when test="criterion.betweenValue">and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}</when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">#{listItem}</foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+
+  <sql id="Base_Column_List">
+    id, source_id, work_id, user_id, source_type, source_title, char_count, chapter_count, rights_confirm_flag, rights_confirm_time, import_status, adapted_flag, deleted_flag, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortSourceDocExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">distinct</if>
+    <include refid="Base_Column_List" />
+    from short_source_doc
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+  </select>
+  <select id="selectOneByExample" parameterType="com.bgssai.shortai.model.ShortSourceDocExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from short_source_doc
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+    <if test="orderByClause != null">order by ${orderByClause}</if>
+    limit 1
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from short_source_doc where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="countByExample" parameterType="com.bgssai.shortai.model.ShortSourceDocExample" resultType="java.lang.Long">
+    select count(*) from short_source_doc
+    <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
+  </select>
+  <insert id="insert" parameterType="com.bgssai.shortai.model.ShortSourceDoc" useGeneratedKeys="true" keyProperty="id">
+    insert into short_source_doc (
+      id,
+      source_id,
+      work_id,
+      user_id,
+      source_type,
+      source_title,
+      char_count,
+      chapter_count,
+      rights_confirm_flag,
+      rights_confirm_time,
+      import_status,
+      adapted_flag,
+      deleted_flag,
+      created_time,
+      updated_time
+    ) values (
+      #{id,jdbcType=BIGINT},
+      #{sourceId,jdbcType=VARCHAR},
+      #{workId,jdbcType=VARCHAR},
+      #{userId,jdbcType=VARCHAR},
+      #{sourceType,jdbcType=VARCHAR},
+      #{sourceTitle,jdbcType=VARCHAR},
+      #{charCount,jdbcType=INTEGER},
+      #{chapterCount,jdbcType=INTEGER},
+      #{rightsConfirmFlag,jdbcType=TINYINT},
+      #{rightsConfirmTime,jdbcType=TIMESTAMP},
+      #{importStatus,jdbcType=VARCHAR},
+      #{adaptedFlag,jdbcType=TINYINT},
+      #{deletedFlag,jdbcType=TINYINT},
+      #{createdTime,jdbcType=TIMESTAMP},
+      #{updatedTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+  <insert id="insertSelective" parameterType="com.bgssai.shortai.model.ShortSourceDoc" useGeneratedKeys="true" keyProperty="id">
+    insert into short_source_doc
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">id,</if>
+      <if test="sourceId != null">source_id,</if>
+      <if test="workId != null">work_id,</if>
+      <if test="userId != null">user_id,</if>
+      <if test="sourceType != null">source_type,</if>
+      <if test="sourceTitle != null">source_title,</if>
+      <if test="charCount != null">char_count,</if>
+      <if test="chapterCount != null">chapter_count,</if>
+      <if test="rightsConfirmFlag != null">rights_confirm_flag,</if>
+      <if test="rightsConfirmTime != null">rights_confirm_time,</if>
+      <if test="importStatus != null">import_status,</if>
+      <if test="adaptedFlag != null">adapted_flag,</if>
+      <if test="deletedFlag != null">deleted_flag,</if>
+      <if test="createdTime != null">created_time,</if>
+      <if test="updatedTime != null">updated_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">#{id,jdbcType=BIGINT},</if>
+      <if test="sourceId != null">#{sourceId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">#{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="sourceType != null">#{sourceType,jdbcType=VARCHAR},</if>
+      <if test="sourceTitle != null">#{sourceTitle,jdbcType=VARCHAR},</if>
+      <if test="charCount != null">#{charCount,jdbcType=INTEGER},</if>
+      <if test="chapterCount != null">#{chapterCount,jdbcType=INTEGER},</if>
+      <if test="rightsConfirmFlag != null">#{rightsConfirmFlag,jdbcType=TINYINT},</if>
+      <if test="rightsConfirmTime != null">#{rightsConfirmTime,jdbcType=TIMESTAMP},</if>
+      <if test="importStatus != null">#{importStatus,jdbcType=VARCHAR},</if>
+      <if test="adaptedFlag != null">#{adaptedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective">
+    update short_source_doc
+    <set>
+      <if test="row.sourceId != null">source_id = #{row.sourceId,jdbcType=VARCHAR},</if>
+      <if test="row.workId != null">work_id = #{row.workId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
+      <if test="row.sourceType != null">source_type = #{row.sourceType,jdbcType=VARCHAR},</if>
+      <if test="row.sourceTitle != null">source_title = #{row.sourceTitle,jdbcType=VARCHAR},</if>
+      <if test="row.charCount != null">char_count = #{row.charCount,jdbcType=INTEGER},</if>
+      <if test="row.chapterCount != null">chapter_count = #{row.chapterCount,jdbcType=INTEGER},</if>
+      <if test="row.rightsConfirmFlag != null">rights_confirm_flag = #{row.rightsConfirmFlag,jdbcType=TINYINT},</if>
+      <if test="row.rightsConfirmTime != null">rights_confirm_time = #{row.rightsConfirmTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.importStatus != null">import_status = #{row.importStatus,jdbcType=VARCHAR},</if>
+      <if test="row.adaptedFlag != null">adapted_flag = #{row.adaptedFlag,jdbcType=TINYINT},</if>
+      <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.ShortSourceDoc">
+    update short_source_doc
+    <set>
+      <if test="sourceId != null">source_id = #{sourceId,jdbcType=VARCHAR},</if>
+      <if test="workId != null">work_id = #{workId,jdbcType=VARCHAR},</if>
+      <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
+      <if test="sourceType != null">source_type = #{sourceType,jdbcType=VARCHAR},</if>
+      <if test="sourceTitle != null">source_title = #{sourceTitle,jdbcType=VARCHAR},</if>
+      <if test="charCount != null">char_count = #{charCount,jdbcType=INTEGER},</if>
+      <if test="chapterCount != null">chapter_count = #{chapterCount,jdbcType=INTEGER},</if>
+      <if test="rightsConfirmFlag != null">rights_confirm_flag = #{rightsConfirmFlag,jdbcType=TINYINT},</if>
+      <if test="rightsConfirmTime != null">rights_confirm_time = #{rightsConfirmTime,jdbcType=TIMESTAMP},</if>
+      <if test="importStatus != null">import_status = #{importStatus,jdbcType=VARCHAR},</if>
+      <if test="adaptedFlag != null">adapted_flag = #{adaptedFlag,jdbcType=TINYINT},</if>
+      <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
+      <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
+      <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>
