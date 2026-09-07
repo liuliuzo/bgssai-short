@@ -15,7 +15,7 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 `bgssai-docmost` 与 `bgssai-build` 是研发解决方案，不是第 1 条工具，也不上官网。用户从 Docmost 站点下载 Build。Build 写代码时把软件工程文档（需求说明、概要设计、详细设计、类图、流程图、时序图、泳道图、状态图等）写入 Docmost。Docmost 要能承载 HTML：Build 可生成 HTML 格式设计并发布到 Docmost，版式与交互对照 `reference/docmost/htmldemo`。用户可自己编辑，也可和 Agent 对话修改，改完发送给 Build 继续编程。Docmost 参考开源 docmost；Build 参考 grok-build、Cursor、DeepSeek-Coder；Bot 参考 grok-bot、openclaw、hermes-agent、grok-build、mycontext、deepseek-harness。所有参考项目在 `reference` 目录。
 
-有用户端的应用必须支持账号密码、邮箱验证码、手机验证码登录。中国大陆境内应用另需微信、抖音、百度、支付宝登录。中国大陆境外应用另需 Google 账户与 GitHub 登录。官网无登录。管理端不开放注册。
+有用户端的应用必须支持账号密码、邮箱验证码、手机验证码登录。中国大陆境内应用另需微信、抖音、百度、支付宝登录。中国大陆境外应用另需 Google 账户与 GitHub 登录。官网无登录。管理端不开放注册。除官网用户端外，所有应用平台未登录时默认进入登录页。
 
 愿景唯一权威：`bgssai-skeleton/docs/PRODUCT-LINE-VISION.md`。本段是各仓副本，变更以该文件为准。
 
@@ -109,6 +109,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 ## 登录与账号（产品线强制，禁止反复纠结）
 
 * **用户端登录**：账号密码、手机验证码（登录即注册）、邮箱验证码登录。本仓为境内产品：授权登录必须支持微信、抖音、百度、支付宝，不引入 Google / GitHub。blog SPA 无忘记密码页，不主动补「忘记密码」。完整口径见产品线愿景「用户端登录」。不得另起一套登录语义，除非用户主动改决策。
+* **未登录默认页**：除官网用户端外，应用平台（用户端与管理端）未登录时默认进入登录页。公开例外仅限登录、注册、找回/重置密码、OAuth 回调，以及产品明确标注的只读分享页。
 * **管理端不开放注册**：管理端禁止自助注册 / 开放注册入口与注册接口；管理员账号只通过 `sql/DML.sql`（及 `sql/<env>/DML.sql`）种子写入。不得实现、不得提议管理端注册页或注册 API，除非用户主动改决策。
 * **单会话（后登踢先登）**：登录签发 JWT 携带 `sid`，账户表写入 `current_session_id`；新登录使旧会话失效。被踢请求返回 HTTP 401、body `code=2003`、文案「账号已在其他设备登录」。用户端与管理端均适用。
 
