@@ -204,6 +204,7 @@
                 <span class="chip">仅 SRT</span>
               </div>
               <span class="spacer"></span>
+              <a class="btn btn-default btn-sm" href="edit-export.html">导出剪辑工程</a>
               <button class="btn btn-default btn-sm">整剧打包（12 集可用）</button>
             </div>
             <div class="table-wrap">
@@ -229,6 +230,11 @@
               <div class="text-muted" style="font-size:11px">
                 下载链接 30 分钟后失效，失效了点「重新获取链接」就行，不用重新导出、更不用重新合成。
                 整剧打包只含已合成且未过期的剧集，过期集打包前会列出并要求确认。
+              </div>
+              <div class="note" style="margin:10px 0 0">
+                成片改不动的部分（剪辑点、语速、转场、花字）不必回来重抽——
+                走<a href="edit-export.html">导出剪辑工程</a>，把排好的时间轴带进剪映 / 达芬奇 / Premiere 继续改。
+                那个入口不要求本集已合成、也不要求已过审。
               </div>
             </div>
           </div>
@@ -372,6 +378,8 @@
         <code>expired_flag</code> · <code>film_duration_sec</code>；
         导出版本 <code>WITH_SUBTITLE</code> / <code>NO_SUBTITLE</code> / <code>SRT_ONLY</code>，
         命名 <code>{work_title}_E{episode_no}_{version}.mp4</code>；
+        剪辑工程导出走独立接口 <code>/bgssai/user/edit-projects/**</code>（见 edit-export.html 与
+        edit-project-export.md），前置只要求「至少一镜有可用视频」，与本页合成前置不同源。
         转场 <code>transition_type</code>（<code>NONE</code> / <code>FADE</code> / <code>DISSOLVE</code>，
         下拉展示中文、枚举值收在选项 value）。
       </div>

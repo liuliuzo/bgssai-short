@@ -50,6 +50,26 @@ const continuityForeshadows = (workId) => http.get('/user/continuity/foreshadows
 const continuityForeshadowSave = (body) => http.post('/user/continuity/foreshadow-save', body)
 const continuityRecheck = (body) => http.post('/user/continuity/recheck', body)
 
+const frameLinkSave = (body) => http.post('/user/shots/frame-link-save', body)
+const frameLinkBatch = (body) => http.post('/user/shots/frame-link-batch', body)
+const lastFrameGenerate = (body) => http.post('/user/shots/last-frame-generate', body)
+
+const sourceImport = (body) => http.post('/user/sources/import', body)
+const sourceList = (workId, pageNum = 1, pageSize = 20) =>
+  http.get('/user/sources/list', { work_id: workId, page_num: pageNum, page_size: pageSize })
+const sourceDetail = (sourceId, pageNum = 1, pageSize = 50) =>
+  http.get('/user/sources/detail', { source_id: sourceId, page_num: pageNum, page_size: pageSize })
+const sourceChaptersSave = (body) => http.post('/user/sources/chapters-save', body)
+const sourceAdaptEstimate = (body) => http.post('/user/sources/adapt-estimate', body)
+const sourceAdapt = (body) => http.post('/user/sources/adapt', body)
+const sourceDelete = (sourceId) => http.post('/user/sources/delete', { source_id: sourceId })
+
+const editProjectPrecheck = (episodeId) => http.get('/user/edit-projects/precheck', { episode_id: episodeId })
+const editProjectExport = (body) => http.post('/user/edit-projects/export', body)
+const editProjectDetail = (exportId) => http.get('/user/edit-projects/detail', { export_id: exportId })
+const editProjectList = (episodeId, pageNum = 1, pageSize = 20) =>
+  http.get('/user/edit-projects/list', { episode_id: episodeId, page_num: pageNum, page_size: pageSize })
+
 const filmRebakeSubtitle = (episodeId) => http.post('/user/films/rebake-subtitle', { episode_id: episodeId })
 const filmSettingsSave = (body) => http.post('/user/films/settings-save', body)
 const filmBgmGenerate = (body) => http.post('/user/films/bgm-generate', body)
@@ -103,4 +123,18 @@ export default {
   filmSettingsSave,
   filmBgmGenerate,
   filmExport,
+  editProjectPrecheck,
+  editProjectExport,
+  editProjectDetail,
+  editProjectList,
+  sourceImport,
+  sourceList,
+  sourceDetail,
+  sourceChaptersSave,
+  sourceAdaptEstimate,
+  sourceAdapt,
+  sourceDelete,
+  frameLinkSave,
+  frameLinkBatch,
+  lastFrameGenerate,
 }

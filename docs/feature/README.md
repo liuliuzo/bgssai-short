@@ -31,6 +31,10 @@
 | 画面生成与任务中心 | 批量任务失控、失败无从续跑、花了多少钱不知道 | [`shot-generation.md`](./shot-generation.md) | [`flow-generation-task.html`](./flow-generation-task.html) · [`state-shot-lifecycle.html`](./state-shot-lifecycle.html) | 用户端 `task-center` |
 | 配音与字幕 | 音色跨集不一致、音画对不齐、字幕逐句手打 | [`voice-subtitle.md`](./voice-subtitle.md) | [`flow-post-production.html`](./flow-post-production.html) | 用户端 `voice-studio` |
 | 成片合成与导出 | 要学剪辑软件，每集重复体力活，导出规格易出错 | [`film-compose-export.md`](./film-compose-export.md) | [`flow-post-production.html`](./flow-post-production.html) | 用户端 `compose-export` |
+| 分镜画布编排 | 一集四五十镜只有纵向列表，看不出全貌，批量操作只能一个个勾 | [`storyboard-canvas.md`](./storyboard-canvas.md) | [`flow-storyboard-canvas.html`](./flow-storyboard-canvas.html) | 用户端 `storyboard-canvas` |
+| 首尾帧衔接 | 每镜只有首帧，镜头之间各拍各的：人物位置、姿态、光线镜镜突变 | [`frame-continuity.md`](./frame-continuity.md) | [`flow-frame-continuity.html`](./flow-frame-continuity.html) | 用户端 `storyboard` |
+| 原著导入与改编 | 只能从一句话梗概起步，手里握着网文 IP、成品剧本、已有大纲的人进不来 | [`source-import.md`](./source-import.md) | [`flow-source-import.html`](./flow-source-import.html) | 用户端 `source-import` |
+| 剪辑工程导出 | 只给 mp4 等于最后一公里断在平台边界：想改剪辑点、语速、转场只能把素材逐个下载、在剪映里从零重排一遍时间轴 | [`edit-project-export.md`](./edit-project-export.md) | [`flow-edit-project-export.html`](./flow-edit-project-export.html) | 用户端 `edit-export` |
 | **优秀短剧质量流水线（主线）** | 做得出但做得平庸，不知道差在哪、该改哪一句 | [`quality-pipeline.md`](./quality-pipeline.md) | [`flow-quality-pipeline.html`](./flow-quality-pipeline.html) | 用户端 `quality-report` · 管理端 `quality-templates` |
 | 合规预检与内容审核 | 花完生成费才发现过不了审 | [`content-compliance.md`](./content-compliance.md) | [`state-review-compliance.html`](./state-review-compliance.html) | 管理端 `content-review` / `review-detail`（用户端内嵌预检） |
 | AI 能力配置与用量成本 | 换模型要改代码、单价无处统一维护、用量无法核账 | [`ai-capability-usage.md`](./ai-capability-usage.md) | [`flow-usage-billing.html`](./flow-usage-billing.html) | 管理端 `ai-models` / `usage-cost` / `creators` · 用户端 `usage-billing` |

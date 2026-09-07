@@ -244,6 +244,30 @@ public class ShortShotExample {
         public Criteria andFirstFrameAssetIdLessThan(String value) { addCriterion("first_frame_asset_id <", value, "firstFrameAssetId"); return (Criteria) this; }
         public Criteria andFirstFrameAssetIdLike(String value) { addCriterion("first_frame_asset_id like", value, "firstFrameAssetId"); return (Criteria) this; }
         public Criteria andFirstFrameAssetIdIn(List<String> values) { addCriterion("first_frame_asset_id in", values, "firstFrameAssetId"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdIsNull() { addCriterion("last_frame_asset_id is null"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdIsNotNull() { addCriterion("last_frame_asset_id is not null"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdEqualTo(String value) { addCriterion("last_frame_asset_id =", value, "lastFrameAssetId"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdNotEqualTo(String value) { addCriterion("last_frame_asset_id <>", value, "lastFrameAssetId"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdGreaterThan(String value) { addCriterion("last_frame_asset_id >", value, "lastFrameAssetId"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdLessThan(String value) { addCriterion("last_frame_asset_id <", value, "lastFrameAssetId"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdLike(String value) { addCriterion("last_frame_asset_id like", value, "lastFrameAssetId"); return (Criteria) this; }
+        public Criteria andLastFrameAssetIdIn(List<String> values) { addCriterion("last_frame_asset_id in", values, "lastFrameAssetId"); return (Criteria) this; }
+        public Criteria andFrameLinkModeIsNull() { addCriterion("frame_link_mode is null"); return (Criteria) this; }
+        public Criteria andFrameLinkModeIsNotNull() { addCriterion("frame_link_mode is not null"); return (Criteria) this; }
+        public Criteria andFrameLinkModeEqualTo(String value) { addCriterion("frame_link_mode =", value, "frameLinkMode"); return (Criteria) this; }
+        public Criteria andFrameLinkModeNotEqualTo(String value) { addCriterion("frame_link_mode <>", value, "frameLinkMode"); return (Criteria) this; }
+        public Criteria andFrameLinkModeGreaterThan(String value) { addCriterion("frame_link_mode >", value, "frameLinkMode"); return (Criteria) this; }
+        public Criteria andFrameLinkModeLessThan(String value) { addCriterion("frame_link_mode <", value, "frameLinkMode"); return (Criteria) this; }
+        public Criteria andFrameLinkModeLike(String value) { addCriterion("frame_link_mode like", value, "frameLinkMode"); return (Criteria) this; }
+        public Criteria andFrameLinkModeIn(List<String> values) { addCriterion("frame_link_mode in", values, "frameLinkMode"); return (Criteria) this; }
+        public Criteria andLastFramePromptIsNull() { addCriterion("last_frame_prompt is null"); return (Criteria) this; }
+        public Criteria andLastFramePromptIsNotNull() { addCriterion("last_frame_prompt is not null"); return (Criteria) this; }
+        public Criteria andLastFramePromptEqualTo(String value) { addCriterion("last_frame_prompt =", value, "lastFramePrompt"); return (Criteria) this; }
+        public Criteria andLastFramePromptNotEqualTo(String value) { addCriterion("last_frame_prompt <>", value, "lastFramePrompt"); return (Criteria) this; }
+        public Criteria andLastFramePromptGreaterThan(String value) { addCriterion("last_frame_prompt >", value, "lastFramePrompt"); return (Criteria) this; }
+        public Criteria andLastFramePromptLessThan(String value) { addCriterion("last_frame_prompt <", value, "lastFramePrompt"); return (Criteria) this; }
+        public Criteria andLastFramePromptLike(String value) { addCriterion("last_frame_prompt like", value, "lastFramePrompt"); return (Criteria) this; }
+        public Criteria andLastFramePromptIn(List<String> values) { addCriterion("last_frame_prompt in", values, "lastFramePrompt"); return (Criteria) this; }
         public Criteria andVideoAssetIdIsNull() { addCriterion("video_asset_id is null"); return (Criteria) this; }
         public Criteria andVideoAssetIdIsNotNull() { addCriterion("video_asset_id is not null"); return (Criteria) this; }
         public Criteria andVideoAssetIdEqualTo(String value) { addCriterion("video_asset_id =", value, "videoAssetId"); return (Criteria) this; }

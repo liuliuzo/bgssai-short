@@ -131,6 +131,22 @@ final class ProviderHttp {
         return joined;
     }
 
+    /**
+     * 尾帧载荷。与 imagePayload 分开取，是因为首帧与尾帧要同时出现在一次请求里；
+     * 复用同一组 key 会让后写的把先写的覆盖掉，而这种覆盖不报错、只是接不好。
+     */
+    static String lastImagePayload(AiProviderRequest request) {
+        String url = com.bgssai.shortai.production.support.ShortJson.text(request.param("last_image_url"));
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        String b64 = com.bgssai.shortai.production.support.ShortJson.text(request.param("last_image_base64"));
+        if (b64.isBlank()) {
+            return "";
+        }
+        String mime = com.bgssai.shortai.production.support.ShortJson.text(request.param("last_image_mime"));
+        return dataUrl(b64, mime);
+    }
     static String imagePayload(AiProviderRequest request) {
         String url = com.bgssai.shortai.production.support.ShortJson.text(request.param("image_url"));
         if (url.startsWith("http://") || url.startsWith("https://")) {

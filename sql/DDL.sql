@@ -396,6 +396,7 @@ CREATE TABLE `short_episode` (
   `review_status` VARCHAR(32) NOT NULL DEFAULT 'NOT_SUBMITTED',
   `film_asset_id` VARCHAR(64) DEFAULT NULL,
   `film_duration_sec` INT DEFAULT NULL,
+  `source_ref_json` LONGTEXT,
   `deleted_flag` TINYINT NOT NULL DEFAULT 0,
   `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -514,6 +515,9 @@ CREATE TABLE `short_shot` (
   `blocked_flag` TINYINT NOT NULL DEFAULT 0,
   `risk_level` VARCHAR(16) DEFAULT 'PASS',
   `first_frame_asset_id` VARCHAR(64) DEFAULT NULL,
+  `last_frame_asset_id` VARCHAR(64) DEFAULT NULL,
+  `frame_link_mode` VARCHAR(16) NOT NULL DEFAULT 'NONE',
+  `last_frame_prompt` VARCHAR(1024) DEFAULT NULL,
   `video_asset_id` VARCHAR(64) DEFAULT NULL,
   `retry_count` INT NOT NULL DEFAULT 0,
   `cost_spent_cent` INT NOT NULL DEFAULT 0,
@@ -990,3 +994,72 @@ CREATE TABLE `short_episode_gap` (
   KEY `idx_short_episode_gap_work` (`work_id`, `handle_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='集间缺口';
 
+DROP TABLE IF EXISTS `short_edit_export`;
+CREATE TABLE `short_edit_export` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `export_id` VARCHAR(64) NOT NULL,
+  `episode_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `project_format` VARCHAR(16) NOT NULL,
+  `jianying_version` VARCHAR(8) DEFAULT NULL,
+  `media_mode` VARCHAR(16) NOT NULL DEFAULT 'WITH_MEDIA',
+  `draft_dir` VARCHAR(512) DEFAULT NULL,
+  `export_status` VARCHAR(16) NOT NULL DEFAULT 'QUEUED',
+  `clip_count` INT NOT NULL DEFAULT 0,
+  `package_byte` BIGINT DEFAULT NULL,
+  `asset_id` VARCHAR(64) DEFAULT NULL,
+  `package_name` VARCHAR(512) DEFAULT NULL,
+  `missing_json` LONGTEXT,
+  `fail_reason` VARCHAR(1024) DEFAULT NULL,
+  `finished_time` DATETIME DEFAULT NULL,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_edit_export_id` (`export_id`),
+  KEY `idx_short_edit_export_ep` (`episode_id`, `project_format`, `deleted_flag`),
+  KEY `idx_short_edit_export_user` (`user_id`, `created_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='剪辑工程导出记录';
+
+DROP TABLE IF EXISTS `short_source_doc`;
+CREATE TABLE `short_source_doc` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `source_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `source_type` VARCHAR(16) NOT NULL,
+  `source_title` VARCHAR(256) NOT NULL,
+  `char_count` INT NOT NULL DEFAULT 0,
+  `chapter_count` INT NOT NULL DEFAULT 0,
+  `rights_confirm_flag` TINYINT NOT NULL DEFAULT 0,
+  `rights_confirm_time` DATETIME DEFAULT NULL,
+  `import_status` VARCHAR(16) NOT NULL DEFAULT 'IMPORTED',
+  `adapted_flag` TINYINT NOT NULL DEFAULT 0,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_source_doc_id` (`source_id`),
+  KEY `idx_short_source_doc_work` (`work_id`, `deleted_flag`),
+  KEY `idx_short_source_doc_user` (`user_id`, `created_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原著源文档';
+
+DROP TABLE IF EXISTS `short_source_chapter`;
+CREATE TABLE `short_source_chapter` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `chapter_id` VARCHAR(64) NOT NULL,
+  `source_id` VARCHAR(64) NOT NULL,
+  `work_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `chapter_no` INT NOT NULL,
+  `chapter_title` VARCHAR(512) DEFAULT NULL,
+  `chapter_text` LONGTEXT,
+  `char_count` INT NOT NULL DEFAULT 0,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_source_chapter_id` (`chapter_id`),
+  KEY `idx_short_source_chapter_src` (`source_id`, `chapter_no`, `deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原著章节';

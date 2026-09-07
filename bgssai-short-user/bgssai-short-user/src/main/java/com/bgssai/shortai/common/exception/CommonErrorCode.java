@@ -26,6 +26,7 @@ public enum CommonErrorCode implements ErrorCode {
     DUPLICATE_SUBMIT("4013", "already submitted for review"),
     ABILITY_UNAVAILABLE("4014", "no enabled model for ability"),
     MONTHLY_LIMIT("4015", "monthly usage cap reached"),
+    MEDIA_TOO_LARGE("4017", "media too large to package, use LINK_ONLY"),
     UNSUPPORTED_PAY_CHANNEL("60004", "unsupported pay channel"),
     NOTIFY_VERIFY_FAILED("60005", "notify signature verify failed"),
     PAYMENT_NOT_CONFIGURED("60013", "production payment not configured");

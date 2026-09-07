@@ -104,6 +104,7 @@
         <option value="VIDEO">目标级别：视频 1.60 / 镜</option>
       </select>
       <label class="text-muted" style="font-size:12px"><input type="checkbox" /> 首帧完成后自动接视频</label>
+      <label class="text-muted" style="font-size:12px"><input type="checkbox" checked /> 同场次镜头首尾帧衔接</label>
       <button class="btn btn-primary">全部生成 约 4.40 元</button>
     </header>
 
@@ -129,6 +130,7 @@
           </div>
           <div class="pic">
             <div class="phone"><span class="ph-tag">首帧</span><div class="ph-body" style="font-size:10px">构图 OK？</div></div>
+            <div class="text-muted" style="font-size:11px; margin:4px 0">接镜 1 尾帧</div>
             <button class="btn btn-primary btn-sm">生成视频 1.6</button>
           </div>
         </div>
@@ -209,6 +211,14 @@
           <div style="margin-top:8px"><button class="btn btn-default btn-sm">展开全部</button></div>
         </div>
 
+        <div class="note" style="max-width:780px; margin:14px auto 0">
+          <strong>首尾帧衔接</strong>：勾上「同场次镜头首尾帧衔接」后，每一镜拿上一镜的最后一帧当开头依据，
+          人物位置、姿态、光线不再镜镜突变。<strong>跨场次自动不接</strong>——上一场是雨夜车里、
+          下一场是白天办公室，硬接比不接更糟；换场本来就该跳，这是剪辑语言，不是缺陷。
+          尾帧默认在视频出完后由本机 ffmpeg 免费抽取；想先定「这一镜往哪收」也可以单独出一张尾帧图（按出图价）。
+          上一镜重抽后，下一镜会被标成「上一镜尾帧已变，本镜可能接不上」，但<strong>不会自动替你重抽</strong>——重抽要花钱。
+        </div>
+
         <div class="text-muted" style="font-size:12px; text-align:center; margin-top:14px; line-height:1.8">
           就一件事：<strong>左边文字写的是什么，右边生成的就是什么。</strong><br />
           文字随便改（免费）；每个按钮生成一步：草图 0.1 元看构图 → 首帧 0.8 元定画面 → 视频 1.6 元。<br />
@@ -236,6 +246,13 @@
         <code>G2_STORYBOARD</code> 评分；未定妆角色的镜头仍禁用生成（<code>blocked_flag=1</code>）。
         顶部 VIDEO 模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
         <code>model_code</code> 随单镜或批量任务提交；存在首帧时由 Provider 走图生视频，否则走文生视频。
+        首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经
+        <code>POST /bgssai/user/shots/frame-link-save</code> 与 <code>/frame-link-batch</code> 维护，
+        列表返回 <code>last_frame_asset_id</code> · <code>last_frame_url</code> · <code>link_effective_flag</code> · <code>link_hint</code>；
+        跨场次自动降级（<code>downgrade_reason=CROSS_SCENE</code>）；单独出尾帧走
+        <code>POST /bgssai/user/shots/last-frame-generate</code>（<code>target_type=LAST_FRAME</code>）；
+        模型是否支持首尾帧取 <code>ai_model_config.config_json.support_last_frame</code>，不支持却设 <code>BOOKEND</code> 返回 <code>4006</code>。
+        需求见 frame-continuity.md。
         顶部展示剧本门（<code>G1_SCRIPT</code>）与预检状态徽标（中文）。
         列表 <code>GET /bgssai/user/shots/list?episode_id</code>。
         进阶能力（剧本工作台 / 图谱 / 质量门 / 走位等）全部收在侧栏「更多」，

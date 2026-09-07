@@ -39,6 +39,8 @@ public class ShotService {
 
     @Autowired
     private AssetService assetService;
+    @Autowired
+    private FrameLinkService frameLinkService;
 
     @Autowired
     private WorkAccessService workAccessService;
@@ -298,6 +300,11 @@ public class ShotService {
         item.put("video_asset_id", row.getVideoAssetId());
         item.put("first_frame_url", assetService.resolveUrl(row.getFirstFrameAssetId()));
         item.put("video_url", assetService.resolveUrl(row.getVideoAssetId()));
+        item.put("last_frame_asset_id", row.getLastFrameAssetId());
+        item.put("last_frame_url", assetService.resolveUrl(row.getLastFrameAssetId()));
+        item.put("last_frame_prompt", row.getLastFramePrompt());
+        item.put("frame_link_mode", row.getFrameLinkMode() == null ? "NONE" : row.getFrameLinkMode());
+        item.putAll(frameLinkService.effectiveState(row));
         item.put("blocked_flag", row.getBlockedFlag());
         item.put("risk_level", row.getRiskLevel());
         return item;

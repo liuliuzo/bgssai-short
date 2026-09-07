@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 剪辑工程导出</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+
+    <div class="side-ctx">
+      <div class="ctx-label">当前作品 / 剧集</div>
+      <div class="ctx-name">退婚三年后她成了首富</div>
+      <div class="ctx-meta">第 14 集 对峙 · 画面 18/20</div>
+    </div>
+
+    <a class="side-link" href="works.html" style="margin-top:8px">我的作品</a>
+    <a class="side-link" href="script-studio.html">总剧本</a>
+    <a class="side-link" href="storyboard.html">创作台</a>
+    <a class="side-link active" href="compose-export.html">出片</a>
+
+    <div class="side-sec">其它</div>
+    <a class="side-link" href="usage-billing.html">账单</a>
+    <a class="side-link" href="work-detail.html">更多功能</a>
+
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal">余额 2 500.00 元</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb">
+        <a href="works.html">我的作品</a><span class="sep">/</span>
+        <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
+        <a href="compose-export.html">合成与导出</a><span class="sep">/</span>
+      </span>
+      <span class="top-title">剪辑工程导出 · 第 14 集</span>
+      <select style="width:120px"><option>第 14 集</option><option>第 1 集</option><option>第 12 集</option></select>
+      <span class="spacer"></span>
+      <a class="btn btn-default btn-sm" href="compose-export.html">回到成片导出</a>
+    </header>
+
+    <div class="stepline">
+      <a href="work-detail.html"><span class="dot done"></span>剧集看板</a>
+      <a href="script-studio.html"><span class="dot done"></span>剧本</a>
+      <a href="story-map.html"><span class="dot done"></span>剧情图谱</a>
+      <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
+      <a href="storyboard.html"><span class="dot done"></span>分镜</a>
+      <a href="task-center.html"><span class="dot doing"></span>画面生成</a>
+      <a href="voice-studio.html"><span class="dot doing"></span>配音字幕</a>
+      <a href="edit-export.html" class="active"><span class="dot done"></span>剪辑工程</a>
+    </div>
+
+    <div class="app-page">
+
+      <div class="note" style="margin-bottom:14px">
+        这一集<strong>还没合成、还没提审、还有 2 镜没出画面</strong>，但剪辑工程照样能导——
+        导出的用途就是拿出去改。合成的前置卡得严是为了「可以发布」，导出如果照抄那套前置，
+        就只有在你已经不需要改的时候才可用。
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat" style="border-color:#a7f3d0; background:#f0fdf4">
+          <div class="stat-label">可导镜头</div>
+          <div class="stat-value text-ok">18 / 20</div>
+          <div class="stat-sub">有可用视频的镜头</div>
+        </div>
+        <div class="stat" style="border-color:#fed7aa; background:#fffbeb">
+          <div class="stat-label">缺片镜头</div>
+          <div class="stat-value text-warn">2</div>
+          <div class="stat-sub">镜 7 · 镜 15，时间轴留空</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">素材总量</div>
+          <div class="stat-value">464 MB</div>
+          <div class="stat-sub">打包上限 2 GB</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">上次导出</div>
+          <div class="stat-value" style="font-size:15px">剪映 V6</div>
+          <div class="stat-sub">09-06 21:14 · 含素材</div>
+        </div>
+      </div>
+
+      <div class="grid grid-side">
+        <div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h2>导出设置</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">不调模型 · 不计费 · 不占配额</span>
+            </div>
+
+            <div class="field">
+              <label>工程格式</label>
+              <div class="opts">
+                <span class="chip active">剪映草稿</span>
+                <span class="chip">FCPXML（达芬奇 / Final Cut）</span>
+                <span class="chip">EDL（Premiere / 达芬奇）</span>
+              </div>
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label>剪映版本</label>
+                <select>
+                  <option value="V6">6.0 及以上（draft_info.json）</option>
+                  <option value="V5">5.x（draft_content.json）</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>素材</label>
+                <select>
+                  <option value="WITH_MEDIA">一并打包（464 MB，解压即用）</option>
+                  <option value="LINK_ONLY">只出工程文件（附下载清单）</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>本机剪映草稿目录</label>
+              <input value="C:\Users\demo\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft" />
+              <div class="hint">
+                剪映按草稿里写死的绝对路径找素材，所以这一栏必须填你本机的真实路径，
+                填过一次下次自动带出。FCPXML 与 EDL 用相对路径，不需要这一栏。
+              </div>
+            </div>
+
+            <div class="toolbar" style="margin-top:4px">
+              <button class="btn btn-primary">导出剪映草稿</button>
+              <span class="text-muted" style="font-size:11px">预计 20 秒左右，导出期间可以离开本页</span>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>这一集会导出什么</h2>
+              <span class="st doing">18 段视频 · 16 条配音 · 1 条 BGM</span>
+            </div>
+            <div class="card-body">
+              <div class="tl">
+                <div class="tl-ruler">
+                  <span>0s</span><span>10s</span><span>20s</span><span>30s</span><span>40s</span><span>50s</span><span>62s</span>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">画面</div>
+                  <div class="tl-b">
+                    <div class="clip" style="width:56px">镜 1 · 4s</div>
+                    <div class="clip" style="width:42px">镜 2 · 3s</div>
+                    <div class="clip" style="width:42px">镜 3</div>
+                    <div class="clip" style="width:56px">镜 4</div>
+                    <div class="clip" style="width:42px">镜 5</div>
+                    <div class="clip" style="width:56px">镜 6</div>
+                    <div class="clip" style="width:70px">镜 8 至 14</div>
+                    <div class="clip" style="width:96px">镜 16 至 20</div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">配音</div>
+                  <div class="tl-b">
+                    <div class="clip gap" style="width:8px"></div>
+                    <div class="clip a" style="width:48px">沈知微</div>
+                    <div class="clip a" style="width:40px">陆时衍</div>
+                    <div class="clip gap" style="width:26px"></div>
+                    <div class="clip a" style="width:56px">旁白</div>
+                    <div class="clip a" style="width:68px">沈知微</div>
+                    <div class="clip a" style="width:96px">陆时衍</div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">字幕</div>
+                  <div class="tl-b">
+                    <div class="clip gap" style="width:8px"></div>
+                    <div class="clip s" style="width:48px">三年前那纸</div>
+                    <div class="clip s" style="width:40px">你敢签</div>
+                    <div class="clip gap" style="width:26px"></div>
+                    <div class="clip s" style="width:56px">雨下得很大</div>
+                    <div class="clip s" style="width:68px">我签，但是</div>
+                    <div class="clip s" style="width:96px">（转身）</div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-n">BGM</div>
+                  <div class="tl-b">
+                    <div class="clip m">bgm-tension-04 · 整集贯穿</div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-muted" style="font-size:11px; margin-top:8px">
+                与<a href="compose-export.html">成片合成</a>用的是同一份时间轴计算，不是另算一遍——
+                同一件事两处算，早晚会对不上。
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>缺片镜头</h2>
+              <span class="st warn">2 镜没有可用视频</span>
+              <span class="spacer"></span>
+              <a class="btn btn-default btn-sm" href="task-center.html">去补生成</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th style="width:70px">镜号</th><th>镜头内容</th><th style="width:110px">当前状态</th><th style="width:220px">导出后的表现</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">镜 7</td>
+                    <td>女主推开会议室门，全场回头</td>
+                    <td><span class="st fail">生成失败</span></td>
+                    <td class="text-muted">时间轴上没有这一段，镜 8 直接接在镜 6 后面</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">镜 15</td>
+                    <td>雨中对峙，两人隔车门</td>
+                    <td><span class="st">未提交</span></td>
+                    <td class="text-muted">同上，不插黑场</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-body" style="padding-top:10px">
+              <div class="note note-warn" style="margin:0">
+                这里<strong>不插黑场占位</strong>：在剪映里看到一段黑，你会以为是转场没做好或者素材坏了，
+                还得回平台查一遍。缺就是缺，名单给你，时间轴上直接跳过。
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-flush" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>导出记录</h2>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:11px">每集每格式保留最近 10 条</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>包名</th><th style="width:110px">格式</th><th style="width:90px">素材</th><th style="width:70px">大小</th><th style="width:90px">状态</th><th style="width:110px">时间</th><th style="width:130px">操作</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">退婚三年后她成了首富_E14_JIANYING.zip</td>
+                    <td>剪映 V6</td><td>含素材</td><td>467 MB</td>
+                    <td><span class="st done">已就绪</span></td>
+                    <td class="text-muted">09-07 09:02</td>
+                    <td><a href="#">下载</a> · <a href="#">重新获取链接</a></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">退婚三年后她成了首富_E14_FCPXML.zip</td>
+                    <td>FCPXML 1.9</td><td>仅工程</td><td>36 KB</td>
+                    <td><span class="st done">已就绪</span></td>
+                    <td class="text-muted">09-06 22:40</td>
+                    <td><a href="#">下载</a> · <a href="#">重新获取链接</a></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">退婚三年后她成了首富_E14_EDL.zip</td>
+                    <td>EDL</td><td>仅工程</td><td>12 KB</td>
+                    <td><span class="st doing">打包中</span></td>
+                    <td class="text-muted">09-07 09:05</td>
+                    <td class="text-muted">约 10 秒</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">退婚三年后她成了首富_E13_JIANYING.zip</td>
+                    <td>剪映 V6</td><td>含素材</td><td>—</td>
+                    <td><span class="st fail">失败</span></td>
+                    <td class="text-muted">09-05 18:22</td>
+                    <td class="text-muted">素材总量 2.4 GB 超限，改用仅工程</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd"><h2>导进剪映的四步</h2></div>
+            <div style="font-size:12px; line-height:1.9">
+              <div><strong>一、找到草稿目录</strong></div>
+              <div class="text-sub mono" style="font-size:11px">Windows：C:\Users\你的用户名\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft</div>
+              <div class="text-sub mono" style="font-size:11px">macOS：/Users/你的用户名/Movies/JianyingPro/User Data/Projects/com.lveditor.draft</div>
+              <div style="margin-top:8px"><strong>二、填进上面那一栏并导出</strong></div>
+              <div class="text-sub">路径写错了草稿能打开但素材全是离线的，务必和剪映设置里的「草稿位置」一致。</div>
+              <div style="margin-top:8px"><strong>三、把 ZIP 解压到该目录</strong></div>
+              <div class="text-sub">解压后 <span class="mono">退婚三年后她成了首富_第14集</span> 这个文件夹要直接躺在草稿目录下，不要多套一层。</div>
+              <div style="margin-top:8px"><strong>四、重启剪映</strong></div>
+              <div class="text-sub">草稿列表里会多出这一集，双击打开，时间轴已经排好。</div>
+            </div>
+            <div class="note note-warn" style="margin:10px 0 0">
+              导出面向<strong>中国大陆版剪映桌面端</strong>，与 CapCut 的兼容性尚未验证，
+              界面按「仅支持剪映」表述，不做没验证过的承诺。
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd"><h2>三种格式怎么选</h2></div>
+            <div style="font-size:12px; line-height:1.9">
+              <div><strong>剪映草稿</strong></div>
+              <div class="text-sub">国内短剧主力工具。视频轨、配音轨、字幕轨、BGM 轨全带上，字幕是可编辑文本不是烧死的图。</div>
+              <div style="margin-top:8px"><strong>FCPXML</strong></div>
+              <div class="text-sub">达芬奇调色、Final Cut 精剪走这条。带 title 文本元素，字幕进去还能改。</div>
+              <div style="margin-top:8px"><strong>EDL</strong></div>
+              <div class="text-sub">最老实的交换格式，几乎所有剪辑软件都认。但它只有剪辑点没有文本轨，所以包里另附一份 SRT。</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd"><h2>导出不会动到什么</h2></div>
+            <div class="kv" style="grid-template-columns:110px 1fr">
+              <div class="k">成片状态</div><div>不变（不置过期）</div>
+              <div class="k">审核结论</div><div>不变（不回落）</div>
+              <div class="k">镜头状态</div><div>不变（不解锁、不打回）</div>
+              <div class="k">账单</div><div>不产生用量记录</div>
+              <div class="k">配额</div><div>不扣余额</div>
+            </div>
+            <div class="text-muted" style="font-size:11px; margin-top:8px">
+              导出是只读动作：把已有素材换个封装拿走，不参与创作状态机。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        接口：<code>GET /bgssai/user/edit-projects/precheck?episode_id</code>（<code>exportable_flag</code> ·
+        <code>ready_shot_count</code> · <code>total_shot_count</code> · <code>missing_shot_list</code> ·
+        <code>estimated_media_byte</code> · <code>media_limit_byte</code> · <code>last_draft_dir</code>）；
+        <code>POST /bgssai/user/edit-projects/export</code>（<code>episode_id</code> ·
+        <code>project_format</code>（<code>JIANYING</code> / <code>FCPXML</code> / <code>EDL</code>）·
+        <code>jianying_version</code>（<code>V6</code> / <code>V5</code>）· <code>media_mode</code>
+        （<code>WITH_MEDIA</code> / <code>LINK_ONLY</code>）· <code>draft_dir</code>，返回
+        <code>export_id</code> 与 <code>export_status</code>）；
+        <code>GET /bgssai/user/edit-projects/detail?export_id</code>（含 <code>download_url</code> 与
+        <code>expire_at</code>，链接 30 分钟有效，过期重新调本接口即可）；
+        <code>GET /bgssai/user/edit-projects/list?episode_id&amp;page_num&amp;page_size</code>。
+        状态机 <code>export_status</code>：<code>QUEUED</code> -&gt; <code>RUNNING</code> -&gt;
+        <code>READY</code> / <code>FAILED</code>，与 <code>compose_status</code> ·
+        <code>review_status</code> · <code>shot_status</code> 无联动。
+        命名 <code>{work_title}_E{episode_no}_{project_format}.zip</code>，包内剪映草稿文件夹
+        <code>{work_title}_第{episode_no}集</code>，素材 <code>shot_{shot_no}.mp4</code> ·
+        <code>voice_{shot_no}.mp3</code> · <code>bgm.mp3</code>。
+        错误码：<code>50000001</code> 剪映格式未填 <code>draft_dir</code> / <code>4003</code> 越权 /
+        <code>4006</code> 本集尚无已生成镜头视频 / <code>4017</code> 素材体积超限须改用
+        <code>LINK_ONLY</code> / <code>429000</code> 限流。
+        需求见 edit-project-export.md。
+      </div>
+
+      <div class="footer">© 2026 昆山兵贵神速智能科技有限公司</div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

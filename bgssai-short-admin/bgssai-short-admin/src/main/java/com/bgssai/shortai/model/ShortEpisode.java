@@ -36,6 +36,8 @@ public class ShortEpisode implements Serializable {
 
     private Integer filmDurationSec;
 
+    private String sourceRefJson;
+
     private Integer deletedFlag;
 
     private Date createdTime;
@@ -160,6 +162,14 @@ public class ShortEpisode implements Serializable {
 
     public void setFilmDurationSec(Integer filmDurationSec) {
         this.filmDurationSec = filmDurationSec;
+    }
+
+    public String getSourceRefJson() {
+        return sourceRefJson;
+    }
+
+    public void setSourceRefJson(String sourceRefJson) {
+        this.sourceRefJson = sourceRefJson == null ? null : sourceRefJson.trim();
     }
 
     public Integer getDeletedFlag() {

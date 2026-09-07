@@ -17,6 +17,7 @@
     <result column="review_status" jdbcType="VARCHAR" property="reviewStatus" />
     <result column="film_asset_id" jdbcType="VARCHAR" property="filmAssetId" />
     <result column="film_duration_sec" jdbcType="INTEGER" property="filmDurationSec" />
+    <result column="source_ref_json" jdbcType="LONGVARCHAR" property="sourceRefJson" />
     <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
     <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
     <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
@@ -65,7 +66,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, episode_id, work_id, user_id, episode_no, episode_title, episode_synopsis, ending_hook, script_status, storyboard_status, dubbing_status, compose_status, review_status, film_asset_id, film_duration_sec, deleted_flag, created_time, updated_time
+    id, episode_id, work_id, user_id, episode_no, episode_title, episode_synopsis, ending_hook, script_status, storyboard_status, dubbing_status, compose_status, review_status, film_asset_id, film_duration_sec, source_ref_json, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortEpisodeExample" resultMap="BaseResultMap">
     select
@@ -107,6 +108,7 @@
       review_status,
       film_asset_id,
       film_duration_sec,
+      source_ref_json,
       deleted_flag,
       created_time,
       updated_time
@@ -126,6 +128,7 @@
       #{reviewStatus,jdbcType=VARCHAR},
       #{filmAssetId,jdbcType=VARCHAR},
       #{filmDurationSec,jdbcType=INTEGER},
+      #{sourceRefJson,jdbcType=LONGVARCHAR},
       #{deletedFlag,jdbcType=TINYINT},
       #{createdTime,jdbcType=TIMESTAMP},
       #{updatedTime,jdbcType=TIMESTAMP}
@@ -149,6 +152,7 @@
       <if test="reviewStatus != null">review_status,</if>
       <if test="filmAssetId != null">film_asset_id,</if>
       <if test="filmDurationSec != null">film_duration_sec,</if>
+      <if test="sourceRefJson != null">source_ref_json,</if>
       <if test="deletedFlag != null">deleted_flag,</if>
       <if test="createdTime != null">created_time,</if>
       <if test="updatedTime != null">updated_time,</if>
@@ -169,6 +173,7 @@
       <if test="reviewStatus != null">#{reviewStatus,jdbcType=VARCHAR},</if>
       <if test="filmAssetId != null">#{filmAssetId,jdbcType=VARCHAR},</if>
       <if test="filmDurationSec != null">#{filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="sourceRefJson != null">#{sourceRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
       <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
@@ -191,6 +196,7 @@
       <if test="row.reviewStatus != null">review_status = #{row.reviewStatus,jdbcType=VARCHAR},</if>
       <if test="row.filmAssetId != null">film_asset_id = #{row.filmAssetId,jdbcType=VARCHAR},</if>
       <if test="row.filmDurationSec != null">film_duration_sec = #{row.filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="row.sourceRefJson != null">source_ref_json = #{row.sourceRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
       <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
       <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
@@ -214,6 +220,7 @@
       <if test="reviewStatus != null">review_status = #{reviewStatus,jdbcType=VARCHAR},</if>
       <if test="filmAssetId != null">film_asset_id = #{filmAssetId,jdbcType=VARCHAR},</if>
       <if test="filmDurationSec != null">film_duration_sec = #{filmDurationSec,jdbcType=INTEGER},</if>
+      <if test="sourceRefJson != null">source_ref_json = #{sourceRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
       <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>

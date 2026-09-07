@@ -39,6 +39,31 @@ public class AsyncConfig {
     }
 
     /**
+     * 执行剪辑工程导出的打包（剪映草稿 / FCPXML / EDL）。
+     * <p>
+     * 与 aiTaskExecutor 分开是刻意的：导出要把一集几百 MB 素材从对象存储逐个拉回来再压缩，
+     * 单个任务能占住线程几十秒。混在生成任务池里，一次整剧导出就能把出图出视频的队列堵死，
+     * 而这两件事的紧要程度完全不同——生成在花钱等结果，导出只是换个封装拿走。
+     * <p>
+     * 池子做得小：导出是低频动作，且每个任务都吃内存（整包在内存里压），并发高了先撑爆的是堆。
+     * 队列满时直接抛给调用方，由 export 接口报错让用户稍后重试，好过在内存里排一长队。
+     */
+    @Bean("editExportExecutor")
+    public ThreadPoolTaskExecutor editExportExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(3);
+        executor.setQueueCapacity(6);
+        executor.setKeepAliveSeconds(120);
+        executor.setAllowCoreThreadTimeOut(true);
+        executor.setThreadNamePrefix("bgssai-edit-export-");
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.setAwaitTerminationSeconds(5);
+        executor.initialize();
+        return executor;
+    }
+
+    /**
      * 执行健康组件检查，使每次检查都能被赋予一个硬截止时间（Standards §13.5）。
      * <p>
      * 没有它探针可能永久挂住：Druid 的 {@code maxWait} 默认「无限等待」，数据库不可达时

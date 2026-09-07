@@ -145,6 +145,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private AiProviderResult minimaxVideo(String base, String apiKey, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
         String image = ProviderHttp.imagePayload(request);
+        String lastImage = ProviderHttp.lastImagePayload(request);
         List<Map<String, Object>> content = new ArrayList<>();
         content.add(Map.of("type", "text", "text", ProviderHttp.promptOf(request)));
         if (!image.isBlank()) {
@@ -152,6 +153,13 @@ public class TencentTokenHubAiProvider implements AiProvider {
             frame.put("type", "image_url");
             frame.put("image_url", Map.of("url", image));
             frame.put("role", "first_frame");
+            content.add(frame);
+        }
+        if (!lastImage.isBlank()) {
+            Map<String, Object> frame = new LinkedHashMap<>();
+            frame.put("type", "image_url");
+            frame.put("image_url", Map.of("url", lastImage));
+            frame.put("role", "last_frame");
             content.add(frame);
         }
         int duration = duration(request, cfg, 4, 15, 6);
@@ -222,9 +230,14 @@ public class TencentTokenHubAiProvider implements AiProvider {
             settings.put("aspect_ratio", ProviderHttp.aspectRatio(cfg, request));
         } else {
             submitPath = path(cfg, "image2video_path", KLING_IMAGE_VIDEO);
-            body.put("contents", List.of(
-                    Map.of("type", "prompt", "text", ProviderHttp.promptOf(request)),
-                    Map.of("type", "first_frame", "url", image)));
+            List<Map<String, Object>> contents = new ArrayList<>();
+            contents.add(Map.of("type", "prompt", "text", ProviderHttp.promptOf(request)));
+            contents.add(Map.of("type", "first_frame", "url", image));
+            String klingLastImage = ProviderHttp.lastImagePayload(request);
+            if (!klingLastImage.isBlank()) {
+                contents.add(Map.of("type", "last_frame", "url", klingLastImage));
+            }
+            body.put("contents", contents);
         }
         body.put("settings", settings);
         Map<String, Object> submitted = post(base + submitPath, apiKey, body, Math.min(60, timeoutSec));

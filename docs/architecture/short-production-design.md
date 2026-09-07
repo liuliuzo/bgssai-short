@@ -33,6 +33,11 @@
 | `short_film` | 成片记录 |
 | `short_review_record` | 审核留痕 |
 | `short_compliance_hit` | 预检命中 |
+| `short_edit_export` | 剪辑工程导出记录（剪映草稿 / FCPXML / EDL），产物落 `short_asset`（`asset_type=EDIT_PROJECT`） |
+| `short_source_doc` / `short_source_chapter` | 原著源文档与章节；一份源可被多部作品分别改编，软删源不级联毁作品 |
+
+`short_episode` 增列 `source_ref_json`（该集取自的源与章号）；`short_shot` 增列 `last_frame_asset_id` / `frame_link_mode` / `last_frame_prompt`（首尾帧衔接）。
+分镜画布**不新增任何表与列**：节点位置由 `scene_no` 与 `shot_no` 推导，存坐标会造出与镜号并行的第二份顺序事实。
 
 状态枚举以 `short-work-management.md` 第八节为单一登记处。
 
@@ -52,6 +57,12 @@
 成片：`NONE` → `COMPOSING` → `READY` / `FAILED`。
 
 审核：`NOT_SUBMITTED` → `PENDING` → `APPROVED` / `REJECTED`。全部剧集 `APPROVED` 则作品 `COMPLETED`。
+
+剪辑工程导出：`QUEUED` → `RUNNING` → `READY` / `FAILED`。**与合成、审核完全解耦**——导出不置成片过期、不回落审核结论、不改镜头状态；被保留上限（每集每格式 10 条）挤出的记录置 `deleted_flag=1` 并软删其产物。
+
+原著源：`IMPORTED` → `ADAPTED`。软删源不影响已改编出的作品与剧集。
+
+首尾帧衔接：`frame_link_mode` 取 `NONE` / `INHERIT_PREV` / `BOOKEND`，镜头级、可随时改且改动不触发重抽；仅同 `scene_no` 的相邻镜头之间生效，跨场自动降级为不衔接。上游尾帧变化（重抽视频、重出尾帧、画布重排改变前驱）把下一镜置 `stale_flag=1`，只标记、不自动重抽。
 
 ## 4. 任务时序
 

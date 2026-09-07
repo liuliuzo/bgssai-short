@@ -39,6 +39,7 @@ const updateShot = (body) => http.post('/user/shots/update', body)
 const listAiModels = (abilityType) => http.get('/user/ai-models/list', { ability_type: abilityType })
 const estimateTasks = (body) => http.post('/user/ai-tasks/estimate', body)
 const submitTasks = (body) => http.post('/user/ai-tasks/submit', body)
+const reorderShots = (body) => http.post('/user/shots/reorder', body)
 const listTasks = (params) => http.get('/user/ai-tasks/list', params)
 const batchProgress = (batchId) => http.get('/user/ai-tasks/batch-progress', { batch_id: batchId })
 const retryTask = (taskId) => http.post('/user/ai-tasks/retry', { task_id: taskId })
@@ -81,6 +82,7 @@ export default {
   listAiModels,
   estimateTasks,
   submitTasks,
+  reorderShots,
   listTasks,
   batchProgress,
   retryTask,

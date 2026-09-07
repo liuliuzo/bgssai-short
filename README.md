@@ -32,7 +32,7 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 
 ## 当前状态
 
-**M0–M3 已完成**（明细见 [`docs/project/milestones.md`](docs/project/milestones.md)）：需求与原型、详细设计与契约、用户端制作全链路和管理端审核 / 模型 / 用量均已落地。生产密钥、OBS 桶与 ffmpeg 真合成仍待运维接入。
+**M0–M4 已完成**（明细见 [`docs/project/milestones.md`](docs/project/milestones.md)）：需求与原型、详细设计与契约、用户端制作全链路和管理端审核 / 模型 / 用量均已落地；M4 补齐了主干两头——原著导入改编（进得来）与剪辑工程导出（出得去），以及首尾帧衔接与分镜画布。生产密钥、OBS 桶与 ffmpeg 真合成仍待运维接入；剪映草稿导出须在装有剪映的机器上真机验证一次。
 
 业务功能一律按 **需求 → 原型 → 详设 → 代码** 顺序推进（Standards §0），不得跳过上游直接编码。
 
@@ -40,7 +40,8 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 
 把一部短剧从想法做到成片的全流程搬到线上，用 AI 承担最费人力的环节；并且不止于「能做出来」——
 四道质量门（剧本 / 分镜 / 画面 / 成片）配合结构模板对标、多方案择优与三视角评审团，
-把问题定位到具体一场戏、一个镜头、一句台词，让创作者定点返工而不是整集重抽
+把问题定位到具体一场戏、一个镜头、一句台词，让创作者定点返工而不是整集重抽；
+并且不把创作者锁在平台里——成片之外同时交付可继续编辑的剪辑工程（剪映草稿 / FCPXML / EDL），剪辑活回到剪辑软件里做
 （主线见 [`docs/feature/quality-pipeline.md`](./docs/feature/quality-pipeline.md)）。
 
 ## 目录结构
