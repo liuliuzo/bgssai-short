@@ -11,11 +11,13 @@
 | `DML.sql` | 种子数据：示例账号、套餐目录、OAuth 密钥、用户端铺底、短剧业务样例。 |
 | `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）。 |
 | `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）。 |
-| `UPGRADE-20260813-oauth-binding.sql` | 存量库：`oauth_binding` |
-| `UPGRADE-20260814-subscription-credit.sql` | 存量库：订阅 / 加量包 |
-| `UPGRADE-20260817-login-oauth.sql` | 存量库：登录 OAuth |
-| `UPGRADE-20260818-short-production.sql` | 存量库：短剧制作闭环 |
-| `UPGRADE-20260826-full-features.sql` | 存量库：后续全量特性对齐 |
+
+> **`DDL.sql` 只能建新库。** 它含 `DROP TABLE IF EXISTS`，对已有数据的库执行等于删库重来。
+> **禁止增量脚本**：不得新增或保留 `UPGRADE-*.sql`、`PRECHECK-*.sql`、`patch_*.sql`、
+> Flyway / Liquibase、`V*__xxx.sql`、`sql/migration/`。结构与种子只改全量 `DDL.sql` / `DML.sql`
+>（及 `sql/dev/DML.sql`、`sql/prod/DML.sql`）。落地：Jenkins `clean database` → `init database`
+>（`DROP DATABASE` → DDL → 共享 DML → 环境 DML）。重建会丢弃该库既有业务数据。
+> 应用启动期不跑任何 DDL。
 
 ## 导入
 

@@ -679,7 +679,7 @@ CREATE TABLE `ai_model_config` (
   `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_ai_model_id` (`model_id`),
-  UNIQUE KEY `uk_ai_model_code` (`ability_type`, `model_code`, `deleted_flag`),
+  UNIQUE KEY `uk_ai_model_code` (`ability_type`, `provider_code`, `model_code`, `deleted_flag`),
   KEY `idx_ai_model_ability` (`ability_type`, `enabled_flag`, `default_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI模型配置';
 
