@@ -5,13 +5,13 @@
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
     <result column="plan_code" jdbcType="VARCHAR" property="planCode" />
-    <result column="five_hour_limit_points" jdbcType="INTEGER" property="fiveHourLimitPoints" />
-    <result column="five_hour_used_points" jdbcType="INTEGER" property="fiveHourUsedPoints" />
+    <result column="five_hour_limit_tokens" jdbcType="INTEGER" property="fiveHourLimitTokens" />
+    <result column="five_hour_used_tokens" jdbcType="INTEGER" property="fiveHourUsedTokens" />
     <result column="five_hour_window_start" jdbcType="TIMESTAMP" property="fiveHourWindowStart" />
-    <result column="weekly_limit_points" jdbcType="INTEGER" property="weeklyLimitPoints" />
-    <result column="weekly_used_points" jdbcType="INTEGER" property="weeklyUsedPoints" />
+    <result column="weekly_limit_tokens" jdbcType="INTEGER" property="weeklyLimitTokens" />
+    <result column="weekly_used_tokens" jdbcType="INTEGER" property="weeklyUsedTokens" />
     <result column="weekly_anchor_at" jdbcType="TIMESTAMP" property="weeklyAnchorAt" />
-    <result column="extra_points" jdbcType="INTEGER" property="extraPoints" />
+    <result column="extra_tokens" jdbcType="INTEGER" property="extraTokens" />
     <result column="quota_version" jdbcType="INTEGER" property="quotaVersion" />
     <result column="del_flag" jdbcType="BIT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
@@ -78,7 +78,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, user_id, plan_code, five_hour_limit_points, five_hour_used_points, five_hour_window_start, weekly_limit_points, weekly_used_points, weekly_anchor_at, extra_points, quota_version, del_flag, creator, modifier, gmt_create, gmt_modified
+    id, user_id, plan_code, five_hour_limit_tokens, five_hour_used_tokens, five_hour_window_start, weekly_limit_tokens, weekly_used_tokens, weekly_anchor_at, extra_tokens, quota_version, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.WebsiteUserQuotaExample" resultMap="BaseResultMap">
     select
@@ -135,8 +135,8 @@
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteUserQuota" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.user_quota (id, user_id, plan_code, five_hour_limit_points, five_hour_used_points, five_hour_window_start, weekly_limit_points, weekly_used_points, weekly_anchor_at, extra_points, quota_version, del_flag, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{fiveHourLimitPoints,jdbcType=INTEGER}, #{fiveHourUsedPoints,jdbcType=INTEGER}, #{fiveHourWindowStart,jdbcType=TIMESTAMP}, #{weeklyLimitPoints,jdbcType=INTEGER}, #{weeklyUsedPoints,jdbcType=INTEGER}, #{weeklyAnchorAt,jdbcType=TIMESTAMP}, #{extraPoints,jdbcType=INTEGER}, #{quotaVersion,jdbcType=INTEGER}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into bgssai_website.user_quota (id, user_id, plan_code, five_hour_limit_tokens, five_hour_used_tokens, five_hour_window_start, weekly_limit_tokens, weekly_used_tokens, weekly_anchor_at, extra_tokens, quota_version, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{fiveHourLimitTokens,jdbcType=INTEGER}, #{fiveHourUsedTokens,jdbcType=INTEGER}, #{fiveHourWindowStart,jdbcType=TIMESTAMP}, #{weeklyLimitTokens,jdbcType=INTEGER}, #{weeklyUsedTokens,jdbcType=INTEGER}, #{weeklyAnchorAt,jdbcType=TIMESTAMP}, #{extraTokens,jdbcType=INTEGER}, #{quotaVersion,jdbcType=INTEGER}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteUserQuota" useGeneratedKeys="true" keyProperty="id">
     insert into bgssai_website.user_quota
@@ -150,26 +150,26 @@
       <if test="planCode != null">
         plan_code,
       </if>
-      <if test="fiveHourLimitPoints != null">
-        five_hour_limit_points,
+      <if test="fiveHourLimitTokens != null">
+        five_hour_limit_tokens,
       </if>
-      <if test="fiveHourUsedPoints != null">
-        five_hour_used_points,
+      <if test="fiveHourUsedTokens != null">
+        five_hour_used_tokens,
       </if>
       <if test="fiveHourWindowStart != null">
         five_hour_window_start,
       </if>
-      <if test="weeklyLimitPoints != null">
-        weekly_limit_points,
+      <if test="weeklyLimitTokens != null">
+        weekly_limit_tokens,
       </if>
-      <if test="weeklyUsedPoints != null">
-        weekly_used_points,
+      <if test="weeklyUsedTokens != null">
+        weekly_used_tokens,
       </if>
       <if test="weeklyAnchorAt != null">
         weekly_anchor_at,
       </if>
-      <if test="extraPoints != null">
-        extra_points,
+      <if test="extraTokens != null">
+        extra_tokens,
       </if>
       <if test="quotaVersion != null">
         quota_version,
@@ -200,26 +200,26 @@
       <if test="planCode != null">
         #{planCode,jdbcType=VARCHAR},
       </if>
-      <if test="fiveHourLimitPoints != null">
-        #{fiveHourLimitPoints,jdbcType=INTEGER},
+      <if test="fiveHourLimitTokens != null">
+        #{fiveHourLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="fiveHourUsedPoints != null">
-        #{fiveHourUsedPoints,jdbcType=INTEGER},
+      <if test="fiveHourUsedTokens != null">
+        #{fiveHourUsedTokens,jdbcType=INTEGER},
       </if>
       <if test="fiveHourWindowStart != null">
         #{fiveHourWindowStart,jdbcType=TIMESTAMP},
       </if>
-      <if test="weeklyLimitPoints != null">
-        #{weeklyLimitPoints,jdbcType=INTEGER},
+      <if test="weeklyLimitTokens != null">
+        #{weeklyLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="weeklyUsedPoints != null">
-        #{weeklyUsedPoints,jdbcType=INTEGER},
+      <if test="weeklyUsedTokens != null">
+        #{weeklyUsedTokens,jdbcType=INTEGER},
       </if>
       <if test="weeklyAnchorAt != null">
         #{weeklyAnchorAt,jdbcType=TIMESTAMP},
       </if>
-      <if test="extraPoints != null">
-        #{extraPoints,jdbcType=INTEGER},
+      <if test="extraTokens != null">
+        #{extraTokens,jdbcType=INTEGER},
       </if>
       <if test="quotaVersion != null">
         #{quotaVersion,jdbcType=INTEGER},
@@ -256,26 +256,26 @@
       <if test="row.planCode != null">
         plan_code = #{row.planCode,jdbcType=VARCHAR},
       </if>
-      <if test="row.fiveHourLimitPoints != null">
-        five_hour_limit_points = #{row.fiveHourLimitPoints,jdbcType=INTEGER},
+      <if test="row.fiveHourLimitTokens != null">
+        five_hour_limit_tokens = #{row.fiveHourLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="row.fiveHourUsedPoints != null">
-        five_hour_used_points = #{row.fiveHourUsedPoints,jdbcType=INTEGER},
+      <if test="row.fiveHourUsedTokens != null">
+        five_hour_used_tokens = #{row.fiveHourUsedTokens,jdbcType=INTEGER},
       </if>
       <if test="row.fiveHourWindowStart != null">
         five_hour_window_start = #{row.fiveHourWindowStart,jdbcType=TIMESTAMP},
       </if>
-      <if test="row.weeklyLimitPoints != null">
-        weekly_limit_points = #{row.weeklyLimitPoints,jdbcType=INTEGER},
+      <if test="row.weeklyLimitTokens != null">
+        weekly_limit_tokens = #{row.weeklyLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="row.weeklyUsedPoints != null">
-        weekly_used_points = #{row.weeklyUsedPoints,jdbcType=INTEGER},
+      <if test="row.weeklyUsedTokens != null">
+        weekly_used_tokens = #{row.weeklyUsedTokens,jdbcType=INTEGER},
       </if>
       <if test="row.weeklyAnchorAt != null">
         weekly_anchor_at = #{row.weeklyAnchorAt,jdbcType=TIMESTAMP},
       </if>
-      <if test="row.extraPoints != null">
-        extra_points = #{row.extraPoints,jdbcType=INTEGER},
+      <if test="row.extraTokens != null">
+        extra_tokens = #{row.extraTokens,jdbcType=INTEGER},
       </if>
       <if test="row.quotaVersion != null">
         quota_version = #{row.quotaVersion,jdbcType=INTEGER},
@@ -305,13 +305,13 @@
     set
       user_id = #{row.userId,jdbcType=VARCHAR},
       plan_code = #{row.planCode,jdbcType=VARCHAR},
-      five_hour_limit_points = #{row.fiveHourLimitPoints,jdbcType=INTEGER},
-      five_hour_used_points = #{row.fiveHourUsedPoints,jdbcType=INTEGER},
+      five_hour_limit_tokens = #{row.fiveHourLimitTokens,jdbcType=INTEGER},
+      five_hour_used_tokens = #{row.fiveHourUsedTokens,jdbcType=INTEGER},
       five_hour_window_start = #{row.fiveHourWindowStart,jdbcType=TIMESTAMP},
-      weekly_limit_points = #{row.weeklyLimitPoints,jdbcType=INTEGER},
-      weekly_used_points = #{row.weeklyUsedPoints,jdbcType=INTEGER},
+      weekly_limit_tokens = #{row.weeklyLimitTokens,jdbcType=INTEGER},
+      weekly_used_tokens = #{row.weeklyUsedTokens,jdbcType=INTEGER},
       weekly_anchor_at = #{row.weeklyAnchorAt,jdbcType=TIMESTAMP},
-      extra_points = #{row.extraPoints,jdbcType=INTEGER},
+      extra_tokens = #{row.extraTokens,jdbcType=INTEGER},
       quota_version = #{row.quotaVersion,jdbcType=INTEGER},
       del_flag = #{row.delFlag,jdbcType=BIT},
       creator = #{row.creator,jdbcType=VARCHAR},
@@ -331,26 +331,26 @@
       <if test="planCode != null">
         plan_code = #{planCode,jdbcType=VARCHAR},
       </if>
-      <if test="fiveHourLimitPoints != null">
-        five_hour_limit_points = #{fiveHourLimitPoints,jdbcType=INTEGER},
+      <if test="fiveHourLimitTokens != null">
+        five_hour_limit_tokens = #{fiveHourLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="fiveHourUsedPoints != null">
-        five_hour_used_points = #{fiveHourUsedPoints,jdbcType=INTEGER},
+      <if test="fiveHourUsedTokens != null">
+        five_hour_used_tokens = #{fiveHourUsedTokens,jdbcType=INTEGER},
       </if>
       <if test="fiveHourWindowStart != null">
         five_hour_window_start = #{fiveHourWindowStart,jdbcType=TIMESTAMP},
       </if>
-      <if test="weeklyLimitPoints != null">
-        weekly_limit_points = #{weeklyLimitPoints,jdbcType=INTEGER},
+      <if test="weeklyLimitTokens != null">
+        weekly_limit_tokens = #{weeklyLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="weeklyUsedPoints != null">
-        weekly_used_points = #{weeklyUsedPoints,jdbcType=INTEGER},
+      <if test="weeklyUsedTokens != null">
+        weekly_used_tokens = #{weeklyUsedTokens,jdbcType=INTEGER},
       </if>
       <if test="weeklyAnchorAt != null">
         weekly_anchor_at = #{weeklyAnchorAt,jdbcType=TIMESTAMP},
       </if>
-      <if test="extraPoints != null">
-        extra_points = #{extraPoints,jdbcType=INTEGER},
+      <if test="extraTokens != null">
+        extra_tokens = #{extraTokens,jdbcType=INTEGER},
       </if>
       <if test="quotaVersion != null">
         quota_version = #{quotaVersion,jdbcType=INTEGER},
@@ -378,13 +378,13 @@
     set
       user_id = #{userId,jdbcType=VARCHAR},
       plan_code = #{planCode,jdbcType=VARCHAR},
-      five_hour_limit_points = #{fiveHourLimitPoints,jdbcType=INTEGER},
-      five_hour_used_points = #{fiveHourUsedPoints,jdbcType=INTEGER},
+      five_hour_limit_tokens = #{fiveHourLimitTokens,jdbcType=INTEGER},
+      five_hour_used_tokens = #{fiveHourUsedTokens,jdbcType=INTEGER},
       five_hour_window_start = #{fiveHourWindowStart,jdbcType=TIMESTAMP},
-      weekly_limit_points = #{weeklyLimitPoints,jdbcType=INTEGER},
-      weekly_used_points = #{weeklyUsedPoints,jdbcType=INTEGER},
+      weekly_limit_tokens = #{weeklyLimitTokens,jdbcType=INTEGER},
+      weekly_used_tokens = #{weeklyUsedTokens,jdbcType=INTEGER},
       weekly_anchor_at = #{weeklyAnchorAt,jdbcType=TIMESTAMP},
-      extra_points = #{extraPoints,jdbcType=INTEGER},
+      extra_tokens = #{extraTokens,jdbcType=INTEGER},
       quota_version = #{quotaVersion,jdbcType=INTEGER},
       del_flag = #{delFlag,jdbcType=BIT},
       creator = #{creator,jdbcType=VARCHAR},

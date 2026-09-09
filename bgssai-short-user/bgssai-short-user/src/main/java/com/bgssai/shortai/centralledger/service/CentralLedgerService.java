@@ -61,7 +61,7 @@ public class CentralLedgerService {
 
     private static final String PLAN_FREE = "FREE";
     private static final String WEBSITE_SUB_ACTIVE = "active";
-    private static final String KIND_PRODUCT_CREDIT = "product_credit";
+    private static final String KIND_PRODUCT_CREDIT = "product_tokens";
     private static final String CURRENCY_CNY = "CNY";
     private static final Integer USER_STATUS_NORMAL = 1;
     private static final long FIVE_HOURS_MS = TimeUnit.HOURS.toMillis(5);
@@ -125,10 +125,10 @@ public class CentralLedgerService {
      * @return true 已入账或命中幂等重放；false 未入账（用量不足、钱包缺失、并发重试耗尽）
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean consume(String websiteUserId, int points, String usageKind, String idempotencyKey, String remark) {
-        log.info("中央账本用量入账 product={} websiteUserId={} points={} kind={}",
-                PRODUCT_CODE, websiteUserId, points, usageKind);
-        if (isBlank(websiteUserId) || points <= 0) {
+    public boolean consume(String websiteUserId, int tokens, String usageKind, String idempotencyKey, String remark) {
+        log.info("中央账本用量入账 product={} websiteUserId={} tokens={} kind={}",
+                PRODUCT_CODE, websiteUserId, tokens, usageKind);
+        if (isBlank(websiteUserId) || tokens <= 0) {
             return false;
         }
         String key = blankToNull(idempotencyKey);
@@ -151,7 +151,7 @@ public class CentralLedgerService {
         }
         boolean applied = false;
         try {
-            applied = deductAndRecord(websiteUserId, points, blankToNull(usageKind), remark, ledgerId);
+            applied = deductAndRecord(websiteUserId, tokens, blankToNull(usageKind), remark, ledgerId);
         } finally {
             if (!applied && key != null) {
                 WebsiteUsageIdempotencyExample undo = new WebsiteUsageIdempotencyExample();
@@ -270,7 +270,7 @@ public class CentralLedgerService {
         return linked;
     }
 
-    private boolean deductAndRecord(String websiteUserId, int points, String usageKind, String remark, String ledgerId) {
+    private boolean deductAndRecord(String websiteUserId, int tokens, String usageKind, String remark, String ledgerId) {
         for (int attempt = 0; attempt < MAX_CAS_RETRY; attempt++) {
             WebsiteUserQuota quota = findQuota(websiteUserId);
             if (quota == null) {
@@ -279,47 +279,47 @@ public class CentralLedgerService {
             }
             Date now = new Date();
             String planCode = quota.getPlanCode();
-            int fiveLimit = nvl(quota.getFiveHourLimitPoints());
-            int weekLimit = nvl(quota.getWeeklyLimitPoints());
+            int fiveLimit = nvl(quota.getFiveHourLimitTokens());
+            int weekLimit = nvl(quota.getWeeklyLimitTokens());
             if (paidPlanExpired(findSubscription(websiteUserId), now)) {
                 WebsiteSubscriptionPlan free = findPlan(PLAN_FREE);
                 if (free != null) {
                     planCode = PLAN_FREE;
-                    fiveLimit = nvl(free.getFiveHourLimitPoints());
-                    weekLimit = nvl(free.getWeeklyLimitPoints());
+                    fiveLimit = nvl(free.getFiveHourLimitTokens());
+                    weekLimit = nvl(free.getWeeklyLimitTokens());
                 }
             }
-            int fiveUsed = nvl(quota.getFiveHourUsedPoints());
+            int fiveUsed = nvl(quota.getFiveHourUsedTokens());
             Date fiveStart = quota.getFiveHourWindowStart();
             if (fiveStart == null || now.getTime() - fiveStart.getTime() >= FIVE_HOURS_MS) {
                 fiveUsed = 0;
                 fiveStart = now;
             }
-            int weekUsed = nvl(quota.getWeeklyUsedPoints());
+            int weekUsed = nvl(quota.getWeeklyUsedTokens());
             Date weekAnchor = quota.getWeeklyAnchorAt();
             if (weekAnchor == null || now.getTime() - weekAnchor.getTime() >= WEEK_MS) {
                 weekUsed = 0;
                 weekAnchor = now;
             }
             int windowRemain = Math.min(Math.max(0, fiveLimit - fiveUsed), Math.max(0, weekLimit - weekUsed));
-            int extra = nvl(quota.getExtraPoints());
-            if (windowRemain + extra < points) {
-                log.warn("中央用量不足，未入账 product={} websiteUserId={} points={} remaining={}",
-                        PRODUCT_CODE, websiteUserId, points, windowRemain + extra);
+            int extra = nvl(quota.getExtraTokens());
+            if (windowRemain + extra < tokens) {
+                log.warn("中央用量不足，未入账 product={} websiteUserId={} tokens={} remaining={}",
+                        PRODUCT_CODE, websiteUserId, tokens, windowRemain + extra);
                 return false;
             }
-            int fromWindow = Math.min(points, windowRemain);
-            int fromExtra = points - fromWindow;
+            int fromWindow = Math.min(tokens, windowRemain);
+            int fromExtra = tokens - fromWindow;
 
             WebsiteUserQuota patch = new WebsiteUserQuota();
             patch.setPlanCode(planCode);
-            patch.setFiveHourLimitPoints(fiveLimit);
-            patch.setFiveHourUsedPoints(fiveUsed + fromWindow);
+            patch.setFiveHourLimitTokens(fiveLimit);
+            patch.setFiveHourUsedTokens(fiveUsed + fromWindow);
             patch.setFiveHourWindowStart(fiveStart);
-            patch.setWeeklyLimitPoints(weekLimit);
-            patch.setWeeklyUsedPoints(weekUsed + fromWindow);
+            patch.setWeeklyLimitTokens(weekLimit);
+            patch.setWeeklyUsedTokens(weekUsed + fromWindow);
             patch.setWeeklyAnchorAt(weekAnchor);
-            patch.setExtraPoints(extra - fromExtra);
+            patch.setExtraTokens(extra - fromExtra);
             patch.setQuotaVersion(nvl(quota.getQuotaVersion()) + 1);
             patch.setModifier(PRODUCT_CODE);
             WebsiteUserQuotaExample cas = new WebsiteUserQuotaExample();
@@ -337,7 +337,7 @@ public class CentralLedgerService {
             ledger.setProductCode(PRODUCT_CODE);
             ledger.setClientId(PRODUCT_CODE);
             ledger.setUsageKind(usageKind == null ? KIND_PRODUCT_CREDIT : usageKind);
-            ledger.setUsagePoints(points);
+            ledger.setUsageTokens(tokens);
             ledger.setPromptTokens(0);
             ledger.setCompletionTokens(0);
             ledger.setRemark(truncate(remark));
@@ -345,11 +345,11 @@ public class CentralLedgerService {
             ledger.setCreator(PRODUCT_CODE);
             ledger.setModifier(PRODUCT_CODE);
             websiteUsageLedgerMapper.insertSelective(ledger);
-            log.info("中央账本用量已入账 product={} websiteUserId={} points={} ledgerId={}",
-                    PRODUCT_CODE, websiteUserId, points, ledgerId);
+            log.info("中央账本用量已入账 product={} websiteUserId={} tokens={} ledgerId={}",
+                    PRODUCT_CODE, websiteUserId, tokens, ledgerId);
             return true;
         }
-        log.warn("中央用量入账并发重试耗尽，未入账 product={} websiteUserId={} points={}", PRODUCT_CODE, websiteUserId, points);
+        log.warn("中央用量入账并发重试耗尽，未入账 product={} websiteUserId={} tokens={}", PRODUCT_CODE, websiteUserId, tokens);
         return false;
     }
 

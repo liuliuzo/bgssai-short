@@ -6,13 +6,13 @@ public class WebsiteUserQuota {
     private Long id;
     private String userId;
     private String planCode;
-    private Integer fiveHourLimitPoints;
-    private Integer fiveHourUsedPoints;
+    private Integer fiveHourLimitTokens;
+    private Integer fiveHourUsedTokens;
     private Date fiveHourWindowStart;
-    private Integer weeklyLimitPoints;
-    private Integer weeklyUsedPoints;
+    private Integer weeklyLimitTokens;
+    private Integer weeklyUsedTokens;
     private Date weeklyAnchorAt;
-    private Integer extraPoints;
+    private Integer extraTokens;
     private Integer quotaVersion;
     private Boolean delFlag;
     private String creator;
@@ -44,20 +44,20 @@ public class WebsiteUserQuota {
         this.planCode = planCode == null ? null : planCode.trim();
     }
 
-    public Integer getFiveHourLimitPoints() {
-        return fiveHourLimitPoints;
+    public Integer getFiveHourLimitTokens() {
+        return fiveHourLimitTokens;
     }
 
-    public void setFiveHourLimitPoints(Integer fiveHourLimitPoints) {
-        this.fiveHourLimitPoints = fiveHourLimitPoints;
+    public void setFiveHourLimitTokens(Integer fiveHourLimitTokens) {
+        this.fiveHourLimitTokens = fiveHourLimitTokens;
     }
 
-    public Integer getFiveHourUsedPoints() {
-        return fiveHourUsedPoints;
+    public Integer getFiveHourUsedTokens() {
+        return fiveHourUsedTokens;
     }
 
-    public void setFiveHourUsedPoints(Integer fiveHourUsedPoints) {
-        this.fiveHourUsedPoints = fiveHourUsedPoints;
+    public void setFiveHourUsedTokens(Integer fiveHourUsedTokens) {
+        this.fiveHourUsedTokens = fiveHourUsedTokens;
     }
 
     public Date getFiveHourWindowStart() {
@@ -68,20 +68,20 @@ public class WebsiteUserQuota {
         this.fiveHourWindowStart = fiveHourWindowStart;
     }
 
-    public Integer getWeeklyLimitPoints() {
-        return weeklyLimitPoints;
+    public Integer getWeeklyLimitTokens() {
+        return weeklyLimitTokens;
     }
 
-    public void setWeeklyLimitPoints(Integer weeklyLimitPoints) {
-        this.weeklyLimitPoints = weeklyLimitPoints;
+    public void setWeeklyLimitTokens(Integer weeklyLimitTokens) {
+        this.weeklyLimitTokens = weeklyLimitTokens;
     }
 
-    public Integer getWeeklyUsedPoints() {
-        return weeklyUsedPoints;
+    public Integer getWeeklyUsedTokens() {
+        return weeklyUsedTokens;
     }
 
-    public void setWeeklyUsedPoints(Integer weeklyUsedPoints) {
-        this.weeklyUsedPoints = weeklyUsedPoints;
+    public void setWeeklyUsedTokens(Integer weeklyUsedTokens) {
+        this.weeklyUsedTokens = weeklyUsedTokens;
     }
 
     public Date getWeeklyAnchorAt() {
@@ -92,12 +92,12 @@ public class WebsiteUserQuota {
         this.weeklyAnchorAt = weeklyAnchorAt;
     }
 
-    public Integer getExtraPoints() {
-        return extraPoints;
+    public Integer getExtraTokens() {
+        return extraTokens;
     }
 
-    public void setExtraPoints(Integer extraPoints) {
-        this.extraPoints = extraPoints;
+    public void setExtraTokens(Integer extraTokens) {
+        this.extraTokens = extraTokens;
     }
 
     public Integer getQuotaVersion() {

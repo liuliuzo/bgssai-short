@@ -523,63 +523,63 @@ public class WebsiteUsageLedgerExample {
             addCriterion("usage_kind not like", value, "usageKind");
             return (Criteria) this;
         }
-        public Criteria andUsagePointsIsNull() {
-            addCriterion("usage_points is null");
+        public Criteria andUsageTokensIsNull() {
+            addCriterion("usage_tokens is null");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsIsNotNull() {
-            addCriterion("usage_points is not null");
+        public Criteria andUsageTokensIsNotNull() {
+            addCriterion("usage_tokens is not null");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsEqualTo(Integer value) {
-            addCriterion("usage_points =", value, "usagePoints");
+        public Criteria andUsageTokensEqualTo(Integer value) {
+            addCriterion("usage_tokens =", value, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsNotEqualTo(Integer value) {
-            addCriterion("usage_points <>", value, "usagePoints");
+        public Criteria andUsageTokensNotEqualTo(Integer value) {
+            addCriterion("usage_tokens <>", value, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsGreaterThan(Integer value) {
-            addCriterion("usage_points >", value, "usagePoints");
+        public Criteria andUsageTokensGreaterThan(Integer value) {
+            addCriterion("usage_tokens >", value, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsGreaterThanOrEqualTo(Integer value) {
-            addCriterion("usage_points >=", value, "usagePoints");
+        public Criteria andUsageTokensGreaterThanOrEqualTo(Integer value) {
+            addCriterion("usage_tokens >=", value, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsLessThan(Integer value) {
-            addCriterion("usage_points <", value, "usagePoints");
+        public Criteria andUsageTokensLessThan(Integer value) {
+            addCriterion("usage_tokens <", value, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsLessThanOrEqualTo(Integer value) {
-            addCriterion("usage_points <=", value, "usagePoints");
+        public Criteria andUsageTokensLessThanOrEqualTo(Integer value) {
+            addCriterion("usage_tokens <=", value, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsIn(List<Integer> values) {
-            addCriterion("usage_points in", values, "usagePoints");
+        public Criteria andUsageTokensIn(List<Integer> values) {
+            addCriterion("usage_tokens in", values, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsNotIn(List<Integer> values) {
-            addCriterion("usage_points not in", values, "usagePoints");
+        public Criteria andUsageTokensNotIn(List<Integer> values) {
+            addCriterion("usage_tokens not in", values, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsBetween(Integer value1, Integer value2) {
-            addCriterion("usage_points between", value1, value2, "usagePoints");
+        public Criteria andUsageTokensBetween(Integer value1, Integer value2) {
+            addCriterion("usage_tokens between", value1, value2, "usageTokens");
             return (Criteria) this;
         }
 
-        public Criteria andUsagePointsNotBetween(Integer value1, Integer value2) {
-            addCriterion("usage_points not between", value1, value2, "usagePoints");
+        public Criteria andUsageTokensNotBetween(Integer value1, Integer value2) {
+            addCriterion("usage_tokens not between", value1, value2, "usageTokens");
             return (Criteria) this;
         }
         public Criteria andPromptTokensIsNull() {

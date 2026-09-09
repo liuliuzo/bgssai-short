@@ -52,7 +52,7 @@ public final class ModelUsageMeta {
         return INTL.equals(regionCode(regionOrProvider)) ? "国外" : "国内";
     }
 
-    public static int pointWeight(String modelId, String provider) {
+    public static int tokenMultiplier(String modelId, String provider) {
         String s = norm(modelId);
         if (s.contains("fable")) {
             return 35;
@@ -111,17 +111,18 @@ public final class ModelUsageMeta {
         return INTL.equals(regionCode(provider, modelId)) ? 5 : 1;
     }
 
-    public static String usageHint(int pointWeight) {
-        int w = Math.max(pointWeight, 1);
-        return "每 1000 token 计 " + w + " 点";
+    public static String usageHint(int tokenMultiplier) {
+        int w = Math.max(tokenMultiplier, 1);
+        return w == 1 ? "按实际 token 计入额度" : ("高级模型：实际 token × " + w + " 计入额度");
     }
 
-    public static int usagePoints(long tokens, int pointWeight) {
+    public static int usageTokens(long tokens, int tokenMultiplier) {
         if (tokens <= 0) {
             return 0;
         }
-        int w = Math.max(pointWeight, 1);
-        return (int) Math.ceil(tokens / 1000.0 * w);
+        int w = Math.max(tokenMultiplier, 1);
+        // 直接相乘可能溢出 int：一次超长对话 × 20 倍权重就够呛，封顶到 MAX_VALUE
+        return (int) Math.min(Integer.MAX_VALUE, tokens * (long) w);
     }
 
     private static String norm(String s) {

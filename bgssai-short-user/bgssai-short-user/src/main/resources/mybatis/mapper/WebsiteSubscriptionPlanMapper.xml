@@ -7,8 +7,8 @@
     <result column="plan_name" jdbcType="VARCHAR" property="planName" />
     <result column="monthly_price_cent" jdbcType="INTEGER" property="monthlyPriceCent" />
     <result column="yearly_price_cent" jdbcType="INTEGER" property="yearlyPriceCent" />
-    <result column="five_hour_limit_points" jdbcType="INTEGER" property="fiveHourLimitPoints" />
-    <result column="weekly_limit_points" jdbcType="INTEGER" property="weeklyLimitPoints" />
+    <result column="five_hour_limit_tokens" jdbcType="INTEGER" property="fiveHourLimitTokens" />
+    <result column="weekly_limit_tokens" jdbcType="INTEGER" property="weeklyLimitTokens" />
     <result column="sort_no" jdbcType="INTEGER" property="sortNo" />
     <result column="enabled" jdbcType="BIT" property="enabled" />
     <result column="del_flag" jdbcType="BIT" property="delFlag" />
@@ -76,7 +76,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, plan_code, plan_name, monthly_price_cent, yearly_price_cent, five_hour_limit_points, weekly_limit_points, sort_no, enabled, del_flag, creator, modifier, gmt_create, gmt_modified
+    id, plan_code, plan_name, monthly_price_cent, yearly_price_cent, five_hour_limit_tokens, weekly_limit_tokens, sort_no, enabled, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlanExample" resultMap="BaseResultMap">
     select
@@ -133,8 +133,8 @@
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlan" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.subscription_plan (id, plan_code, plan_name, monthly_price_cent, yearly_price_cent, five_hour_limit_points, weekly_limit_points, sort_no, enabled, del_flag, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{planCode,jdbcType=VARCHAR}, #{planName,jdbcType=VARCHAR}, #{monthlyPriceCent,jdbcType=INTEGER}, #{yearlyPriceCent,jdbcType=INTEGER}, #{fiveHourLimitPoints,jdbcType=INTEGER}, #{weeklyLimitPoints,jdbcType=INTEGER}, #{sortNo,jdbcType=INTEGER}, #{enabled,jdbcType=BIT}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into bgssai_website.subscription_plan (id, plan_code, plan_name, monthly_price_cent, yearly_price_cent, five_hour_limit_tokens, weekly_limit_tokens, sort_no, enabled, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{planCode,jdbcType=VARCHAR}, #{planName,jdbcType=VARCHAR}, #{monthlyPriceCent,jdbcType=INTEGER}, #{yearlyPriceCent,jdbcType=INTEGER}, #{fiveHourLimitTokens,jdbcType=INTEGER}, #{weeklyLimitTokens,jdbcType=INTEGER}, #{sortNo,jdbcType=INTEGER}, #{enabled,jdbcType=BIT}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlan" useGeneratedKeys="true" keyProperty="id">
     insert into bgssai_website.subscription_plan
@@ -154,11 +154,11 @@
       <if test="yearlyPriceCent != null">
         yearly_price_cent,
       </if>
-      <if test="fiveHourLimitPoints != null">
-        five_hour_limit_points,
+      <if test="fiveHourLimitTokens != null">
+        five_hour_limit_tokens,
       </if>
-      <if test="weeklyLimitPoints != null">
-        weekly_limit_points,
+      <if test="weeklyLimitTokens != null">
+        weekly_limit_tokens,
       </if>
       <if test="sortNo != null">
         sort_no,
@@ -198,11 +198,11 @@
       <if test="yearlyPriceCent != null">
         #{yearlyPriceCent,jdbcType=INTEGER},
       </if>
-      <if test="fiveHourLimitPoints != null">
-        #{fiveHourLimitPoints,jdbcType=INTEGER},
+      <if test="fiveHourLimitTokens != null">
+        #{fiveHourLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="weeklyLimitPoints != null">
-        #{weeklyLimitPoints,jdbcType=INTEGER},
+      <if test="weeklyLimitTokens != null">
+        #{weeklyLimitTokens,jdbcType=INTEGER},
       </if>
       <if test="sortNo != null">
         #{sortNo,jdbcType=INTEGER},
@@ -248,11 +248,11 @@
       <if test="row.yearlyPriceCent != null">
         yearly_price_cent = #{row.yearlyPriceCent,jdbcType=INTEGER},
       </if>
-      <if test="row.fiveHourLimitPoints != null">
-        five_hour_limit_points = #{row.fiveHourLimitPoints,jdbcType=INTEGER},
+      <if test="row.fiveHourLimitTokens != null">
+        five_hour_limit_tokens = #{row.fiveHourLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="row.weeklyLimitPoints != null">
-        weekly_limit_points = #{row.weeklyLimitPoints,jdbcType=INTEGER},
+      <if test="row.weeklyLimitTokens != null">
+        weekly_limit_tokens = #{row.weeklyLimitTokens,jdbcType=INTEGER},
       </if>
       <if test="row.sortNo != null">
         sort_no = #{row.sortNo,jdbcType=INTEGER},
@@ -287,8 +287,8 @@
       plan_name = #{row.planName,jdbcType=VARCHAR},
       monthly_price_cent = #{row.monthlyPriceCent,jdbcType=INTEGER},
       yearly_price_cent = #{row.yearlyPriceCent,jdbcType=INTEGER},
-      five_hour_limit_points = #{row.fiveHourLimitPoints,jdbcType=INTEGER},
-      weekly_limit_points = #{row.weeklyLimitPoints,jdbcType=INTEGER},
+      five_hour_limit_tokens = #{row.fiveHourLimitTokens,jdbcType=INTEGER},
+      weekly_limit_tokens = #{row.weeklyLimitTokens,jdbcType=INTEGER},
       sort_no = #{row.sortNo,jdbcType=INTEGER},
       enabled = #{row.enabled,jdbcType=BIT},
       del_flag = #{row.delFlag,jdbcType=BIT},
@@ -315,11 +315,11 @@
       <if test="yearlyPriceCent != null">
         yearly_price_cent = #{yearlyPriceCent,jdbcType=INTEGER},
       </if>
-      <if test="fiveHourLimitPoints != null">
-        five_hour_limit_points = #{fiveHourLimitPoints,jdbcType=INTEGER},
+      <if test="fiveHourLimitTokens != null">
+        five_hour_limit_tokens = #{fiveHourLimitTokens,jdbcType=INTEGER},
       </if>
-      <if test="weeklyLimitPoints != null">
-        weekly_limit_points = #{weeklyLimitPoints,jdbcType=INTEGER},
+      <if test="weeklyLimitTokens != null">
+        weekly_limit_tokens = #{weeklyLimitTokens,jdbcType=INTEGER},
       </if>
       <if test="sortNo != null">
         sort_no = #{sortNo,jdbcType=INTEGER},
@@ -352,8 +352,8 @@
       plan_name = #{planName,jdbcType=VARCHAR},
       monthly_price_cent = #{monthlyPriceCent,jdbcType=INTEGER},
       yearly_price_cent = #{yearlyPriceCent,jdbcType=INTEGER},
-      five_hour_limit_points = #{fiveHourLimitPoints,jdbcType=INTEGER},
-      weekly_limit_points = #{weeklyLimitPoints,jdbcType=INTEGER},
+      five_hour_limit_tokens = #{fiveHourLimitTokens,jdbcType=INTEGER},
+      weekly_limit_tokens = #{weeklyLimitTokens,jdbcType=INTEGER},
       sort_no = #{sortNo,jdbcType=INTEGER},
       enabled = #{enabled,jdbcType=BIT},
       del_flag = #{delFlag,jdbcType=BIT},

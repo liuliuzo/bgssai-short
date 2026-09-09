@@ -108,10 +108,10 @@ public class AiModelResolveService {
             item.put("unit_price_cent", row.getUnitPriceCent());
             item.put("default_flag", row.getDefaultFlag());
             String region = ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
-            int weight = ModelUsageMeta.pointWeight(row.getModelCode(), row.getProviderCode());
+            int weight = ModelUsageMeta.tokenMultiplier(row.getModelCode(), row.getProviderCode());
             item.put("region", region);
             item.put("region_label", ModelUsageMeta.regionLabel(region));
-            item.put("point_weight", weight);
+            item.put("token_multiplier", weight);
             item.put("usage_hint", ModelUsageMeta.usageHint(weight));
             list.add(item);
         }

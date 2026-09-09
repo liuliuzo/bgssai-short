@@ -8,8 +8,8 @@ public class WebsiteSubscriptionPlan {
     private String planName;
     private Integer monthlyPriceCent;
     private Integer yearlyPriceCent;
-    private Integer fiveHourLimitPoints;
-    private Integer weeklyLimitPoints;
+    private Integer fiveHourLimitTokens;
+    private Integer weeklyLimitTokens;
     private Integer sortNo;
     private Boolean enabled;
     private Boolean delFlag;
@@ -58,20 +58,20 @@ public class WebsiteSubscriptionPlan {
         this.yearlyPriceCent = yearlyPriceCent;
     }
 
-    public Integer getFiveHourLimitPoints() {
-        return fiveHourLimitPoints;
+    public Integer getFiveHourLimitTokens() {
+        return fiveHourLimitTokens;
     }
 
-    public void setFiveHourLimitPoints(Integer fiveHourLimitPoints) {
-        this.fiveHourLimitPoints = fiveHourLimitPoints;
+    public void setFiveHourLimitTokens(Integer fiveHourLimitTokens) {
+        this.fiveHourLimitTokens = fiveHourLimitTokens;
     }
 
-    public Integer getWeeklyLimitPoints() {
-        return weeklyLimitPoints;
+    public Integer getWeeklyLimitTokens() {
+        return weeklyLimitTokens;
     }
 
-    public void setWeeklyLimitPoints(Integer weeklyLimitPoints) {
-        this.weeklyLimitPoints = weeklyLimitPoints;
+    public void setWeeklyLimitTokens(Integer weeklyLimitTokens) {
+        this.weeklyLimitTokens = weeklyLimitTokens;
     }
 
     public Integer getSortNo() {

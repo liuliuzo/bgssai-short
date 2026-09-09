@@ -316,122 +316,122 @@ public class WebsiteUserQuotaExample {
             addCriterion("plan_code not like", value, "planCode");
             return (Criteria) this;
         }
-        public Criteria andFiveHourLimitPointsIsNull() {
-            addCriterion("five_hour_limit_points is null");
+        public Criteria andFiveHourLimitTokensIsNull() {
+            addCriterion("five_hour_limit_tokens is null");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsIsNotNull() {
-            addCriterion("five_hour_limit_points is not null");
+        public Criteria andFiveHourLimitTokensIsNotNull() {
+            addCriterion("five_hour_limit_tokens is not null");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsEqualTo(Integer value) {
-            addCriterion("five_hour_limit_points =", value, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensEqualTo(Integer value) {
+            addCriterion("five_hour_limit_tokens =", value, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsNotEqualTo(Integer value) {
-            addCriterion("five_hour_limit_points <>", value, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensNotEqualTo(Integer value) {
+            addCriterion("five_hour_limit_tokens <>", value, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsGreaterThan(Integer value) {
-            addCriterion("five_hour_limit_points >", value, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensGreaterThan(Integer value) {
+            addCriterion("five_hour_limit_tokens >", value, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsGreaterThanOrEqualTo(Integer value) {
-            addCriterion("five_hour_limit_points >=", value, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensGreaterThanOrEqualTo(Integer value) {
+            addCriterion("five_hour_limit_tokens >=", value, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsLessThan(Integer value) {
-            addCriterion("five_hour_limit_points <", value, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensLessThan(Integer value) {
+            addCriterion("five_hour_limit_tokens <", value, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsLessThanOrEqualTo(Integer value) {
-            addCriterion("five_hour_limit_points <=", value, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensLessThanOrEqualTo(Integer value) {
+            addCriterion("five_hour_limit_tokens <=", value, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsIn(List<Integer> values) {
-            addCriterion("five_hour_limit_points in", values, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensIn(List<Integer> values) {
+            addCriterion("five_hour_limit_tokens in", values, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsNotIn(List<Integer> values) {
-            addCriterion("five_hour_limit_points not in", values, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensNotIn(List<Integer> values) {
+            addCriterion("five_hour_limit_tokens not in", values, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsBetween(Integer value1, Integer value2) {
-            addCriterion("five_hour_limit_points between", value1, value2, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensBetween(Integer value1, Integer value2) {
+            addCriterion("five_hour_limit_tokens between", value1, value2, "fiveHourLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourLimitPointsNotBetween(Integer value1, Integer value2) {
-            addCriterion("five_hour_limit_points not between", value1, value2, "fiveHourLimitPoints");
+        public Criteria andFiveHourLimitTokensNotBetween(Integer value1, Integer value2) {
+            addCriterion("five_hour_limit_tokens not between", value1, value2, "fiveHourLimitTokens");
             return (Criteria) this;
         }
-        public Criteria andFiveHourUsedPointsIsNull() {
-            addCriterion("five_hour_used_points is null");
-            return (Criteria) this;
-        }
-
-        public Criteria andFiveHourUsedPointsIsNotNull() {
-            addCriterion("five_hour_used_points is not null");
+        public Criteria andFiveHourUsedTokensIsNull() {
+            addCriterion("five_hour_used_tokens is null");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsEqualTo(Integer value) {
-            addCriterion("five_hour_used_points =", value, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensIsNotNull() {
+            addCriterion("five_hour_used_tokens is not null");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsNotEqualTo(Integer value) {
-            addCriterion("five_hour_used_points <>", value, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensEqualTo(Integer value) {
+            addCriterion("five_hour_used_tokens =", value, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsGreaterThan(Integer value) {
-            addCriterion("five_hour_used_points >", value, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensNotEqualTo(Integer value) {
+            addCriterion("five_hour_used_tokens <>", value, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsGreaterThanOrEqualTo(Integer value) {
-            addCriterion("five_hour_used_points >=", value, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensGreaterThan(Integer value) {
+            addCriterion("five_hour_used_tokens >", value, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsLessThan(Integer value) {
-            addCriterion("five_hour_used_points <", value, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensGreaterThanOrEqualTo(Integer value) {
+            addCriterion("five_hour_used_tokens >=", value, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsLessThanOrEqualTo(Integer value) {
-            addCriterion("five_hour_used_points <=", value, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensLessThan(Integer value) {
+            addCriterion("five_hour_used_tokens <", value, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsIn(List<Integer> values) {
-            addCriterion("five_hour_used_points in", values, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensLessThanOrEqualTo(Integer value) {
+            addCriterion("five_hour_used_tokens <=", value, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsNotIn(List<Integer> values) {
-            addCriterion("five_hour_used_points not in", values, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensIn(List<Integer> values) {
+            addCriterion("five_hour_used_tokens in", values, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsBetween(Integer value1, Integer value2) {
-            addCriterion("five_hour_used_points between", value1, value2, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensNotIn(List<Integer> values) {
+            addCriterion("five_hour_used_tokens not in", values, "fiveHourUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andFiveHourUsedPointsNotBetween(Integer value1, Integer value2) {
-            addCriterion("five_hour_used_points not between", value1, value2, "fiveHourUsedPoints");
+        public Criteria andFiveHourUsedTokensBetween(Integer value1, Integer value2) {
+            addCriterion("five_hour_used_tokens between", value1, value2, "fiveHourUsedTokens");
+            return (Criteria) this;
+        }
+
+        public Criteria andFiveHourUsedTokensNotBetween(Integer value1, Integer value2) {
+            addCriterion("five_hour_used_tokens not between", value1, value2, "fiveHourUsedTokens");
             return (Criteria) this;
         }
         public Criteria andFiveHourWindowStartIsNull() {
@@ -493,122 +493,122 @@ public class WebsiteUserQuotaExample {
             addCriterion("five_hour_window_start not between", value1, value2, "fiveHourWindowStart");
             return (Criteria) this;
         }
-        public Criteria andWeeklyLimitPointsIsNull() {
-            addCriterion("weekly_limit_points is null");
+        public Criteria andWeeklyLimitTokensIsNull() {
+            addCriterion("weekly_limit_tokens is null");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsIsNotNull() {
-            addCriterion("weekly_limit_points is not null");
+        public Criteria andWeeklyLimitTokensIsNotNull() {
+            addCriterion("weekly_limit_tokens is not null");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsEqualTo(Integer value) {
-            addCriterion("weekly_limit_points =", value, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensEqualTo(Integer value) {
+            addCriterion("weekly_limit_tokens =", value, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsNotEqualTo(Integer value) {
-            addCriterion("weekly_limit_points <>", value, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensNotEqualTo(Integer value) {
+            addCriterion("weekly_limit_tokens <>", value, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsGreaterThan(Integer value) {
-            addCriterion("weekly_limit_points >", value, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensGreaterThan(Integer value) {
+            addCriterion("weekly_limit_tokens >", value, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsGreaterThanOrEqualTo(Integer value) {
-            addCriterion("weekly_limit_points >=", value, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensGreaterThanOrEqualTo(Integer value) {
+            addCriterion("weekly_limit_tokens >=", value, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsLessThan(Integer value) {
-            addCriterion("weekly_limit_points <", value, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensLessThan(Integer value) {
+            addCriterion("weekly_limit_tokens <", value, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsLessThanOrEqualTo(Integer value) {
-            addCriterion("weekly_limit_points <=", value, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensLessThanOrEqualTo(Integer value) {
+            addCriterion("weekly_limit_tokens <=", value, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsIn(List<Integer> values) {
-            addCriterion("weekly_limit_points in", values, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensIn(List<Integer> values) {
+            addCriterion("weekly_limit_tokens in", values, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsNotIn(List<Integer> values) {
-            addCriterion("weekly_limit_points not in", values, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensNotIn(List<Integer> values) {
+            addCriterion("weekly_limit_tokens not in", values, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsBetween(Integer value1, Integer value2) {
-            addCriterion("weekly_limit_points between", value1, value2, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensBetween(Integer value1, Integer value2) {
+            addCriterion("weekly_limit_tokens between", value1, value2, "weeklyLimitTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyLimitPointsNotBetween(Integer value1, Integer value2) {
-            addCriterion("weekly_limit_points not between", value1, value2, "weeklyLimitPoints");
+        public Criteria andWeeklyLimitTokensNotBetween(Integer value1, Integer value2) {
+            addCriterion("weekly_limit_tokens not between", value1, value2, "weeklyLimitTokens");
             return (Criteria) this;
         }
-        public Criteria andWeeklyUsedPointsIsNull() {
-            addCriterion("weekly_used_points is null");
-            return (Criteria) this;
-        }
-
-        public Criteria andWeeklyUsedPointsIsNotNull() {
-            addCriterion("weekly_used_points is not null");
+        public Criteria andWeeklyUsedTokensIsNull() {
+            addCriterion("weekly_used_tokens is null");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsEqualTo(Integer value) {
-            addCriterion("weekly_used_points =", value, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensIsNotNull() {
+            addCriterion("weekly_used_tokens is not null");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsNotEqualTo(Integer value) {
-            addCriterion("weekly_used_points <>", value, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensEqualTo(Integer value) {
+            addCriterion("weekly_used_tokens =", value, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsGreaterThan(Integer value) {
-            addCriterion("weekly_used_points >", value, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensNotEqualTo(Integer value) {
+            addCriterion("weekly_used_tokens <>", value, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsGreaterThanOrEqualTo(Integer value) {
-            addCriterion("weekly_used_points >=", value, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensGreaterThan(Integer value) {
+            addCriterion("weekly_used_tokens >", value, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsLessThan(Integer value) {
-            addCriterion("weekly_used_points <", value, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensGreaterThanOrEqualTo(Integer value) {
+            addCriterion("weekly_used_tokens >=", value, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsLessThanOrEqualTo(Integer value) {
-            addCriterion("weekly_used_points <=", value, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensLessThan(Integer value) {
+            addCriterion("weekly_used_tokens <", value, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsIn(List<Integer> values) {
-            addCriterion("weekly_used_points in", values, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensLessThanOrEqualTo(Integer value) {
+            addCriterion("weekly_used_tokens <=", value, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsNotIn(List<Integer> values) {
-            addCriterion("weekly_used_points not in", values, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensIn(List<Integer> values) {
+            addCriterion("weekly_used_tokens in", values, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsBetween(Integer value1, Integer value2) {
-            addCriterion("weekly_used_points between", value1, value2, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensNotIn(List<Integer> values) {
+            addCriterion("weekly_used_tokens not in", values, "weeklyUsedTokens");
             return (Criteria) this;
         }
 
-        public Criteria andWeeklyUsedPointsNotBetween(Integer value1, Integer value2) {
-            addCriterion("weekly_used_points not between", value1, value2, "weeklyUsedPoints");
+        public Criteria andWeeklyUsedTokensBetween(Integer value1, Integer value2) {
+            addCriterion("weekly_used_tokens between", value1, value2, "weeklyUsedTokens");
+            return (Criteria) this;
+        }
+
+        public Criteria andWeeklyUsedTokensNotBetween(Integer value1, Integer value2) {
+            addCriterion("weekly_used_tokens not between", value1, value2, "weeklyUsedTokens");
             return (Criteria) this;
         }
         public Criteria andWeeklyAnchorAtIsNull() {
@@ -670,63 +670,63 @@ public class WebsiteUserQuotaExample {
             addCriterion("weekly_anchor_at not between", value1, value2, "weeklyAnchorAt");
             return (Criteria) this;
         }
-        public Criteria andExtraPointsIsNull() {
-            addCriterion("extra_points is null");
+        public Criteria andExtraTokensIsNull() {
+            addCriterion("extra_tokens is null");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsIsNotNull() {
-            addCriterion("extra_points is not null");
+        public Criteria andExtraTokensIsNotNull() {
+            addCriterion("extra_tokens is not null");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsEqualTo(Integer value) {
-            addCriterion("extra_points =", value, "extraPoints");
+        public Criteria andExtraTokensEqualTo(Integer value) {
+            addCriterion("extra_tokens =", value, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsNotEqualTo(Integer value) {
-            addCriterion("extra_points <>", value, "extraPoints");
+        public Criteria andExtraTokensNotEqualTo(Integer value) {
+            addCriterion("extra_tokens <>", value, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsGreaterThan(Integer value) {
-            addCriterion("extra_points >", value, "extraPoints");
+        public Criteria andExtraTokensGreaterThan(Integer value) {
+            addCriterion("extra_tokens >", value, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsGreaterThanOrEqualTo(Integer value) {
-            addCriterion("extra_points >=", value, "extraPoints");
+        public Criteria andExtraTokensGreaterThanOrEqualTo(Integer value) {
+            addCriterion("extra_tokens >=", value, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsLessThan(Integer value) {
-            addCriterion("extra_points <", value, "extraPoints");
+        public Criteria andExtraTokensLessThan(Integer value) {
+            addCriterion("extra_tokens <", value, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsLessThanOrEqualTo(Integer value) {
-            addCriterion("extra_points <=", value, "extraPoints");
+        public Criteria andExtraTokensLessThanOrEqualTo(Integer value) {
+            addCriterion("extra_tokens <=", value, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsIn(List<Integer> values) {
-            addCriterion("extra_points in", values, "extraPoints");
+        public Criteria andExtraTokensIn(List<Integer> values) {
+            addCriterion("extra_tokens in", values, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsNotIn(List<Integer> values) {
-            addCriterion("extra_points not in", values, "extraPoints");
+        public Criteria andExtraTokensNotIn(List<Integer> values) {
+            addCriterion("extra_tokens not in", values, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsBetween(Integer value1, Integer value2) {
-            addCriterion("extra_points between", value1, value2, "extraPoints");
+        public Criteria andExtraTokensBetween(Integer value1, Integer value2) {
+            addCriterion("extra_tokens between", value1, value2, "extraTokens");
             return (Criteria) this;
         }
 
-        public Criteria andExtraPointsNotBetween(Integer value1, Integer value2) {
-            addCriterion("extra_points not between", value1, value2, "extraPoints");
+        public Criteria andExtraTokensNotBetween(Integer value1, Integer value2) {
+            addCriterion("extra_tokens not between", value1, value2, "extraTokens");
             return (Criteria) this;
         }
         public Criteria andQuotaVersionIsNull() {

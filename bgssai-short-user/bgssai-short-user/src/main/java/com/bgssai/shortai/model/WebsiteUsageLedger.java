@@ -9,7 +9,7 @@ public class WebsiteUsageLedger {
     private String productCode;
     private String clientId;
     private String usageKind;
-    private Integer usagePoints;
+    private Integer usageTokens;
     private Integer promptTokens;
     private Integer completionTokens;
     private String conversationId;
@@ -68,12 +68,12 @@ public class WebsiteUsageLedger {
         this.usageKind = usageKind == null ? null : usageKind.trim();
     }
 
-    public Integer getUsagePoints() {
-        return usagePoints;
+    public Integer getUsageTokens() {
+        return usageTokens;
     }
 
-    public void setUsagePoints(Integer usagePoints) {
-        this.usagePoints = usagePoints;
+    public void setUsageTokens(Integer usageTokens) {
+        this.usageTokens = usageTokens;
     }
 
     public Integer getPromptTokens() {

@@ -106,14 +106,14 @@ class CentralLedgerServiceTest {
 
         ArgumentCaptor<WebsiteUserQuota> patch = ArgumentCaptor.forClass(WebsiteUserQuota.class);
         verify(quotaMapper).updateByExampleSelective(patch.capture(), any(WebsiteUserQuotaExample.class));
-        assertEquals(10, patch.getValue().getFiveHourUsedPoints());
-        assertEquals(52, patch.getValue().getWeeklyUsedPoints());
-        assertEquals(4, patch.getValue().getExtraPoints());
+        assertEquals(10, patch.getValue().getFiveHourUsedTokens());
+        assertEquals(52, patch.getValue().getWeeklyUsedTokens());
+        assertEquals(4, patch.getValue().getExtraTokens());
         assertEquals(4, patch.getValue().getQuotaVersion());
 
         ArgumentCaptor<WebsiteUsageLedger> ledger = ArgumentCaptor.forClass(WebsiteUsageLedger.class);
         verify(ledgerMapper).insertSelective(ledger.capture());
-        assertEquals(5, ledger.getValue().getUsagePoints());
+        assertEquals(5, ledger.getValue().getUsageTokens());
         assertEquals(CentralLedgerService.PRODUCT_CODE, ledger.getValue().getProductCode());
         verify(idempotencyMapper, never()).insertSelective(any(WebsiteUsageIdempotency.class));
     }
@@ -131,9 +131,9 @@ class CentralLedgerServiceTest {
 
         ArgumentCaptor<WebsiteUserQuota> patch = ArgumentCaptor.forClass(WebsiteUserQuota.class);
         verify(quotaMapper).updateByExampleSelective(patch.capture(), any(WebsiteUserQuotaExample.class));
-        assertEquals(3, patch.getValue().getFiveHourUsedPoints());
-        assertEquals(3, patch.getValue().getWeeklyUsedPoints());
-        assertEquals(0, patch.getValue().getExtraPoints());
+        assertEquals(3, patch.getValue().getFiveHourUsedTokens());
+        assertEquals(3, patch.getValue().getWeeklyUsedTokens());
+        assertEquals(0, patch.getValue().getExtraTokens());
     }
 
     @Test
@@ -228,13 +228,13 @@ class CentralLedgerServiceTest {
         quota.setId(1L);
         quota.setUserId(WEBSITE_USER);
         quota.setPlanCode("PRO");
-        quota.setFiveHourLimitPoints(fiveLimit);
-        quota.setFiveHourUsedPoints(fiveUsed);
+        quota.setFiveHourLimitTokens(fiveLimit);
+        quota.setFiveHourUsedTokens(fiveUsed);
         quota.setFiveHourWindowStart(new Date());
-        quota.setWeeklyLimitPoints(weekLimit);
-        quota.setWeeklyUsedPoints(weekUsed);
+        quota.setWeeklyLimitTokens(weekLimit);
+        quota.setWeeklyUsedTokens(weekUsed);
         quota.setWeeklyAnchorAt(new Date());
-        quota.setExtraPoints(extra);
+        quota.setExtraTokens(extra);
         quota.setQuotaVersion(version);
         return quota;
     }
