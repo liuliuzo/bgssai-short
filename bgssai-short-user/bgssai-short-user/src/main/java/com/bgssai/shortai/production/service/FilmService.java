@@ -341,6 +341,11 @@ public class FilmService {
             // Return a playable/presigned URL — the download-url JSON endpoint is not a media src.
             result.put("download_url", film.getFilmAssetId() == null ? null
                     : assetService.resolveUrl(film.getFilmAssetId()));
+            result.put("media_id", film.getMediaId());
+            result.put("media_play_url", film.getMediaPlayUrl());
+            result.put("media_publish_status", film.getMediaPublishStatus());
+            result.put("media_published_at", film.getMediaPublishedAt());
+            result.put("media_last_error", film.getMediaLastError());
         }
         return Responses.ok(result);
     }

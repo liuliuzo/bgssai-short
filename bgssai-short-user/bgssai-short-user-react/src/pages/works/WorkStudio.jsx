@@ -833,6 +833,21 @@ function ComposePane({ work, episodeId, onReload }) {
           message.success('已撤回')
           await onReload()
         }}>撤回审核</Button>
+        <Button
+          type="primary"
+          disabled={!film?.film_id || film?.compose_status !== 'READY'}
+          onClick={async () => {
+            const { data } = await productionApi.publishFilmToMedia({
+              episode_id: episodeId,
+              film_id: film?.film_id,
+            })
+            if (data?.success) {
+              const r = data.result || {}
+              message.success(`已发布到 Media：${r.media_id || ''}`)
+              await load()
+            }
+          }}
+        >发布到 Media</Button>
       </Space>
       {film?.download_url ? (
         <div style={{ marginTop: 12 }}>
@@ -848,6 +863,20 @@ function ComposePane({ work, episodeId, onReload }) {
             style={{ width: '100%', maxWidth: 360, background: '#111' }}
           />
         </div>
+      ) : null}
+      {film?.media_id ? (
+        <Alert
+          type="success"
+          showIcon
+          style={{ marginTop: 12 }}
+          message={`Media ${film.media_publish_status || 'READY'} · ${film.media_id}`}
+          description={film.media_play_url ? (
+            <a href={film.media_play_url} target="_blank" rel="noreferrer">{film.media_play_url}</a>
+          ) : null}
+        />
+      ) : null}
+      {film?.media_last_error ? (
+        <Alert type="error" showIcon style={{ marginTop: 12 }} message={film.media_last_error} />
       ) : null}
     </Card>
   )

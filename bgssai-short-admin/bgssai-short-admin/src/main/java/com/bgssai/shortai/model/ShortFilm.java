@@ -32,6 +32,16 @@ public class ShortFilm implements Serializable {
 
     private String exportJson;
 
+    private String mediaId;
+
+    private String mediaPlayUrl;
+
+    private String mediaPublishStatus;
+
+    private Date mediaPublishedAt;
+
+    private String mediaLastError;
+
     private Integer deletedFlag;
 
     private Date createdTime;
@@ -140,6 +150,46 @@ public class ShortFilm implements Serializable {
 
     public void setExportJson(String exportJson) {
         this.exportJson = exportJson == null ? null : exportJson.trim();
+    }
+
+    public String getMediaId() {
+        return mediaId;
+    }
+
+    public void setMediaId(String mediaId) {
+        this.mediaId = mediaId == null ? null : mediaId.trim();
+    }
+
+    public String getMediaPlayUrl() {
+        return mediaPlayUrl;
+    }
+
+    public void setMediaPlayUrl(String mediaPlayUrl) {
+        this.mediaPlayUrl = mediaPlayUrl == null ? null : mediaPlayUrl.trim();
+    }
+
+    public String getMediaPublishStatus() {
+        return mediaPublishStatus;
+    }
+
+    public void setMediaPublishStatus(String mediaPublishStatus) {
+        this.mediaPublishStatus = mediaPublishStatus == null ? null : mediaPublishStatus.trim();
+    }
+
+    public Date getMediaPublishedAt() {
+        return mediaPublishedAt;
+    }
+
+    public void setMediaPublishedAt(Date mediaPublishedAt) {
+        this.mediaPublishedAt = mediaPublishedAt;
+    }
+
+    public String getMediaLastError() {
+        return mediaLastError;
+    }
+
+    public void setMediaLastError(String mediaLastError) {
+        this.mediaLastError = mediaLastError == null ? null : mediaLastError.trim();
     }
 
     public Integer getDeletedFlag() {
