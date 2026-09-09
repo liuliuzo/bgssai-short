@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.ShortDebitOutboxMapper">
+  <resultMap id="BaseResultMap" type="com.bgssai.shortai.model.ShortDebitOutboxEntry">
+    <id column="outbox_id" property="outboxId" />
+    <result column="user_id" property="userId" />
+    <result column="website_user_id" property="websiteUserId" />
+    <result column="amount" property="amount" />
+    <result column="usage_kind" property="usageKind" />
+    <result column="delivered" property="delivered" />
+    <result column="attempts" property="attempts" />
+    <result column="next_attempt_at" property="nextAttemptAt" />
+    <result column="lease_until" property="leaseUntil" />
+  </resultMap>
+  <insert id="enqueue">
+    INSERT INTO short_debit_outbox(outbox_id, user_id, website_user_id, amount, usage_kind)
+    SELECT #{id}, #{userId}, open_id, #{amount}, 'quota_cent' FROM oauth_binding
+    WHERE user_id = #{userId} AND platform = 'bgssai' AND del_flag = 0 AND open_id IS NOT NULL AND open_id &lt;&gt; ''
+    ON DUPLICATE KEY UPDATE outbox_id = outbox_id
+  </insert>
+  <select id="pending" parameterType="com.bgssai.shortai.model.ShortDebitOutboxExample" resultMap="BaseResultMap">
+    SELECT outbox_id, user_id, website_user_id, amount, usage_kind, delivered, attempts, next_attempt_at, lease_until
+    FROM short_debit_outbox
+    WHERE delivered = 0 AND next_attempt_at &lt;= NOW() AND (lease_until IS NULL OR lease_until &lt; NOW())
+    ORDER BY next_attempt_at, outbox_id LIMIT #{limit}
+  </select>
+  <update id="claim">
+    UPDATE short_debit_outbox SET lease_until = DATE_ADD(NOW(), INTERVAL 120 SECOND)
+    WHERE outbox_id = #{id} AND delivered = 0 AND next_attempt_at &lt;= NOW() AND (lease_until IS NULL OR lease_until &lt; NOW())
+  </update>
+  <update id="acknowledge">
+    UPDATE short_debit_outbox SET delivered = 1, lease_until = NULL WHERE outbox_id = #{id}
+  </update>
+  <update id="retry">
+    UPDATE short_debit_outbox SET attempts = attempts + 1, lease_until = NULL,
+      next_attempt_at = DATE_ADD(NOW(), INTERVAL #{delay} SECOND)
+    WHERE outbox_id = #{id} AND delivered = 0
+  </update>
+</mapper>

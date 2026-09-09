@@ -201,7 +201,7 @@ CREATE TABLE credit_pack (
   name VARCHAR(64) NOT NULL COMMENT '名称',
   credit_cent INT NOT NULL COMMENT '入账额度(分)',
   price_cent INT NOT NULL COMMENT '售价(分)',
-  
+
   is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否上架',
   sort_order INT NOT NULL DEFAULT 0 COMMENT '排序',
   del_flag TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
@@ -1063,3 +1063,16 @@ CREATE TABLE `short_source_chapter` (
   UNIQUE KEY `uk_short_source_chapter_id` (`chapter_id`),
   KEY `idx_short_source_chapter_src` (`source_id`, `chapter_no`, `deleted_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原著章节';
+
+CREATE TABLE IF NOT EXISTS short_debit_outbox (
+    outbox_id VARCHAR(128) NOT NULL PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL,
+    website_user_id VARCHAR(64) NOT NULL,
+    amount INT NOT NULL,
+    usage_kind VARCHAR(32) NOT NULL,
+    delivered TINYINT NOT NULL DEFAULT 0,
+    attempts INT NOT NULL DEFAULT 0,
+    next_attempt_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    lease_until DATETIME NULL,
+    KEY idx_short_debit_pending(delivered, next_attempt_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
