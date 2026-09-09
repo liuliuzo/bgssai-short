@@ -21,7 +21,7 @@
 
 `POST /bgssai/user/subscription/order/status`：仅订单本人。`created` 且非沙箱、创建超过 5 秒时
 回查渠道；已支付则 `grantIfCreated` 后返回 `paid`。沙箱不查渠道。渠道异常只记 WARN，接口仍返回库状态。
-前端订阅页在展示 `code_url` 后每 2.5 秒轮询直至 `paid`。
+前端订阅页在下单成功后弹出扫码弹窗：用 `code_url` 渲染可扫二维码（沙箱假 `weixin://` / `https://qr.alipay.com/sandbox/...` 同样渲染），展示 `order_no` / 金额 / `payment_channel`，并提供复制 `code_url`。弹窗打开期间每约 2 秒轮询 `order/status`，直至 `paid` / `closed` / `expires_at` 超时；`paid` 后刷新 `subscription/me` 与加量包列表；关闭弹窗或卸载时停止轮询。
 
 ## 3. 回调（验签永不删除）
 
