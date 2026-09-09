@@ -350,6 +350,9 @@ public class FilmService {
             if (publishLog != null) {
                 result.put("publish_log", publishLog);
             }
+            if (film.getMediaPublishLog() != null && !film.getMediaPublishLog().isBlank()) {
+                result.put("media_publish_log", film.getMediaPublishLog());
+            }
         }
         return Responses.ok(result);
     }

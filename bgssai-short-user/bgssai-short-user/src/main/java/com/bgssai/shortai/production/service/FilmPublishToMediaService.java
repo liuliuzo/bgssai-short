@@ -21,7 +21,9 @@ import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishToMediaReq;
 import com.bgssai.shortai.production.media.MediaIngestClient;
 import com.bgssai.shortai.production.media.MediaIngestContract;
+import com.bgssai.shortai.production.media.MediaPublishException;
 import com.bgssai.shortai.production.media.RestMediaIngestClient;
+import com.bgssai.shortai.production.support.ShortJson;
 
 @Service
 public class FilmPublishToMediaService {
@@ -60,14 +62,21 @@ public class FilmPublishToMediaService {
         Map<String, Object> payload = MediaIngestContract.buildPayload(
                 film.getWorkId(), film.getEpisodeId(), film.getFilmId(),
                 title, coverUrl, videoUrl, film.getFilmDurationSec(), tags);
+        String idempotencyKey = String.valueOf(payload.get("idempotency_key"));
 
         try {
             MediaIngestClient.IngestResult ingested = mediaIngestClient.ingest(payload);
             Date publishedAt = new Date();
-            persistSuccess(film, ingested, publishedAt);
-            return Responses.ok(toResult(film, ingested, payload.get("idempotency_key"), publishedAt));
+            persistSuccess(film, ingested, idempotencyKey, publishedAt);
+            return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt));
         } catch (BizException ex) {
-            persistFailure(film, ex.getMessage());
+            Integer httpStatus = null;
+            int attempts = 1;
+            if (ex instanceof MediaPublishException mpe) {
+                httpStatus = mpe.getHttpStatus();
+                attempts = mpe.getAttempts();
+            }
+            persistFailure(film, idempotencyKey, httpStatus, attempts, ex.getMessage());
             throw ex;
         }
     }
@@ -140,6 +149,10 @@ public class FilmPublishToMediaService {
         if (film == null) {
             return null;
         }
+        Map<String, Object> fromJson = ShortJson.map(film.getMediaPublishLog());
+        if (!fromJson.isEmpty()) {
+            return fromJson;
+        }
         String status = film.getMediaPublishStatus();
         boolean hasLog = (status != null && !status.isBlank() && !"NONE".equals(status))
                 || (film.getMediaId() != null && !film.getMediaId().isBlank())
@@ -148,13 +161,29 @@ public class FilmPublishToMediaService {
             return null;
         }
         Map<String, Object> log = new LinkedHashMap<>();
+        log.put("idempotency_key", MediaIngestContract.idempotencyKey(
+                film.getWorkId(), film.getEpisodeId(), film.getFilmId()));
         log.put("media_id", film.getMediaId());
         log.put("play_url", film.getMediaPlayUrl());
         log.put("status", status == null || status.isBlank() ? "NONE" : status);
+        log.put("http_status", null);
+        log.put("error", film.getMediaLastError());
         log.put("published_at", film.getMediaPublishedAt());
-        log.put("last_error", film.getMediaLastError());
-        log.put("idempotency_key", MediaIngestContract.idempotencyKey(
-                film.getWorkId(), film.getEpisodeId(), film.getFilmId()));
+        log.put("attempts", 1);
+        return log;
+    }
+
+    static Map<String, Object> richPublishLog(String idempotencyKey, String mediaId, String playUrl,
+            String status, Integer httpStatus, String error, int attempts, Date at) {
+        Map<String, Object> log = new LinkedHashMap<>();
+        log.put("idempotency_key", idempotencyKey);
+        log.put("media_id", mediaId);
+        log.put("play_url", playUrl);
+        log.put("status", status);
+        log.put("http_status", httpStatus);
+        log.put("error", error == null ? "" : error);
+        log.put("attempts", attempts);
+        log.put("published_at", at);
         return log;
     }
 
@@ -242,13 +271,18 @@ public class FilmPublishToMediaService {
         return film;
     }
 
-    private void persistSuccess(ShortFilm film, MediaIngestClient.IngestResult ingested, Date publishedAt) {
+    private void persistSuccess(ShortFilm film, MediaIngestClient.IngestResult ingested,
+            String idempotencyKey, Date publishedAt) {
+        Map<String, Object> log = richPublishLog(idempotencyKey, ingested.mediaId(), ingested.playUrl(),
+                ingested.status(), ingested.httpStatus(), "", ingested.attempts(), publishedAt);
+        String logJson = ShortJson.toJson(log);
         ShortFilm patch = new ShortFilm();
         patch.setMediaId(ingested.mediaId());
         patch.setMediaPlayUrl(ingested.playUrl());
         patch.setMediaPublishStatus(ingested.status());
         patch.setMediaPublishedAt(publishedAt);
         patch.setMediaLastError("");
+        patch.setMediaPublishLog(logJson);
         patch.setUpdatedTime(publishedAt);
         ShortFilmExample up = new ShortFilmExample();
         up.createCriteria().andIdEqualTo(film.getId());
@@ -258,20 +292,30 @@ public class FilmPublishToMediaService {
         film.setMediaPublishStatus(ingested.status());
         film.setMediaPublishedAt(publishedAt);
         film.setMediaLastError("");
+        film.setMediaPublishLog(logJson);
     }
 
-    private void persistFailure(ShortFilm film, String error) {
+    private void persistFailure(ShortFilm film, String idempotencyKey, Integer httpStatus, int attempts,
+            String error) {
         String msg = error == null ? "media publish failed" : error;
         if (msg.length() > 1000) {
             msg = msg.substring(0, 1000);
         }
+        Date at = new Date();
+        Map<String, Object> log = richPublishLog(idempotencyKey, film.getMediaId(), film.getMediaPlayUrl(),
+                "FAILED", httpStatus, msg, attempts, at);
+        String logJson = ShortJson.toJson(log);
         ShortFilm patch = new ShortFilm();
         patch.setMediaPublishStatus("FAILED");
         patch.setMediaLastError(msg);
-        patch.setUpdatedTime(new Date());
+        patch.setMediaPublishLog(logJson);
+        patch.setUpdatedTime(at);
         ShortFilmExample up = new ShortFilmExample();
         up.createCriteria().andIdEqualTo(film.getId());
         shortFilmMapper.updateByExampleSelective(patch, up);
+        film.setMediaPublishStatus("FAILED");
+        film.setMediaLastError(msg);
+        film.setMediaPublishLog(logJson);
     }
 
     private static Map<String, Object> toResult(ShortFilm film, MediaIngestClient.IngestResult ingested,
@@ -285,6 +329,8 @@ public class FilmPublishToMediaService {
         result.put("status", ingested.status());
         result.put("idempotency_key", idempotencyKey);
         result.put("published_at", publishedAt);
+        result.put("http_status", ingested.httpStatus());
+        result.put("attempts", ingested.attempts());
         result.put("publish_log", buildPublishLog(film));
         return result;
     }

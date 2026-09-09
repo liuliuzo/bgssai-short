@@ -218,4 +218,40 @@ class FilmPublishToMediaServiceTest {
         film.setMediaPublishStatus("NONE");
         assertEquals(null, FilmPublishToMediaService.buildPublishLog(film));
     }
+
+    @Test
+    void idempotentRepublishUpdatesLatestResult() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any()))
+                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1", "READY", 200, 1))
+                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1b", "READY", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        ApiResponse first = service().publish(req);
+        ApiResponse second = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> r2 = (Map<String, Object>) second.getResult();
+        assertEquals("md-1", r2.get("media_id"));
+        assertEquals("https://p/1b", r2.get("play_url"));
+        assertEquals("short:w-1:ep-1:fl-1", r2.get("idempotency_key"));
+        verify(mediaIngestClient, org.mockito.Mockito.times(2)).ingest(any());
+        verify(filmMapper, org.mockito.Mockito.times(2)).updateByExampleSelective(any(), any());
+        assertTrue(first.isSuccess());
+    }
+
+    @Test
+    void richPublishLogContainsIdempotencyAndHttpStatus() {
+        Map<String, Object> log = FilmPublishToMediaService.richPublishLog(
+                "short:w:e:f", "md-9", "https://p", "READY", 200, "", 2, new java.util.Date());
+        assertEquals("short:w:e:f", log.get("idempotency_key"));
+        assertEquals("md-9", log.get("media_id"));
+        assertEquals(200, log.get("http_status"));
+        assertEquals(2, log.get("attempts"));
+    }
 }

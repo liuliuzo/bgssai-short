@@ -71,6 +71,8 @@ class RestMediaIngestClientTest {
         BizException ex = assertThrows(BizException.class, () -> client.ingest(payload));
         assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
         assertTrue(ex.getMessage().contains("不可达") || ex.getMessage().contains("Media"));
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(2))
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
     }
 
     @Test
@@ -151,5 +153,63 @@ class RestMediaIngestClientTest {
         BizException ex = assertThrows(BizException.class, () -> client.ingest(
                 MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
         assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
+    }
+
+    @Test
+    void retriesOnceOnHttp500ThenSucceeds() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> ok = Map.of("media_id", "md-r", "play_url", "https://p/r", "status", "READY");
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenThrow(new org.springframework.web.client.HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+                .thenReturn(new ResponseEntity<>(ok, HttpStatus.OK));
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        MediaIngestClient.IngestResult out = client.ingest(MediaIngestContract.buildPayload(
+                "w", "e", "f", "t", null, "https://v.mp4", 1, List.of()));
+        assertEquals("md-r", out.mediaId());
+        assertEquals(2, out.attempts());
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(2))
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
+    }
+
+    @Test
+    void doesNotRetryOnBizCode6xxxx() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "60021");
+        body.put("message", "quota");
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        assertThrows(BizException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(1))
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
+    }
+
+    @Test
+    void retriesOnceOnTimeoutThenFails() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenThrow(new ResourceAccessException("Read timed out",
+                        new java.net.SocketTimeoutException("Read timed out")));
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        MediaPublishException ex = assertThrows(MediaPublishException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        assertEquals(CommonErrorCode.UPSTREAM_TIMEOUT.code(), ex.getCode());
+        assertEquals(2, ex.getAttempts());
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(2))
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
     }
 }

@@ -23,6 +23,8 @@ import com.bgssai.shortai.secret.SysSecretReader;
 @Component
 public class RestMediaIngestClient implements MediaIngestClient {
 
+    static final int MAX_ATTEMPTS = 2;
+
     private final RestTemplate restTemplate;
     private final BgssaiMediaProperties properties;
     private final SysSecretReader secretReader;
@@ -41,7 +43,6 @@ public class RestMediaIngestClient implements MediaIngestClient {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public IngestResult ingest(Map<String, Object> payload) {
         String base = properties.getBaseUrl();
         if (base == null || base.isBlank()) {
@@ -56,6 +57,23 @@ public class RestMediaIngestClient implements MediaIngestClient {
                             + " 写入键 bgssai.media.ingest-token（勿把真实密钥提交到仓库）");
         }
         String url = trimSlash(base) + MediaIngestContract.INGEST_PATH;
+        MediaPublishException lastRetriable = null;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                IngestResult result = postOnce(url, token, payload, attempt);
+                return result;
+            } catch (MediaPublishException ex) {
+                if (!isRetriable(ex) || attempt >= MAX_ATTEMPTS) {
+                    throw withAttempts(ex, attempt);
+                }
+                lastRetriable = ex;
+            }
+        }
+        throw withAttempts(lastRetriable, MAX_ATTEMPTS);
+    }
+
+    @SuppressWarnings("unchecked")
+    private IngestResult postOnce(String url, String token, Map<String, Object> payload, int attempt) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(MediaIngestContract.TOKEN_HEADER, token);
@@ -63,19 +81,22 @@ public class RestMediaIngestClient implements MediaIngestClient {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, new HttpEntity<>(payload, headers),
                     Map.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                        "Media 发布失败：HTTP " + response.getStatusCode().value());
+                int status = response.getStatusCode().value();
+                throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                        "Media 发布失败：HTTP " + status, status, attempt);
             }
-            return parseBody(response.getBody(), response.getStatusCode().value());
+            return parseBody(response.getBody(), response.getStatusCode().value(), attempt);
+        } catch (MediaPublishException ex) {
+            throw ex;
         } catch (BizException ex) {
             throw ex;
         } catch (HttpStatusCodeException ex) {
-            throw mapHttpStatus(ex);
+            throw mapHttpStatus(ex, attempt);
         } catch (ResourceAccessException ex) {
-            throw mapAccess(ex);
+            throw mapAccess(ex, attempt);
         } catch (RestClientException ex) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 服务不可用：" + shortMsg(ex), ex);
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                    "Media 服务不可用：" + shortMsg(ex), null, attempt, ex);
         }
     }
 
@@ -95,68 +116,97 @@ public class RestMediaIngestClient implements MediaIngestClient {
     }
 
     @SuppressWarnings("unchecked")
-    IngestResult parseBody(Map<String, Object> body, int httpStatus) {
+    IngestResult parseBody(Map<String, Object> body, int httpStatus, int attempt) {
         String bizCode = text(body.get("code"));
         if (!bizCode.isBlank() && !isSuccessCode(bizCode)) {
             String bizMsg = text(body.get("message"));
             if (bizMsg.isBlank()) {
                 bizMsg = text(body.get("msg"));
             }
+            String message;
             if (looksLike6xxxx(bizCode)) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                        "Media 业务拒绝（" + bizCode + "）"
-                                + (bizMsg.isBlank() ? "" : "：" + bizMsg));
+                message = "Media 业务拒绝（" + bizCode + "）"
+                        + (bizMsg.isBlank() ? "" : "：" + bizMsg);
+            } else {
+                message = "Media 返回错误码 " + bizCode
+                        + (bizMsg.isBlank() ? "" : "：" + bizMsg);
             }
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 返回错误码 " + bizCode
-                            + (bizMsg.isBlank() ? "" : "：" + bizMsg));
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR, message, httpStatus, attempt);
         }
         Map<String, Object> result = unwrapResult(body);
         String mediaId = text(result.get("media_id"));
         String playUrl = text(result.get("play_url"));
         String status = text(result.get("status"));
         if (mediaId.isBlank() || playUrl.isBlank()) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）");
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                    "Media 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）",
+                    httpStatus, attempt);
         }
         if (status.isBlank()) {
             status = "READY";
         }
-        return new IngestResult(mediaId, playUrl, status);
+        return new IngestResult(mediaId, playUrl, status, httpStatus, attempt);
     }
 
-    private BizException mapHttpStatus(HttpStatusCodeException ex) {
+    private static boolean isRetriable(MediaPublishException ex) {
+        Integer status = ex.getHttpStatus();
+        if (status != null && status >= 500) {
+            return true;
+        }
+        if (CommonErrorCode.UPSTREAM_TIMEOUT.code().equals(ex.getCode())) {
+            return true;
+        }
+        String msg = ex.getMessage() == null ? "" : ex.getMessage();
+        return msg.contains("不可达") || msg.contains("超时") || msg.contains("服务异常");
+    }
+
+    private static MediaPublishException withAttempts(MediaPublishException ex, int attempts) {
+        if (ex == null) {
+            return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR, "Media 发布失败", null, attempts);
+        }
+        if (ex.getAttempts() == attempts) {
+            return ex;
+        }
+        String suffix = attempts > 1 ? "（已重试）" : "";
+        String msg = ex.getMessage() == null ? "Media 发布失败" : ex.getMessage();
+        if (attempts > 1 && !msg.contains("已重试")) {
+            msg = msg + suffix;
+        }
+        return new MediaPublishException(ex.getCode(), msg, ex.getHttpStatus(), attempts, ex.getCause());
+    }
+
+    private MediaPublishException mapHttpStatus(HttpStatusCodeException ex, int attempt) {
         int status = ex.getStatusCode().value();
         String bodySnippet = shortMsg(ex.getResponseBodyAsString());
         if (status >= 500) {
-            return new BizException(CommonErrorCode.UPSTREAM_ERROR,
+            return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
                     "Media 服务异常（HTTP " + status + "）"
                             + (bodySnippet.isBlank() ? "" : "：" + bodySnippet),
-                    ex);
+                    status, attempt, ex);
         }
         if (status == 401 || status == 403) {
-            return new BizException(CommonErrorCode.UPSTREAM_ERROR,
+            return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
                     "Media 鉴权失败（HTTP " + status + "）：请检查 ingest-token 是否与 media 侧一致",
-                    ex);
+                    status, attempt, ex);
         }
         if (status == 404) {
-            return new BizException(CommonErrorCode.UPSTREAM_ERROR,
+            return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
                     "Media 接口不存在（HTTP 404）：请确认 bgssai.media.base-url 指向正确的 media 服务",
-                    ex);
+                    status, attempt, ex);
         }
-        return new BizException(CommonErrorCode.UPSTREAM_ERROR,
+        return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
                 "Media 发布失败（HTTP " + status + "）"
                         + (bodySnippet.isBlank() ? "" : "：" + bodySnippet),
-                ex);
+                status, attempt, ex);
     }
 
-    private BizException mapAccess(ResourceAccessException ex) {
+    private MediaPublishException mapAccess(ResourceAccessException ex, int attempt) {
         if (isTimeout(ex)) {
-            return new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,
-                    "Media 请求超时：请确认 media 服务可达后重试", ex);
+            return new MediaPublishException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                    "Media 请求超时：请确认 media 服务可达后重试", null, attempt, ex);
         }
-        return new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                "Media 服务不可达（连接失败）：请确认 media 已启动且 base-url 正确", ex);
+        return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                "Media 服务不可达（连接失败）：请确认 media 已启动且 base-url 正确", null, attempt, ex);
     }
 
     private static boolean isTimeout(Throwable ex) {

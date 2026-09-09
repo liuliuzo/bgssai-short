@@ -42,6 +42,8 @@ public class ShortFilm implements Serializable {
 
     private String mediaLastError;
 
+    private String mediaPublishLog;
+
     private Integer deletedFlag;
 
     private Date createdTime;
@@ -190,6 +192,14 @@ public class ShortFilm implements Serializable {
 
     public void setMediaLastError(String mediaLastError) {
         this.mediaLastError = mediaLastError == null ? null : mediaLastError.trim();
+    }
+
+    public String getMediaPublishLog() {
+        return mediaPublishLog;
+    }
+
+    public void setMediaPublishLog(String mediaPublishLog) {
+        this.mediaPublishLog = mediaPublishLog;
     }
 
     public Integer getDeletedFlag() {

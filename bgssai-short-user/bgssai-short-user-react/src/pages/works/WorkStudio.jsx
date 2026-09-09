@@ -981,6 +981,10 @@ function ComposePane({ work, episodeId, onReload }) {
           disabled={!canPublish}
           onClick={runPublish}
         >发布到 Media</Button>
+        <Button onClick={async () => {
+          await load()
+          message.success('已刷新发布状态')
+        }}>刷新发布状态</Button>
       </Space>
       {film?.download_url ? (
         <div style={{ marginTop: 12 }}>
@@ -1038,6 +1042,9 @@ function ComposePane({ work, episodeId, onReload }) {
               {publishLog.published_at ? (
                 <Paragraph type="secondary" style={{ marginBottom: 4 }}>
                   发布时间 {String(publishLog.published_at)}
+                  {publishLog.http_status != null ? ` · HTTP ${publishLog.http_status}` : ''}
+                  {publishLog.attempts != null ? ` · 尝试 ${publishLog.attempts} 次` : ''}
+                  {publishLog.idempotency_key ? ` · ${publishLog.idempotency_key}` : ''}
                 </Paragraph>
               ) : null}
               {publishLog.last_error ? (

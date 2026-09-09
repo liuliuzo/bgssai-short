@@ -610,6 +610,7 @@ CREATE TABLE `short_film` (
   `media_publish_status` VARCHAR(32) NOT NULL DEFAULT 'NONE',
   `media_published_at` DATETIME DEFAULT NULL,
   `media_last_error` VARCHAR(1024) DEFAULT NULL,
+  `media_publish_log` LONGTEXT,
   `deleted_flag` TINYINT NOT NULL DEFAULT 0,
   `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
