@@ -18,15 +18,40 @@ const { TextArea } = Input
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function waitTask(workId, taskId) {
-  for (let i = 0; i < 40; i += 1) {
-    const { data } = await productionApi.listTasks({ work_id: workId, page_num: 1, page_size: 50 })
-    const row = (data?.result || []).find((item) => item.task_id === taskId)
-    if (row && (row.task_status === 'SUCCEEDED' || row.task_status === 'FAILED' || row.task_status === 'CANCELED')) {
-      return row
-    }
+  if (!taskId) return null
+  const rows = await waitTasks(workId, [taskId])
+  return rows[0] || null
+}
+
+async function waitTasks(workId, taskIds) {
+  const ids = [...new Set((taskIds || []).filter(Boolean))]
+  if (!ids.length) return []
+  for (let i = 0; i < 80; i += 1) {
+    const { data } = await productionApi.listTasks({ work_id: workId, page_num: 1, page_size: 100 })
+    const rows = data?.result || []
+    const matched = ids.map((id) => rows.find((item) => item.task_id === id)).filter(Boolean)
+    const done = matched.length === ids.length
+      && matched.every((row) => row.task_status === 'SUCCEEDED'
+        || row.task_status === 'FAILED'
+        || row.task_status === 'CANCELED')
+    if (done) return matched
     await sleep(1500)
   }
-  return null
+  return []
+}
+
+async function waitBatch(workId, batchId, taskIds) {
+  if (batchId) {
+    for (let i = 0; i < 80; i += 1) {
+      const { data } = await productionApi.batchProgress(batchId)
+      const result = data?.result
+      if (result && (result.queued + result.running) === 0) {
+        return result
+      }
+      await sleep(1500)
+    }
+  }
+  return waitTasks(workId, taskIds)
 }
 
 function ScriptPane({ work, episodeId, onReload }) {
@@ -379,7 +404,7 @@ function StoryboardPane({ work, episodeId }) {
     })
     if (data?.success) {
       message.success(taskType === 'VIDEO' ? '视频已提交，可去任务页等结果' : '草图已提交，出图后先看构图对不对')
-      await waitTask(work.work_id, data.result.task_id_list?.[0])
+      await waitBatch(work.work_id, data.result.batch_id, data.result.task_id_list)
       load()
     }
   }
@@ -670,6 +695,15 @@ function ComposePane({ work, episodeId, onReload }) {
   return (
     <Card title="成片与提审">
       <Paragraph>合成状态 {film?.compose_status || '-'} / 预检 {precheck?.ready ? '可合成' : '未就绪'} / 风险 {precheck?.risk_level || '-'}</Paragraph>
+      {(precheck?.blocker_list || []).length ? (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="合成前置未满足"
+          description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
+        />
+      ) : null}
       <Space style={{ marginBottom: 12 }} wrap>
         <Select
           placeholder="音乐模型"
@@ -715,7 +749,7 @@ function ComposePane({ work, episodeId, onReload }) {
       </Space>
       <Space>
         <Button onClick={load}>刷新</Button>
-        <Button type="primary" onClick={async () => {
+        <Button type="primary" disabled={!precheck?.ready} onClick={async () => {
           const { data } = await productionApi.composeFilm(episodeId)
           if (data?.success) {
             message.success('合成任务已提交')
@@ -738,11 +772,20 @@ function ComposePane({ work, episodeId, onReload }) {
         }}>撤回审核</Button>
       </Space>
       {film?.download_url ? (
-        <Paragraph style={{ marginTop: 12 }}>
-          成片预览 <a href={film.download_url} target="_blank" rel="noreferrer">{film.download_url}</a>
-        </Paragraph>
+        <div style={{ marginTop: 12 }}>
+          <Paragraph>
+            成片预览{' '}
+            <a href={film.download_url} target="_blank" rel="noreferrer">下载</a>
+          </Paragraph>
+          <video
+            key={film.film_asset_id || film.download_url}
+            src={film.download_url}
+            controls
+            playsInline
+            style={{ width: '100%', maxWidth: 360, background: '#111' }}
+          />
+        </div>
       ) : null}
-      {film?.film_asset_id ? <img alt="film" src={film.download_url} style={{ maxWidth: 180, marginTop: 12 }} /> : null}
     </Card>
   )
 }

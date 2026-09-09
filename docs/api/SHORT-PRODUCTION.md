@@ -222,13 +222,20 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ### GET /bgssai/user/films/precheck?episode_id=
 
-未锁定镜头列表；BLOCK 命中。
+返回 `ready`、`unlocked_shots`、`missing_video_shots`、`blocker_list`、`risk_level`。
+`ready=true` 要求全部镜头为 `VIDEO_READY`/`LOCKED` 且 `video_asset_id` 非空，且无配音
+`MISALIGNED`、合规无 `BLOCK`。仅有 `IMAGE_READY` 草图不得通过预检。
 
 ### GET /bgssai/user/films/timeline?episode_id=
+
+返回 `clip_list`、`audio_track`、`subtitle_track`（优先 `short_subtitle`，否则按镜
+`dialogue_text` 推算）、`bgm_asset_id` / `bgm_url`、`total_sec`。
 
 ### POST /bgssai/user/films/compose
 
 `{ "episode_id" }` → `{ "task_id" }`
+
+合成走 `FFMPEG`：拼接镜头视频，默认烧录简单字幕（`burn_subtitle_flag` 缺省开），可选混入已选 BGM。
 
 ### POST /bgssai/user/films/bgm-generate
 
@@ -247,12 +254,13 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ### POST /bgssai/user/films/settings-save
 
-`{ "work_id", "episode_id", "compose_setting": { "bgm_asset_id", "bgm_volume", "duck_flag" } }`。
+`{ "work_id", "episode_id", "compose_setting": { "bgm_asset_id", "bgm_volume", "duck_flag", "burn_subtitle_flag" } }`。
 选用的 BGM 必须是当前用户、当前作品、当前剧集下的 AUDIO 候选。
 
 ### GET /bgssai/user/films/detail?episode_id=
 
-增加 `bgm_asset_id`、`bgm_url` 与
+返回 `compose_status`、`film_asset_id`、`film_duration_sec`、`download_url`（可播放的签名/本地 URL，
+不是 download-url JSON 接口路径）、以及 `bgm_asset_id`、`bgm_url`、
 `bgm_candidate_list[{ "asset_id", "file_url", "duration_sec", "created_time", "selected_flag" }]`。
 
 ### GET /bgssai/user/films/download-url?asset_id=

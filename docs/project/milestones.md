@@ -38,14 +38,15 @@ M0 结束时仓库仅有骨架继承的登录鉴权、登录日志分页示例�
 | 配音字幕 / 预演 / 图谱 / 质量 / 三问 | 已完成 | `voice-subtitle-design.md`、`previz-story-quality-ux-design.md` |
 | 安全（AI/OBS 密钥） | 已完成 | `ai-provider-secrets.md` |
 
-## M3 代码与数据库（本轮范围已完成）
+## M3 代码与数据库（主干已落地；演示闭环仍依赖密钥与 ffmpeg）
 
 | 事项 | 状态 | 说明 |
 | --- | --- | --- |
 | `sql/DDL.sql` + `UPGRADE-20260826-full-features.sql` | 已完成 | 模型/用量/配音/预演/图谱/质量/三问表 |
 | 用户端制作全链路 + 用量/充值 | 已完成 | Provider SPI、OBS/本地存储、配音、预演、图谱、质量、样片/连贯性 |
-| 管理端审核 / 创作者 / 模型 / 用量 / 质量模板 | 已完成 | 含加量包与支付商户 |
-| AI 默认种子 | IMAGE/VIDEO 默认可灵，并启用 MiniMax / Seedance / Veo | 创作者提交时点选 `model_code`；MiniMax / Seedance / Veo 需写入对应 `sys_secret` 后才真正出片；OBS 未配时走本地目录 |
+| 管理端审核 / 创作者 / 模型 / 用量 / 质量模板 | 已完成 | 含加量包与支付商户；AI `sys_secret` 仍需 SQL/运维写入（尚无专用 Admin 密钥页） |
+| AI 默认种子 | IMAGE 默认可灵、TEXT/VIDEO 默认 TokenHub | 创作者提交时点选 `model_code`；空密钥时生成任务会失败；OBS 未配时走本地目录 |
+| 成片合成（MVP） | 已收紧 | 预检要求每镜有视频；FFMPEG 拼接 + 可选 BGM + 台词/字幕轨简单烧录；成片 `download_url` 为可播放签名地址 |
 
 ## M4 两端补齐（对标开源短剧平台后的增量）
 
@@ -68,5 +69,7 @@ M0-M3 把「想法到成片」的主干做完了，M4 补的是主干两头—�
 | 数据库脚本归档 | `bgssai-database` | 本仓 `sql/` 权威，执行在 database 仓 |
 | 部署与启停编排 | `bgssai-workflows` | Jenkins Job 登记 |
 | 日志采集接入 | `bgssai-logs` | 主机清单与采集配置 |
-| 生产密钥与 OBS 桶 | 运维 | 写入 `sys_secret` 并启用；安装 ffmpeg 以启用真实合成与镜头尾帧抽取 |
+| 生产密钥与 OBS 桶 | 运维 | 至少写入 `ai.tencent_tokenhub.api_key`、`ai.kling.api_key`（及选用模型对应密钥）并启用；配置 OBS 或接受本地目录回退；安装 ffmpeg 以启用真实合成与镜头尾帧抽取 |
+| 管理端 AI 密钥页 | 本仓后续 | 业务第三方凭证应按配置分层走 Admin；当前演示路径用 SQL 更新 `sys_secret` |
+| 配音混流 / 完整字幕工作台 | 本仓后续 | MVP 合成已烧台词级简单字幕；完整配音混流、多版本导出（纯净版/SRT_ONLY）仍按详设增量 |
 | 剪映草稿真机验证 | 待验证 | 剪映草稿是逆向格式、随客户端版本演进，单元测试只能验证生成结构符合设计，**证明不了剪映一定能打开**。上线前须在装有剪映桌面版的机器上，对 5.x 与 6.x 各实测一次：导出、解压进草稿目录、重启剪映、打开草稿，确认音画轨对齐、字幕可编辑、素材不离线。详见 `feature/edit-project-export.md` 第八节 |

@@ -38,6 +38,7 @@ import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortSourceChapterMapper;
 import com.bgssai.shortai.mapper.ShortSourceDocMapper;
+import com.bgssai.shortai.mapper.ShortSubtitleMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.AiUsageRecord;
@@ -61,11 +62,14 @@ import com.bgssai.shortai.model.ShortSourceChapter;
 import com.bgssai.shortai.model.ShortSourceChapterExample;
 import com.bgssai.shortai.model.ShortSourceDoc;
 import com.bgssai.shortai.model.ShortSourceDocExample;
+import com.bgssai.shortai.model.ShortSubtitle;
+import com.bgssai.shortai.model.ShortSubtitleExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.storage.ObjectStorage;
 
@@ -92,6 +96,8 @@ public class ShortAiTaskWorker {
     private ShortFilmMapper shortFilmMapper;
     @Autowired
     private ShortDubbingMapper shortDubbingMapper;
+    @Autowired
+    private ShortSubtitleMapper shortSubtitleMapper;
     @Autowired
     private ShortSourceDocMapper shortSourceDocMapper;
     @Autowired
@@ -738,6 +744,10 @@ public class ShortAiTaskWorker {
         if (bgm != null) {
             request.getParams().put(FfmpegComposeProvider.PARAM_BGM, bgm);
         }
+        String srt = loadSubtitleSrt(ep, shots);
+        if (srt != null && !srt.isBlank()) {
+            request.getParams().put(FfmpegComposeProvider.PARAM_SUBTITLE_SRT, srt);
+        }
         request.setPrompt(timeline);
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
@@ -847,6 +857,26 @@ public class ShortAiTaskWorker {
         return bytes;
     }
 
+    /**
+     * MVP simple subs: burn dialogue (or short_subtitle rows) unless compose_setting
+     * explicitly sets burn_subtitle_flag=0.
+     */
+    private String loadSubtitleSrt(ShortEpisode ep, List<ShortShot> shots) {
+        ShortWorkExample wx = new ShortWorkExample();
+        wx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
+        ShortWork work = shortWorkMapper.selectOneByExample(wx);
+        Map<String, Object> setting = work == null ? Map.of() : ShortJson.map(work.getComposeSettingJson());
+        Integer burnFlag = ShortJson.integer(setting.get("burn_subtitle_flag"), 1);
+        if (burnFlag != null && burnFlag == 0) {
+            return null;
+        }
+        ShortSubtitleExample sx = new ShortSubtitleExample();
+        sx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
+        sx.setOrderByClause("subtitle_no asc");
+        List<ShortSubtitle> rows = shortSubtitleMapper.selectByExample(sx);
+        return SubtitleSrtBuilder.fromCues(SubtitleSrtBuilder.cuesForEpisode(rows, shots));
+    }
+
     private ShortAsset saveBinary(String userId, String workId, String episodeId, String shotId, String type,
             AiProviderResult result, String taskId, boolean selected) {
         ShortAsset asset = new ShortAsset();
@@ -924,7 +954,7 @@ public class ShortAiTaskWorker {
     }
 
     private AiProviderResult execute(AiModelConfig model, AiProviderRequest request) {
-        AiProvider provider = aiProviderRegistry.get(model.getProviderCode());
+        AiProvider provider = aiProviderRegistry.resolve(model);
         AiProviderResult result = provider.execute(request);
         int usage = result == null || result.getUsageAmount() == null ? 1 : Math.max(1, result.getUsageAmount());
         executionUsage.set(executionUsage.get() + usage);

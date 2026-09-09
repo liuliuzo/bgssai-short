@@ -37,6 +37,9 @@ public class FfmpegComposeProvider implements AiProvider {
     /** params 中承载可选背景音乐字节的键。 */
     public static final String PARAM_BGM = "bgm_audio";
 
+    /** params 中承载可选 SRT 字幕文本的键（UTF-8）。 */
+    public static final String PARAM_SUBTITLE_SRT = "subtitle_srt";
+
     private static final Logger log = LoggerFactory.getLogger(FfmpegComposeProvider.class);
 
     private static final int PROBE_TIMEOUT_SEC = 10;
@@ -80,8 +83,9 @@ public class FfmpegComposeProvider implements AiProvider {
             Files.write(dir.resolve("concat.txt"), listFile.toString().getBytes(StandardCharsets.UTF_8));
 
             byte[] bgm = binaryParam(request, PARAM_BGM);
+            String srt = textParam(request, PARAM_SUBTITLE_SRT);
             Path out = dir.resolve("film.mp4");
-            Path concatOut = bgm == null ? out : dir.resolve("video.mp4");
+            Path concatOut = (bgm == null && (srt == null || srt.isBlank())) ? out : dir.resolve("video.mp4");
             // 先试无损拼接；片段编码参数不一致时 concat 会失败，再退到统一重编码。
             if (!run(dir, timeoutSec, "ffmpeg", "-y", "-f", "concat", "-safe", "0",
                     "-i", "concat.txt", "-c", "copy", concatOut.getFileName().toString())) {
@@ -93,13 +97,32 @@ public class FfmpegComposeProvider implements AiProvider {
                             "ffmpeg 合成失败，请检查镜头视频是否可解码");
                 }
             }
+            Path current = concatOut;
+            if (srt != null && !srt.isBlank()) {
+                Files.writeString(dir.resolve("subs.srt"), srt, StandardCharsets.UTF_8);
+                Path burned = bgm == null ? out : dir.resolve("video-subs.mp4");
+                // Absolute path with escaped separators for the subtitles filter.
+                String srtPath = dir.resolve("subs.srt").toAbsolutePath().toString()
+                        .replace("\\", "/")
+                        .replace(":", "\\:")
+                        .replace("'", "\\'");
+                if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", current.getFileName().toString(),
+                        "-vf", "subtitles=" + srtPath + ":force_style='FontSize=22,Outline=1,Shadow=0'",
+                        "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                        "-c:a", "copy", burned.getFileName().toString())) {
+                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 字幕烧录失败");
+                }
+                current = burned;
+            }
             if (bgm != null) {
                 Files.write(dir.resolve("bgm-audio"), bgm);
-                if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", concatOut.getFileName().toString(),
+                if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", current.getFileName().toString(),
                         "-stream_loop", "-1", "-i", "bgm-audio", "-map", "0:v:0", "-map", "1:a:0",
                         "-c:v", "copy", "-c:a", "aac", "-shortest", out.getFileName().toString())) {
                     throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 背景音乐混流失败");
                 }
+            } else if (!current.equals(out)) {
+                Files.move(current, out, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
             byte[] mp4 = Files.readAllBytes(out);
             if (mp4.length == 0) {
@@ -140,6 +163,17 @@ public class FfmpegComposeProvider implements AiProvider {
     private static byte[] binaryParam(AiProviderRequest request, String name) {
         Object raw = request.param(name);
         return raw instanceof byte[] bytes && bytes.length > 0 ? bytes : null;
+    }
+
+    private static String textParam(AiProviderRequest request, String name) {
+        Object raw = request.param(name);
+        if (raw instanceof String s && !s.isBlank()) {
+            return s;
+        }
+        if (raw instanceof byte[] bytes && bytes.length > 0) {
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+        return null;
     }
 
     private static void requireFfmpeg() {
