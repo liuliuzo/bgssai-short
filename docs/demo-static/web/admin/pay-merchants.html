@@ -26,10 +26,38 @@
       <div class="card">
         <p>路径对齐 VPN：POST /bgssai/admin/pay/wechat-configs/save · POST /bgssai/admin/pay/alipay-configs/save；指定收款 POST .../set-collection-active。</p>
         <ul>
-          <li>微信 Native：mch_id 唯一；空白凭据保留原值；同号软删行复活。</li>
-          <li>支付宝当面付：app_id 唯一；sign_type 仅 RSA2。</li>
-          <li>同渠道至多一行 is_collection_active=1。生产无收款商户时用户下单返回 60013。</li>
+          <li>微信 Native：mch_id 唯一；空白凭据保留原值；同号软删行复活。生产必填 merchant_serial_no / api_v3_key / mch_private_key / notify_url。</li>
+          <li>支付宝当面付：app_id 唯一；sign_type 仅 RSA2；必填 app_private_key / alipay_public_key / notify_url。</li>
+          <li>同渠道至多一行 is_collection_active=1。生产无收款商户或凭据不全时用户下单返回 60013。</li>
+          <li>清库后由 sql/DML.sql 种子恢复；支付宝短剧 App 未创建前为 PENDING_SHORT_DRAMA 且未启用收款。</li>
         </ul>
+        <h3>微信表单字段</h3>
+        <table>
+          <thead><tr><th>字段</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>merchant_name</td><td>商户名</td></tr>
+            <tr><td>mch_id</td><td>商户号（唯一）</td></tr>
+            <tr><td>app_id</td><td>AppID</td></tr>
+            <tr><td>merchant_serial_no</td><td>商户 API 证书序列号（生产必填）</td></tr>
+            <tr><td>api_v3_key</td><td>APIv3 密钥</td></tr>
+            <tr><td>mch_private_key</td><td>商户私钥 PEM</td></tr>
+            <tr><td>wechat_public_key_id / wechat_public_key</td><td>可选，公钥模式</td></tr>
+            <tr><td>notify_url</td><td>Native 异步通知 URL</td></tr>
+            <tr><td>is_enabled</td><td>启用</td></tr>
+          </tbody>
+        </table>
+        <h3>支付宝表单字段</h3>
+        <table>
+          <thead><tr><th>字段</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>merchant_name</td><td>商户名</td></tr>
+            <tr><td>app_id</td><td>应用 AppID（唯一）</td></tr>
+            <tr><td>app_private_key</td><td>应用私钥</td></tr>
+            <tr><td>alipay_public_key</td><td>支付宝公钥</td></tr>
+            <tr><td>notify_url</td><td>异步通知 URL</td></tr>
+            <tr><td>is_enabled</td><td>启用</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </main>

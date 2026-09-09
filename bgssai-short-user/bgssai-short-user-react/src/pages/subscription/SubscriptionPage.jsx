@@ -85,7 +85,7 @@ export default function SubscriptionPage() {
           closePayModal()
         }
       } catch {
-        // 轮询失败不打断扫码
+        // 轮询瞬时失败不打断扫码；连续失败由用户关闭重试
       }
     }
 

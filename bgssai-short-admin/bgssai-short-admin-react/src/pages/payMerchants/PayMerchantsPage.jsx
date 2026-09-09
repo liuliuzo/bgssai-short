@@ -101,11 +101,15 @@ export default function PayMerchantsPage() {
             <>
               <Form.Item name="mch_id" label="商户号" rules={[{ required: true }]}><Input /></Form.Item>
               <Form.Item name="app_id" label="AppId" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item name="merchant_serial_no" label="商户证书序列号" rules={[{ required: true }]}><Input placeholder="API 证书序列号，生产下单必填" /></Form.Item>
               <Form.Item name="api_v3_key" label="APIv3 Key"><Input /></Form.Item>
               <Form.Item name="mch_private_key" label="商户私钥"><Input.TextArea rows={3} /></Form.Item>
+              <Form.Item name="wechat_public_key_id" label="微信支付公钥 ID"><Input /></Form.Item>
+              <Form.Item name="wechat_public_key" label="微信支付公钥"><Input.TextArea rows={3} /></Form.Item>
             </>
           )}
-          <Form.Item name="notify_url" label="回调 URL"><Input /></Form.Item>
+          <Form.Item name="notify_url" label="回调 URL" rules={[{ required: true }]}><Input placeholder="https://…/bgssai/user/payment/{wechat|alipay}/notify" /></Form.Item>
+          <Form.Item name="env_mode" label="环境" initialValue="PRODUCTION"><Input /></Form.Item>
           <Form.Item name="is_enabled" label="启用" valuePropName="checked"><Switch /></Form.Item>
         </Form>
       </Modal>

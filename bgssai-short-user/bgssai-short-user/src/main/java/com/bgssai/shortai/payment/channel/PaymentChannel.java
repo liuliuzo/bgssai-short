@@ -16,9 +16,10 @@ public interface PaymentChannel {
 
     /**
      * Query whether the channel already paid this out_trade_no.
-     * Returns the channel trade no, or null. Sandbox / missing creds / exceptions must not throw.
+     * Returns trade no + amount (fen), or null. Sandbox / missing creds / exceptions must not throw.
+     * Amount must be present for grant compensation (fail-closed).
      */
-    default String queryPaidChannelTradeNo(String outTradeNo) {
+    default ChannelPaidQuery queryPaidOrder(String outTradeNo) {
         return null;
     }
 

@@ -67,13 +67,14 @@
 
 鉴权：需 JWT。仅订单本人可查。Body：`{ "order_no": "SUB..." }`。
 
-套餐与加量包共用此接口。`created` 且非沙箱、创建超过 5 秒时回查渠道（微信商户单号 /
-`alipay.trade.query`）；渠道已支付则发放后返回 `paid`。渠道查询异常不影响本接口（只读库）。
+套餐与加量包共用此接口。`created` 且已过 `expires_at` 时置 `closed`。否则在非沙箱、创建超过 5 秒时回查渠道（微信商户单号 /
+`alipay.trade.query`）；渠道已支付且金额（分）与订单一致才发放后返回 `paid`；金额缺失或不一致不发放。渠道查询异常不影响本接口（只读库）。
 
 ```json
 { "result": {
   "order_no": "SUB...", "order_type": "subscription", "status": "paid",
-  "amount_cent": 9900, "payment_channel": "WECHAT"
+  "amount_cent": 9900, "payment_channel": "WECHAT",
+  "expires_at": "2026-08-14 12:30:00"
 } }
 ```
 
@@ -81,21 +82,21 @@
 
 ### POST /bgssai/user/payment/wechat/notify
 
-成功：HTTP 200，`{"code":"SUCCESS","message":"OK"}`。验签失败：HTTP 401，`{"code":"FAIL","message":"SIGN_ERROR"}`。
+成功：HTTP 200，`{"code":"SUCCESS","message":"OK"}`。验签失败或金额不符：HTTP 401，`{"code":"FAIL","message":"SIGN_ERROR"}`。
 
-沙箱 body 为 form：`out_trade_no`、`transaction_id`、`trade_state=SUCCESS`、`amount`（分）、`sign`（HMAC-SHA256）。
+沙箱 body 为 form（`application/x-www-form-urlencoded`）：`out_trade_no`、`transaction_id`、`trade_state=SUCCESS`、`amount`（分，必填）、`sign`（HMAC-SHA256）。生产为 APIv3 JSON + 签名头。
 
 ### POST /bgssai/user/payment/alipay/notify
 
 `application/x-www-form-urlencoded`。成功：`success`。失败：`failure`。
 
-沙箱字段：`out_trade_no`、`trade_no`、`trade_status=TRADE_SUCCESS`、`total_amount`（元）、`sign`。
+沙箱字段：`out_trade_no`、`trade_no`、`trade_status=TRADE_SUCCESS`、`total_amount`（元，必填）、`sign`。
 
 ## 扫码 UX 与沙箱验证
 
 用户端订阅页：`create` / `credit-packs/orders` 返回 `code_url` 后弹窗展示可扫二维码，并轮询本页 `order/status`（约 2s）直至终态。
 
-### 沙箱（`bgssai.payment.sandbox-enabled=true`）
+### 沙箱（`bgssai.payment.sandbox-enabled=true`；缺省为 false，仅 local/dev/test 打开）
 
 1. 登录用户端 → 套餐与加量 → 点「微信」或「支付宝」下单，弹窗出现二维码（沙箱 `code_url` 为占位 URL，仍应可渲染）。
 2. 模拟微信回调（密钥默认 `sandbox-wechat-sign-key`；`sign` = HMAC-SHA256 hex，对除 `sign` 外字段按 key 字典序 `k=v` 用 `&` 拼接）：
@@ -115,7 +116,7 @@ curl -sS -X POST 'http://127.0.0.1:8080/bgssai/user/payment/wechat/notify' \
 
 ### 生产
 
-- Admin 配置启用收款商户（`wechat_pay_config` / `alipay_config`，凭据落库，勿提交 `payment/wechatpay/` 私钥）。
+- Admin 配置启用收款商户（`wechat_pay_config` / `alipay_config`，凭据落库并由 DML 种子恢复；微信必填 `merchant_serial_no`）。支付宝短剧控制台 App 创建前不得设收款。
 - 公网可达 notify URL；profile 设 `bgssai.payment.sandbox-enabled=false`。
 - 本轮不做 JSAPI / H5 / 自动续费。
 
@@ -123,7 +124,7 @@ curl -sS -X POST 'http://127.0.0.1:8080/bgssai/user/payment/wechat/notify' \
 
 ### POST /bgssai/admin/pay/wechat-configs/save
 
-对齐 VPN。空白凭据列保留原值。`mch_id` 全表唯一；逻辑删除后同号复活。
+对齐 VPN。空白凭据列保留原值。`mch_id` 全表唯一；逻辑删除后同号复活。表单含 `merchant_serial_no`（生产必填）。
 
 ### GET /bgssai/admin/pay/wechat-configs
 

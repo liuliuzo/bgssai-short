@@ -74,7 +74,7 @@ public class WechatPayGateway {
     }
 
 
-    public String queryPaidTransactionId(WechatMerchant merchant, String outTradeNo) {
+    public Transaction queryPaidTransaction(WechatMerchant merchant, String outTradeNo) {
         Config config = requireConfig(merchant);
         NativePayService service = new NativePayService.Builder().config(config).build();
         QueryOrderByOutTradeNoRequest request = new QueryOrderByOutTradeNoRequest();
@@ -82,9 +82,15 @@ public class WechatPayGateway {
         request.setOutTradeNo(outTradeNo);
         Transaction transaction = service.queryOrderByOutTradeNo(request);
         if (transaction != null && transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS) {
-            return transaction.getTransactionId();
+            return transaction;
         }
         return null;
+    }
+
+    /** @deprecated use {@link #queryPaidTransaction}; kept for callers that only need trade id. */
+    public String queryPaidTransactionId(WechatMerchant merchant, String outTradeNo) {
+        Transaction transaction = queryPaidTransaction(merchant, outTradeNo);
+        return transaction == null ? null : transaction.getTransactionId();
     }
 
     public void invalidate() {

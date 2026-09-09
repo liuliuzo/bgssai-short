@@ -58,7 +58,22 @@ public class PaidOrderGrantService {
             log.info("payment already paid orderNo={}", order.getOrderNo());
             return;
         }
+        if ("closed".equals(order.getStatus())) {
+            log.warn("payment grant refused closed orderNo={}", order.getOrderNo());
+            return;
+        }
         Date now = new Date();
+        if (order.getExpiresAt() != null && order.getExpiresAt().before(now)) {
+            log.warn("payment grant refused expired orderNo={}", order.getOrderNo());
+            PaymentOrder closePatch = new PaymentOrder();
+            closePatch.setStatus("closed");
+            closePatch.setGmtModified(now);
+            PaymentOrderExample closeCas = new PaymentOrderExample();
+            closeCas.createCriteria().andIdEqualTo(order.getId()).andStatusEqualTo("created").andDelFlagEqualTo(0);
+            paymentOrderMapper.updateByExampleSelective(closePatch, closeCas);
+            order.setStatus("closed");
+            return;
+        }
         PaymentOrder patch = new PaymentOrder();
         patch.setStatus("paid");
         patch.setChannelTradeNo(channelTradeNo);

@@ -75,4 +75,28 @@ class PaidOrderGrantServiceTest {
         verify(userQuotaMapper).updateByExampleSelective(any(UserQuota.class), any());
         assertEquals("credit_pack", order.getOrderType());
     }
+
+    @Test
+    void closedOrderIsNotGranted() {
+        PaymentOrder order = new PaymentOrder();
+        order.setId(3L);
+        order.setOrderNo("O-closed");
+        order.setStatus("closed");
+        service.grantIfCreated(order, "tx");
+        verify(paymentOrderMapper, never()).updateByExampleSelective(any(PaymentOrder.class), any(PaymentOrderExample.class));
+    }
+
+    @Test
+    void expiredCreatedOrderIsClosedWithoutGrant() {
+        PaymentOrder order = new PaymentOrder();
+        order.setId(4L);
+        order.setOrderNo("O-exp");
+        order.setStatus("created");
+        order.setExpiresAt(new java.util.Date(System.currentTimeMillis() - 1000L));
+        when(paymentOrderMapper.updateByExampleSelective(any(PaymentOrder.class), any(PaymentOrderExample.class)))
+                .thenReturn(1);
+        service.grantIfCreated(order, "tx");
+        assertEquals("closed", order.getStatus());
+        verify(quotaWalletService, never()).requireWallet(any());
+    }
 }

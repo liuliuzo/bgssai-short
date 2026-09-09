@@ -19,11 +19,15 @@
 
 ## 3. 查单补偿
 
-`POST /bgssai/user/subscription/order/status`：仅订单本人。`created` 且非沙箱、创建超过 5 秒时
-回查渠道；已支付则 `grantIfCreated` 后返回 `paid`。沙箱不查渠道。渠道异常只记 WARN，接口仍返回库状态。
+`POST /bgssai/user/subscription/order/status`：仅订单本人。
+
+1. 若 `created` 且已过 `expires_at`：CAS 置 `closed` 并返回，不查渠道、不发放。
+2. 若 `created` 且非沙箱、创建超过 5 秒：回查渠道；渠道返回交易号 **与金额（分）**；金额缺失或不一致则不发放；一致则 `grantIfCreated`。
+3. 沙箱不查渠道。渠道异常只记 WARN，接口仍返回库状态。
+
 前端订阅页在下单成功后弹出扫码弹窗：用 `code_url` 渲染可扫二维码（沙箱假 `weixin://` / `https://qr.alipay.com/sandbox/...` 同样渲染），展示 `order_no` / 金额 / `payment_channel`，并提供复制 `code_url`。弹窗打开期间每约 2 秒轮询 `order/status`，直至 `paid` / `closed` / `expires_at` 超时；`paid` 后刷新 `subscription/me` 与加量包列表；关闭弹窗或卸载时停止轮询。
 
-## 3. 回调（验签永不删除）
+## 4. 回调（验签永不删除）
 
 ```
 渠道 POST notify
@@ -31,23 +35,25 @@
   -> verified=false -> 60005 / 渠道 FAIL 应答
   -> 非成功态 -> 仍返回成功应答（避免无意义重试）
   -> 按 order_no 查单
-  -> amount_cent 与通知金额（分）不一致 -> 60005
-  -> status=paid -> 幂等返回成功应答
+  -> status=paid / closed -> 幂等确认，不发放
+  -> created 且已过 expires_at -> 置 closed，确认，不发放
+  -> amount_cent 缺失或与通知金额（分）不一致 -> 60005
   -> status=created -> 置 paid，按 order_type 发放
 ```
 
-微信生产：APIv3 平台证书 / 公钥验签 + AEAD 解密。沙箱：HMAC-SHA256（`sign` 字段，canonical 排序排除 sign）。
+微信生产：APIv3 平台证书 / 公钥验签 + AEAD 解密。沙箱：HMAC-SHA256（`sign` 字段，canonical 排序排除 sign）；控制器同时接受 form 与 JSON body。
 
 支付宝生产：`AlipaySignature.rsaCheckV1` RSA2，按 `app_id` 路由商户。沙箱：HMAC-SHA256。
 
-## 4. 发放
+## 5. 发放
 
 - `order_type=subscription`：upsert `user_subscription`（`active`，周期一个月），`user_quota.balance_cent` = 套餐 `monthly_balance_cent`，`monthly_limit_cent` 同步，`extra_balance_cent` 不动。
 - `order_type=credit_pack`：`extra_balance_cent += grant_cent`。
+- `closed` / 已过期订单拒绝发放。
 
 同一事务内改订单状态与钱包。
 
-## 5. 扣减（任务成功）
+## 6. 扣减（任务成功）
 
 `QuotaConsumeService.consume(userId, costCent, monthLimitCheck=true)`：
 
@@ -57,16 +63,17 @@
 4. 先减 `balance_cent`，再减 `extra_balance_cent`；`month_spent_cent += cost`。
 5. CAS：`updateByExampleSelective` 带当前 `balance_cent` / `extra_balance_cent` 条件，冲突重试。
 
-## 6. 表与索引
+## 7. 表与索引
 
 见 `sql/DDL.sql`。`payment_order.uk_order_no`；`user_quota.uk_user_id`；`user_subscription.uk_user_id`。
 
-## 7. 配置
+## 8. 配置
 
 用户端 profile：
 
-- `bgssai.payment.sandbox-enabled`
+- `bgssai.payment.sandbox-enabled`（**缺省 false**；local/dev/test 显式 true）
+- `bgssai.payment.notify-base-url`（商户行 `notify_url` 为空时的回退前缀）
 - `bgssai.payment.wechat.sign-key`（仅沙箱 HMAC）
 - `bgssai.payment.alipay.sign-key`（仅沙箱 HMAC）
 
-商户凭据只在 `wechat_pay_config` / `alipay_config`。
+商户凭据只在 `wechat_pay_config` / `alipay_config`，并由 `sql/DML.sql` + `sql/<env>/DML.sql` 种子恢复（清库后）。支付宝短剧控制台 App 未创建前种子为 `PENDING_SHORT_DRAMA` 且未启用收款。
