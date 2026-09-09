@@ -21,6 +21,7 @@ import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishToMediaReq;
 import com.bgssai.shortai.production.media.MediaIngestClient;
 import com.bgssai.shortai.production.media.MediaIngestContract;
+import com.bgssai.shortai.production.media.RestMediaIngestClient;
 
 @Service
 public class FilmPublishToMediaService {
@@ -71,21 +72,118 @@ public class FilmPublishToMediaService {
         }
     }
 
+    /**
+     * Dev-friendly preflight: config + film gates + last publish_log snapshot.
+     * Does not call media.
+     */
+    public ApiResponse preflight(String episodeId, String filmId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        RestMediaIngestClient.ConfigStatus config = resolveConfigStatus();
+        result.put("base_url_configured", config.baseUrlConfigured());
+        result.put("token_configured", config.tokenConfigured());
+        result.put("config_ready", config.ready());
+
+        List<String> warnings = new ArrayList<>();
+        if (!config.baseUrlConfigured()) {
+            warnings.add("未配置 bgssai.media.base-url：请在 application-*.properties 填写 media 服务地址");
+        }
+        if (!config.tokenConfigured()) {
+            warnings.add("未配置 bgssai.media.ingest-token：请写 properties 占位或在 Admin/sys_secret 写入"
+                    + "（勿提交真实密钥）");
+        }
+
+        boolean filmReady = false;
+        boolean reviewApproved = false;
+        boolean publishable = false;
+        String gateReason = "";
+        Map<String, Object> publishLog = null;
+
+        if ((episodeId != null && !episodeId.isBlank()) || (filmId != null && !filmId.isBlank())) {
+            try {
+                ShortFilm film = resolveFilm(episodeId, filmId);
+                ShortEpisode episode = workAccessService.requireEpisode(film.getEpisodeId());
+                filmReady = "READY".equals(film.getComposeStatus())
+                        && (film.getExpiredFlag() == null || film.getExpiredFlag() == 0)
+                        && film.getFilmAssetId() != null && !film.getFilmAssetId().isBlank();
+                reviewApproved = "APPROVED".equals(episode.getReviewStatus());
+                try {
+                    assertPublishable(film, episode);
+                    publishable = true;
+                } catch (BizException gate) {
+                    gateReason = gate.getMessage();
+                    publishable = false;
+                }
+                publishLog = buildPublishLog(film);
+                result.put("film_id", film.getFilmId());
+                result.put("episode_id", film.getEpisodeId());
+                result.put("work_id", film.getWorkId());
+                result.put("compose_status", film.getComposeStatus());
+                result.put("review_status", episode.getReviewStatus());
+            } catch (BizException ex) {
+                gateReason = ex.getMessage();
+                warnings.add(ex.getMessage());
+            }
+        }
+
+        result.put("film_ready", filmReady);
+        result.put("review_approved", reviewApproved);
+        result.put("publishable", publishable && config.ready());
+        result.put("gate_reason", gateReason);
+        result.put("warnings", warnings);
+        if (publishLog != null) {
+            result.put("publish_log", publishLog);
+        }
+        return Responses.ok(result);
+    }
+
+    static Map<String, Object> buildPublishLog(ShortFilm film) {
+        if (film == null) {
+            return null;
+        }
+        String status = film.getMediaPublishStatus();
+        boolean hasLog = (status != null && !status.isBlank() && !"NONE".equals(status))
+                || (film.getMediaId() != null && !film.getMediaId().isBlank())
+                || (film.getMediaLastError() != null && !film.getMediaLastError().isBlank());
+        if (!hasLog) {
+            return null;
+        }
+        Map<String, Object> log = new LinkedHashMap<>();
+        log.put("media_id", film.getMediaId());
+        log.put("play_url", film.getMediaPlayUrl());
+        log.put("status", status == null || status.isBlank() ? "NONE" : status);
+        log.put("published_at", film.getMediaPublishedAt());
+        log.put("last_error", film.getMediaLastError());
+        log.put("idempotency_key", MediaIngestContract.idempotencyKey(
+                film.getWorkId(), film.getEpisodeId(), film.getFilmId()));
+        return log;
+    }
+
+    private RestMediaIngestClient.ConfigStatus resolveConfigStatus() {
+        if (mediaIngestClient instanceof RestMediaIngestClient rest) {
+            return rest.configStatus();
+        }
+        return new RestMediaIngestClient.ConfigStatus(true, true);
+    }
+
     static void assertPublishable(ShortFilm film, ShortEpisode episode) {
         if (film == null || (film.getDeletedFlag() != null && film.getDeletedFlag() == 1)) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "film not found");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "成片不存在，无法发布到 Media");
         }
         if (!"READY".equals(film.getComposeStatus())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "film must be READY before publish to media");
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "成片未就绪（compose_status=" + nullToDash(film.getComposeStatus())
+                            + "，需 READY）后才能发布到 Media");
         }
         if (film.getExpiredFlag() != null && film.getExpiredFlag() == 1) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "expired film cannot publish to media");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "成片已过期，请重新合成后再发布到 Media");
         }
         if (film.getFilmAssetId() == null || film.getFilmAssetId().isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "film asset missing");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "成片素材缺失，无法发布到 Media");
         }
         if (!"APPROVED".equals(episode.getReviewStatus())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "episode review must be APPROVED before publish");
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "剧集审核未通过（review_status=" + nullToDash(episode.getReviewStatus())
+                            + "，需 APPROVED）后才能发布到 Media");
         }
     }
 
@@ -112,6 +210,10 @@ public class FilmPublishToMediaService {
 
     private static String filmFallback(ShortWork work, ShortEpisode episode) {
         return work.getWorkId() + "/" + episode.getEpisodeId();
+    }
+
+    private static String nullToDash(String v) {
+        return v == null || v.isBlank() ? "-" : v;
     }
 
     private ShortFilm resolveFilm(String episodeId, String filmId) {
@@ -183,6 +285,7 @@ public class FilmPublishToMediaService {
         result.put("status", ingested.status());
         result.put("idempotency_key", idempotencyKey);
         result.put("published_at", publishedAt);
+        result.put("publish_log", buildPublishLog(film));
         return result;
     }
 }

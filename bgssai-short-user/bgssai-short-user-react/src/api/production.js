@@ -50,6 +50,8 @@ const filmDetail = (episodeId) => http.get('/user/films/detail', { episode_id: e
 const composeEstimate = (episodeId) => http.post('/user/films/compose-estimate', { episode_id: episodeId })
 const composeFilm = (episodeId) => http.post('/user/films/compose', { episode_id: episodeId })
 const publishFilmToMedia = (body) => http.post('/user/films/publish-to-media', body)
+const publishFilmToMediaPreflight = (params) =>
+  http.get('/user/films/publish-to-media/preflight', params)
 const submitReview = (episodeId) => http.post('/user/reviews/submit', { episode_id: episodeId })
 const withdrawReview = (episodeId) => http.post('/user/reviews/withdraw', { episode_id: episodeId })
 const listReviews = (workId) => http.get('/user/reviews/list', { work_id: workId })
@@ -94,6 +96,7 @@ export default {
   composeEstimate,
   composeFilm,
   publishFilmToMedia,
+  publishFilmToMediaPreflight,
   submitReview,
   withdrawReview,
   listReviews,

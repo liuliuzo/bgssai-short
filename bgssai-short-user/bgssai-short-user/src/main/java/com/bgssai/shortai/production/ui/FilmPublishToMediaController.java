@@ -1,8 +1,10 @@
 package com.bgssai.shortai.production.ui;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bgssai.shortai.common.ApiResponse;
@@ -20,5 +22,13 @@ public class FilmPublishToMediaController {
     @PostMapping("/bgssai/user/films/publish-to-media")
     public ApiResponse handle(@RequestBody FilmPublishToMediaReq req) {
         return service.publish(req);
+    }
+
+    @NeedAop
+    @GetMapping("/bgssai/user/films/publish-to-media/preflight")
+    public ApiResponse preflight(
+            @RequestParam(value = "episode_id", required = false) String episodeId,
+            @RequestParam(value = "film_id", required = false) String filmId) {
+        return service.preflight(episodeId, filmId);
     }
 }

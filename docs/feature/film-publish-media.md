@@ -15,15 +15,18 @@
   3. **契约**：`POST {bgssai.media.base-url}/bgssai/user/media/ingest/short-drama`，请求头 `X-Bgssai-Ingest-Token`，Body snake_case（见第四节）。
   4. **幂等键**：`short:{work_id}:{episode_id}:{film_id}`；重复发布允许，由 media 侧幂等；short 更新最近一次结果。
   5. **配置**：`bgssai.media.base-url` 与 `bgssai.media.ingest-token` 写在各环境 `application-*.properties`（token 仅占位，不提交真实密钥）；运行期优先 properties，空则回退 `sys_secret.bgssai.media.ingest-token`。
-  6. **失败**：media 不可达 / 非 2xx / 响应缺字段 → `BizException`（`502000` 或 `4006`），文案可读，并写入 `media_last_error`。
+  6. **失败**：media 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error`。
+  7. **预检**：`GET /bgssai/user/films/publish-to-media/preflight` 检查配置与闸门，缺配置时给出开发友好警告；不调用 media。
+  8. **UX**：发布按钮 loading；成功展示 `media_id` + `play_url`（打开/复制）；成片详情在存在 publish_log 时展示最近一次发布状态。
 
 ## 三、验收标准
 
 1. READY + APPROVED 成片可发布，返回 `media_id`、`play_url`、`status`。
-2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 media。
+2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 media；文案可读。
 3. 重复点击发布不炸；落库最近一次 `media_id` / `status` / `published_at` / `last_error`。
-4. 用户端成片区有「发布到 Media」按钮；成功展示播放链接与 media_id；失败由统一错误提示。
-5. 单测覆盖 payload 字段与闸门（HTTP mock）；本地 media 404 不影响单测。
+4. 用户端成片区有「发布到 Media」按钮；成功展示播放链接与 media_id（可打开/复制）；失败区分 media 宕机 / 6xxxx / 未 READY。
+5. 缺 base-url / ingest-token 时 preflight 警告，不误导为「成片问题」。
+6. 单测覆盖 payload 字段与闸门（HTTP mock）；本地 media 404 不影响单测。
 
 ## 四、接口契约（snake_case）
 
@@ -45,11 +48,26 @@
     "play_url": "https://media.example/play/md-xxxx",
     "status": "READY",
     "idempotency_key": "short:w-dm-004:ep-dm-004-01:fl-dm-004-01",
-    "published_at": "2026-09-09T14:00:00Z"
+    "published_at": "2026-09-09T14:00:00Z",
+    "publish_log": {
+      "media_id": "md-xxxx",
+      "play_url": "https://media.example/play/md-xxxx",
+      "status": "READY",
+      "published_at": "2026-09-09T14:00:00Z",
+      "last_error": "",
+      "idempotency_key": "short:w-dm-004:ep-dm-004-01:fl-dm-004-01"
+    }
   }
   ```
 - 鉴权：需 `@NeedAop`（请求头 `Jwttoken`），角色 `USER`。
-- 错误码：`4006` 闸门拒绝 / 参数非法；`502000` media 上游失败；`2002` token 失效。
+- 错误码：`4006` 闸门拒绝 / 参数非法 / 配置缺失；`502000` media 上游失败；`504000` 超时；`2002` token 失效。
+
+### GET /bgssai/user/films/publish-to-media/preflight
+
+查询参数：`episode_id` / `film_id`（可选）。不调用 media。
+
+响应 `result` 关键字段：`config_ready` `base_url_configured` `token_configured` `film_ready`
+`review_approved` `publishable` `gate_reason` `warnings[]`，以及可选 `publish_log`。
 
 ### short → media（共享契约，MUST 与 media 侧一致）
 

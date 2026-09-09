@@ -298,10 +298,15 @@ FFmpeg 混入成片音轨。
 `film_asset_id`、本集 `review_status=APPROVED`。
 
 响应 `result`：`film_id` `episode_id` `work_id` `media_id` `play_url` `status`
-`idempotency_key` `published_at`。media 不可达返回 `502000`。
+`idempotency_key` `published_at` `publish_log`。media 不可达返回 `502000`；超时 `504000`；
+业务码 6xxxx 文案可读。
+
+### GET /bgssai/user/films/publish-to-media/preflight?episode_id=&film_id=
+
+不调用 media。返回配置就绪、闸门结论、`warnings[]`，以及可选最近一次 `publish_log`。
 
 `films/detail` 额外返回最近一次发布字段：`media_id` `media_play_url`
-`media_publish_status` `media_published_at` `media_last_error`。
+`media_publish_status` `media_published_at` `media_last_error`，存在历史时附带 `publish_log`。
 
 ## 分镜画布重排
 

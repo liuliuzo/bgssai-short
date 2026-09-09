@@ -123,7 +123,7 @@ class FilmPublishToMediaServiceTest {
         film.setExpiredFlag(1);
         BizException ex = assertThrows(BizException.class,
                 () -> FilmPublishToMediaService.assertPublishable(film, approvedEpisode()));
-        assertTrue(ex.getMessage().contains("expired"));
+        assertTrue(ex.getMessage().contains("过期"));
     }
 
     @Test
@@ -198,5 +198,24 @@ class FilmPublishToMediaServiceTest {
     void buildTitleIncludesWorkEpisodeAndName() {
         String title = FilmPublishToMediaService.buildTitle(work(), approvedEpisode());
         assertEquals("退婚三年后她成了首富 第1集 开场", title);
+    }
+
+    @Test
+    void buildPublishLogWhenHistoryExists() {
+        ShortFilm film = readyFilm();
+        film.setMediaId("md-1");
+        film.setMediaPlayUrl("https://play/1");
+        film.setMediaPublishStatus("READY");
+        Map<String, Object> log = FilmPublishToMediaService.buildPublishLog(film);
+        assertEquals("md-1", log.get("media_id"));
+        assertEquals("https://play/1", log.get("play_url"));
+        assertEquals("short:w-1:ep-1:fl-1", log.get("idempotency_key"));
+    }
+
+    @Test
+    void buildPublishLogNullWhenNone() {
+        ShortFilm film = readyFilm();
+        film.setMediaPublishStatus("NONE");
+        assertEquals(null, FilmPublishToMediaService.buildPublishLog(film));
     }
 }
