@@ -39,6 +39,7 @@ import com.bgssai.shortai.production.dto.FeatureDtos.FilmExportReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.BgmGenerateReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmRebakeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmSettingsSaveReq;
+import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -67,6 +68,8 @@ public class FilmService {
     private ShortAssetMapper shortAssetMapper;
     @Autowired
     private ShortSubtitleMapper shortSubtitleMapper;
+    @Autowired
+    private AiTaskService aiTaskService;
 
     public ApiResponse precheck(String episodeId) {
         ShortEpisode ep = workAccessService.requireEpisode(episodeId);
@@ -183,20 +186,35 @@ public class FilmService {
         return Responses.ok(result);
     }
 
+    public ApiResponse estimateCompose(FilmReq req) {
+        AiTaskReq estimateReq = new AiTaskReq();
+        estimateReq.setEpisodeId(req == null ? null : req.getEpisodeId());
+        estimateReq.setTaskType("COMPOSE");
+        return aiTaskService.estimate(estimateReq);
+    }
+
     public ApiResponse compose(FilmReq req) {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
         Map<String, Object> check = precheckMap(ep.getEpisodeId());
         if (!Boolean.TRUE.equals(check.get("ready"))) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "precheck not ready");
         }
+        AiTaskReq estimateReq = new AiTaskReq();
+        estimateReq.setEpisodeId(ep.getEpisodeId());
+        estimateReq.setTaskType("COMPOSE");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> estimate = (Map<String, Object>) aiTaskService.estimate(estimateReq).getResult();
+        int durationSec = ShortJson.integer(estimate.get("duration_sec"), 1);
         patchCompose(ep, "COMPOSING");
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("episode_id", ep.getEpisodeId());
         request.put("compose_mode", "FULL");
+        request.put("duration_sec", durationSec);
         ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "COMPOSE", "COMPOSE",
                 ep.getEpisodeId(), request, null, 0);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
+        result.put("estimated_cost_cent", estimate.get("estimated_cost_cent"));
         return Responses.ok(result);
     }
 

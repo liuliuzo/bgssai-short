@@ -43,6 +43,7 @@ import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleStyleSaveReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleTranscribeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleUpdateReq;
+import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
 
@@ -65,6 +66,17 @@ public class DubbingService {
     private ShortEpisodeMapper shortEpisodeMapper;
     @Autowired
     private ShortWorkMapper shortWorkMapper;
+    @Autowired
+    private AiTaskService aiTaskService;
+
+    public ApiResponse estimate(DubbingSubmitReq req) {
+        AiTaskReq estimateReq = new AiTaskReq();
+        estimateReq.setEpisodeId(req == null ? null : req.getEpisodeId());
+        estimateReq.setShotIds(req == null ? null : req.getShotIdList());
+        estimateReq.setTaskType("VOICE");
+        estimateReq.setModelCode(req == null ? null : req.getModelCode());
+        return aiTaskService.estimate(estimateReq);
+    }
 
     @Transactional
     public ApiResponse submit(DubbingSubmitReq req) {
@@ -73,6 +85,13 @@ public class DubbingService {
         if (req.getShotIdList() != null && !req.getShotIdList().isEmpty()) {
             shots = shots.stream().filter(s -> req.getShotIdList().contains(s.getShotId())).toList();
         }
+        AiTaskReq estimateReq = new AiTaskReq();
+        estimateReq.setEpisodeId(ep.getEpisodeId());
+        estimateReq.setShotIds(req.getShotIdList());
+        estimateReq.setTaskType("VOICE");
+        estimateReq.setModelCode(req.getModelCode());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> estimate = (Map<String, Object>) aiTaskService.estimate(estimateReq).getResult();
         ShortWork work = workAccessService.requireWork(ep.getWorkId());
         Map<String, ShortCharacter> chars = charactersOf(ep.getWorkId());
         String batchId = ShortIds.id("b-");
@@ -126,6 +145,7 @@ public class DubbingService {
         result.put("batch_id", batchId);
         result.put("task_id_list", taskIds);
         result.put("task_count", taskIds.size());
+        result.put("estimated_cost_cent", estimate.get("estimated_cost_cent"));
         return Responses.ok(result);
     }
 

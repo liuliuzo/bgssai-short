@@ -52,6 +52,20 @@ class QuotaConsumeServiceTest {
     }
 
     @Test
+    void assertAffordableInsufficientThrows4007() {
+        when(quotaWalletService.requireWallet("u-1")).thenReturn(quota(10, 5, 0, 1000));
+        BizException ex = assertThrows(BizException.class, () -> service.assertAffordable("u-1", 20));
+        assertEquals("4007", ex.getCode());
+    }
+
+    @Test
+    void assertAffordableMonthCapThrows4015() {
+        when(quotaWalletService.requireWallet("u-1")).thenReturn(quota(500, 500, 90, 100));
+        BizException ex = assertThrows(BizException.class, () -> service.assertAffordable("u-1", 20));
+        assertEquals("4015", ex.getCode());
+    }
+
+    @Test
     void insufficientThrows4007() {
         when(quotaWalletService.requireWallet("u-1")).thenReturn(quota(10, 5, 0, 1000));
         BizException ex = assertThrows(BizException.class, () -> service.consume("u-1", 20));

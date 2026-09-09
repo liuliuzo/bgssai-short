@@ -34,8 +34,11 @@ public class QuotaConsumeService {
     @Autowired(required = false)
     private BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient;
 
-    @Transactional
-    public void consume(String userId, int costCent) {
+    /**
+     * Pre-submit / estimate affordability gate. Same 4007 / 4015 rules as {@link #consume}
+     * but does not debit the wallet.
+     */
+    public void assertAffordable(String userId, int costCent) {
         if (costCent <= 0) {
             return;
         }
@@ -44,15 +47,31 @@ public class QuotaConsumeService {
         int limit = quota.getMonthlyLimitCent() == null ? 0 : quota.getMonthlyLimitCent();
         int spent = quota.getMonthSpentCent() == null ? 0 : quota.getMonthSpentCent();
         if (limit > 0 && spent + costCent > limit) {
-            log.warn("quota month cap userId={} cost={} spent={} limit={}", userId, costCent, spent, limit);
+            log.warn("quota month cap (assert) userId={} cost={} spent={} limit={}",
+                    userId, costCent, spent, limit);
             throw new BizException(CommonErrorCode.MONTHLY_LIMIT);
         }
         int balance = quota.getBalanceCent() == null ? 0 : quota.getBalanceCent();
         int extra = quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent();
         if (balance + extra < costCent) {
-            log.warn("quota insufficient userId={} cost={} available={}", userId, costCent, balance + extra);
+            log.warn("quota insufficient (assert) userId={} cost={} available={}",
+                    userId, costCent, balance + extra);
             throw new BizException(CommonErrorCode.QUOTA_INSUFFICIENT);
         }
+    }
+
+    @Transactional
+    public void consume(String userId, int costCent) {
+        if (costCent <= 0) {
+            return;
+        }
+        assertAffordable(userId, costCent);
+        UserQuota quota = quotaWalletService.requireWallet(userId);
+        quotaWalletService.resetMonthIfNeeded(quota);
+        int limit = quota.getMonthlyLimitCent() == null ? 0 : quota.getMonthlyLimitCent();
+        int spent = quota.getMonthSpentCent() == null ? 0 : quota.getMonthSpentCent();
+        int balance = quota.getBalanceCent() == null ? 0 : quota.getBalanceCent();
+        int extra = quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent();
         int fromBalance = Math.min(balance, costCent);
         int fromExtra = costCent - fromBalance;
         UserQuota patch = new UserQuota();

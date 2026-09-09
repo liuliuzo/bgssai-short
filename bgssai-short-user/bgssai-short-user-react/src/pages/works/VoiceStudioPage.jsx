@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Button, Card, Form, Input, InputNumber, Select, Space, Table, Typography, message } from 'antd'
+import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
 import productionApi from '../../api/production'
 
 const { Paragraph } = Typography
+
+function formatYuan(cent) {
+  return ((cent || 0) / 100).toFixed(2)
+}
 
 export default function VoiceStudioPage({ work, episodeId }) {
   const [dubbings, setDubbings] = useState([])
@@ -74,7 +78,22 @@ export default function VoiceStudioPage({ work, episodeId }) {
             }))}
           />
           <Button type="primary" onClick={async () => {
-            const { data } = await featuresApi.submitDubbing({ episode_id: episodeId, model_code: voiceModelCode })
+            const body = { episode_id: episodeId, model_code: voiceModelCode }
+            const { data: estRes } = await featuresApi.estimateDubbing(body)
+            if (!estRes?.success) return
+            const est = estRes.result || {}
+            const ok = await new Promise((resolve) => {
+              Modal.confirm({
+                title: '确认配音费用',
+                content: `预计 ${formatYuan(est.estimated_cost_cent)} 元 · 余额 ${formatYuan(est.available_cent)} 元 · ${est.task_count || 0} 条台词`,
+                okText: '确认提交',
+                cancelText: '取消',
+                onOk: () => resolve(true),
+                onCancel: () => resolve(false),
+              })
+            })
+            if (!ok) return
+            const { data } = await featuresApi.submitDubbing(body)
             if (data?.success) {
               message.success(`已提交 ${data.result?.task_count || 0} 个配音任务`)
               await load()

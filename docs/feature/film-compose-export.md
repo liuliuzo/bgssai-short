@@ -47,9 +47,11 @@
      9:16 成片。因此**运行 / 部署机必须预装 ffmpeg 并在 PATH 中**，缺失时合成任务明确失败
      并提示「本机未安装 ffmpeg」；任一镜头缺可用视频时失败信息点名缺哪几镜。不提供
      「合不成就出一张占位图」的兜底——假成片会让创作者以为已经出片。
-  10. **MVP 简单字幕**：合成默认烧录字幕（`compose_setting_json.burn_subtitle_flag` 缺省为开）。
+  10. **MVP 字幕 + 配音混流**：合成默认烧录字幕（`compose_setting_json.burn_subtitle_flag` 缺省为开）。
      优先使用 `short_subtitle` 行；若尚无字幕表数据，则按镜号用 `dialogue_text` 生成 SRT。
-     完整配音混流、样式化字幕工作台仍按本节其余规则增量，不阻塞「空项目 → 可播放 MP4」。
+     若镜头已有 `short_dubbing.audio_asset_id`，FFmpeg 按镜序混入配音轨（缺配音镜用静音占位，
+     `export_json.dubbing_missing_shot_nos` / `dubbing_warn` 记录缺口）；无任何配音时仍走画面-only 路径。
+     有配音后再选 BGM 时对 BGM 降音量 `amix`，不再整轨替换人声。样式化字幕工作台仍按本节其余规则增量。
   11. 下载走临时签名 URL，有效期 30 分钟，不暴露对象存储永久地址；`films/detail` 的
      `download_url` 直接返回可播放地址（不是 download-url JSON 接口路径）。下载区提供
      「重新获取链接」按钮，链接过期后重取新签名 URL 即可，无需重新导出或重走合成流程。
@@ -95,7 +97,9 @@
         { "track_type": "BGM", "clip_list": [
             { "asset_id": "a-52001", "start_ms": 0, "end_ms": 88000, "duck_flag": 1 } ] } ] } }
   ```
-- `POST /bgssai/user/films/compose`（`episode_id`；返回 `task_id`）
+- `POST /bgssai/user/films/compose-estimate`（`episode_id`；返回与 `/ai-tasks/estimate` 同构的费用字段，
+  `task_type=COMPOSE`；余额不足 `4007` / 月额度 `4015`）
+- `POST /bgssai/user/films/compose`（`episode_id`；先过预检与费用闸门；返回 `task_id` + `estimated_cost_cent`）
 - `GET /bgssai/user/films/detail?episode_id=e-20001`
   （`film_asset_id`、`film_duration_sec`、`compose_status`、`expired_flag`、`subtitle_stale_flag`、
   `composed_time`）

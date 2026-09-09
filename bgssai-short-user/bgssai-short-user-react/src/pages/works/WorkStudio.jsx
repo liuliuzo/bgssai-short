@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Card, Collapse, Form, Input, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
+import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
@@ -16,6 +16,32 @@ const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function formatYuan(cent) {
+  return ((cent || 0) / 100).toFixed(2)
+}
+
+function confirmEstimate(est, title) {
+  const breakdown = (est.shot_cost_list || []).slice(0, 8).map((s) =>
+    `镜${s.shot_no} ${s.task_type} ${formatYuan(s.estimated_cost_cent)}元`).join('；')
+  return new Promise((resolve) => {
+    Modal.confirm({
+      title: title || '确认费用后提交',
+      content: (
+        <div>
+          <p>预计费用 {formatYuan(est.estimated_cost_cent)} 元</p>
+          <p>余额可用 {formatYuan(est.available_cent)} 元</p>
+          <p>共 {est.task_count || 0} 项（{est.model_code || '-'}）</p>
+          {breakdown ? <p>{breakdown}{(est.shot_cost_list || []).length > 8 ? '…' : ''}</p> : null}
+        </div>
+      ),
+      okText: '确认提交',
+      cancelText: '取消',
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
+    })
+  })
+}
 
 async function waitTask(workId, taskId) {
   if (!taskId) return null
@@ -394,14 +420,20 @@ function StoryboardPane({ work, episodeId }) {
   }
 
   const submitLevel = async (taskType, autoNext) => {
-    const { data } = await productionApi.submitTasks({
+    const estimateBody = {
       episode_id: episodeId,
       shot_ids: selectedIds,
       task_type: taskType,
       auto_next_flag: autoNext ? 1 : 0,
       model_code: taskType === 'VIDEO' ? videoModelCode : imageModelCode,
       next_model_code: autoNext ? videoModelCode : undefined,
-    })
+    }
+    const { data: estRes } = await productionApi.estimateTasks(estimateBody)
+    if (!estRes?.success) return
+    setCost(estRes.result)
+    const ok = await confirmEstimate(estRes.result, taskType === 'VIDEO' ? '确认视频费用' : '确认出图费用')
+    if (!ok) return
+    const { data } = await productionApi.submitTasks(estimateBody)
     if (data?.success) {
       message.success(taskType === 'VIDEO' ? '视频已提交，可去任务页等结果' : '草图已提交，出图后先看构图对不对')
       await waitBatch(work.work_id, data.result.batch_id, data.result.task_id_list)
@@ -469,12 +501,15 @@ function StoryboardPane({ work, episodeId }) {
       </Space>}>
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
-            约 {cost.task_count} 镜 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
-            （{cost.model_code || '-'}）。这是出图费用，还不包含视频。
+            约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
+            （余额 {formatYuan(cost.available_cent)} 元 · {cost.model_code || '-'}）
+            {(cost.shot_cost_list || []).length > 0
+              ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
+              : ''}
           </Paragraph>
         ) : (
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            勾选镜头后估费用。默认先出图、不自动出视频。
+            勾选镜头后估费用。生成前会再弹窗确认预计费用与余额。
           </Paragraph>
         )}
       </Card>
@@ -563,13 +598,18 @@ function StoryboardPane({ work, episodeId }) {
                   })
                 }}>提示词会拍出什么</Button>
                 <Button size="small" disabled={row.shot_status === 'LOCKED'} onClick={async () => {
-                  const { data } = await productionApi.submitTasks({
+                  const body = {
                     episode_id: episodeId,
                     shot_ids: [row.shot_id],
                     task_type: 'IMAGE',
                     auto_next_flag: 0,
                     model_code: imageModelCode,
-                  })
+                  }
+                  const { data: estRes } = await productionApi.estimateTasks(body)
+                  if (!estRes?.success) return
+                  const ok = await confirmEstimate(estRes.result, '确认出图费用')
+                  if (!ok) return
+                  const { data } = await productionApi.submitTasks(body)
                   if (data?.success) {
                     message.success('正在出图确认构图')
                     await waitTask(work.work_id, data.result.task_id_list?.[0])
@@ -577,13 +617,18 @@ function StoryboardPane({ work, episodeId }) {
                   }
                 }}>出一张图看看</Button>
                 <Button size="small" type="primary" disabled={!row.first_frame_asset_id || row.shot_status === 'LOCKED'} onClick={async () => {
-                  const { data } = await productionApi.submitTasks({
+                  const body = {
                     episode_id: episodeId,
                     shot_ids: [row.shot_id],
                     task_type: 'VIDEO',
                     auto_next_flag: 0,
                     model_code: videoModelCode,
-                  })
+                  }
+                  const { data: estRes } = await productionApi.estimateTasks(body)
+                  if (!estRes?.success) return
+                  const ok = await confirmEstimate(estRes.result, '确认视频费用')
+                  if (!ok) return
+                  const { data } = await productionApi.submitTasks(body)
                   if (data?.success) {
                     message.success('构图已确认，开始生成视频')
                     await waitTask(work.work_id, data.result.task_id_list?.[0])
@@ -666,6 +711,7 @@ function TasksPane({ workId, episodeId }) {
 function ComposePane({ work, episodeId, onReload }) {
   const [precheck, setPrecheck] = useState(null)
   const [film, setFilm] = useState(null)
+  const [composeCost, setComposeCost] = useState(null)
   const [musicModels, setMusicModels] = useState([])
   const [musicModelCode, setMusicModelCode] = useState()
   const [musicPrompt, setMusicPrompt] = useState('电影感纯音乐，情绪递进，适合作为短剧背景音乐')
@@ -705,6 +751,12 @@ function ComposePane({ work, episodeId, onReload }) {
           message="合成前置未满足"
           description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
         />
+      ) : null}
+      {composeCost ? (
+        <Paragraph type="secondary">
+          合成预估 {formatYuan(composeCost.estimated_cost_cent)} 元 · 余额 {formatYuan(composeCost.available_cent)} 元
+          · 有配音时会混入成片音轨
+        </Paragraph>
       ) : null}
       <Space style={{ marginBottom: 12 }} wrap>
         <Select
@@ -751,10 +803,19 @@ function ComposePane({ work, episodeId, onReload }) {
       </Space>
       <Space>
         <Button onClick={load}>刷新</Button>
+        <Button onClick={async () => {
+          const { data } = await productionApi.composeEstimate(episodeId)
+          if (data?.success) setComposeCost(data.result)
+        }}>估合成费用</Button>
         <Button type="primary" disabled={!precheck?.ready} onClick={async () => {
+          const { data: estRes } = await productionApi.composeEstimate(episodeId)
+          if (!estRes?.success) return
+          setComposeCost(estRes.result)
+          const ok = await confirmEstimate(estRes.result, '确认合成费用')
+          if (!ok) return
           const { data } = await productionApi.composeFilm(episodeId)
           if (data?.success) {
-            message.success('合成任务已提交')
+            message.success('合成任务已提交（有配音会混入成片）')
             await waitTask(work.work_id, data.result.task_id)
             await load()
             await onReload()

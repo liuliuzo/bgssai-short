@@ -61,14 +61,16 @@ public class AiTaskQueue {
         task.setProgressPercent(0);
         task.setRetryCount(0);
         task.setAutoNextFlag(autoNext);
-        task.setCostCent(aiModelResolveService.costCent(model, estimatedUsage(model, req)));
+        int usage = estimatedUsage(model, req);
+        int priced = aiModelResolveService.costCent(model, usage);
+        task.setCostCent(priced > 0 ? priced : com.bgssai.shortai.production.support.TaskPrices.cost(taskType));
         Date now = new Date();
         task.setQueuedTime(now);
         task.setCreatedTime(now);
         task.setUpdatedTime(now);
         shortAiTaskMapper.insertSelective(task);
-        log.info("enqueue ai task taskId={} type={} model={} target={}", task.getTaskId(), taskType,
-                model.getModelCode(), targetId);
+        log.info("enqueue ai task taskId={} type={} model={} target={} cost={}", task.getTaskId(), taskType,
+                model.getModelCode(), targetId, task.getCostCent());
         return task;
     }
 

@@ -785,12 +785,18 @@ public class ShortAiTaskWorker {
         }
         timelineMap.put("shots", shotMeta);
         timelineMap.put("duration_sec", duration);
-        String timeline = ShortJson.toJson(timelineMap);
 
         AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
         request.getParams().put("title", ep.getEpisodeTitle());
         request.getParams().put("duration_sec", duration);
         request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
+        List<Integer> clipDurations = new ArrayList<>();
+        List<String> dubbingMissing = new ArrayList<>();
+        List<byte[]> dubbingAudio = loadDubbingAudio(shots, clipDurations, dubbingMissing);
+        request.getParams().put(FfmpegComposeProvider.PARAM_CLIP_DURATION_SEC_LIST, clipDurations);
+        if (dubbingAudio.stream().anyMatch(b -> b != null && b.length > 0)) {
+            request.getParams().put(FfmpegComposeProvider.PARAM_DUBBING_LIST, dubbingAudio);
+        }
         byte[] bgm = loadSelectedBgm(ep);
         if (bgm != null) {
             request.getParams().put(FfmpegComposeProvider.PARAM_BGM, bgm);
@@ -799,6 +805,14 @@ public class ShortAiTaskWorker {
         if (srt != null && !srt.isBlank()) {
             request.getParams().put(FfmpegComposeProvider.PARAM_SUBTITLE_SRT, srt);
         }
+        if (!dubbingMissing.isEmpty()) {
+            timelineMap.put("dubbing_missing_shot_nos", dubbingMissing);
+            timelineMap.put("dubbing_warn",
+                    "部分镜头无配音，已用静音占位：" + String.join("、", dubbingMissing));
+        }
+        int mixed = (int) dubbingAudio.stream().filter(b -> b != null && b.length > 0).count();
+        timelineMap.put("dubbing_mixed_count", mixed);
+        String timeline = ShortJson.toJson(timelineMap);
         request.setPrompt(timeline);
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
@@ -839,6 +853,54 @@ public class ShortAiTaskWorker {
         eup.createCriteria().andIdEqualTo(ep.getId());
         shortEpisodeMapper.updateByExampleSelective(epPatch, eup);
         workStatusService.refresh(ep.getWorkId());
+    }
+
+    private List<byte[]> loadDubbingAudio(List<ShortShot> shots, List<Integer> clipDurations,
+            List<String> missingShotNos) {
+        List<byte[]> audio = new ArrayList<>();
+        for (ShortShot shot : shots) {
+            int dur = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
+            clipDurations.add(dur);
+            ShortDubbingExample dex = new ShortDubbingExample();
+            dex.createCriteria().andShotIdEqualTo(shot.getShotId()).andDeletedFlagEqualTo(0);
+            dex.setOrderByClause("line_no asc");
+            List<ShortDubbing> rows = shortDubbingMapper.selectByExample(dex);
+            byte[] bytes = null;
+            for (ShortDubbing row : rows) {
+                if (row.getAudioAssetId() == null || row.getAudioAssetId().isBlank()) {
+                    continue;
+                }
+                bytes = audioAssetBytes(row.getAudioAssetId());
+                if (bytes != null) {
+                    break;
+                }
+            }
+            if (bytes == null) {
+                if (shot.getDialogueText() != null && !shot.getDialogueText().isBlank()) {
+                    missingShotNos.add("镜" + shot.getShotNo());
+                }
+                audio.add(new byte[0]);
+            } else {
+                audio.add(bytes);
+            }
+        }
+        return audio;
+    }
+
+    private byte[] audioAssetBytes(String assetId) {
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null || asset.getStorageKey() == null || asset.getStorageKey().isBlank()) {
+            return null;
+        }
+        try {
+            byte[] bytes = objectStorage.get(asset.getStorageKey());
+            return bytes == null || bytes.length == 0 ? null : bytes;
+        } catch (RuntimeException ex) {
+            log.warn("compose dubbing fetch failed assetId={}", assetId, ex);
+            return null;
+        }
     }
 
     /**
