@@ -1,5 +1,5 @@
 app_name=BGSSAIShort
-app_id=PENDING
+app_id=2021006196627810
 website=https://dev.user.bgssai-short.com
 oauth_callback=https://dev.user.bgssai-short.com
 notify_url=https://dev.user.bgssai-short.com/bgssai/user/payment/alipay/notify

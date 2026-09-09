@@ -17,4 +17,4 @@ Shared platform public key: `alipay_public_key_body.txt`
 | marklens | 2021006185681180 |
 | publish | 2021006186687014 |
 | voiceunion | 2021006185633244 |
-| bgssai-short | PENDING（控制台尚未创建短剧支付宝应用；DML 种子 `PENDING_BGSSAI_SHORT`，`is_enabled=0` / 非收款，控制台创建后由 Admin 写入真实 app_id 并设收款） |
+| bgssai-short | 2021006196627810（BGSSAIShort；DML 种子同号） |
