@@ -13,11 +13,14 @@ import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortFilmMapper;
 import com.bgssai.shortai.model.ShortEpisode;
+import com.bgssai.shortai.model.ShortEpisodeExample;
 import com.bgssai.shortai.model.ShortFilm;
 import com.bgssai.shortai.model.ShortFilmExample;
 import com.bgssai.shortai.model.ShortWork;
+import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishBatchToMediaReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishToMediaReq;
 import com.bgssai.shortai.production.media.MediaIngestClient;
 import com.bgssai.shortai.production.media.MediaIngestContract;
@@ -32,6 +35,8 @@ public class FilmPublishToMediaService {
     private WorkAccessService workAccessService;
     @Autowired
     private ShortFilmMapper shortFilmMapper;
+    @Autowired
+    private ShortEpisodeMapper shortEpisodeMapper;
     @Autowired
     private AssetService assetService;
     @Autowired
@@ -85,7 +90,7 @@ public class FilmPublishToMediaService {
      * Dev-friendly preflight: config + film gates + last publish_log snapshot.
      * Does not call media.
      */
-    public ApiResponse preflight(String episodeId, String filmId) {
+    public ApiResponse preflight(String episodeId, String filmId, String workId) {
         Map<String, Object> result = new LinkedHashMap<>();
         RestMediaIngestClient.ConfigStatus config = resolveConfigStatus();
         result.put("base_url_configured", config.baseUrlConfigured());
@@ -134,6 +139,23 @@ public class FilmPublishToMediaService {
             }
         }
 
+        if (workId != null && !workId.isBlank()) {
+            ShortWork work = workAccessService.requireWork(workId);
+            List<ShortFilm> candidates = listBatchCandidates(work.getWorkId());
+            result.put("batch_work_id", work.getWorkId());
+            result.put("batch_ready_count", candidates.size());
+            List<Map<String, Object>> preview = new ArrayList<>();
+            for (ShortFilm film : candidates) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("film_id", film.getFilmId());
+                row.put("episode_id", film.getEpisodeId());
+                row.put("media_id", film.getMediaId());
+                row.put("media_publish_status", film.getMediaPublishStatus());
+                preview.add(row);
+            }
+            result.put("batch_candidate_list", preview);
+        }
+
         result.put("film_ready", filmReady);
         result.put("review_approved", reviewApproved);
         result.put("publishable", publishable && config.ready());
@@ -143,6 +165,95 @@ public class FilmPublishToMediaService {
             result.put("publish_log", publishLog);
         }
         return Responses.ok(result);
+    }
+
+    /**
+     * Batch-publish all READY + APPROVED films under a work. Sequential with progress fields.
+     */
+    public ApiResponse publishBatch(FilmPublishBatchToMediaReq req) {
+        if (req == null || req.getWorkId() == null || req.getWorkId().isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "work_id required");
+        }
+        ShortWork work = workAccessService.requireWork(req.getWorkId());
+        List<ShortFilm> candidates = listBatchCandidates(work.getWorkId());
+        List<Map<String, Object>> items = new ArrayList<>();
+        int succeeded = 0;
+        int failed = 0;
+        int total = candidates.size();
+        int index = 0;
+        for (ShortFilm film : candidates) {
+            index += 1;
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("progress_index", index);
+            item.put("progress_total", total);
+            item.put("film_id", film.getFilmId());
+            item.put("episode_id", film.getEpisodeId());
+            item.put("work_id", film.getWorkId());
+            try {
+                FilmPublishToMediaReq one = new FilmPublishToMediaReq();
+                one.setFilmId(film.getFilmId());
+                one.setEpisodeId(film.getEpisodeId());
+                ApiResponse oneResp = publish(one);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> oneResult = (Map<String, Object>) oneResp.getResult();
+                item.put("ok", true);
+                item.put("media_id", oneResult.get("media_id"));
+                item.put("play_url", oneResult.get("play_url"));
+                item.put("status", oneResult.get("status"));
+                item.put("idempotency_key", oneResult.get("idempotency_key"));
+                item.put("error", "");
+                succeeded += 1;
+            } catch (BizException ex) {
+                item.put("ok", false);
+                item.put("media_id", film.getMediaId());
+                item.put("play_url", film.getMediaPlayUrl());
+                item.put("status", "FAILED");
+                item.put("error", ex.getMessage());
+                failed += 1;
+            }
+            items.add(item);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("work_id", work.getWorkId());
+        result.put("total", total);
+        result.put("succeeded", succeeded);
+        result.put("failed", failed);
+        result.put("skipped", 0);
+        result.put("progress_percent", total == 0 ? 100 : (int) Math.round(100.0 * (succeeded + failed) / total));
+        result.put("item_list", items);
+        return Responses.ok(result);
+    }
+
+    /**
+     * READY films whose episode is APPROVED (latest film per episode).
+     */
+    List<ShortFilm> listBatchCandidates(String workId) {
+        ShortEpisodeExample epEx = new ShortEpisodeExample();
+        epEx.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        epEx.setOrderByClause("episode_no asc, id asc");
+        List<ShortEpisode> episodes = shortEpisodeMapper.selectByExample(epEx);
+        List<ShortFilm> out = new ArrayList<>();
+        for (ShortEpisode episode : episodes) {
+            if (!"APPROVED".equals(episode.getReviewStatus())) {
+                continue;
+            }
+            ShortFilmExample filmEx = new ShortFilmExample();
+            filmEx.createCriteria().andEpisodeIdEqualTo(episode.getEpisodeId()).andDeletedFlagEqualTo(0)
+                    .andComposeStatusEqualTo("READY");
+            filmEx.setOrderByClause("id desc");
+            ShortFilm film = shortFilmMapper.selectOneByExample(filmEx);
+            if (film == null) {
+                continue;
+            }
+            if (film.getExpiredFlag() != null && film.getExpiredFlag() == 1) {
+                continue;
+            }
+            if (film.getFilmAssetId() == null || film.getFilmAssetId().isBlank()) {
+                continue;
+            }
+            out.add(film);
+        }
+        return out;
     }
 
     static Map<String, Object> buildPublishLog(ShortFilm film) {

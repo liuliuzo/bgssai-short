@@ -790,6 +790,8 @@ function ComposePane({ work, episodeId, onReload }) {
   const [film, setFilm] = useState(null)
   const [mediaPreflight, setMediaPreflight] = useState(null)
   const [publishing, setPublishing] = useState(false)
+  const [batchPublishing, setBatchPublishing] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(null)
   const [publishError, setPublishError] = useState(null)
   const [composeCost, setComposeCost] = useState(null)
   const [musicModels, setMusicModels] = useState([])
@@ -801,12 +803,12 @@ function ComposePane({ work, episodeId, onReload }) {
     const [p, f, mp] = await Promise.all([
       productionApi.filmPrecheck(episodeId),
       productionApi.filmDetail(episodeId),
-      productionApi.publishFilmToMediaPreflight({ episode_id: episodeId }),
+      productionApi.publishFilmToMediaPreflight({ episode_id: episodeId, work_id: work?.work_id }),
     ])
     setPrecheck(p.data?.result)
     setFilm(f.data?.result)
     setMediaPreflight(mp.data?.result || null)
-  }, [episodeId])
+  }, [episodeId, work?.work_id])
 
   useEffect(() => { load() }, [load])
 
@@ -860,6 +862,42 @@ function ComposePane({ work, episodeId, onReload }) {
       setPublishError(formatPublishError(data, err?.message || '网络异常'))
     } finally {
       setPublishing(false)
+    }
+  }
+
+  const runBatchPublish = async () => {
+    if (!work?.work_id) return
+    const count = mediaPreflight?.batch_ready_count || 0
+    const ok = await new Promise((resolve) => {
+      Modal.confirm({
+        title: '批量发布到 Media',
+        content: `将发布本作品全部 READY 且已过审的成片（约 ${count} 集）。确认继续？`,
+        okText: '开始批量发布',
+        cancelText: '取消',
+        onOk: () => resolve(true),
+        onCancel: () => resolve(false),
+      })
+    })
+    if (!ok) return
+    setBatchPublishing(true)
+    setBatchProgress({ progress_percent: 0, total: count, succeeded: 0, failed: 0 })
+    setPublishError(null)
+    try {
+      const { data } = await productionApi.publishFilmToMediaBatch({ work_id: work.work_id })
+      if (data?.success) {
+        const r = data.result || {}
+        setBatchProgress(r)
+        message.success(`批量完成：成功 ${r.succeeded || 0} / 失败 ${r.failed || 0} / 共 ${r.total || 0}`)
+        await load()
+        await onReload()
+      } else {
+        setPublishError(formatPublishError(data))
+      }
+    } catch (err) {
+      const data = err?.response?.data
+      setPublishError(formatPublishError(data, err?.message || '网络异常'))
+    } finally {
+      setBatchPublishing(false)
     }
   }
 
@@ -978,14 +1016,36 @@ function ComposePane({ work, episodeId, onReload }) {
         <Button
           type="primary"
           loading={publishing}
-          disabled={!canPublish}
+          disabled={!canPublish || batchPublishing}
           onClick={runPublish}
         >发布到 Media</Button>
+        <Button
+          loading={batchPublishing}
+          disabled={batchPublishing || publishing || mediaPreflight?.config_ready === false
+            || !(mediaPreflight?.batch_ready_count > 0)}
+          onClick={runBatchPublish}
+        >
+          批量发布 READY 集
+          {mediaPreflight?.batch_ready_count != null ? `（${mediaPreflight.batch_ready_count}）` : ''}
+        </Button>
         <Button onClick={async () => {
           await load()
           message.success('已刷新发布状态')
         }}>刷新发布状态</Button>
       </Space>
+      {batchProgress ? (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginTop: 12 }}
+          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 成功 ${batchProgress.succeeded || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
+          description={(batchProgress.item_list || []).slice(0, 12).map((it) => (
+            <div key={`${it.episode_id}-${it.film_id}`}>
+              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.ok ? `OK ${it.media_id || ''}` : `失败 ${it.error || ''}`}
+            </div>
+          ))}
+        />
+      ) : null}
       {film?.download_url ? (
         <div style={{ marginTop: 12 }}>
           <Paragraph>

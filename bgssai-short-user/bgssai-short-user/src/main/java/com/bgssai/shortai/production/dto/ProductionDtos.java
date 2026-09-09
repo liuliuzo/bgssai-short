@@ -245,6 +245,12 @@ public class ProductionDtos {
         public void setFilmId(String filmId) { this.filmId = filmId; }
     }
 
+    public static class FilmPublishBatchToMediaReq {
+        private String workId;
+        public String getWorkId() { return workId; }
+        public void setWorkId(String workId) { this.workId = workId; }
+    }
+
     public static class ReviewUserReq {
         private String episodeId;
         private String workId;

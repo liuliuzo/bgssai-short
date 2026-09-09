@@ -298,15 +298,28 @@ FFmpeg 混入成片音轨。
 `film_asset_id`、本集 `review_status=APPROVED`。
 
 响应 `result`：`film_id` `episode_id` `work_id` `media_id` `play_url` `status`
-`idempotency_key` `published_at` `publish_log`。media 不可达返回 `502000`；超时 `504000`；
-业务码 6xxxx 文案可读。
+`idempotency_key` `published_at` `http_status` `attempts` `publish_log`。media 不可达返回 `502000`；超时 `504000`；
+业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次。
 
-### GET /bgssai/user/films/publish-to-media/preflight?episode_id=&film_id=
+### POST /bgssai/user/films/publish-to-media/batch
 
-不调用 media。返回配置就绪、闸门结论、`warnings[]`，以及可选最近一次 `publish_log`。
+```json
+{ "work_id": "w-dm-004" }
+```
+
+按剧集顺序发布本作品全部 READY+APPROVED 成片。响应：`total` `succeeded` `failed`
+`progress_percent` `item_list[{progress_index,progress_total,film_id,episode_id,ok,media_id,play_url,error}]`。
+
+### GET /bgssai/user/films/publish-to-media/preflight?episode_id=&film_id=&work_id=
+
+不调用 media。返回配置就绪、闸门结论、`warnings[]`，以及可选最近一次 `publish_log`；
+带 `work_id` 时返回 `batch_ready_count` / `batch_candidate_list`。
+
+下架/撤回：media 暂无契约，本仓 skip（见需求文档）。
 
 `films/detail` 额外返回最近一次发布字段：`media_id` `media_play_url`
-`media_publish_status` `media_published_at` `media_last_error`，存在历史时附带 `publish_log`。
+`media_publish_status` `media_published_at` `media_last_error`，存在历史时附带 `publish_log`
+（及原始 `media_publish_log` JSON）。
 
 ## 分镜画布重排
 
