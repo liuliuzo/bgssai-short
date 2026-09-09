@@ -4,7 +4,10 @@ import java.util.Map;
 
 public interface MediaIngestClient {
 
-    record IngestResult(String mediaId, String playUrl, String status) {
+    record IngestResult(String mediaId, String playUrl, String status, Integer httpStatus, int attempts) {
+        public IngestResult(String mediaId, String playUrl, String status) {
+            this(mediaId, playUrl, status, 200, 1);
+        }
     }
 
     IngestResult ingest(Map<String, Object> payload);

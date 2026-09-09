@@ -19,10 +19,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortFilmMapper;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortFilm;
 import com.bgssai.shortai.model.ShortWork;
+import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishBatchToMediaReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishToMediaReq;
 import com.bgssai.shortai.production.media.MediaIngestClient;
 import com.bgssai.shortai.production.media.MediaIngestContract;
@@ -30,6 +32,7 @@ import com.bgssai.shortai.production.media.MediaIngestContract;
 class FilmPublishToMediaServiceTest {
 
     private final ShortFilmMapper filmMapper = mock(ShortFilmMapper.class);
+    private final ShortEpisodeMapper episodeMapper = mock(ShortEpisodeMapper.class);
     private final WorkAccessService workAccessService = mock(WorkAccessService.class);
     private final AssetService assetService = mock(AssetService.class);
     private final MediaIngestClient mediaIngestClient = mock(MediaIngestClient.class);
@@ -37,6 +40,7 @@ class FilmPublishToMediaServiceTest {
     private FilmPublishToMediaService service() {
         FilmPublishToMediaService service = new FilmPublishToMediaService();
         ReflectionTestUtils.setField(service, "shortFilmMapper", filmMapper);
+        ReflectionTestUtils.setField(service, "shortEpisodeMapper", episodeMapper);
         ReflectionTestUtils.setField(service, "workAccessService", workAccessService);
         ReflectionTestUtils.setField(service, "assetService", assetService);
         ReflectionTestUtils.setField(service, "mediaIngestClient", mediaIngestClient);
@@ -123,7 +127,7 @@ class FilmPublishToMediaServiceTest {
         film.setExpiredFlag(1);
         BizException ex = assertThrows(BizException.class,
                 () -> FilmPublishToMediaService.assertPublishable(film, approvedEpisode()));
-        assertTrue(ex.getMessage().contains("expired"));
+        assertTrue(ex.getMessage().contains("过期"));
     }
 
     @Test
@@ -198,5 +202,90 @@ class FilmPublishToMediaServiceTest {
     void buildTitleIncludesWorkEpisodeAndName() {
         String title = FilmPublishToMediaService.buildTitle(work(), approvedEpisode());
         assertEquals("退婚三年后她成了首富 第1集 开场", title);
+    }
+
+    @Test
+    void buildPublishLogWhenHistoryExists() {
+        ShortFilm film = readyFilm();
+        film.setMediaId("md-1");
+        film.setMediaPlayUrl("https://play/1");
+        film.setMediaPublishStatus("READY");
+        Map<String, Object> log = FilmPublishToMediaService.buildPublishLog(film);
+        assertEquals("md-1", log.get("media_id"));
+        assertEquals("https://play/1", log.get("play_url"));
+        assertEquals("short:w-1:ep-1:fl-1", log.get("idempotency_key"));
+    }
+
+    @Test
+    void buildPublishLogNullWhenNone() {
+        ShortFilm film = readyFilm();
+        film.setMediaPublishStatus("NONE");
+        assertEquals(null, FilmPublishToMediaService.buildPublishLog(film));
+    }
+
+    @Test
+    void idempotentRepublishUpdatesLatestResult() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any()))
+                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1", "READY", 200, 1))
+                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1b", "READY", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        ApiResponse first = service().publish(req);
+        ApiResponse second = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> r2 = (Map<String, Object>) second.getResult();
+        assertEquals("md-1", r2.get("media_id"));
+        assertEquals("https://p/1b", r2.get("play_url"));
+        assertEquals("short:w-1:ep-1:fl-1", r2.get("idempotency_key"));
+        verify(mediaIngestClient, org.mockito.Mockito.times(2)).ingest(any());
+        verify(filmMapper, org.mockito.Mockito.times(2)).updateByExampleSelective(any(), any());
+        assertTrue(first.isSuccess());
+    }
+
+    @Test
+    void richPublishLogContainsIdempotencyAndHttpStatus() {
+        Map<String, Object> log = FilmPublishToMediaService.richPublishLog(
+                "short:w:e:f", "md-9", "https://p", "READY", 200, "", 2, new java.util.Date());
+        assertEquals("short:w:e:f", log.get("idempotency_key"));
+        assertEquals("md-9", log.get("media_id"));
+        assertEquals(200, log.get("http_status"));
+        assertEquals(2, log.get("attempts"));
+    }
+
+    @Test
+    void batchPublishReportsProgress() {
+        ShortFilm film = readyFilm();
+        ShortEpisode ep = approvedEpisode();
+        ShortWork work = work();
+        when(workAccessService.requireWork("w-1")).thenReturn(work);
+        when(episodeMapper.selectByExample(any())).thenReturn(List.of(ep));
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(ep);
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any())).thenReturn(
+                new MediaIngestClient.IngestResult("md-b", "https://p/b", "READY", 200, 1));
+
+        FilmPublishBatchToMediaReq req = new FilmPublishBatchToMediaReq();
+        req.setWorkId("w-1");
+        ApiResponse response = service().publishBatch(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals(1, result.get("total"));
+        assertEquals(1, result.get("succeeded"));
+        assertEquals(0, result.get("failed"));
+        assertEquals(100, result.get("progress_percent"));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> items = (List<Map<String, Object>>) result.get("item_list");
+        assertEquals(1, items.size());
+        assertEquals(true, items.get(0).get("ok"));
+        assertEquals("md-b", items.get(0).get("media_id"));
     }
 }

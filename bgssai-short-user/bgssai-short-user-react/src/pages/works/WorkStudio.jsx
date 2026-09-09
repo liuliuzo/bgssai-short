@@ -708,9 +708,91 @@ function TasksPane({ workId, episodeId }) {
   )
 }
 
+function formatPublishError(data, fallback) {
+  const code = data?.code != null ? String(data.code) : ''
+  const msg = data?.message || fallback || '发布失败'
+  if (code === '4006' || /READY|APPROVED|过期|未就绪|审核/.test(msg)) {
+    return { title: '无法发布（闸门未通过）', detail: msg }
+  }
+  if (code === '502000' || /不可达|不可用|连接失败|Media 服务/.test(msg)) {
+    return { title: 'Media 服务不可用', detail: msg }
+  }
+  if (code === '504000' || /超时/.test(msg)) {
+    return { title: 'Media 请求超时', detail: msg }
+  }
+  if (/6\d{4}/.test(msg) || /^6\d{4}$/.test(code)) {
+    return { title: 'Media 业务拒绝', detail: msg }
+  }
+  if (/未配置|base-url|ingest-token/.test(msg)) {
+    return { title: 'Media 配置缺失', detail: msg }
+  }
+  return { title: '发布失败', detail: msg }
+}
+
+function showPublishSuccess(result) {
+  const mediaId = result?.media_id || ''
+  const playUrl = result?.play_url || ''
+  Modal.success({
+    title: '已发布到 Media',
+    width: 520,
+    content: (
+      <div>
+        <Paragraph style={{ marginBottom: 8 }}>
+          <Text type="secondary">media_id</Text>
+          <br />
+          <Text copyable={{ text: mediaId }}>{mediaId || '-'}</Text>
+        </Paragraph>
+        <Paragraph style={{ marginBottom: 12 }}>
+          <Text type="secondary">play_url</Text>
+          <br />
+          {playUrl ? (
+            <Text copyable={{ text: playUrl }}>
+              <a href={playUrl} target="_blank" rel="noreferrer">{playUrl}</a>
+            </Text>
+          ) : (
+            <Text>-</Text>
+          )}
+        </Paragraph>
+        <Space>
+          {playUrl ? (
+            <Button type="primary" onClick={() => window.open(playUrl, '_blank', 'noopener,noreferrer')}>
+              打开播放页
+            </Button>
+          ) : null}
+          {mediaId ? (
+            <Button onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(mediaId)
+                message.success('已复制 media_id')
+              } catch {
+                message.warning('复制失败，请手动选择')
+              }
+            }}>复制 media_id</Button>
+          ) : null}
+          {playUrl ? (
+            <Button onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(playUrl)
+                message.success('已复制 play_url')
+              } catch {
+                message.warning('复制失败，请手动选择')
+              }
+            }}>复制播放链接</Button>
+          ) : null}
+        </Space>
+      </div>
+    ),
+  })
+}
+
 function ComposePane({ work, episodeId, onReload }) {
   const [precheck, setPrecheck] = useState(null)
   const [film, setFilm] = useState(null)
+  const [mediaPreflight, setMediaPreflight] = useState(null)
+  const [publishing, setPublishing] = useState(false)
+  const [batchPublishing, setBatchPublishing] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(null)
+  const [publishError, setPublishError] = useState(null)
   const [composeCost, setComposeCost] = useState(null)
   const [musicModels, setMusicModels] = useState([])
   const [musicModelCode, setMusicModelCode] = useState()
@@ -718,13 +800,15 @@ function ComposePane({ work, episodeId, onReload }) {
 
   const load = useCallback(async () => {
     if (!episodeId) return
-    const [p, f] = await Promise.all([
+    const [p, f, mp] = await Promise.all([
       productionApi.filmPrecheck(episodeId),
       productionApi.filmDetail(episodeId),
+      productionApi.publishFilmToMediaPreflight({ episode_id: episodeId, work_id: work?.work_id }),
     ])
     setPrecheck(p.data?.result)
     setFilm(f.data?.result)
-  }, [episodeId])
+    setMediaPreflight(mp.data?.result || null)
+  }, [episodeId, work?.work_id])
 
   useEffect(() => { load() }, [load])
 
@@ -740,6 +824,83 @@ function ComposePane({ work, episodeId, onReload }) {
     return () => { cancelled = true }
   }, [])
 
+  const publishLog = film?.publish_log
+    || mediaPreflight?.publish_log
+    || (film?.media_id || film?.media_last_error || (film?.media_publish_status && film.media_publish_status !== 'NONE')
+      ? {
+        media_id: film.media_id,
+        play_url: film.media_play_url,
+        status: film.media_publish_status,
+        published_at: film.media_published_at,
+        last_error: film.media_last_error,
+      }
+      : null)
+
+  const canPublish = !!film?.film_id
+    && film?.compose_status === 'READY'
+    && mediaPreflight?.config_ready !== false
+    && !publishing
+
+  const runPublish = async () => {
+    if (!film?.film_id) return
+    setPublishing(true)
+    setPublishError(null)
+    try {
+      const { data } = await productionApi.publishFilmToMedia({
+        episode_id: episodeId,
+        film_id: film.film_id,
+      })
+      if (data?.success) {
+        showPublishSuccess(data.result || {})
+        await load()
+        await onReload()
+      } else {
+        setPublishError(formatPublishError(data))
+      }
+    } catch (err) {
+      const data = err?.response?.data
+      setPublishError(formatPublishError(data, err?.message || '网络异常'))
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  const runBatchPublish = async () => {
+    if (!work?.work_id) return
+    const count = mediaPreflight?.batch_ready_count || 0
+    const ok = await new Promise((resolve) => {
+      Modal.confirm({
+        title: '批量发布到 Media',
+        content: `将发布本作品全部 READY 且已过审的成片（约 ${count} 集）。确认继续？`,
+        okText: '开始批量发布',
+        cancelText: '取消',
+        onOk: () => resolve(true),
+        onCancel: () => resolve(false),
+      })
+    })
+    if (!ok) return
+    setBatchPublishing(true)
+    setBatchProgress({ progress_percent: 0, total: count, succeeded: 0, failed: 0 })
+    setPublishError(null)
+    try {
+      const { data } = await productionApi.publishFilmToMediaBatch({ work_id: work.work_id })
+      if (data?.success) {
+        const r = data.result || {}
+        setBatchProgress(r)
+        message.success(`批量完成：成功 ${r.succeeded || 0} / 失败 ${r.failed || 0} / 共 ${r.total || 0}`)
+        await load()
+        await onReload()
+      } else {
+        setPublishError(formatPublishError(data))
+      }
+    } catch (err) {
+      const data = err?.response?.data
+      setPublishError(formatPublishError(data, err?.message || '网络异常'))
+    } finally {
+      setBatchPublishing(false)
+    }
+  }
+
   return (
     <Card title="成片与提审">
       <Paragraph>合成状态 {film?.compose_status || '-'} / 预检 {precheck?.ready ? '可合成' : '未就绪'} / 风险 {precheck?.risk_level || '-'}</Paragraph>
@@ -750,6 +911,25 @@ function ComposePane({ work, episodeId, onReload }) {
           style={{ marginBottom: 12 }}
           message="合成前置未满足"
           description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
+        />
+      ) : null}
+      {mediaPreflight && mediaPreflight.config_ready === false ? (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="Media 发布预检：配置未就绪"
+          description={(mediaPreflight.warnings || []).join('；')
+            || '请配置 bgssai.media.base-url / ingest-token（或 sys_secret）后再发布'}
+        />
+      ) : null}
+      {mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="当前成片暂不可发布到 Media"
+          description={mediaPreflight.gate_reason}
         />
       ) : null}
       {composeCost ? (
@@ -801,7 +981,7 @@ function ComposePane({ work, episodeId, onReload }) {
           }}
         />
       </Space>
-      <Space>
+      <Space wrap>
         <Button onClick={load}>刷新</Button>
         <Button onClick={async () => {
           const { data } = await productionApi.composeEstimate(episodeId)
@@ -835,20 +1015,37 @@ function ComposePane({ work, episodeId, onReload }) {
         }}>撤回审核</Button>
         <Button
           type="primary"
-          disabled={!film?.film_id || film?.compose_status !== 'READY'}
-          onClick={async () => {
-            const { data } = await productionApi.publishFilmToMedia({
-              episode_id: episodeId,
-              film_id: film?.film_id,
-            })
-            if (data?.success) {
-              const r = data.result || {}
-              message.success(`已发布到 Media：${r.media_id || ''}`)
-              await load()
-            }
-          }}
+          loading={publishing}
+          disabled={!canPublish || batchPublishing}
+          onClick={runPublish}
         >发布到 Media</Button>
+        <Button
+          loading={batchPublishing}
+          disabled={batchPublishing || publishing || mediaPreflight?.config_ready === false
+            || !(mediaPreflight?.batch_ready_count > 0)}
+          onClick={runBatchPublish}
+        >
+          批量发布 READY 集
+          {mediaPreflight?.batch_ready_count != null ? `（${mediaPreflight.batch_ready_count}）` : ''}
+        </Button>
+        <Button onClick={async () => {
+          await load()
+          message.success('已刷新发布状态')
+        }}>刷新发布状态</Button>
       </Space>
+      {batchProgress ? (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginTop: 12 }}
+          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 成功 ${batchProgress.succeeded || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
+          description={(batchProgress.item_list || []).slice(0, 12).map((it) => (
+            <div key={`${it.episode_id}-${it.film_id}`}>
+              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.ok ? `OK ${it.media_id || ''}` : `失败 ${it.error || ''}`}
+            </div>
+          ))}
+        />
+      ) : null}
       {film?.download_url ? (
         <div style={{ marginTop: 12 }}>
           <Paragraph>
@@ -864,19 +1061,58 @@ function ComposePane({ work, episodeId, onReload }) {
           />
         </div>
       ) : null}
-      {film?.media_id ? (
+      {publishError ? (
         <Alert
-          type="success"
+          type="error"
           showIcon
+          closable
+          onClose={() => setPublishError(null)}
           style={{ marginTop: 12 }}
-          message={`Media ${film.media_publish_status || 'READY'} · ${film.media_id}`}
-          description={film.media_play_url ? (
-            <a href={film.media_play_url} target="_blank" rel="noreferrer">{film.media_play_url}</a>
-          ) : null}
+          message={publishError.title}
+          description={publishError.detail}
         />
       ) : null}
-      {film?.media_last_error ? (
-        <Alert type="error" showIcon style={{ marginTop: 12 }} message={film.media_last_error} />
+      {publishLog ? (
+        <Alert
+          type={publishLog.status === 'FAILED' || publishLog.last_error ? 'warning' : 'success'}
+          showIcon
+          style={{ marginTop: 12 }}
+          message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无 media_id'}`}
+          description={(
+            <div>
+              {publishLog.play_url ? (
+                <Paragraph style={{ marginBottom: 4 }}>
+                  播放链接{' '}
+                  <a href={publishLog.play_url} target="_blank" rel="noreferrer">{publishLog.play_url}</a>
+                  {' '}
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(publishLog.play_url)
+                        message.success('已复制')
+                      } catch {
+                        message.warning('复制失败')
+                      }
+                    }}
+                  >复制</Button>
+                </Paragraph>
+              ) : null}
+              {publishLog.published_at ? (
+                <Paragraph type="secondary" style={{ marginBottom: 4 }}>
+                  发布时间 {String(publishLog.published_at)}
+                  {publishLog.http_status != null ? ` · HTTP ${publishLog.http_status}` : ''}
+                  {publishLog.attempts != null ? ` · 尝试 ${publishLog.attempts} 次` : ''}
+                  {publishLog.idempotency_key ? ` · ${publishLog.idempotency_key}` : ''}
+                </Paragraph>
+              ) : null}
+              {publishLog.last_error ? (
+                <Paragraph type="danger" style={{ marginBottom: 0 }}>{publishLog.last_error}</Paragraph>
+              ) : null}
+            </div>
+          )}
+        />
       ) : null}
     </Card>
   )

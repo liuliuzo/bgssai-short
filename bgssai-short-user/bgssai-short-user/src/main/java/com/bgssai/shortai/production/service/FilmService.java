@@ -346,6 +346,13 @@ public class FilmService {
             result.put("media_publish_status", film.getMediaPublishStatus());
             result.put("media_published_at", film.getMediaPublishedAt());
             result.put("media_last_error", film.getMediaLastError());
+            Map<String, Object> publishLog = FilmPublishToMediaService.buildPublishLog(film);
+            if (publishLog != null) {
+                result.put("publish_log", publishLog);
+            }
+            if (film.getMediaPublishLog() != null && !film.getMediaPublishLog().isBlank()) {
+                result.put("media_publish_log", film.getMediaPublishLog());
+            }
         }
         return Responses.ok(result);
     }
