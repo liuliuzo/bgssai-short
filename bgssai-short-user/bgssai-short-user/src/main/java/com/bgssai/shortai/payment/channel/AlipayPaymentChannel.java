@@ -104,7 +104,7 @@ public class AlipayPaymentChannel implements PaymentChannel {
 
 
     @Override
-    public String queryPaidChannelTradeNo(String outTradeNo) {
+    public ChannelPaidQuery queryPaidOrder(String outTradeNo) {
         if (outTradeNo == null || outTradeNo.isBlank()) {
             return null;
         }
@@ -115,10 +115,11 @@ public class AlipayPaymentChannel implements PaymentChannel {
             List<AlipayMerchant> candidates = payMerchantReader.listVerifiableAlipayMerchants();
             for (AlipayMerchant merchant : candidates) {
                 try {
-                    String tradeNo = alipayGateway.queryPaidTradeNo(merchant, outTradeNo);
-                    if (tradeNo != null && !tradeNo.isBlank()) {
-                        log.info("alipay order query paid outTradeNo={} appId={}", outTradeNo, merchant.getAppId());
-                        return tradeNo;
+                    ChannelPaidQuery paid = alipayGateway.queryPaidOrder(merchant, outTradeNo);
+                    if (paid != null) {
+                        log.info("alipay order query paid outTradeNo={} appId={} amountFen={}",
+                                outTradeNo, merchant.getAppId(), paid.getAmountCent());
+                        return paid;
                     }
                 } catch (Exception e) {
                     log.warn("alipay order query failed outTradeNo={} appId={} error={}",

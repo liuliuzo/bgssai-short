@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentProperties {
 
-    @Value("${bgssai.payment.sandbox-enabled:true}")
+    @Value("${bgssai.payment.sandbox-enabled:false}")
     private boolean sandboxEnabled;
 
     @Value("${bgssai.payment.notify-base-url:http://localhost:8080}")

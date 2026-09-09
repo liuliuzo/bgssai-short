@@ -14,12 +14,13 @@
 2. 微信生产：APIv3 签名头 + 资源解密；无匹配商户视为验签失败。
 3. 支付宝生产：RSA2 `rsaCheckV1`，按 `app_id` 精确路由 `alipay_config`。
 4. 沙箱：HMAC-SHA256，密钥来自 `bgssai.payment.*.sign-key`，**不是**商户 APIv3 / 应用私钥。
-5. 验签通过后仍用库内 `payment_order.amount_cent` 与通知金额（分）比较，不一致抛 `60005`，不改状态。
-6. `status=paid` 直接确认，不再发放（幂等）。
-7. 日志只记 `order_no` / 渠道 / 商户号，不记密钥、私钥、APIv3 key。
-8. 用户端任何接口不返回商户凭据。
+5. 验签通过后仍用库内 `payment_order.amount_cent` 与通知金额（分）比较；**通知金额缺失或解析失败视为不符**，抛 `60005`，不改状态。不得把「金额字段缺失」当成匹配。
+6. `status=paid` 直接确认，不再发放（幂等）。`status=closed` 或已过 `expires_at` 的 `created` 订单：关闭（若仍为 created）后确认应答，**不发放**。
+7. 查单补偿（`order/status`）同样要求渠道返回金额且与订单一致，否则不发放。
+8. 日志只记 `order_no` / 渠道 / 商户号，不记密钥、私钥、APIv3 key。
+9. 用户端任何接口不返回商户凭据。
 
 ## 应答契约
 
-- 微信成功：HTTP 200 + `{"code":"SUCCESS","message":"OK"}`；验签失败 HTTP 401 + FAIL。
+- 微信成功：HTTP 200 + `{"code":"SUCCESS","message":"OK"}`；验签失败 HTTP 401 + FAIL。沙箱可用 `application/x-www-form-urlencoded`；生产为 APIv3 JSON body + 签名头。
 - 支付宝：明文 `success` / `failure`（失败也 HTTP 200，由 body 驱动重试）。

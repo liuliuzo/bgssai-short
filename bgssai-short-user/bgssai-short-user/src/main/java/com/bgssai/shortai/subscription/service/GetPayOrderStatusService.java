@@ -1,5 +1,7 @@
 package com.bgssai.shortai.subscription.service;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -16,10 +18,12 @@ import com.bgssai.shortai.common.exception.UnauthorizedException;
 import com.bgssai.shortai.mapper.PaymentOrderMapper;
 import com.bgssai.shortai.model.PaymentOrder;
 import com.bgssai.shortai.model.PaymentOrderExample;
+import com.bgssai.shortai.payment.channel.ChannelPaidQuery;
 import com.bgssai.shortai.payment.channel.PaymentChannel;
 import com.bgssai.shortai.payment.channel.PaymentChannelRouter;
 import com.bgssai.shortai.payment.config.PaymentProperties;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
+import com.bgssai.shortai.payment.service.PaymentAmountGuard;
 
 @Service
 public class GetPayOrderStatusService {
@@ -42,18 +46,28 @@ public class GetPayOrderStatusService {
         }
         log.info("query pay order status userId={} orderNo={}", userId, orderNo.trim());
         PaymentOrder order = loadOwned(userId, orderNo.trim());
+        if ("created".equals(order.getStatus()) && closeIfExpired(order)) {
+            log.info("pay order closed by expiry on status query orderNo={} userId={}",
+                    order.getOrderNo(), userId);
+            return ok(toResult(order));
+        }
         if ("created".equals(order.getStatus())
                 && !paymentProperties.isSandboxEnabled()
                 && order.getGmtCreate() != null
                 && System.currentTimeMillis() - order.getGmtCreate().getTime() > CHANNEL_QUERY_MIN_AGE_MS) {
             try {
                 PaymentChannel channel = paymentChannelRouter.route(order.getPaymentChannel());
-                String channelTradeNo = channel.queryPaidChannelTradeNo(order.getOrderNo());
-                if (channelTradeNo != null && !channelTradeNo.isBlank()) {
-                    paidOrderGrantService.grantIfCreated(order, channelTradeNo);
-                    order = loadOwned(userId, order.getOrderNo());
-                    log.info("pending pay order settled by channel query orderNo={} userId={}",
-                            order.getOrderNo(), userId);
+                ChannelPaidQuery paid = channel.queryPaidOrder(order.getOrderNo());
+                if (paid != null) {
+                    if (!PaymentAmountGuard.matches(order.getAmountCent(), paid.getAmountCent())) {
+                        log.warn("channel query amount mismatch orderNo={} orderFen={} channelFen={}",
+                                order.getOrderNo(), order.getAmountCent(), paid.getAmountCent());
+                    } else {
+                        paidOrderGrantService.grantIfCreated(order, paid.getChannelTradeNo());
+                        order = loadOwned(userId, order.getOrderNo());
+                        log.info("pending pay order settled by channel query orderNo={} userId={}",
+                                order.getOrderNo(), userId);
+                    }
                 }
             } catch (RuntimeException e) {
                 log.warn("channel query compensation failed orderNo={} error={}",
@@ -61,6 +75,26 @@ public class GetPayOrderStatusService {
             }
         }
         return ok(toResult(order));
+    }
+
+    private boolean closeIfExpired(PaymentOrder order) {
+        if (order.getExpiresAt() == null || !order.getExpiresAt().before(new Date())) {
+            return false;
+        }
+        Date now = new Date();
+        PaymentOrder patch = new PaymentOrder();
+        patch.setStatus("closed");
+        patch.setGmtModified(now);
+        PaymentOrderExample cas = new PaymentOrderExample();
+        cas.createCriteria().andIdEqualTo(order.getId()).andStatusEqualTo("created").andDelFlagEqualTo(0);
+        int n = paymentOrderMapper.updateByExampleSelective(patch, cas);
+        if (n == 1) {
+            order.setStatus("closed");
+            return true;
+        }
+        PaymentOrder latest = loadOwned(order.getUserId(), order.getOrderNo());
+        order.setStatus(latest.getStatus());
+        return "closed".equals(order.getStatus());
     }
 
     private PaymentOrder loadOwned(String userId, String orderNo) {
@@ -74,12 +108,14 @@ public class GetPayOrderStatusService {
     }
 
     private static Map<String, Object> toResult(PaymentOrder row) {
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("order_no", row.getOrderNo());
         m.put("order_type", row.getOrderType());
         m.put("status", row.getStatus());
         m.put("amount_cent", row.getAmountCent());
         m.put("payment_channel", row.getPaymentChannel());
+        m.put("expires_at", row.getExpiresAt() == null ? null : fmt.format(row.getExpiresAt()));
         return m;
     }
 

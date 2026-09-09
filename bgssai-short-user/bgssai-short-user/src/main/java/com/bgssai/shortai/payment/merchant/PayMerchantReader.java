@@ -15,6 +15,7 @@ import com.bgssai.shortai.model.AlipayConfig;
 import com.bgssai.shortai.model.AlipayConfigExample;
 import com.bgssai.shortai.model.WechatPayConfig;
 import com.bgssai.shortai.model.WechatPayConfigExample;
+import com.bgssai.shortai.payment.config.PaymentProperties;
 
 @Component
 public class PayMerchantReader {
@@ -26,6 +27,9 @@ public class PayMerchantReader {
 
     @Autowired
     private AlipayConfigMapper alipayConfigMapper;
+
+    @Autowired
+    private PaymentProperties paymentProperties;
 
     public WechatMerchant requireActiveWechatMerchant() {
         WechatPayConfigExample example = new WechatPayConfigExample();
@@ -131,17 +135,17 @@ public class PayMerchantReader {
         return toAlipayMerchant(row);
     }
 
-    private static WechatMerchant toWechatMerchant(WechatPayConfig row) {
+    private WechatMerchant toWechatMerchant(WechatPayConfig row) {
         return new WechatMerchant(
                 row.getMchId(),
                 row.getAppId(),
                 row.getMerchantSerialNo(),
                 row.getMchPrivateKey(),
                 row.getApiV3Key(),
-                row.getNotifyUrl());
+                resolveNotifyUrl(row.getNotifyUrl(), "/bgssai/user/payment/wechat/notify"));
     }
 
-    private static AlipayMerchant toAlipayMerchant(AlipayConfig row) {
+    private AlipayMerchant toAlipayMerchant(AlipayConfig row) {
         return new AlipayMerchant(
                 row.getAppId(),
                 row.getAppPrivateKey(),
@@ -149,7 +153,19 @@ public class PayMerchantReader {
                 row.getSignType(),
                 row.getCharset(),
                 row.getGatewayUrl(),
-                row.getNotifyUrl(),
+                resolveNotifyUrl(row.getNotifyUrl(), "/bgssai/user/payment/alipay/notify"),
                 row.getReturnUrl());
+    }
+
+    private String resolveNotifyUrl(String configured, String path) {
+        if (configured != null && !configured.isBlank()) {
+            return configured.trim();
+        }
+        String base = paymentProperties.getNotifyBaseUrl();
+        if (base == null || base.isBlank()) {
+            return null;
+        }
+        String normalized = base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
+        return normalized + path;
     }
 }

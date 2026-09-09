@@ -1,5 +1,7 @@
 package com.bgssai.shortai.payment.service;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,14 +49,48 @@ public class PaymentNotifyService {
             log.warn("payment notify order not found channel={} orderNo={}", channelCode, result.getOrderNo());
             return channelConfirm(channelCode);
         }
-        if (result.getAmountCent() != null && order.getAmountCent() != null
-                && !result.getAmountCent().equals(order.getAmountCent())) {
-            log.warn("payment notify amount mismatch orderNo={} notifyFen={} orderFen={}",
-                    order.getOrderNo(), result.getAmountCent(), order.getAmountCent());
-            throw new BizException("60005", "notify amount mismatch");
+        if ("paid".equals(order.getStatus())) {
+            log.info("payment notify already paid orderNo={}", order.getOrderNo());
+            return channelConfirm(channelCode);
         }
+        if ("closed".equals(order.getStatus())) {
+            log.warn("payment notify ignored closed order orderNo={}", order.getOrderNo());
+            return channelConfirm(channelCode);
+        }
+        if (closeIfExpired(order)) {
+            log.warn("payment notify ignored expired order orderNo={}", order.getOrderNo());
+            return channelConfirm(channelCode);
+        }
+        PaymentAmountGuard.requireMatch(order.getOrderNo(), order.getAmountCent(), result.getAmountCent());
         paidOrderGrantService.grantIfCreated(order, result.getChannelTradeNo());
         return channelConfirm(channelCode);
+    }
+
+    private boolean closeIfExpired(PaymentOrder order) {
+        if (order.getExpiresAt() == null || !order.getExpiresAt().before(new Date())) {
+            return false;
+        }
+        if (!"created".equals(order.getStatus())) {
+            return false;
+        }
+        Date now = new Date();
+        PaymentOrder patch = new PaymentOrder();
+        patch.setStatus("closed");
+        patch.setGmtModified(now);
+        PaymentOrderExample cas = new PaymentOrderExample();
+        cas.createCriteria().andIdEqualTo(order.getId()).andStatusEqualTo("created").andDelFlagEqualTo(0);
+        int n = paymentOrderMapper.updateByExampleSelective(patch, cas);
+        if (n == 1) {
+            order.setStatus("closed");
+            return true;
+        }
+        PaymentOrderExample reload = new PaymentOrderExample();
+        reload.createCriteria().andIdEqualTo(order.getId()).andDelFlagEqualTo(0);
+        PaymentOrder latest = paymentOrderMapper.selectOneByExample(reload);
+        if (latest != null) {
+            order.setStatus(latest.getStatus());
+        }
+        return "closed".equals(order.getStatus());
     }
 
     private String channelConfirm(String channelCode) {

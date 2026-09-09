@@ -15,6 +15,7 @@ import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.payment.merchant.AlipayMerchant;
+import com.bgssai.shortai.payment.util.AmountCent;
 import com.bgssai.shortai.payment.util.PemSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -72,7 +73,7 @@ public class AlipayGateway {
     }
 
 
-    public String queryPaidTradeNo(AlipayMerchant merchant, String outTradeNo) {
+    public ChannelPaidQuery queryPaidOrder(AlipayMerchant merchant, String outTradeNo) {
         AlipayClient client = requireClient(merchant);
         AlipayTradeQueryRequest request = new AlipayTradeQueryRequest();
         try {
@@ -83,7 +84,8 @@ public class AlipayGateway {
             if (response != null && response.isSuccess()
                     && ("TRADE_SUCCESS".equals(response.getTradeStatus())
                     || "TRADE_FINISHED".equals(response.getTradeStatus()))) {
-                return response.getTradeNo();
+                Integer amountCent = AmountCent.yuanToCent(response.getTotalAmount());
+                return ChannelPaidQuery.of(response.getTradeNo(), amountCent);
             }
             return null;
         } catch (Exception e) {
@@ -91,6 +93,11 @@ public class AlipayGateway {
                     merchant.getAppId(), outTradeNo, e.getClass().getSimpleName());
             return null;
         }
+    }
+
+    public String queryPaidTradeNo(AlipayMerchant merchant, String outTradeNo) {
+        ChannelPaidQuery paid = queryPaidOrder(merchant, outTradeNo);
+        return paid == null ? null : paid.getChannelTradeNo();
     }
 
     public void invalidate() {

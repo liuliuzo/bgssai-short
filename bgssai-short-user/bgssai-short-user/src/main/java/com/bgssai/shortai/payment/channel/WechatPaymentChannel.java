@@ -137,7 +137,7 @@ public class WechatPaymentChannel implements PaymentChannel {
 
 
     @Override
-    public String queryPaidChannelTradeNo(String outTradeNo) {
+    public ChannelPaidQuery queryPaidOrder(String outTradeNo) {
         if (outTradeNo == null || outTradeNo.isBlank()) {
             return null;
         }
@@ -148,11 +148,22 @@ public class WechatPaymentChannel implements PaymentChannel {
             List<WechatMerchant> candidates = payMerchantReader.listVerifiableWechatMerchants();
             for (WechatMerchant merchant : candidates) {
                 try {
-                    String tradeNo = wechatPayGateway.queryPaidTransactionId(merchant, outTradeNo);
-                    if (tradeNo != null && !tradeNo.isBlank()) {
-                        log.info("wechat order query paid outTradeNo={} mchId={}", outTradeNo, merchant.getMchId());
-                        return tradeNo;
+                    Transaction tx = wechatPayGateway.queryPaidTransaction(merchant, outTradeNo);
+                    if (tx == null) {
+                        continue;
                     }
+                    Integer amountCent = null;
+                    if (tx.getAmount() != null && tx.getAmount().getTotal() != null) {
+                        amountCent = tx.getAmount().getTotal();
+                    }
+                    ChannelPaidQuery paid = ChannelPaidQuery.of(tx.getTransactionId(), amountCent);
+                    if (paid != null) {
+                        log.info("wechat order query paid outTradeNo={} mchId={} amountFen={}",
+                                outTradeNo, merchant.getMchId(), amountCent);
+                        return paid;
+                    }
+                    log.warn("wechat order query paid but amount missing outTradeNo={} mchId={}",
+                            outTradeNo, merchant.getMchId());
                 } catch (Exception e) {
                     log.warn("wechat order query failed outTradeNo={} mchId={} error={}",
                             outTradeNo, merchant.getMchId(), e.getClass().getSimpleName());

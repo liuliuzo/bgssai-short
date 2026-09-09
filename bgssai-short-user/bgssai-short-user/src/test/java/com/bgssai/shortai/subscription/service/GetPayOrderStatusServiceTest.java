@@ -24,6 +24,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.mapper.PaymentOrderMapper;
 import com.bgssai.shortai.model.PaymentOrder;
 import com.bgssai.shortai.model.PaymentOrderExample;
+import com.bgssai.shortai.payment.channel.ChannelPaidQuery;
 import com.bgssai.shortai.payment.channel.PaymentChannel;
 import com.bgssai.shortai.payment.channel.PaymentChannelRouter;
 import com.bgssai.shortai.payment.config.PaymentProperties;
@@ -64,7 +65,7 @@ class GetPayOrderStatusServiceTest {
     void channelQueryCompensationSettlesPaidCreatedOrder() {
         PaymentOrder order = agedCreatedOrder();
         GetPayOrderStatusService service = newService(order, false);
-        when(channel.queryPaidChannelTradeNo("po-001")).thenReturn("4200000000000000001");
+        when(channel.queryPaidOrder("po-001")).thenReturn(ChannelPaidQuery.of("4200000000000000001", 9900));
         doAnswer(invocation -> {
             PaymentOrder arg = invocation.getArgument(0);
             arg.setStatus("paid");
@@ -80,10 +81,24 @@ class GetPayOrderStatusServiceTest {
     }
 
     @Test
+    void channelQueryAmountMismatchDoesNotGrant() {
+        PaymentOrder order = agedCreatedOrder();
+        GetPayOrderStatusService service = newService(order, false);
+        when(channel.queryPaidOrder("po-001")).thenReturn(ChannelPaidQuery.of("4200000000000000001", 1));
+
+        ApiResponse resp = service.query("po-001");
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) resp.getResult();
+        assertEquals("created", result.get("status"));
+        verify(paidOrderGrantService, never()).grantIfCreated(any(PaymentOrder.class), anyString());
+    }
+
+    @Test
     void channelQueryReturningNullKeepsOrderCreated() {
         PaymentOrder order = agedCreatedOrder();
         GetPayOrderStatusService service = newService(order, false);
-        when(channel.queryPaidChannelTradeNo("po-001")).thenReturn(null);
+        when(channel.queryPaidOrder("po-001")).thenReturn(null);
 
         ApiResponse resp = service.query("po-001");
 
@@ -103,7 +118,24 @@ class GetPayOrderStatusServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) resp.getResult();
         assertEquals("created", result.get("status"));
-        verify(channel, never()).queryPaidChannelTradeNo(anyString());
+        verify(channel, never()).queryPaidOrder(anyString());
+    }
+
+    @Test
+    void expiredCreatedOrderIsClosedWithoutChannelQuery() {
+        PaymentOrder order = agedCreatedOrder();
+        order.setExpiresAt(new Date(System.currentTimeMillis() - 60_000L));
+        GetPayOrderStatusService service = newService(order, false);
+        when(paymentOrderMapper.updateByExampleSelective(any(PaymentOrder.class), any(PaymentOrderExample.class)))
+                .thenReturn(1);
+
+        ApiResponse resp = service.query("po-001");
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) resp.getResult();
+        assertEquals("closed", result.get("status"));
+        verify(channel, never()).queryPaidOrder(anyString());
+        verify(paidOrderGrantService, never()).grantIfCreated(any(PaymentOrder.class), anyString());
     }
 
     private GetPayOrderStatusService newService(PaymentOrder order, boolean sandboxEnabled) {

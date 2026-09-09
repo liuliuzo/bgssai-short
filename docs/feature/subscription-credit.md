@@ -31,7 +31,9 @@
 4. **计价**：下单金额只取服务端套餐 / 加量包目录价，忽略客户端传入的金额。
 5. **支付渠道**：微信 Native（`code_url` 二维码）、支付宝当面付预下单（`code_url` 二维码）。渠道代码 `WECHAT` / `ALIPAY`。
 6. **沙箱 / 生产**：`bgssai.payment.sandbox-enabled=true` 时走 HMAC-SHA256 占位下单与回调验签，不读商户行。生产模式必须有启用且标记收款的商户，凭据不全返回 `60013`，不得静默回落沙箱。
-7. **回调**：公开路径验签 + 金额核对（分）+ 幂等。已 `paid` 的订单重复通知不重复发放。验签失败返回渠道要求的失败应答（微信 HTTP 401 + FAIL JSON；支付宝 `failure`）。
+7. **回调**：公开路径验签 + 金额核对（分；金额缺失视为不符）+ 幂等。已 `paid` 的订单重复通知不重复发放。已 `closed` / 已过期订单不发放。验签失败返回渠道要求的失败应答（微信 HTTP 401 + FAIL JSON；支付宝 `failure`）。
+7a. **查单补偿**：`order/status` 在非沙箱下对超时未回调的 `created` 订单回查渠道；渠道已支付且金额一致才发放。过期订单先置 `closed`。
+7b. **沙箱默认关闭**：`bgssai.payment.sandbox-enabled` 缺省为 `false`；仅 local/dev/test profile 显式打开。生产不得静默回落沙箱。
 8. **扣减时机**：任务 `SUCCEEDED` 时调用额度扣减：先扣 `balance_cent`，不足再扣 `extra_balance_cent`；合计不足返回 `4007`。`FAILED` / `CANCELED` 不计费。
 9. **手工调额**：`POST /bgssai/admin/creators/adjust-quota`，`remark` 必填，写 `quota_change_log`。
 10. **本轮不做**：自动续费代扣、退款自动化、JSAPI / H5。
@@ -94,7 +96,7 @@
 
 ## 五、流程 / 状态机
 
-订单：`created` -> `paid` | `closed`。`paid` 仅由验签通过且金额一致的回调（或 FREE 零元当场发放）写入。
+订单：`created` -> `paid` | `closed`。`paid` 由以下路径写入：（1）验签通过且金额一致的渠道回调；（2）用户端 `order/status` 查单补偿（非沙箱、金额一致）；（3）FREE 零元当场发放。`closed` 在订单已过 `expires_at` 时由状态查询或迟到回调关闭，关闭后不再发放。
 
 扣费：任务成功 -> 校验合计余额与月度上限 -> 先 `balance_cent` 后 `extra_balance_cent` -> 累加 `month_spent_cent`。
 
