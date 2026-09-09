@@ -69,6 +69,7 @@ import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.storage.ObjectStorage;
@@ -662,9 +663,13 @@ public class ShortAiTaskWorker {
         if (shot.getShotDurationSec() != null) {
             request.getParams().put("duration_sec", shot.getShotDurationSec());
         }
-        request.setPrompt(shotPrompt(shot, ability));
+        ConsistencyBundle consistency = loadConsistency(shot);
+        String prompt = ShotConsistency.withConsistency(shotPrompt(shot, ability), consistency.fragment());
+        request.setPrompt(prompt);
         if ("VIDEO".equals(ability)) {
             attachFrames(shot, request, model);
+        } else {
+            attachConsistencyRefs(consistency, request);
         }
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), shot.getShotId(),
@@ -684,6 +689,7 @@ public class ShortAiTaskWorker {
         } else {
             patch.setFirstFrameAssetId(asset.getAssetId());
             patch.setShotStatus("IMAGE_READY");
+            patch.setStaleFlag(0);
             if (Integer.valueOf(1).equals(task.getAutoNextFlag())) {
                 Map<String, Object> origin = ShortJson.map(task.getRequestJson());
                 String nextModel = ShortJson.text(origin.get("next_model_code"));
@@ -705,6 +711,51 @@ public class ShortAiTaskWorker {
         if ("VIDEO".equals(task.getTaskType()) && patch.getLastFrameAssetId() != null) {
             frameLinkService.markNextStale(shot);
         }
+    }
+
+    private ConsistencyBundle loadConsistency(ShortShot shot) {
+        List<ShortCharacter> lockedChars = new ArrayList<>();
+        for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
+            if (row != null && "LOCKED".equals(row.getCardStatus())
+                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
+                lockedChars.add(row);
+            }
+        }
+        ShortSceneCard lockedScene = null;
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            ShortSceneCardExample sx = new ShortSceneCardExample();
+            sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
+            ShortSceneCard row = shortSceneCardMapper.selectOneByExample(sx);
+            if (row != null && "LOCKED".equals(row.getCardStatus())
+                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
+                lockedScene = row;
+            }
+        }
+        return new ConsistencyBundle(lockedChars, lockedScene,
+                ShotConsistency.appearanceFragment(lockedChars, lockedScene));
+    }
+
+    /**
+     * IMAGE path: attach first locked character portrait as subject reference (Kling
+     * image_reference=subject). Scene card appearance stays in prompt text.
+     */
+    private void attachConsistencyRefs(ConsistencyBundle consistency, AiProviderRequest request) {
+        if (consistency.characters().isEmpty()) {
+            return;
+        }
+        ShortCharacter primary = consistency.characters().get(0);
+        attachFrameAsset(primary.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime");
+        if (request.param("image_base64") != null || request.param("image_url") != null) {
+            request.getParams().put("image_reference", "subject");
+            request.getParams().put("image_fidelity", 0.75);
+            request.getParams().put("human_fidelity", 0.55);
+        }
+    }
+
+    private record ConsistencyBundle(List<ShortCharacter> characters, ShortSceneCard scene, String fragment) {
     }
 
     private void finishCompose(ShortAiTask task, AiModelConfig model) {

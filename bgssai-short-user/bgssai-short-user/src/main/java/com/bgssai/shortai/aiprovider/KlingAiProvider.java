@@ -113,6 +113,17 @@ public class KlingAiProvider implements AiProvider {
         }
         body.put("n", 1);
         body.put("aspect_ratio", aspectRatio(cfg, request));
+        String image = imagePayload(request);
+        if (image != null && !image.isBlank()) {
+            body.put("image", image);
+            String ref = firstNonBlank(ShortJson.text(request.param("image_reference")), "subject");
+            body.put("image_reference", ref);
+            Double fidelity = ShortJson.decimal(request.param("image_fidelity"), 0.75d);
+            body.put("image_fidelity", fidelity);
+            if ("subject".equals(ref)) {
+                body.put("human_fidelity", ShortJson.decimal(request.param("human_fidelity"), 0.55d));
+            }
+        }
         Map<String, Object> data = submitAndPoll(baseUrl, path, apiKey, body, timeoutSec, cfg);
         String url = firstImageUrl(data);
         byte[] bytes = transport.getBytes(url, Math.min(120, timeoutSec));

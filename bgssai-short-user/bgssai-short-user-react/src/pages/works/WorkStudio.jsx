@@ -414,8 +414,8 @@ function StoryboardPane({ work, episodeId }) {
       <Alert
         type="info"
         showIcon
-        message="先看懂这一镜，再花钱生成"
-        description="改人话分镜免费。出一张图只确认构图。构图没问题再生成视频。不要用视频去试错。"
+        message="先定妆、再写镜、再出图、再出视频"
+        description="分镜会自动挂上角色/场景卡。引用未定妆角色时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。"
       />
       <Card size="small" extra={<Space wrap>
         <Button onClick={() => setCanvasView(true)}>切到画布</Button>
@@ -484,6 +484,8 @@ function StoryboardPane({ work, episodeId }) {
           size="small"
           title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${row.shot_status || 'PENDING'}`}
           extra={<Space>
+            {row.stale_flag === 1 ? <Tag color="orange">定妆已变，建议重抽</Tag> : null}
+            {row.blocked_flag === 1 ? <Tag color="red">未就绪</Tag> : null}
             <Tag color={(row.prompt_score || 0) >= 70 ? 'green' : 'orange'}>提示词 {row.prompt_score ?? '-'} 分</Tag>
             <Select
               size="small"
@@ -560,7 +562,7 @@ function StoryboardPane({ work, episodeId }) {
                     prompt_issues: check.issue_list,
                   })
                 }}>提示词会拍出什么</Button>
-                <Button size="small" onClick={async () => {
+                <Button size="small" disabled={row.shot_status === 'LOCKED'} onClick={async () => {
                   const { data } = await productionApi.submitTasks({
                     episode_id: episodeId,
                     shot_ids: [row.shot_id],
@@ -574,7 +576,7 @@ function StoryboardPane({ work, episodeId }) {
                     load()
                   }
                 }}>出一张图看看</Button>
-                <Button size="small" type="primary" disabled={!row.first_frame_asset_id} onClick={async () => {
+                <Button size="small" type="primary" disabled={!row.first_frame_asset_id || row.shot_status === 'LOCKED'} onClick={async () => {
                   const { data } = await productionApi.submitTasks({
                     episode_id: episodeId,
                     shot_ids: [row.shot_id],

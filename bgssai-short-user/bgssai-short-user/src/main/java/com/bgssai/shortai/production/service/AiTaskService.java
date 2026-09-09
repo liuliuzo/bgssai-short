@@ -20,13 +20,19 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
+import com.bgssai.shortai.mapper.ShortCharacterMapper;
+import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
 import com.bgssai.shortai.mapper.UserSubscriptionMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
+import com.bgssai.shortai.model.ShortCharacter;
+import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortEpisode;
+import com.bgssai.shortai.model.ShortSceneCard;
+import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.SubscriptionPlan;
@@ -37,6 +43,7 @@ import com.bgssai.shortai.model.UserSubscriptionExample;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
+import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
@@ -53,6 +60,10 @@ public class AiTaskService {
     private AiTaskQueue aiTaskQueue;
     @Autowired
     private ShortShotMapper shortShotMapper;
+    @Autowired
+    private ShortCharacterMapper shortCharacterMapper;
+    @Autowired
+    private ShortSceneCardMapper shortSceneCardMapper;
     @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired
@@ -99,6 +110,7 @@ public class AiTaskService {
         String batchId = com.bgssai.shortai.production.support.ShortIds.id("b-");
         List<String> ids = new ArrayList<>();
         for (ShortShot shot : shots) {
+            assertShotReady(shot, type);
             Map<String, Object> scan = ComplianceLexicon.scan(
                     (shot.getDialogueText() == null ? "" : shot.getDialogueText()) + " "
                             + (shot.getImagePrompt() == null ? "" : shot.getImagePrompt()),
@@ -201,6 +213,20 @@ public class AiTaskService {
         result.put("failed", failed);
         result.put("canceled", canceled);
         result.put("progress_percent", total == 0 ? 0 : done * 100 / total);
+        List<Map<String, Object>> failedTasks = new ArrayList<>();
+        for (ShortAiTask row : rows) {
+            if (!"FAILED".equals(row.getTaskStatus())) {
+                continue;
+            }
+            Map<String, Object> fail = new LinkedHashMap<>();
+            fail.put("task_id", row.getTaskId());
+            fail.put("target_id", row.getTargetId());
+            fail.put("task_type", row.getTaskType());
+            fail.put("fail_reason_code", row.getFailReasonCode());
+            fail.put("fail_reason", row.getFailReason());
+            failedTasks.add(fail);
+        }
+        result.put("failed_task_list", failedTasks);
         return Responses.ok(result);
     }
 
@@ -260,6 +286,47 @@ public class AiTaskService {
         ShortShotExample ex = new ShortShotExample();
         ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         return shortShotMapper.selectByExample(ex);
+    }
+
+    private void assertShotReady(ShortShot shot, String type) {
+        if ("LOCKED".equals(shot.getShotStatus())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "镜" + shot.getShotNo() + " 已定稿，不能再生成");
+        }
+        if (ShotConsistency.shotNeedsPrompt(shot)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "镜" + shot.getShotNo() + " 还没有可生成的画面描述，先写人话分镜");
+        }
+        if ("VIDEO".equals(type)
+                && (shot.getFirstFrameAssetId() == null || shot.getFirstFrameAssetId().isBlank())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "镜" + shot.getShotNo() + " 需先出图确认构图，再生成视频");
+        }
+        for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
+            if (row == null) {
+                continue;
+            }
+            if (!"LOCKED".equals(row.getCardStatus()) || row.getRefImageAssetId() == null
+                    || row.getRefImageAssetId().isBlank()) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的角色「" + row.getCharacterName()
+                                + "」尚未定妆，请先完成定妆");
+            }
+        }
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            ShortSceneCardExample sx = new ShortSceneCardExample();
+            sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
+            ShortSceneCard scene = shortSceneCardMapper.selectOneByExample(sx);
+            if (scene != null && (!"LOCKED".equals(scene.getCardStatus())
+                    || scene.getRefImageAssetId() == null || scene.getRefImageAssetId().isBlank())) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的场景「" + scene.getCardName()
+                                + "」尚未锁定场景卡，请先定妆");
+            }
+        }
     }
 
     private void patchShotStatus(ShortShot shot, String status) {
