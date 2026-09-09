@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.aiprovider.AiProviderRegistry;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
@@ -21,6 +22,8 @@ public class AiModelResolveService {
 
     @Autowired
     private AiModelConfigMapper aiModelConfigMapper;
+    @Autowired
+    private AiProviderRegistry aiProviderRegistry;
 
     public AiModelConfig resolve(String abilityType, String modelCode) {
         if (abilityType == null || abilityType.isBlank()) {
@@ -34,11 +37,14 @@ public class AiModelResolveService {
                     .andModelCodeEqualTo(modelCode.trim())
                     .andEnabledFlagEqualTo(1)
                     .andDeletedFlagEqualTo(0);
-            AiModelConfig row = aiModelConfigMapper.selectOneByExample(ex);
-            if (row == null) {
+            // Prefer default + registered provider when catalog has duplicate model_code rows.
+            ex.setOrderByClause("default_flag desc, id asc");
+            List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+            AiModelConfig picked = pickResolvable(rows);
+            if (picked == null) {
                 throw new BizException(CommonErrorCode.RULE_REJECT, "model disabled or not found: " + modelCode);
             }
-            return row;
+            return picked;
         }
         AiModelConfigExample ex = new AiModelConfigExample();
         ex.createCriteria()
@@ -46,11 +52,30 @@ public class AiModelResolveService {
                 .andDefaultFlagEqualTo(1)
                 .andEnabledFlagEqualTo(1)
                 .andDeletedFlagEqualTo(0);
-        AiModelConfig row = aiModelConfigMapper.selectOneByExample(ex);
+        ex.setOrderByClause("id asc");
+        List<AiModelConfig> defaults = aiModelConfigMapper.selectByExample(ex);
+        AiModelConfig row = pickResolvable(defaults);
         if (row == null) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE);
         }
         return row;
+    }
+
+    private AiModelConfig pickResolvable(List<AiModelConfig> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        for (AiModelConfig row : rows) {
+            if (aiProviderRegistry.supports(row.getProviderCode())) {
+                return row;
+            }
+        }
+        for (AiModelConfig row : rows) {
+            if (aiProviderRegistry.resolvable(row)) {
+                return row;
+            }
+        }
+        return null;
     }
 
     public int costCent(AiModelConfig model, int usageAmount) {
@@ -69,6 +94,9 @@ public class AiModelResolveService {
         List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
         List<Map<String, Object>> list = new ArrayList<>();
         for (AiModelConfig row : rows) {
+            if (!aiProviderRegistry.resolvable(row)) {
+                continue;
+            }
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("model_id", row.getModelId());
             item.put("ability_type", row.getAbilityType());

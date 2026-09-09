@@ -357,9 +357,13 @@
 
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        接口：<code>GET /bgssai/user/films/precheck?episode_id</code> · <code>/timeline?episode_id</code> ·
-        <code>/detail?episode_id</code> · <code>/download-url?asset_id</code>（重新获取链接同此接口）；
-        <code>POST /bgssai/user/films/compose</code> · <code>/bgm-generate</code>（提交
+        接口：<code>GET /bgssai/user/films/precheck?episode_id</code>（须全部镜有视频；
+        <code>blocker_list</code> 含 <code>SHOT_NOT_READY</code> / <code>SHOT_MISSING_VIDEO</code> /
+        <code>DUBBING_MISALIGNED</code>）· <code>/timeline?episode_id</code>（含
+        <code>subtitle_track</code>）·
+        <code>/detail?episode_id</code>（<code>download_url</code> 为可播放签名地址）·
+        <code>/download-url?asset_id</code>（重新获取链接同此接口）；
+        <code>POST /bgssai/user/films/compose</code>（默认烧录简单字幕）· <code>/bgm-generate</code>（提交
         <code>model_code</code> / <code>prompt</code> / <code>is_instrumental</code>，成功结果含
         <code>bgm_asset_id</code>）· <code>/rebake-subtitle</code>
         （<code>compose_mode=SUBTITLE_ONLY</code>，仅重烧字幕）· <code>/settings-save</code> ·

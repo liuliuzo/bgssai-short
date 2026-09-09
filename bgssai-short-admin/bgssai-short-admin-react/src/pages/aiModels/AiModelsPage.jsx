@@ -40,7 +40,7 @@ export default function AiModelsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>AI 能力与模型</Title>
-      <Paragraph type="secondary">单价单位为分；密钥不入库明文，仅存 config_json 中的 secret_ref。</Paragraph>
+      <Paragraph type="secondary">单价单位为分；密钥写在「AI 密钥」页的 sys_secret，本页 config_json 只存 secret_ref。</Paragraph>
       <Card
         extra={
           <Button type="primary" onClick={() => {

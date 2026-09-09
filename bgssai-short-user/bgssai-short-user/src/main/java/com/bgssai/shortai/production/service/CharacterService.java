@@ -150,6 +150,7 @@ public class CharacterService {
         ShortCharacterExample up = new ShortCharacterExample();
         up.createCriteria().andIdEqualTo(row.getId());
         shortCharacterMapper.updateByExampleSelective(patch, up);
+        markShotsStaleForCharacter(row);
         return Responses.ok("ok");
     }
 
@@ -208,7 +209,56 @@ public class CharacterService {
         ShortSceneCardExample up = new ShortSceneCardExample();
         up.createCriteria().andIdEqualTo(row.getId());
         shortSceneCardMapper.updateByExampleSelective(patch, up);
+        markShotsStaleForScene(row);
         return Responses.ok("ok");
+    }
+
+    private void markShotsStaleForCharacter(ShortCharacter character) {
+        ShortShotExample ex = new ShortShotExample();
+        ex.createCriteria().andWorkIdEqualTo(character.getWorkId()).andDeletedFlagEqualTo(0);
+        Date now = new Date();
+        for (com.bgssai.shortai.model.ShortShot shot : shortShotMapper.selectByExample(ex)) {
+            if ("LOCKED".equals(shot.getShotStatus())) {
+                continue;
+            }
+            boolean hit = false;
+            for (String id : com.bgssai.shortai.production.support.ShotConsistency.characterIds(
+                    shot.getCharacterRefJson())) {
+                if (character.getCharacterId().equals(id)) {
+                    hit = true;
+                    break;
+                }
+            }
+            if (!hit) {
+                continue;
+            }
+            com.bgssai.shortai.model.ShortShot patch = new com.bgssai.shortai.model.ShortShot();
+            patch.setStaleFlag(1);
+            patch.setBlockedFlag(0);
+            patch.setUpdatedTime(now);
+            ShortShotExample up = new ShortShotExample();
+            up.createCriteria().andIdEqualTo(shot.getId());
+            shortShotMapper.updateByExampleSelective(patch, up);
+        }
+    }
+
+    private void markShotsStaleForScene(ShortSceneCard scene) {
+        ShortShotExample ex = new ShortShotExample();
+        ex.createCriteria().andWorkIdEqualTo(scene.getWorkId()).andSceneCardIdEqualTo(scene.getSceneCardId())
+                .andDeletedFlagEqualTo(0);
+        Date now = new Date();
+        for (com.bgssai.shortai.model.ShortShot shot : shortShotMapper.selectByExample(ex)) {
+            if ("LOCKED".equals(shot.getShotStatus())) {
+                continue;
+            }
+            com.bgssai.shortai.model.ShortShot patch = new com.bgssai.shortai.model.ShortShot();
+            patch.setStaleFlag(1);
+            patch.setBlockedFlag(0);
+            patch.setUpdatedTime(now);
+            ShortShotExample up = new ShortShotExample();
+            up.createCriteria().andIdEqualTo(shot.getId());
+            shortShotMapper.updateByExampleSelective(patch, up);
+        }
     }
 
     private Map<String, Object> characterView(ShortCharacter row) {

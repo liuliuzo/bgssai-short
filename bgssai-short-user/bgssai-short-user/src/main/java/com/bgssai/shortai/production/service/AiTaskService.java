@@ -20,13 +20,19 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
+import com.bgssai.shortai.mapper.ShortCharacterMapper;
+import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
 import com.bgssai.shortai.mapper.UserSubscriptionMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
+import com.bgssai.shortai.model.ShortCharacter;
+import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortEpisode;
+import com.bgssai.shortai.model.ShortSceneCard;
+import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.SubscriptionPlan;
@@ -37,8 +43,10 @@ import com.bgssai.shortai.model.UserSubscriptionExample;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
+import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
 import com.github.pagehelper.PageHelper;
 
@@ -54,9 +62,15 @@ public class AiTaskService {
     @Autowired
     private ShortShotMapper shortShotMapper;
     @Autowired
+    private ShortCharacterMapper shortCharacterMapper;
+    @Autowired
+    private ShortSceneCardMapper shortSceneCardMapper;
+    @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired
     private QuotaWalletService quotaWalletService;
+    @Autowired
+    private QuotaConsumeService quotaConsumeService;
     @Autowired
     private PaidOrderGrantService paidOrderGrantService;
     @Autowired
@@ -67,26 +81,49 @@ public class AiTaskService {
     private AiModelResolveService aiModelResolveService;
 
     public ApiResponse estimate(AiTaskReq req) {
-        List<ShortShot> shots = resolveShots(req);
-        String type = req.getTaskType() == null ? "IMAGE" : req.getTaskType();
-        AiModelConfig model = aiModelResolveService.resolve(type, req.getModelCode());
-        int estimated = shots.stream().mapToInt(shot -> costForShot(model, type, shot)).sum();
-        if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
-            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
-            estimated += shots.stream().mapToInt(shot -> costForShot(videoModel, "VIDEO", shot)).sum();
+        if (req == null) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "body required");
         }
+        String type = req.getTaskType() == null ? "IMAGE" : req.getTaskType().trim();
         String userId = workAccessService.requireUser();
-        UserQuota quota = quotaWalletService.requireWallet(userId);
-        quotaWalletService.resetMonthIfNeeded(quota);
-        int available = (quota.getBalanceCent() == null ? 0 : quota.getBalanceCent())
-                + (quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent());
-        int affordable = estimated <= 0 ? 0 : available / estimated;
-        Map<String, Object> result = new LinkedHashMap<>();
+        ensureWallet(userId);
+        if ("COMPOSE".equals(type)) {
+            return Responses.ok(estimateCompose(req, userId));
+        }
+        if ("VOICE".equals(type)) {
+            return Responses.ok(estimateVoice(req, userId));
+        }
+        List<ShortShot> shots = resolveShots(req);
+        AiModelConfig model = aiModelResolveService.resolve(type, req.getModelCode());
+        List<Map<String, Object>> shotCostList = new ArrayList<>();
+        int estimated = 0;
+        for (ShortShot shot : shots) {
+            int cost = costForShot(model, type, shot);
+            estimated += cost;
+            shotCostList.add(shotCostItem(shot, type, model, cost));
+        }
+        AiModelConfig videoModel = null;
+        if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
+            videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
+            for (ShortShot shot : shots) {
+                int cost = costForShot(videoModel, "VIDEO", shot);
+                estimated += cost;
+                shotCostList.add(shotCostItem(shot, "VIDEO", videoModel, cost));
+            }
+        }
+        Map<String, Object> result = walletEstimateFields(userId, estimated);
+        result.put("task_type", type);
         result.put("task_count", shots.size());
         result.put("estimated_cost_cent", estimated);
-        result.put("affordable_episode_count", affordable);
         result.put("model_code", model.getModelCode());
-        result.put("unit_price_cent", model.getUnitPriceCent());
+        result.put("unit_price_cent", effectiveUnitPrice(model, type));
+        result.put("price_unit", model.getPriceUnit());
+        if (videoModel != null) {
+            result.put("next_model_code", videoModel.getModelCode());
+            result.put("next_unit_price_cent", effectiveUnitPrice(videoModel, "VIDEO"));
+        }
+        result.put("shot_cost_list", shotCostList);
+        quotaConsumeService.assertAffordable(userId, estimated);
         return Responses.ok(result);
     }
 
@@ -94,11 +131,20 @@ public class AiTaskService {
     public ApiResponse submit(AiTaskReq req) {
         List<ShortShot> shots = resolveShots(req);
         String type = req.getTaskType() == null ? "IMAGE" : req.getTaskType();
-        ensureWallet(workAccessService.requireUser());
+        String userId = workAccessService.requireUser();
+        ensureWallet(userId);
+        AiModelConfig model = aiModelResolveService.resolve(type, req.getModelCode());
+        int estimated = shots.stream().mapToInt(shot -> costForShot(model, type, shot)).sum();
+        if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
+            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
+            estimated += shots.stream().mapToInt(shot -> costForShot(videoModel, "VIDEO", shot)).sum();
+        }
+        quotaConsumeService.assertAffordable(userId, estimated);
         int autoNext = req.getAutoNextFlag() == null ? 0 : req.getAutoNextFlag();
         String batchId = com.bgssai.shortai.production.support.ShortIds.id("b-");
         List<String> ids = new ArrayList<>();
         for (ShortShot shot : shots) {
+            assertShotReady(shot, type);
             Map<String, Object> scan = ComplianceLexicon.scan(
                     (shot.getDialogueText() == null ? "" : shot.getDialogueText()) + " "
                             + (shot.getImagePrompt() == null ? "" : shot.getImagePrompt()),
@@ -124,7 +170,117 @@ public class AiTaskService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("batch_id", batchId);
         result.put("task_id_list", ids);
+        result.put("task_count", ids.size());
+        result.put("estimated_cost_cent", estimated);
         return Responses.ok(result);
+    }
+
+    private Map<String, Object> estimateCompose(AiTaskReq req, String userId) {
+        ShortEpisode ep = workAccessService.requireEpisode(req.getEpisodeId());
+        AiModelConfig model = aiModelResolveService.resolve("COMPOSE", req.getModelCode());
+        int durationSec = episodeDurationSec(ep.getEpisodeId());
+        int usage = usageAmount(model, durationSec);
+        int estimated = pricedCost(model, "COMPOSE", usage);
+        Map<String, Object> result = walletEstimateFields(userId, estimated);
+        result.put("task_type", "COMPOSE");
+        result.put("task_count", 1);
+        result.put("episode_id", ep.getEpisodeId());
+        result.put("duration_sec", durationSec);
+        result.put("estimated_cost_cent", estimated);
+        result.put("model_code", model.getModelCode());
+        result.put("unit_price_cent", effectiveUnitPrice(model, "COMPOSE"));
+        result.put("price_unit", model.getPriceUnit());
+        result.put("shot_cost_list", List.of());
+        quotaConsumeService.assertAffordable(userId, estimated);
+        return result;
+    }
+
+    private Map<String, Object> estimateVoice(AiTaskReq req, String userId) {
+        List<ShortShot> shots = resolveShots(req).stream()
+                .filter(s -> s.getDialogueText() != null && !s.getDialogueText().isBlank())
+                .toList();
+        if (shots.isEmpty()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "no dialogue shots to dub");
+        }
+        AiModelConfig model = aiModelResolveService.resolve("VOICE", req.getModelCode());
+        List<Map<String, Object>> shotCostList = new ArrayList<>();
+        int estimated = 0;
+        for (ShortShot shot : shots) {
+            int cost = costForShot(model, "VOICE", shot);
+            estimated += cost;
+            shotCostList.add(shotCostItem(shot, "VOICE", model, cost));
+        }
+        Map<String, Object> result = walletEstimateFields(userId, estimated);
+        result.put("task_type", "VOICE");
+        result.put("task_count", shots.size());
+        result.put("estimated_cost_cent", estimated);
+        result.put("model_code", model.getModelCode());
+        result.put("unit_price_cent", effectiveUnitPrice(model, "VOICE"));
+        result.put("price_unit", model.getPriceUnit());
+        result.put("shot_cost_list", shotCostList);
+        quotaConsumeService.assertAffordable(userId, estimated);
+        return result;
+    }
+
+    private Map<String, Object> walletEstimateFields(String userId, int estimated) {
+        UserQuota quota = quotaWalletService.requireWallet(userId);
+        quotaWalletService.resetMonthIfNeeded(quota);
+        int balance = quota.getBalanceCent() == null ? 0 : quota.getBalanceCent();
+        int extra = quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent();
+        int available = balance + extra;
+        int affordable = estimated <= 0 ? 0 : available / estimated;
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("balance_cent", balance);
+        result.put("extra_balance_cent", extra);
+        result.put("available_cent", available);
+        result.put("month_spent_cent", quota.getMonthSpentCent() == null ? 0 : quota.getMonthSpentCent());
+        result.put("monthly_limit_cent", quota.getMonthlyLimitCent() == null ? 0 : quota.getMonthlyLimitCent());
+        result.put("affordable_flag", estimated <= 0 || available >= estimated ? 1 : 0);
+        result.put("affordable_episode_count", affordable);
+        return result;
+    }
+
+    private Map<String, Object> shotCostItem(ShortShot shot, String type, AiModelConfig model, int cost) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("shot_id", shot.getShotId());
+        item.put("shot_no", shot.getShotNo());
+        item.put("task_type", type);
+        item.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
+        item.put("model_code", model.getModelCode());
+        item.put("unit_price_cent", effectiveUnitPrice(model, type));
+        item.put("estimated_cost_cent", cost);
+        return item;
+    }
+
+    private int episodeDurationSec(String episodeId) {
+        ShortShotExample ex = new ShortShotExample();
+        ex.createCriteria().andEpisodeIdEqualTo(episodeId).andDeletedFlagEqualTo(0);
+        int total = 0;
+        for (ShortShot shot : shortShotMapper.selectByExample(ex)) {
+            total += shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
+        }
+        return Math.max(1, total);
+    }
+
+    private static int usageAmount(AiModelConfig model, int durationSec) {
+        String unit = model.getPriceUnit();
+        if ("PER_SECOND".equals(unit)) {
+            return Math.max(1, durationSec);
+        }
+        if ("PER_MINUTE".equals(unit)) {
+            return Math.max(1, (durationSec + 59) / 60);
+        }
+        return 1;
+    }
+
+    private int pricedCost(AiModelConfig model, String type, int usage) {
+        int cost = aiModelResolveService.costCent(model, usage);
+        return cost > 0 ? cost : TaskPrices.cost(type);
+    }
+
+    private int effectiveUnitPrice(AiModelConfig model, String type) {
+        int price = model.getUnitPriceCent() == null ? 0 : model.getUnitPriceCent();
+        return price > 0 ? price : TaskPrices.cost(type);
     }
 
     public PageResponse list(int pageNum, int pageSize, String taskType, String taskStatus, String batchId,
@@ -201,6 +357,20 @@ public class AiTaskService {
         result.put("failed", failed);
         result.put("canceled", canceled);
         result.put("progress_percent", total == 0 ? 0 : done * 100 / total);
+        List<Map<String, Object>> failedTasks = new ArrayList<>();
+        for (ShortAiTask row : rows) {
+            if (!"FAILED".equals(row.getTaskStatus())) {
+                continue;
+            }
+            Map<String, Object> fail = new LinkedHashMap<>();
+            fail.put("task_id", row.getTaskId());
+            fail.put("target_id", row.getTargetId());
+            fail.put("task_type", row.getTaskType());
+            fail.put("fail_reason_code", row.getFailReasonCode());
+            fail.put("fail_reason", row.getFailReason());
+            failedTasks.add(fail);
+        }
+        result.put("failed_task_list", failedTasks);
         return Responses.ok(result);
     }
 
@@ -262,6 +432,47 @@ public class AiTaskService {
         return shortShotMapper.selectByExample(ex);
     }
 
+    private void assertShotReady(ShortShot shot, String type) {
+        if ("LOCKED".equals(shot.getShotStatus())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "镜" + shot.getShotNo() + " 已定稿，不能再生成");
+        }
+        if (ShotConsistency.shotNeedsPrompt(shot)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "镜" + shot.getShotNo() + " 还没有可生成的画面描述，先写人话分镜");
+        }
+        if ("VIDEO".equals(type)
+                && (shot.getFirstFrameAssetId() == null || shot.getFirstFrameAssetId().isBlank())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "镜" + shot.getShotNo() + " 需先出图确认构图，再生成视频");
+        }
+        for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
+            if (row == null) {
+                continue;
+            }
+            if (!"LOCKED".equals(row.getCardStatus()) || row.getRefImageAssetId() == null
+                    || row.getRefImageAssetId().isBlank()) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的角色「" + row.getCharacterName()
+                                + "」尚未定妆，请先完成定妆");
+            }
+        }
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            ShortSceneCardExample sx = new ShortSceneCardExample();
+            sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
+            ShortSceneCard scene = shortSceneCardMapper.selectOneByExample(sx);
+            if (scene != null && (!"LOCKED".equals(scene.getCardStatus())
+                    || scene.getRefImageAssetId() == null || scene.getRefImageAssetId().isBlank())) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的场景「" + scene.getCardName()
+                                + "」尚未锁定场景卡，请先定妆");
+            }
+        }
+    }
+
     private void patchShotStatus(ShortShot shot, String status) {
         ShortShot patch = new ShortShot();
         patch.setShotStatus(status);
@@ -272,10 +483,8 @@ public class AiTaskService {
     }
 
     private int costForShot(AiModelConfig model, String type, ShortShot shot) {
-        int usage = "PER_SECOND".equals(model.getPriceUnit())
-                ? Math.max(1, shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec()) : 1;
-        int cost = aiModelResolveService.costCent(model, usage);
-        return cost > 0 ? cost : TaskPrices.cost(type);
+        int duration = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
+        return pricedCost(model, type, usageAmount(model, duration));
     }
 
     private ShortAiTask requireTask(String taskId) {

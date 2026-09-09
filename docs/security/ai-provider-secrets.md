@@ -23,9 +23,10 @@
 | `ai.veo.api_key` | Google Gemini / Veo API Key（`x-goog-api-key`） |
 | `ai.{provider_code}.{model_code}.api_key` | 单模型覆盖（可选） |
 
-本仓 DML 对所有 AI 供应商只放空值占位行；真实值由 Admin 或受控 SQL 写入。TokenHub 行使用
+本仓 DML 对所有 AI 供应商只放空值占位行；真实值由 **Admin「AI 密钥」页**
+（`GET/POST /bgssai/admin/secrets/**`）或受控 SQL 写入。TokenHub 行使用
 `ON DUPLICATE KEY UPDATE` 的仅空值回填规则，禁止提交真实 Bearer Key。九个生产模型可以保持启用，
-但密钥为空或停用时任务必须明确失败。
+但密钥为空或停用时任务必须明确失败。Admin「测试」只检查密钥非空已启用，**不向供应商发扣费请求**。
 
 ## 3. 运行时读取
 
@@ -33,6 +34,12 @@
 2. 查 `sys_secret`：`enabled=1` 且非空；否则任务失败。任何 AI Provider 均无 MOCK 密钥回退。
 3. OBS：启动或首次 put/presign 时解析 properties 中的 `obs.*`；缺失时 `local` profile 可回退
    `LocalFileObjectStorage`，非 local 档 fail-fast 或任务级失败（见详设）。
+
+## 4. Admin 接口
+
+- `GET /bgssai/admin/secrets/list?key_prefix=ai.` → `secret_list`（掩码，不回显明文）
+- `POST /bgssai/admin/secrets/update` → `{ secret_key, secret_value?, enabled?, description? }`
+- `POST /bgssai/admin/secrets/test` → `{ secret_key }` → `{ ok, configured_flag, message }`
 
 ## 4. 日志与审计
 

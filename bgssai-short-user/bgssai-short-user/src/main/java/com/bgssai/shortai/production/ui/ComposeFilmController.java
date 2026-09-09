@@ -17,6 +17,12 @@ public class ComposeFilmController {
     private FilmService service;
 
     @NeedAop
+    @PostMapping("/bgssai/user/films/compose-estimate")
+    public ApiResponse estimate(@RequestBody ProductionDtos.FilmReq req) {
+        return service.estimateCompose(req);
+    }
+
+    @NeedAop
     @PostMapping("/bgssai/user/films/compose")
     public ApiResponse handle(@RequestBody ProductionDtos.FilmReq req) {
         return service.compose(req);

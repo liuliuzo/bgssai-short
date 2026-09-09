@@ -157,10 +157,10 @@ export default function WorksPage() {
                       name="episode_count"
                       label="集数"
                       style={{ flex: 1 }}
-                      rules={[{ type: 'number', min: 1, max: 200, message: '集数需在 1-200 之间' }]}
+                      rules={[{ type: 'number', min: 1, max: 80, message: '集数需在 1-80 之间' }]}
                       extra="创建后生成等量剧集占位"
                     >
-                      <InputNumber min={1} max={200} style={{ width: '100%' }} />
+                      <InputNumber min={1} max={80} style={{ width: '100%' }} />
                     </Form.Item>
                     <Form.Item
                       name="episode_duration_sec"

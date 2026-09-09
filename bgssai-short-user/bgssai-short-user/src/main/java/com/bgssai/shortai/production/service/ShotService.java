@@ -16,12 +16,18 @@ import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
+import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
+import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortScriptMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
+import com.bgssai.shortai.model.ShortCharacter;
+import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortEpisodeExample;
+import com.bgssai.shortai.model.ShortSceneCard;
+import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortScript;
 import com.bgssai.shortai.model.ShortScriptExample;
 import com.bgssai.shortai.model.ShortShot;
@@ -32,6 +38,7 @@ import com.bgssai.shortai.production.dto.ProductionDtos.ShotReq;
 import com.bgssai.shortai.production.support.PromptComposer;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.ShotConsistency;
 import com.github.pagehelper.PageHelper;
 
 @Service
@@ -54,6 +61,10 @@ public class ShotService {
     private ShortEpisodeMapper shortEpisodeMapper;
     @Autowired
     private ShortWorkMapper shortWorkMapper;
+    @Autowired
+    private ShortCharacterMapper shortCharacterMapper;
+    @Autowired
+    private ShortSceneCardMapper shortSceneCardMapper;
 
     @Transactional
     public ApiResponse split(ShotReq req) {
@@ -84,6 +95,12 @@ public class ShotService {
         }
         int shotNo = maxLockedNo(ep.getEpisodeId());
         List<Map<String, Object>> scenes = ShortJson.list(script.getSceneJson());
+        ShortCharacterExample cx = new ShortCharacterExample();
+        cx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> characters = shortCharacterMapper.selectByExample(cx);
+        ShortSceneCardExample scx = new ShortSceneCardExample();
+        scx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortSceneCard> sceneCards = shortSceneCardMapper.selectByExample(scx);
         for (Map<String, Object> scene : scenes) {
             int sceneNo = ShortJson.integer(scene.get("scene_no"), 1);
             Object raw = scene.get("line_list");
@@ -97,7 +114,7 @@ public class ShotService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> line = (Map<String, Object>) item;
                 shotNo++;
-                insertShot(ep, shotNo, sceneNo, scene, line, style);
+                insertShot(ep, shotNo, sceneNo, scene, line, style, characters, sceneCards);
             }
         }
         patchStoryboard(ep, "DRAFT");
@@ -212,9 +229,12 @@ public class ShotService {
     }
 
     private void insertShot(ShortEpisode ep, int shotNo, int sceneNo, Map<String, Object> scene,
-            Map<String, Object> line, String style) {
+            Map<String, Object> line, String style, List<ShortCharacter> characters,
+            List<ShortSceneCard> sceneCards) {
         String desc = ShortJson.text(scene.get("scene_summary")) + " / " + ShortJson.text(line.get("line_text"));
         String dialogue = ShortJson.text(line.get("line_text"));
+        String characterName = ShortJson.text(line.get("character_name"));
+        String haystack = characterName + " " + desc + " " + dialogue;
         ShortShot shot = new ShortShot();
         shot.setShotId(ShortIds.id("sh-"));
         shot.setEpisodeId(ep.getEpisodeId());
@@ -228,11 +248,15 @@ public class ShotService {
         shot.setShotDesc(desc);
         shot.setDialogueText(dialogue);
         shot.setEmotion(ShortJson.text(line.get("emotion")));
+        shot.setCharacterRefJson(ShotConsistency.bindCharacterRefs(characters, haystack));
+        shot.setSceneCardId(ShotConsistency.bindSceneCardId(sceneCards,
+                ShortJson.text(scene.get("scene_location")) + " " + ShortJson.text(scene.get("scene_summary"))));
         shot.setPrevizText(PromptComposer.previzText(shot));
         shot.setImagePrompt(PromptComposer.compose(shot, style));
         shot.setPrevizLevel("TEXT");
         shot.setShotStatus("PENDING");
-        shot.setBlockedFlag(0);
+        boolean refsUnlocked = hasUnlockedRefs(shot, characters, sceneCards);
+        shot.setBlockedFlag(refsUnlocked || ShotConsistency.shotNeedsPrompt(shot) ? 1 : 0);
         shot.setRiskLevel("PASS");
         shot.setRetryCount(0);
         shot.setCostSpentCent(0);
@@ -240,6 +264,26 @@ public class ShotService {
         shot.setDeletedFlag(0);
         shot.setCreatedTime(new Date());
         shortShotMapper.insertSelective(shot);
+    }
+
+    private boolean hasUnlockedRefs(ShortShot shot, List<ShortCharacter> characters,
+            List<ShortSceneCard> sceneCards) {
+        for (String id : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            for (ShortCharacter c : characters) {
+                if (id.equals(c.getCharacterId()) && !"LOCKED".equals(c.getCardStatus())) {
+                    return true;
+                }
+            }
+        }
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank() && sceneCards != null) {
+            for (ShortSceneCard sc : sceneCards) {
+                if (shot.getSceneCardId().equals(sc.getSceneCardId())
+                        && !"LOCKED".equals(sc.getCardStatus())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private int maxLockedNo(String episodeId) {
@@ -305,6 +349,9 @@ public class ShotService {
         item.put("last_frame_prompt", row.getLastFramePrompt());
         item.put("frame_link_mode", row.getFrameLinkMode() == null ? "NONE" : row.getFrameLinkMode());
         item.putAll(frameLinkService.effectiveState(row));
+        item.put("character_ref_json", ShortJson.list(row.getCharacterRefJson()));
+        item.put("scene_card_id", row.getSceneCardId());
+        item.put("stale_flag", row.getStaleFlag() == null ? 0 : row.getStaleFlag());
         item.put("blocked_flag", row.getBlockedFlag());
         item.put("risk_level", row.getRiskLevel());
         return item;

@@ -157,11 +157,19 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 
 ### POST /bgssai/user/ai-tasks/estimate
 
-`{ "episode_id", "shot_ids", "task_type", "auto_next_flag", "model_code?", "next_model_code?" }` → `{ "task_count", "estimated_cost_cent", "model_code", "unit_price_cent" }`
+`{ "episode_id", "shot_ids", "task_type"(IMAGE|VIDEO|VOICE|COMPOSE), "auto_next_flag", "model_code?", "next_model_code?" }`
+→ `{ "task_type", "task_count", "estimated_cost_cent", "model_code", "unit_price_cent", "price_unit",
+    "balance_cent", "extra_balance_cent", "available_cent", "affordable_flag", "affordable_episode_count",
+    "month_spent_cent", "monthly_limit_cent",
+    "shot_cost_list":[{ "shot_id", "shot_no", "task_type", "duration_sec", "model_code", "unit_price_cent", "estimated_cost_cent" }] }`
+
+余额不足返回 `4007`，月额度触顶返回 `4015`（与 submit / 成功扣费同一口径）。计价与 submit 共用
+`AiModelResolveService` 快照：`unit_price_cent × usage_amount`（`PER_SECOND` 按镜时长），单价为 0 时回退
+`TaskPrices`。
 
 ### POST /bgssai/user/ai-tasks/submit
 
-同上 + 余额校验。返回 `{ "batch_id", "task_id_list" }`。USER 限流。
+同上 + 余额校验。返回 `{ "batch_id", "task_id_list", "task_count", "estimated_cost_cent" }`。USER 限流。
 
 ### GET /bgssai/user/ai-tasks/list
 
@@ -186,14 +194,19 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ## 配音与字幕
 
+### POST /bgssai/user/dubbings/estimate
+
+参数同 submit。返回与 `/ai-tasks/estimate` 同构费用字段（`task_type=VOICE` + `shot_cost_list`）；
+余额不足 `4007` / 月额度 `4015`。
+
 ### POST /bgssai/user/dubbings/submit
 
 ```json
 { "episode_id": "e-20001", "model_code": "minimax-speech-2.8-hd" }
 ```
 
-按有台词且存在音色绑定的镜头入队 VOICE，`model_code` 可选。返回
-`{ "batch_id", "task_id_list", "task_count" }`。
+按有台词的镜头入队 VOICE，`model_code` 可选。提交前过费用闸门。返回
+`{ "batch_id", "task_id_list", "task_count", "estimated_cost_cent" }`。
 
 ### POST /bgssai/user/dubbings/regenerate
 
@@ -222,13 +235,25 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ### GET /bgssai/user/films/precheck?episode_id=
 
-未锁定镜头列表；BLOCK 命中。
+返回 `ready`、`unlocked_shots`、`missing_video_shots`、`blocker_list`、`risk_level`。
+`ready=true` 要求全部镜头为 `VIDEO_READY`/`LOCKED` 且 `video_asset_id` 非空，且无配音
+`MISALIGNED`、合规无 `BLOCK`。仅有 `IMAGE_READY` 草图不得通过预检。
 
 ### GET /bgssai/user/films/timeline?episode_id=
 
+返回 `clip_list`、`audio_track`、`subtitle_track`（优先 `short_subtitle`，否则按镜
+`dialogue_text` 推算）、`bgm_asset_id` / `bgm_url`、`total_sec`。
+
+### POST /bgssai/user/films/compose-estimate
+
+`{ "episode_id" }` → 同 `/ai-tasks/estimate`（`task_type=COMPOSE`，含 `duration_sec`）。
+
 ### POST /bgssai/user/films/compose
 
-`{ "episode_id" }` → `{ "task_id" }`
+`{ "episode_id" }` → `{ "task_id", "estimated_cost_cent" }`。预检 + 费用闸门后入队；有配音素材时
+FFmpeg 混入成片音轨。
+
+合成走 `FFMPEG`：拼接镜头视频，默认烧录简单字幕（`burn_subtitle_flag` 缺省开），可选混入已选 BGM。
 
 ### POST /bgssai/user/films/bgm-generate
 
@@ -247,12 +272,13 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ### POST /bgssai/user/films/settings-save
 
-`{ "work_id", "episode_id", "compose_setting": { "bgm_asset_id", "bgm_volume", "duck_flag" } }`。
+`{ "work_id", "episode_id", "compose_setting": { "bgm_asset_id", "bgm_volume", "duck_flag", "burn_subtitle_flag" } }`。
 选用的 BGM 必须是当前用户、当前作品、当前剧集下的 AUDIO 候选。
 
 ### GET /bgssai/user/films/detail?episode_id=
 
-增加 `bgm_asset_id`、`bgm_url` 与
+返回 `compose_status`、`film_asset_id`、`film_duration_sec`、`download_url`（可播放的签名/本地 URL，
+不是 download-url JSON 接口路径）、以及 `bgm_asset_id`、`bgm_url`、
 `bgm_candidate_list[{ "asset_id", "file_url", "duration_sec", "created_time", "selected_flag" }]`。
 
 ### GET /bgssai/user/films/download-url?asset_id=

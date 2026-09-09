@@ -27,6 +27,12 @@ public class DubbingControllers {
     private DubbingService service;
 
     @NeedAop
+    @PostMapping("/bgssai/user/dubbings/estimate")
+    public ApiResponse estimate(@RequestBody DubbingSubmitReq req) {
+        return service.estimate(req);
+    }
+
+    @NeedAop
     @PostMapping("/bgssai/user/dubbings/submit")
     public ApiResponse submit(@RequestBody DubbingSubmitReq req) {
         return service.submit(req);

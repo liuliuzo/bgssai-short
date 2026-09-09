@@ -38,6 +38,7 @@ import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortSourceChapterMapper;
 import com.bgssai.shortai.mapper.ShortSourceDocMapper;
+import com.bgssai.shortai.mapper.ShortSubtitleMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.AiUsageRecord;
@@ -61,11 +62,15 @@ import com.bgssai.shortai.model.ShortSourceChapter;
 import com.bgssai.shortai.model.ShortSourceChapterExample;
 import com.bgssai.shortai.model.ShortSourceDoc;
 import com.bgssai.shortai.model.ShortSourceDocExample;
+import com.bgssai.shortai.model.ShortSubtitle;
+import com.bgssai.shortai.model.ShortSubtitleExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.ShotConsistency;
+import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.storage.ObjectStorage;
 
@@ -92,6 +97,8 @@ public class ShortAiTaskWorker {
     private ShortFilmMapper shortFilmMapper;
     @Autowired
     private ShortDubbingMapper shortDubbingMapper;
+    @Autowired
+    private ShortSubtitleMapper shortSubtitleMapper;
     @Autowired
     private ShortSourceDocMapper shortSourceDocMapper;
     @Autowired
@@ -656,9 +663,13 @@ public class ShortAiTaskWorker {
         if (shot.getShotDurationSec() != null) {
             request.getParams().put("duration_sec", shot.getShotDurationSec());
         }
-        request.setPrompt(shotPrompt(shot, ability));
+        ConsistencyBundle consistency = loadConsistency(shot);
+        String prompt = ShotConsistency.withConsistency(shotPrompt(shot, ability), consistency.fragment());
+        request.setPrompt(prompt);
         if ("VIDEO".equals(ability)) {
             attachFrames(shot, request, model);
+        } else {
+            attachConsistencyRefs(consistency, request);
         }
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), shot.getShotId(),
@@ -678,6 +689,7 @@ public class ShortAiTaskWorker {
         } else {
             patch.setFirstFrameAssetId(asset.getAssetId());
             patch.setShotStatus("IMAGE_READY");
+            patch.setStaleFlag(0);
             if (Integer.valueOf(1).equals(task.getAutoNextFlag())) {
                 Map<String, Object> origin = ShortJson.map(task.getRequestJson());
                 String nextModel = ShortJson.text(origin.get("next_model_code"));
@@ -699,6 +711,51 @@ public class ShortAiTaskWorker {
         if ("VIDEO".equals(task.getTaskType()) && patch.getLastFrameAssetId() != null) {
             frameLinkService.markNextStale(shot);
         }
+    }
+
+    private ConsistencyBundle loadConsistency(ShortShot shot) {
+        List<ShortCharacter> lockedChars = new ArrayList<>();
+        for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
+            if (row != null && "LOCKED".equals(row.getCardStatus())
+                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
+                lockedChars.add(row);
+            }
+        }
+        ShortSceneCard lockedScene = null;
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            ShortSceneCardExample sx = new ShortSceneCardExample();
+            sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
+            ShortSceneCard row = shortSceneCardMapper.selectOneByExample(sx);
+            if (row != null && "LOCKED".equals(row.getCardStatus())
+                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
+                lockedScene = row;
+            }
+        }
+        return new ConsistencyBundle(lockedChars, lockedScene,
+                ShotConsistency.appearanceFragment(lockedChars, lockedScene));
+    }
+
+    /**
+     * IMAGE path: attach first locked character portrait as subject reference (Kling
+     * image_reference=subject). Scene card appearance stays in prompt text.
+     */
+    private void attachConsistencyRefs(ConsistencyBundle consistency, AiProviderRequest request) {
+        if (consistency.characters().isEmpty()) {
+            return;
+        }
+        ShortCharacter primary = consistency.characters().get(0);
+        attachFrameAsset(primary.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime");
+        if (request.param("image_base64") != null || request.param("image_url") != null) {
+            request.getParams().put("image_reference", "subject");
+            request.getParams().put("image_fidelity", 0.75);
+            request.getParams().put("human_fidelity", 0.55);
+        }
+    }
+
+    private record ConsistencyBundle(List<ShortCharacter> characters, ShortSceneCard scene, String fragment) {
     }
 
     private void finishCompose(ShortAiTask task, AiModelConfig model) {
@@ -728,16 +785,34 @@ public class ShortAiTaskWorker {
         }
         timelineMap.put("shots", shotMeta);
         timelineMap.put("duration_sec", duration);
-        String timeline = ShortJson.toJson(timelineMap);
 
         AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
         request.getParams().put("title", ep.getEpisodeTitle());
         request.getParams().put("duration_sec", duration);
         request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
+        List<Integer> clipDurations = new ArrayList<>();
+        List<String> dubbingMissing = new ArrayList<>();
+        List<byte[]> dubbingAudio = loadDubbingAudio(shots, clipDurations, dubbingMissing);
+        request.getParams().put(FfmpegComposeProvider.PARAM_CLIP_DURATION_SEC_LIST, clipDurations);
+        if (dubbingAudio.stream().anyMatch(b -> b != null && b.length > 0)) {
+            request.getParams().put(FfmpegComposeProvider.PARAM_DUBBING_LIST, dubbingAudio);
+        }
         byte[] bgm = loadSelectedBgm(ep);
         if (bgm != null) {
             request.getParams().put(FfmpegComposeProvider.PARAM_BGM, bgm);
         }
+        String srt = loadSubtitleSrt(ep, shots);
+        if (srt != null && !srt.isBlank()) {
+            request.getParams().put(FfmpegComposeProvider.PARAM_SUBTITLE_SRT, srt);
+        }
+        if (!dubbingMissing.isEmpty()) {
+            timelineMap.put("dubbing_missing_shot_nos", dubbingMissing);
+            timelineMap.put("dubbing_warn",
+                    "部分镜头无配音，已用静音占位：" + String.join("、", dubbingMissing));
+        }
+        int mixed = (int) dubbingAudio.stream().filter(b -> b != null && b.length > 0).count();
+        timelineMap.put("dubbing_mixed_count", mixed);
+        String timeline = ShortJson.toJson(timelineMap);
         request.setPrompt(timeline);
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
@@ -778,6 +853,54 @@ public class ShortAiTaskWorker {
         eup.createCriteria().andIdEqualTo(ep.getId());
         shortEpisodeMapper.updateByExampleSelective(epPatch, eup);
         workStatusService.refresh(ep.getWorkId());
+    }
+
+    private List<byte[]> loadDubbingAudio(List<ShortShot> shots, List<Integer> clipDurations,
+            List<String> missingShotNos) {
+        List<byte[]> audio = new ArrayList<>();
+        for (ShortShot shot : shots) {
+            int dur = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
+            clipDurations.add(dur);
+            ShortDubbingExample dex = new ShortDubbingExample();
+            dex.createCriteria().andShotIdEqualTo(shot.getShotId()).andDeletedFlagEqualTo(0);
+            dex.setOrderByClause("line_no asc");
+            List<ShortDubbing> rows = shortDubbingMapper.selectByExample(dex);
+            byte[] bytes = null;
+            for (ShortDubbing row : rows) {
+                if (row.getAudioAssetId() == null || row.getAudioAssetId().isBlank()) {
+                    continue;
+                }
+                bytes = audioAssetBytes(row.getAudioAssetId());
+                if (bytes != null) {
+                    break;
+                }
+            }
+            if (bytes == null) {
+                if (shot.getDialogueText() != null && !shot.getDialogueText().isBlank()) {
+                    missingShotNos.add("镜" + shot.getShotNo());
+                }
+                audio.add(new byte[0]);
+            } else {
+                audio.add(bytes);
+            }
+        }
+        return audio;
+    }
+
+    private byte[] audioAssetBytes(String assetId) {
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null || asset.getStorageKey() == null || asset.getStorageKey().isBlank()) {
+            return null;
+        }
+        try {
+            byte[] bytes = objectStorage.get(asset.getStorageKey());
+            return bytes == null || bytes.length == 0 ? null : bytes;
+        } catch (RuntimeException ex) {
+            log.warn("compose dubbing fetch failed assetId={}", assetId, ex);
+            return null;
+        }
     }
 
     /**
@@ -845,6 +968,26 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.RULE_REJECT, "selected BGM content is empty");
         }
         return bytes;
+    }
+
+    /**
+     * MVP simple subs: burn dialogue (or short_subtitle rows) unless compose_setting
+     * explicitly sets burn_subtitle_flag=0.
+     */
+    private String loadSubtitleSrt(ShortEpisode ep, List<ShortShot> shots) {
+        ShortWorkExample wx = new ShortWorkExample();
+        wx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
+        ShortWork work = shortWorkMapper.selectOneByExample(wx);
+        Map<String, Object> setting = work == null ? Map.of() : ShortJson.map(work.getComposeSettingJson());
+        Integer burnFlag = ShortJson.integer(setting.get("burn_subtitle_flag"), 1);
+        if (burnFlag != null && burnFlag == 0) {
+            return null;
+        }
+        ShortSubtitleExample sx = new ShortSubtitleExample();
+        sx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
+        sx.setOrderByClause("subtitle_no asc");
+        List<ShortSubtitle> rows = shortSubtitleMapper.selectByExample(sx);
+        return SubtitleSrtBuilder.fromCues(SubtitleSrtBuilder.cuesForEpisode(rows, shots));
     }
 
     private ShortAsset saveBinary(String userId, String workId, String episodeId, String shotId, String type,
@@ -924,7 +1067,7 @@ public class ShortAiTaskWorker {
     }
 
     private AiProviderResult execute(AiModelConfig model, AiProviderRequest request) {
-        AiProvider provider = aiProviderRegistry.get(model.getProviderCode());
+        AiProvider provider = aiProviderRegistry.resolve(model);
         AiProviderResult result = provider.execute(request);
         int usage = result == null || result.getUsageAmount() == null ? 1 : Math.max(1, result.getUsageAmount());
         executionUsage.set(executionUsage.get() + usage);

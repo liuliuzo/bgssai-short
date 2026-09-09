@@ -35,19 +35,20 @@ const listShots = (params) => http.get('/user/shots/list', params)
 const lockShot = (shotId) => http.post('/user/shots/lock', { shot_id: shotId })
 const unlockShot = (shotId) => http.post('/user/shots/unlock', { shot_id: shotId })
 const updateShot = (body) => http.post('/user/shots/update', body)
+const reorderShots = (body) => http.post('/user/shots/reorder', body)
 
 const listAiModels = (abilityType) => http.get('/user/ai-models/list', { ability_type: abilityType })
 const estimateTasks = (body) => http.post('/user/ai-tasks/estimate', body)
 const submitTasks = (body) => http.post('/user/ai-tasks/submit', body)
-const reorderShots = (body) => http.post('/user/shots/reorder', body)
 const listTasks = (params) => http.get('/user/ai-tasks/list', params)
 const batchProgress = (batchId) => http.get('/user/ai-tasks/batch-progress', { batch_id: batchId })
 const retryTask = (taskId) => http.post('/user/ai-tasks/retry', { task_id: taskId })
 const cancelTask = (taskId) => http.post('/user/ai-tasks/cancel', { task_id: taskId })
 
 const filmPrecheck = (episodeId) => http.get('/user/films/precheck', { episode_id: episodeId })
-const composeFilm = (episodeId) => http.post('/user/films/compose', { episode_id: episodeId })
 const filmDetail = (episodeId) => http.get('/user/films/detail', { episode_id: episodeId })
+const composeEstimate = (episodeId) => http.post('/user/films/compose-estimate', { episode_id: episodeId })
+const composeFilm = (episodeId) => http.post('/user/films/compose', { episode_id: episodeId })
 const submitReview = (episodeId) => http.post('/user/reviews/submit', { episode_id: episodeId })
 const withdrawReview = (episodeId) => http.post('/user/reviews/withdraw', { episode_id: episodeId })
 const listReviews = (workId) => http.get('/user/reviews/list', { work_id: workId })
@@ -79,17 +80,18 @@ export default {
   lockShot,
   unlockShot,
   updateShot,
+  reorderShots,
   listAiModels,
   estimateTasks,
   submitTasks,
-  reorderShots,
   listTasks,
   batchProgress,
   retryTask,
   cancelTask,
   filmPrecheck,
-  composeFilm,
   filmDetail,
+  composeEstimate,
+  composeFilm,
   submitReview,
   withdrawReview,
   listReviews,

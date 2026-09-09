@@ -18,6 +18,7 @@ import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortFilmMapper;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
+import com.bgssai.shortai.mapper.ShortSubtitleMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAsset;
@@ -30,15 +31,19 @@ import com.bgssai.shortai.model.ShortFilm;
 import com.bgssai.shortai.model.ShortFilmExample;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
+import com.bgssai.shortai.model.ShortSubtitle;
+import com.bgssai.shortai.model.ShortSubtitleExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmExportReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.BgmGenerateReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmRebakeReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmSettingsSaveReq;
+import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
 
 @Service
 public class FilmService {
@@ -61,6 +66,10 @@ public class FilmService {
     private ShortWorkMapper shortWorkMapper;
     @Autowired
     private ShortAssetMapper shortAssetMapper;
+    @Autowired
+    private ShortSubtitleMapper shortSubtitleMapper;
+    @Autowired
+    private AiTaskService aiTaskService;
 
     public ApiResponse precheck(String episodeId) {
         ShortEpisode ep = workAccessService.requireEpisode(episodeId);
@@ -68,15 +77,24 @@ public class FilmService {
         ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         List<ShortShot> shots = shortShotMapper.selectByExample(ex);
         List<Map<String, Object>> unlocked = new ArrayList<>();
+        List<Map<String, Object>> missingVideo = new ArrayList<>();
         List<Map<String, Object>> parts = new ArrayList<>();
         for (ShortShot shot : shots) {
-            if (!"LOCKED".equals(shot.getShotStatus()) && !"VIDEO_READY".equals(shot.getShotStatus())
-                    && !"IMAGE_READY".equals(shot.getShotStatus())) {
+            boolean statusOk = "LOCKED".equals(shot.getShotStatus()) || "VIDEO_READY".equals(shot.getShotStatus());
+            boolean hasVideo = shot.getVideoAssetId() != null && !shot.getVideoAssetId().isBlank();
+            if (!statusOk) {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("shot_id", shot.getShotId());
                 item.put("shot_no", shot.getShotNo());
                 item.put("shot_status", shot.getShotStatus());
                 unlocked.add(item);
+            }
+            if (!hasVideo) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("shot_id", shot.getShotId());
+                item.put("shot_no", shot.getShotNo());
+                item.put("shot_status", shot.getShotStatus());
+                missingVideo.add(item);
             }
             parts.add(ComplianceLexicon.scan(shot.getDialogueText(), shot.getSceneNo(), null, shot.getShotNo()));
         }
@@ -86,6 +104,20 @@ public class FilmService {
                 .andAlignStatusEqualTo("MISALIGNED");
         List<ShortDubbing> misaligned = shortDubbingMapper.selectByExample(dex);
         List<Map<String, Object>> blockers = new ArrayList<>();
+        if (!unlocked.isEmpty()) {
+            Map<String, Object> blocker = new LinkedHashMap<>();
+            blocker.put("blocker_code", "SHOT_NOT_READY");
+            blocker.put("blocker_desc", "存在未完成视频的镜头，需全部 VIDEO_READY 或 LOCKED 后再合成");
+            blocker.put("count", unlocked.size());
+            blockers.add(blocker);
+        }
+        if (!missingVideo.isEmpty()) {
+            Map<String, Object> blocker = new LinkedHashMap<>();
+            blocker.put("blocker_code", "SHOT_MISSING_VIDEO");
+            blocker.put("blocker_desc", "以下镜头缺少可用视频素材");
+            blocker.put("count", missingVideo.size());
+            blockers.add(blocker);
+        }
         if (!misaligned.isEmpty()) {
             Map<String, Object> blocker = new LinkedHashMap<>();
             blocker.put("blocker_code", "DUBBING_MISALIGNED");
@@ -93,10 +125,12 @@ public class FilmService {
             blocker.put("count", misaligned.size());
             blockers.add(blocker);
         }
-        boolean ready = unlocked.isEmpty() && !"BLOCK".equals(scan.get("risk_level")) && blockers.isEmpty();
+        boolean ready = unlocked.isEmpty() && missingVideo.isEmpty()
+                && !"BLOCK".equals(scan.get("risk_level")) && misaligned.isEmpty();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("ready", ready);
         result.put("unlocked_shots", unlocked);
+        result.put("missing_video_shots", missingVideo);
         result.put("risk_level", scan.get("risk_level"));
         result.put("hit_list", scan.get("hit_list"));
         result.put("blocker_list", blockers);
@@ -109,11 +143,11 @@ public class FilmService {
         ShortShotExample ex = new ShortShotExample();
         ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         ex.setOrderByClause("shot_no asc");
+        List<ShortShot> shots = shortShotMapper.selectByExample(ex);
         List<Map<String, Object>> clips = new ArrayList<>();
         List<Map<String, Object>> audioTrack = new ArrayList<>();
-        List<Map<String, Object>> subtitleTrack = new ArrayList<>();
         int t = 0;
-        for (ShortShot shot : shortShotMapper.selectByExample(ex)) {
+        for (ShortShot shot : shots) {
             int dur = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
             Map<String, Object> clip = new LinkedHashMap<>();
             clip.put("shot_id", shot.getShotId());
@@ -138,6 +172,7 @@ public class FilmService {
             }
             t += dur;
         }
+        List<Map<String, Object>> subtitleTrack = loadSubtitleTrack(ep, shots);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("clip_list", clips);
         result.put("audio_track", audioTrack);
@@ -151,20 +186,35 @@ public class FilmService {
         return Responses.ok(result);
     }
 
+    public ApiResponse estimateCompose(FilmReq req) {
+        AiTaskReq estimateReq = new AiTaskReq();
+        estimateReq.setEpisodeId(req == null ? null : req.getEpisodeId());
+        estimateReq.setTaskType("COMPOSE");
+        return aiTaskService.estimate(estimateReq);
+    }
+
     public ApiResponse compose(FilmReq req) {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
         Map<String, Object> check = precheckMap(ep.getEpisodeId());
         if (!Boolean.TRUE.equals(check.get("ready"))) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "precheck not ready");
         }
+        AiTaskReq estimateReq = new AiTaskReq();
+        estimateReq.setEpisodeId(ep.getEpisodeId());
+        estimateReq.setTaskType("COMPOSE");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> estimate = (Map<String, Object>) aiTaskService.estimate(estimateReq).getResult();
+        int durationSec = ShortJson.integer(estimate.get("duration_sec"), 1);
         patchCompose(ep, "COMPOSING");
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("episode_id", ep.getEpisodeId());
         request.put("compose_mode", "FULL");
+        request.put("duration_sec", durationSec);
         ShortAiTask task = aiTaskQueue.enqueue(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), "COMPOSE", "COMPOSE",
                 ep.getEpisodeId(), request, null, 0);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
+        result.put("estimated_cost_cent", estimate.get("estimated_cost_cent"));
         return Responses.ok(result);
     }
 
@@ -288,10 +338,19 @@ public class FilmService {
             result.put("film_id", film.getFilmId());
             result.put("film_asset_id", film.getFilmAssetId());
             result.put("film_duration_sec", film.getFilmDurationSec());
+            // Return a playable/presigned URL — the download-url JSON endpoint is not a media src.
             result.put("download_url", film.getFilmAssetId() == null ? null
-                    : "/bgssai/user/films/download-url?asset_id=" + film.getFilmAssetId());
+                    : assetService.resolveUrl(film.getFilmAssetId()));
         }
         return Responses.ok(result);
+    }
+
+    private List<Map<String, Object>> loadSubtitleTrack(ShortEpisode ep, List<ShortShot> shots) {
+        ShortSubtitleExample sx = new ShortSubtitleExample();
+        sx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
+        sx.setOrderByClause("subtitle_no asc");
+        List<ShortSubtitle> rows = shortSubtitleMapper.selectByExample(sx);
+        return SubtitleSrtBuilder.cuesForEpisode(rows, shots);
     }
 
     private List<Map<String, Object>> bgmCandidates(ShortEpisode ep, String selectedBgm) {

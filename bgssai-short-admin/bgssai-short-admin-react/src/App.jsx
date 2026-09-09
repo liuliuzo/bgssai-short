@@ -11,6 +11,7 @@ import SubscriptionPlansPage from './pages/subscriptionPlans/SubscriptionPlansPa
 import PayMerchantsPage from './pages/payMerchants/PayMerchantsPage'
 import QualityTemplatesPage from './pages/qualityTemplates/QualityTemplatesPage'
 import AiModelsPage from './pages/aiModels/AiModelsPage'
+import AiSecretsPage from './pages/secrets/AiSecretsPage'
 import UsageCostPage from './pages/usageCost/UsageCostPage'
 
 function RequireAuth({ children }) {
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="/subscription-plans" element={<SubscriptionPlansPage />} />
         <Route path="/pay-merchants" element={<PayMerchantsPage />} />
         <Route path="/ai-models" element={<AiModelsPage />} />
+        <Route path="/ai-secrets" element={<AiSecretsPage />} />
         <Route path="/usage-cost" element={<UsageCostPage />} />
         <Route path="/quality-templates" element={<QualityTemplatesPage />} />
         <Route path="/" element={<Navigate to="/home" replace />} />

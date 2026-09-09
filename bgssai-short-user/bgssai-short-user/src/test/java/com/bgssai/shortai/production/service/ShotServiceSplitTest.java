@@ -17,7 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bgssai.shortai.common.aop.UserContext;
+import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
+import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortScriptMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
@@ -76,6 +78,12 @@ class ShotServiceSplitTest {
         ReflectionTestUtils.setField(service, "shortScriptMapper", scriptMapper);
         ReflectionTestUtils.setField(service, "shortEpisodeMapper", episodeMapper);
         ReflectionTestUtils.setField(service, "shortWorkMapper", workMapper);
+        ShortCharacterMapper characterMapper = org.mockito.Mockito.mock(ShortCharacterMapper.class);
+        ShortSceneCardMapper sceneCardMapper = org.mockito.Mockito.mock(ShortSceneCardMapper.class);
+        when(characterMapper.selectByExample(any())).thenReturn(new ArrayList<>());
+        when(sceneCardMapper.selectByExample(any())).thenReturn(new ArrayList<>());
+        ReflectionTestUtils.setField(service, "shortCharacterMapper", characterMapper);
+        ReflectionTestUtils.setField(service, "shortSceneCardMapper", sceneCardMapper);
     }
 
     @AfterEach

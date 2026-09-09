@@ -1,6 +1,7 @@
 import http from '../utils/http'
 
 const submitDubbing = (body) => http.post('/user/dubbings/submit', body)
+const estimateDubbing = (body) => http.post('/user/dubbings/estimate', body)
 const listDubbings = (episodeId) => http.get('/user/dubbings/list', { episode_id: episodeId })
 const regenerateDubbing = (body) => http.post('/user/dubbings/regenerate', body)
 const alignDubbing = (body) => http.post('/user/dubbings/align', body)
@@ -77,6 +78,7 @@ const filmExport = (body) => http.post('/user/films/export', body)
 
 export default {
   submitDubbing,
+  estimateDubbing,
   listDubbings,
   regenerateDubbing,
   alignDubbing,

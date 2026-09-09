@@ -34,7 +34,7 @@
 | `SeedanceAiProvider` | `provider_code=SEEDANCE`：火山方舟 Seedance `VIDEO` |
 | `VeoAiProvider` | `provider_code=VEO`：Google Gemini API Veo `VIDEO` |
 | `TencentTokenHubAiProvider` | `provider_code=TENCENT_TOKENHUB`：TEXT / VIDEO / VOICE / ASR / MUSIC 统一协议适配 |
-| `FfmpegComposeProvider` | `provider_code=FFMPEG`：本机 FFmpeg 合成 9:16 成片 |
+| `FfmpegComposeProvider` | `provider_code=FFMPEG`：本机 FFmpeg 合成 9:16 成片；默认烧录 SRT 简单字幕（台词/`short_subtitle`），可关 `burn_subtitle_flag` |
 | `AiProviderRegistry` | 按 `provider_code` 选实现 |
 | `ObjectStorage` | put / get bytes / delete / presignGet |
 | `HuaweiObsObjectStorage` | OBS Java SDK 实现 |
@@ -126,4 +126,5 @@ submit
 - 不引入独立消息队列
 - 不实现 WebSocket 推送（继续轮询）
 - 首批生产模型目录与默认值由 `tokenhub-model-integration-design.md` 绑定；既有直连 Provider 继续保留为备用
-- **不提供 MOCK 兜底 provider**：COMPOSE 由 `FfmpegComposeProvider` 在本机完成；ffmpeg 缺失或镜头视频不全时合成任务直接失败并说明原因，不用假成片掩盖未接通
+- **不提供 MOCK 兜底 provider**：COMPOSE 由 `FfmpegComposeProvider` 在本机完成；ffmpeg 缺失或镜头视频不全时合成任务直接失败并说明原因，不用假成片掩盖未接通；`films/detail.download_url` 返回可播放签名 URL（勿把 download-url JSON 路径当媒体地址）
+- **目录 orphan provider**：用户端模型列表只暴露可解析的 provider；`HUNYUAN`/`WAND` 等无专用 bean 时，TEXT+`chat_path` 回落 `OPENAI_COMPAT`，TokenHub 域名回落 `TENCENT_TOKENHUB`，其余拒绝

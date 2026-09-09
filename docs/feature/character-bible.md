@@ -40,7 +40,11 @@
   7. 改角色卡定妆照会影响后续生成，不回溯已生成镜头；界面须提示「已有 N 个镜头使用旧形象，
      是否加入重生成队列」，并按镜列出重生成预估费用（`estimated_cost_cent`）；批量重生成弹窗
      按镜可勾选，默认只勾选非 `LOCKED` 镜头（已定稿的不动），确认后批量加入重生成
-     （走 `shot-generation.md` 的批量任务）。
+     （走 `shot-generation.md` 的批量任务）。MVP 实现：`lockCharacter` / `lockScene` 将引用
+     该卡且未定稿的镜头置 `stale_flag=1`（已定稿不动）。
+  8. **一致性下发（MVP）**：分镜拆分按角色名/场景名写入 `character_ref_json` / `scene_card_id`。
+     IMAGE 把已定妆 `ref_image_asset_id` 作为 subject 参考图（可灵 `image_reference=subject`）
+     并拼接外观描述；VIDEO 至少把外观描述写入提示词。提交时未定妆即拦截。
   8. 删除角色卡：被镜头引用中的角色卡不允许删除，须先解除引用。
 
 ## 三、验收标准

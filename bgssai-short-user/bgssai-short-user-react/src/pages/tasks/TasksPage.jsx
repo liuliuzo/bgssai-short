@@ -33,7 +33,7 @@ export default function TasksPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>任务中心</Title>
-      <Paragraph type="secondary">轮询 Mock 生成队列。失败可重试，排队中可取消。</Paragraph>
+      <Paragraph type="secondary">轮询真实生成队列。失败可重试，排队中可取消。</Paragraph>
       <Card>
         <Table
           rowKey="task_id"
