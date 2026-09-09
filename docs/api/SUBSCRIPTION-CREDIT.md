@@ -91,6 +91,34 @@
 
 沙箱字段：`out_trade_no`、`trade_no`、`trade_status=TRADE_SUCCESS`、`total_amount`（元）、`sign`。
 
+## 扫码 UX 与沙箱验证
+
+用户端订阅页：`create` / `credit-packs/orders` 返回 `code_url` 后弹窗展示可扫二维码，并轮询本页 `order/status`（约 2s）直至终态。
+
+### 沙箱（`bgssai.payment.sandbox-enabled=true`）
+
+1. 登录用户端 → 套餐与加量 → 点「微信」或「支付宝」下单，弹窗出现二维码（沙箱 `code_url` 为占位 URL，仍应可渲染）。
+2. 模拟微信回调（密钥默认 `sandbox-wechat-sign-key`；`sign` = HMAC-SHA256 hex，对除 `sign` 外字段按 key 字典序 `k=v` 用 `&` 拼接）：
+
+```bash
+# 将 ORDER_NO / AMOUNT_CENT 换成下单响应；先算 sign 再 POST
+curl -sS -X POST 'http://127.0.0.1:8080/bgssai/user/payment/wechat/notify' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data-urlencode 'out_trade_no=ORDER_NO' \
+  --data-urlencode 'transaction_id=sandbox-tx-1' \
+  --data-urlencode 'trade_state=SUCCESS' \
+  --data-urlencode 'amount=AMOUNT_CENT' \
+  --data-urlencode 'sign=SIGN_HEX'
+```
+
+3. 弹窗轮询到 `paid` → 提示成功并刷新可用余额 / 加量。
+
+### 生产
+
+- Admin 配置启用收款商户（`wechat_pay_config` / `alipay_config`，凭据落库，勿提交 `payment/wechatpay/` 私钥）。
+- 公网可达 notify URL；profile 设 `bgssai.payment.sandbox-enabled=false`。
+- 本轮不做 JSAPI / H5 / 自动续费。
+
 ## 管理端
 
 ### POST /bgssai/admin/pay/wechat-configs/save

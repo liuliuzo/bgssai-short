@@ -57,7 +57,7 @@
 ## 三、验收标准
 
 1. 用户端套餐列表返回五档，金额与发放额与目录一致，不以客户端报价为准。
-2. 购买 PRO 微信支付：创建订单金额等于目录 `price_cent`，返回 `code_url`；沙箱回调 HMAC 验签通过后订阅 `active`，`balance_cent` 重置为该档 `monthly_balance_cent`。
+2. 购买 PRO 微信支付：创建订单金额等于目录 `price_cent`，返回 `code_url`；用户端弹出扫码弹窗（二维码由 `code_url` 渲染，可复制链接），轮询 `order/status` 至 `paid` 后刷新余额；沙箱回调 HMAC 验签通过后订阅 `active`，`balance_cent` 重置为该档 `monthly_balance_cent`。支付宝当面付同 UX。
 3. 购买加量包后仅增加 `extra_balance_cent`，套餐到期不扣减该字段。
 4. 同一 `order_no` 重复通知只发放一次。
 5. 回调金额与订单 `amount_cent` 不一致则拒绝，不改订单状态。

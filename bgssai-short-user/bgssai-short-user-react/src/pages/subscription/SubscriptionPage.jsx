@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Space, Table, Typography, message } from 'antd'
 import subscriptionApi from '../../api/subscription'
+import NativePayQrModal from './NativePayQrModal'
+import {
+  PAY_ORDER_POLL_INTERVAL_MS,
+  resolvePollOutcome,
+} from './payOrderPoll'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -14,8 +19,9 @@ export default function SubscriptionPage() {
   const [packs, setPacks] = useState([])
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(false)
-  const [codeUrl, setCodeUrl] = useState('')
-  const [pendingOrderNo, setPendingOrderNo] = useState('')
+  const [payOrder, setPayOrder] = useState(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [polling, setPolling] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -39,38 +45,84 @@ export default function SubscriptionPage() {
     load()
   }, [load])
 
+  const closePayModal = useCallback(() => {
+    setModalOpen(false)
+    setPolling(false)
+    setPayOrder(null)
+  }, [])
+
   useEffect(() => {
-    if (!pendingOrderNo) return undefined
-    const poll = setInterval(async () => {
+    if (!modalOpen || !polling || !payOrder?.order_no) return undefined
+
+    let cancelled = false
+    const tick = async () => {
+      const outcomeFromExpiry = resolvePollOutcome('created', payOrder.expires_at)
+      if (outcomeFromExpiry === 'timeout') {
+        if (!cancelled) {
+          message.warning('订单已超时，请重新下单')
+          closePayModal()
+        }
+        return
+      }
       try {
-        const { data } = await subscriptionApi.orderStatus(pendingOrderNo)
-        if (data?.success && data.result?.status === 'paid') {
+        const { data } = await subscriptionApi.orderStatus(payOrder.order_no)
+        if (cancelled) return
+        const status = data?.result?.status
+        const outcome = resolvePollOutcome(status, payOrder.expires_at)
+        if (outcome === 'paid') {
           message.success('支付成功，已开通')
-          setPendingOrderNo('')
-          setCodeUrl('')
+          closePayModal()
           load()
+          return
+        }
+        if (outcome === 'closed') {
+          message.warning('订单已关闭')
+          closePayModal()
+          return
+        }
+        if (outcome === 'timeout') {
+          message.warning('订单已超时，请重新下单')
+          closePayModal()
         }
       } catch {
         // 轮询失败不打断扫码
       }
-    }, 2500)
-    return () => clearInterval(poll)
-  }, [pendingOrderNo, load])
+    }
+
+    tick()
+    const timer = setInterval(tick, PAY_ORDER_POLL_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [modalOpen, polling, payOrder, closePayModal, load])
 
   const buy = async (fn) => {
     try {
       const { data } = await fn()
-      if (data?.success && data.result) {
-        setCodeUrl(data.result.code_url || '')
-        if (data.result.status === 'paid') {
-          message.success('已开通')
-          setPendingOrderNo('')
-          load()
-        } else {
-          setPendingOrderNo(data.result.order_no || '')
-          message.success('请使用微信 / 支付宝扫描 code_url')
-        }
+      if (!data?.success || !data.result) return
+      const result = data.result
+      if (result.status === 'paid') {
+        message.success('已开通')
+        closePayModal()
+        load()
+        return
       }
+      if (!result.code_url) {
+        message.error('下单成功但未返回支付链接')
+        return
+      }
+      setPayOrder({
+        order_no: result.order_no,
+        amount_cent: result.amount_cent,
+        payment_channel: result.payment_channel,
+        code_url: result.code_url,
+        expires_at: result.expires_at,
+        order_type: result.order_type,
+      })
+      setModalOpen(true)
+      setPolling(true)
+      message.info('请使用手机扫码完成支付')
     } catch (e) {
       message.error(e?.message || '下单失败')
     }
@@ -80,7 +132,7 @@ export default function SubscriptionPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>套餐与加量</Title>
       <Paragraph type="secondary">
-        套餐发放周期余额 balance_cent；加量包进入 extra_balance_cent。金额为分，页面展示为元。
+        套餐发放周期余额 balance_cent；加量包进入 extra_balance_cent。金额为分，页面展示为元。微信 Native / 支付宝当面付扫码支付。
       </Paragraph>
       <Card loading={loading} style={{ marginBottom: 16 }}>
         <Space size="large">
@@ -134,7 +186,6 @@ export default function SubscriptionPage() {
             },
           ]}
         />
-        {codeUrl ? <Paragraph style={{ marginTop: 12 }} copyable>{codeUrl}</Paragraph> : null}
       </Card>
       <Card title="订单记录" style={{ marginTop: 16 }}>
         <Table
@@ -152,6 +203,12 @@ export default function SubscriptionPage() {
           ]}
         />
       </Card>
+      <NativePayQrModal
+        open={modalOpen}
+        order={payOrder}
+        polling={polling}
+        onClose={closePayModal}
+      />
     </div>
   )
 }
