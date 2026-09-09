@@ -76,4 +76,4 @@
 - `bgssai.payment.wechat.sign-key`（仅沙箱 HMAC）
 - `bgssai.payment.alipay.sign-key`（仅沙箱 HMAC）
 
-商户凭据只在 `wechat_pay_config` / `alipay_config`，并由 `sql/DML.sql` + `sql/<env>/DML.sql` 种子恢复（清库后）。支付宝短剧控制台 App 未创建前种子为 `PENDING_BGSSAI_SHORT` 且未启用收款。
+商户凭据只在 `wechat_pay_config` / `alipay_config`，并由 `sql/DML.sql` + `sql/<env>/DML.sql` 种子恢复（清库后）。支付宝开放平台应用 BGSSAIShort，AppID `2021006196627810`。
