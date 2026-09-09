@@ -236,6 +236,15 @@ public class ProductionDtos {
         public void setAssetId(String assetId) { this.assetId = assetId; }
     }
 
+    public static class FilmPublishToMediaReq {
+        private String episodeId;
+        private String filmId;
+        public String getEpisodeId() { return episodeId; }
+        public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
+        public String getFilmId() { return filmId; }
+        public void setFilmId(String filmId) { this.filmId = filmId; }
+    }
+
     public static class ReviewUserReq {
         private String episodeId;
         private String workId;

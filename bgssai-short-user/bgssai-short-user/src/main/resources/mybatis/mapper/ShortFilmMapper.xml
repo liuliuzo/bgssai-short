@@ -15,6 +15,11 @@
     <result column="compose_task_id" jdbcType="VARCHAR" property="composeTaskId" />
     <result column="composed_time" jdbcType="TIMESTAMP" property="composedTime" />
     <result column="export_json" jdbcType="LONGVARCHAR" property="exportJson" />
+    <result column="media_id" jdbcType="VARCHAR" property="mediaId" />
+    <result column="media_play_url" jdbcType="VARCHAR" property="mediaPlayUrl" />
+    <result column="media_publish_status" jdbcType="VARCHAR" property="mediaPublishStatus" />
+    <result column="media_published_at" jdbcType="TIMESTAMP" property="mediaPublishedAt" />
+    <result column="media_last_error" jdbcType="VARCHAR" property="mediaLastError" />
     <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
     <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
     <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
@@ -63,7 +68,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, film_id, episode_id, work_id, user_id, film_asset_id, film_duration_sec, compose_status, expired_flag, subtitle_stale_flag, compose_task_id, composed_time, export_json, deleted_flag, created_time, updated_time
+    id, film_id, episode_id, work_id, user_id, film_asset_id, film_duration_sec, compose_status, expired_flag, subtitle_stale_flag, compose_task_id, composed_time, export_json, media_id, media_play_url, media_publish_status, media_published_at, media_last_error, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortFilmExample" resultMap="BaseResultMap">
     select
@@ -103,6 +108,11 @@
       compose_task_id,
       composed_time,
       export_json,
+      media_id,
+      media_play_url,
+      media_publish_status,
+      media_published_at,
+      media_last_error,
       deleted_flag,
       created_time,
       updated_time
@@ -120,6 +130,11 @@
       #{composeTaskId,jdbcType=VARCHAR},
       #{composedTime,jdbcType=TIMESTAMP},
       #{exportJson,jdbcType=LONGVARCHAR},
+      #{mediaId,jdbcType=VARCHAR},
+      #{mediaPlayUrl,jdbcType=VARCHAR},
+      #{mediaPublishStatus,jdbcType=VARCHAR},
+      #{mediaPublishedAt,jdbcType=TIMESTAMP},
+      #{mediaLastError,jdbcType=VARCHAR},
       #{deletedFlag,jdbcType=TINYINT},
       #{createdTime,jdbcType=TIMESTAMP},
       #{updatedTime,jdbcType=TIMESTAMP}
@@ -141,6 +156,11 @@
       <if test="composeTaskId != null">compose_task_id,</if>
       <if test="composedTime != null">composed_time,</if>
       <if test="exportJson != null">export_json,</if>
+      <if test="mediaId != null">media_id,</if>
+      <if test="mediaPlayUrl != null">media_play_url,</if>
+      <if test="mediaPublishStatus != null">media_publish_status,</if>
+      <if test="mediaPublishedAt != null">media_published_at,</if>
+      <if test="mediaLastError != null">media_last_error,</if>
       <if test="deletedFlag != null">deleted_flag,</if>
       <if test="createdTime != null">created_time,</if>
       <if test="updatedTime != null">updated_time,</if>
@@ -159,6 +179,11 @@
       <if test="composeTaskId != null">#{composeTaskId,jdbcType=VARCHAR},</if>
       <if test="composedTime != null">#{composedTime,jdbcType=TIMESTAMP},</if>
       <if test="exportJson != null">#{exportJson,jdbcType=LONGVARCHAR},</if>
+      <if test="mediaId != null">#{mediaId,jdbcType=VARCHAR},</if>
+      <if test="mediaPlayUrl != null">#{mediaPlayUrl,jdbcType=VARCHAR},</if>
+      <if test="mediaPublishStatus != null">#{mediaPublishStatus,jdbcType=VARCHAR},</if>
+      <if test="mediaPublishedAt != null">#{mediaPublishedAt,jdbcType=TIMESTAMP},</if>
+      <if test="mediaLastError != null">#{mediaLastError,jdbcType=VARCHAR},</if>
       <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
       <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
@@ -179,6 +204,11 @@
       <if test="row.composeTaskId != null">compose_task_id = #{row.composeTaskId,jdbcType=VARCHAR},</if>
       <if test="row.composedTime != null">composed_time = #{row.composedTime,jdbcType=TIMESTAMP},</if>
       <if test="row.exportJson != null">export_json = #{row.exportJson,jdbcType=LONGVARCHAR},</if>
+      <if test="row.mediaId != null">media_id = #{row.mediaId,jdbcType=VARCHAR},</if>
+      <if test="row.mediaPlayUrl != null">media_play_url = #{row.mediaPlayUrl,jdbcType=VARCHAR},</if>
+      <if test="row.mediaPublishStatus != null">media_publish_status = #{row.mediaPublishStatus,jdbcType=VARCHAR},</if>
+      <if test="row.mediaPublishedAt != null">media_published_at = #{row.mediaPublishedAt,jdbcType=TIMESTAMP},</if>
+      <if test="row.mediaLastError != null">media_last_error = #{row.mediaLastError,jdbcType=VARCHAR},</if>
       <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
       <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
       <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
@@ -200,6 +230,11 @@
       <if test="composeTaskId != null">compose_task_id = #{composeTaskId,jdbcType=VARCHAR},</if>
       <if test="composedTime != null">composed_time = #{composedTime,jdbcType=TIMESTAMP},</if>
       <if test="exportJson != null">export_json = #{exportJson,jdbcType=LONGVARCHAR},</if>
+      <if test="mediaId != null">media_id = #{mediaId,jdbcType=VARCHAR},</if>
+      <if test="mediaPlayUrl != null">media_play_url = #{mediaPlayUrl,jdbcType=VARCHAR},</if>
+      <if test="mediaPublishStatus != null">media_publish_status = #{mediaPublishStatus,jdbcType=VARCHAR},</if>
+      <if test="mediaPublishedAt != null">media_published_at = #{mediaPublishedAt,jdbcType=TIMESTAMP},</if>
+      <if test="mediaLastError != null">media_last_error = #{mediaLastError,jdbcType=VARCHAR},</if>
       <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>
       <if test="createdTime != null">created_time = #{createdTime,jdbcType=TIMESTAMP},</if>
       <if test="updatedTime != null">updated_time = #{updatedTime,jdbcType=TIMESTAMP},</if>

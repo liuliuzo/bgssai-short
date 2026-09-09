@@ -285,6 +285,24 @@ FFmpeg 混入成片音轨。
 
 `{ "download_url", "expires_at" }`。download_url 为同源资产地址。
 
+### POST /bgssai/user/films/publish-to-media
+
+将 READY 且审核 `APPROVED` 的成片推送到 bgssai-media（共享 ingest 契约见
+[`../feature/film-publish-media.md`](../feature/film-publish-media.md)）。
+
+```json
+{ "episode_id": "ep-dm-004-01", "film_id": "fl-dm-004-01" }
+```
+
+`episode_id` / `film_id` 至少其一。闸门：`compose_status=READY`、`expired_flag=0`、有
+`film_asset_id`、本集 `review_status=APPROVED`。
+
+响应 `result`：`film_id` `episode_id` `work_id` `media_id` `play_url` `status`
+`idempotency_key` `published_at`。media 不可达返回 `502000`。
+
+`films/detail` 额外返回最近一次发布字段：`media_id` `media_play_url`
+`media_publish_status` `media_published_at` `media_last_error`。
+
 ## 分镜画布重排
 
 需求见 [`../feature/storyboard-canvas.md`](../feature/storyboard-canvas.md)。

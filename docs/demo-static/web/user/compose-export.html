@@ -184,6 +184,13 @@
                   <button class="btn btn-default btn-sm">重新合成 2.00 元</button>
                   <button class="btn btn-default btn-sm">仅重烧字幕 0.20 元</button>
                   <button class="btn btn-primary btn-sm">导出</button>
+                  <button class="btn btn-primary btn-sm">发布到 Media</button>
+                </div>
+                <div class="note" style="margin:12px 0 0">
+                  审核已通过且成片 READY 时可「发布到 Media」：调用
+                  <code>POST /bgssai/user/films/publish-to-media</code>，把可播放 MP4 推到
+                  bgssai-media，成功后展示 <code>media_id</code> 与播放链接；可重复发布（幂等键
+                  <code>short:{work_id}:{episode_id}:{film_id}</code>）。
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">
                   过期分两级：<strong>重抽镜头、重配音</strong>会让成片整体过期——须重新合成，
