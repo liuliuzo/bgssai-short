@@ -3,36 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 短剧制作平台原型 — 用户端 MCP 接入</title>
+  <title>AI 短剧制作平台原型 — 用户端 MCP Connectors</title>
   <link rel="stylesheet" href="../assets/theme.css" />
 </head>
 <body>
   <div class="container">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
-      <h1 class="title" style="margin:0">MCP 接入</h1>
+      <h1 class="title" style="margin:0">MCP Connectors</h1>
       <span class="badge">USER</span>
     </div>
+    <p class="subtitle" style="margin-bottom:4px"><strong>Connect your AI tools to bgssai</strong></p>
     <p class="subtitle">
       导航：<a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
-      <a href="mcp-tokens.html">MCP 接入</a> ·
+      <a href="mcp-tokens.html">MCP 连接器</a> ·
       <a href="login.html">退出登录</a>
     </p>
 
     <div class="card">
+      <h2 class="card-title">连接 AI 工具</h2>
       <p class="subtitle">
-        创建个人访问令牌，供 Cursor / Claude 连接 <code>POST /api/mcp</code>。
-        明文仅创建时显示一次。当前工具仅登录日志与健康探针。
+        为 Claude / Codex / Cursor / Grok Bot / bgssai-bot 配置同一 MCP 端点
+        <code>POST /api/mcp</code>。先创建令牌，再按工具粘贴配置。当前工具仅登录日志与健康探针。
       </p>
       <p>查询 API：<code>POST /bgssai/mcp-tokens/list</code>（需请求头 <code>Jwttoken</code>）</p>
       <p>动作 API：<code>POST /bgssai/mcp-tokens/create</code> body <code>{token_name}</code>；
         <code>POST /bgssai/mcp-tokens/revoke</code> body <code>{id}</code></p>
       <p>MCP 端点鉴权：<code>Authorization: Bearer bgs_mcp_...</code></p>
+
+      <h3 style="font-size:15px;margin:16px 0 8px">Claude</h3>
+      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">claude mcp add --transport http bgssai-short https://&lt;域名&gt;/api/mcp \
+  --header "Authorization: Bearer bgs_mcp_你的令牌"</pre>
+
+      <h3 style="font-size:15px;margin:16px 0 8px">Codex</h3>
+      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">codex mcp add bgssai-short --url https://&lt;域名&gt;/api/mcp \
+  --header "Authorization: Bearer bgs_mcp_你的令牌"</pre>
+
+      <h3 style="font-size:15px;margin:16px 0 8px">Cursor</h3>
+      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">{
+  "mcpServers": {
+    "bgssai-short": {
+      "url": "https://&lt;域名&gt;/api/mcp",
+      "headers": { "Authorization": "Bearer bgs_mcp_你的令牌" }
+    }
+  }
+}</pre>
+
+      <h3 style="font-size:15px;margin:16px 0 8px">Grok Bot</h3>
+      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">MCP URL:  https://&lt;域名&gt;/api/mcp
+Auth:     Authorization: Bearer bgs_mcp_你的令牌
+Transport: Streamable HTTP (POST)</pre>
+
+      <h3 style="font-size:15px;margin:16px 0 8px">bgssai-bot</h3>
+      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">MCP URL:  https://&lt;域名&gt;/api/mcp
+Auth:     Authorization: Bearer bgs_mcp_你的令牌
+Transport: Streamable HTTP (POST)
+# 或：用 Chat 登录后由平台下发 MCP</pre>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">个人访问令牌</h2>
+      <p class="subtitle">明文仅创建时显示一次。建议按工具命名。</p>
       <table>
         <thead>
           <tr><th>token_name</th><th>token_masked</th><th>last_used_time</th><th>create_time</th></tr>
         </thead>
         <tbody>
           <tr><td>Cursor</td><td>bgs_mcp_****abcd</td><td>2026-08-13 10:00</td><td>2026-08-13 09:00</td></tr>
+          <tr><td>Claude</td><td>bgs_mcp_****ef01</td><td>-</td><td>2026-08-13 09:10</td></tr>
+          <tr><td>bgssai-bot</td><td>bgs_mcp_****2345</td><td>2026-08-13 11:00</td><td>2026-08-13 09:20</td></tr>
         </tbody>
       </table>
     </div>
