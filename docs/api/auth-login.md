@@ -41,6 +41,16 @@
 
 短信 / SMTP 凭据读 `sys_secret`（DML STEP SMS-1 / SMTP-1），不新增 Admin 页。
 
+腾讯云短信对齐 BGSSAI 共享控制台应用（`TencentSmsSender` / `SmsSecrets`）：
+
+| 项 | 开发 | 生产 |
+| --- | --- | --- |
+| `bgssai.sms.sdk-app-id` | `1401156379`（`sql/dev/DML.sql`） | `1401191076`（`sql/prod/DML.sql`） |
+| `bgssai.sms.sign-name` | `昆山兵贵神速智能科技`（共享 `sql/DML.sql`） | 同左 |
+| `bgssai.sms.template-id` | `2677885`（登录 OTP，已审批；勿用待审 `2728085`） | 同左 |
+
+`SecretId` / `SecretKey` 仍走 `sys_secret`；示例占位见 `sms/credentials.example.env`。
+
 ### 成功响应
 
 ```json

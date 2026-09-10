@@ -15,6 +15,9 @@ SET NAMES utf8mb4;
 
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tencent_tokenhub.api_key', '', '开发环境 TokenHub API Key（由 Admin 写入）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 
+-- 腾讯云短信 SdkAppId（BGSSAI 共享控制台 · 开发应用）；SignName / TemplateId 见共享 DML STEP SMS-1
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sdk-app-id', '1401156379', '腾讯云短信 SdkAppId（开发 · 共享控制台）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+
 -- 支付 notify_url 随环境写入库内商户行（业务凭证分层）；OAuth redirect_uri 仍在 profile。
 
 -- 支付回调 URL（开发环境用户端域名）
