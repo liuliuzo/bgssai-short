@@ -9,8 +9,8 @@
 | --- | --- |
 | `DDL.sql` | 建库 + 建表（登录 / OAuth / MCP / 订阅支付 / 短剧制作闭环）。自顶向下执行一次即建出完整 schema。 |
 | `DML.sql` | 种子数据：示例账号、套餐目录、OAuth 密钥、用户端铺底、短剧业务样例。 |
-| `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）。 |
-| `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）。 |
+| `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401156379` 等。 |
+| `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401191076` 等。 |
 
 > **`DDL.sql` 只能建新库。** 它含 `DROP TABLE IF EXISTS`，对已有数据的库执行等于删库重来。
 > **禁止增量脚本**：不得新增或保留 `UPGRADE-*.sql`、`PRECHECK-*.sql`、`patch_*.sql`、
@@ -28,6 +28,18 @@ mysql -h <host> -u <user> -p bgssai_short < sql/dev/DML.sql
 ```
 
 生产清库后把最后一步换成 `sql/prod/DML.sql`。
+
+## 腾讯云短信（共享控制台）
+
+用户端登录 OTP 走腾讯云短信（`sys_secret` · STEP SMS-1）。对齐 BGSSAI 共享控制台：
+
+| key | 共享 DML | 开发 `sql/dev/DML.sql` | 生产 `sql/prod/DML.sql` |
+| --- | --- | --- | --- |
+| `bgssai.sms.sdk-app-id` | 空（由环境 DML 回填） | `1401156379` | `1401191076` |
+| `bgssai.sms.sign-name` | `昆山兵贵神速智能科技` | — | — |
+| `bgssai.sms.template-id` | `2677885`（已审批登录 OTP；勿用 `2728085`） | — | — |
+
+SecretId / SecretKey 占位示例见仓库根 `sms/credentials.example.env`（勿提交真实密钥到新字段）。
 
 ## 开发环境种子账号
 
