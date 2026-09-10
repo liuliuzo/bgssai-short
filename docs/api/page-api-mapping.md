@@ -37,7 +37,7 @@
 | `login.html` | `/login` | `POST /bgssai/user/login` | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段 + 各模块概览接口） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
-| `mcp-tokens.html` | `/mcp-tokens` | `POST /bgssai/mcp-tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT | [`MCP.md`](./MCP.md) |
+| `mcp-tokens.html`（MCP Connectors） | `/mcp-tokens` | `POST /bgssai/mcp-tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT；页内引导 Claude / Codex / Cursor / Grok Bot / bgssai-bot | [`MCP.md`](./MCP.md) |
 | `works.html` | `/works` | `GET /bgssai/user/short-works/list?page_num&page_size&work_status&genre&keyword` | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `work-create.html` | `/works/create` | `POST /bgssai/user/short-works/create`（必填仅 `work_title` + `one_line_pitch`，其余走默认；不再含 `cost_budget_cent` / `quality_threshold_score`）· `GET /bgssai/user/quality/templates?genre`（本切片返回空列表） | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `work-detail.html` | `/works/:work_id` | `GET /bgssai/user/short-works/detail?work_id` · `POST /bgssai/user/short-works/update` · `/archive` · `POST /bgssai/user/episodes/create` · `/update` · `/delete` · `POST /bgssai/user/episodes/batch`（本切片未实现，返回 4006） | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
