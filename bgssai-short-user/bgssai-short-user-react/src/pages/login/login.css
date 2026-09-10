@@ -384,3 +384,8 @@
     gap: 8px;
   }
 }
+
+.login-download {
+  text-align: center;
+  margin-top: 16px;
+}
