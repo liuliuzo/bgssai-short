@@ -4,6 +4,8 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import com.bgssai.shortai.common.exception.BizException;
+import com.bgssai.shortai.common.exception.CommonErrorCode;
 import static org.junit.jupiter.api.Assertions.*;
 class ProviderHttpDownloadTest {
     @Test void authenticatesInitialDownloadAndStripsCredentialsOnCrossOriginRedirect() throws Exception {
@@ -26,4 +28,12 @@ class ProviderHttpDownloadTest {
             assertEquals("video-fixture",new String(bytes)); assertEquals("synthetic-test-key",initialKey.get()); assertNull(redirectedKey.get());
         } finally { source.stop(0); destination.stop(0); }
     }
+
+    @Test
+    void stubUrlRejectedAsUnconfiguredFakeSuccess() {
+        BizException ex = assertThrows(BizException.class,
+                () -> new ProviderHttp.JdkClient().getBytes("stub://provider/out.mp4", Map.of(), 5));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+    }
+
 }

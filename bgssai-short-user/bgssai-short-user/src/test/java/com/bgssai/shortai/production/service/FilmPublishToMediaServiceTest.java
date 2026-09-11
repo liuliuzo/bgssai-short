@@ -161,6 +161,8 @@ class FilmPublishToMediaServiceTest {
         assertEquals("md-9", result.get("media_id"));
         assertEquals("https://media/play/md-9", result.get("play_url"));
         assertEquals("READY", result.get("status"));
+        assertEquals(Boolean.TRUE, result.get("commercial_ready"));
+        assertEquals(Boolean.TRUE, result.get("commercial_ready"));
         assertEquals("short:w-1:ep-1:fl-1", result.get("idempotency_key"));
         verify(filmMapper).updateByExampleSelective(any(), any());
         verify(mediaIngestClient).ingest(any());
@@ -288,4 +290,60 @@ class FilmPublishToMediaServiceTest {
         assertEquals(true, items.get(0).get("ok"));
         assertEquals("md-b", items.get(0).get("media_id"));
     }
+
+
+    @Test
+    void stubFilmUrlRejectedBeforeMediaCall() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("stub://finished/demo.mp4");
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        BizException ex = assertThrows(BizException.class, () -> service().publish(req));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+        verify(mediaIngestClient, never()).ingest(any());
+    }
+
+    @Test
+    void pendingMediaHandoffIsNotCommercialReady() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any())).thenReturn(
+                new MediaIngestClient.IngestResult("md-p", "https://media/play/md-p", "PENDING", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setEpisodeId("ep-1");
+        ApiResponse response = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals("PENDING", result.get("status"));
+        assertEquals(Boolean.FALSE, result.get("commercial_ready"));
+        assertEquals("md-p", result.get("media_id"));
+        verify(filmMapper).updateByExampleSelective(any(), any());
+    }
+
+    @Test
+    void unconfiguredMediaClientFailureIsNotSuccess() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(mediaIngestClient.ingest(any())).thenThrow(
+                new BizException(CommonErrorCode.RULE_REJECT, "Media 未配置：请设置 bgssai.media.base-url"));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        BizException ex = assertThrows(BizException.class, () -> service().publish(req));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+        assertTrue(ex.getMessage().contains("未配置") || ex.getMessage().contains("base-url"));
+    }
+
 }

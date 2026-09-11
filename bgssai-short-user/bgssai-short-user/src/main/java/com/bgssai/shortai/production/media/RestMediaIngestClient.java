@@ -15,6 +15,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.bgssai.shortai.common.CommercialOutcomeGuard;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.configuration.BgssaiMediaProperties;
@@ -142,10 +143,22 @@ public class RestMediaIngestClient implements MediaIngestClient {
                     "Media 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）",
                     httpStatus, attempt);
         }
+        try {
+            CommercialOutcomeGuard.rejectFakeUrl(playUrl, "media play_url");
+        } catch (BizException ex) {
+            throw new MediaPublishException(CommonErrorCode.RULE_REJECT, ex.getMessage(), httpStatus, attempt);
+        }
         if (status.isBlank()) {
             status = "READY";
         }
-        return new IngestResult(mediaId, playUrl, status, httpStatus, attempt);
+        String classified = CommercialOutcomeGuard.classifyMediaStatus(status);
+        if ("FAILED".equals(classified)) {
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                    "Media 返回失败状态 status=" + status + "（与 PENDING 区分：此为 FAIL）",
+                    httpStatus, attempt);
+        }
+        // PENDING stays PENDING; READY/SUCCEEDED normalize to READY. Never invent SUCCEEDED.
+        return new IngestResult(mediaId, playUrl, classified, httpStatus, attempt);
     }
 
     private static boolean isRetriable(MediaPublishException ex) {

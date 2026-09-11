@@ -212,4 +212,77 @@ class RestMediaIngestClientTest {
         org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(2))
                 .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
     }
+
+
+    @Test
+    void stubPlayUrlNeverSucceeds() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("media_id", "md-stub");
+        result.put("play_url", "stub://media/md-stub");
+        result.put("status", "READY");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "0");
+        body.put("result", result);
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        BizException ex = assertThrows(BizException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+    }
+
+    @Test
+    void pendingStatusIsNotFailedAndNotRewrittenToReady() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("media_id", "md-p");
+        result.put("play_url", "https://play/md-p");
+        result.put("status", "PENDING");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "0");
+        body.put("result", result);
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        MediaIngestClient.IngestResult out = client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of()));
+        assertEquals("PENDING", out.status());
+        assertEquals("md-p", out.mediaId());
+    }
+
+    @Test
+    void failedStatusIsFailNotPending() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("media_id", "md-f");
+        result.put("play_url", "https://play/md-f");
+        result.put("status", "FAILED");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "0");
+        body.put("result", result);
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        BizException ex = assertThrows(BizException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
+        assertTrue(ex.getMessage().contains("FAIL") || ex.getMessage().contains("失败"));
+    }
+
 }

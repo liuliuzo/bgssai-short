@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.common.ApiResponse;
+import com.bgssai.shortai.common.CommercialOutcomeGuard;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
@@ -55,6 +56,7 @@ public class FilmPublishToMediaService {
         if (videoUrl == null || videoUrl.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "film video URL unavailable");
         }
+        CommercialOutcomeGuard.rejectFakeUrl(videoUrl, "film video_url");
         String coverUrl = null;
         if (work.getCoverAssetId() != null && !work.getCoverAssetId().isBlank()) {
             coverUrl = assetService.resolveUrl(work.getCoverAssetId());
@@ -71,6 +73,16 @@ public class FilmPublishToMediaService {
 
         try {
             MediaIngestClient.IngestResult ingested = mediaIngestClient.ingest(payload);
+            CommercialOutcomeGuard.rejectFakeUrl(ingested.playUrl(), "media play_url");
+            String classified = CommercialOutcomeGuard.classifyMediaStatus(ingested.status());
+            if ("FAILED".equals(classified)) {
+                throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                        "Media handoff FAILED (status=" + ingested.status() + ")",
+                        ingested.httpStatus(), ingested.attempts());
+            }
+            ingested = new MediaIngestClient.IngestResult(
+                    ingested.mediaId(), ingested.playUrl(), classified,
+                    ingested.httpStatus(), ingested.attempts());
             Date publishedAt = new Date();
             persistSuccess(film, ingested, idempotencyKey, publishedAt);
             return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt));
@@ -178,6 +190,7 @@ public class FilmPublishToMediaService {
         List<ShortFilm> candidates = listBatchCandidates(work.getWorkId());
         List<Map<String, Object>> items = new ArrayList<>();
         int succeeded = 0;
+        int pending = 0;
         int failed = 0;
         int total = candidates.size();
         int index = 0;
@@ -200,9 +213,14 @@ public class FilmPublishToMediaService {
                 item.put("media_id", oneResult.get("media_id"));
                 item.put("play_url", oneResult.get("play_url"));
                 item.put("status", oneResult.get("status"));
+                item.put("commercial_ready", oneResult.get("commercial_ready"));
                 item.put("idempotency_key", oneResult.get("idempotency_key"));
                 item.put("error", "");
-                succeeded += 1;
+                if (Boolean.TRUE.equals(oneResult.get("commercial_ready"))) {
+                    succeeded += 1;
+                } else {
+                    pending += 1;
+                }
             } catch (BizException ex) {
                 item.put("ok", false);
                 item.put("media_id", film.getMediaId());
@@ -217,9 +235,11 @@ public class FilmPublishToMediaService {
         result.put("work_id", work.getWorkId());
         result.put("total", total);
         result.put("succeeded", succeeded);
+        result.put("pending", pending);
         result.put("failed", failed);
         result.put("skipped", 0);
-        result.put("progress_percent", total == 0 ? 100 : (int) Math.round(100.0 * (succeeded + failed) / total));
+        result.put("progress_percent", total == 0 ? 100
+                : (int) Math.round(100.0 * (succeeded + pending + failed) / total));
         result.put("item_list", items);
         return Responses.ok(result);
     }
@@ -438,6 +458,7 @@ public class FilmPublishToMediaService {
         result.put("media_id", ingested.mediaId());
         result.put("play_url", ingested.playUrl());
         result.put("status", ingested.status());
+        result.put("commercial_ready", CommercialOutcomeGuard.isReadyStatus(ingested.status()));
         result.put("idempotency_key", idempotencyKey);
         result.put("published_at", publishedAt);
         result.put("http_status", ingested.httpStatus());
