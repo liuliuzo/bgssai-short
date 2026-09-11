@@ -44,8 +44,9 @@ class ShortAiTaskWorkerTest {
         verify(consume, never()).consume(any(), anyInt());
     }
 
-    @Test
-    void successMarksSucceededAndConsumes() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"UNKNOWN", "SHOT"})
+    void invalidOrMissingTaskTargetFailsWithoutCharging(String target) {
         ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
         QuotaConsumeService consume = org.mockito.Mockito.mock(QuotaConsumeService.class);
         AiModelResolveService resolve = org.mockito.Mockito.mock(AiModelResolveService.class);
@@ -66,7 +67,8 @@ class ShortAiTaskWorkerTest {
         task.setUserId("u-1");
         task.setTaskStatus("QUEUED");
         task.setTaskType("TEXT");
-        task.setTargetType("UNKNOWN");
+        task.setTargetType(target);
+        ReflectionTestUtils.setField(worker, "shortShotMapper", org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class));
         task.setModelCode("gpt-4o-mini");
         task.setCostCent(15);
         AiModelConfig model = new AiModelConfig();
@@ -79,8 +81,11 @@ class ShortAiTaskWorkerTest {
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
         when(resolve.resolve(any(), any())).thenReturn(model);
         worker.tick();
-        verify(consume).consume("u-1", 15);
-        verify(usageMapper).insertSelective(any());
+        verify(consume, never()).consume(any(), anyInt());
+        verify(usageMapper, never()).insertSelective(any());
+        org.mockito.ArgumentCaptor<ShortAiTask> patches = org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
+        org.junit.jupiter.api.Assertions.assertEquals("FAILED", patches.getValue().getTaskStatus());
     }
 
     /** 超过「模型 timeout_sec + 宽限」仍在 RUNNING 的任务必须被判超时，否则会永远卡住。 */

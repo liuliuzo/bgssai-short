@@ -121,11 +121,8 @@ public class FfmpegComposeProvider implements AiProvider {
             if (srt != null && !srt.isBlank()) {
                 Files.writeString(dir.resolve("subs.srt"), srt, StandardCharsets.UTF_8);
                 Path burned = bgm == null ? out : dir.resolve("video-subs.mp4");
-                // Absolute path with escaped separators for the subtitles filter.
-                String srtPath = dir.resolve("subs.srt").toAbsolutePath().toString()
-                        .replace("\\", "/")
-                        .replace(":", "\\:")
-                        .replace("'", "\\'");
+                // run() uses dir as its working directory; avoid drive-letter/filter escaping.
+                String srtPath = "subs.srt";
                 if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", current.getFileName().toString(),
                         "-vf", "subtitles=" + srtPath + ":force_style='FontSize=22,Outline=1,Shadow=0'",
                         "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",

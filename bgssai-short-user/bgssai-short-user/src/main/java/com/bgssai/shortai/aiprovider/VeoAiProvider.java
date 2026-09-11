@@ -112,7 +112,7 @@ public class VeoAiProvider implements AiProvider {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "veo submit missing operation name");
         }
         Map<String, Object> done = poll(base, apiKey, name, timeoutSec, cfg);
-        return download(done, timeoutSec);
+        return download(done, timeoutSec, apiKey, base);
     }
 
     private Map<String, Object> poll(String base, String apiKey, String name, int timeoutSec,
@@ -120,6 +120,10 @@ public class VeoAiProvider implements AiProvider {
         long deadline = System.currentTimeMillis() + timeoutSec * 1000L;
         long interval = ProviderHttp.pollIntervalMs(cfg);
         String query = name.startsWith("http") ? name : base + "/" + name.replaceFirst("^/+", "");
+        java.net.URI target = java.net.URI.create(query);
+        java.net.URI provider = java.net.URI.create(base);
+        if (!java.util.Objects.equals(target.getScheme(), provider.getScheme()) || !java.util.Objects.equals(target.getHost(), provider.getHost())
+                || target.getPort() != provider.getPort()) throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "invalid Veo operation origin");
         Map<String, String> headers = Map.of("x-goog-api-key", apiKey);
         while (System.currentTimeMillis() < deadline) {
             Map<String, Object> last = ShortJson.map(http.getJson(query, headers, Math.min(60, timeoutSec)));
@@ -137,7 +141,7 @@ public class VeoAiProvider implements AiProvider {
     }
 
     @SuppressWarnings("unchecked")
-    private AiProviderResult download(Map<String, Object> done, int timeoutSec) throws Exception {
+    private AiProviderResult download(Map<String, Object> done, int timeoutSec, String apiKey, String base) throws Exception {
         Object response = done.get("response");
         if (!(response instanceof Map<?, ?> resp)) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "veo response missing");
@@ -163,7 +167,11 @@ public class VeoAiProvider implements AiProvider {
             if (uri.isBlank()) {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "veo video uri missing");
             }
-            bytes = http.getBytes(uri, Math.min(180, timeoutSec));
+            java.net.URI target = java.net.URI.create(uri);
+            java.net.URI provider = java.net.URI.create(base);
+            boolean sameOrigin = java.util.Objects.equals(target.getScheme(), provider.getScheme())
+                    && java.util.Objects.equals(target.getHost(), provider.getHost()) && target.getPort() == provider.getPort();
+            bytes = http.getBytes(uri, sameOrigin ? Map.of("x-goog-api-key", apiKey) : Map.of(), Math.min(180, timeoutSec));
         }
         AiProviderResult result = AiProviderResult.binary(bytes, "video/mp4");
         result.setWidth(1080);

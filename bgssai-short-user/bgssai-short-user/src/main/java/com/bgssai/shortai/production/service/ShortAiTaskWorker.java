@@ -131,6 +131,9 @@ public class ShortAiTaskWorker {
     @Qualifier("aiTaskExecutor")
     private TaskExecutor aiTaskExecutor;
 
+    @Autowired
+    private ShortTaskSettlementService settlement;
+
     private final ThreadLocal<Integer> executionUsage = ThreadLocal.withInitial(() -> 0);
 
     /** 判定 RUNNING 卡死的宽限秒数：模型 timeout_sec 之上再留这么久仍无结果就判超时。 */
@@ -324,21 +327,7 @@ public class ShortAiTaskWorker {
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             complete(task, model);
-            ShortAiTask ok = new ShortAiTask();
-            ok.setTaskStatus("SUCCEEDED");
-            ok.setProgressPercent(100);
-            ok.setFinishedTime(new Date());
-            ok.setUpdatedTime(new Date());
-            ShortAiTaskExample up = new ShortAiTaskExample();
-            up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
-            if (shortAiTaskMapper.updateByExampleSelective(ok, up) != 1) {
-                // 已被回收器判超时或被用户取消：不再记账，避免为作废的任务扣费。
-                log.warn("ai task finished after reap/cancel, skip billing taskId={}", task.getTaskId());
-                return;
-            }
-            insertUsage(task, model, Math.max(1, executionUsage.get()));
-            quotaConsumeService.consume(task.getUserId(), task.getCostCent() == null ? 0 : task.getCostCent());
-            addSpent(task);
+            settlement.settle(task, model, Math.max(1, executionUsage.get()));
         } catch (BizException exBiz) {
             failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
         } catch (Exception exAll) {
@@ -407,7 +396,9 @@ public class ShortAiTaskWorker {
         }
         if ("BGM".equals(task.getTargetType())) {
             finishBgm(task, req, model);
+            return;
         }
+        throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported task target");
     }
 
     private void finishDubbing(ShortAiTask task, AiModelConfig model) {
@@ -415,13 +406,13 @@ public class ShortAiTaskWorker {
         ex.createCriteria().andDubbingIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
         ShortDubbing row = shortDubbingMapper.selectOneByExample(ex);
         if (row == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         ShortShotExample sx = new ShortShotExample();
         sx.createCriteria().andShotIdEqualTo(row.getShotId()).andDeletedFlagEqualTo(0);
         ShortShot shot = shortShotMapper.selectOneByExample(sx);
         if (shot == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         AiProviderRequest request = baseRequest(model, "VOICE", "DUBBING");
         request.getParams().put("title", row.getLineText());
@@ -639,7 +630,7 @@ public class ShortAiTaskWorker {
         wx.createCriteria().andWorkIdEqualTo(task.getWorkId()).andDeletedFlagEqualTo(0);
         ShortWork work = shortWorkMapper.selectOneByExample(wx);
         if (work == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         AiProviderRequest request = baseRequest(model, "TEXT", "OUTLINE");
         Map<String, Object> params = request.getParams();
@@ -669,7 +660,7 @@ public class ShortAiTaskWorker {
     private void finishScript(ShortAiTask task, Map<String, Object> req, AiModelConfig model) {
         ShortEpisode ep = episode(task.getEpisodeId());
         if (ep == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         AiProviderRequest request = baseRequest(model, "TEXT", "SCRIPT");
         request.getParams().put("episode_title", ep.getEpisodeTitle());
@@ -690,7 +681,7 @@ public class ShortAiTaskWorker {
     private void finishRewrite(ShortAiTask task, Map<String, Object> req, AiModelConfig model) {
         ShortEpisode ep = episode(task.getEpisodeId());
         if (ep == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         String instruction = ShortJson.text(req.get("instruction"));
         scriptService.persistRewrite(ep, ShortJson.integer(req.get("scene_no"), 0),
@@ -710,7 +701,7 @@ public class ShortAiTaskWorker {
         ex.createCriteria().andCharacterIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
         ShortCharacter row = shortCharacterMapper.selectOneByExample(ex);
         if (row == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         int count = ShortJson.integer(req.get("candidate_count"), 4);
         String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
@@ -741,7 +732,7 @@ public class ShortAiTaskWorker {
         ex.createCriteria().andSceneCardIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
         ShortSceneCard row = shortSceneCardMapper.selectOneByExample(ex);
         if (row == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         int count = ShortJson.integer(req.get("candidate_count"), 4);
         String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
@@ -766,7 +757,7 @@ public class ShortAiTaskWorker {
         ex.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
         ShortShot shot = shortShotMapper.selectOneByExample(ex);
         if (shot == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         String ability = "VIDEO".equals(task.getTaskType()) ? "VIDEO" : "IMAGE";
         AiProviderRequest request = baseRequest(model, ability, "SHOT");
@@ -875,7 +866,7 @@ public class ShortAiTaskWorker {
     private void finishCompose(ShortAiTask task, AiModelConfig model) {
         ShortEpisode ep = episode(task.getEpisodeId());
         if (ep == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         ShortShotExample sx = new ShortShotExample();
         sx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
@@ -1150,27 +1141,6 @@ public class ShortAiTaskWorker {
         return asset;
     }
 
-    private void insertUsage(ShortAiTask task, AiModelConfig model, int usageAmount) {
-        AiUsageRecord row = new AiUsageRecord();
-        row.setRecordId(ShortIds.id("ur-"));
-        row.setUserId(task.getUserId());
-        row.setWorkId(task.getWorkId());
-        row.setEpisodeId(task.getEpisodeId());
-        row.setShotId("SHOT".equals(task.getTargetType()) ? task.getTargetId() : null);
-        row.setTaskId(task.getTaskId());
-        row.setAbilityType(task.getTaskType());
-        row.setModelCode(model.getModelCode());
-        row.setQualityLevel(model.getQualityLevel());
-        row.setPriceUnit(model.getPriceUnit());
-        row.setUsageAmount(usageAmount);
-        row.setUnitPriceCent(model.getUnitPriceCent());
-        row.setCostCent(task.getCostCent() == null
-                ? aiModelResolveService.costCent(model, usageAmount)
-                : task.getCostCent());
-        row.setCreatedTime(new Date());
-        aiUsageRecordMapper.insertSelective(row);
-    }
-
     private AiProviderRequest baseRequest(AiModelConfig model, String ability, String operation) {
         AiProviderRequest request = new AiProviderRequest();
         request.setAbilityType(ability);
@@ -1336,7 +1306,7 @@ public class ShortAiTaskWorker {
         ex.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
         ShortShot shot = shortShotMapper.selectOneByExample(ex);
         if (shot == null) {
-            return;
+            throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         AiProviderRequest request = baseRequest(model, "IMAGE", "LAST_FRAME");
         request.getParams().put("title", "镜 " + shot.getShotNo() + " 尾帧");
@@ -1392,24 +1362,6 @@ public class ShortAiTaskWorker {
         ShortEpisodeExample ex = new ShortEpisodeExample();
         ex.createCriteria().andEpisodeIdEqualTo(episodeId).andDeletedFlagEqualTo(0);
         return shortEpisodeMapper.selectOneByExample(ex);
-    }
-
-    private void addSpent(ShortAiTask task) {
-        if (task.getWorkId() == null || task.getCostCent() == null) {
-            return;
-        }
-        ShortWorkExample wx = new ShortWorkExample();
-        wx.createCriteria().andWorkIdEqualTo(task.getWorkId()).andDeletedFlagEqualTo(0);
-        ShortWork work = shortWorkMapper.selectOneByExample(wx);
-        if (work == null) {
-            return;
-        }
-        ShortWork patch = new ShortWork();
-        patch.setCostSpentCent((work.getCostSpentCent() == null ? 0 : work.getCostSpentCent()) + task.getCostCent());
-        patch.setUpdatedTime(new Date());
-        ShortWorkExample up = new ShortWorkExample();
-        up.createCriteria().andIdEqualTo(work.getId());
-        shortWorkMapper.updateByExampleSelective(patch, up);
     }
 
     private void fail(ShortAiTask task, String code, String message) {
