@@ -25,6 +25,7 @@ class QuotaConsumeServiceTest {
         userQuotaMapper = org.mockito.Mockito.mock(UserQuotaMapper.class);
         quotaWalletService = org.mockito.Mockito.mock(QuotaWalletService.class);
         service = new QuotaConsumeService();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "debitOutbox", org.mockito.Mockito.mock(ShortDebitOutbox.class));
         ReflectionTestUtils.setField(service, "userQuotaMapper", userQuotaMapper);
         ReflectionTestUtils.setField(service, "quotaChangeLogMapper",
                 org.mockito.Mockito.mock(QuotaChangeLogMapper.class));

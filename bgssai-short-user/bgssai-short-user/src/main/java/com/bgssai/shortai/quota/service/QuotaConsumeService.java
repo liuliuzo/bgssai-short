@@ -1,6 +1,7 @@
 package com.bgssai.shortai.quota.service;
 
 import java.util.Date;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
-import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.mapper.QuotaChangeLogMapper;
 import com.bgssai.shortai.mapper.UserQuotaMapper;
 import com.bgssai.shortai.model.QuotaChangeLog;
@@ -31,8 +31,8 @@ public class QuotaConsumeService {
     @Autowired
     private QuotaWalletService quotaWalletService;
 
-    @Autowired(required = false)
-    private BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient;
+    @Autowired
+    private ShortDebitOutbox debitOutbox;
 
     /**
      * Pre-submit / estimate affordability gate. Same 4007 / 4015 rules as {@link #consume}
@@ -46,14 +46,14 @@ public class QuotaConsumeService {
         quotaWalletService.resetMonthIfNeeded(quota);
         int limit = quota.getMonthlyLimitCent() == null ? 0 : quota.getMonthlyLimitCent();
         int spent = quota.getMonthSpentCent() == null ? 0 : quota.getMonthSpentCent();
-        if (limit > 0 && spent + costCent > limit) {
+        if (limit > 0 && (long) spent + costCent > limit) {
             log.warn("quota month cap (assert) userId={} cost={} spent={} limit={}",
                     userId, costCent, spent, limit);
             throw new BizException(CommonErrorCode.MONTHLY_LIMIT);
         }
         int balance = quota.getBalanceCent() == null ? 0 : quota.getBalanceCent();
         int extra = quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent();
-        if (balance + extra < costCent) {
+        if ((long) balance + extra < costCent) {
             log.warn("quota insufficient (assert) userId={} cost={} available={}",
                     userId, costCent, balance + extra);
             throw new BizException(CommonErrorCode.QUOTA_INSUFFICIENT);
@@ -62,6 +62,11 @@ public class QuotaConsumeService {
 
     @Transactional
     public void consume(String userId, int costCent) {
+        consume(userId, costCent, "quota:" + UUID.randomUUID());
+    }
+
+    @Transactional
+    public void consume(String userId, int costCent, String settlementId) {
         if (costCent <= 0) {
             return;
         }
@@ -103,8 +108,6 @@ public class QuotaConsumeService {
         quotaChangeLogMapper.insertSelective(logRow);
         log.info("quota consumed userId={} cost={} balanceAfter={} extraAfter={}",
                 userId, costCent, patch.getBalanceCent(), patch.getExtraBalanceCent());
-        if (bgssaiWebsiteLedgerClient != null) {
-            bgssaiWebsiteLedgerClient.reportDebit(userId, costCent, "quota_cent");
-        }
+        debitOutbox.enqueue(settlementId, userId, costCent);
     }
 }
