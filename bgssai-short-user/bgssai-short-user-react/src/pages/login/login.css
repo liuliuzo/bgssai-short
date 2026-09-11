@@ -340,7 +340,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  /* Glass chip behind official BGSSAI mark (no third-party trademark glyphs) */
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(var(--lg-blur, 12px)) saturate(var(--lg-saturate, 160%));
+  -webkit-backdrop-filter: blur(var(--lg-blur, 12px)) saturate(var(--lg-saturate, 160%));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+}
+.oauth-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 @media (max-width: 920px) {
