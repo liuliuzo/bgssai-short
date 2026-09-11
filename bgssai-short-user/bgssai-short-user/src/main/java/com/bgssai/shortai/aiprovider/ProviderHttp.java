@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 
+import com.bgssai.shortai.common.CommercialOutcomeGuard;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 
@@ -61,8 +62,11 @@ final class ProviderHttp {
             URI target = URI.create(url);
             Map<String, String> forwarded = headers;
             for (int redirect = 0; redirect <= 5; redirect++) {
+                CommercialOutcomeGuard.rejectFakeUrl(target.toString(), "provider download url");
                 if (!"https".equalsIgnoreCase(target.getScheme()) && !"http".equalsIgnoreCase(target.getScheme())) {
-                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "invalid download scheme");
+                    throw new BizException(CommonErrorCode.RULE_REJECT,
+                            "invalid download scheme (refusing stub/placeholder commercial success): "
+                                    + target.getScheme());
                 }
                 HttpRequest.Builder request = HttpRequest.newBuilder(target)
                         .timeout(Duration.ofSeconds(Math.max(15, timeoutSec))).GET();

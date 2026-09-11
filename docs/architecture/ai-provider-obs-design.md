@@ -38,7 +38,7 @@
 | `AiProviderRegistry` | 按 `provider_code` 选实现 |
 | `ObjectStorage` | put / get bytes / delete / presignGet |
 | `HuaweiObsObjectStorage` | OBS Java SDK 实现 |
-| `LocalFileObjectStorage` | 仅 `local` profile 或 OBS 未配置时的开发回退（目录可配） |
+| `LocalFileObjectStorage` | **仅 `local` profile**；非 local 未配 OBS 或 OBS 初始化失败则 fail-fast（SHORT-01 商业门禁，禁止静默回落冒充 OBS 成功） |
 
 ## 3. 模型配置与密钥
 

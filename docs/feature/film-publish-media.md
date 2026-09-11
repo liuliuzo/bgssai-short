@@ -22,6 +22,17 @@
   10. **批量**：`POST .../batch` 按剧集顺序发布本作品全部 READY+APPROVED 成片，返回进度字段。
   11. **下架 / 撤回（skip）**：当前 bgssai-media 未提供 short-drama unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 media 侧补齐后再开需求。
 
+
+## SHORT-01 交接状态（商业门禁）
+
+| Media `status` | Short 落库 | `commercial_ready` | 含义 |
+| --- | --- | --- | --- |
+| READY / SUCCEEDED | READY | true | 发布成功 |
+| PENDING / PROCESSING / QUEUED | PENDING | false | 已受理未就绪，不是 FAIL |
+| FAILED / ERROR | FAILED + 抛错 | false | 明确失败 |
+
+未配置 Media、或返回 `stub://` 等占位 `play_url`：失败，禁止冒充成功。详见 [short-01-commercial-gate.md](short-01-commercial-gate.md)。
+
 ## 三、验收标准
 
 1. READY + APPROVED 成片可发布，返回 `media_id`、`play_url`、`status`。

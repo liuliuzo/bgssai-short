@@ -1,5 +1,7 @@
 package com.bgssai.shortai.storage;
 
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +15,8 @@ public class ObjectStorageConfiguration {
 
     @Bean
     public ObjectStorage objectStorage(ObsProperties props, Environment env) {
+        boolean localProfile = Arrays.stream(env.getActiveProfiles())
+                .anyMatch(p -> "local".equalsIgnoreCase(p));
         String ak = trim(props.getAccessKey());
         String sk = trim(props.getSecretKey());
         String endpoint = trim(props.getEndpoint());
@@ -26,14 +30,25 @@ public class ObjectStorageConfiguration {
                         props.getConnectTimeoutMs(), props.getSocketTimeoutMs(),
                         props.getMaxErrorRetry());
             } catch (Throwable ex) {
-                log.warn("Huawei OBS init failed, fallback to LocalFile: {}", ex.toString());
+                if (!localProfile) {
+                    throw new IllegalStateException(
+                            "Huawei OBS init failed and LocalFile fallback is disabled outside local profile"
+                                    + " (commercial gate SHORT-01)",
+                            ex);
+                }
+                log.warn("Huawei OBS init failed, fallback to LocalFile (local profile only): {}", ex.toString());
             }
+        } else if (!localProfile) {
+            throw new IllegalStateException(
+                    "OBS not configured (bgssai.obs.*). LocalFileObjectStorage is only allowed when"
+                            + " spring.profiles.active includes local. Refusing silent local fallback"
+                            + " that would look like commercial OBS success (SHORT-01).");
         }
         String base = props.getPublicBaseUrl();
         if (base == null || base.isBlank()) {
             base = "";
         }
-        log.info("ObjectStorage=LocalFile root={}", props.getLocalRoot());
+        log.info("ObjectStorage=LocalFile root={} (local profile only)", props.getLocalRoot());
         String sign = env.getProperty("jwt.secret", "bgssai-local-object-sign");
         return new LocalFileObjectStorage(props.getLocalRoot(), base, sign);
     }

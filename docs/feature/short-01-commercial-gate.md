@@ -1,0 +1,42 @@
+# SHORT-01 商业门禁（成片生产 → Media）
+
+## 背景
+
+SHORT-01 目标是短剧制作链路达到可商用：真实模型生成、OBS 成片落盘、Short→Media 发布端到端可用。
+当前验收为 **PARTIAL**：合成与发布代码已在，但**不得**用 stub/占位 URL 或本地假落盘冒充商业成功（对照 long 的 `stub://` 假成功路径）。
+
+## 门禁口径（本轮落地）
+
+1. **未配置 ≠ 成功**
+   - AI Provider 缺密钥：任务失败（既有 `RULE_REJECT`），不写 SUCCEEDED。
+   - Media 缺 `base-url` / ingest-token：发布失败，文案明确「未配置」。
+   - OBS：仅 `local` profile 允许 `LocalFileObjectStorage`；`dev`/`test`/`prod` 未配 OBS 或 OBS 初始化失败时 **启动 fail-fast**，禁止静默本地回落看起来像已接通 OBS。
+
+2. **禁止假成功 URL**
+   - `stub://`、`mock://`、`placeholder://`、`about:` 等，以及明显占位地址，在 Provider 下载、成片发布、Media `play_url` 解析处一律拒绝。
+   - 不得把此类 URL 写成任务 SUCCEEDED 或 Media READY。
+
+3. **Short→Media 交接：PENDING vs FAIL**
+   - **READY**（含 SUCCEEDED 归一）：`commercial_ready=true`，可视为发布成功。
+   - **PENDING**（PROCESSING/QUEUED 等）：交接已受理但未就绪；落库 status=PENDING，`commercial_ready=false`；**不是 FAIL**。
+   - **FAILED**：明确失败；抛错并落库 FAILED；与 PENDING 文案区分。
+   - 批量接口单独统计 `pending`，不得把 PENDING 计入 `succeeded`。
+
+## 仍为 PENDING 的商业证明
+
+以下需真实凭证与联调环境，**本 PR 不伪造**：
+
+- 付费/生产模型真实出图出片
+- 华为 OBS 成片上传与签名播放
+- Short → Media 全链路 E2E（含 Media 侧可播）
+
+## 相关代码
+
+- `CommercialOutcomeGuard`
+- `ObjectStorageConfiguration`
+- `RestMediaIngestClient` / `FilmPublishToMediaService`
+- `ProviderHttp` 下载入口
+
+## 验收对齐
+
+见 `docs/review/acceptance-20260911.md`：假成功已阻断；直播模型+OBS+Media E2E 仍为 PENDING。
