@@ -28,9 +28,9 @@
 | `short_work` | 作品容器，含 `outline_json` |
 | `short_episode` | 剧集占位与六阶段状态 |
 | `short_script` / `short_script_version` | 单集剧本与最近 20 版 |
-| `short_character` / `short_scene_card` | 作品级资产卡 |
-| `short_shot` | 镜头；`image_prompt` 为派生字段 |
-| `short_ai_task` | 统一异步任务 |
+| `short_character` / `short_scene_card` | 作品级资产卡；`card_type` 取 `SCENE` / `PROP` |
+| `short_shot` | 镜头；`image_prompt` 为派生字段；`prop_ref_json` 引用道具卡 |
+| `short_ai_task` | 统一异步任务：TEXT / IMAGE / VIDEO / VOICE / COMPOSE，状态 QUEUED → RUNNING → SUCCEEDED / FAILED / CANCELED |
 | `short_asset` | 素材元数据；`storage_key` 为 OBS object key（本地回退可为文件路径） |
 | `short_film` | 成片记录 |
 | `short_review_record` | 审核留痕 |
@@ -54,7 +54,9 @@
 
 镜头：`PENDING` → `IMAGE_GENERATING` → `IMAGE_READY` → `VIDEO_GENERATING` → `VIDEO_READY` → `LOCKED`；失败 `FAILED`。
 
-任务：`QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`；可 `CANCELED`。`PAUSED` 本切片不实现暂停入口。
+任务：`QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`；`QUEUED` / `RUNNING` 可 `CANCELED`；
+`FAILED` / `CANCELED` 经 `retry` / `recover` 回 `QUEUED`。`PAUSED` 本切片不实现暂停入口。
+资产一致性：创作台面板绑定角色 / 场景 / 道具后，生成闸门校验卡已 `LOCKED`；见 `asset-consistency-panel.md`。
 
 成片：`NONE` → `COMPOSING` → `READY` / `FAILED`。
 

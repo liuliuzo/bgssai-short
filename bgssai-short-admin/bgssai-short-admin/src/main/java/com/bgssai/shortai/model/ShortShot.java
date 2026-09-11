@@ -38,6 +38,8 @@ public class ShortShot implements Serializable {
 
     private String sceneCardId;
 
+    private String propRefJson;
+
     private String extraPrompt;
 
     private String imagePrompt;
@@ -208,6 +210,14 @@ public class ShortShot implements Serializable {
 
     public void setSceneCardId(String sceneCardId) {
         this.sceneCardId = sceneCardId == null ? null : sceneCardId.trim();
+    }
+
+    public String getPropRefJson() {
+        return propRefJson;
+    }
+
+    public void setPropRefJson(String propRefJson) {
+        this.propRefJson = propRefJson == null ? null : propRefJson.trim();
     }
 
     public String getExtraPrompt() {

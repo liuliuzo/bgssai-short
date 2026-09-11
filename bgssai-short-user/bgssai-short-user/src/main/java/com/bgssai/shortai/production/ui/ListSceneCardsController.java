@@ -17,7 +17,8 @@ public class ListSceneCardsController {
 
     @NeedAop
     @GetMapping("/bgssai/user/scene-cards/list")
-    public ApiResponse handle(@RequestParam(value = "work_id", required = false) String work_id) {
-        return service.listScenes(work_id);
+    public ApiResponse handle(@RequestParam(value = "work_id", required = false) String work_id,
+            @RequestParam(value = "card_type", required = false) String card_type) {
+        return service.listScenes(work_id, card_type);
     }
 }

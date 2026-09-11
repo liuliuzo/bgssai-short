@@ -111,9 +111,11 @@
   ```
 - `GET /bgssai/user/ai-tasks/batch-progress?batch_id=b-70001`
   （`total_count` / `succeeded_count` / `failed_count` / `running_count` / `queued_count` / `cost_spent_cent`）
-- `POST /bgssai/user/ai-tasks/retry`（`task_id_list` 或 `batch_id` + `only_failed_flag`，
+- `POST /bgssai/user/ai-tasks/retry`（`task_id`；`FAILED` / `CANCELED` 可重入 `QUEUED`，
   可选 `fallback_model_flag`：超时类失败换备用模型重试）
-- `POST /bgssai/user/ai-tasks/cancel`（`task_id_list` 或 `batch_id`）
+- `POST /bgssai/user/ai-tasks/recover`（与 retry 同语义，失败 / 取消后恢复排队；列表字段带
+  `task_status_name` / `task_type_name` / `recoverable_flag` / `cancellable_flag`）
+- `POST /bgssai/user/ai-tasks/cancel`（`task_id`；`QUEUED` / `RUNNING` / `PAUSED` 可取消）
 - `POST /bgssai/user/ai-tasks/pause` · `POST /bgssai/user/ai-tasks/resume`（`batch_id`；
   暂停把批内 `QUEUED` 转 `PAUSED`，恢复转回 `QUEUED`，不重走提交流程）
 - `GET /bgssai/user/notifications/list?page_num&page_size`（站内通知：`notify_id`、

@@ -503,6 +503,7 @@ CREATE TABLE `short_shot` (
   `lighting` VARCHAR(64) DEFAULT NULL,
   `character_ref_json` LONGTEXT,
   `scene_card_id` VARCHAR(64) DEFAULT NULL,
+  `prop_ref_json` LONGTEXT,
   `extra_prompt` VARCHAR(1024) DEFAULT NULL,
   `image_prompt` LONGTEXT,
   `previz_text` LONGTEXT,

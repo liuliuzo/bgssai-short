@@ -212,6 +212,22 @@
           <div style="margin-top:8px"><button class="btn btn-default btn-sm">展开全部</button></div>
         </div>
 
+        <div class="card" style="max-width:780px; margin:14px auto 0">
+          <div class="card-hd">
+            <h2>资产一致性</h2>
+            <span class="text-muted" style="font-size:12px">角色 / 场景 / 道具绑到勾选镜头</span>
+            <span class="spacer"></span>
+            <a class="btn btn-default btn-sm" href="character-bible.html">打开资产库</a>
+            <button class="btn btn-primary btn-sm">绑定到已勾选镜头</button>
+          </div>
+          <div class="row" style="padding:10px 14px; gap:8px; flex-wrap:wrap; font-size:12px">
+            <span class="chip active">沈知微 LOCKED</span>
+            <span class="chip">宴会厅 LOCKED</span>
+            <span class="chip">退婚书 PROP</span>
+            <span class="text-muted">未锁定引用会拦截生成 · latest_task 显示在每镜标题旁</span>
+          </div>
+        </div>
+
         <div class="note" style="max-width:780px; margin:14px auto 0">
           <strong>首尾帧衔接</strong>：勾上「同场次镜头首尾帧衔接」后，每一镜拿上一镜的最后一帧当开头依据，
           人物位置、姿态、光线不再镜镜突变。<strong>跨场次自动不接</strong>——上一场是雨夜车里、
@@ -239,12 +255,16 @@
         <code>POST /bgssai/user/previz/draft-generate</code>（<code>target_level</code> 取
         <code>DRAFT_IMAGE</code> / <code>IMAGE</code> / <code>VIDEO</code> +
         可选 <code>auto_continue_video_flag</code>），提交前返回费用预估。
+        右侧资产一致性面板走 <code>GET /bgssai/user/assets/consistency-panel</code>，
+        勾选镜头后 <code>POST /bgssai/user/shots/bind-assets</code> 写入
+        <code>character_ref_json</code> / <code>scene_card_id</code> / <code>prop_ref_json</code>。
+        列表另回 <code>latest_task</code>（统一任务状态机）。
         行内提示来自连贯性检查、角色定妆状态与合规预检
         （<code>/previz/continuity-check</code>、<code>card_status</code>、
         <code>POST /bgssai/user/compliance/precheck</code> <code>check_scope=SHOT</code>：
         命中片段高亮 + <code>risk_category</code> 中文 + 改写建议 + 「采纳改写」），仅在有问题时出现。
         连贯性提示不阻塞生成（该镜生成按钮不禁用），可「忽略这条」——忽略留痕并计入分镜门
-        <code>G2_STORYBOARD</code> 评分；未定妆角色的镜头仍禁用生成（<code>blocked_flag=1</code>）。
+        <code>G2_STORYBOARD</code> 评分；未定妆角色 / 场景 / 道具的镜头仍禁用生成（<code>blocked_flag=1</code>）。
         顶部 VIDEO 模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
         <code>model_code</code> 随单镜或批量任务提交；存在首帧时由 Provider 走图生视频，否则走文生视频。
         首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经

@@ -152,6 +152,10 @@ public class ShortShotExample {
         public Criteria andSceneCardIdLessThan(String value) { addCriterion("scene_card_id <", value, "sceneCardId"); return (Criteria) this; }
         public Criteria andSceneCardIdLike(String value) { addCriterion("scene_card_id like", value, "sceneCardId"); return (Criteria) this; }
         public Criteria andSceneCardIdIn(List<String> values) { addCriterion("scene_card_id in", values, "sceneCardId"); return (Criteria) this; }
+        public Criteria andPropRefJsonIsNull() { addCriterion("prop_ref_json is null"); return (Criteria) this; }
+        public Criteria andPropRefJsonIsNotNull() { addCriterion("prop_ref_json is not null"); return (Criteria) this; }
+        public Criteria andPropRefJsonEqualTo(String value) { addCriterion("prop_ref_json =", value, "propRefJson"); return (Criteria) this; }
+        public Criteria andPropRefJsonLike(String value) { addCriterion("prop_ref_json like", value, "propRefJson"); return (Criteria) this; }
         public Criteria andExtraPromptIsNull() { addCriterion("extra_prompt is null"); return (Criteria) this; }
         public Criteria andExtraPromptIsNotNull() { addCriterion("extra_prompt is not null"); return (Criteria) this; }
         public Criteria andExtraPromptEqualTo(String value) { addCriterion("extra_prompt =", value, "extraPrompt"); return (Criteria) this; }

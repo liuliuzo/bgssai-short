@@ -833,8 +833,18 @@ public class ShortAiTaskWorker {
                 lockedScene = row;
             }
         }
-        return new ConsistencyBundle(lockedChars, lockedScene,
-                ShotConsistency.appearanceFragment(lockedChars, lockedScene));
+        List<ShortSceneCard> lockedProps = new ArrayList<>();
+        for (String propId : ShotConsistency.propIds(shot.getPropRefJson())) {
+            ShortSceneCardExample px = new ShortSceneCardExample();
+            px.createCriteria().andSceneCardIdEqualTo(propId).andDeletedFlagEqualTo(0);
+            ShortSceneCard row = shortSceneCardMapper.selectOneByExample(px);
+            if (row != null && "LOCKED".equals(row.getCardStatus())
+                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
+                lockedProps.add(row);
+            }
+        }
+        return new ConsistencyBundle(lockedChars, lockedScene, lockedProps,
+                ShotConsistency.appearanceFragment(lockedChars, lockedScene, lockedProps));
     }
 
     /**
@@ -854,7 +864,8 @@ public class ShortAiTaskWorker {
         }
     }
 
-    private record ConsistencyBundle(List<ShortCharacter> characters, ShortSceneCard scene, String fragment) {
+    private record ConsistencyBundle(List<ShortCharacter> characters, ShortSceneCard scene,
+            List<ShortSceneCard> props, String fragment) {
     }
 
     private void finishCompose(ShortAiTask task, AiModelConfig model) {
