@@ -399,3 +399,25 @@
   text-align: center;
   margin-top: 16px;
 }
+
+/* Bot 窄栏登录：单列表单，触控热区加大；不改独立桌面分屏 */
+html[data-bgssai-shell="1"] .login-shell--pane {
+  grid-template-columns: 1fr;
+  min-height: 100dvh;
+}
+
+html[data-bgssai-shell="1"] .login-shell--pane .login-main {
+  padding: 20px 16px calc(28px + env(safe-area-inset-bottom));
+}
+
+html[data-bgssai-shell="1"] .login-shell--pane .login-panel-brand {
+  display: flex;
+}
+
+html[data-bgssai-shell="1"] .login-shell--pane .input,
+html[data-bgssai-shell="1"] .login-shell--pane .btn,
+html[data-bgssai-shell="1"] .login-shell--pane .login-seg-btn,
+html[data-bgssai-shell="1"] .login-shell--pane .oauth-btn,
+html[data-bgssai-shell="1"] .login-shell--pane .login-code-btn {
+  min-height: 44px;
+}

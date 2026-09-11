@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>壳内窄栏判定 — bgssai-short</title>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #1a1a1a; --muted: #6b7280; --accent: #2563eb;
+    --ok: #059669; --line: #d1d5db; --box-fill: #ffffff; --box-stroke: #374151;
+    --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font); margin: 0; padding: 24px; line-height: 1.5; }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  .meta { font-size: 12px; color: var(--muted); margin-bottom: 24px; border-left: 3px solid var(--accent); padding-left: 12px; }
+  svg { background: var(--box-fill); border: 1px solid var(--line); border-radius: 4px; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 16px; max-width: 800px; }
+  svg text { font-family: var(--font); fill: var(--fg); }
+  svg .box { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 1.5; }
+  svg .arr { stroke: var(--fg); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+  svg .lbl { font-size: 12px; }
+  svg .small { font-size: 10px; fill: var(--muted); }
+</style>
+</head>
+<body>
+<h1>用户端壳内窄栏判定</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>bgssai-short-user 前端布局</dd>
+  <dt>关联</dt><dd>docs/feature/mobile-in-bot-shell.md</dd>
+  <dt>更新</dt><dd>2026-09-11</dd>
+</dl>
+<svg viewBox="0 0 860 280" width="860" height="280">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a1a1a"></path>
+    </marker>
+  </defs>
+  <rect class="box" x="24" y="40" width="180" height="64" rx="4"></rect>
+  <text class="lbl" x="114" y="68" text-anchor="middle">打开用户端 URL</text>
+  <text class="small" x="114" y="88" text-anchor="middle">search 或 hash</text>
+
+  <path class="arr" d="M204 72 H 250"></path>
+  <rect class="box" x="250" y="32" width="220" height="80" rx="4"></rect>
+  <text class="lbl" x="360" y="62" text-anchor="middle">bgssai_shell / chat_pane</text>
+  <text class="small" x="360" y="84" text-anchor="middle">1/true/yes 或 0/false/no</text>
+
+  <path class="arr" d="M470 56 H 520"></path>
+  <rect class="box" x="520" y="16" width="200" height="56" rx="4"></rect>
+  <text class="lbl" x="620" y="50" text-anchor="middle">壳内窄栏</text>
+
+  <path class="arr" d="M470 88 H 520"></path>
+  <rect class="box" x="520" y="88" width="200" height="56" rx="4"></rect>
+  <text class="lbl" x="620" y="122" text-anchor="middle">独立桌面</text>
+
+  <path class="arr" d="M360 112 V 180 H 520"></path>
+  <rect class="box" x="520" y="168" width="200" height="56" rx="4"></rect>
+  <text class="lbl" x="620" y="194" text-anchor="middle">读 sessionStorage</text>
+  <text class="small" x="620" y="212" text-anchor="middle">无 query 时保持当次会话</text>
+
+  <text class="small" x="24" y="250">窗口宽度不参与判定。参数只改布局，不改鉴权。</text>
+</svg>
+<p class="note">管理端本轮不接入。密钥不得写入 query 或原型。</p>
+</body>
+</html>
