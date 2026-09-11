@@ -35,6 +35,41 @@ public final class ShortJson {
         }
     }
 
+    /**
+     * Accepts ["id"] or [{"character_id":"id"}] / [{"scene_card_id":"id"}].
+     */
+    public static List<String> idList(String json, String... idKeys) {
+        List<String> ids = new ArrayList<>();
+        if (json == null || json.isBlank()) {
+            return ids;
+        }
+        try {
+            List<Object> raw = MAPPER.readValue(json, new TypeReference<List<Object>>() {
+            });
+            for (Object item : raw) {
+                if (item == null) {
+                    continue;
+                }
+                if (item instanceof String text && !text.isBlank()) {
+                    ids.add(text.trim());
+                    continue;
+                }
+                if (item instanceof Map<?, ?> map) {
+                    for (String key : idKeys) {
+                        Object value = map.get(key);
+                        if (value != null && !String.valueOf(value).isBlank()) {
+                            ids.add(String.valueOf(value).trim());
+                            break;
+                        }
+                    }
+                }
+            }
+            return ids;
+        } catch (Exception ex) {
+            return ids;
+        }
+    }
+
     public static Map<String, Object> map(String json) {
         if (json == null || json.isBlank()) {
             return new LinkedHashMap<>();

@@ -28,6 +28,7 @@ import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.CharacterReq;
+import com.bgssai.shortai.production.support.ShotConsistency;
 
 @Service
 public class CharacterService {
@@ -54,8 +55,9 @@ public class CharacterService {
         ex.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
         ex.setOrderByClause("id asc");
         List<Map<String, Object>> list = new ArrayList<>();
+        List<com.bgssai.shortai.model.ShortShot> shots = workShots(work.getWorkId());
         for (ShortCharacter row : shortCharacterMapper.selectByExample(ex)) {
-            list.add(characterView(row));
+            list.add(characterView(row, shots));
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("character_list", list);
@@ -155,15 +157,68 @@ public class CharacterService {
     }
 
     public ApiResponse listScenes(String workId) {
+        return listScenes(workId, null);
+    }
+
+    public ApiResponse listScenes(String workId, String cardType) {
         ShortWork work = workAccessService.requireWork(workId);
         ShortSceneCardExample ex = new ShortSceneCardExample();
         ex.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+        List<com.bgssai.shortai.model.ShortShot> shots = workShots(work.getWorkId());
         List<Map<String, Object>> list = new ArrayList<>();
         for (ShortSceneCard row : shortSceneCardMapper.selectByExample(ex)) {
-            list.add(sceneView(row));
+            if (cardType != null && !cardType.isBlank() && !cardType.equalsIgnoreCase(
+                    row.getCardType() == null ? "SCENE" : row.getCardType())) {
+                continue;
+            }
+            list.add(sceneView(row, shots));
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("scene_card_list", list);
+        return Responses.ok(result);
+    }
+
+    public ApiResponse consistencyPanel(String workId) {
+        ShortWork work = workAccessService.requireWork(workId);
+        List<com.bgssai.shortai.model.ShortShot> shots = workShots(work.getWorkId());
+        ShortCharacterExample cx = new ShortCharacterExample();
+        cx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+        cx.setOrderByClause("id asc");
+        List<Map<String, Object>> characters = new ArrayList<>();
+        for (ShortCharacter row : shortCharacterMapper.selectByExample(cx)) {
+            characters.add(characterView(row, shots));
+        }
+        ShortSceneCardExample sx = new ShortSceneCardExample();
+        sx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+        List<Map<String, Object>> scenes = new ArrayList<>();
+        List<Map<String, Object>> props = new ArrayList<>();
+        for (ShortSceneCard row : shortSceneCardMapper.selectByExample(sx)) {
+            Map<String, Object> item = sceneView(row, shots);
+            if (ShotConsistency.isType(row, "PROP")) {
+                props.add(item);
+            } else {
+                scenes.add(item);
+            }
+        }
+        int unbound = 0;
+        int unlocked = 0;
+        for (com.bgssai.shortai.model.ShortShot shot : shots) {
+            boolean hasRef = !ShotConsistency.characterIds(shot.getCharacterRefJson()).isEmpty()
+                    || (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank())
+                    || !ShotConsistency.propIds(shot.getPropRefJson()).isEmpty();
+            if (!hasRef) {
+                unbound++;
+            }
+            if (Integer.valueOf(1).equals(shot.getBlockedFlag())) {
+                unlocked++;
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("character_list", characters);
+        result.put("scene_list", scenes);
+        result.put("prop_list", props);
+        result.put("unbound_shot_count", unbound);
+        result.put("unlocked_ref_count", unlocked);
         return Responses.ok(result);
     }
 
@@ -221,15 +276,7 @@ public class CharacterService {
             if ("LOCKED".equals(shot.getShotStatus())) {
                 continue;
             }
-            boolean hit = false;
-            for (String id : com.bgssai.shortai.production.support.ShotConsistency.characterIds(
-                    shot.getCharacterRefJson())) {
-                if (character.getCharacterId().equals(id)) {
-                    hit = true;
-                    break;
-                }
-            }
-            if (!hit) {
+            if (!ShotConsistency.containsRef(shot.getCharacterRefJson(), character.getCharacterId())) {
                 continue;
             }
             com.bgssai.shortai.model.ShortShot patch = new com.bgssai.shortai.model.ShortShot();
@@ -244,11 +291,17 @@ public class CharacterService {
 
     private void markShotsStaleForScene(ShortSceneCard scene) {
         ShortShotExample ex = new ShortShotExample();
-        ex.createCriteria().andWorkIdEqualTo(scene.getWorkId()).andSceneCardIdEqualTo(scene.getSceneCardId())
-                .andDeletedFlagEqualTo(0);
+        ex.createCriteria().andWorkIdEqualTo(scene.getWorkId()).andDeletedFlagEqualTo(0);
         Date now = new Date();
         for (com.bgssai.shortai.model.ShortShot shot : shortShotMapper.selectByExample(ex)) {
             if ("LOCKED".equals(shot.getShotStatus())) {
+                continue;
+            }
+            boolean hit = scene.getSceneCardId() != null && scene.getSceneCardId().equals(shot.getSceneCardId());
+            if (!hit && ShotConsistency.isType(scene, "PROP")) {
+                hit = ShotConsistency.containsRef(shot.getPropRefJson(), scene.getSceneCardId());
+            }
+            if (!hit) {
                 continue;
             }
             com.bgssai.shortai.model.ShortShot patch = new com.bgssai.shortai.model.ShortShot();
@@ -261,7 +314,17 @@ public class CharacterService {
         }
     }
 
+    private List<com.bgssai.shortai.model.ShortShot> workShots(String workId) {
+        ShortShotExample ex = new ShortShotExample();
+        ex.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        return shortShotMapper.selectByExample(ex);
+    }
+
     private Map<String, Object> characterView(ShortCharacter row) {
+        return characterView(row, workShots(row.getWorkId()));
+    }
+
+    private Map<String, Object> characterView(ShortCharacter row, List<com.bgssai.shortai.model.ShortShot> shots) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("character_id", row.getCharacterId());
         item.put("work_id", row.getWorkId());
@@ -272,20 +335,49 @@ public class CharacterService {
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));
         item.put("candidate_list", candidates(row.getCharacterId()));
+        item.put("used_shot_count", countCharacterShots(shots, row.getCharacterId()));
         return item;
     }
 
     private Map<String, Object> sceneView(ShortSceneCard row) {
+        return sceneView(row, workShots(row.getWorkId()));
+    }
+
+    private Map<String, Object> sceneView(ShortSceneCard row, List<com.bgssai.shortai.model.ShortShot> shots) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("scene_card_id", row.getSceneCardId());
         item.put("card_name", row.getCardName());
-        item.put("card_type", row.getCardType());
+        item.put("card_type", row.getCardType() == null ? "SCENE" : row.getCardType());
         item.put("card_status", row.getCardStatus());
         item.put("appearance_prompt", row.getAppearancePrompt());
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));
         item.put("candidate_list", candidates(row.getSceneCardId()));
+        item.put("used_shot_count", countSceneShots(shots, row));
         return item;
+    }
+
+    private int countCharacterShots(List<com.bgssai.shortai.model.ShortShot> shots, String characterId) {
+        int count = 0;
+        for (com.bgssai.shortai.model.ShortShot shot : shots) {
+            if (ShotConsistency.containsRef(shot.getCharacterRefJson(), characterId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int countSceneShots(List<com.bgssai.shortai.model.ShortShot> shots, ShortSceneCard card) {
+        int count = 0;
+        for (com.bgssai.shortai.model.ShortShot shot : shots) {
+            if (card.getSceneCardId() != null && card.getSceneCardId().equals(shot.getSceneCardId())) {
+                count++;
+            } else if (ShotConsistency.isType(card, "PROP")
+                    && ShotConsistency.containsRef(shot.getPropRefJson(), card.getSceneCardId())) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private List<Map<String, Object>> candidates(String targetId) {

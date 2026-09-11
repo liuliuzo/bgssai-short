@@ -176,6 +176,9 @@ public class ProductionDtos {
         private String cameraMove;
         private Integer shotDurationSec;
         private String extraPrompt;
+        private String sceneCardId;
+        private List<String> characterIdList;
+        private List<String> propIdList;
         public String getEpisodeId() { return episodeId; }
         public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
         public String getShotId() { return shotId; }
@@ -192,6 +195,12 @@ public class ProductionDtos {
         public void setShotDurationSec(Integer shotDurationSec) { this.shotDurationSec = shotDurationSec; }
         public String getExtraPrompt() { return extraPrompt; }
         public void setExtraPrompt(String extraPrompt) { this.extraPrompt = extraPrompt; }
+        public String getSceneCardId() { return sceneCardId; }
+        public void setSceneCardId(String sceneCardId) { this.sceneCardId = sceneCardId; }
+        public List<String> getCharacterIdList() { return characterIdList; }
+        public void setCharacterIdList(List<String> characterIdList) { this.characterIdList = characterIdList; }
+        public List<String> getPropIdList() { return propIdList; }
+        public void setPropIdList(List<String> propIdList) { this.propIdList = propIdList; }
     }
 
     public static class AiTaskReq {

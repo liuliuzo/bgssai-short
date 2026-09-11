@@ -87,6 +87,8 @@
 - `POST /bgssai/user/characters/lock`（`character_id` + `outfit_code` + 选中的 `ref_image_asset_id`）
 - `POST /bgssai/user/characters/update` · `POST /bgssai/user/characters/delete`
 - `POST /bgssai/user/characters/bind-voice`（`character_id` + `voice_id` + `voice_speed`）
+- `GET /bgssai/user/assets/consistency-panel?work_id=w-10001`（角色 / 场景 / 道具三栏 + 引用计数，见 `asset-consistency-panel.md`）
+- `POST /bgssai/user/shots/bind-assets`（镜头显式绑定角色、场景、道具）
 - `GET /bgssai/user/scene-cards/list?work_id=w-10001&card_type=SCENE`
 - `POST /bgssai/user/scene-cards/create` · `/portrait-generate` · `/lock` · `/update` · `/delete`
 - `GET /bgssai/user/characters/affected-shots?character_id=c-30001`（改卡前查受影响镜头；返回

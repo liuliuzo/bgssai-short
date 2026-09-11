@@ -43,6 +43,7 @@ import com.bgssai.shortai.model.UserSubscriptionExample;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
+import com.bgssai.shortai.production.support.GenerationTaskStatus;
 import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -375,9 +376,14 @@ public class AiTaskService {
     }
 
     @Transactional
+    public ApiResponse recover(AiTaskReq req) {
+        return retry(req);
+    }
+
+    @Transactional
     public ApiResponse retry(AiTaskReq req) {
         ShortAiTask task = requireTask(req == null ? null : req.getTaskId());
-        if (!"FAILED".equals(task.getTaskStatus()) && !"CANCELED".equals(task.getTaskStatus())) {
+        if (!GenerationTaskStatus.recoverable(task.getTaskStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "only failed/canceled can retry");
         }
         ShortAiTask patch = new ShortAiTask();
@@ -396,8 +402,8 @@ public class AiTaskService {
     @Transactional
     public ApiResponse cancel(AiTaskReq req) {
         ShortAiTask task = requireTask(req == null ? null : req.getTaskId());
-        if ("SUCCEEDED".equals(task.getTaskStatus())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "succeeded task cannot cancel");
+        if (!GenerationTaskStatus.cancellable(task.getTaskStatus())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "only queued/running/paused can cancel");
         }
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("CANCELED");
@@ -471,6 +477,17 @@ public class AiTaskService {
                                 + "」尚未锁定场景卡，请先定妆");
             }
         }
+        for (String propId : ShotConsistency.propIds(shot.getPropRefJson())) {
+            ShortSceneCardExample px = new ShortSceneCardExample();
+            px.createCriteria().andSceneCardIdEqualTo(propId).andDeletedFlagEqualTo(0);
+            ShortSceneCard prop = shortSceneCardMapper.selectOneByExample(px);
+            if (prop != null && (!"LOCKED".equals(prop.getCardStatus())
+                    || prop.getRefImageAssetId() == null || prop.getRefImageAssetId().isBlank())) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的道具「" + prop.getCardName()
+                                + "」尚未锁定道具卡，请先定妆");
+            }
+        }
     }
 
     private void patchShotStatus(ShortShot shot, String status) {
@@ -522,6 +539,7 @@ public class AiTaskService {
         item.put("batch_id", row.getBatchId());
         item.put("task_type", row.getTaskType());
         item.put("task_status", row.getTaskStatus());
+        item.putAll(GenerationTaskStatus.flags(row.getTaskStatus(), row.getTaskType()));
         item.put("target_type", row.getTargetType());
         item.put("target_id", row.getTargetId());
         item.put("progress_percent", row.getProgressPercent());

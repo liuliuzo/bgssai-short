@@ -40,6 +40,38 @@ class ShotConsistencyTest {
     }
 
     @Test
+    void readsStringIdArrays() {
+        assertEquals(List.of("c-1", "c-2"), ShotConsistency.characterIds("[\"c-1\",\"c-2\"]"));
+        assertEquals(List.of("sc-p1"), ShotConsistency.propIds("[\"sc-p1\"]"));
+        assertTrue(ShotConsistency.containsRef("[\"sc-p1\"]", "sc-p1"));
+    }
+
+    @Test
+    void bindsPropsByName() {
+        ShortSceneCard prop = new ShortSceneCard();
+        prop.setSceneCardId("sc-p1");
+        prop.setCardName("退婚书");
+        prop.setCardType("PROP");
+        ShortSceneCard scene = new ShortSceneCard();
+        scene.setSceneCardId("sc-s1");
+        scene.setCardName("宴会厅");
+        scene.setCardType("SCENE");
+        String json = ShotConsistency.bindPropRefs(List.of(prop, scene), "她把退婚书推过去");
+        assertEquals(List.of("sc-p1"), ShotConsistency.propIds(json));
+        assertEquals("sc-s1", ShotConsistency.bindSceneCardId(List.of(prop, scene), "宴会厅夜景"));
+    }
+
+    @Test
+    void appearanceFragmentIncludesProps() {
+        ShortSceneCard prop = new ShortSceneCard();
+        prop.setCardName("退婚书");
+        prop.setAppearancePrompt("红印未干");
+        String frag = ShotConsistency.appearanceFragment(List.of(), null, List.of(prop));
+        assertTrue(frag.contains("退婚书"));
+        assertTrue(frag.contains("红印未干"));
+    }
+
+    @Test
     void shotNeedsPromptWhenEmpty() {
         ShortShot empty = new ShortShot();
         assertTrue(ShotConsistency.shotNeedsPrompt(empty));

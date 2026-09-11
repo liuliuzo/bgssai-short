@@ -18,6 +18,7 @@
     <result column="lighting" jdbcType="VARCHAR" property="lighting" />
     <result column="character_ref_json" jdbcType="LONGVARCHAR" property="characterRefJson" />
     <result column="scene_card_id" jdbcType="VARCHAR" property="sceneCardId" />
+    <result column="prop_ref_json" jdbcType="LONGVARCHAR" property="propRefJson" />
     <result column="extra_prompt" jdbcType="VARCHAR" property="extraPrompt" />
     <result column="image_prompt" jdbcType="LONGVARCHAR" property="imagePrompt" />
     <result column="previz_text" jdbcType="LONGVARCHAR" property="previzText" />
@@ -85,7 +86,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, extra_prompt, image_prompt, previz_text, blocking_json, axis_flag, previz_level, stale_flag, prompt_version, shot_status, blocked_flag, risk_level, first_frame_asset_id, last_frame_asset_id, frame_link_mode, last_frame_prompt, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
+    id, shot_id, episode_id, work_id, user_id, shot_no, scene_no, shot_size, camera_move, shot_duration_sec, shot_desc, dialogue_text, emotion, lighting, character_ref_json, scene_card_id, prop_ref_json, extra_prompt, image_prompt, previz_text, blocking_json, axis_flag, previz_level, stale_flag, prompt_version, shot_status, blocked_flag, risk_level, first_frame_asset_id, last_frame_asset_id, frame_link_mode, last_frame_prompt, video_asset_id, retry_count, cost_spent_cent, shot_version, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortShotExample" resultMap="BaseResultMap">
     select
@@ -128,6 +129,7 @@
       lighting,
       character_ref_json,
       scene_card_id,
+      prop_ref_json,
       extra_prompt,
       image_prompt,
       previz_text,
@@ -167,6 +169,7 @@
       #{lighting,jdbcType=VARCHAR},
       #{characterRefJson,jdbcType=LONGVARCHAR},
       #{sceneCardId,jdbcType=VARCHAR},
+      #{propRefJson,jdbcType=LONGVARCHAR},
       #{extraPrompt,jdbcType=VARCHAR},
       #{imagePrompt,jdbcType=LONGVARCHAR},
       #{previzText,jdbcType=LONGVARCHAR},
@@ -210,6 +213,7 @@
       <if test="lighting != null">lighting,</if>
       <if test="characterRefJson != null">character_ref_json,</if>
       <if test="sceneCardId != null">scene_card_id,</if>
+      <if test="propRefJson != null">prop_ref_json,</if>
       <if test="extraPrompt != null">extra_prompt,</if>
       <if test="imagePrompt != null">image_prompt,</if>
       <if test="previzText != null">previz_text,</if>
@@ -250,6 +254,7 @@
       <if test="lighting != null">#{lighting,jdbcType=VARCHAR},</if>
       <if test="characterRefJson != null">#{characterRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="sceneCardId != null">#{sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="propRefJson != null">#{propRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="extraPrompt != null">#{extraPrompt,jdbcType=VARCHAR},</if>
       <if test="imagePrompt != null">#{imagePrompt,jdbcType=LONGVARCHAR},</if>
       <if test="previzText != null">#{previzText,jdbcType=LONGVARCHAR},</if>
@@ -292,6 +297,7 @@
       <if test="row.lighting != null">lighting = #{row.lighting,jdbcType=VARCHAR},</if>
       <if test="row.characterRefJson != null">character_ref_json = #{row.characterRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="row.sceneCardId != null">scene_card_id = #{row.sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="row.propRefJson != null">prop_ref_json = #{row.propRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="row.extraPrompt != null">extra_prompt = #{row.extraPrompt,jdbcType=VARCHAR},</if>
       <if test="row.imagePrompt != null">image_prompt = #{row.imagePrompt,jdbcType=LONGVARCHAR},</if>
       <if test="row.previzText != null">previz_text = #{row.previzText,jdbcType=LONGVARCHAR},</if>
@@ -335,6 +341,7 @@
       <if test="lighting != null">lighting = #{lighting,jdbcType=VARCHAR},</if>
       <if test="characterRefJson != null">character_ref_json = #{characterRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="sceneCardId != null">scene_card_id = #{sceneCardId,jdbcType=VARCHAR},</if>
+      <if test="propRefJson != null">prop_ref_json = #{propRefJson,jdbcType=LONGVARCHAR},</if>
       <if test="extraPrompt != null">extra_prompt = #{extraPrompt,jdbcType=VARCHAR},</if>
       <if test="imagePrompt != null">image_prompt = #{imagePrompt,jdbcType=LONGVARCHAR},</if>
       <if test="previzText != null">previz_text = #{previzText,jdbcType=LONGVARCHAR},</if>

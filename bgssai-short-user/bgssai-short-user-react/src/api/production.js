@@ -23,7 +23,9 @@ const portraitCharacter = (characterId, modelCode) =>
   http.post('/user/characters/portrait-generate', { character_id: characterId, model_code: modelCode })
 const lockCharacter = (characterId, assetId) =>
   http.post('/user/characters/lock', { character_id: characterId, asset_id: assetId })
-const listScenes = (workId) => http.get('/user/scene-cards/list', { work_id: workId })
+const consistencyPanel = (workId) => http.get('/user/assets/consistency-panel', { work_id: workId })
+const bindShotAssets = (body) => http.post('/user/shots/bind-assets', body)
+const listScenes = (workId, cardType) => http.get('/user/scene-cards/list', { work_id: workId, card_type: cardType })
 const createScene = (body) => http.post('/user/scene-cards/create', body)
 const portraitScene = (sceneCardId, modelCode) =>
   http.post('/user/scene-cards/portrait-generate', { scene_card_id: sceneCardId, model_code: modelCode })
@@ -43,6 +45,7 @@ const submitTasks = (body) => http.post('/user/ai-tasks/submit', body)
 const listTasks = (params) => http.get('/user/ai-tasks/list', params)
 const batchProgress = (batchId) => http.get('/user/ai-tasks/batch-progress', { batch_id: batchId })
 const retryTask = (taskId) => http.post('/user/ai-tasks/retry', { task_id: taskId })
+const recoverTask = (taskId) => http.post('/user/ai-tasks/recover', { task_id: taskId })
 const cancelTask = (taskId) => http.post('/user/ai-tasks/cancel', { task_id: taskId })
 
 const filmPrecheck = (episodeId) => http.get('/user/films/precheck', { episode_id: episodeId })
@@ -71,6 +74,8 @@ export default {
   getScript,
   saveScript,
   readyScript,
+  consistencyPanel,
+  bindShotAssets,
   listCharacters,
   createCharacter,
   portraitCharacter,
@@ -91,6 +96,7 @@ export default {
   listTasks,
   batchProgress,
   retryTask,
+  recoverTask,
   cancelTask,
   filmPrecheck,
   filmDetail,

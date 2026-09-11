@@ -16,12 +16,15 @@ import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
+import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortScriptMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
+import com.bgssai.shortai.model.ShortAiTask;
+import com.bgssai.shortai.model.ShortAiTaskExample;
 import com.bgssai.shortai.model.ShortCharacter;
 import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortEpisode;
@@ -35,6 +38,7 @@ import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.dto.ProductionDtos.ShotReq;
+import com.bgssai.shortai.production.support.GenerationTaskStatus;
 import com.bgssai.shortai.production.support.PromptComposer;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -65,6 +69,8 @@ public class ShotService {
     private ShortCharacterMapper shortCharacterMapper;
     @Autowired
     private ShortSceneCardMapper shortSceneCardMapper;
+    @Autowired
+    private ShortAiTaskMapper shortAiTaskMapper;
 
     @Transactional
     public ApiResponse split(ShotReq req) {
@@ -205,6 +211,91 @@ public class ShotService {
     }
 
     @Transactional
+    public ApiResponse bindAssets(ShotReq req) {
+        ShortShot shot = requireShot(req == null ? null : req.getShotId());
+        if ("LOCKED".equals(shot.getShotStatus())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "定稿镜头不能改绑定");
+        }
+        ShortCharacterExample cx = new ShortCharacterExample();
+        cx.createCriteria().andWorkIdEqualTo(shot.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> characters = shortCharacterMapper.selectByExample(cx);
+        ShortSceneCardExample scx = new ShortSceneCardExample();
+        scx.createCriteria().andWorkIdEqualTo(shot.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortSceneCard> sceneCards = shortSceneCardMapper.selectByExample(scx);
+        ShortShot patch = new ShortShot();
+        if (req.getCharacterIdList() != null) {
+            List<String> allowed = new ArrayList<>();
+            for (String id : req.getCharacterIdList()) {
+                if (id == null || id.isBlank()) {
+                    continue;
+                }
+                boolean found = false;
+                for (ShortCharacter c : characters) {
+                    if (id.equals(c.getCharacterId())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new BizException(CommonErrorCode.INVALID_PARAM, "character not in this work");
+                }
+                allowed.add(id.trim());
+            }
+            patch.setCharacterRefJson(ShotConsistency.refsFromIds(allowed));
+            shot.setCharacterRefJson(patch.getCharacterRefJson());
+        }
+        if (req.getSceneCardId() != null) {
+            if (req.getSceneCardId().isBlank()) {
+                patch.setSceneCardId("");
+                shot.setSceneCardId(null);
+            } else {
+                boolean found = false;
+                for (ShortSceneCard sc : sceneCards) {
+                    if (req.getSceneCardId().equals(sc.getSceneCardId()) && ShotConsistency.isType(sc, "SCENE")) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new BizException(CommonErrorCode.INVALID_PARAM, "scene card not in this work");
+                }
+                patch.setSceneCardId(req.getSceneCardId().trim());
+                shot.setSceneCardId(patch.getSceneCardId());
+            }
+        }
+        if (req.getPropIdList() != null) {
+            List<String> allowed = new ArrayList<>();
+            for (String id : req.getPropIdList()) {
+                if (id == null || id.isBlank()) {
+                    continue;
+                }
+                boolean found = false;
+                for (ShortSceneCard sc : sceneCards) {
+                    if (id.equals(sc.getSceneCardId()) && ShotConsistency.isType(sc, "PROP")) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new BizException(CommonErrorCode.INVALID_PARAM, "prop card not in this work");
+                }
+                allowed.add(id.trim());
+            }
+            patch.setPropRefJson(ShotConsistency.refsFromIds(allowed));
+            shot.setPropRefJson(patch.getPropRefJson());
+        }
+        boolean blocked = hasUnlockedRefs(shot, characters, sceneCards);
+        patch.setBlockedFlag(blocked || ShotConsistency.shotNeedsPrompt(shot) ? 1 : 0);
+        patch.setStaleFlag(0);
+        patch.setUpdatedTime(new Date());
+        ShortShotExample up = new ShortShotExample();
+        up.createCriteria().andIdEqualTo(shot.getId());
+        shortShotMapper.updateByExampleSelective(patch, up);
+        ShortShot fresh = requireShot(shot.getShotId());
+        return Responses.ok(view(fresh));
+    }
+
+    @Transactional
     public ApiResponse lock(ShotReq req, boolean locked) {
         ShortShot shot = requireShot(req == null ? null : req.getShotId());
         ShortShot patch = new ShortShot();
@@ -251,6 +342,8 @@ public class ShotService {
         shot.setCharacterRefJson(ShotConsistency.bindCharacterRefs(characters, haystack));
         shot.setSceneCardId(ShotConsistency.bindSceneCardId(sceneCards,
                 ShortJson.text(scene.get("scene_location")) + " " + ShortJson.text(scene.get("scene_summary"))));
+        shot.setPropRefJson(ShotConsistency.bindPropRefs(sceneCards, haystack + " "
+                + ShortJson.text(scene.get("scene_location")) + " " + ShortJson.text(scene.get("scene_summary"))));
         shot.setPrevizText(PromptComposer.previzText(shot));
         shot.setImagePrompt(PromptComposer.compose(shot, style));
         shot.setPrevizLevel("TEXT");
@@ -279,6 +372,16 @@ public class ShotService {
             for (ShortSceneCard sc : sceneCards) {
                 if (shot.getSceneCardId().equals(sc.getSceneCardId())
                         && !"LOCKED".equals(sc.getCardStatus())) {
+                    return true;
+                }
+            }
+        }
+        for (String id : ShotConsistency.propIds(shot.getPropRefJson())) {
+            if (sceneCards == null) {
+                break;
+            }
+            for (ShortSceneCard sc : sceneCards) {
+                if (id.equals(sc.getSceneCardId()) && !"LOCKED".equals(sc.getCardStatus())) {
                     return true;
                 }
             }
@@ -349,11 +452,31 @@ public class ShotService {
         item.put("last_frame_prompt", row.getLastFramePrompt());
         item.put("frame_link_mode", row.getFrameLinkMode() == null ? "NONE" : row.getFrameLinkMode());
         item.putAll(frameLinkService.effectiveState(row));
-        item.put("character_ref_json", ShortJson.list(row.getCharacterRefJson()));
+        item.put("character_ref_json", ShotConsistency.characterIds(row.getCharacterRefJson()));
         item.put("scene_card_id", row.getSceneCardId());
+        item.put("prop_ref_json", ShotConsistency.propIds(row.getPropRefJson()));
         item.put("stale_flag", row.getStaleFlag() == null ? 0 : row.getStaleFlag());
         item.put("blocked_flag", row.getBlockedFlag());
         item.put("risk_level", row.getRiskLevel());
+        item.put("latest_task", latestTask(row.getShotId()));
+        return item;
+    }
+
+    private Map<String, Object> latestTask(String shotId) {
+        ShortAiTaskExample ex = new ShortAiTaskExample();
+        ex.createCriteria().andTargetIdEqualTo(shotId);
+        ex.setOrderByClause("id desc");
+        java.util.List<ShortAiTask> tasks = shortAiTaskMapper.selectByExample(ex);
+        ShortAiTask task = tasks == null || tasks.isEmpty() ? null : tasks.get(0);
+        if (task == null) {
+            return null;
+        }
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("task_id", task.getTaskId());
+        item.put("task_type", task.getTaskType());
+        item.put("task_status", task.getTaskStatus());
+        item.put("progress_percent", task.getProgressPercent());
+        item.putAll(GenerationTaskStatus.flags(task.getTaskStatus(), task.getTaskType()));
         return item;
     }
 }

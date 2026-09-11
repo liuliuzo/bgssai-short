@@ -26,6 +26,7 @@
 | 剧本工作台与节奏体检 | AI 写成小说腔，没钩子没反转，节奏对不上时长 | [`script-studio.md`](./script-studio.md) | [`flow-script-generation.html`](./flow-script-generation.html) | 用户端 `script-studio` |
 | **剧情图谱与走位示意** | 节奏塌在哪、关系揭早了没、两人有没有站反——用文字读半天，看图一眼就知道 | [`story-map.md`](./story-map.md) | [`flow-story-map.html`](./flow-story-map.html) | 用户端 `story-map`（走位内嵌 `previz` / `storyboard`） |
 | 角色卡与场景卡 | 同一角色每镜换脸、场景每镜换装修，只能反复抽卡 | [`character-bible.md`](./character-bible.md) | [`flow-character-consistency.html`](./flow-character-consistency.html) | 用户端 `character-bible` |
+| **资产一致性面板** | 资产库和分镜拆开，镜头不能显式点名角色 / 场景 / 道具 | [`asset-consistency-panel.md`](./asset-consistency-panel.md) | [`flow-asset-consistency-panel.html`](./flow-asset-consistency-panel.html) | 用户端 `character-bible` · `storyboard` |
 | 分镜工作台 | 不懂镜头语言，一集 40 多镜要手写提示词，耗掉大半天 | [`storyboard-workbench.md`](./storyboard-workbench.md) | [`state-shot-lifecycle.html`](./state-shot-lifecycle.html) | 用户端 `storyboard` |
 | **文字预演与提示词优化** | 视频生成一次要等几分钟，不满意再改提示词，时间与钱全耗在等待上 | [`previz-text-storyboard.md`](./previz-text-storyboard.md) | [`flow-previz-prompt.html`](./flow-previz-prompt.html) | 用户端 `previz`（+ `storyboard` 内嵌） |
 | 画面生成与任务中心 | 批量任务失控、失败无从续跑、花了多少钱不知道 | [`shot-generation.md`](./shot-generation.md) | [`flow-generation-task.html`](./flow-generation-task.html) · [`state-shot-lifecycle.html`](./state-shot-lifecycle.html) | 用户端 `task-center` |

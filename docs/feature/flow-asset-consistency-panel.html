@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>资产一致性面板 — bgssai short feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; } h2 { font-size:14px; margin:28px 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:900px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .lock { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .stop { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+  svg .accent { stroke:var(--accent); color:var(--accent); }
+  svg .okline { stroke:var(--ok); color:var(--ok); }
+  svg .errline { stroke:var(--err); color:var(--err); }
+</style>
+</head>
+<body>
+
+<h1>资产一致性：定妆、绑定、下发</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>consistency-panel · shots/bind-assets · 生成闸门</dd>
+  <dt>关联</dt><dd>asset-consistency-panel.md · character-bible.md · shot-generation.md</dd>
+  <dt>更新</dt><dd>2026-09-11</dd>
+</dl>
+
+<h2>一、三类资产贴在分镜旁</h2>
+<svg viewBox="0 0 1040 220" width="1040" height="220">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <rect class="box" x="20" y="36" width="180" height="54" rx="6"/>
+  <text class="lbl" x="110" y="58" text-anchor="middle">角色卡</text>
+  <text class="small" x="110" y="76" text-anchor="middle">short_character</text>
+
+  <rect class="box" x="230" y="36" width="180" height="54" rx="6"/>
+  <text class="lbl" x="320" y="58" text-anchor="middle">场景卡</text>
+  <text class="small" x="320" y="76" text-anchor="middle">card_type=SCENE</text>
+
+  <rect class="box" x="440" y="36" width="180" height="54" rx="6"/>
+  <text class="lbl" x="530" y="58" text-anchor="middle">道具卡</text>
+  <text class="small" x="530" y="76" text-anchor="middle">card_type=PROP</text>
+
+  <rect class="run" x="700" y="36" width="300" height="54" rx="6"/>
+  <text class="lbl" x="850" y="58" text-anchor="middle">一致性面板</text>
+  <text class="small" x="850" y="76" text-anchor="middle">GET /assets/consistency-panel</text>
+
+  <path class="arr accent" d="M 200 63 L 230 63"/>
+  <path class="arr accent" d="M 410 63 L 440 63"/>
+  <path class="arr accent" d="M 620 63 L 700 63"/>
+
+  <rect class="lock" x="230" y="130" width="390" height="60" rx="6"/>
+  <text class="lbl" x="425" y="154" text-anchor="middle">勾选镜头 → bind-assets</text>
+  <text class="small" x="425" y="174" text-anchor="middle">character_ref_json + scene_card_id + prop_ref_json</text>
+  <path class="arr okline" d="M 850 90 L 850 160 L 620 160"/>
+</svg>
+
+<h2>二、生成前引用闸门</h2>
+<svg viewBox="0 0 1040 200" width="1040" height="200">
+  <rect class="box" x="20" y="40" width="200" height="50" rx="6"/>
+  <text class="lbl" x="120" y="62" text-anchor="middle">提交 IMAGE / VIDEO</text>
+  <text class="small" x="120" y="78" text-anchor="middle">本镜三类引用</text>
+
+  <rect class="run" x="280" y="40" width="240" height="50" rx="6"/>
+  <text class="lbl" x="400" y="62" text-anchor="middle">卡必须 LOCKED</text>
+  <text class="small" x="400" y="78" text-anchor="middle">且有 ref_image_asset_id</text>
+
+  <rect class="lock" x="580" y="40" width="200" height="50" rx="6"/>
+  <text class="lbl" x="680" y="62" text-anchor="middle">拼一致性片段</text>
+  <text class="small" x="680" y="78" text-anchor="middle">外观 + 参考图</text>
+
+  <rect class="box" x="840" y="40" width="180" height="50" rx="6"/>
+  <text class="lbl" x="930" y="62" text-anchor="middle">入队 QUEUED</text>
+  <text class="small" x="930" y="78" text-anchor="middle">统一任务状态机</text>
+
+  <path class="arr accent" d="M 220 65 L 280 65"/>
+  <path class="arr accent" d="M 520 65 L 580 65"/>
+  <path class="arr accent" d="M 780 65 L 840 65"/>
+
+  <rect class="stop" x="280" y="120" width="400" height="46" rx="6"/>
+  <text class="small" x="480" y="142" text-anchor="middle">任一引用未锁定 → 4006，blocked_flag=1</text>
+  <text class="small" x="480" y="158" text-anchor="middle">面板给出「去定妆」而不是静默换脸</text>
+  <path class="arr errline" d="M 400 90 L 400 120"/>
+</svg>
+
+<p class="note">
+  对照的是 Jellyfish / ArcReel 的「资产库贴着时间线、镜头必须点名引用」这一能力，
+  不是搬它们的页面或仓库结构。成片播放继续交给 bgssai-media。
+</p>
+
+</body>
+</html>

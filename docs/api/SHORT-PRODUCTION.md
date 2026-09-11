@@ -130,9 +130,18 @@ lock：`{ "character_id", "asset_id" }`
 
 `{ "character_id", "candidate_count" }`（2/4/8，默认 4）→ `{ "task_id" }`
 
-### GET /bgssai/user/scene-cards/list?work_id=
+### GET /bgssai/user/assets/consistency-panel?work_id=
+
+返回 `{ "character_list", "scene_list", "prop_list", "unbound_shot_count", "unlocked_ref_count" }`。
+每条资产含 `card_status`、`used_shot_count`、`ref_image_url`。道具来自 `short_scene_card.card_type=PROP`。
+
+### GET /bgssai/user/scene-cards/list?work_id=&card_type=
+
+`card_type` 可选 `SCENE` / `PROP`；缺省两类都回。
 
 ### POST /bgssai/user/scene-cards/create|lock|portrait-generate
+
+create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
 
 ---
 
@@ -145,6 +154,14 @@ lock：`{ "character_id", "asset_id" }`
 ### GET /bgssai/user/shots/list?episode_id=&page_num=&page_size=&shot_status=
 
 `GET /bgssai/user/shots/list` 每镜另回 `look_plain`（这一镜观众会看到什么）、`prompt_score`、`previz_level`。
+
+`GET /bgssai/user/shots/list` 另回 `prop_ref_json`、`latest_task`
+（`task_id` / `task_type` / `task_status` / `task_status_name` / `progress_percent`）。
+
+### POST /bgssai/user/shots/bind-assets
+
+`{ "shot_id", "character_id_list?", "scene_card_id?", "prop_id_list?" }`。
+未传字段保持原值；空数组 / 空串解除该类引用。定稿镜返回 `4006`。
 
 ### POST /bgssai/user/shots/update|lock|unlock
 
@@ -186,9 +203,14 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 `{ "character_id" | "scene_card_id", "candidate_count", "model_code" }`。
 `model_code` 可选，缺省用该能力的默认模型；取值来自 `GET /bgssai/user/ai-models/list?ability_type=IMAGE`。
 
-### POST /bgssai/user/ai-tasks/retry|cancel
+list 每条另回 `task_status_name`、`task_type_name`、`recoverable_flag`、`cancellable_flag`。
+TEXT / IMAGE / VIDEO / VOICE / COMPOSE 共用
+`QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`，可 `CANCELED`。
 
-`{ "task_id" }`。retry 可带 `fallback_model_flag`。
+### POST /bgssai/user/ai-tasks/retry|recover|cancel
+
+`{ "task_id" }`。retry / recover 仅 `FAILED` / `CANCELED` 回 `QUEUED`；retry 可带 `fallback_model_flag`。
+cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 
 ---
 

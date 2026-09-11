@@ -164,7 +164,7 @@
 | `compose_status` 合成状态 | `NONE` / `COMPOSING` 合成中 / `READY` 已出成片 / `FAILED` |
 | `review_status` 审核状态 | `NOT_SUBMITTED` 未提交 / `PENDING` 待审核 / `APPROVED` 已通过 / `REJECTED` 已驳回 |
 | `task_type` 任务类型 | `TEXT` 文本 / `IMAGE` 图像 / `VIDEO` 视频 / `VOICE` 语音 / `COMPOSE` 合成 |
-| `task_status` 任务状态 | `QUEUED` 排队中 / `PAUSED` 已暂停（手工暂停批次或预算触顶进入，恢复转回 `QUEUED`）/ `RUNNING` 执行中 / `SUCCEEDED` 成功 / `FAILED` 失败 / `CANCELED` 已取消 |
+| `task_status` 任务状态 | `QUEUED` 排队中 / `PAUSED` 已暂停（手工暂停批次或预算触顶进入，恢复转回 `QUEUED`）/ `RUNNING` 执行中 / `SUCCEEDED` 成功 / `FAILED` 失败 / `CANCELED` 已取消；`FAILED` / `CANCELED` 经 retry / recover 回 `QUEUED` |
 | `fail_reason_code` 任务失败原因 | `MODEL_TIMEOUT` 模型超时 / `CONTENT_BLOCKED` 内容拦截 / `ASSET_MISSING` 素材缺失 |
 | `notify_type` 站内通知类型 | `BATCH_DONE` 批次完成 / `BATCH_FAILED` 批次出现失败 |
 | `compose_mode` 合成方式 | `FULL` 全量合成 / `SUBTITLE_ONLY` 仅重烧字幕（轻量合成，不重编码画面与音频） |

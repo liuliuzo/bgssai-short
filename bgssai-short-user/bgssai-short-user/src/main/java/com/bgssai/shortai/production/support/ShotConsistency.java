@@ -46,6 +46,9 @@ public final class ShotConsistency {
             if (sc == null || sc.getCardName() == null || sc.getCardName().isBlank()) {
                 continue;
             }
+            if (!isType(sc, "SCENE")) {
+                continue;
+            }
             String name = sc.getCardName().trim();
             if (hay.contains(name) || name.contains(hay)) {
                 return sc.getSceneCardId();
@@ -54,19 +57,69 @@ public final class ShotConsistency {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<String> characterIds(String characterRefJson) {
+    public static String bindPropRefs(List<ShortSceneCard> cards, String haystack) {
+        if (cards == null || cards.isEmpty() || haystack == null || haystack.isBlank()) {
+            return null;
+        }
         List<String> ids = new ArrayList<>();
-        for (Map<String, Object> item : ShortJson.list(characterRefJson)) {
-            String id = ShortJson.text(item.get("character_id"));
-            if (!id.isBlank()) {
-                ids.add(id);
+        for (ShortSceneCard sc : cards) {
+            if (sc == null || sc.getCardName() == null || sc.getCardName().isBlank() || !isType(sc, "PROP")) {
+                continue;
+            }
+            if (haystack.contains(sc.getCardName().trim())) {
+                ids.add(sc.getSceneCardId());
             }
         }
-        return ids;
+        return ids.isEmpty() ? null : ShortJson.toJson(ids);
+    }
+
+    public static String refsFromIds(List<String> ids) {
+        if (ids == null) {
+            return null;
+        }
+        List<String> clean = new ArrayList<>();
+        for (String id : ids) {
+            if (id != null && !id.isBlank()) {
+                clean.add(id.trim());
+            }
+        }
+        return ShortJson.toJson(clean);
+    }
+
+    public static List<String> characterIds(String characterRefJson) {
+        return ShortJson.idList(characterRefJson, "character_id");
+    }
+
+    public static List<String> propIds(String propRefJson) {
+        return ShortJson.idList(propRefJson, "scene_card_id", "prop_id");
+    }
+
+    public static boolean containsRef(String json, String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        for (String item : ShortJson.idList(json, "character_id", "scene_card_id", "prop_id")) {
+            if (id.equals(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isType(ShortSceneCard card, String expected) {
+        if (card == null) {
+            return false;
+        }
+        String type = card.getCardType() == null || card.getCardType().isBlank() ? "SCENE" : card.getCardType();
+        return expected.equals(type);
     }
 
     public static String appearanceFragment(List<ShortCharacter> lockedChars, ShortSceneCard lockedScene) {
+        return appearanceFragment(lockedChars, lockedScene, null);
+    }
+
+    public static String appearanceFragment(List<ShortCharacter> lockedChars, ShortSceneCard lockedScene,
+            List<ShortSceneCard> lockedProps) {
         StringBuilder sb = new StringBuilder();
         if (lockedChars != null) {
             for (ShortCharacter c : lockedChars) {
@@ -94,6 +147,22 @@ public final class ShotConsistency {
             sb.append("场景「").append(name).append("」保持场景卡一致");
             if (!appearance.isBlank()) {
                 sb.append("：").append(appearance);
+            }
+        }
+        if (lockedProps != null) {
+            for (ShortSceneCard prop : lockedProps) {
+                if (prop == null) {
+                    continue;
+                }
+                String name = prop.getCardName() == null ? "道具" : prop.getCardName().trim();
+                String appearance = prop.getAppearancePrompt() == null ? "" : prop.getAppearancePrompt().trim();
+                if (sb.length() > 0) {
+                    sb.append("；");
+                }
+                sb.append("道具「").append(name).append("」保持道具卡一致");
+                if (!appearance.isBlank()) {
+                    sb.append("：").append(appearance);
+                }
             }
         }
         return sb.toString();
