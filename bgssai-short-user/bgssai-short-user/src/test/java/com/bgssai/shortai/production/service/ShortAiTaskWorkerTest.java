@@ -14,25 +14,20 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
-import com.bgssai.shortai.aiprovider.AiProvider;
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
-import com.bgssai.shortai.aiprovider.AiProviderResult;
-import com.bgssai.shortai.mapper.AiUsageRecordMapper;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
-import com.bgssai.shortai.quota.service.QuotaConsumeService;
-import com.bgssai.shortai.storage.ObjectStorage;
 
 class ShortAiTaskWorkerTest {
 
     @Test
-    void casMissDoesNotConsume() {
+    void casMissDoesNotSettle() {
         ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
-        QuotaConsumeService consume = org.mockito.Mockito.mock(QuotaConsumeService.class);
+        ShortTaskSettlementService settlement = org.mockito.Mockito.mock(ShortTaskSettlementService.class);
         ShortAiTaskWorker worker = new ShortAiTaskWorker();
         ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
-        ReflectionTestUtils.setField(worker, "quotaConsumeService", consume);
+        ReflectionTestUtils.setField(worker, "settlement", settlement);
         ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
         ShortAiTask task = new ShortAiTask();
         task.setId(9L);
@@ -41,25 +36,21 @@ class ShortAiTaskWorkerTest {
         when(mapper.selectOneByExample(any())).thenReturn(task);
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(0);
         worker.tick();
-        verify(consume, never()).consume(any(), anyInt());
+        verify(settlement, never()).settle(any(), any(), anyInt());
     }
 
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(strings = {"UNKNOWN", "SHOT"})
     void invalidOrMissingTaskTargetFailsWithoutCharging(String target) {
         ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
-        QuotaConsumeService consume = org.mockito.Mockito.mock(QuotaConsumeService.class);
+        ShortTaskSettlementService settlement = org.mockito.Mockito.mock(ShortTaskSettlementService.class);
         AiModelResolveService resolve = org.mockito.Mockito.mock(AiModelResolveService.class);
         AiProviderRegistry registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
-        AiUsageRecordMapper usageMapper = org.mockito.Mockito.mock(AiUsageRecordMapper.class);
-        ObjectStorage storage = org.mockito.Mockito.mock(ObjectStorage.class);
         ShortAiTaskWorker worker = new ShortAiTaskWorker();
         ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
-        ReflectionTestUtils.setField(worker, "quotaConsumeService", consume);
+        ReflectionTestUtils.setField(worker, "settlement", settlement);
         ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
         ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
-        ReflectionTestUtils.setField(worker, "aiUsageRecordMapper", usageMapper);
-        ReflectionTestUtils.setField(worker, "objectStorage", storage);
         ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
         ShortAiTask task = new ShortAiTask();
         task.setId(9L);
@@ -68,7 +59,8 @@ class ShortAiTaskWorkerTest {
         task.setTaskStatus("QUEUED");
         task.setTaskType("TEXT");
         task.setTargetType(target);
-        ReflectionTestUtils.setField(worker, "shortShotMapper", org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class));
+        ReflectionTestUtils.setField(worker, "shortShotMapper",
+                org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class));
         task.setModelCode("gpt-4o-mini");
         task.setCostCent(15);
         AiModelConfig model = new AiModelConfig();
@@ -81,8 +73,7 @@ class ShortAiTaskWorkerTest {
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
         when(resolve.resolve(any(), any())).thenReturn(model);
         worker.tick();
-        verify(consume, never()).consume(any(), anyInt());
-        verify(usageMapper, never()).insertSelective(any());
+        verify(settlement, never()).settle(any(), any(), anyInt());
         org.mockito.ArgumentCaptor<ShortAiTask> patches = org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
         verify(mapper, org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
         org.junit.jupiter.api.Assertions.assertEquals("FAILED", patches.getValue().getTaskStatus());

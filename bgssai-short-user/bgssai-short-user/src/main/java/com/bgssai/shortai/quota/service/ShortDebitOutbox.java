@@ -18,7 +18,8 @@ public class ShortDebitOutbox {
                     rows.acknowledge(row.getOutboxId()); continue;
                 }
             } catch (RuntimeException failure) { /* The durable row remains pending. */ }
-            rows.retry(row.getOutboxId(), Math.min(300, 5 * (1 << Math.min(6, row.getAttempts()))));
+            int attempts = row.getAttempts() == null ? 0 : row.getAttempts();
+            rows.retry(row.getOutboxId(), Math.min(300, 5 * (1 << Math.min(6, attempts))));
         }
     }
 }

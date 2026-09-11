@@ -1070,15 +1070,17 @@ CREATE TABLE `short_source_chapter` (
   KEY `idx_short_source_chapter_src` (`source_id`, `chapter_no`, `deleted_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原著章节';
 
-CREATE TABLE IF NOT EXISTS short_debit_outbox (
-    outbox_id VARCHAR(128) NOT NULL PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL,
-    website_user_id VARCHAR(64) NOT NULL,
-    amount INT NOT NULL,
-    usage_kind VARCHAR(32) NOT NULL,
-    delivered TINYINT NOT NULL DEFAULT 0,
-    attempts INT NOT NULL DEFAULT 0,
-    next_attempt_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    lease_until DATETIME NULL,
-    KEY idx_short_debit_pending(delivered, next_attempt_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+DROP TABLE IF EXISTS `short_debit_outbox`;
+CREATE TABLE `short_debit_outbox` (
+  `outbox_id` VARCHAR(128) NOT NULL COMMENT '幂等发送键（通常为 task:<taskId>）',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '本产品用户',
+  `website_user_id` VARCHAR(64) NOT NULL COMMENT '官网中央账本用户 open_id',
+  `amount` INT NOT NULL COMMENT '扣减额度（分）',
+  `usage_kind` VARCHAR(32) NOT NULL COMMENT '用量类型',
+  `delivered` TINYINT NOT NULL DEFAULT 0 COMMENT '是否已送达中央账本',
+  `attempts` INT NOT NULL DEFAULT 0 COMMENT '投递尝试次数',
+  `next_attempt_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '下次尝试时间',
+  `lease_until` DATETIME NULL COMMENT '投递租约截止',
+  PRIMARY KEY (`outbox_id`),
+  KEY `idx_short_debit_pending` (`delivered`, `next_attempt_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务扣费中央账本待发送队列';

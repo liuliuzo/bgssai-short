@@ -29,7 +29,6 @@ import com.bgssai.shortai.aiprovider.FfmpegComposeProvider;
 import com.bgssai.shortai.aiprovider.TencentTokenHubAiProvider;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
-import com.bgssai.shortai.mapper.AiUsageRecordMapper;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
@@ -73,7 +72,6 @@ import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
-import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.storage.ObjectStorage;
 
 @Component
@@ -106,8 +104,6 @@ public class ShortAiTaskWorker {
     @Autowired
     private ShortSourceChapterMapper shortSourceChapterMapper;
     @Autowired
-    private AiUsageRecordMapper aiUsageRecordMapper;
-    @Autowired
     private ScriptService scriptService;
     @Autowired
     private WorkStatusService workStatusService;
@@ -115,8 +111,6 @@ public class ShortAiTaskWorker {
     private DubbingService dubbingService;
     @Autowired
     private FrameLinkService frameLinkService;
-    @Autowired
-    private QuotaConsumeService quotaConsumeService;
     @Autowired
     private AiTaskQueue aiTaskQueue;
     @Autowired

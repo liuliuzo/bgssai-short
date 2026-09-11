@@ -1,6 +1,7 @@
 package com.bgssai.shortai.quota.service;
 
 import java.util.Date;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,20 +47,22 @@ public class QuotaConsumeService {
         int limit = quota.getMonthlyLimitCent() == null ? 0 : quota.getMonthlyLimitCent();
         int spent = quota.getMonthSpentCent() == null ? 0 : quota.getMonthSpentCent();
         if (limit > 0 && (long) spent + costCent > limit) {
-            log.warn("quota month cap userId={} cost={} spent={} limit={}", userId, costCent, spent, limit);
+            log.warn("quota month cap (assert) userId={} cost={} spent={} limit={}",
+                    userId, costCent, spent, limit);
             throw new BizException(CommonErrorCode.MONTHLY_LIMIT);
         }
         int balance = quota.getBalanceCent() == null ? 0 : quota.getBalanceCent();
         int extra = quota.getExtraBalanceCent() == null ? 0 : quota.getExtraBalanceCent();
         if ((long) balance + extra < costCent) {
-            log.warn("quota insufficient userId={} cost={} available={}", userId, costCent, balance + extra);
+            log.warn("quota insufficient (assert) userId={} cost={} available={}",
+                    userId, costCent, balance + extra);
             throw new BizException(CommonErrorCode.QUOTA_INSUFFICIENT);
         }
     }
 
     @Transactional
     public void consume(String userId, int costCent) {
-        consume(userId, costCent, "quota:" + java.util.UUID.randomUUID());
+        consume(userId, costCent, "quota:" + UUID.randomUUID());
     }
 
     @Transactional
