@@ -1,97 +1,63 @@
-// 第三方品牌官方 Logo（全彩官方标识）。
-// 几何轮廓源自 simple-icons（各品牌官方商标的矢量剪影，CC0 许可），此处按各家官方品牌色
-// 渲染为「全彩 Logo」：微信绿、支付宝蓝、抖音三色错位音符。
-// 使用处统一以「白色圆底（浅色底板）」承载，令品牌官方色如实呈现。
-// 抖音为唯一多层标识：同一音符路径叠三层——青(#25F4EE)左上错位、红(#FE2C55)右下错位、主音符(#161823)居中在最上。
+/**
+ * OAuth / brand icons — officially published BGSSAI platform marks only.
+ *
+ * Do NOT embed third-party trademark SVGs (WeChat / Alipay / Douyin / Baidu logos).
+ * Channel identity is the text label; the glyph is always the BGSSAI mark.
+ *
+ * Asset source of truth: docs/brand/ASSET-SOURCES.md
+ * Mark files: /brand/bgss-mark.png (synced from docs/demo-static/web/assets/).
+ */
 
-function brandIcon(path, label, color) {
-  return function BrandIcon({ size = 18, className, style, title = label }) {
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill={color}
-        className={className}
-        style={style}
-        role="img"
-        aria-label={title}
-      >
-        <path d={path} />
-      </svg>
-    )
-  }
-}
+const MARK_SRC = '/brand/bgss-mark.png'
 
-export const BrandWechat = brandIcon(
-  'M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z',
-  '微信',
-  '#07C160',
-)
-
-export const BrandAlipay = brandIcon(
-  'M19.695 15.07c3.426 1.158 4.203 1.22 4.203 1.22V3.846c0-2.124-1.705-3.845-3.81-3.845H3.914C1.808.001.102 1.722.102 3.846v16.31c0 2.123 1.706 3.845 3.813 3.845h16.173c2.105 0 3.81-1.722 3.81-3.845v-.157s-6.19-2.602-9.315-4.119c-2.096 2.602-4.8 4.181-7.607 4.181-4.75 0-6.361-4.19-4.112-6.949.49-.602 1.324-1.175 2.617-1.497 2.025-.502 5.247.313 8.266 1.317a16.796 16.796 0 0 0 1.341-3.302H5.781v-.952h4.799V6.975H4.77v-.953h5.81V3.591s0-.409.411-.409h2.347v2.84h5.744v.951h-5.744v1.704h4.69a19.453 19.453 0 0 1-1.986 5.06c1.424.52 2.702 1.011 3.654 1.333m-13.81-2.032c-.596.06-1.71.325-2.321.869-1.83 1.608-.735 4.55 2.968 4.55 2.151 0 4.301-1.388 5.99-3.61-2.403-1.182-4.438-2.028-6.637-1.809',
-  '支付宝',
-  '#1677FF',
-)
-
-const DOUYIN_NOTE =
-  'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z'
-
-
-export const BrandBaidu = brandIcon(
-  'M9.154 0C7.71 0 6.54 1.658 6.54 3.707c0 2.051 1.171 3.71 2.615 3.71 1.446 0 2.614-1.659 2.614-3.71C11.768 1.658 10.6 0 9.154 0zm7.025.594C14.86.58 13.347 2.589 13.2 3.927c-.187 1.745.25 3.487 2.179 3.735 1.933.25 3.175-1.806 3.422-3.364.252-1.555-.995-3.364-2.362-3.674a1.218 1.218 0 0 0-.261-.03zM3.582 5.535a2.811 2.811 0 0 0-.156.008c-2.118.19-2.428 3.24-2.428 3.24-.287 1.41.686 4.425 3.297 3.864 2.617-.561 2.262-3.68 2.183-4.362-.125-1.018-1.292-2.773-2.896-2.75zm16.534 1.753c-2.308 0-2.617 2.119-2.617 3.616 0 1.43.121 3.425 2.988 3.362 2.867-.063 2.553-3.238 2.553-3.988 0-.745-.62-2.99-2.924-2.99zm-8.264 2.478c-1.424.014-2.708.925-3.323 1.947-1.118 1.868-2.863 3.05-3.112 3.363-.25.309-3.61 2.116-2.864 5.42.746 3.301 3.365 3.237 3.365 3.237s1.93.19 4.171-.31c2.24-.495 4.17.123 4.17.123s5.233 1.748 6.665-1.616c1.43-3.364-.808-5.109-.808-5.109s-2.99-2.306-4.736-4.798c-1.072-1.665-2.348-2.268-3.528-2.257zm-2.234 3.84l1.542.024v8.197H7.758c-1.47-.291-2.055-1.292-2.13-1.462-.072-.173-.488-.976-.268-2.343.635-2.049 2.447-2.196 2.447-2.196h1.81zm3.964 2.39v3.881c.096.413.612.488.612.488h1.614v-4.343h1.689v5.782h-3.915c-1.517-.39-1.59-1.465-1.59-1.465v-4.317zm-5.458 1.147c-.66.197-.978.708-1.05.928-.076.22-.247.78-.1 1.269.294 1.095 1.248 1.144 1.248 1.144h1.37v-3.34z',
-  '百度',
-  '#2932E1',
-)
-export function BrandDouyin({ size = 18, className, style, title = '抖音' }) {
+function PlatformMarkIcon({ size = 18, className, style, title = 'BGSSAI' }) {
   return (
-    <svg
+    <img
+      src={MARK_SRC}
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      alt=""
+      title={title}
       className={className}
-      style={style}
+      style={{
+        borderRadius: Math.max(3, Math.round(size * 0.18)),
+        objectFit: 'contain',
+        display: 'block',
+        ...style,
+      }}
       role="img"
       aria-label={title}
-    >
-      <g transform="translate(12 12) scale(0.9) translate(-12 -12)">
-        <path d={DOUYIN_NOTE} fill="#25F4EE" transform="translate(-0.7 -0.7)" />
-        <path d={DOUYIN_NOTE} fill="#FE2C55" transform="translate(0.7 0.7)" />
-        <path d={DOUYIN_NOTE} fill="#161823" />
-      </g>
-    </svg>
+    />
   )
 }
 
-export function BrandBgssai({ size = 18, className, style, title = 'BGSSAI 账号' }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      className={className}
-      style={style}
-      role="img"
-      aria-label={title}
-    >
-      <rect width="24" height="24" rx="5" fill="#071d49" />
-      <text
-        x="12"
-        y="17"
-        textAnchor="middle"
-        fontFamily="Arial, Helvetica, sans-serif"
-        fontSize="14"
-        fontWeight="700"
-        fill="#ffffff"
-      >
-        B
-      </text>
-    </svg>
-  )
+/** @deprecated name kept for import compatibility — renders BGSSAI mark, not WeChat trademark */
+export function BrandWechat(props) {
+  return <PlatformMarkIcon title="微信登录" {...props} />
 }
 
-// OAuth 第三方登录渠道：单一事实来源。本产品微信 / 支付宝 / 抖音 / 百度 / BGSSAI。
+/** @deprecated name kept for import compatibility — renders BGSSAI mark, not Alipay trademark */
+export function BrandAlipay(props) {
+  return <PlatformMarkIcon title="支付宝登录" {...props} />
+}
+
+/** @deprecated name kept for import compatibility — renders BGSSAI mark, not Baidu trademark */
+export function BrandBaidu(props) {
+  return <PlatformMarkIcon title="百度登录" {...props} />
+}
+
+/** @deprecated name kept for import compatibility — renders BGSSAI mark, not Douyin trademark */
+export function BrandDouyin(props) {
+  return <PlatformMarkIcon title="抖音登录" {...props} />
+}
+
+export function BrandBgssai(props) {
+  return <PlatformMarkIcon title="BGSSAI 账号" {...props} />
+}
+
+export { PlatformMarkIcon }
+
+// OAuth channels: label text names the provider; icon is always the platform mark.
 export const OAUTH_PROVIDERS = [
   { key: 'wechat', label: '微信', color: '#07c160', Icon: BrandWechat },
   { key: 'alipay', label: '支付宝', color: '#1677ff', Icon: BrandAlipay },
@@ -99,4 +65,3 @@ export const OAUTH_PROVIDERS = [
   { key: 'baidu', label: '百度', color: '#2932e1', Icon: BrandBaidu },
   { key: 'bgssai', label: 'BGSSAI 账号', color: '#071d49', Icon: BrandBgssai },
 ]
-

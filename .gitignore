@@ -157,3 +157,4 @@ application-secrets.properties
 # =========================================================================
 # src/main/resources/log/ 下的 *.xml 为类路径日志配置（由 logging.config 引用），
 # 不被上面任何规则忽略，正常纳入版本控制。
+tmp/

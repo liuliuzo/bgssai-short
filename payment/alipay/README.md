@@ -6,6 +6,9 @@ Each product folder has RSA keys + `app_info.txt` (AppID / URLs).
 
 Shared platform public key: `alipay_public_key_body.txt`
 
+App icon (`app_icon_320.png`): official BGSSAI mark (not Alipay trademark).
+Source and regeneration: `docs/brand/ASSET-SOURCES.md`.
+
 | Product | AppID |
 |---------|-------|
 | blog | 2021006159661313 |
