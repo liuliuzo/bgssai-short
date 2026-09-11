@@ -1,5 +1,7 @@
 # 短剧制作闭环详设
 
+2026-09-11 字幕烧录修复：FFmpeg 子进程的工作目录已经固定为本次任务临时目录，字幕文件固定为该目录的 `subs.srt`。subtitles filter 使用该相对文件名，避免 Windows 盘符冒号被滤镜语法误解成下一选项。流程为“写入任务目录 → 以该目录启动 FFmpeg → 烧录字幕 → 检查进程结果 → 返回 MP4”；失败维持现有错误语义。未修改 API、任务状态、DDL/DML 或持久层三件套。现有真实视频合成测试验证该路径。
+
 对齐需求：`docs/feature/short-work-management.md`、`script-studio.md`、`character-bible.md`、
 `storyboard-workbench.md`、`shot-generation.md`、`film-compose-export.md`、`content-compliance.md`
 及后续扩展功能（配音、预演、剧情图谱、质量门、三问体验）。

@@ -1,5 +1,7 @@
 # 产品愿景（PRODUCT_VISION）
 
+当前校准版本：2026-09-11。完整产品规划见 [产品线验收基线](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/feature/product-line-acceptance.md)；实现和验证状态见本仓 `docs/review/acceptance-20260911.md`。规划目标不等于验收通过。
+
 ## 产品线规划（全线统一）
 
 BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此冲突。
