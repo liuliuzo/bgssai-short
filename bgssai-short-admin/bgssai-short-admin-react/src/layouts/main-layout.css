@@ -14,6 +14,8 @@
   flex-direction: column;
   background: var(--pa-sidebar-bg);
   border-right: 1px solid var(--pa-sidebar-border);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -131,8 +133,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: #ffffff;
+  background: var(--lg-glass-bg);
   border-bottom: 1px solid var(--lg-border);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
   z-index: 10;
 }
 

@@ -1,39 +1,40 @@
 /*
- * AI 短剧制作平台管理端 — 扁平设计体系（React 版）
- * 与用户端共用 bgssai-blog React 令牌真值（--brand/--text/--sub 等，见 theme.css）：
- * 实底白卡片 + 1px 细边框 + 轻微阴影 + 蓝色品牌色（#2563eb）。侧边栏统一为浅色（白底 + 蓝色激活态）。
- * 旧「液态玻璃」令牌名保留并映射为扁平实底值，避免引用它们的页面失效。
+ * AI 短剧制作平台管理端 — Liquid Glass 设计体系（React 版）
+ * 半透明玻璃表面 + backdrop-filter；令牌与 liquid-glass.css 同步。
+ * 品牌色保持 #2563eb。侧边栏使用玻璃底 + 蓝色激活态。
  */
+
+@import './liquid-glass.css';
 
 /* ============ 1. 设计令牌 ============ */
 :root {
-  /* blog canonical — 与 bgssai-blog React 令牌同名同值 */
+  /* blog / product brand — 与 theme.css 同名同值 */
   --brand: #2563eb;
   --brand-2: #1e40af;
   --brand-3: #3b82f6;
   --text: #0f172a;
   --sub: #475569;
   --muted: #64748b;
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --surface-2: #f1f5f9;
+  --bg: transparent;
+  --card: var(--lg-glass-bg);
+  --border: var(--lg-border);
+  --surface-2: var(--lg-hover-bg);
   --ai: #7c3aed;
   --ok: #10b981;
   --warn: #f59e0b;
   --danger: #ef4444;
   --hot: #ef4444;
-  --info-soft: #eff6ff;
+  --info-soft: rgba(37, 99, 235, 0.12);
   --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
 
-  /* 品牌色（legacy --lg-* 别名，对齐 blog canonical） */
+  /* 品牌色（--lg-* 别名） */
   --lg-accent: var(--brand);
   --lg-accent-2: var(--brand-2);
   --lg-accent-hover: #1d4ed8;
   --lg-accent-soft: var(--info-soft);
   --lg-accent-grad: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   --lg-accent-grad-r: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-  --lg-accent-glow: rgba(37, 99, 235, 0.18);
+  --lg-accent-glow: rgba(37, 99, 235, 0.22);
 
   /* 语义文字 */
   --lg-text: var(--text);
@@ -48,63 +49,31 @@
   --lg-danger: var(--danger);
   --lg-hot: var(--hot);
 
-  /* 表面与边框 */
-  --lg-bg-page: var(--bg);
-  --lg-card: var(--card);
-  --lg-border: var(--border);
-  --lg-border-subtle: #eef0f4;
-  --lg-hover-bg: var(--surface-2);
-
-  /* 兼容旧「玻璃」令牌名 → 扁平实底 */
-  --lg-glass-bg: #ffffff;
-  --lg-glass-bg-light: #f8fafc;
-  --lg-glass-bg-strong: #ffffff;
-  --lg-glass-sidebar: #ffffff;
-  --lg-highlight: transparent;
-
-  /* 阴影（轻微、扁平） */
-  --lg-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --lg-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06);
-  --lg-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
+  /* 表面别名（玻璃令牌由 liquid-glass.css 提供） */
+  --lg-bg-page: transparent;
 
   /* 圆角 */
   --lg-radius-sm: 6px;
   --lg-radius-control: 8px;
   --lg-radius-md: 10px;
   --lg-radius-card: 12px;
-  --lg-radius-panel: 12px;
+  --lg-radius-panel: 14px;
   --lg-radius-pill: 999px;
 
   /* 动效 */
   --lg-easing: cubic-bezier(0.22, 1, 0.36, 1);
   --lg-duration: 0.18s;
 
-  --lg-blur: 0px;
-  --lg-saturate: 100%;
-
-  /* 平台管理员侧边栏：统一浅色（白底 + 蓝色激活态，对齐 blog .side-menu） */
-  --pa-sidebar-bg: #ffffff;
-  --pa-sidebar-text: #0f172a;
-  --pa-sidebar-muted: #94a3b8;
-  --pa-sidebar-active: #eff6ff;
-  --pa-sidebar-hover: #f1f5f9;
-  --pa-sidebar-border: #e2e8f0;
+  /* 平台侧边栏：玻璃底 + 蓝色激活态 */
+  --pa-sidebar-bg: var(--pa-sidebar-bg, var(--lg-glass-sidebar));
+  --pa-sidebar-text: var(--pa-sidebar-text, #0f172a);
+  --pa-sidebar-muted: var(--pa-sidebar-muted, #64748b);
+  --pa-sidebar-active: var(--pa-sidebar-active, rgba(37, 99, 235, 0.14));
+  --pa-sidebar-hover: var(--pa-sidebar-hover, rgba(255, 255, 255, 0.46));
+  --pa-sidebar-border: var(--pa-sidebar-border, rgba(255, 255, 255, 0.42));
 }
 
 /* ============ 2. 工具类 ============ */
-.lg-bg {
-  background: var(--lg-bg-page);
-  min-height: 100vh;
-}
-
-.lg-surface,
-.lg-surface-strong {
-  background: var(--lg-card);
-  border: 1px solid var(--lg-border);
-  box-shadow: var(--lg-shadow-sm);
-  border-radius: var(--lg-radius-card);
-}
-
 .lg-pill {
   border-radius: var(--lg-radius-pill) !important;
 }
@@ -138,17 +107,19 @@ body.lg-bg {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ============ 4. Ant Design 扁平覆盖 ============ */
+/* ============ 4. Ant Design 玻璃覆盖 ============ */
 .ant-card {
-  background: var(--lg-card);
-  border: 1px solid var(--lg-border);
+  background: var(--lg-glass-bg) !important;
+  border: 1px solid var(--lg-border) !important;
   box-shadow: var(--lg-shadow-sm);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
 }
 
 .ant-btn-primary {
   background: var(--lg-accent);
   border: 1px solid var(--lg-accent);
-  box-shadow: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
 }
 .ant-btn-primary:not(:disabled):hover {
   background: var(--lg-accent-hover) !important;
@@ -159,12 +130,14 @@ body.lg-bg {
   background: transparent !important;
 }
 .ant-table-wrapper .ant-table-thead > tr > th {
-  background: var(--lg-bg-page);
+  background: var(--lg-glass-bg-light) !important;
   color: var(--lg-text-muted);
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.02em;
   border-bottom: 1px solid var(--lg-border);
+  backdrop-filter: blur(12px) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(12px) saturate(var(--lg-saturate));
 }
 .ant-table-wrapper .ant-table-tbody > tr > td {
   background: transparent;
@@ -175,15 +148,36 @@ body.lg-bg {
 }
 
 .ant-modal .ant-modal-content {
-  background: var(--lg-card);
+  background: var(--lg-glass-bg-strong) !important;
   border: 1px solid var(--lg-border);
   box-shadow: var(--lg-shadow-lg);
+  backdrop-filter: blur(calc(var(--lg-blur) + 6px)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--lg-blur) + 6px)) saturate(var(--lg-saturate));
 }
 
 .ant-dropdown .ant-dropdown-menu {
-  background: var(--lg-card);
+  background: var(--lg-glass-bg-strong) !important;
   border: 1px solid var(--lg-border);
   box-shadow: var(--lg-shadow-lg);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker {
+  background: var(--lg-glass-bg-light) !important;
+  border-color: var(--lg-border) !important;
+  backdrop-filter: blur(10px) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(10px) saturate(var(--lg-saturate));
+}
+
+.ant-layout,
+.ant-layout-sider,
+.ant-layout-header,
+.ant-layout-content {
+  background: transparent !important;
 }
 
 /* ============ 5. 滚动条 ============ */
@@ -195,9 +189,9 @@ body.lg-bg {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(148, 163, 184, 0.55);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(100, 116, 139, 0.7);
 }
