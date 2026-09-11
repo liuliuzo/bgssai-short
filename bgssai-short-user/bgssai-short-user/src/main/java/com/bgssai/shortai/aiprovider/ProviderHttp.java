@@ -19,6 +19,10 @@ final class ProviderHttp {
         String getJson(String url, Map<String, String> headers, int timeoutSec) throws Exception;
 
         byte[] getBytes(String url, int timeoutSec) throws Exception;
+
+        default byte[] getBytes(String url, Map<String, String> headers, int timeoutSec) throws Exception {
+            return getBytes(url, timeoutSec);
+        }
     }
 
     interface Sleeper {
@@ -49,19 +53,41 @@ final class ProviderHttp {
 
         @Override
         public byte[] getBytes(String url, int timeoutSec) throws Exception {
-            HttpRequest req = HttpRequest.newBuilder(URI.create(url))
-                    .timeout(Duration.ofSeconds(Math.max(15, timeoutSec)))
-                    .GET()
-                    .build();
-            HttpResponse<byte[]> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofByteArray());
-            if (resp.statusCode() >= 400) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "download status " + resp.statusCode());
+            return getBytes(url, Map.of(), timeoutSec);
+        }
+
+        @Override
+        public byte[] getBytes(String url, Map<String, String> headers, int timeoutSec) throws Exception {
+            URI target = URI.create(url);
+            Map<String, String> forwarded = headers;
+            for (int redirect = 0; redirect <= 5; redirect++) {
+                if (!"https".equalsIgnoreCase(target.getScheme()) && !"http".equalsIgnoreCase(target.getScheme())) {
+                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "invalid download scheme");
+                }
+                HttpRequest.Builder request = HttpRequest.newBuilder(target)
+                        .timeout(Duration.ofSeconds(Math.max(15, timeoutSec))).GET();
+                apply(request, forwarded);
+                HttpResponse<byte[]> response = httpClient.send(request.build(), HttpResponse.BodyHandlers.ofByteArray());
+                if (response.statusCode() >= 300 && response.statusCode() < 400) {
+                    String location = response.headers().firstValue("location").orElse("");
+                    if (location.isBlank()) throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "download redirect missing location");
+                    URI next = target.resolve(location);
+                    if ("https".equalsIgnoreCase(target.getScheme()) && !"https".equalsIgnoreCase(next.getScheme())) {
+                        throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "download cannot downgrade HTTPS");
+                    }
+                    if (!java.util.Objects.equals(target.getHost(), next.getHost()) || target.getPort() != next.getPort()
+                            || !java.util.Objects.equals(target.getScheme(), next.getScheme())) forwarded = Map.of();
+                    target = next;
+                    continue;
+                }
+                if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "download status " + response.statusCode());
+                }
+                byte[] body = response.body();
+                if (body == null || body.length == 0) throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "download empty");
+                return body;
             }
-            byte[] body = resp.body();
-            if (body == null || body.length == 0) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "download empty");
-            }
-            return body;
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "too many download redirects");
         }
 
         private static void apply(HttpRequest.Builder b, Map<String, String> headers) {
@@ -76,7 +102,7 @@ final class ProviderHttp {
         }
 
         private static String handleJson(HttpResponse<String> resp) {
-            if (resp.statusCode() >= 400) {
+            if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "http " + resp.statusCode());
             }
             return resp.body() == null ? "" : resp.body();
