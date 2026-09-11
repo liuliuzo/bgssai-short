@@ -10,7 +10,7 @@ import './styles/global.css'
 
 dayjs.locale('zh-cn')
 
-// 主题令牌：扁平蓝色设计体系（品牌色 #2563eb），管理端与用户端保持一致。
+// 主题令牌：Liquid Glass（半透明容器 + 品牌色 #2563eb），管理端与用户端保持一致。
 const theme = {
   token: {
     colorPrimary: '#2563eb',
@@ -18,14 +18,14 @@ const theme = {
     colorText: '#0f172a',
     colorTextSecondary: '#64748b',
     colorTextTertiary: '#94a3b8',
-    colorBorder: '#e2e8f0',
-    colorBorderSecondary: '#eef0f4',
-    colorBgLayout: '#f8fafc',
-    colorBgContainer: '#ffffff',
-    colorBgElevated: '#ffffff',
+    colorBorder: 'rgba(255, 255, 255, 0.55)',
+    colorBorderSecondary: 'rgba(255, 255, 255, 0.32)',
+    colorBgLayout: 'transparent',
+    colorBgContainer: 'rgba(255, 255, 255, 0.52)',
+    colorBgElevated: 'rgba(255, 255, 255, 0.74)',
     borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    boxShadowSecondary: '0 8px 24px rgba(0, 0, 0, 0.10)',
+    boxShadow: '0 10px 36px rgba(15, 23, 42, 0.10)',
+    boxShadowSecondary: '0 18px 52px rgba(15, 23, 42, 0.14)',
     fontFamily:
       '-apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", Arial, sans-serif',
   },
@@ -34,7 +34,7 @@ const theme = {
     Input: { borderRadius: 8, borderRadiusSM: 6, borderRadiusLG: 10 },
     Card: { borderRadiusLG: 12 },
     Modal: { borderRadiusLG: 12 },
-    Table: { borderRadiusLG: 12, headerBg: '#f8fafc' },
+    Table: { borderRadiusLG: 12, headerBg: 'rgba(255, 255, 255, 0.34)' },
   },
 }
 
