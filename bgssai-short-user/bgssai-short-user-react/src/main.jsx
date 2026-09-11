@@ -7,6 +7,9 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import App from './App'
 import './styles/global.css'
+import { syncBgssaiShell } from './lib/bgssaiShell'
+
+syncBgssaiShell(window.location, window.sessionStorage, document)
 
 dayjs.locale('zh-cn')
 

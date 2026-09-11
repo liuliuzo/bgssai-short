@@ -34,6 +34,7 @@
 
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
+| `shell-pane.html`（布局模式） | 既有用户端路由 + `?bgssai_shell=1` / `?chat_pane=1` | 无新接口；壳参数只改前端布局 | 与所在路由相同；参数不替代 `Jwttoken` | [`../feature/mobile-in-bot-shell.md`](../feature/mobile-in-bot-shell.md) |
 | `login.html` | `/login` | `POST /bgssai/user/login` | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段 + 各模块概览接口） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |

@@ -94,6 +94,22 @@ body,
   height: 100%;
 }
 
+html[data-bgssai-shell="1"],
+html[data-bgssai-shell="1"] body,
+html[data-bgssai-shell="1"] #root {
+  height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html[data-bgssai-shell="1"] .ant-btn {
+  min-height: 44px;
+}
+
+html[data-bgssai-shell="1"] .ant-table-wrapper {
+  overflow-x: auto;
+}
+
 body.lg-bg {
   font-family: var(--font);
   color: var(--lg-text);

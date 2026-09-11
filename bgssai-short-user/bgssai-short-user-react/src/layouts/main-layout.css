@@ -238,3 +238,95 @@
   flex-shrink: 0;
   letter-spacing: 0.01em;
 }
+
+/* ---- Bot / Chat 窄栏（仅 data-bgssai-shell，不按窗口宽度切换独立桌面） ---- */
+html[data-bgssai-shell="1"] .pa-layout--shell {
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 100%;
+}
+
+html[data-bgssai-shell="1"] .pa-layout--shell .pa-topbar {
+  height: 48px;
+  padding: 0 12px;
+  padding-top: env(safe-area-inset-top);
+}
+
+html[data-bgssai-shell="1"] .pa-layout--shell .pa-topbar-title {
+  font-size: 14px;
+}
+
+html[data-bgssai-shell="1"] .pa-layout--shell .pa-content {
+  padding: 12px 12px calc(12px + 64px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+html[data-bgssai-shell="1"] .pa-shell-tabbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  min-height: 56px;
+  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  background: var(--lg-glass-bg);
+  border-top: 1px solid var(--lg-border);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+}
+
+html[data-bgssai-shell="1"] .pa-shell-tab {
+  flex: 1;
+  min-height: 44px;
+  min-width: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--pa-sidebar-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+html[data-bgssai-shell="1"] .pa-shell-tab.active {
+  color: var(--lg-accent);
+  font-weight: 700;
+}
+
+html[data-bgssai-shell="1"] .pa-shell-tab-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+html[data-bgssai-shell="1"] .pa-shell-more-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+html[data-bgssai-shell="1"] .pa-shell-more-item {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--lg-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+html[data-bgssai-shell="1"] .pa-shell-more-item.active {
+  background: var(--pa-sidebar-active);
+  color: var(--lg-accent);
+  font-weight: 600;
+}

@@ -37,6 +37,7 @@ forward 到 `/index.html`。
 | AI 模型与用量 | 模型目录、用量流水、充值申请。详设见 `ai-capability-usage-design.md` |
 | 配音字幕 | 见 `voice-subtitle-design.md` |
 | 预演 / 图谱 / 质量 / 三问 | 见 `previz-story-quality-ux-design.md` |
+| 壳内窄栏 | 用户端按 `bgssai_shell` / `chat_pane` 切触控底栏；独立桌面不改。详设见 `mobile-in-bot-shell-design.md` |
 
 ### 请求处理链（示例：GET /bgssai/admin/login-logs）
 

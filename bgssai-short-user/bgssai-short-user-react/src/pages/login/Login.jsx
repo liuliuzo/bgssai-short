@@ -6,6 +6,7 @@ import { OAUTH_PROVIDERS } from '../../components/brandIcons'
 import { useWechatFastLogin } from '../../components/WechatFastLoginDialog'
 import { parseWechatQrConnect } from '../../lib/wechatFastLogin'
 import { useUserStore, isAllowedRole } from '../../store/user'
+import { useBgssaiShell } from '../../hooks/useBgssaiShell'
 import './login.css'
 
 const CODE_OK = new Set([0, 200, '0', '200'])
@@ -44,6 +45,7 @@ export default function Login() {
   const [sending, setSending] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const { startWechatFastLogin, wechatFastLoginDialog } = useWechatFastLogin()
+  const inShell = useBgssaiShell()
 
   useEffect(() => {
     if (countdown <= 0) return undefined
@@ -159,7 +161,8 @@ export default function Login() {
   }
 
   return (
-    <div className="login-shell">
+    <div className={`login-shell${inShell ? ' login-shell--pane' : ''}`}>
+      {!inShell && (
       <aside className="login-hero">
         <div className="login-hero-top">
           <img className="login-hero-logo" src="/brand/bgss-mark-tile.png" alt="" />
@@ -197,6 +200,7 @@ export default function Login() {
         </div>
         <div className="login-hero-foot">先看懂画面，再花生成额度。</div>
       </aside>
+      )}
 
       <main className="login-main">
         <div className="login-panel">
