@@ -8,12 +8,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
+import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
@@ -140,31 +142,56 @@ public class ShortAiTaskWorker {
     /** 改编提示词里原文素材的字符预算：再多就是花钱让模型读铺垫，且容易超上下文。 */
     private static final int ADAPT_PROMPT_CHAR_BUDGET = 60000;
 
+    /** 库/表缺失等 SQL 失败时的初始退避（毫秒）。 */
+    private static final long POLL_BACKOFF_INITIAL_MS = 5_000L;
+
+    /** SQL 风暴防护：单次退避上限（毫秒）。 */
+    private static final long POLL_BACKOFF_MAX_MS = 300_000L;
+
+    private final AtomicInteger pollFailureStreak = new AtomicInteger();
+    private volatile long pollPauseUntilEpochMs;
+
     @Scheduled(fixedDelay = 800)
     public void tick() {
-        ShortAiTaskExample ex = new ShortAiTaskExample();
-        ex.createCriteria().andTaskStatusEqualTo("QUEUED");
-        ex.setOrderByClause("id asc");
-        ShortAiTask task = shortAiTaskMapper.selectOneByExample(ex);
-        if (task == null) {
-            return;
-        }
-        ShortAiTask running = new ShortAiTask();
-        running.setTaskStatus("RUNNING");
-        running.setStartedTime(new Date());
-        running.setProgressPercent(30);
-        running.setUpdatedTime(new Date());
-        ShortAiTaskExample cas = new ShortAiTaskExample();
-        cas.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("QUEUED");
-        int n = shortAiTaskMapper.updateByExampleSelective(running, cas);
-        if (n != 1) {
+        if (isPollPaused()) {
             return;
         }
         try {
-            aiTaskExecutor.execute(() -> run(task));
-        } catch (RejectedExecutionException rejected) {
-            // 池子满了就把任务退回排队，交给下一轮 tick，不在内存里堆积。
-            requeue(task);
+            ShortAiTaskExample ex = new ShortAiTaskExample();
+            ex.createCriteria().andTaskStatusEqualTo("QUEUED");
+            ex.setOrderByClause("id asc");
+            ShortAiTask task = shortAiTaskMapper.selectOneByExample(ex);
+            if (task == null) {
+                onPollSuccess();
+                return;
+            }
+            ShortAiTask running = new ShortAiTask();
+            running.setTaskStatus("RUNNING");
+            running.setStartedTime(new Date());
+            running.setProgressPercent(30);
+            running.setUpdatedTime(new Date());
+            ShortAiTaskExample cas = new ShortAiTaskExample();
+            cas.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("QUEUED");
+            int n = shortAiTaskMapper.updateByExampleSelective(running, cas);
+            if (n != 1) {
+                onPollSuccess();
+                return;
+            }
+            try {
+                aiTaskExecutor.execute(() -> run(task));
+            } catch (RejectedExecutionException rejected) {
+                // 池子满了就把任务退回排队，交给下一轮 tick，不在内存里堆积。
+                requeue(task);
+            }
+            onPollSuccess();
+        } catch (DataAccessException ex) {
+            onPollFailure("tick", ex);
+        } catch (RuntimeException ex) {
+            if (looksLikeSchemaOrDatasourceFailure(ex)) {
+                onPollFailure("tick", ex);
+            } else {
+                log.error("ai task tick unexpected failure", ex);
+            }
         }
     }
 
@@ -175,23 +202,110 @@ public class ShortAiTaskWorker {
      */
     @Scheduled(fixedDelay = 30_000)
     public void reapStaleTasks() {
-        ShortAiTaskExample ex = new ShortAiTaskExample();
-        ex.createCriteria().andTaskStatusEqualTo("RUNNING");
-        for (ShortAiTask task : shortAiTaskMapper.selectByExample(ex)) {
-            Date started = task.getStartedTime() == null ? task.getQueuedTime() : task.getStartedTime();
-            if (started == null) {
-                continue;
-            }
-            int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
-            long ageSec = (System.currentTimeMillis() - started.getTime()) / 1000L;
-            if (ageSec < limit) {
-                continue;
-            }
-            log.warn("ai task stale taskId={} type={} model={} ageSec={} limitSec={}",
-                    task.getTaskId(), task.getTaskType(), task.getModelCode(), ageSec, limit);
-            failIfRunning(task, "MODEL_TIMEOUT",
-                    "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）");
+        if (isPollPaused()) {
+            return;
         }
+        try {
+            ShortAiTaskExample ex = new ShortAiTaskExample();
+            ex.createCriteria().andTaskStatusEqualTo("RUNNING");
+            for (ShortAiTask task : shortAiTaskMapper.selectByExample(ex)) {
+                Date started = task.getStartedTime() == null ? task.getQueuedTime() : task.getStartedTime();
+                if (started == null) {
+                    continue;
+                }
+                int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
+                long ageSec = (System.currentTimeMillis() - started.getTime()) / 1000L;
+                if (ageSec < limit) {
+                    continue;
+                }
+                log.warn("ai task stale taskId={} type={} model={} ageSec={} limitSec={}",
+                        task.getTaskId(), task.getTaskType(), task.getModelCode(), ageSec, limit);
+                failIfRunning(task, "MODEL_TIMEOUT",
+                        "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）");
+            }
+            onPollSuccess();
+        } catch (DataAccessException ex) {
+            onPollFailure("reapStaleTasks", ex);
+        } catch (RuntimeException ex) {
+            if (looksLikeSchemaOrDatasourceFailure(ex)) {
+                onPollFailure("reapStaleTasks", ex);
+            } else {
+                log.error("ai task reap unexpected failure", ex);
+            }
+        }
+    }
+
+    private boolean isPollPaused() {
+        return System.currentTimeMillis() < pollPauseUntilEpochMs;
+    }
+
+    private void onPollSuccess() {
+        if (pollFailureStreak.get() != 0 || pollPauseUntilEpochMs != 0L) {
+            pollFailureStreak.set(0);
+            pollPauseUntilEpochMs = 0L;
+        }
+    }
+
+    /**
+     * 库不存在 / 表不存在时，fixedDelay=800 会把 ERROR 打满磁盘。失败后指数退避，
+     * 同一窗口只打一条 ERROR（含建议执行 sql/DDL.sql）。
+     */
+    private void onPollFailure(String job, Exception ex) {
+        int streak = pollFailureStreak.incrementAndGet();
+        long shift = Math.min(16, Math.max(0, streak - 1));
+        long backoffMs = Math.min(POLL_BACKOFF_MAX_MS, POLL_BACKOFF_INITIAL_MS << shift);
+        pollPauseUntilEpochMs = System.currentTimeMillis() + backoffMs;
+        String hint = looksLikeSchemaOrDatasourceFailure(ex)
+                ? " check datasource DB name and apply sql/DDL.sql (short_ai_task)"
+                : "";
+        log.error("ai task {} failed (streak={}); pause {}ms.{} cause={}",
+                job, streak, backoffMs, hint, summarize(ex));
+    }
+
+    private static boolean looksLikeSchemaOrDatasourceFailure(Throwable ex) {
+        Throwable cur = ex;
+        while (cur != null) {
+            if (cur instanceof DataAccessException) {
+                return true;
+            }
+            String name = cur.getClass().getName();
+            if (name.contains("SQLSyntaxErrorException")
+                    || name.contains("SQLException")
+                    || name.contains("CannotGetJdbcConnectionException")
+                    || name.contains("BadSqlGrammarException")) {
+                return true;
+            }
+            String msg = cur.getMessage();
+            if (msg != null) {
+                String lower = msg.toLowerCase();
+                if (lower.contains("unknown database")
+                        || lower.contains("doesn't exist")
+                        || lower.contains("does not exist")
+                        || lower.contains("short_ai_task")) {
+                    return true;
+                }
+            }
+            cur = cur.getCause();
+        }
+        return false;
+    }
+
+    private static String summarize(Throwable ex) {
+        StringBuilder sb = new StringBuilder();
+        Throwable cur = ex;
+        int depth = 0;
+        while (cur != null && depth < 4) {
+            if (depth > 0) {
+                sb.append(" | ");
+            }
+            sb.append(cur.getClass().getSimpleName());
+            if (cur.getMessage() != null && !cur.getMessage().isBlank()) {
+                sb.append(": ").append(cur.getMessage());
+            }
+            cur = cur.getCause();
+            depth++;
+        }
+        return sb.toString();
     }
 
     private int timeoutSecOf(ShortAiTask task) {

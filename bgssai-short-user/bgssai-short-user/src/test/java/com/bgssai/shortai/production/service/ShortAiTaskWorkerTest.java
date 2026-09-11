@@ -3,11 +3,14 @@ package com.bgssai.shortai.production.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
@@ -134,5 +137,31 @@ class ShortAiTaskWorkerTest {
         worker.reapStaleTasks();
 
         verify(mapper, never()).updateByExampleSelective(any(), any());
+    }
+
+    /**
+     * 库/表缺失时 tick 必须吞掉 SQL 异常并进入退避，避免 fixedDelay=800 把 ERROR 打满磁盘。
+     */
+    @Test
+    void schemaFailurePausesPolling() {
+        ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
+        when(mapper.selectOneByExample(any())).thenThrow(
+                new InvalidDataAccessResourceUsageException(
+                        "Table 'bgssai_short.short_ai_task' doesn't exist"));
+
+        worker.tick();
+        worker.tick();
+
+        verify(mapper, times(1)).selectOneByExample(any());
+        long pauseUntil = (Long) ReflectionTestUtils.getField(worker, "pollPauseUntilEpochMs");
+        Assertions.assertTrue(pauseUntil > System.currentTimeMillis());
+        Assertions.assertEquals(1, ReflectionTestUtils.getField(worker, "pollFailureStreak")
+                instanceof java.util.concurrent.atomic.AtomicInteger
+                        ? ((java.util.concurrent.atomic.AtomicInteger) ReflectionTestUtils
+                                .getField(worker, "pollFailureStreak")).get()
+                        : -1);
     }
 }
