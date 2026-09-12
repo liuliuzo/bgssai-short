@@ -12,6 +12,10 @@
   margin: 0;
 }
 
+.legal-footer-pair {
+  white-space: nowrap;
+}
+
 .legal-footer-links a {
   font-size: 12px;
   line-height: 1.5;

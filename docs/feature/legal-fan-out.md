@@ -1,11 +1,11 @@
 # 官网法律页分发（legal-fan-out）
 
 > 状态：**需法务审阅**。正文只在 `bgssai-website`，本仓只做外链。对照官网
-> `docs/feature/legal-fan-out-checklist.md`。禁止编造 ICP / 许可证号。
+> `docs/legal/README.md`。禁止编造 ICP / 许可证号。
 
 ## 一、背景与目标
 
-- 背景：短剧用户端登录与页脚需要指向官网五份权威法律页；管理端不托管法律正文。
+- 背景：短剧用户端登录与页脚需要指向官网权威法律页；管理端不托管法律正文。
 - 目标：用户端登录页与全站页脚展示中英双语外链；管理端仅外链；页脚只写公司名，不写未颁发证照号。
 - 关联角色：`USER`（登录 + 页脚）；`PLATFORM_ADMIN`（仅外链）。
 
@@ -13,18 +13,26 @@
 
 - 用户故事：作为创作者，我希望在登录和页脚用中英文打开官网法律页，而不在短剧产品里读一份另写的条款。
 - 业务规则：
-  1. 权威正文只在官网五页，本仓不复制、不改写条款。
-  2. 五页（中文 / English，同一 URL 双语页）：用户协议 / User Agreement、隐私政策 / Privacy Policy、儿童个人信息保护规则 / Children's Privacy、第三方信息共享清单 / Third-Party Sharing、个人信息收集清单 / Personal Information Collection。
-  3. 用户端：登录面板底部 + 登录后页脚，五条双语外链，新标签打开。
-  4. 管理端：登录页与页脚同样五条外链，不新增 `/legal` 路由，不托管正文。
-  5. 版权行只写 `© 2026 昆山兵贵神速智能科技有限公司`。禁止编造 ICP 备案号、公安备案号、增值电信业务经营许可证号。
-  6. 本切片不改接口、不改 `sql/`、不改鉴权。
+  1. 权威正文只在官网，本仓不复制、不改写条款。路径必须与官网 `docs/legal/README.md` **逐字一致**。
+  2. 基址只能是 `https://www.bgssai.com`，禁止 `www.bgssai.cn`。
+  3. 五页中英路径（中文无前缀，英文一律 `/en/`，均带尾斜杠）：
+     - 服务条款 / Terms of Service：`/terms-of-service/` + `/en/terms-of-service/`
+     - 隐私政策 / Privacy Policy：`/privacy-policy/` + `/en/privacy-policy/`
+     - 个人信息收集清单 / Personal Information Inventory：`/personal-information-inventory/` + `/en/personal-information-inventory/`
+     - 第三方信息共享清单 / Third-Party Sharing：`/third-party-sharing/` + `/en/third-party-sharing/`
+     - 应用权限 / App Permissions：`/app-permissions/` + `/en/app-permissions/`
+  4. 可选索引：`/legal/` + `/en/legal/`。页脚不强制展示。
+  5. 禁止旧路径：`/legal/user-agreement`、`children-privacy`、`personal-info-collection`，以及任何 `bgssai.cn` 法律页。
+  6. 用户端：登录面板底部 + 登录后页脚，五条中英外链（中文标签开中文页，英文标签开英文页），新标签打开。
+  7. 管理端：登录页与页脚同样外链，不新增 `/legal` 路由，不托管正文。
+  8. 版权行只写 `© 2026 昆山兵贵神速智能科技有限公司`。禁止编造 ICP 备案号、公安备案号、增值电信业务经营许可证号。
+  9. 本切片不改接口、不改 `sql/`、不改鉴权。
 
 ## 三、验收标准
 
-1. 用户端 `/login` 与登录后页脚可见五条双语外链，目标为 `https://www.bgssai.cn/legal/*`。
+1. 用户端 `/login` 与登录后页脚可见五条中英外链，目标为 `https://www.bgssai.com/<slug>/` 与 `https://www.bgssai.com/en/<slug>/`。
 2. 管理端登录与页脚只有外链，无站内法律页。
-3. 页脚与登录区不出现证照编号。
+3. 页脚与登录区不出现证照编号，也不出现已退役路径。
 4. 需求 / 原型 / 设计标注 **需法务审阅**。
 5. 无新后端接口，无 DDL / DML。
 

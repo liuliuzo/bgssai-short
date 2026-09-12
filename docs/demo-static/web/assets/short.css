@@ -33,6 +33,7 @@
 .footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
 .legal-fanout { text-align: center; }
 .legal-fanout-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; }
+.legal-fanout-pair { white-space: nowrap; }
 .legal-fanout-links a { color: var(--sub); text-decoration: none; }
 .legal-fanout-links a:hover { color: var(--brand); text-decoration: underline; }
 .legal-fanout-copy { margin-top: 8px; }
