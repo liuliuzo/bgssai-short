@@ -52,11 +52,21 @@ public class FilmPublishToMediaService {
         ShortWork work = workAccessService.requireWork(film.getWorkId());
         assertPublishable(film, episode);
 
+        String idempotencyKey = MediaIngestContract.idempotencyKey(
+                film.getWorkId(), film.getEpisodeId(), film.getFilmId());
+        if (!Boolean.TRUE.equals(req.getForce()) && isReplayable(film, idempotencyKey)) {
+            return Responses.ok(toReplayResult(film, idempotencyKey));
+        }
+
         String videoUrl = assetService.resolveUrl(film.getFilmAssetId());
         if (videoUrl == null || videoUrl.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "film video URL unavailable");
         }
         CommercialOutcomeGuard.rejectFakeUrl(videoUrl, "film video_url");
+        if (!MediaIngestContract.isHttpUrl(videoUrl)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "film video_url must be http(s) for Media ingest");
+        }
         String coverUrl = null;
         if (work.getCoverAssetId() != null && !work.getCoverAssetId().isBlank()) {
             coverUrl = assetService.resolveUrl(work.getCoverAssetId());
@@ -69,7 +79,6 @@ public class FilmPublishToMediaService {
         Map<String, Object> payload = MediaIngestContract.buildPayload(
                 film.getWorkId(), film.getEpisodeId(), film.getFilmId(),
                 title, coverUrl, videoUrl, film.getFilmDurationSec(), tags);
-        String idempotencyKey = String.valueOf(payload.get("idempotency_key"));
 
         try {
             MediaIngestClient.IngestResult ingested = mediaIngestClient.ingest(payload);
@@ -85,7 +94,7 @@ public class FilmPublishToMediaService {
                     ingested.httpStatus(), ingested.attempts());
             Date publishedAt = new Date();
             persistSuccess(film, ingested, idempotencyKey, publishedAt);
-            return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt));
+            return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt, false));
         } catch (BizException ex) {
             Integer httpStatus = null;
             int attempts = 1;
@@ -206,6 +215,7 @@ public class FilmPublishToMediaService {
                 FilmPublishToMediaReq one = new FilmPublishToMediaReq();
                 one.setFilmId(film.getFilmId());
                 one.setEpisodeId(film.getEpisodeId());
+                one.setForce(req.getForce());
                 ApiResponse oneResp = publish(one);
                 @SuppressWarnings("unchecked")
                 Map<String, Object> oneResult = (Map<String, Object>) oneResp.getResult();
@@ -215,6 +225,7 @@ public class FilmPublishToMediaService {
                 item.put("status", oneResult.get("status"));
                 item.put("commercial_ready", oneResult.get("commercial_ready"));
                 item.put("idempotency_key", oneResult.get("idempotency_key"));
+                item.put("replayed", oneResult.get("replayed"));
                 item.put("error", "");
                 if (Boolean.TRUE.equals(oneResult.get("commercial_ready"))) {
                     succeeded += 1;
@@ -304,8 +315,47 @@ public class FilmPublishToMediaService {
         return log;
     }
 
+    static boolean isReplayable(ShortFilm film, String idempotencyKey) {
+        if (film == null || idempotencyKey == null || idempotencyKey.isBlank()) {
+            return false;
+        }
+        if (!CommercialOutcomeGuard.isReadyStatus(film.getMediaPublishStatus())) {
+            return false;
+        }
+        if (film.getMediaId() == null || film.getMediaId().isBlank()) {
+            return false;
+        }
+        if (film.getMediaPlayUrl() == null || film.getMediaPlayUrl().isBlank()) {
+            return false;
+        }
+        try {
+            CommercialOutcomeGuard.rejectFakeUrl(film.getMediaPlayUrl(), "media play_url");
+        } catch (BizException ex) {
+            return false;
+        }
+        String existingKey = existingIdempotencyKey(film);
+        return existingKey == null || existingKey.isBlank() || idempotencyKey.equals(existingKey);
+    }
+
+    static String existingIdempotencyKey(ShortFilm film) {
+        Map<String, Object> fromJson = ShortJson.map(film.getMediaPublishLog());
+        Object key = fromJson.get("idempotency_key");
+        if (key != null && !String.valueOf(key).isBlank()) {
+            return String.valueOf(key).trim();
+        }
+        if (film.getWorkId() == null || film.getEpisodeId() == null || film.getFilmId() == null) {
+            return "";
+        }
+        return MediaIngestContract.idempotencyKey(film.getWorkId(), film.getEpisodeId(), film.getFilmId());
+    }
+
     static Map<String, Object> richPublishLog(String idempotencyKey, String mediaId, String playUrl,
             String status, Integer httpStatus, String error, int attempts, Date at) {
+        return richPublishLog(idempotencyKey, mediaId, playUrl, status, httpStatus, error, attempts, at, false);
+    }
+
+    static Map<String, Object> richPublishLog(String idempotencyKey, String mediaId, String playUrl,
+            String status, Integer httpStatus, String error, int attempts, Date at, boolean replayed) {
         Map<String, Object> log = new LinkedHashMap<>();
         log.put("idempotency_key", idempotencyKey);
         log.put("media_id", mediaId);
@@ -315,6 +365,7 @@ public class FilmPublishToMediaService {
         log.put("error", error == null ? "" : error);
         log.put("attempts", attempts);
         log.put("published_at", at);
+        log.put("replayed", replayed);
         return log;
     }
 
@@ -450,7 +501,7 @@ public class FilmPublishToMediaService {
     }
 
     private static Map<String, Object> toResult(ShortFilm film, MediaIngestClient.IngestResult ingested,
-            Object idempotencyKey, Date publishedAt) {
+            Object idempotencyKey, Date publishedAt, boolean replayed) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("film_id", film.getFilmId());
         result.put("episode_id", film.getEpisodeId());
@@ -460,10 +511,24 @@ public class FilmPublishToMediaService {
         result.put("status", ingested.status());
         result.put("commercial_ready", CommercialOutcomeGuard.isReadyStatus(ingested.status()));
         result.put("idempotency_key", idempotencyKey);
+        result.put("replayed", replayed);
         result.put("published_at", publishedAt);
         result.put("http_status", ingested.httpStatus());
         result.put("attempts", ingested.attempts());
         result.put("publish_log", buildPublishLog(film));
+        return result;
+    }
+
+    private static Map<String, Object> toReplayResult(ShortFilm film, String idempotencyKey) {
+        MediaIngestClient.IngestResult ingested = new MediaIngestClient.IngestResult(
+                film.getMediaId(), film.getMediaPlayUrl(),
+                CommercialOutcomeGuard.classifyMediaStatus(film.getMediaPublishStatus()),
+                200, 0);
+        Date publishedAt = film.getMediaPublishedAt() == null ? new Date() : film.getMediaPublishedAt();
+        Map<String, Object> result = toResult(film, ingested, idempotencyKey, publishedAt, true);
+        Map<String, Object> log = richPublishLog(idempotencyKey, ingested.mediaId(), ingested.playUrl(),
+                ingested.status(), 200, "", 0, publishedAt, true);
+        result.put("publish_log", log);
         return result;
     }
 }

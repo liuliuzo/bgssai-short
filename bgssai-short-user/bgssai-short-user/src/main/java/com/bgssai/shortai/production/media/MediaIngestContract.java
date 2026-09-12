@@ -19,13 +19,32 @@ public final class MediaIngestContract {
 
     public static final String TOKEN_HEADER = "X-Bgssai-Ingest-Token";
 
+    /**
+     * Extra HTTP header (body {@code idempotency_key} remains the media UNIQUE key).
+     * Media twin currently keys on the body field; this header is sent so a future
+     * header-based gate can reuse the same value.
+     */
+    public static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
+
     public static final String SECRET_KEY = "bgssai.media.ingest-token";
 
     private MediaIngestContract() {
     }
 
     public static String idempotencyKey(String workId, String episodeId, String filmId) {
-        return "short:" + workId + ":" + episodeId + ":" + filmId;
+        return "short:" + trim(workId) + ":" + trim(episodeId) + ":" + trim(filmId);
+    }
+
+    public static boolean isHttpUrl(String url) {
+        if (url == null) {
+            return false;
+        }
+        String v = url.trim();
+        return v.startsWith("http://") || v.startsWith("https://");
+    }
+
+    private static String trim(String v) {
+        return v == null ? "" : v.trim();
     }
 
     public static Map<String, Object> buildPayload(String workId, String episodeId, String filmId,

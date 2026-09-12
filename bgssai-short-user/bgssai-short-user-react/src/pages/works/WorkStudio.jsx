@@ -860,8 +860,9 @@ function formatPublishError(data, fallback) {
 function showPublishSuccess(result) {
   const mediaId = result?.media_id || ''
   const playUrl = result?.play_url || ''
+  const replayed = !!result?.replayed
   Modal.success({
-    title: '已发布到 Media',
+    title: replayed ? '已发布到 Media（幂等回放，未新建目录）' : '已发布到 Media',
     width: 520,
     content: (
       <div>
@@ -1233,6 +1234,7 @@ function ComposePane({ work, episodeId, onReload }) {
                   {publishLog.http_status != null ? ` · HTTP ${publishLog.http_status}` : ''}
                   {publishLog.attempts != null ? ` · 尝试 ${publishLog.attempts} 次` : ''}
                   {publishLog.idempotency_key ? ` · ${publishLog.idempotency_key}` : ''}
+                  {publishLog.replayed ? ' · 幂等回放' : ''}
                 </Paragraph>
               ) : null}
               {publishLog.last_error ? (

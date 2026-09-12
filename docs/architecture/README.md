@@ -31,7 +31,7 @@ forward 到 `/index.html`。
 | CORS | `configuration/CorsConfig`：显式白名单（禁 `*`），按 profile 配置 allowed-origins |
 | 健康检查 | `health/**` + `configuration/AsyncConfig` 的 `healthProbeExecutor`：三个公开端点（存活 / 就绪 / 全量）+ 组件化探针 + 单检查硬超时 + 整批 TTL 缓存。全产品线统一口径见 Standards §13，详设见 `health-check-design.md` |
 | MCP | 用户端 `mcp/**`：`POST /api/mcp` PAT 自校验 + JSON-RPC；令牌管理 `POST /bgssai/mcp-tokens/*`。详设见 `mcp-server.md` |
-| 短剧制作闭环 | 作品 → 剧本 → 角色/场景/道具卡 → 分镜绑定 → AI 任务状态机 → 配音/成片提审。详设见 `short-production-design.md`，契约见 `../api/SHORT-PRODUCTION.md` |
+| 短剧制作闭环 | 作品 → 剧本 → 角色/场景/道具卡 → 分镜绑定 → AI 任务状态机 → 配音/成片提审 → Media 幂等发布。详设见 `short-production-design.md`，契约见 `../api/SHORT-PRODUCTION.md` · `../api/short-to-media-publish.md` |
 | AI Provider + OBS | 能力 SPI、OpenAI 兼容、可灵 / MiniMax / Seedance / Veo、华为云 OBS、计费快照。详设见 `ai-provider-obs-design.md` |
 | TokenHub 多模型 | Hy4 / Kimi / DeepSeek、MiniMax / PixVerse / Kling 视频、Hy-ASR、MiniMax Speech / Music。详设见 `tokenhub-model-integration-design.md` |
 | AI 模型与用量 | 模型目录、用量流水、充值申请。详设见 `ai-capability-usage-design.md` |

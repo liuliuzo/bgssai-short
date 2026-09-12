@@ -164,6 +164,7 @@ class FilmPublishToMediaServiceTest {
         assertEquals(Boolean.TRUE, result.get("commercial_ready"));
         assertEquals(Boolean.TRUE, result.get("commercial_ready"));
         assertEquals("short:w-1:ep-1:fl-1", result.get("idempotency_key"));
+        assertEquals(Boolean.FALSE, result.get("replayed"));
         verify(filmMapper).updateByExampleSelective(any(), any());
         verify(mediaIngestClient).ingest(any());
     }
@@ -226,7 +227,7 @@ class FilmPublishToMediaServiceTest {
     }
 
     @Test
-    void idempotentRepublishUpdatesLatestResult() {
+    void idempotentRepublishReplaysReadyWithoutSecondIngest() {
         ShortFilm film = readyFilm();
         when(filmMapper.selectOneByExample(any())).thenReturn(film);
         when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
@@ -234,8 +235,7 @@ class FilmPublishToMediaServiceTest {
         when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
         when(assetService.resolveUrl("as-cover")).thenReturn(null);
         when(mediaIngestClient.ingest(any()))
-                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1", "READY", 200, 1))
-                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1b", "READY", 200, 1));
+                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1", "READY", 200, 1));
 
         FilmPublishToMediaReq req = new FilmPublishToMediaReq();
         req.setFilmId("fl-1");
@@ -244,11 +244,63 @@ class FilmPublishToMediaServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> r2 = (Map<String, Object>) second.getResult();
         assertEquals("md-1", r2.get("media_id"));
-        assertEquals("https://p/1b", r2.get("play_url"));
+        assertEquals("https://p/1", r2.get("play_url"));
         assertEquals("short:w-1:ep-1:fl-1", r2.get("idempotency_key"));
-        verify(mediaIngestClient, org.mockito.Mockito.times(2)).ingest(any());
-        verify(filmMapper, org.mockito.Mockito.times(2)).updateByExampleSelective(any(), any());
+        assertEquals(Boolean.TRUE, r2.get("replayed"));
+        verify(mediaIngestClient, org.mockito.Mockito.times(1)).ingest(any());
+        verify(filmMapper, org.mockito.Mockito.times(1)).updateByExampleSelective(any(), any());
         assertTrue(first.isSuccess());
+    }
+
+    @Test
+    void forceRepublishCallsMediaAgainWithSameKey() {
+        ShortFilm film = readyFilm();
+        film.setMediaId("md-1");
+        film.setMediaPlayUrl("https://p/1");
+        film.setMediaPublishStatus("READY");
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any()))
+                .thenReturn(new MediaIngestClient.IngestResult("md-1", "https://p/1b", "READY", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        req.setForce(true);
+        ApiResponse response = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals("md-1", result.get("media_id"));
+        assertEquals("https://p/1b", result.get("play_url"));
+        assertEquals(Boolean.FALSE, result.get("replayed"));
+        assertEquals("short:w-1:ep-1:fl-1", result.get("idempotency_key"));
+        verify(mediaIngestClient).ingest(any());
+    }
+
+    @Test
+    void pendingHandoffIsNotReplayed() {
+        ShortFilm film = readyFilm();
+        film.setMediaId("md-p");
+        film.setMediaPlayUrl("https://p/pending");
+        film.setMediaPublishStatus("PENDING");
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any()))
+                .thenReturn(new MediaIngestClient.IngestResult("md-p", "https://p/ready", "READY", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        ApiResponse response = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals("READY", result.get("status"));
+        assertEquals(Boolean.FALSE, result.get("replayed"));
+        verify(mediaIngestClient).ingest(any());
     }
 
     @Test
@@ -259,6 +311,21 @@ class FilmPublishToMediaServiceTest {
         assertEquals("md-9", log.get("media_id"));
         assertEquals(200, log.get("http_status"));
         assertEquals(2, log.get("attempts"));
+        assertEquals(Boolean.FALSE, log.get("replayed"));
+    }
+
+    @Test
+    void replayableOnlyWhenReadyWithCatalogFields() {
+        ShortFilm film = readyFilm();
+        film.setMediaId("md-1");
+        film.setMediaPlayUrl("https://play/1");
+        film.setMediaPublishStatus("READY");
+        assertTrue(FilmPublishToMediaService.isReplayable(film, "short:w-1:ep-1:fl-1"));
+        film.setMediaPublishStatus("PENDING");
+        assertFalse(FilmPublishToMediaService.isReplayable(film, "short:w-1:ep-1:fl-1"));
+        film.setMediaPublishStatus("READY");
+        film.setMediaPlayUrl("stub://play");
+        assertFalse(FilmPublishToMediaService.isReplayable(film, "short:w-1:ep-1:fl-1"));
     }
 
     @Test
@@ -291,6 +358,22 @@ class FilmPublishToMediaServiceTest {
         assertEquals("md-b", items.get(0).get("media_id"));
     }
 
+
+    @Test
+    void nonHttpFilmUrlRejectedBeforeMediaCall() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("file:///tmp/demo.mp4");
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        BizException ex = assertThrows(BizException.class, () -> service().publish(req));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+        assertTrue(ex.getMessage().contains("http"));
+        verify(mediaIngestClient, never()).ingest(any());
+    }
 
     @Test
     void stubFilmUrlRejectedBeforeMediaCall() {

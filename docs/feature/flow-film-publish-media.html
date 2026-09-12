@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Short → Media 幂等发布交接 — bgssai short feature</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#6b7280; --accent:#2563eb; --warn:#d97706;
+          --ok:#059669; --err:#dc2626; --line:#d1d5db; --box-fill:#ffffff; --box-stroke:#374151;
+          --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:var(--font); margin:0; padding:24px; line-height:1.5; }
+  h1 { font-size:18px; margin:0 0 8px; }
+  .meta { font-size:12px; color:var(--muted); margin-bottom:24px; border-left:3px solid var(--accent); padding-left:12px; }
+  .meta dt { font-weight:bold; display:inline; } .meta dd { display:inline; margin:0 16px 0 4px; }
+  svg { background:var(--box-fill); border:1px solid var(--line); border-radius:4px; max-width:100%; }
+  .note { font-size:12px; color:var(--muted); margin-top:16px; max-width:920px; }
+  svg text { font-family:var(--font); fill:var(--fg); }
+  svg .box { fill:var(--box-fill); stroke:var(--box-stroke); stroke-width:1.5; }
+  svg .run { fill:#eff6ff; stroke:var(--accent); stroke-width:1.2; }
+  svg .done { fill:#f0fdf4; stroke:var(--ok); stroke-width:1.2; }
+  svg .warnbox { fill:#fffbeb; stroke:var(--warn); stroke-width:1.2; }
+  svg .fail { fill:#fef2f2; stroke:var(--err); stroke-width:1.2; }
+  svg .arr { stroke:var(--fg); stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+  svg .lbl { font-size:12px; } svg .small { font-size:10px; fill:var(--muted); }
+</style>
+</head>
+<body>
+<h1>Short → Media 幂等发布交接</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>成片 READY + 过审 → ingest short-drama → 落库 media_id / play_url</dd>
+  <dt>关联</dt><dd>film-publish-media.md · short-to-media-publish.md</dd>
+  <dt>更新</dt><dd>2026-09-12</dd>
+</dl>
+<svg viewBox="0 0 920 420" width="920" height="420" role="img" aria-label="idempotent publish flow">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <rect class="run" x="24" y="24" width="180" height="56" rx="4"/>
+  <text class="lbl" x="114" y="48" text-anchor="middle">成片 compose READY</text>
+  <text class="small" x="114" y="66" text-anchor="middle">且 review APPROVED</text>
+
+  <rect class="box" x="248" y="24" width="180" height="56" rx="4"/>
+  <text class="lbl" x="338" y="48" text-anchor="middle">闸门 / preflight</text>
+  <text class="small" x="338" y="66" text-anchor="middle">未就绪则 4006，不调 Media</text>
+
+  <rect class="warnbox" x="472" y="24" width="200" height="56" rx="4"/>
+  <text class="lbl" x="572" y="48" text-anchor="middle">已 READY 且同键？</text>
+  <text class="small" x="572" y="66" text-anchor="middle">无 force → 回放 replayed</text>
+
+  <rect class="done" x="716" y="24" width="180" height="56" rx="4"/>
+  <text class="lbl" x="806" y="48" text-anchor="middle">返回既有目录</text>
+  <text class="small" x="806" y="66" text-anchor="middle">不二次 ingest</text>
+
+  <rect class="run" x="248" y="140" width="200" height="56" rx="4"/>
+  <text class="lbl" x="348" y="164" text-anchor="middle">POST Media ingest</text>
+  <text class="small" x="348" y="182" text-anchor="middle">idempotency_key 固定</text>
+
+  <rect class="done" x="496" y="140" width="200" height="56" rx="4"/>
+  <text class="lbl" x="596" y="164" text-anchor="middle">落库 media_id / URL</text>
+  <text class="small" x="596" y="182" text-anchor="middle">status READY / PENDING</text>
+
+  <rect class="fail" x="744" y="140" width="152" height="56" rx="4"/>
+  <text class="lbl" x="820" y="164" text-anchor="middle">FAILED</text>
+  <text class="small" x="820" y="182" text-anchor="middle">写 last_error</text>
+
+  <rect class="box" x="248" y="256" width="424" height="72" rx="4"/>
+  <text class="lbl" x="460" y="284" text-anchor="middle">Media MUST：idempotency_key UNIQUE upsert</text>
+  <text class="small" x="460" y="304" text-anchor="middle">同一键返回同一 media_id，禁止双目录</text>
+
+  <line class="arr" x1="204" y1="52" x2="248" y2="52"/>
+  <line class="arr" x1="428" y1="52" x2="472" y2="52"/>
+  <line class="arr" x1="672" y1="52" x2="716" y2="52"/>
+  <line class="arr" x1="348" y1="80" x2="348" y2="140"/>
+  <line class="arr" x1="448" y1="168" x2="496" y2="168"/>
+  <line class="arr" x1="696" y1="168" x2="744" y2="168"/>
+  <line class="arr" x1="348" y1="196" x2="348" y2="256"/>
+</svg>
+<p class="note">
+  剪辑工程导出（short_edit_export）不在本图。只有成片 compose READY 才能发布。
+  首发并发双击靠 Media UNIQUE；二次点击靠 Short 回放。
+</p>
+</body>
+</html>

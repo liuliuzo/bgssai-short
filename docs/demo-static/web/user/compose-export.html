@@ -199,6 +199,8 @@
                   传 <code>work_id</code> 可看批量候选数。若存在最近一次发布记录（publish_log），
                   成片区展示状态与播放链接。幂等键
                   <code>short:{work_id}:{episode_id}:{film_id}</code>。
+                  同一成片已 READY 再点发布走回放（<code>replayed=true</code>），不新建 Media 目录；
+                  <code>force=true</code> 才用同一键再 POST。
                   下架/撤回：media 暂无契约，本仓 skip。
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">
