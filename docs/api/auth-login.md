@@ -16,9 +16,11 @@
 
 公开接口（无需 token），按 IP 限流（capacity 5 / 每分钟补 5）。
 
-登录页与登录后页脚展示官网五条法律外链（中英双语标签，新标签打开）。正文只在
-`https://www.bgssai.cn/legal/*`。管理端只做外链，不托管条款。版权行不写证照编号。
-状态：需法务审阅。见 [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md)。
+登录页与登录后页脚展示官网五条法律外链（中文标签开中文页，英文标签开英文页，新标签打开）。正文只在
+`https://www.bgssai.com` 权威路径（`/terms-of-service/`、`/privacy-policy/`、
+`/personal-information-inventory/`、`/third-party-sharing/`、`/app-permissions/` 及其 `/en/` 对照页）。
+管理端只做外链，不托管条款。版权行不写证照编号。状态：需法务审阅。
+见 [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md)。
 
 ### 请求体
 
