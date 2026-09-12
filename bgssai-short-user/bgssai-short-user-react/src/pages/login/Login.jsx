@@ -7,6 +7,7 @@ import { useWechatFastLogin } from '../../components/WechatFastLoginDialog'
 import { parseWechatQrConnect } from '../../lib/wechatFastLogin'
 import { useUserStore, isAllowedRole } from '../../store/user'
 import { useBgssaiShell } from '../../hooks/useBgssaiShell'
+import LegalFooter from '../../components/LegalFooter'
 import './login.css'
 
 const CODE_OK = new Set([0, 200, '0', '200'])
@@ -327,6 +328,7 @@ export default function Login() {
               </button>
             ))}
           </div>
+          <LegalFooter tone="light" variant="login" />
         </div>
       </main>
       {wechatFastLoginDialog}

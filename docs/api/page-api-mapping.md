@@ -15,7 +15,7 @@
 
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
-| `login.html` | `/login` | `POST /bgssai/admin/login` | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) |
+| `login.html` | `/login` | `POST /bgssai/admin/login`；页脚五条官网法律外链（无新接口，仅外链） | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) · [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/admin/login-logs?page_num&page_size` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`auth-login.md`](./auth-login.md) |
 | `content-review.html` | `/reviews` | `GET /bgssai/admin/reviews/list?page_num&page_size&review_status&risk_level&keyword` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
@@ -35,7 +35,7 @@
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
 | `shell-pane.html`（布局模式） | 既有用户端路由 + `?bgssai_shell=1` / `?chat_pane=1` | 无新接口；壳参数只改前端布局 | 与所在路由相同；参数不替代 `Jwttoken` | [`../feature/mobile-in-bot-shell.md`](../feature/mobile-in-bot-shell.md) |
-| `login.html` | `/login` | `POST /bgssai/user/login` | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) |
+| `login.html` | `/login` | `POST /bgssai/user/login`；登录区 + 页脚五条官网法律双语外链（无新接口） | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) · [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段 + 各模块概览接口） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
 | `mcp-tokens.html`（MCP Connectors） | `/mcp-tokens` | `POST /bgssai/mcp-tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT；页内引导 Claude / Codex / Cursor / Grok Bot / bgssai-bot | [`MCP.md`](./MCP.md) |

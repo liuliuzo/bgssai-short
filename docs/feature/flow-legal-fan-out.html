@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>官网法律页分发 — 流程</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1a1a1a;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --warn: #d97706;
+    --ok: #059669;
+    --line: #d1d5db;
+    --box-fill: #ffffff;
+    --box-stroke: #374151;
+    --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font);
+    margin: 0; padding: 24px; line-height: 1.5;
+  }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  .meta {
+    font-size: 12px; color: var(--muted); margin-bottom: 24px;
+    border-left: 3px solid var(--accent); padding-left: 12px;
+  }
+  .meta dt { font-weight: bold; display: inline; }
+  .meta dd { display: inline; margin: 0 16px 0 4px; }
+  svg { background: var(--box-fill); border: 1px solid var(--line); border-radius: 4px; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 16px; max-width: 880px; }
+  svg text { font-family: var(--font); fill: var(--fg); }
+  svg .box { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 1.5; }
+  svg .arr { stroke: var(--fg); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+  svg .lbl { font-size: 12px; }
+  svg .small { font-size: 10px; fill: var(--muted); }
+  svg .accent { stroke: var(--accent); }
+  svg .warn { stroke: var(--warn); }
+  svg .ok { stroke: var(--ok); }
+</style>
+</head>
+<body>
+<h1>官网法律页分发（需法务审阅）</h1>
+<dl class="meta">
+  <dt>作用域</dt><dd>用户端登录 / 页脚 · 管理端仅外链</dd>
+  <dt>关联</dt><dd>docs/feature/legal-fan-out.md</dd>
+  <dt>更新</dt><dd>2026-09-12</dd>
+</dl>
+
+<svg viewBox="0 0 960 360" width="960" height="360">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="40" y="40" width="220" height="70" rx="6"/>
+  <text class="lbl" x="150" y="70" text-anchor="middle">USER 登录页</text>
+  <text class="small" x="150" y="92" text-anchor="middle">五条双语外链</text>
+
+  <rect class="box" x="40" y="150" width="220" height="70" rx="6"/>
+  <text class="lbl" x="150" y="180" text-anchor="middle">USER 登录后页脚</text>
+  <text class="small" x="150" y="202" text-anchor="middle">同一组外链</text>
+
+  <rect class="box" x="40" y="260" width="220" height="70" rx="6"/>
+  <text class="lbl" x="150" y="290" text-anchor="middle">ADMIN 登录 / 页脚</text>
+  <text class="small" x="150" y="312" text-anchor="middle">仅外链，无站内正文</text>
+
+  <rect class="box ok" x="380" y="150" width="220" height="70" rx="6"/>
+  <text class="lbl" x="490" y="180" text-anchor="middle">新标签打开</text>
+  <text class="small" x="490" y="202" text-anchor="middle">不复制条款</text>
+
+  <rect class="box" x="700" y="110" width="220" height="150" rx="6"/>
+  <text class="lbl" x="810" y="150" text-anchor="middle">官网五页</text>
+  <text class="small" x="810" y="172" text-anchor="middle">www.bgssai.cn/legal/*</text>
+  <text class="small" x="810" y="194" text-anchor="middle">权威正文</text>
+  <text class="small" x="810" y="216" text-anchor="middle">需法务审阅</text>
+  <text class="small" x="810" y="238" text-anchor="middle">无编造证照号</text>
+
+  <path class="arr accent" d="M 260 75 L 380 175"/>
+  <path class="arr accent" d="M 260 185 L 380 185"/>
+  <path class="arr accent" d="M 260 295 L 380 195"/>
+  <path class="arr ok" d="M 600 185 L 700 185"/>
+</svg>
+
+<p class="note">
+  本仓只做入口。法律正文、证照公示以官网为准；未颁发的备案号 / 许可证号不得出现在短剧产品页脚。
+</p>
+</body>
+</html>
