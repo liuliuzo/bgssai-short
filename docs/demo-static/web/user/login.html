@@ -6,6 +6,7 @@
   <title>AI 短剧制作平台原型 — 用户端登录</title>
   <link rel="stylesheet" href="../assets/theme.css" />
   <link rel="stylesheet" href="../assets/liquid-glass.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
   <style>
     .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
     .login-card { width: 380px; }
@@ -30,6 +31,7 @@
         请求体：{ "login_type": "password", "identifier": "<账号>", "password": "<密码>" }
         成功 result：{ jwt_token, role_code, role_name, user_id, user_name, real_name }
         成功后跳转 /home（见 PAGE-FLOW.html）。
+        法律页：登录区与页脚只外链官网五页，不托管正文。需法务审阅。
       -->
       <div class="field">
         <label>账号 identifier</label>
@@ -41,7 +43,17 @@
       </div>
       <button class="btn btn-block" onclick="location.href='home.html'">登 录</button>
 
-      <div class="footer" style="margin-top:20px">© 2026 昆山兵贵神速智能科技有限公司</div>
+      <div class="footer legal-fanout" style="margin-top:20px">
+        <nav class="legal-fanout-links" aria-label="法律信息 Legal">
+          <a href="https://www.bgssai.cn/legal/user-agreement" target="_blank" rel="noopener noreferrer">用户协议 / User Agreement</a>
+          <a href="https://www.bgssai.cn/legal/privacy" target="_blank" rel="noopener noreferrer">隐私政策 / Privacy Policy</a>
+          <a href="https://www.bgssai.cn/legal/children-privacy" target="_blank" rel="noopener noreferrer">儿童个人信息保护规则 / Children's Privacy</a>
+          <a href="https://www.bgssai.cn/legal/third-party-sharing" target="_blank" rel="noopener noreferrer">第三方信息共享清单 / Third-Party Sharing</a>
+          <a href="https://www.bgssai.cn/legal/personal-info-collection" target="_blank" rel="noopener noreferrer">个人信息收集清单 / Personal Information Collection</a>
+        </nav>
+        <div class="legal-fanout-copy">© 2026 昆山兵贵神速智能科技有限公司</div>
+        <p class="legal-review-note">需法务审阅 · 正文只在官网，本仓不写条款、不编造证照编号</p>
+      </div>
     </div>
   </div>
 </body>

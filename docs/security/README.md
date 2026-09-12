@@ -18,6 +18,7 @@
 | MCP PAT | Bearer `bgs_mcp_` 自校验；工具不接受 `user_id`；仅登录日志与健康探针。见 `mcp-server.md` |
 | 支付回调验签 | 微信 / 支付宝 notify 必须验签，金额按分核对，已支付订单幂等。见 `payment-notify-verify.md` |
 | AI / OBS 密钥 | AI API Key 进 `sys_secret`，`ai_model_config.config_json` 只存 `secret_ref`；OBS AK/SK 属中间件参数，进分环境 properties。见 `ai-provider-secrets.md` |
+| 法律页外链 | 正文只在官网；产品仓只外链、不编造证照号。见 `legal-fan-out.md` |
 
 ## 变更约束
 
