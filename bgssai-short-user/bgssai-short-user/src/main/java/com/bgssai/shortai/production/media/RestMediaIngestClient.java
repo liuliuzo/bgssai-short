@@ -78,6 +78,10 @@ public class RestMediaIngestClient implements MediaIngestClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(MediaIngestContract.TOKEN_HEADER, token);
+        String idempotencyKey = text(payload == null ? null : payload.get("idempotency_key"));
+        if (!idempotencyKey.isBlank()) {
+            headers.set(MediaIngestContract.IDEMPOTENCY_HEADER, idempotencyKey);
+        }
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, new HttpEntity<>(payload, headers),
                     Map.class);

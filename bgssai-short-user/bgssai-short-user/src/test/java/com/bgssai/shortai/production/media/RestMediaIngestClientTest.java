@@ -9,6 +9,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.mockito.ArgumentCaptor;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,29 @@ class RestMediaIngestClientTest {
         assertEquals("md-1", out.mediaId());
         assertEquals("https://play/md-1", out.playUrl());
         assertEquals("READY", out.status());
+    }
+
+    @Test
+    void sendsIdempotencyKeyHeaderMatchingBody() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok-1");
+        Map<String, Object> result = Map.of("media_id", "md-1", "play_url", "https://play/md-1", "status", "READY");
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/media/ingest/short-drama"),
+                captor.capture(), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(result, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        Map<String, Object> payload = MediaIngestContract.buildPayload(
+                "w", "e", "f", "t", null, "https://v.mp4", 10, List.of());
+        client.ingest(payload);
+        HttpEntity<?> entity = captor.getValue();
+        assertEquals("short:w:e:f", entity.getHeaders().getFirst(MediaIngestContract.IDEMPOTENCY_HEADER));
+        assertEquals("tok-1", entity.getHeaders().getFirst(MediaIngestContract.TOKEN_HEADER));
+        assertEquals("short:w:e:f", payload.get("idempotency_key"));
     }
 
     @Test

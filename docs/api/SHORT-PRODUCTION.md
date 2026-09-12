@@ -310,27 +310,30 @@ FFmpeg 混入成片音轨。
 ### POST /bgssai/user/films/publish-to-media
 
 将 READY 且审核 `APPROVED` 的成片推送到 bgssai-media（共享 ingest 契约见
-[`../feature/film-publish-media.md`](../feature/film-publish-media.md)）。
+[`../feature/film-publish-media.md`](../feature/film-publish-media.md)、
+[`short-to-media-publish.md`](./short-to-media-publish.md)）。
 
 ```json
-{ "episode_id": "ep-dm-004-01", "film_id": "fl-dm-004-01" }
+{ "episode_id": "ep-dm-004-01", "film_id": "fl-dm-004-01", "force": false }
 ```
 
-`episode_id` / `film_id` 至少其一。闸门：`compose_status=READY`、`expired_flag=0`、有
-`film_asset_id`、本集 `review_status=APPROVED`。
+`episode_id` / `film_id` 至少其一。`force` 可选。闸门：`compose_status=READY`、`expired_flag=0`、有
+`film_asset_id`、本集 `review_status=APPROVED`、`video_url` 为 http(s)。
+
+已 READY 且同幂等键则回放（`replayed=true`，不调 Media）。`force=true` 才再 POST。
 
 响应 `result`：`film_id` `episode_id` `work_id` `media_id` `play_url` `status`
-`idempotency_key` `published_at` `http_status` `attempts` `publish_log`。media 不可达返回 `502000`；超时 `504000`；
-业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次。
+`idempotency_key` `replayed` `published_at` `http_status` `attempts` `publish_log`。media 不可达返回 `502000`；超时 `504000`；
+业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次（键不变）。
 
 ### POST /bgssai/user/films/publish-to-media/batch
 
 ```json
-{ "work_id": "w-dm-004" }
+{ "work_id": "w-dm-004", "force": false }
 ```
 
 按剧集顺序发布本作品全部 READY+APPROVED 成片。响应：`total` `succeeded` `failed`
-`progress_percent` `item_list[{progress_index,progress_total,film_id,episode_id,ok,media_id,play_url,error}]`。
+`progress_percent` `item_list[{progress_index,progress_total,film_id,episode_id,ok,media_id,play_url,idempotency_key,replayed,error}]`。
 
 ### GET /bgssai/user/films/publish-to-media/preflight?episode_id=&film_id=&work_id=
 

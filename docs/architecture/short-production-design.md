@@ -98,3 +98,19 @@ films-bgm-generate / films-compose
 
 审核只读创作内容。通过 / 驳回写入 `short_review_record`。驳回必填 `reject_item_list`。
 创作者列表读 `sys_user`（`org_code=USER`），冻结写 `status=2`。
+
+## 7. Short → Media 幂等交接
+
+成片 `compose_status=READY` 且本集 `APPROVED` 后，用户端
+`POST /bgssai/user/films/publish-to-media` 调 Media
+`POST /bgssai/user/media/ingest/short-drama`。剪辑工程导出不是闸门。
+
+幂等键 `short:{work_id}:{episode_id}:{film_id}` 写入 Body 与 `Idempotency-Key` 头。
+已 READY 且已有 `media_id` / `play_url` 时 Short 回放，不再 ingest。
+Media 对端按该键 UNIQUE upsert，禁止双目录。契约见
+[`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)，
+配图见 [`../feature/flow-film-publish-media.html`](../feature/flow-film-publish-media.html)。
+
+`short_film` 记录 `media_id` / `media_play_url` / `media_publish_status` /
+`media_published_at` / `media_last_error` / `media_publish_log`。
+PENDING 不是商业成功；stub / 未配置不得写成 READY。
