@@ -67,7 +67,7 @@ Jenkins 侧实现：本仓 `Jenkinsfile`（部署）与 `jenkins/Jenkinsfile.sto
 健康检查：`http://127.0.0.1:8080/bgssai/health/readiness`。部署与关停只作用于对应 systemd 服务，
 **不得**对共机执行整机级关停或重装。
 
-共享库：dev `192.168.0.217`（公网 `101.44.27.60`）/ prod 境内 `172.31.4.181`（公网 `121.36.230.185`）。
+开发中间件：MySQL `122.8.178.143` / Redis `122.8.185.32` / ES `101.44.26.151`。生产库境内 `172.31.4.181`（公网 `121.36.230.185`）。
 
 目标机需要构建工具链。一次性准备：在目标机上以 root 跑一次中央仓的
 [`jenkins/install/provision-build-host.sh`](https://github.com/liuliuzo/bgssai-workflows/blob/develop/jenkins/install/provision-build-host.sh)。
