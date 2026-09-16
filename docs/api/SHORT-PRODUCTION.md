@@ -257,9 +257,11 @@ cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 
 ### GET /bgssai/user/films/precheck?episode_id=
 
-返回 `ready`、`unlocked_shots`、`missing_video_shots`、`blocker_list`、`risk_level`。
+返回 `ready`、`unlocked_shots`、`missing_video_shots`、`blocker_list`、`risk_level`、
+`shot_count`、`acceptance_min_shot_count`（固定 3）、`acceptance_shot_count_ok`。
 `ready=true` 要求全部镜头为 `VIDEO_READY`/`LOCKED` 且 `video_asset_id` 非空，且无配音
 `MISALIGNED`、合规无 `BLOCK`。仅有 `IMAGE_READY` 草图不得通过预检。
+`acceptance_shot_count_ok` 为 SHORT-01 联调验收提示（不足 3 镜不阻断 `ready`）。
 
 ### GET /bgssai/user/films/timeline?episode_id=
 
@@ -299,8 +301,11 @@ FFmpeg 混入成片音轨。
 
 ### GET /bgssai/user/films/detail?episode_id=
 
-返回 `compose_status`、`film_asset_id`、`film_duration_sec`、`download_url`（可播放的签名/本地 URL，
-不是 download-url JSON 接口路径）、以及 `bgm_asset_id`、`bgm_url`、
+返回 `compose_status`、`film_asset_id`、`film_duration_sec`、`compose_task_id`、
+`download_url`（可播放的签名/本地 URL，不是 download-url JSON 接口路径；`stub://` 等占位为 null）、
+`production_evidence`（`compose_task_id` / `source_task_id` / `model_code` / `cost_cent` /
+`storage_key` / `file_size_byte` / `task_status` / `commercial_ready` / `media_play_url_ok`）、
+`commercial_ready`，以及 `bgm_asset_id`、`bgm_url`、
 `bgm_candidate_list[{ "asset_id", "file_url", "duration_sec", "created_time", "selected_flag" }]`。
 
 ### GET /bgssai/user/films/download-url?asset_id=

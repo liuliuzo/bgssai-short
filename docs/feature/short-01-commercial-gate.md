@@ -40,3 +40,10 @@ SHORT-01 目标是短剧制作链路达到可商用：真实模型生成、OBS �
 ## 验收对齐
 
 见 `docs/review/acceptance-20260911.md`：假成功已阻断；直播模型+OBS+Media E2E 仍为 PENDING。
+
+## 一集生产联调骨架（2026-09-16）
+
+联调验收剧本、契约测与 NOT_VERIFIED 清单见
+[`docs/review/short-01-episode-production-20260916.md`](../review/short-01-episode-production-20260916.md)。
+成片详情须带 `production_evidence`；占位 URL 不得标 `commercial_ready`。
+
