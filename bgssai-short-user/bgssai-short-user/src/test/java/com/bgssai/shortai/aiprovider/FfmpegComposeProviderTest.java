@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +20,7 @@ class FfmpegComposeProviderTest {
 
     @Test
     void concatenatesClipsAndBurnsSubtitles() throws Exception {
+        assumeCommand("ffmpeg");
         Path clip1 = temp.resolve("c1.mp4");
         Path clip2 = temp.resolve("c2.mp4");
         runLocal("ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=black:s=320x240:d=1",
@@ -46,6 +48,8 @@ class FfmpegComposeProviderTest {
 
     @Test
     void mixesPartialDubbingIntoFinalMp4() throws Exception {
+        assumeCommand("ffmpeg");
+        assumeCommand("ffprobe");
         Path clip1 = temp.resolve("c1.mp4");
         Path clip2 = temp.resolve("c2.mp4");
         Path voice = temp.resolve("vo.wav");
@@ -97,6 +101,20 @@ class FfmpegComposeProviderTest {
         assertTrue(cmd.contains("-filter_complex"));
         assertTrue(cmd.stream().anyMatch(s -> s.contains("amix")));
         assertTrue(cmd.contains("[aout]"));
+    }
+
+    private static void assumeCommand(String command) {
+        Assumptions.assumeTrue(canRun(command), command + " is not installed on this host");
+    }
+
+    private static boolean canRun(String command) {
+        try {
+            Process p = new ProcessBuilder(command, "-version").redirectErrorStream(true).start();
+            p.getInputStream().readAllBytes();
+            return p.waitFor(15, java.util.concurrent.TimeUnit.SECONDS) && p.exitValue() == 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static void runLocal(String... cmd) throws Exception {
