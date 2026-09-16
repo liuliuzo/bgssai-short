@@ -57,7 +57,7 @@
 * **适用范围**：本规范适用于所有 bgssai.* 命名空间下的微服务及业务系统（包括但不限于 geo, saas 等）。
 * **冲突解决原则**：当通用行业规范（如《阿里巴巴 Java 开发手册》）与本项目自定义核心规约冲突时，**绝对优先服从项目自定义规约**。
 * **向用户汇报（强制）**：对用户只说整体进度与结果；执行过程中也不要在对话里复述改动。禁止输出文件清单、diff、命令日志、commit SHA、逐仓 PR 表。详情见各仓 `AGENTS.md`。
-* **Git Flow（强制）**：GitHub 默认分支一律 `develop`。AI Agent 必须先创建自己的 feature 分支再改文件，禁止直接在 `develop` / `release` / `master` / `main` 上改。开发环境发布 `develop`，测试环境发布 `release`，生产环境发布 `master`。`bgssai-build` 额外保留 `main`，只同步上游 grok-build。详情见各仓 `AGENTS.md`。
+* **Git Flow（强制）**：GitHub 默认分支一律 `develop`。AI Agent 必须先创建自己的 feature 分支再改文件，禁止直接在 `develop` / `release` / `master` / `main` 上改。现阶段 dev 与 prod 都部署 `develop`（只换 `application-dev.properties` / `application-prod.properties`），测试环境发布 `release`；原因是当前版本不稳定，只走 `develop` 才能快速修问题。禁止把生产部署指到 `master`。待版本稳定后再恢复 prod 部署 `master`。`bgssai-build` 额外保留 `main`，只同步上游 grok-build。详情见各仓 `AGENTS.md`。
 * **编译验证时机（强制）**：开发过程中**严禁频繁执行 `mvn compile`** 进行边写边编译式的校验。正确流程是：所有功能/重构改动**全部落地完成后**，在当前 feature 分支上**统一执行一次** `mvn compile`（或 `mvn -q -DskipTests compile`）进行最终编译校验即可。避免单次修改后立即跑编译造成的反复等待，节省时间与 token。若一次编译报错，**集中**修复后再跑一次，禁止"改一行 → 编译 → 改一行 → 编译"的低效循环。
 * **每次 PR 提交必须是一个可运行版本（强制，违者代码不予合并）**：每一次 PR / 合并请求（Merge Request）所提交的最终状态，都必须是一个**可独立运行的完整版本**——即该分支必须能通过编译（`mvn compile` / `mvn -q -DskipTests compile` 零错误）并成功启动，核心业务链路功能可用。**严禁**提交处于"半成品"、"编译不过"、"启动即崩"、"功能断裂"等任何不可运行中间态的代码。
   * **拆分提交也须各自可运行**：若一个较大需求需拆成多次 PR 逐步落地，则每一次 PR 都必须自成一个**可运行的里程碑**——未完成的部分通过功能开关（Feature Flag）/ 灰度隐藏，或保持旧逻辑可用，绝不允许把不可运行的半成品中间态直接合入目标分支。
