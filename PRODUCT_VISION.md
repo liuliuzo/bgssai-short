@@ -16,13 +16,13 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 8. **境外应用**只有：`bgssai-geo-global`、`bgssai-saas-global`、`bgssai-tokenhub-global`、`bgssai-chat-global`。其余有用户端的应用按境内处理。
 
-`bgssai-wiki` 与 `bgssai-build` 是研发解决方案，不是第 1 条工具。用户从 Wiki 站点和官网介绍页都可以下载 Build，Build 也能引导到 Wiki。Build 写代码时把软件工程文档（需求说明、概要设计、详细设计、类图、流程图、时序图、泳道图、状态图等）写入 Wiki。Wiki 要能承载 HTML：Build 可生成 HTML 格式设计并发布到 Wiki，版式与交互对照 `reference/wiki/htmldemo`。用户可自己编辑，也可和 Agent 对话修改，改完发送给 Build 继续编程。Wiki 参考开源 docmost，对标 Confluence 的空间 / 页面树 / 权限 / 版本，**不做** Jira 对接、插件市场、宏。Build 参考 grok-build、Cursor、DeepSeek-Coder、Codex、Claude Code。对照这些项目，不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。Tokenhub 管理端大模型 API Key 管理对照 dify。short 对照 waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT（reference/short/）。Blog 对照知乎，支持用 AI 写文章，以及 Markdown、富文本、粘贴 HTML 发文；推荐与排序对照 x-algorithm。note 对照小红书（reference/xiaohongshu-prototypes），推荐与排序同样对照 x-algorithm。publish 对照传声港（reference/chuanshenggang-prototypes）。saas 对照 n8n、Activepieces、HubSpot、twenty、espocrm、SuiteCRM、leadbridge。builder 对照 open-design、open-codesign、claude design；必须可预览、可管理、可编辑、可部署，并能用 `*.bgssai-builder.com` 子域名发布站点。所有参考项目在 `reference` 目录。
+`bgssai-wiki` 与 `bgssai-build` 是研发解决方案，不是第 1 条工具。用户从 Wiki 站点和官网介绍页都可以下载 Build，Build 也能引导到 Wiki。Build 写代码时把软件工程文档（需求说明、概要设计、详细设计、类图、流程图、时序图、泳道图、状态图等）写入 Wiki。Wiki 要能承载 HTML：Build 可生成 HTML 格式设计并发布到 Wiki，版式与交互对照 `reference/wiki/htmldemo`。用户可自己编辑，也可和 Agent 对话修改，改完发送给 Build 继续编程。Wiki 参考开源 docmost，对标 Confluence 的空间 / 页面树 / 权限 / 版本，**不做** Jira 对接、插件市场、宏。Build 参考 grok-build、Cursor、DeepSeek-Coder、Codex、Claude Code。对照这些项目，不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。Tokenhub 管理端大模型 API Key 管理对照 dify。short 对照 waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT（reference/short/）。Blog 对照知乎，支持用 AI 写文章，以及 Markdown、富文本、粘贴 HTML 发文；推荐与排序对照 x-algorithm。note 对照小红书（reference/xiaohongshu-prototypes），推荐与排序同样对照 x-algorithm。publish 对照传声港（reference/chuanshenggang-prototypes）。saas 对照 n8n、Activepieces、HubSpot、twenty、espocrm、SuiteCRM、leadbridge。web（建站，仓 `bgssai-web`）对照 open-design、open-codesign、claude design；必须可预览、可管理、可编辑、可部署，并能用 `*.bgssai-web.com` 子域名发布站点。不要把 Web（建站）写成 Build（编程工具）。所有参考项目在 `reference` 目录。
 
 有用户端的应用必须支持账号密码、邮箱验证码、手机验证码登录。中国大陆境内应用另需微信、抖音、百度、支付宝登录。中国大陆境外应用另需 Google 账户与 GitHub 登录。短信通道用腾讯云（含国际短信）。官网无登录。管理端不开放注册，管理员只走 DML 种子账号密码，不接 Chat。除官网用户端外，所有应用平台未登录时默认进入登录页。「用 Chat 登录」与微信 / Google 等授权只在 user 用户端。
 
 愿景唯一权威：`bgssai-skeleton/docs/PRODUCT-LINE-VISION.md`。本段是各仓副本，变更以该文件为准。
 
-**本仓位置**：本仓是第 1 条工具集合中的短剧制作产品。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。设计与交互对照 `reference/short/`：waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。
+**本仓位置**：本仓是第 1 条工具集合中的短剧**制作**产品。成片发布到 `bgssai-media` 的 YouTube Shorts 流；本仓不做播放社区。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。设计与交互对照 `reference/short/`：waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。
 
 **对照（只读 `reference/short/`，不照搬品牌与仓库结构）：** waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。对标的是短剧从文字到成片的任务流与交互，不是把其中任一项目当本仓实现。
 

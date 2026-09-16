@@ -9,8 +9,8 @@
 - 境外仅 GEO / SaaS / Tokenhub / Chat 的 Global 仓。Web 用户登录需账号密码、邮箱验证码、手机验证码；境内另支持微信、抖音、百度、支付宝，境外另支持 Google、GitHub。
 - Tokenhub CN/Global 分别接入大陆/国际模型原生 API，服务旗下产品和外部用户；Admin 模型凭证管理参考 Dify。
 - 全产品支持 Bot 下载与授权托管；Wiki/Build 构成工程文档、HTML 设计、人工/Agent 编辑与编程任务的双向闭环。
-- Short / Long 分别制作短剧和长剧；Media 参考 VLC，播放主流格式并接收 Short 成品发布。Wechat 参考既定 IM 项目，支持 Web/Android/iOS 及会话内 AI 图片和回复建议。Office 参考 OpenOffice，按实际格式与版本样本验收兼容性及 AI 办公。
-- Blog 支持 AI、Markdown、富文本、HTML 发文；Note 对照小红书，两者推荐参考 x-algorithm。Publish 对照传声港；SaaS 包含工作流、CRM、线索与 Hootsuite 式社媒管理；Builder 支持预览、管理、编辑和 *.bgssai-builder.com 部署。
+- Short / Long 分别制作短剧和长剧；Media 对照 VLC 做播放器，并作为对标 YouTube / YouTube Shorts 的视频播放平台：播主流格式，承接 short 短剧成片与 long 长剧成片直接发布播放。Wechat 参考既定 IM 项目，支持 Web/Android/iOS 及会话内 AI 图片和回复建议。Office 参考 OpenOffice，按实际格式与版本样本验收兼容性及 AI 办公。
+- Blog 支持 AI、Markdown、富文本、HTML 发文；Note 对照小红书，两者推荐参考 x-algorithm。Publish 对照传声港；SaaS 包含工作流、CRM、线索与 Hootsuite 式社媒管理；Web（建站，仓 `bgssai-web`）支持预览、管理、编辑和 *.bgssai-web.com 部署；不要把 Web 写成 Build。
 - 参考资料来自工作区 reference 目录；未完成实现、缺失参考和未执行的集成验收必须显式记录。数据库脚本版本与线上数据库执行状态分别报告。
 
 ## 产品线规划（全线统一）
@@ -27,7 +27,7 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 8. **境外应用**只有：`bgssai-geo-global`、`bgssai-saas-global`、`bgssai-tokenhub-global`、`bgssai-chat-global`。其余有用户端的应用按境内处理。
 
-`bgssai-wiki` 与 `bgssai-build` 是研发解决方案，不是第 1 条工具。用户从 Wiki 站点和官网介绍页都可以下载 Build，Build 也能引导到 Wiki。Build 写代码时把软件工程文档（需求说明、概要设计、详细设计、类图、流程图、时序图、泳道图、状态图等）写入 Wiki。Wiki 要能承载 HTML：Build 可生成 HTML 格式设计并发布到 Wiki，版式与交互对照 `reference/wiki/htmldemo`。用户可自己编辑，也可和 Agent 对话修改，改完发送给 Build 继续编程。Wiki 参考开源 docmost，对标 Confluence 的空间 / 页面树 / 权限 / 版本，**不做** Jira 对接、插件市场、宏。Build 参考 grok-build、Cursor、DeepSeek-Coder、Codex、Claude Code。对照这些项目，不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。Tokenhub 管理端大模型 API Key 管理对照 dify。short 对照 waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT（reference/short/）。Blog 对照知乎，支持用 AI 写文章，以及 Markdown、富文本、粘贴 HTML 发文；推荐与排序对照 x-algorithm。note 对照小红书（reference/xiaohongshu-prototypes），推荐与排序同样对照 x-algorithm。publish 对照传声港（reference/chuanshenggang-prototypes）。saas 对照 n8n、Activepieces、HubSpot、twenty、espocrm、SuiteCRM、leadbridge。builder 对照 open-design、open-codesign、claude design；必须可预览、可管理、可编辑、可部署，并能用 `*.bgssai-builder.com` 子域名发布站点。所有参考项目在 `reference` 目录。
+`bgssai-wiki` 与 `bgssai-build` 是研发解决方案，不是第 1 条工具。用户从 Wiki 站点和官网介绍页都可以下载 Build，Build 也能引导到 Wiki。Build 写代码时把软件工程文档（需求说明、概要设计、详细设计、类图、流程图、时序图、泳道图、状态图等）写入 Wiki。Wiki 要能承载 HTML：Build 可生成 HTML 格式设计并发布到 Wiki，版式与交互对照 `reference/wiki/htmldemo`。用户可自己编辑，也可和 Agent 对话修改，改完发送给 Build 继续编程。Wiki 参考开源 docmost，对标 Confluence 的空间 / 页面树 / 权限 / 版本，**不做** Jira 对接、插件市场、宏。Build 参考 grok-build、Cursor、DeepSeek-Coder、Codex、Claude Code。对照这些项目，不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。Tokenhub 管理端大模型 API Key 管理对照 dify。short 对照 waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT（reference/short/）。Blog 对照知乎，支持用 AI 写文章，以及 Markdown、富文本、粘贴 HTML 发文；推荐与排序对照 x-algorithm。note 对照小红书（reference/xiaohongshu-prototypes），推荐与排序同样对照 x-algorithm。publish 对照传声港（reference/chuanshenggang-prototypes）。saas 对照 n8n、Activepieces、HubSpot、twenty、espocrm、SuiteCRM、leadbridge。web（建站，仓 `bgssai-web`）对照 open-design、open-codesign、claude design；必须可预览、可管理、可编辑、可部署，并能用 `*.bgssai-web.com` 子域名发布站点。不要把 Web（建站）写成 Build（编程工具）。所有参考项目在 `reference` 目录。
 
 有用户端的应用必须支持账号密码、邮箱验证码、手机验证码登录。中国大陆境内应用另需微信、抖音、百度、支付宝登录。中国大陆境外应用另需 Google 账户与 GitHub 登录。短信通道用腾讯云（含国际短信）。官网无登录。管理端不开放注册，管理员只走 DML 种子账号密码，不接 Chat。除官网用户端外，所有应用平台未登录时默认进入登录页。「用 Chat 登录」与微信 / Google 等授权只在 user 用户端。
 
