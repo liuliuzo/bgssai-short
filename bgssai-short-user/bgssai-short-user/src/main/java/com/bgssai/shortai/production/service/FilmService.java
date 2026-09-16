@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.common.ApiResponse;
+import com.bgssai.shortai.common.CommercialOutcomeGuard;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortDubbingMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortFilmMapper;
@@ -21,6 +23,7 @@ import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortSubtitleMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.ShortAiTask;
+import com.bgssai.shortai.model.ShortAiTaskExample;
 import com.bgssai.shortai.model.ShortAsset;
 import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.model.ShortDubbing;
@@ -68,6 +71,8 @@ public class FilmService {
     private ShortAssetMapper shortAssetMapper;
     @Autowired
     private ShortSubtitleMapper shortSubtitleMapper;
+    @Autowired
+    private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired
     private AiTaskService aiTaskService;
 
@@ -135,6 +140,10 @@ public class FilmService {
         result.put("hit_list", scan.get("hit_list"));
         result.put("blocker_list", blockers);
         result.put("misaligned_count", misaligned.size());
+        result.put("shot_count", shots.size());
+        // SHORT-01 联调验收要求真实模型至少 3 镜；不足时仅提示，不阻断合成入口。
+        result.put("acceptance_min_shot_count", 3);
+        result.put("acceptance_shot_count_ok", shots.size() >= 3);
         return Responses.ok(result);
     }
 
@@ -332,20 +341,28 @@ public class FilmService {
         Map<String, Object> composeSetting = ShortJson.map(work.getComposeSettingJson());
         String selectedBgm = ShortJson.text(composeSetting.get("bgm_asset_id"));
         result.put("bgm_asset_id", selectedBgm.isBlank() ? null : selectedBgm);
-        result.put("bgm_url", selectedBgm.isBlank() ? null : assetService.resolveUrl(selectedBgm));
+        String bgmUrl = selectedBgm.isBlank() ? null : assetService.resolveUrl(selectedBgm);
+        result.put("bgm_url", CommercialOutcomeGuard.safeCommercialUrl(bgmUrl));
         result.put("bgm_candidate_list", bgmCandidates(ep, selectedBgm));
         if (film != null) {
             result.put("film_id", film.getFilmId());
             result.put("film_asset_id", film.getFilmAssetId());
             result.put("film_duration_sec", film.getFilmDurationSec());
+            result.put("compose_task_id", film.getComposeTaskId());
+            result.put("composed_time", film.getComposedTime());
             // Return a playable/presigned URL — the download-url JSON endpoint is not a media src.
-            result.put("download_url", film.getFilmAssetId() == null ? null
-                    : assetService.resolveUrl(film.getFilmAssetId()));
+            // Placeholder / stub schemes must never surface as commercial playable URLs.
+            String downloadUrl = film.getFilmAssetId() == null ? null
+                    : assetService.resolveUrl(film.getFilmAssetId());
+            result.put("download_url", CommercialOutcomeGuard.safeCommercialUrl(downloadUrl));
             result.put("media_id", film.getMediaId());
-            result.put("media_play_url", film.getMediaPlayUrl());
+            result.put("media_play_url", CommercialOutcomeGuard.safeCommercialUrl(film.getMediaPlayUrl()));
             result.put("media_publish_status", film.getMediaPublishStatus());
             result.put("media_published_at", film.getMediaPublishedAt());
             result.put("media_last_error", film.getMediaLastError());
+            Map<String, Object> evidence = filmEvidence(film);
+            result.put("production_evidence", evidence);
+            result.put("commercial_ready", Boolean.TRUE.equals(evidence.get("commercial_ready")));
             Map<String, Object> publishLog = FilmPublishToMediaService.buildPublishLog(film);
             if (publishLog != null) {
                 result.put("publish_log", publishLog);
@@ -355,6 +372,55 @@ public class FilmService {
             }
         }
         return Responses.ok(result);
+    }
+
+    /**
+     * SHORT-01：成片必须能回溯到合成任务、模型、耗用与对象存储键；占位 URL 不得标 commercial_ready。
+     */
+    private Map<String, Object> filmEvidence(ShortFilm film) {
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("compose_task_id", film.getComposeTaskId());
+        evidence.put("film_asset_id", film.getFilmAssetId());
+        evidence.put("compose_status", film.getComposeStatus());
+        ShortAsset asset = null;
+        if (film.getFilmAssetId() != null && !film.getFilmAssetId().isBlank()) {
+            ShortAssetExample ax = new ShortAssetExample();
+            ax.createCriteria().andAssetIdEqualTo(film.getFilmAssetId()).andDeletedFlagEqualTo(0);
+            asset = shortAssetMapper.selectOneByExample(ax);
+        }
+        if (asset != null) {
+            evidence.put("source_task_id", asset.getSourceTaskId());
+            evidence.put("storage_key", asset.getStorageKey());
+            evidence.put("file_size_byte", asset.getFileSizeByte());
+            evidence.put("mime_type", asset.getMimeType());
+            evidence.put("duration_sec", asset.getDurationSec());
+        }
+        ShortAiTask task = null;
+        String taskId = film.getComposeTaskId();
+        if ((taskId == null || taskId.isBlank()) && asset != null) {
+            taskId = asset.getSourceTaskId();
+        }
+        if (taskId != null && !taskId.isBlank()) {
+            ShortAiTaskExample tx = new ShortAiTaskExample();
+            tx.createCriteria().andTaskIdEqualTo(taskId);
+            task = shortAiTaskMapper.selectOneByExample(tx);
+        }
+        if (task != null) {
+            evidence.put("model_code", task.getModelCode());
+            evidence.put("cost_cent", task.getCostCent());
+            evidence.put("task_status", task.getTaskStatus());
+            evidence.put("task_type", task.getTaskType());
+        }
+        boolean storageOk = asset != null && asset.getStorageKey() != null && !asset.getStorageKey().isBlank()
+                && !asset.getStorageKey().startsWith("<svg")
+                && asset.getFileSizeByte() != null && asset.getFileSizeByte() > 0;
+        boolean taskOk = film.getComposeTaskId() != null && !film.getComposeTaskId().isBlank();
+        boolean statusOk = "READY".equals(film.getComposeStatus());
+        // 成片商业就绪只看合成产物与证据链；Media play_url 另行校验，占位不得冒充已发布。
+        evidence.put("media_play_url_ok", film.getMediaPlayUrl() == null || film.getMediaPlayUrl().isBlank()
+                || CommercialOutcomeGuard.safeCommercialUrl(film.getMediaPlayUrl()) != null);
+        evidence.put("commercial_ready", statusOk && storageOk && taskOk);
+        return evidence;
     }
 
     private List<Map<String, Object>> loadSubtitleTrack(ShortEpisode ep, List<ShortShot> shots) {
@@ -377,7 +443,8 @@ public class FilmService {
             }
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("asset_id", asset.getAssetId());
-            item.put("file_url", assetService.resolveUrl(asset.getAssetId()));
+            item.put("file_url",
+                    CommercialOutcomeGuard.safeCommercialUrl(assetService.resolveUrl(asset.getAssetId())));
             item.put("duration_sec", asset.getDurationSec());
             item.put("created_time", asset.getCreatedTime());
             item.put("selected_flag", asset.getAssetId().equals(selectedBgm) ? 1 : 0);

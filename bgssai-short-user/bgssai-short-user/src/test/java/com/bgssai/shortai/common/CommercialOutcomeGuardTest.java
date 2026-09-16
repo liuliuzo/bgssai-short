@@ -2,6 +2,7 @@ package com.bgssai.shortai.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,5 +54,15 @@ class CommercialOutcomeGuardTest {
         assertTrue(CommercialOutcomeGuard.isFailedStatus("FAILED"));
         assertFalse(CommercialOutcomeGuard.isReadyStatus("PENDING"));
         assertFalse(CommercialOutcomeGuard.isPendingStatus("FAILED"));
+    }
+
+    @Test
+    void isFakeUrlAndSafeCommercialUrl() {
+        assertTrue(CommercialOutcomeGuard.isFakeUrl(null));
+        assertTrue(CommercialOutcomeGuard.isFakeUrl("stub://x"));
+        assertFalse(CommercialOutcomeGuard.isFakeUrl("https://obs.my-cdn.com/a.mp4"));
+        assertNull(CommercialOutcomeGuard.safeCommercialUrl("mock://x"));
+        assertEquals("https://obs.my-cdn.com/a.mp4",
+                CommercialOutcomeGuard.safeCommercialUrl("https://obs.my-cdn.com/a.mp4"));
     }
 }

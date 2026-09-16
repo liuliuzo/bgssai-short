@@ -771,6 +771,12 @@ public class ShortAiTaskWorker {
             attachConsistencyRefs(consistency, request);
         }
         AiProviderResult result = execute(model, request);
+        // SHORT-01：空字节不得落成 VIDEO_READY / IMAGE_READY，避免「无素材却成功」。
+        if (result == null || result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    ("VIDEO".equals(ability) ? "video" : "image")
+                            + " provider returned empty content");
+        }
         ShortAsset asset = saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), shot.getShotId(),
                 ability, result, task.getTaskId(), true);
         ShortShot patch = new ShortShot();
@@ -925,6 +931,9 @@ public class ShortAiTaskWorker {
         String timeline = ShortJson.toJson(timelineMap);
         request.setPrompt(timeline);
         AiProviderResult result = execute(model, request);
+        if (result == null || result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "compose provider returned empty film");
+        }
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
                 result, task.getTaskId(), true);
         asset.setDurationSec(duration);

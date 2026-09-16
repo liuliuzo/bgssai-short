@@ -29,20 +29,35 @@ public final class CommercialOutcomeGuard {
         if (url == null || url.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, label + " unavailable");
         }
-        String trimmed = url.trim();
-        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (isFakeUrl(url)) {
+            String trimmed = url.trim();
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    label + " is stub/placeholder (" + schemeOf(trimmed)
+                            + "); refusing fake commercial success");
+        }
+    }
+
+    /**
+     * Soft check for read paths: never surface a placeholder as a playable commercial URL.
+     */
+    public static boolean isFakeUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return true;
+        }
+        String lower = url.trim().toLowerCase(Locale.ROOT);
         if (lower.startsWith("stub:") || lower.startsWith("mock:") || lower.startsWith("fake:")
                 || lower.startsWith("placeholder:") || lower.startsWith("about:")
                 || lower.startsWith("null:") || lower.startsWith("test:")) {
-            throw new BizException(CommonErrorCode.RULE_REJECT,
-                    label + " is stub/placeholder (" + schemeOf(trimmed) + "); refusing fake commercial success");
+            return true;
         }
-        if (lower.contains("://example.") || lower.contains("://localhost/placeholder")
+        return lower.contains("://example.") || lower.contains("://localhost/placeholder")
                 || lower.contains("/placeholder/") || lower.endsWith("/placeholder")
-                || "placeholder".equals(lower) || "todo".equals(lower)) {
-            throw new BizException(CommonErrorCode.RULE_REJECT,
-                    label + " looks like a placeholder; refusing fake commercial success");
-        }
+                || "placeholder".equals(lower) || "todo".equals(lower);
+    }
+
+    /** Returns null when blank or fake so callers cannot mark PASS on placeholders. */
+    public static String safeCommercialUrl(String url) {
+        return isFakeUrl(url) ? null : url.trim();
     }
 
     public static boolean isReadyStatus(String status) {
