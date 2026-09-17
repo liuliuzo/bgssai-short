@@ -37,7 +37,14 @@ mysql -h <host> -u <user> -p bgssai_short < sql/dev/DML.sql
 | --- | --- | --- | --- |
 | `bgssai.sms.sdk-app-id` | 空（由环境 DML 回填） | `1401156379` | `1401191076` |
 | `bgssai.sms.sign-name` | `昆山兵贵神速智能科技` | — | — |
-| `bgssai.sms.template-id` | `2677885`（已审批登录 OTP；勿用 `2728085`） | — | — |
+| `bgssai.sms.template-id` | `2677885`（已审批登录 OTP 双参；勿用待审 `2734311`） | — | — |
+
+短信正文产品名 / 模板参数个数不进 `sys_secret`，写在用户端 `application.properties`：
+
+| key | 默认 | 说明 |
+| --- | --- | --- |
+| `bgssai.sms.product-label` | `Short` | 写入模板的产品名；发码 API 回显 `product` |
+| `bgssai.sms.template-param-count` | `2` | `2\|3\|4`；默认 2 对齐生产模板 `2677885`；待审 `2734311` 通过后再切 3/4 |
 
 SecretId / SecretKey 占位示例见仓库根 `sms/credentials.example.env`（勿提交真实密钥到新字段）。
 

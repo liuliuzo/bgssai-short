@@ -27,8 +27,12 @@
       </div>
 
       <!--
-        对应接口：POST /bgssai/user/login（管理端原型见 ../admin/login.html）
-        请求体：{ "login_type": "password", "identifier": "<账号>", "password": "<密码>" }
+        对应接口：
+        - POST /bgssai/user/login（密码）
+        - POST /bgssai/user/sms/send → result: { expires_in, product, seq }
+          product/seq 供对照短信正文；模板参数个数默认 2（与已审批模板 2677885 对齐）
+        - POST /bgssai/user/login/sms
+        请求体密码登录：{ "login_type": "password", "identifier": "<账号>", "password": "<密码>" }
         成功 result：{ jwt_token, role_code, role_name, user_id, user_name, real_name }
         成功后跳转 /home（见 PAGE-FLOW.html）。
         法律页：登录区与页脚只外链官网五页，不托管正文。需法务审阅。

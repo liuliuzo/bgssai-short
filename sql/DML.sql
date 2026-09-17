@@ -67,12 +67,13 @@ INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`
 -- STEP SMS-1: 腾讯云短信（验证码登录即注册）
 -- 对齐 BGSSAI 共享控制台应用：SignName / 登录 OTP TemplateId 跨环境共享；
 -- SdkAppId 环境差异见 sql/dev/DML.sql（1401156379）与 sql/prod/DML.sql（1401191076）。
--- 登录 OTP 使用已审批模板 2677885，禁止改用待审模板 2728085。
+-- 登录 OTP 使用已审批双参模板 2677885；待审多参模板 2734311 通过前禁止改用。
+-- 产品名 / 模板参数个数见用户端 application.properties（bgssai.sms.product-label / template-param-count，默认 count=2）。
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.secret-id', 'AKID674pMgojQUSHuLafaJUUYXKvNekeP0pd', '腾讯云短信 SecretId', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.secret-key', 'kKjQuBE5lEUFuOgrrfGtARfnnhU8nMxZ', '腾讯云短信 SecretKey', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sdk-app-id', '', '腾讯云短信 SdkAppId（环境差异见 sql/dev 与 sql/prod）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sign-name', '昆山兵贵神速智能科技', '腾讯云短信签名（共享控制台）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.template-id', '2677885', '腾讯云短信登录 OTP 模板 ID（已审批；勿用 2728085）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.template-id', '2677885', '腾讯云短信登录 OTP 模板 ID（已审批双参；勿用待审 2734311）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 -- STEP SMS-1 END
 
 -- STEP SMTP-1: 平台发件邮箱（邮箱验证码登录）
