@@ -77,7 +77,12 @@ export default function Login() {
         const { data } = await authApi.sendSms({ phone: phoneTrim })
         if (CODE_OK.has(data && data.code)) {
           setCountdown(60)
-          message.success('验证码已发送')
+          const result = (data && data.result) || {}
+          message.success(
+            result.product && result.seq != null
+              ? `验证码已发送（${result.product}#${result.seq}）`
+              : '验证码已发送',
+          )
         }
       } else if (loginMethod === 'email') {
         const emailTrim = email.trim()

@@ -8,7 +8,8 @@
 本表只列中间件与应用运行参数。业务第三方凭证不进入 properties：TokenHub 等 AI Key、腾讯云短信
 等由 Admin / DML 种子维护并落 `sys_secret`，详见 `ai-provider-secrets.md` 与
 `docs/api/auth-login.md` §1.1。短信 SdkAppId 开发 `1401156379`、生产 `1401191076`；签名与登录
-OTP 模板 `2677885` 见共享 DML STEP SMS-1。
+OTP 模板 `2677885`（双参）见共享 DML STEP SMS-1；产品名 / 参数个数见用户端
+`bgssai.sms.product-label` / `bgssai.sms.template-param-count`（默认 count=2）。
 
 | key | 说明 | 生成 / 来源 |
 | --- | --- | --- |

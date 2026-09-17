@@ -1,5 +1,7 @@
 package com.bgssai.shortai.login.sms;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,18 +20,32 @@ public class TencentSmsSender {
 
     private static final Logger log = LoggerFactory.getLogger(TencentSmsSender.class);
 
-    private final SmsSecrets smsSecrets;
+    /** 与发码 API {@code expires_in=300} 对齐的正文「X 分钟内有效」。 */
+    private static final int EXPIRE_MINUTES = 5;
 
-    public TencentSmsSender(SmsSecrets smsSecrets) {
+    private final SmsSecrets smsSecrets;
+    private final SmsOtpProperties smsOtpProperties;
+    private final AtomicLong sendSeq = new AtomicLong(0L);
+
+    public TencentSmsSender(SmsSecrets smsSecrets, SmsOtpProperties smsOtpProperties) {
         this.smsSecrets = smsSecrets;
+        this.smsOtpProperties = smsOtpProperties;
     }
 
-    public void send(String phone, String code) {
+    /**
+     * 发送登录 OTP。按 {@link SmsOtpProperties#getTemplateParamCount()} 组装模板参数；
+     * 每次发码递增序号，并随结果回传产品名与序号。
+     */
+    public SmsSendResult send(String phone, String code) {
         if (OAuthIds.blank(smsSecrets.secretId()) || OAuthIds.blank(smsSecrets.secretKey())
                 || OAuthIds.blank(smsSecrets.sdkAppId()) || OAuthIds.blank(smsSecrets.signName())
                 || OAuthIds.blank(smsSecrets.templateId())) {
             throw new BizException("5203", "短信通道暂不可用");
         }
+        String product = smsOtpProperties.getProductLabel();
+        long seq = sendSeq.incrementAndGet();
+        String[] templateParams = SmsTemplateParams.build(
+                smsOtpProperties.getTemplateParamCount(), product, seq, code, EXPIRE_MINUTES);
         try {
             SmsClient client = new SmsClient(new Credential(smsSecrets.secretId(), smsSecrets.secretKey()), "ap-guangzhou");
             SendSmsRequest req = new SendSmsRequest();
@@ -37,12 +53,15 @@ public class TencentSmsSender {
             req.setSignName(smsSecrets.signName());
             req.setTemplateId(smsSecrets.templateId());
             req.setPhoneNumberSet(new String[]{toE164(phone)});
-            req.setTemplateParamSet(new String[]{code, "5"});
+            req.setTemplateParamSet(templateParams);
             SendSmsResponse resp = client.SendSms(req);
             SendStatus[] statusSet = resp.getSendStatusSet();
             if (statusSet == null || statusSet.length == 0 || !"Ok".equals(statusSet[0].getCode())) {
                 throw new BizException("5203", "短信发送失败");
             }
+            log.info("短信验证码已发送 phone={} product={} seq={} paramCount={} requestId={}",
+                    mask(phone), product, seq, smsOtpProperties.getTemplateParamCount(), resp.getRequestId());
+            return new SmsSendResult(product, seq);
         } catch (BizException e) {
             throw e;
         } catch (TencentCloudSDKException e) {

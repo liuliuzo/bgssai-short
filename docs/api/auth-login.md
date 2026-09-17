@@ -40,9 +40,15 @@
 
 公开接口（无需 token，无 `@NeedAop`）。未注册标识符现场建号。
 
-- `POST /bgssai/user/sms/send` `{ "phone": "13800138000" }` → `{ expires_in: 300 }`；凭据缺失 `5203`。
+- `POST /bgssai/user/sms/send` `{ "phone": "13800138000" }` → `{ expires_in: 300, product: "Short", seq: 42 }`；凭据缺失 `5203`。
+  - `product` / `seq`：本次写入短信模板的产品名与递增序号（客服对照）；邮箱发码不含这两项。
+  - 模板参数个数由 `bgssai.sms.template-param-count`（`2|3|4`，**默认 2**）决定：
+    - `2` → `[code, minutes]`（生产已审批模板 `2677885` 双参；待审 `2734311` 通过前勿切 3/4）
+    - `3` → `[product#seq, code, minutes]`
+    - `4` → `[product, seq, code, minutes]`
+  - 产品名配置：`bgssai.sms.product-label`（默认 `Short`），写在 `application.properties`，非 `sys_secret`。
 - `POST /bgssai/user/login/sms` `{ "phone": "13800138000", "code": "123456" }`，成功形状与密码登录一致，可带 `is_new_user`。
-- `POST /bgssai/user/email/send` `{ "email": "buyer@example.com" }`；凭据缺失 `5204`。
+- `POST /bgssai/user/email/send` `{ "email": "buyer@example.com" }` → `{ expires_in: 300 }`；凭据缺失 `5204`。
 - `POST /bgssai/user/login/email` `{ "email": "buyer@example.com", "email_code": "123456" }`。
 
 短信 / SMTP 凭据读 `sys_secret`（DML STEP SMS-1 / SMTP-1），不新增 Admin 页。
@@ -53,7 +59,9 @@
 | --- | --- | --- |
 | `bgssai.sms.sdk-app-id` | `1401156379`（`sql/dev/DML.sql`） | `1401191076`（`sql/prod/DML.sql`） |
 | `bgssai.sms.sign-name` | `昆山兵贵神速智能科技`（共享 `sql/DML.sql`） | 同左 |
-| `bgssai.sms.template-id` | `2677885`（登录 OTP，已审批；勿用待审 `2728085`） | 同左 |
+| `bgssai.sms.template-id` | `2677885`（登录 OTP，已审批双参；勿用待审 `2734311`） | 同左 |
+| `bgssai.sms.product-label` | `Short`（`application.properties`） | 同左 |
+| `bgssai.sms.template-param-count` | `2`（默认；与 `2677885` 对齐） | 同左 |
 
 `SecretId` / `SecretKey` 仍走 `sys_secret`；示例占位见 `sms/credentials.example.env`。
 

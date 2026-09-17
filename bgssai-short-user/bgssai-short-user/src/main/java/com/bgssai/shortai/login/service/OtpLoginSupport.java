@@ -14,6 +14,7 @@ import com.bgssai.shortai.login.dto.resp.RespUserLogin;
 import com.bgssai.shortai.login.mail.SmtpMailSender;
 import com.bgssai.shortai.login.oauth.OAuthIds;
 import com.bgssai.shortai.login.otp.InMemoryOtpStore;
+import com.bgssai.shortai.login.sms.SmsSendResult;
 import com.bgssai.shortai.login.sms.TencentSmsSender;
 import com.bgssai.shortai.mapper.SysUserMapper;
 import com.bgssai.shortai.model.SysUser;
@@ -53,14 +54,15 @@ public class OtpLoginSupport {
         acquireCooldown("sms:" + phone);
         String code = nextCode();
         otpStore.save("sms", phone, code);
+        SmsSendResult sent;
         try {
-            tencentSmsSender.send(phone, code);
+            sent = tencentSmsSender.send(phone, code);
         } catch (RuntimeException e) {
             otpStore.delete("sms", phone);
             cooldown.remove("sms:" + phone);
             throw e;
         }
-        return expires();
+        return expires(sent.getProduct(), sent.getSeq());
     }
 
     public RespCodeSend sendEmail(String rawEmail) {
@@ -178,8 +180,14 @@ public class OtpLoginSupport {
     }
 
     private static RespCodeSend expires() {
+        return expires(null, null);
+    }
+
+    private static RespCodeSend expires(String product, Long seq) {
         RespCodeSend resp = new RespCodeSend();
         resp.setExpiresIn(300);
+        resp.setProduct(product);
+        resp.setSeq(seq);
         return resp;
     }
 }
