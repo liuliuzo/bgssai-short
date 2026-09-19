@@ -114,6 +114,14 @@ node_modules/
 bower_components/
 *.tsbuildinfo
 
+# Clients (desktop / mobile shells)
+clients/**/.env
+clients/desktop/dist/
+clients/mobile/.expo/
+clients/mobile/dist/
+clients/mobile/android/
+clients/mobile/ios/
+
 # Python 虚拟环境
 venv/
 env/

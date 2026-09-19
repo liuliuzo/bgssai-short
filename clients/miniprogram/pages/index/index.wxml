@@ -1,0 +1,18 @@
+<view class="shell">
+  <view class="brand">BGSSAI Short</view>
+  <view class="lead">一个小程序 · 两个登录入口</view>
+
+  <button class="entrance" bindtap="openUser">
+    <view class="role">创作者登录</view>
+    <view class="desc">进入用户端，制作短剧与成片。</view>
+  </button>
+
+  <button class="entrance" bindtap="openAdmin">
+    <view class="role">运营登录</view>
+    <view class="desc">进入管理端，审核与平台运营。</view>
+  </button>
+
+  <view class="note">
+    不提供独立的管理端 / 用户端小程序。首版用 web-view 承载两端端 H5；业务域名与 AppID 由运维单独配置，本仓库不提交密钥。
+  </view>
+</view>

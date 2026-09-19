@@ -51,11 +51,13 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 bgssai-short-parent/         # 本仓库根（Maven 聚合父工程，packaging=pom）
 ├── README.md                      # 本文件（总览）
 ├── PRODUCT_VISION.md              # 产品愿景与定位
+├── CLIENTS.md                     # 六端客户端状态表
 ├── CLAUDE.md / AGENTS.md          # AI 助手协作约定
 ├── pom.xml                        # Maven 聚合父工程（聚合两个后端模块）
 ├── sql/                           # DDL.sql / DML.sql（本产品共享库权威 schema）
 ├── docs/                          # 所有文档（单一事实来源）
 ├── deploy/                        # 部署说明与 Jenkins 流水线脚本（与中央仓逐字节一致）
+├── clients/                       # 六端壳：desktop / mobile / miniprogram
 ├── .github/workflows/             # CI（构建校验）
 │
 ├── bgssai-short-admin/      # 【管理端】端口 8080，role_code=PLATFORM_ADMIN
@@ -66,6 +68,8 @@ bgssai-short-parent/         # 本仓库根（Maven 聚合父工程，packaging=
     ├── bgssai-short-user/        # 后端：Java 21 + Spring Boot 4 + MyBatis
     └── bgssai-short-user-react/  # 前端：React 18 + Vite + Ant Design 5（端口 3002）
 ```
+
+六端客户端脚手架与状态见 [`CLIENTS.md`](./CLIENTS.md)。
 
 两个后端共用同一个 MySQL 库（`bgssai_short`）：管理端承载运营方（`PLATFORM_ADMIN`）的控制面
 API（账号、内容审核、AI 能力与用量管理），用户端承载创作者（`USER`）的制作业务 API。每个前端工程与其

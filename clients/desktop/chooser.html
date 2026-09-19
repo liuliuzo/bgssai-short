@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BGSSAI Short</title>
+    <style>
+      :root {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --panel: #ffffff;
+        --accent: #0f172a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(165deg, #0f172a 0%, #1e293b 38%, #f1f5f9 38%);
+        color: var(--ink);
+      }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+      }
+      .brand {
+        color: #f8fafc;
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin: 0 0 8px;
+      }
+      .lead {
+        color: #cbd5e1;
+        margin: 0 0 48px;
+        font-size: 15px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        width: min(720px, 100%);
+      }
+      button.entrance {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 14px;
+        padding: 28px 24px;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+      }
+      button.entrance:hover {
+        border-color: #94a3b8;
+        transform: translateY(-1px);
+      }
+      button.entrance:focus-visible {
+        outline: 2px solid #334155;
+        outline-offset: 2px;
+      }
+      .role {
+        font-size: 20px;
+        font-weight: 650;
+        margin: 0 0 8px;
+      }
+      .desc {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .hint {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .error {
+        color: #b91c1c;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        padding: 12px 16px;
+        border-radius: 10px;
+        max-width: 720px;
+      }
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1 class="brand">BGSSAI Short</h1>
+      <p class="lead">一个桌面应用 · 两个登录入口</p>
+      <div id="root" class="grid" hidden>
+        <button type="button" class="entrance" data-role="user">
+          <p class="role">创作者登录</p>
+          <p class="desc">进入用户端，制作短剧与成片。</p>
+        </button>
+        <button type="button" class="entrance" data-role="admin">
+          <p class="role">运营登录</p>
+          <p class="desc">进入管理端，审核与平台运营。</p>
+        </button>
+      </div>
+      <p id="err" class="error" hidden></p>
+      <p class="hint">不提供独立的管理端 / 用户端安装包。</p>
+    </div>
+    <script>
+      (async function () {
+        const root = document.getElementById('root');
+        const err = document.getElementById('err');
+        if (!window.bgssaiDesktop || !window.bgssaiDesktop.getEntrances) {
+          err.hidden = false;
+          err.textContent = 'Desktop bridge missing.';
+          return;
+        }
+        const urls = await window.bgssaiDesktop.getEntrances();
+        if (!urls || !urls.userUrl || !urls.adminUrl) {
+          err.hidden = false;
+          err.textContent =
+            'USER_PRODUCT_URL / ADMIN_PRODUCT_URL not configured. See .env.example.';
+          return;
+        }
+        root.hidden = false;
+        root.querySelectorAll('button.entrance').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            window.bgssaiDesktop.openEntrance(btn.getAttribute('data-role'));
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
