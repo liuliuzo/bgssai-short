@@ -1089,6 +1089,7 @@ CREATE TABLE `short_debit_outbox` (
 -- ----------------------------
 -- 站内在线客服（留言 / 会话）
 -- ----------------------------
+DROP TABLE IF EXISTS `short_cs_ticket`;
 DROP TABLE IF EXISTS `short_cs_message`;
 DROP TABLE IF EXISTS `short_cs_session`;
 CREATE TABLE `short_cs_session` (
@@ -1131,3 +1132,25 @@ CREATE TABLE `short_cs_message` (
   UNIQUE KEY `uk_short_cs_message_id` (`message_id`),
   KEY `idx_short_cs_message_session` (`session_id`, `create_time`, `del_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='在线客服消息';
+
+CREATE TABLE `short_cs_ticket` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `ticket_id` VARCHAR(64) NOT NULL COMMENT '业务工单 ID',
+  `session_id` VARCHAR(64) NOT NULL COMMENT '关联会话',
+  `subject` VARCHAR(200) NOT NULL COMMENT '工单主题',
+  `category` VARCHAR(64) DEFAULT NULL COMMENT '可选分类',
+  `priority` VARCHAR(16) NOT NULL DEFAULT 'NORMAL' COMMENT 'LOW/NORMAL/HIGH',
+  `status` VARCHAR(16) NOT NULL DEFAULT 'OPEN' COMMENT 'OPEN/IN_PROGRESS/RESOLVED/CLOSED',
+  `description` VARCHAR(2000) DEFAULT NULL COMMENT '可选描述',
+  `guest_token` VARCHAR(64) DEFAULT NULL COMMENT '访客令牌快照',
+  `user_id` VARCHAR(64) DEFAULT NULL COMMENT '登录用户快照',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除 0/1',
+  `create_by` VARCHAR(64) DEFAULT 'system' COMMENT '创建人',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` VARCHAR(64) DEFAULT 'system' COMMENT '更新人',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_cs_ticket_id` (`ticket_id`),
+  KEY `idx_short_cs_ticket_session` (`session_id`, `del_flag`, `status`),
+  KEY `idx_short_cs_ticket_status` (`status`, `create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='在线客服工单';

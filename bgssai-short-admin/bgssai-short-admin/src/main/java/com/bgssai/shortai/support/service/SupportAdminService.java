@@ -20,10 +20,13 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortCsMessageMapper;
 import com.bgssai.shortai.mapper.ShortCsSessionMapper;
+import com.bgssai.shortai.mapper.ShortCsTicketMapper;
 import com.bgssai.shortai.model.ShortCsMessage;
 import com.bgssai.shortai.model.ShortCsMessageExample;
 import com.bgssai.shortai.model.ShortCsSession;
 import com.bgssai.shortai.model.ShortCsSessionExample;
+import com.bgssai.shortai.model.ShortCsTicket;
+import com.bgssai.shortai.model.ShortCsTicketExample;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 
@@ -36,13 +39,18 @@ public class SupportAdminService {
     public static final String SENDER_ADMIN = "ADMIN";
 
     private static final int CONTENT_MAX = 2000;
+    private static final java.util.Set<String> TICKET_STATUSES =
+            java.util.Set.of("OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED");
 
     private final ShortCsSessionMapper sessionMapper;
     private final ShortCsMessageMapper messageMapper;
+    private final ShortCsTicketMapper ticketMapper;
 
-    public SupportAdminService(ShortCsSessionMapper sessionMapper, ShortCsMessageMapper messageMapper) {
+    public SupportAdminService(ShortCsSessionMapper sessionMapper, ShortCsMessageMapper messageMapper,
+            ShortCsTicketMapper ticketMapper) {
         this.sessionMapper = sessionMapper;
         this.messageMapper = messageMapper;
+        this.ticketMapper = ticketMapper;
     }
 
     private void requireAdmin() {
@@ -92,7 +100,18 @@ public class SupportAdminService {
         long total = ((Page<ShortCsSession>) rows).getTotal();
         List<Map<String, Object>> items = new ArrayList<>();
         for (ShortCsSession row : rows) {
-            items.add(toSessionMap(row));
+            Map<String, Object> item = toSessionMap(row);
+            ShortCsTicket ticket = findLatestTicket(row.getSessionId());
+            if (ticket != null) {
+                item.put("ticket_id", ticket.getTicketId());
+                item.put("ticket_status", ticket.getStatus());
+                item.put("ticket_subject", ticket.getSubject());
+            } else {
+                item.put("ticket_id", null);
+                item.put("ticket_status", null);
+                item.put("ticket_subject", null);
+            }
+            items.add(item);
         }
         PageResponse response = new PageResponse();
         response.setCode("0");
@@ -126,7 +145,38 @@ public class SupportAdminService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("session", toSessionMap(session));
         out.put("messages", msgList);
+        out.put("ticket", toTicketMap(findLatestTicket(session.getSessionId())));
         return out;
+    }
+
+    @Transactional
+    public Map<String, Object> updateTicketStatus(Map<String, Object> body) {
+        requireAdmin();
+        String ticketId = trim(str(body, "ticket_id"));
+        String status = trim(str(body, "status"));
+        if (!StringUtils.hasText(ticketId)) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "ticket_id 不能为空");
+        }
+        if (!StringUtils.hasText(status)) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "status 不能为空");
+        }
+        status = status.toUpperCase();
+        if (!TICKET_STATUSES.contains(status)) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "status 须为 OPEN/IN_PROGRESS/RESOLVED/CLOSED");
+        }
+        ShortCsTicketExample ex = new ShortCsTicketExample();
+        ex.createCriteria().andTicketIdEqualTo(ticketId).andDelFlagEqualTo(Boolean.FALSE);
+        ShortCsTicket ticket = ticketMapper.selectOneByExample(ex);
+        if (ticket == null) {
+            throw new BizException(CommonErrorCode.RESOURCE_NOT_FOUND, "工单不存在");
+        }
+        String adminId = UserContext.getUserId();
+        Date now = new Date();
+        ticket.setStatus(status);
+        ticket.setUpdateBy(adminId);
+        ticket.setUpdateTime(now);
+        ticketMapper.updateByPrimaryKeySelective(ticket);
+        return toTicketMap(ticket);
     }
 
     @Transactional
@@ -197,6 +247,14 @@ public class SupportAdminService {
         return session;
     }
 
+    private ShortCsTicket findLatestTicket(String sessionId) {
+        ShortCsTicketExample ex = new ShortCsTicketExample();
+        ex.createCriteria().andSessionIdEqualTo(sessionId).andDelFlagEqualTo(Boolean.FALSE);
+        ex.setOrderByClause("id DESC");
+        List<ShortCsTicket> rows = ticketMapper.selectByExample(ex);
+        return rows == null || rows.isEmpty() ? null : rows.get(0);
+    }
+
     private Map<String, Object> toSessionMap(ShortCsSession s) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("session_id", s.getSessionId());
@@ -221,6 +279,23 @@ public class SupportAdminService {
         m.put("sender_id", msg.getSenderId());
         m.put("content", msg.getContent());
         m.put("create_time", formatTime(msg.getCreateTime()));
+        return m;
+    }
+
+    private Map<String, Object> toTicketMap(ShortCsTicket t) {
+        if (t == null) {
+            return null;
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("ticket_id", t.getTicketId());
+        m.put("session_id", t.getSessionId());
+        m.put("subject", t.getSubject());
+        m.put("category", t.getCategory());
+        m.put("priority", t.getPriority());
+        m.put("status", t.getStatus());
+        m.put("description", t.getDescription());
+        m.put("create_time", formatTime(t.getCreateTime()));
+        m.put("update_time", formatTime(t.getUpdateTime()));
         return m;
     }
 
