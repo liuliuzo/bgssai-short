@@ -38,15 +38,25 @@
 
 .cs-panel-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 8px;
   padding: 12px 14px;
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
 }
 
 .cs-panel-header strong {
+  display: block;
   font-size: 14px;
+}
+
+.cs-panel-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 400;
 }
 
 .cs-panel-header button {
@@ -56,20 +66,6 @@
   font-size: 18px;
   line-height: 1;
   color: #64748b;
-}
-
-.cs-contact {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.cs-contact input {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 7px 9px;
-  font-size: 12px;
 }
 
 .cs-msgs {
@@ -140,13 +136,6 @@
 .cs-compose button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-.cs-hint {
-  padding: 8px 12px;
-  font-size: 12px;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
 }
 
 .cs-empty {

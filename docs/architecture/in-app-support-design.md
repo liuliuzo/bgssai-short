@@ -2,7 +2,13 @@
 
 ## 目标
 
-落地全产品线「站内在线客服（留言 / 会话）」标准：用户端悬浮入口 + 会话 UI；管理端处理台；会话 / 消息落库；不做第三方 SaaS / 智能客服。
+落地全产品线「站内在线客服（留言 / 会话）」标准：用户端悬浮入口 + **对话气泡**会话 UI；管理端处理台；会话 / 消息落库；不做第三方 SaaS / 智能客服。
+
+## 访客 UX（对齐 bot #87 / note #36）
+
+- 打开面板 → 气泡列表 + 底部 composer；**无**联系方式 / 主题前置表单。
+- 首条留言调用 `sessions/create`（带 `content`）建会话；后续走 `messages/send`。
+- API 可选 `contact_*` 仅兼容 / 管理端展示；访客 UI 不采集。管理端 inbox 保留。
 
 ## 模块落点
 
@@ -11,7 +17,7 @@
 | 用户后端 | `com.bgssai.shortai.support`（`ui` / `service`） |
 | 管理后端 | 同包名，管理端 Controllers |
 | 表 | `short_cs_session` · `short_cs_message` |
-| 用户前端 | `components/SupportWidget`（登录页 + MainLayout） |
+| 用户前端 | `components/SupportWidget`（登录页 + MainLayout；对话气泡） |
 | 管理前端 | `pages/support/SupportInboxPage` |
 
 ## 鉴权
