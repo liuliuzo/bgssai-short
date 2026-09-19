@@ -29,3 +29,7 @@ clients/miniprogram/   # 单一微信小程序，双登录入口
 | 管理 | `http://localhost:3001` | `https://dev.admin.bgssai-short.com` | `https://admin.bgssai-short.com` |
 
 各端通过环境变量或 `config` 选择 profile（`local` / `dev` / `prod`），默认 `dev`。
+
+## 在线客服
+
+`support=in-app messaging`（站内留言 / 会话；用户端悬浮入口 + 管理端处理台；不强制第三方 SaaS）。

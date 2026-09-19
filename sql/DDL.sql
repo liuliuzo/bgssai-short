@@ -1085,3 +1085,49 @@ CREATE TABLE `short_debit_outbox` (
   PRIMARY KEY (`outbox_id`),
   KEY `idx_short_debit_pending` (`delivered`, `next_attempt_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务扣费中央账本待发送队列';
+
+-- ----------------------------
+-- 站内在线客服（留言 / 会话）
+-- ----------------------------
+DROP TABLE IF EXISTS `short_cs_message`;
+DROP TABLE IF EXISTS `short_cs_session`;
+CREATE TABLE `short_cs_session` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `session_id` VARCHAR(64) NOT NULL COMMENT '业务会话 ID',
+  `guest_token` VARCHAR(64) NOT NULL COMMENT '访客拥有权令牌',
+  `user_id` VARCHAR(64) DEFAULT NULL COMMENT '登录用户 sys_user.user_id，可空',
+  `contact_name` VARCHAR(64) DEFAULT NULL COMMENT '联系人姓名',
+  `contact_phone` VARCHAR(45) DEFAULT NULL COMMENT '联系手机',
+  `contact_email` VARCHAR(128) DEFAULT NULL COMMENT '联系邮箱',
+  `status` VARCHAR(16) NOT NULL DEFAULT 'OPEN' COMMENT 'OPEN/PENDING/CLOSED',
+  `unread_user` INT NOT NULL DEFAULT 0 COMMENT '用户未读数',
+  `unread_admin` INT NOT NULL DEFAULT 0 COMMENT '客服未读数',
+  `last_message_at` DATETIME DEFAULT NULL COMMENT '最近消息时间',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除 0/1',
+  `create_by` VARCHAR(64) DEFAULT 'system' COMMENT '创建人',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` VARCHAR(64) DEFAULT 'system' COMMENT '更新人',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_cs_session_id` (`session_id`),
+  KEY `idx_short_cs_session_guest` (`guest_token`, `del_flag`),
+  KEY `idx_short_cs_session_user` (`user_id`, `del_flag`),
+  KEY `idx_short_cs_session_status` (`status`, `last_message_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='在线客服会话';
+
+CREATE TABLE `short_cs_message` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `message_id` VARCHAR(64) NOT NULL COMMENT '业务消息 ID',
+  `session_id` VARCHAR(64) NOT NULL COMMENT '所属会话',
+  `sender_type` VARCHAR(16) NOT NULL COMMENT 'USER/GUEST/ADMIN',
+  `sender_id` VARCHAR(64) DEFAULT NULL COMMENT '发送方标识',
+  `content` VARCHAR(2000) NOT NULL COMMENT '文本内容',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除 0/1',
+  `create_by` VARCHAR(64) DEFAULT 'system' COMMENT '创建人',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` VARCHAR(64) DEFAULT 'system' COMMENT '更新人',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_cs_message_id` (`message_id`),
+  KEY `idx_short_cs_message_session` (`session_id`, `create_time`, `del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='在线客服消息';

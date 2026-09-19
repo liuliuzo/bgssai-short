@@ -13,6 +13,7 @@ import QualityTemplatesPage from './pages/qualityTemplates/QualityTemplatesPage'
 import AiModelsPage from './pages/aiModels/AiModelsPage'
 import AiSecretsPage from './pages/secrets/AiSecretsPage'
 import UsageCostPage from './pages/usageCost/UsageCostPage'
+import SupportInboxPage from './pages/support/SupportInboxPage'
 
 function RequireAuth({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
@@ -55,6 +56,7 @@ export default function App() {
         }
       >
         <Route path="/home" element={<Home />} />
+        <Route path="/support" element={<SupportInboxPage />} />
         <Route path="/login-logs" element={<LoginLogsPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/creators" element={<CreatorsPage />} />

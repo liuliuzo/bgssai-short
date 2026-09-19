@@ -5,6 +5,7 @@ import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, W
 import { useUserStore } from '../store/user'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
 import LegalFooter from '../components/LegalFooter'
+import SupportWidget from '../components/SupportWidget'
 import './main-layout.css'
 
 // Navigation items — two sample sections ship with the scaffold; add product routes here.
@@ -166,6 +167,8 @@ export default function MainLayout() {
           </nav>
         )}
       </div>
+
+      <SupportWidget />
 
       <Drawer
         title="更多"

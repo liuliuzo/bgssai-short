@@ -8,6 +8,7 @@ import { parseWechatQrConnect } from '../../lib/wechatFastLogin'
 import { useUserStore, isAllowedRole } from '../../store/user'
 import { useBgssaiShell } from '../../hooks/useBgssaiShell'
 import LegalFooter from '../../components/LegalFooter'
+import SupportWidget from '../../components/SupportWidget'
 import { PhoneDialField } from '../../components/PhoneDialField'
 import { DEFAULT_DIAL_CODE, composeApiPhone, validatePhoneParts } from '../../lib/phoneDial'
 import './login.css'
@@ -347,6 +348,7 @@ export default function Login() {
         </div>
       </main>
       {wechatFastLoginDialog}
+      <SupportWidget />
     </div>
   )
 }
