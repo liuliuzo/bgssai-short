@@ -1,0 +1,21 @@
+<view class="gate">
+  <view class="gate__brand">
+    <text class="gate__name">BGSSAI Short</text>
+    <text class="gate__sub">选择登录入口</text>
+  </view>
+  <view class="gate__entries">
+    <view
+      wx:for="{{entries}}"
+      wx:key="id"
+      class="entry entry--{{item.id}}"
+      data-id="{{item.id}}"
+      data-url="{{item.url}}"
+      data-label="{{item.label}}"
+      bindtap="onSelect"
+    >
+      <text class="entry__label">{{item.label}}</text>
+      <text class="entry__hint">{{item.url}}</text>
+    </view>
+  </view>
+  <text class="gate__meta">profile={{profile}} · installable=single-app dual-entry</text>
+</view>

@@ -1,0 +1,7 @@
+<view class="wrap">
+  <web-view wx:if="{{url}}" src="{{url}}"></web-view>
+  <view wx:else class="fallback">
+    <text>缺少入口地址</text>
+    <button size="mini" bindtap="onBack">返回入口</button>
+  </view>
+</view>

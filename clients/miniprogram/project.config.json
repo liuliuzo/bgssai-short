@@ -1,0 +1,15 @@
+{
+  "description": "bgssai-short dual-entry miniprogram",
+  "packOptions": {
+    "ignore": []
+  },
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "minified": true
+  },
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "projectname": "bgssai-short",
+  "condition": {}
+}

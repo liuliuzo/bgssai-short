@@ -153,6 +153,15 @@ application-secrets.properties
 **/application-secrets.properties
 
 # =========================================================================
+# 9. 可安装客户端本地产物（clients/）
+# =========================================================================
+clients/**/dist/
+clients/**/.expo/
+clients/**/android/
+clients/**/ios/
+clients/miniprogram/miniprogram_npm/
+
+# =========================================================================
 # 8. logback 配置说明
 # =========================================================================
 # src/main/resources/log/ 下的 *.xml 为类路径日志配置（由 logging.config 引用），
