@@ -59,8 +59,10 @@
         <div class="row">
           <span class="badge badge-info">生产目录</span>
           <div style="font-size:13px">
-            首批文本、视频、语音、ASR 与音乐模型统一走 <code>TENCENT_TOKENHUB</code>，共用
-            <code>ai.tencent_tokenhub.api_key</code>；配置页只保存 <code>secret_ref</code>，不保存密钥明文。
+            首批文本、视频、语音、ASR 与音乐模型统一走 <code>TENCENT_TOKENHUB</code> 双中枢
+            （CN / Global），密钥分别为 <code>ai.tokenhub_cn.api_key</code> 与
+            <code>ai.tokenhub_global.api_key</code>；配置页只保存 <code>hub</code> /
+            <code>secret_ref</code>，不保存密钥明文。
             真实密钥在 <a href="ai-secrets.html">AI 密钥</a> 页写入 <code>sys_secret</code>。
           </div>
         </div>
@@ -228,7 +230,7 @@
           </div>
           <div class="field">
             <label>供应商端点与参数</label>
-            <textarea rows="3">{"base_url":"https://tokenhub.tencentmaas.com","secret_ref":"ai.tencent_tokenhub.api_key","submit_path":"/v1/wand/minimax-video-v2/generation","task_path":"/v1/wand/minimax-video-v2/tasks/{task_id}"}</textarea>
+            <textarea rows="3">{"hub":"cn","base_url":"https://tokenhub-cn.bgssai.com","secret_ref":"ai.tokenhub_cn.api_key","submit_path":"/v1/wand/minimax-video-v2/generation","task_path":"/v1/wand/minimax-video-v2/tasks/{task_id}"}</textarea>
             <div class="hint">密钥不入库明文，只写 secret_ref（如 ai.kling.api_key），按 docs/security 的密钥保管口径处理</div>
           </div>
           <div class="toolbar">

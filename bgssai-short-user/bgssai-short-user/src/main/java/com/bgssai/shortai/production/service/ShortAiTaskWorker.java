@@ -27,6 +27,7 @@ import com.bgssai.shortai.aiprovider.AiProviderRequest;
 import com.bgssai.shortai.aiprovider.AiProviderResult;
 import com.bgssai.shortai.aiprovider.FfmpegComposeProvider;
 import com.bgssai.shortai.aiprovider.TencentTokenHubAiProvider;
+import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
@@ -1382,7 +1383,7 @@ public class ShortAiTaskWorker {
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("FAILED");
         patch.setFailReasonCode(code);
-        patch.setFailReason(message);
+        patch.setFailReason(TokenHubClientSupport.userFacingMessage(message));
         patch.setFinishedTime(new Date());
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();
@@ -1395,7 +1396,7 @@ public class ShortAiTaskWorker {
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("FAILED");
         patch.setFailReasonCode(code);
-        patch.setFailReason(message == null ? "" : message);
+        patch.setFailReason(TokenHubClientSupport.userFacingMessage(message));
         patch.setFinishedTime(new Date());
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();

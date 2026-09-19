@@ -28,7 +28,7 @@ export default function AiSecretsPage() {
       <Title level={4} style={{ marginTop: 0 }}>AI 密钥</Title>
       <Paragraph type="secondary">
         业务第三方凭证落库（sys_secret）。中间件参数仍写 application-*.properties。演示前至少配置
-        ai.tencent_tokenhub.api_key 与 ai.kling.api_key。
+        ai.tokenhub_cn.api_key 与 ai.tokenhub_global.api_key（可空值回填自旧键 ai.tencent_tokenhub.api_key）。
       </Paragraph>
       <Card>
         <Table

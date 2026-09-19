@@ -393,10 +393,23 @@ public class AiTaskService {
         patch.setProgressPercent(0);
         patch.setRetryCount((task.getRetryCount() == null ? 0 : task.getRetryCount()) + 1);
         patch.setUpdatedTime(new Date());
+        boolean useFallback = req != null && req.getFallbackModelFlag() != null
+                && req.getFallbackModelFlag() == 1;
+        if (useFallback) {
+            AiModelConfig alt = aiModelResolveService.resolveFallback(task.getTaskType(), task.getModelCode());
+            if (alt != null && alt.getModelCode() != null && !alt.getModelCode().isBlank()) {
+                patch.setModelCode(alt.getModelCode());
+            }
+        }
         ShortAiTaskExample up = new ShortAiTaskExample();
         up.createCriteria().andIdEqualTo(task.getId());
         shortAiTaskMapper.updateByExampleSelective(patch, up);
-        return Responses.ok("ok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("task_id", task.getTaskId());
+        result.put("task_status", "QUEUED");
+        result.put("model_code", patch.getModelCode() != null ? patch.getModelCode() : task.getModelCode());
+        result.put("fallback_model_flag", useFallback ? 1 : 0);
+        return Responses.ok(result);
     }
 
     @Transactional

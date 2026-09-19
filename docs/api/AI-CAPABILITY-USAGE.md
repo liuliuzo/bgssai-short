@@ -138,16 +138,21 @@ Query：`page_num`、`page_size`、`work_id`、`episode_id`、`ability_type`、`
 
 ### GET /bgssai/user/ai-models/list
 
-Query：`ability_type`（可选）。需登录 `USER`。返回该能力下 **启用** 模型，供创作台点选；不含 `config_json` 与密钥。
+Query：`ability_type`（可选）。需登录 `USER`。返回该能力下 **启用** 模型，供创作台点选；
+只暴露展示名与计价，不含 `provider_code`、`config_json` 与密钥。
 
 ```json
 { "result": { "model_list": [
-  { "model_id": "m-tokenhub-video-minimax", "ability_type": "VIDEO", "provider_code": "TENCENT_TOKENHUB",
-    "model_code": "minimax-video-h3", "model_name": "MiniMax-Video-H3", "quality_level": "STANDARD",
-    "price_unit": "PER_SECOND", "unit_price_cent": 50, "default_flag": 1 }
+  { "model_id": "m-tokenhub-video-minimax", "ability_type": "VIDEO",
+    "model_code": "minimax-video-h3", "display_name": "MiniMax-Video-H3",
+    "model_name": "MiniMax-Video-H3", "quality_level": "STANDARD",
+    "price_unit": "PER_SECOND", "unit_price_cent": 50, "default_flag": 1,
+    "region": "cn", "region_label": "国内" }
 ] } }
 ```
 
-首批生产目录：TEXT `hy4-preview` / `kimi-k3` / `deepseek-v4-pro`；VIDEO
+首批生产目录：TEXT `hy4-preview` / `kimi-k3` / `deepseek-chat`（CN）与 `gpt-4o-mini` /
+`claude-3-5-haiku-latest`（Global）；VIDEO
 `minimax-video-h3` / `pixverse-video-v6.0` / `kling-video-v3`；VOICE
 `minimax-speech-2.8-hd`；ASR `hy-asr-3.0-preview`；MUSIC `minimax-music-v2.6`。
+指定 `model_code` 不可用时服务端回退默认模型；重试可带 `fallback_model_flag=1`。

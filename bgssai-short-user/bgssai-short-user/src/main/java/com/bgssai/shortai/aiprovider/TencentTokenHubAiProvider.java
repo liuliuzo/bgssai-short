@@ -20,14 +20,13 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
- * provider_code=TENCENT_TOKENHUB. One Bearer key fronts the production TEXT,
- * VIDEO, VOICE, ASR and MUSIC model catalog.
+ * provider_code=TENCENT_TOKENHUB. Dual BGSSAI hubs (CN + Global) front TEXT /
+ * VIDEO / VOICE / ASR / MUSIC; keys live in sys_secret only.
  */
 @Component
 public class TencentTokenHubAiProvider implements AiProvider {
 
     public static final String CODE = "TENCENT_TOKENHUB";
-    static final String DEFAULT_BASE_URL = "https://tokenhub.tencentmaas.com";
 
     private static final String CHAT_PATH = "/v1/chat/completions";
     private static final String MINIMAX_VIDEO_SUBMIT = "/v1/wand/minimax-video-v2/generation";
@@ -48,32 +47,35 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private final SysSecretReader secretReader;
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
-    private final String gatewayBaseUrl;
-    private final String gatewayApiKey;
+    private final String cnBaseUrl;
+    private final String globalBaseUrl;
 
     @Autowired
     public TencentTokenHubAiProvider(SysSecretReader secretReader,
-            @Value("${bgssai.llm.gateway-base-url:}") String gatewayBaseUrl,
-            @Value("${bgssai.llm.gateway-api-key:}") String gatewayApiKey) {
+            @Value("${bgssai.llm.tokenhub-cn-base-url:${bgssai.llm.gateway-base-url:https://tokenhub-cn.bgssai.com}}")
+                    String cnBaseUrl,
+            @Value("${bgssai.llm.tokenhub-global-base-url:https://tokenhub-global.bgssai.com}")
+                    String globalBaseUrl) {
         this(secretReader, new ProviderHttp.JdkClient(), ms -> {
             if (ms > 0) {
                 Thread.sleep(ms);
             }
-        }, gatewayBaseUrl, gatewayApiKey);
+        }, cnBaseUrl, globalBaseUrl);
     }
 
     TencentTokenHubAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
             ProviderHttp.Sleeper sleeper) {
-        this(secretReader, http, sleeper, "", "");
+        this(secretReader, http, sleeper, TokenHubClientSupport.DEFAULT_CN_BASE_URL,
+                TokenHubClientSupport.DEFAULT_GLOBAL_BASE_URL);
     }
 
     TencentTokenHubAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
-            ProviderHttp.Sleeper sleeper, String gatewayBaseUrl, String gatewayApiKey) {
+            ProviderHttp.Sleeper sleeper, String cnBaseUrl, String globalBaseUrl) {
         this.secretReader = secretReader;
         this.http = http;
         this.sleeper = sleeper;
-        this.gatewayBaseUrl = ProviderHttp.trimSlash(gatewayBaseUrl == null ? "" : gatewayBaseUrl);
-        this.gatewayApiKey = gatewayApiKey == null ? "" : gatewayApiKey.trim();
+        this.cnBaseUrl = ProviderHttp.trimSlash(cnBaseUrl == null ? "" : cnBaseUrl);
+        this.globalBaseUrl = ProviderHttp.trimSlash(globalBaseUrl == null ? "" : globalBaseUrl);
     }
 
     @Override
@@ -87,18 +89,17 @@ public class TencentTokenHubAiProvider implements AiProvider {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String hub = TokenHubClientSupport.resolveHub(cfg, request.getModel().getModelCode());
         String base = ProviderHttp.trimSlash(ProviderHttp.firstNonBlank(
-                ShortJson.text(cfg.get("base_url")), DEFAULT_BASE_URL));
+                ShortJson.text(cfg.get("base_url")),
+                TokenHubClientSupport.defaultBaseUrl(hub, cnBaseUrl, globalBaseUrl)));
         String ref = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
-                SysSecretReader.AI_TENCENT_TOKENHUB_API_KEY);
-        String apiKey = secretReader.get(ref);
+                TokenHubClientSupport.defaultSecretRef(hub));
+        String apiKey = TokenHubClientSupport.resolveApiKey(secretReader, hub, ref);
         String ability = request.getAbilityType() == null ? "" : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
-        if ("TEXT".equals(ability) && !gatewayBaseUrl.isBlank() && !gatewayApiKey.isBlank()) {
-            base = gatewayBaseUrl;
-            apiKey = gatewayApiKey;
-        }
         if (apiKey.isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "AI api key missing for " + ref);
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                    TokenHubClientSupport.userFacingMessage("model credential unavailable"));
         }
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
         try {
@@ -109,15 +110,17 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 case "ASR" -> asr(base, apiKey, cfg, request, timeoutSec);
                 case "MUSIC" -> music(base, apiKey, cfg, request, timeoutSec);
                 default -> throw new BizException(CommonErrorCode.RULE_REJECT,
-                        "TENCENT_TOKENHUB unsupported ability: " + ability);
+                        "unsupported ability for model gateway: " + ability);
             };
         } catch (BizException ex) {
-            throw ex;
+            throw new BizException(ex.getCode(), TokenHubClientSupport.userFacingMessage(ex.getMessage()));
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "tokenhub interrupted");
+            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                    TokenHubClientSupport.userFacingMessage("model call interrupted"));
         } catch (Exception ex) {
-            log.warn("TokenHub call failed ability={} model={}", ability, request.getModel().getModelCode(), ex);
+            log.warn("hub call failed ability={} hub={} model={}", ability, hub,
+                    request.getModel().getModelCode(), ex);
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, safe(ex));
         }
     }
@@ -132,7 +135,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         Map<String, Object> resp = post(base + path, apiKey, body, Math.min(120, timeoutSec));
         String content = chatContent(resp);
         if (content.isBlank()) {
-            throw upstream("tokenhub text content missing", resp);
+            throw upstream("model text content missing", resp);
         }
         AiProviderResult result = AiProviderResult.text(content);
         int tokens = nestedInt(resp, "usage", "total_tokens", 0);
@@ -155,7 +158,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         if (model.startsWith("kling-video-")) {
             return klingVideo(base, apiKey, cfg, request, timeoutSec);
         }
-        throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported TokenHub video model: " + model);
+        throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported video model: " + model);
     }
 
     private AiProviderResult minimaxVideo(String base, String apiKey, Map<String, Object> cfg,
@@ -346,7 +349,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private AiProviderResult audioResult(AiProviderRequest request, String value, int durationMs,
             int timeoutSec) throws Exception {
         if (value == null || value.isBlank()) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "tokenhub audio missing");
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model audio missing");
         }
         byte[] bytes;
         if (value.startsWith("https://")) {
@@ -357,7 +360,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
             try {
                 bytes = value.startsWith("data:") ? Base64.getDecoder().decode(hex) : decodeHex(hex);
             } catch (IllegalArgumentException ex) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "tokenhub audio encoding invalid");
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model audio encoding invalid");
             }
         }
         AiProviderResult result = AiProviderResult.binary(bytes, "audio/mpeg");
@@ -382,7 +385,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private Map<String, Object> poll(String base, String apiKey, String taskPath, String taskId,
             int timeoutSec, long intervalMs, PollKind kind) throws Exception {
         if (taskId == null || taskId.isBlank()) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "tokenhub submit missing task_id");
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model submit missing task_id");
         }
         String query = base + taskPath.replace("{task_id}", taskId);
         long deadline = System.currentTimeMillis() + timeoutSec * 1000L;
@@ -393,11 +396,11 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 return resp;
             }
             if (state == PollState.FAILED) {
-                throw upstream("tokenhub task failed", resp);
+                throw upstream("model task failed", resp);
             }
             sleeper.sleep(intervalMs);
         }
-        throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "tokenhub task timeout task_id=" + taskId);
+        throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "model task timeout");
     }
 
     private static PollState pollState(Map<String, Object> resp, PollKind kind) {
@@ -456,7 +459,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         Map<String, Object> base = child(resp, "base_resp");
         if (!base.isEmpty() && ShortJson.integer(base.get("status_code"), 0) != 0) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, ProviderHttp.firstNonBlank(
-                    ShortJson.text(base.get("status_msg")), "tokenhub " + operation + " failed"));
+                    ShortJson.text(base.get("status_msg")), "model " + operation + " failed"));
         }
     }
 
@@ -474,7 +477,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 ShortJson.text(resp.get("message")), ShortJson.text(resp.get("msg")),
                 ShortJson.text(resp.get("ErrMsg")), nestedText(resp, "base_resp", "status_msg"), fallback);
         return new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                message.length() > 240 ? message.substring(0, 240) : message);
+                TokenHubClientSupport.userFacingMessage(message));
     }
 
     private static Map<String, Object> child(Map<String, Object> source, String key) {
@@ -606,11 +609,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private static String safe(Exception ex) {
-        String message = ex.getMessage();
-        if (message == null || message.isBlank()) {
-            return "tokenhub call failed";
-        }
-        return message.length() > 240 ? message.substring(0, 240) : message;
+        return TokenHubClientSupport.userFacingMessage(ex.getMessage());
     }
 
     private enum PollKind {

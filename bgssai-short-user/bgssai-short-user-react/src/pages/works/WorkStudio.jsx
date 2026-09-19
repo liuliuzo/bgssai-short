@@ -400,7 +400,8 @@ function modelLabel(row) {
   if (!row) return ''
   const price = ((Number(row.unit_price_cent) || 0) / 100).toFixed(2)
   const region = row.region_label || (row.region === 'intl' ? '国外' : '国内')
-  return `${row.model_name} · ${region} · ${price}元`
+  const name = row.display_name || row.model_name || row.model_code
+  return `${name} · ${region} · ${price}元`
 }
 
 function StoryboardPane({ work, episodeId }) {

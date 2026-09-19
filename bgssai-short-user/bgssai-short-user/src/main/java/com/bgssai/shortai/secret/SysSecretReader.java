@@ -13,7 +13,12 @@ public class SysSecretReader {
 
     public static final String AI_OPENAI_COMPAT_API_KEY = "ai.openai_compat.api_key";
 
+    /** @deprecated Prefer {@link #AI_TOKENHUB_CN_API_KEY}; kept for empty-fill migration. */
     public static final String AI_TENCENT_TOKENHUB_API_KEY = "ai.tencent_tokenhub.api_key";
+
+    public static final String AI_TOKENHUB_CN_API_KEY = "ai.tokenhub_cn.api_key";
+
+    public static final String AI_TOKENHUB_GLOBAL_API_KEY = "ai.tokenhub_global.api_key";
 
     public static final String AI_KLING_API_KEY = "ai.kling.api_key";
 
