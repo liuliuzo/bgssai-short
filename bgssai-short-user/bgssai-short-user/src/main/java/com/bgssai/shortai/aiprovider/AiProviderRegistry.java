@@ -59,7 +59,7 @@ public class AiProviderRegistry {
         }
         Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
         String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
-        if (baseUrl.contains("tokenhub.tencentmaas.com") && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
+        if (TokenHubClientSupport.isTokenHubHost(baseUrl) && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
             return byCode.get(TencentTokenHubAiProvider.CODE);
         }
         String chatPath = ShortJson.text(cfg.get("chat_path"));
@@ -79,7 +79,7 @@ public class AiProviderRegistry {
         }
         Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
         String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
-        if (baseUrl.contains("tokenhub.tencentmaas.com") && supports(TencentTokenHubAiProvider.CODE)) {
+        if (TokenHubClientSupport.isTokenHubHost(baseUrl) && supports(TencentTokenHubAiProvider.CODE)) {
             return true;
         }
         String chatPath = ShortJson.text(cfg.get("chat_path"));

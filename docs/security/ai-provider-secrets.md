@@ -15,7 +15,9 @@
 
 | secret_key | 用途 |
 | --- | --- |
-| `ai.tencent_tokenhub.api_key` | TokenHub 共用 Bearer Key（TEXT / VIDEO / VOICE / ASR / MUSIC） |
+| `ai.tokenhub_cn.api_key` | BGSSAI TokenHub-CN Bearer Key（境内中枢） |
+| `ai.tokenhub_global.api_key` | BGSSAI TokenHub-Global Bearer Key（境外中枢） |
+| `ai.tencent_tokenhub.api_key` | 旧 CN 键（仅空值回填兼容，新配置请用 `ai.tokenhub_cn.api_key`） |
 | `ai.openai_compat.api_key` | OpenAI 兼容网关默认密钥（可多模型共用同一 ref） |
 | `ai.kling.api_key` | 可灵官方 API Key（Bearer；`provider_code=KLING` 的 IMAGE / VIDEO 共用） |
 | `ai.minimax.api_key` | MiniMax / 海螺 API Key（Bearer） |
@@ -27,6 +29,7 @@
 （`GET/POST /bgssai/admin/secrets/**`）或受控 SQL 写入。TokenHub 行使用
 `ON DUPLICATE KEY UPDATE` 的仅空值回填规则，禁止提交真实 Bearer Key。九个生产模型可以保持启用，
 但密钥为空或停用时任务必须明确失败。Admin「测试」只检查密钥非空已启用，**不向供应商发扣费请求**。
+properties 只允许写中枢 base URL，禁止写 TokenHub API Key。
 
 ## 3. 运行时读取
 

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
+import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
@@ -16,6 +17,7 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.AiModelConfigMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.AiModelConfigExample;
+import com.bgssai.shortai.production.support.ShortJson;
 
 @Service
 public class AiModelResolveService {
@@ -41,11 +43,60 @@ public class AiModelResolveService {
             ex.setOrderByClause("default_flag desc, id asc");
             List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
             AiModelConfig picked = pickResolvable(rows);
-            if (picked == null) {
-                throw new BizException(CommonErrorCode.RULE_REJECT, "model disabled or not found: " + modelCode);
+            if (picked != null) {
+                return picked;
             }
-            return picked;
+            // Graceful fallback: requested model unavailable → ability default.
+            AiModelConfig fallback = resolveDefault(ability);
+            if (fallback != null) {
+                return fallback;
+            }
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                    TokenHubClientSupport.userFacingMessage("model unavailable: " + modelCode));
         }
+        AiModelConfig row = resolveDefault(ability);
+        if (row == null) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE);
+        }
+        return row;
+    }
+
+    /**
+     * Pick another enabled model for the same ability (retry with fallback_model_flag).
+     * Prefers non-matching model_code, then default, then any resolvable row.
+     */
+    public AiModelConfig resolveFallback(String abilityType, String excludeModelCode) {
+        if (abilityType == null || abilityType.isBlank()) {
+            return null;
+        }
+        String ability = abilityType.trim();
+        AiModelConfigExample ex = new AiModelConfigExample();
+        ex.createCriteria()
+                .andAbilityTypeEqualTo(ability)
+                .andEnabledFlagEqualTo(1)
+                .andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("default_flag desc, id asc");
+        List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        String exclude = excludeModelCode == null ? "" : excludeModelCode.trim();
+        AiModelConfig alternate = null;
+        for (AiModelConfig row : rows) {
+            if (!aiProviderRegistry.resolvable(row)) {
+                continue;
+            }
+            if (!exclude.isBlank() && exclude.equals(row.getModelCode())) {
+                continue;
+            }
+            if (row.getDefaultFlag() != null && row.getDefaultFlag() == 1) {
+                return row;
+            }
+            if (alternate == null) {
+                alternate = row;
+            }
+        }
+        return alternate;
+    }
+
+    private AiModelConfig resolveDefault(String ability) {
         AiModelConfigExample ex = new AiModelConfigExample();
         ex.createCriteria()
                 .andAbilityTypeEqualTo(ability)
@@ -55,10 +106,17 @@ public class AiModelResolveService {
         ex.setOrderByClause("id asc");
         List<AiModelConfig> defaults = aiModelConfigMapper.selectByExample(ex);
         AiModelConfig row = pickResolvable(defaults);
-        if (row == null) {
-            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE);
+        if (row != null) {
+            return row;
         }
-        return row;
+        // No default row: any enabled resolvable model for the ability.
+        AiModelConfigExample any = new AiModelConfigExample();
+        any.createCriteria()
+                .andAbilityTypeEqualTo(ability)
+                .andEnabledFlagEqualTo(1)
+                .andDeletedFlagEqualTo(0);
+        any.setOrderByClause("id asc");
+        return pickResolvable(aiModelConfigMapper.selectByExample(any));
     }
 
     private AiModelConfig pickResolvable(List<AiModelConfig> rows) {
@@ -84,6 +142,9 @@ public class AiModelResolveService {
         return price * amount;
     }
 
+    /**
+     * User catalog: display_name + model_code for picker only. No provider_code / hub brand.
+     */
     public ApiResponse listEnabled(String abilityType) {
         AiModelConfigExample ex = new AiModelConfigExample();
         AiModelConfigExample.Criteria c = ex.createCriteria().andEnabledFlagEqualTo(1).andDeletedFlagEqualTo(0);
@@ -97,18 +158,24 @@ public class AiModelResolveService {
             if (!aiProviderRegistry.resolvable(row)) {
                 continue;
             }
+            Map<String, Object> cfg = ShortJson.map(row.getConfigJson());
+            String hub = TokenHubClientSupport.resolveHub(cfg, row.getModelCode());
+            String region = TokenHubClientSupport.HUB_GLOBAL.equals(hub)
+                    ? ModelUsageMeta.INTL
+                    : ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
+            int weight = ModelUsageMeta.tokenMultiplier(row.getModelCode(), row.getProviderCode());
+            String displayName = row.getModelName() == null || row.getModelName().isBlank()
+                    ? row.getModelCode() : row.getModelName();
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("model_id", row.getModelId());
             item.put("ability_type", row.getAbilityType());
-            item.put("provider_code", row.getProviderCode());
             item.put("model_code", row.getModelCode());
-            item.put("model_name", row.getModelName());
+            item.put("display_name", displayName);
+            item.put("model_name", displayName);
             item.put("quality_level", row.getQualityLevel());
             item.put("price_unit", row.getPriceUnit());
             item.put("unit_price_cent", row.getUnitPriceCent());
             item.put("default_flag", row.getDefaultFlag());
-            String region = ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
-            int weight = ModelUsageMeta.tokenMultiplier(row.getModelCode(), row.getProviderCode());
             item.put("region", region);
             item.put("region_label", ModelUsageMeta.regionLabel(region));
             item.put("token_multiplier", weight);

@@ -216,8 +216,9 @@
         <code>POST /bgssai/user/scripts/outline-generate</code>——执行前展示影响范围与费用
         （只重写大纲行，不覆盖已定稿集的正文）；无大纲空态下顶部按钮文案为「生成大纲」，
         已有大纲才是「重新生成大纲」。顶部文本模型来自
-        <code>GET /bgssai/user/ai-models/list?ability_type=TEXT</code>，大纲、剧本生成与局部重写提交
-        <code>model_code</code>，省略时由后端解析默认模型。展开的剧本即 <code>scene_list</code>
+        <code>GET /bgssai/user/ai-models/list?ability_type=TEXT</code>（选项展示
+        <code>display_name</code>，不含中枢名 / <code>provider_code</code>），大纲、剧本生成与局部重写提交
+        <code>model_code</code>，省略或不可用时由后端回退默认模型。展开的剧本即 <code>scene_list</code>
         （<code>POST /bgssai/user/scripts/save</code> · <code>/generate</code> · <code>/rewrite</code>），
         定稿走 <code>POST /bgssai/user/scripts/ready</code> 并自动拆镜进创作台；
         定稿后仅错别字级文字修改（不改变场次与台词切分）不回落 <code>storyboard_status</code>。

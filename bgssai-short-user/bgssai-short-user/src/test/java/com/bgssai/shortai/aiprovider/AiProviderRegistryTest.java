@@ -58,6 +58,40 @@ class AiProviderRegistryTest {
     }
 
     @Test
+    void resolveFallsBackToTokenHubForBgssaiHubHosts() {
+        ProviderHttp.Client noop = new ProviderHttp.Client() {
+            @Override
+            public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
+                return "{}";
+            }
+
+            @Override
+            public String getJson(String url, Map<String, String> headers, int timeoutSec) {
+                return "{}";
+            }
+
+            @Override
+            public byte[] getBytes(String url, int timeoutSec) {
+                return new byte[0];
+            }
+        };
+        TencentTokenHubAiProvider hub = new TencentTokenHubAiProvider(
+                new SysSecretReader(key -> "k"), noop, ms -> {
+                });
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(hub));
+        AiModelConfig cn = new AiModelConfig();
+        cn.setProviderCode("CUSTOM");
+        cn.setAbilityType("TEXT");
+        cn.setConfigJson("{\"base_url\":\"https://tokenhub-cn.bgssai.com\",\"hub\":\"cn\"}");
+        assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(cn).providerCode());
+        AiModelConfig global = new AiModelConfig();
+        global.setProviderCode("CUSTOM");
+        global.setAbilityType("TEXT");
+        global.setConfigJson("{\"base_url\":\"https://tokenhub-global.bgssai.com\",\"hub\":\"global\"}");
+        assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(global).providerCode());
+    }
+
+    @Test
     void unknownVideoVendorWithoutFallbackRejected() {
         AiProviderRegistry registry = new AiProviderRegistry(List.of());
         AiModelConfig model = new AiModelConfig();

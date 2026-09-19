@@ -66,9 +66,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BizException.class)
     public ResponseEntity<ApiResponse> handleBizException(BizException ex, HttpServletRequest request) {
+        String msg = com.bgssai.shortai.aiprovider.TokenHubClientSupport.userFacingMessage(ex.getMessage());
+        // Preserve ordinary business copy when the scrubber would only rewrite hub leaks.
+        String raw = ex.getMessage() == null ? "" : ex.getMessage();
+        String lower = raw.toLowerCase();
+        boolean hubLeak = lower.contains("tokenhub") || lower.contains("token hub")
+                || lower.contains("tencentmaas") || lower.contains("api key missing")
+                || lower.contains("secret_ref") || lower.contains("bearer ");
+        if (!hubLeak && !raw.isBlank()) {
+            msg = raw.length() > 240 ? raw.substring(0, 240) : raw;
+        }
         log.warn("[GlobalException] biz path={} code={} msg={}",
-                request.getRequestURI(), ex.getCode(), ex.getMessage());
-        return json(HttpStatus.OK, envelope(ex.getCode(), ex.getMessage()));
+                request.getRequestURI(), ex.getCode(), msg);
+        return json(HttpStatus.OK, envelope(ex.getCode(), msg));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -2676,3 +2676,22 @@ WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT' AND model_id 
 UPDATE ai_model_config
 SET config_json = JSON_SET(COALESCE(config_json, '{}'), '$.base_url', 'https://tokenhub-cn.bgssai.com')
 WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT';
+
+-- Dual TokenHub client standard (CN + Global; align org-wide HR #49)
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', '', 'BGSSAI TokenHub-CN API Key（境内模型中枢）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', '', 'BGSSAI TokenHub-Global API Key（境外模型中枢）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+UPDATE `sys_secret` cn
+JOIN `sys_secret` legacy ON legacy.`secret_key` = 'ai.tencent_tokenhub.api_key'
+SET cn.`secret_value` = legacy.`secret_value`
+WHERE cn.`secret_key` = 'ai.tokenhub_cn.api_key'
+  AND (cn.`secret_value` IS NULL OR cn.`secret_value` = '')
+  AND legacy.`secret_value` IS NOT NULL AND legacy.`secret_value` <> '';
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(`config_json`, '{}'),
+    '$.hub', 'cn',
+    '$.base_url', 'https://tokenhub-cn.bgssai.com',
+    '$.secret_ref', 'ai.tokenhub_cn.api_key')
+WHERE `provider_code` = 'TENCENT_TOKENHUB'
+  AND (`model_code` IS NULL OR (`model_code` NOT LIKE 'gpt-%' AND `model_code` NOT LIKE 'claude%' AND `model_code` NOT LIKE 'gemini%' AND `model_code` NOT LIKE 'grok%'));
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-global-text-gpt4o-mini', 'TEXT', 'TENCENT_TOKENHUB', 'gpt-4o-mini', 'GPT-4o mini', 'STANDARD', 'PER_KILO_TOKEN', 8, 0, 1, 120, 1, '{"hub":"global","base_url":"https://tokenhub-global.bgssai.com","secret_ref":"ai.tokenhub_global.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_name` = VALUES(`model_name`), `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-global-text-claude-haiku', 'TEXT', 'TENCENT_TOKENHUB', 'claude-3-5-haiku-latest', 'Claude Haiku', 'HIGH', 'PER_KILO_TOKEN', 12, 0, 1, 120, 1, '{"hub":"global","base_url":"https://tokenhub-global.bgssai.com","secret_ref":"ai.tokenhub_global.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_name` = VALUES(`model_name`), `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;

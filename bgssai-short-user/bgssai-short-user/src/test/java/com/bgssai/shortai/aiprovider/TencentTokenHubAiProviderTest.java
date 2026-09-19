@@ -115,7 +115,7 @@ class TencentTokenHubAiProviderTest {
         FakeClient http = new FakeClient();
         BizException ex = assertThrows(BizException.class,
                 () -> provider(http, "").execute(request("TEXT", "hy4-preview", "x")));
-        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+        assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
         assertTrue(http.postedUrls.isEmpty());
     }
 
@@ -124,12 +124,50 @@ class TencentTokenHubAiProviderTest {
         FakeClient http = new FakeClient();
         http.posts.add("{\"choices\":[{\"message\":{\"content\":\"hub\"}}],\"usage\":{\"total_tokens\":3}}");
         TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
-                new SysSecretReader(secretRef -> "native-key"), http, ms -> {
-                }, "https://www.bgssai-tokenhub-cn.com/", "sk-hub");
-        AiProviderResult result = provider.execute(request("TEXT", "hy4-preview", "写剧本"));
+                new SysSecretReader(secretRef -> {
+                    if (SysSecretReader.AI_TOKENHUB_CN_API_KEY.equals(secretRef)
+                            || SysSecretReader.AI_TENCENT_TOKENHUB_API_KEY.equals(secretRef)) {
+                        return "sk-hub";
+                    }
+                    return "";
+                }), http, ms -> {
+                }, "https://tokenhub-cn.bgssai.com/", "https://tokenhub-global.bgssai.com/");
+        AiProviderRequest req = request("TEXT", "hy4-preview", "写剧本");
+        req.getModel().setConfigJson(
+                "{\"hub\":\"cn\",\"base_url\":\"https://tokenhub-cn.bgssai.com\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        AiProviderResult result = provider.execute(req);
         assertEquals("hub", result.getTextContent());
-        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub-cn.com/v1/chat/completions"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://tokenhub-cn.bgssai.com/v1/chat/completions"));
         assertEquals("Bearer sk-hub", http.postedHeaders.get(0).get("Authorization"));
+    }
+
+    @Test
+    void globalHubUsesGlobalSecretAndBaseUrl() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"choices\":[{\"message\":{\"content\":\"intl\"}}],\"usage\":{\"total_tokens\":2}}");
+        TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
+                new SysSecretReader(secretRef -> SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY.equals(secretRef)
+                        ? "sk-global" : "sk-cn"),
+                http, ms -> {
+                }, "https://tokenhub-cn.bgssai.com", "https://tokenhub-global.bgssai.com");
+        AiProviderRequest req = request("TEXT", "gpt-4o-mini", "hello");
+        req.getModel().setConfigJson(
+                "{\"hub\":\"global\",\"secret_ref\":\"ai.tokenhub_global.api_key\",\"chat_path\":\"/v1/chat/completions\"}");
+        AiProviderResult result = provider.execute(req);
+        assertEquals("intl", result.getTextContent());
+        assertTrue(http.postedUrls.get(0).startsWith("https://tokenhub-global.bgssai.com/v1/chat/completions"));
+        assertEquals("Bearer sk-global", http.postedHeaders.get(0).get("Authorization"));
+    }
+
+    @Test
+    void userFacingErrorsHideTokenHubBrand() {
+        FakeClient http = new FakeClient();
+        BizException ex = assertThrows(BizException.class,
+                () -> provider(http, "").execute(request("TEXT", "hy4-preview", "x")));
+        assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
+        assertTrue(!ex.getMessage().toLowerCase().contains("tokenhub"));
+        assertTrue(!ex.getMessage().toLowerCase().contains("api key"));
+        assertTrue(http.postedUrls.isEmpty());
     }
 
     private static TencentTokenHubAiProvider provider(FakeClient http, String key) {
@@ -143,7 +181,8 @@ class TencentTokenHubAiProviderTest {
         model.setModelCode(modelCode);
         model.setPriceUnit("PER_CALL");
         model.setTimeoutSec(60);
-        model.setConfigJson("{\"base_url\":\"https://tokenhub.tencentmaas.com\",\"poll_interval_ms\":0}");
+        model.setConfigJson(
+                "{\"hub\":\"cn\",\"base_url\":\"https://tokenhub-cn.bgssai.com\",\"poll_interval_ms\":0,\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
         AiProviderRequest request = new AiProviderRequest();
         request.setAbilityType(ability);
         request.setModel(model);

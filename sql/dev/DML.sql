@@ -38,3 +38,10 @@ WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT' AND model_id 
 UPDATE ai_model_config
 SET config_json = JSON_SET(COALESCE(config_json, '{}'), '$.base_url', 'https://tokenhub-cn.bgssai.com')
 WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT';
+
+-- Dual TokenHub secrets (dev seeds; keys stay in sys_secret, not properties)
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', 'sk-bgssai-short-cn-temp', 'BGSSAI TokenHub-CN API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', 'sk-bgssai-short-global-temp', 'BGSSAI TokenHub-Global API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(`config_json`, '{}'), '$.hub', 'cn', '$.base_url', 'https://tokenhub-cn.bgssai.com', '$.secret_ref', 'ai.tokenhub_cn.api_key')
+WHERE `provider_code` = 'TENCENT_TOKENHUB' AND `model_id` NOT LIKE 'm-tokenhub-global-%';

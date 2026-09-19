@@ -7,7 +7,10 @@
 
 - 以 `provider_code=TENCENT_TOKENHUB` 接入 TEXT / VIDEO / VOICE / ASR / MUSIC，业务 Service
   仍只提交标准化的 `AiProviderRequest`，不感知供应商 JSON。
-- 九个模型共用 `sys_secret.secret_key=ai.tencent_tokenhub.api_key`，模型配置只保存非敏感路径与默认参数。
+- **双中枢**：`config_json.hub=cn|global` 分别走 TokenHub-CN / TokenHub-Global；密钥
+  `ai.tokenhub_cn.api_key` / `ai.tokenhub_global.api_key`（旧 CN 键空值回填兼容）。
+- 用户端只见 `display_name` 模型选择器；错误与 `fail_reason` 脱敏，不含 TokenHub 字样。
+- 所选模型不可用时回退同能力默认模型；重试可换备用模型。
 - 上游返回的临时视频、音频、字幕 URL 只在 Worker 内使用；成功后立即下载并转存对象存储。
 - 同步和异步上游调用统一落入 `short_ai_task` 状态、重试、计费与失败原因，不生成占位结果。
 
@@ -15,10 +18,10 @@
 
 ```text
 业务 Service
-  -> AiModelResolveService 解析 ability_type + model_code
+  -> AiModelResolveService 解析 ability_type + model_code（不可用则回退默认）
   -> AiTaskQueue 写入 QUEUED
-  -> ShortAiTaskWorker 组装标准请求
-       -> TencentTokenHubAiProvider 按 model_code 分派端点
+    -> ShortAiTaskWorker 组装标准请求
+       -> TencentTokenHubAiProvider 按 hub + model_code 分派端点
        -> 同步取结果，或在 timeout_sec 内轮询
        -> 临时 URL 下载为 bytes
        -> ObjectStorage.put + short_asset
@@ -26,15 +29,22 @@
 ```
 
 `TencentTokenHubAiProvider` 只负责供应商协议转换与结果归一化；作品、剧集、镜头、字幕、BGM 归属校验均在
-Service / Worker 内完成。`AiProviderRegistry` 按 `TENCENT_TOKENHUB` 注册该实现，既有直连 Provider 不删除。
+Service / Worker 内完成。`AiProviderRegistry` 按 `TENCENT_TOKENHUB` 注册该实现，并对
+`tokenhub-cn.bgssai.com` / `tokenhub-global.bgssai.com` / 历史 `tokenhub.tencentmaas.com`
+host 做 resolvable 回退。
 
 ## 3. 模型与端点映射
 
-基础地址统一为 `https://tokenhub.tencentmaas.com`，鉴权统一为 `Authorization: Bearer <api_key>`。
+| 中枢 | 默认 base_url | secret_ref |
+| --- | --- | --- |
+| CN | `https://tokenhub-cn.bgssai.com` | `ai.tokenhub_cn.api_key` |
+| Global | `https://tokenhub-global.bgssai.com` | `ai.tokenhub_global.api_key` |
+
+鉴权统一为 `Authorization: Bearer <api_key>`。properties 仅可写中枢 base URL，**禁止**写 API Key。
 
 | 能力 | 模型 | 提交端点 | 查询端点 | 完成结果 |
 | --- | --- | --- | --- | --- |
-| TEXT | `hy4-preview` / `kimi-k3` / `deepseek-v4-pro` | `POST /v1/chat/completions` | 同步 | `choices[0].message.content` |
+| TEXT | `hy4-preview` / `kimi-k3` / `deepseek-chat`（CN）；`gpt-4o-mini` / `claude-3-5-haiku-latest`（Global） | `POST /v1/chat/completions` | 同步 | `choices[0].message.content` |
 | VIDEO | `minimax-video-h3` | `POST /v1/wand/minimax-video-v2/generation` | `GET /v1/wand/minimax-video-v2/tasks/{task_id}` | `task.content.url` |
 | VIDEO | `pixverse-video-v6.0` | 文生 `/v1/wand/pixverse/text-to-video`；图生 `/v1/wand/pixverse/image-to-video` | `GET /v1/wand/pixverse/tasks/{task_id}` | `Resp.url` |
 | VIDEO | `kling-video-v3` | 文生 `/v1/wand/kling/text-to-video`；图生 `/v1/wand/kling/image-to-video` | `GET /v1/wand/kling/tasks/{task_id}` | `data[].outputs[].url` |
@@ -98,19 +108,23 @@ TokenHub `config_json` 共同字段：
 
 ```json
 {
-  "base_url": "https://tokenhub.tencentmaas.com",
-  "secret_ref": "ai.tencent_tokenhub.api_key",
+  "hub": "cn",
+  "base_url": "https://tokenhub-cn.bgssai.com",
+  "secret_ref": "ai.tokenhub_cn.api_key",
   "poll_interval_ms": 3000
 }
 ```
+
+Global 行使用 `"hub":"global"` 与 `https://tokenhub-global.bgssai.com` / `ai.tokenhub_global.api_key`。
 
 各端点可由 `chat_path`、`submit_path`、`task_path`、`text2video_path`、`image2video_path` 覆盖，便于
 供应商升级时通过管理端调整；代码内保留本文件 §3 的安全默认值。
 
 ## 6. 安全与可观测性
 
-- 日志只记录 `provider_code`、`model_code`、上游 `request_id`、task_id、状态和耗时；不记录
+- 日志只记录 `provider_code`、`model_code`、`hub`、上游 `request_id`、task_id、状态和耗时；不记录
   Authorization、完整输入临时 URL 或供应商输出 URL。
 - 下载只接受 `https` URL；单文件设置响应体上限，且按能力校验 MIME（VIDEO 仅视频，VOICE/MUSIC 仅音频）。
-- TokenHub Key 缺失、空值或停用时在调用前失败；接口与日志均不回显 Key。
-- 任务重试沿用同一业务参数，新建上游任务；成功计费一次，失败不计费。
+- 中枢 Key 缺失、空值或停用时在调用前失败；接口、`fail_reason` 与用户错误文案均不回显 Key，也不出现
+  TokenHub 品牌字样。
+- 任务重试沿用同一业务参数，新建上游任务；`fallback_model_flag=1` 时可换备用模型；成功计费一次，失败不计费。
