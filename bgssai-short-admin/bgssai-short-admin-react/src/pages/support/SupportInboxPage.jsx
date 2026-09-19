@@ -6,6 +6,13 @@ import './support-inbox.css'
 const { Title, Text, Paragraph } = Typography
 const CODE_OK = new Set([0, 200, '0', '200'])
 
+const TICKET_STATUS_OPTIONS = [
+  { value: 'OPEN', label: 'OPEN' },
+  { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
+  { value: 'RESOLVED', label: 'RESOLVED' },
+  { value: 'CLOSED', label: 'CLOSED' },
+]
+
 export default function SupportInboxPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
@@ -17,6 +24,7 @@ export default function SupportInboxPage() {
   const [activeId, setActiveId] = useState('')
   const [session, setSession] = useState(null)
   const [messages, setMessages] = useState([])
+  const [ticket, setTicket] = useState(null)
   const [replyText, setReplyText] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -53,6 +61,7 @@ export default function SupportInboxPage() {
       setActiveId(sessionId)
       setSession(data.result?.session || null)
       setMessages(Array.isArray(data.result?.messages) ? data.result.messages : [])
+      setTicket(data.result?.ticket || null)
       await loadList(pageNum)
     } finally {
       setBusy(false)
@@ -97,11 +106,31 @@ export default function SupportInboxPage() {
     }
   }
 
+  const handleTicketStatus = async (nextStatus) => {
+    if (!ticket?.ticket_id || !nextStatus) return
+    setBusy(true)
+    try {
+      const { data } = await supportApi.updateTicketStatus({
+        ticket_id: ticket.ticket_id,
+        status: nextStatus,
+      })
+      if (!CODE_OK.has(data?.code)) {
+        message.error(data?.message || '更新工单失败')
+        return
+      }
+      setTicket(data.result || null)
+      await loadList(pageNum)
+      message.success('工单状态已更新')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>在线客服</Title>
       <Paragraph type="secondary">
-        处理用户留言会话：列表、详情、回复、关闭。对应 POST /bgssai/admin/support/**
+        处理用户留言会话与工单：列表、详情、回复、关闭、更新工单状态。对应 POST /bgssai/admin/support/**
       </Paragraph>
 
       <Space wrap style={{ marginBottom: 12 }}>
@@ -143,10 +172,13 @@ export default function SupportInboxPage() {
               <div className="si-item-title">
                 <strong>{row.contact_name || row.user_id || '访客'}</strong>
                 <span className="si-badge">{row.status}</span>
+                {row.ticket_status && (
+                  <span className="si-ticket-badge">工单 {row.ticket_status}</span>
+                )}
                 {Number(row.unread_admin) > 0 && <span className="si-unread">{row.unread_admin}</span>}
               </div>
               <div className="si-item-meta">
-                {row.contact_phone || row.contact_email || row.session_id}
+                {row.ticket_subject || row.contact_phone || row.contact_email || row.session_id}
               </div>
               <div className="si-item-meta">{row.last_message_at || row.create_time}</div>
             </button>
@@ -176,6 +208,22 @@ export default function SupportInboxPage() {
                   关闭会话
                 </Button>
               </div>
+              {ticket && (
+                <div className="si-ticket-bar">
+                  <div className="si-ticket-info">
+                    <strong>工单 {ticket.ticket_id}</strong>
+                    <span>{ticket.subject}</span>
+                  </div>
+                  <Select
+                    size="small"
+                    style={{ width: 140 }}
+                    value={ticket.status}
+                    options={TICKET_STATUS_OPTIONS}
+                    disabled={busy}
+                    onChange={handleTicketStatus}
+                  />
+                </div>
+              )}
               <div className="si-msgs">
                 {messages.map((m) => (
                   <div

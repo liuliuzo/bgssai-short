@@ -17,6 +17,7 @@ export default function SupportWidget() {
   const [sessionId, setSessionId] = useState('')
   const [status, setStatus] = useState('')
   const [messages, setMessages] = useState([])
+  const [ticket, setTicket] = useState(null)
   const [draft, setDraft] = useState('')
   const listRef = useRef(null)
 
@@ -41,6 +42,7 @@ export default function SupportWidget() {
     if (result.guest_token) setGuestToken(result.guest_token)
     setSessionId(result.session_id || '')
     setStatus(result.status || '')
+    setTicket(null)
     if (result.message) {
       setMessages([result.message])
     } else {
@@ -60,6 +62,7 @@ export default function SupportWidget() {
     const result = data.result || {}
     setStatus(result.session?.status || '')
     setMessages(Array.isArray(result.messages) ? result.messages : [])
+    setTicket(result.ticket || null)
   }
 
   const bootstrap = async () => {
@@ -70,6 +73,7 @@ export default function SupportWidget() {
         setSessionId('')
         setStatus('')
         setMessages([])
+        setTicket(null)
         return
       }
       const { data } = await supportApi.listMine({
@@ -89,6 +93,7 @@ export default function SupportWidget() {
       setSessionId('')
       setStatus('')
       setMessages([])
+      setTicket(null)
     } catch {
       /* ignore until first send */
     } finally {
@@ -131,6 +136,34 @@ export default function SupportWidget() {
     }
   }
 
+  const handleCreateTicket = async () => {
+    if (busy) return
+    if (!sessionId || status === 'CLOSED') {
+      message.warning('请先发送一条留言开始会话')
+      return
+    }
+    setBusy(true)
+    try {
+      const { data } = await supportApi.createTicket({
+        session_id: sessionId,
+        guest_token: getGuestToken() || undefined,
+      })
+      if (!CODE_OK.has(data?.code)) {
+        throw new Error(data?.message || '提工单失败')
+      }
+      setTicket(data.result || null)
+      await loadDetail(sessionId)
+      message.success('已提工单')
+    } catch (e) {
+      message.error(e.message || '提工单失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const ticketOpen = ticket && ticket.status !== 'CLOSED'
+  const canTicket = Boolean(sessionId) && status !== 'CLOSED'
+
   return (
     <>
       <button type="button" className="cs-fab" onClick={handleOpen}>
@@ -151,6 +184,21 @@ export default function SupportWidget() {
             </div>
             <button type="button" aria-label="关闭" onClick={() => setOpen(false)}>
               ×
+            </button>
+          </div>
+          <div className="cs-toolbar">
+            <span className="cs-ticket-label">
+              {ticket
+                ? `工单 · ${ticket.status}${ticket.subject ? ` · ${ticket.subject}` : ''}`
+                : '需要正式跟进时可提工单'}
+            </span>
+            <button
+              type="button"
+              onClick={handleCreateTicket}
+              disabled={busy || !canTicket || ticketOpen}
+              title={ticketOpen ? '本会话已有未关闭工单' : '提工单'}
+            >
+              {ticketOpen ? '已提工单' : '提工单'}
             </button>
           </div>
           <div className="cs-msgs" ref={listRef}>

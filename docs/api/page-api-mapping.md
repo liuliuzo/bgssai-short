@@ -27,7 +27,7 @@
 | `creators.html` | `/creators` | `GET /bgssai/admin/creators/list?page_num&page_size&keyword&enabled_flag` · `POST /bgssai/admin/creators/adjust-quota` · `/toggle-enabled`；充值申请处理（本切片未实现）：`GET /bgssai/admin/recharge/list` · `POST /bgssai/admin/recharge/handle` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) · [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 | `credit-packs.html` | `/credit-packs` | `GET /bgssai/admin/credit-packs/list` · `POST /bgssai/admin/credit-packs/save` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 | `pay-merchants.html` | `/pay-merchants` | `GET /bgssai/admin/pay/wechat-configs` · `POST /bgssai/admin/pay/wechat-configs/save` · `/set-collection-active`；支付宝同构 `/alipay-configs` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
-| `support-inbox.html` | `/support` | `POST /bgssai/admin/support/sessions/list` · `/detail` · `POST /bgssai/admin/support/messages/reply` · `POST /bgssai/admin/support/sessions/close` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`in-app-support.md`](./in-app-support.md) |
+| `support-inbox.html` | `/support` | `POST /bgssai/admin/support/sessions/list` · `/detail` · `POST /bgssai/admin/support/messages/reply` · `POST /bgssai/admin/support/sessions/close` · `POST /bgssai/admin/support/tickets/update_status` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`in-app-support.md`](./in-app-support.md) |
 
 ## web 用户端（`docs/demo-static/web/user/`，前端 3002 / 后端 8080，`role_code=USER`）
 
@@ -37,7 +37,7 @@
 | --- | --- | --- | --- | --- |
 | `shell-pane.html`（布局模式） | 既有用户端路由 + `?bgssai_shell=1` / `?chat_pane=1` | 无新接口；壳参数只改前端布局 | 与所在路由相同；参数不替代 `Jwttoken` | [`../feature/mobile-in-bot-shell.md`](../feature/mobile-in-bot-shell.md) |
 | `login.html` | `/login` | `POST /bgssai/user/login`；登录区 + 页脚五条官网法律双语外链（无新接口）；页内悬浮在线客服复用 support 公开接口 | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) · [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md) · [`in-app-support.md`](./in-app-support.md) |
-| `support-chat.html`（悬浮组件） | 登录页 + 主壳全局 | `POST /bgssai/user/support/sessions/create` · `/mine` · `/detail` · `POST /bgssai/user/support/messages/send` | 公开（IP 限流；可选 `Jwttoken` 绑定 user_id；访客凭 `guest_token`） | [`in-app-support.md`](./in-app-support.md) |
+| `support-chat.html`（悬浮组件） | 登录页 + 主壳全局 | `POST /bgssai/user/support/sessions/create` · `/mine` · `/detail` · `POST /bgssai/user/support/messages/send` · `POST /bgssai/user/support/tickets/create` | 公开（IP 限流；可选 `Jwttoken` 绑定 user_id；访客凭 `guest_token`） | [`in-app-support.md`](./in-app-support.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段 + 各模块概览接口） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
 | `mcp-tokens.html`（MCP Connectors） | `/mcp-tokens` | `POST /bgssai/mcp-tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT；页内引导 Claude / Codex / Cursor / Grok Bot / bgssai-bot | [`MCP.md`](./MCP.md) |

@@ -23,5 +23,6 @@ const createSession = (body) => http.post('/user/support/sessions/create', body)
 const listMine = (body) => http.post('/user/support/sessions/mine', body)
 const detail = (body) => http.post('/user/support/sessions/detail', body)
 const send = (body) => http.post('/user/support/messages/send', body)
+const createTicket = (body) => http.post('/user/support/tickets/create', body)
 
-export default { createSession, listMine, detail, send }
+export default { createSession, listMine, detail, send, createTicket }

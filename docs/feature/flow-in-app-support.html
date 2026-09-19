@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-  <h1>站内在线客服 · 会话流程</h1>
+  <h1>站内在线客服 · 会话 + 工单流程</h1>
   <div class="lane">
     <h2>用户 / 访客</h2>
     <div class="steps">
@@ -27,20 +27,24 @@
       <div class="box">首条留言 create → PENDING</div>
       <span class="arrow">→</span>
       <div class="box">send / detail 看历史气泡</div>
+      <span class="arrow">→</span>
+      <div class="box">提工单 → ticket OPEN（可继续聊）</div>
     </div>
   </div>
   <div class="lane">
     <h2>管理端</h2>
     <div class="steps">
-      <div class="box">sessions/list</div>
+      <div class="box">sessions/list（含 ticket_status）</div>
       <span class="arrow">→</span>
-      <div class="box">detail（清未读）</div>
+      <div class="box">detail + ticket</div>
       <span class="arrow">→</span>
       <div class="box">reply → OPEN</div>
       <span class="arrow">→</span>
-      <div class="box">close → CLOSED</div>
+      <div class="box">update_status 工单</div>
+      <span class="arrow">→</span>
+      <div class="box">close 会话 → CLOSED</div>
     </div>
   </div>
-  <p class="note">访客端无必填联系方式 / 主题表单。关闭后用户再发即 create 新会话。状态枚举：OPEN / PENDING / CLOSED。</p>
+  <p class="note">访客端无必填联系方式 / 主题表单。聊内提工单为正式化升级，不替代对话。会话状态：OPEN / PENDING / CLOSED。工单状态：OPEN / IN_PROGRESS / RESOLVED / CLOSED。</p>
 </body>
 </html>

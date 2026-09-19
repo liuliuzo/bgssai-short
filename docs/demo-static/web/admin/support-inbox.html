@@ -22,6 +22,9 @@
     .reply input { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
     .reply button { padding: 8px 12px; border: none; border-radius: 8px; background: var(--brand, #2563eb); color: #fff; }
     .badge-soft { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #fef3c7; }
+    .badge-ticket { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #ffedd5; color: #9a3412; }
+    .ticket-bar { padding: 8px 12px; border-bottom: 1px solid var(--border); background: #fff7ed; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+    .ticket-bar select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -38,16 +41,17 @@
     <div class="card">
       <h2 class="card-title">契约摘要</h2>
       <p>列表：<code>POST /bgssai/admin/support/sessions/list</code>
-        body <code>{status?, keyword?, page_num, page_size}</code></p>
+        body <code>{status?, keyword?, page_num, page_size}</code>（含 <code>ticket_status</code>）</p>
       <p>详情：<code>POST /bgssai/admin/support/sessions/detail</code> ·
         回复：<code>POST /bgssai/admin/support/messages/reply</code> ·
-        关闭：<code>POST /bgssai/admin/support/sessions/close</code></p>
+        关闭：<code>POST /bgssai/admin/support/sessions/close</code> ·
+        工单状态：<code>POST /bgssai/admin/support/tickets/update_status</code></p>
     </div>
 
     <div class="inbox">
       <div class="inbox-list">
         <div class="inbox-item active">
-          <div><strong>张三</strong> <span class="badge-soft">PENDING</span></div>
+          <div><strong>张三</strong> <span class="badge-soft">PENDING</span> <span class="badge-ticket">工单 OPEN</span></div>
           <div class="meta">138****0000 · unread_admin=1 · 2026-09-19 10:00</div>
         </div>
         <div class="inbox-item">
@@ -63,9 +67,19 @@
           </div>
           <button type="button" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:#fff">关闭会话</button>
         </header>
+        <div class="ticket-bar">
+          <span>工单 ct-demo-001 · 成片导出失败</span>
+          <select aria-label="工单状态">
+            <option selected>OPEN</option>
+            <option>IN_PROGRESS</option>
+            <option>RESOLVED</option>
+            <option>CLOSED</option>
+          </select>
+        </div>
         <div class="msgs">
           <div class="bubble user">你好，成片导出失败，求协助。</div>
           <div class="bubble admin">您好，请提供作品 ID，我们马上看。</div>
+          <div class="bubble user">【已提工单】成片导出失败</div>
         </div>
         <div class="reply">
           <input placeholder="回复用户…" value="已定位问题，请重试导出。" />

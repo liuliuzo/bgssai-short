@@ -6,7 +6,9 @@
 
 | 枚举 | 值 |
 | --- | --- |
-| `status` | `OPEN` · `PENDING` · `CLOSED` |
+| 会话 `status` | `OPEN` · `PENDING` · `CLOSED` |
+| 工单 `status` | `OPEN` · `IN_PROGRESS` · `RESOLVED` · `CLOSED` |
+| 工单 `priority`（可选） | `LOW` · `NORMAL` · `HIGH` |
 | `sender_type` | `USER` · `GUEST` · `ADMIN` |
 
 ## 用户 / 访客
@@ -53,13 +55,32 @@
 
 请求：`{ "session_id": "cs-...", "guest_token": "string|optional" }`
 
-响应 `result`：`session` + `messages[]`。校验归属（`user_id` 或 `guest_token`）；成功后 `unread_user=0`。
+响应 `result`：`session` + `messages[]` + `ticket`（当前会话最新未删工单，无则 `null`）。校验归属（`user_id` 或 `guest_token`）；成功后 `unread_user=0`。
 
 ### POST `/bgssai/user/support/messages/send`
 
 请求：`{ "session_id": "cs-...", "guest_token": "string|optional", "content": "文本" }`
 
 响应 `result`：新建消息对象。`CLOSED` 返回 `4006`；成功后 `status=PENDING`，`unread_admin++`。
+
+### POST `/bgssai/user/support/tickets/create`
+
+请求：
+
+```json
+{
+  "session_id": "cs-...",
+  "guest_token": "string|optional",
+  "subject": "string|optional 缺省取最近用户留言",
+  "category": "string|optional",
+  "priority": "LOW|NORMAL|HIGH|optional 默认 NORMAL",
+  "description": "string|optional"
+}
+```
+
+响应 `result`：工单对象（`ticket_id` / `session_id` / `subject` / `category` / `priority` / `status` / `description` / `create_time`）。
+
+规则：会话须存在且未 `CLOSED`；归属校验同 detail。若本会话已有未 `CLOSED` 工单，直接返回该工单（幂等）。新建时 `status=OPEN`，写入一条用户侧提示消息「【已提工单】{subject}」，会话 `PENDING` 且 `unread_admin++`。
 
 ## 管理端
 
@@ -69,13 +90,13 @@
 
 请求：`{ "status": "OPEN|PENDING|CLOSED|optional", "keyword": "optional", "page_num": 1, "page_size": 20 }`
 
-响应：分页会话列表（含联系方式、未读、`user_id`、`last_message_at`）。
+响应：分页会话列表（含联系方式、未读、`user_id`、`last_message_at`、`ticket_id`、`ticket_status`、`ticket_subject`；无工单时后三者为 null）。
 
 ### POST `/bgssai/admin/support/sessions/detail`
 
 请求：`{ "session_id": "cs-..." }`
 
-响应：`session` + `messages[]`；清零 `unread_admin`。
+响应：`session` + `messages[]` + `ticket`；清零 `unread_admin`。
 
 ### POST `/bgssai/admin/support/messages/reply`
 
@@ -89,12 +110,18 @@
 
 响应：`{ "session_id", "status": "CLOSED" }`。
 
+### POST `/bgssai/admin/support/tickets/update_status`
+
+请求：`{ "ticket_id": "ct-...", "status": "OPEN|IN_PROGRESS|RESOLVED|CLOSED" }`
+
+响应：更新后的工单对象。非法状态 → `50000001`；不存在 → `404000`。
+
 ## 错误码
 
 | code | 含义 |
 | --- | --- |
 | `4003` | 管理端非管理员 / 用户越权看他人会话 |
 | `4006` | 会话已关闭或规则拒绝 |
-| `404000` | 会话不存在 |
+| `404000` | 会话 / 工单不存在 |
 | `429000` | 限流 |
 | `50000001` | 参数非法（如 content 为空） |
