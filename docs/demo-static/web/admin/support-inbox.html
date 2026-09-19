@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 管理端在线客服</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/liquid-glass.css" />
+  <style>
+    .inbox { display: grid; grid-template-columns: 280px 1fr; gap: 12px; min-height: 420px; }
+    .inbox-list, .inbox-detail { border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+    .inbox-item { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .inbox-item.active { background: #eff6ff; }
+    .inbox-item .meta { font-size: 12px; color: var(--muted); }
+    .inbox-detail { display: flex; flex-direction: column; }
+    .inbox-detail header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
+    .msgs { flex: 1; padding: 12px; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+    .bubble { max-width: 75%; padding: 8px 10px; border-radius: 10px; font-size: 13px; }
+    .bubble.user { align-self: flex-start; background: #f1f5f9; }
+    .bubble.admin { align-self: flex-end; background: #dbeafe; }
+    .reply { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
+    .reply input { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+    .reply button { padding: 8px 12px; border: none; border-radius: 8px; background: var(--brand, #2563eb); color: #fff; }
+    .badge-soft { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #fef3c7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+      <h1 class="title" style="margin:0">在线客服处理台</h1>
+      <span class="badge">PLATFORM_ADMIN</span>
+    </div>
+    <p class="subtitle">
+      导航：<a href="home.html">首页</a> · <a href="support-inbox.html">在线客服</a> ·
+      <a href="login-logs.html">登录日志</a>
+    </p>
+
+    <div class="card">
+      <h2 class="card-title">契约摘要</h2>
+      <p>列表：<code>POST /bgssai/admin/support/sessions/list</code>
+        body <code>{status?, keyword?, page_num, page_size}</code></p>
+      <p>详情：<code>POST /bgssai/admin/support/sessions/detail</code> ·
+        回复：<code>POST /bgssai/admin/support/messages/reply</code> ·
+        关闭：<code>POST /bgssai/admin/support/sessions/close</code></p>
+    </div>
+
+    <div class="inbox">
+      <div class="inbox-list">
+        <div class="inbox-item active">
+          <div><strong>张三</strong> <span class="badge-soft">PENDING</span></div>
+          <div class="meta">138****0000 · unread_admin=1 · 2026-09-19 10:00</div>
+        </div>
+        <div class="inbox-item">
+          <div><strong>demo</strong> <span class="badge-soft">OPEN</span></div>
+          <div class="meta">user_id=u-demo-0001 · 2026-09-18 18:20</div>
+        </div>
+      </div>
+      <div class="inbox-detail">
+        <header>
+          <div>
+            <strong>会话 cs-demo-001</strong>
+            <div class="meta" style="font-size:12px;color:var(--muted)">联系：张三 / 13800000000 / demo@example.com</div>
+          </div>
+          <button type="button" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:#fff">关闭会话</button>
+        </header>
+        <div class="msgs">
+          <div class="bubble user">你好，成片导出失败，求协助。</div>
+          <div class="bubble admin">您好，请提供作品 ID，我们马上看。</div>
+        </div>
+        <div class="reply">
+          <input placeholder="回复用户…" value="已定位问题，请重试导出。" />
+          <button type="button">回复</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

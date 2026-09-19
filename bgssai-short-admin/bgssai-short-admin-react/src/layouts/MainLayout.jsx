@@ -1,6 +1,6 @@
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, AuditOutlined, TeamOutlined, GiftOutlined, PayCircleOutlined, RobotOutlined, KeyOutlined, FundOutlined, ExperimentOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, AuditOutlined, TeamOutlined, GiftOutlined, PayCircleOutlined, RobotOutlined, KeyOutlined, FundOutlined, ExperimentOutlined, CustomerServiceOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import LegalFooter from '../components/LegalFooter'
 import './main-layout.css'
@@ -8,6 +8,7 @@ import './main-layout.css'
 // Navigation items — two sample sections ship with the scaffold; add product routes here.
 const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
+  { key: '/support', label: '在线客服', icon: <CustomerServiceOutlined /> },
   { key: '/reviews', label: '内容审核', icon: <AuditOutlined /> },
   { key: '/ai-models', label: 'AI 模型', icon: <RobotOutlined /> },
   { key: '/ai-secrets', label: 'AI 密钥', icon: <KeyOutlined /> },

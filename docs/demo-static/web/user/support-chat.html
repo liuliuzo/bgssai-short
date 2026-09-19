@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 用户端在线客服</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/liquid-glass.css" />
+  <style>
+    .cs-fab {
+      position: fixed; right: 24px; bottom: 24px; z-index: 50;
+      background: var(--brand, #2563eb); color: #fff; border: none; border-radius: 999px;
+      padding: 12px 18px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm);
+    }
+    .cs-panel {
+      position: fixed; right: 24px; bottom: 80px; width: 360px; max-width: calc(100vw - 32px);
+      height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; z-index: 50;
+    }
+    .cs-panel header { padding: 12px 14px; border-bottom: 1px solid var(--border); font-weight: 700; }
+    .cs-msgs { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .cs-bubble { max-width: 80%; padding: 8px 10px; border-radius: 10px; font-size: 13px; }
+    .cs-bubble.me { align-self: flex-end; background: #dbeafe; }
+    .cs-bubble.them { align-self: flex-start; background: #f1f5f9; }
+    .cs-compose { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
+    .cs-compose input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+    .cs-compose button { padding: 8px 12px; border: none; border-radius: 8px; background: var(--brand, #2563eb); color: #fff; }
+    .cs-contact { padding: 8px 12px; border-bottom: 1px solid var(--border); display: grid; gap: 6px; }
+    .cs-contact input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+      <h1 class="title" style="margin:0">在线客服（悬浮）</h1>
+      <span class="badge">USER / GUEST</span>
+    </div>
+    <p class="subtitle">
+      导航：<a href="home.html">首页</a> · <a href="login.html">登录</a> ·
+      <a href="support-chat.html">在线客服</a>
+    </p>
+
+    <div class="card">
+      <h2 class="card-title">契约摘要</h2>
+      <p>创建：<code>POST /bgssai/user/support/sessions/create</code>
+        body <code>{guest_token?, contact_name?, contact_phone?, contact_email?, content?}</code></p>
+      <p>我的会话：<code>POST /bgssai/user/support/sessions/mine</code></p>
+      <p>详情：<code>POST /bgssai/user/support/sessions/detail</code> body <code>{session_id, guest_token?}</code></p>
+      <p>发消息：<code>POST /bgssai/user/support/messages/send</code> body <code>{session_id, guest_token?, content}</code></p>
+      <p>状态：<code>OPEN</code> / <code>PENDING</code> / <code>CLOSED</code>；访客凭 <code>guest_token</code>（localStorage）。</p>
+    </div>
+
+    <div class="cs-panel" aria-label="在线客服面板">
+      <header>在线客服 · status=PENDING</header>
+      <div class="cs-contact">
+        <input placeholder="联系人姓名（建议）" value="张三" />
+        <input placeholder="手机（建议）" value="13800000000" />
+        <input placeholder="邮箱（建议）" value="demo@example.com" />
+      </div>
+      <div class="cs-msgs">
+        <div class="cs-bubble me">你好，成片导出失败，求协助。</div>
+        <div class="cs-bubble them">您好，请提供作品 ID，我们马上看。</div>
+      </div>
+      <div class="cs-compose">
+        <input placeholder="输入留言…" value="作品 ID 是 w-dm-005" />
+        <button type="button">发送</button>
+      </div>
+    </div>
+    <button class="cs-fab" type="button">在线客服</button>
+  </div>
+</body>
+</html>
