@@ -19,7 +19,7 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 1. **BGSSAI** 是给一人公司（OPC）创业者的全行业工具集合，让用户能找到 OPC 创业时所有需要的工具。
 2. **bgssai-website** 是公司官网，对外介绍公司的产品和服务；`reference` 目录中的 `reference-website` 是原来的官网。官网无登录，不承载产品操作、在线对话或中心账号。可放 Bot 与 Build 安装包作介绍页下载。
-3. **bgssai-chat** 提供类似 ChatGPT、Gemini、Claude home、Grok 的 Web 在线对话 AI。境内仓为 `bgssai-chat-cn`（用户/IdP `https://chat.bgssai.cn`），境外仓为 `bgssai-chat-global`（用户/IdP `https://chat.bgssai.com`）。两套系统，账号不互通。
+3. **bgssai-chat** 提供类似 ChatGPT、Gemini、Claude home、Grok 的 Web 在线对话 AI。境内仓为 `bgssai-chat-cn`（用户/IdP `https://chat-cn.bgssai.com`），境外仓为 `bgssai-chat-global`（用户/IdP `https://chat.bgssai.com`）。两套系统，账号不互通。
 4. **中心用户账号在 bgssai-chat**：用和 Google、GitHub 一样的**第三方登录**接入各 App，不是单点登录。Chat 也可以授权登录不是 BGSSAI 的应用，并做成可对外卖的开放平台（开发者控制台 + 文档 + OIDC）。各 App 也可以有自己的用户账号体系。**授权只发生在 user 用户端**；各仓 admin 是后端运营账号，不接入 Chat、不做「用 Chat 登录」。境内应用走 `bgssai-chat-cn`，境外应用走 `bgssai-chat-global`。
 5. **bgssai-bot** 对标 Grok Bot；BGSSAI 的全部产品应用可以托管给 Bot 直接操作。所有应用项目都可以下载 bgssai-bot（Bot）的安装包，全平台范围。连接各产品同时支持 MCP 个人令牌（PAT）和「用 Chat 登录」后下发 MCP。不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。
 6. **bgssai-tokenhub** 是模型中枢，也是面向外部用户的商业服务（套餐、收费、发票）。对接主流模型原生 API，再提供给旗下产品和 BGSSAI 外部用户。`bgssai-tokenhub-global` 对接国际主流模型，`bgssai-tokenhub-cn` 对接中国大陆模型。两仓都有用户端，对标腾讯云 TokenHub（`reference/tokenhub-prototypes`）；用户端走登录规范，也可用 Chat 登录。旗下产品和外部用户调模型都走中枢凭证。
