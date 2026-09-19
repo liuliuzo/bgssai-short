@@ -421,3 +421,8 @@ html[data-bgssai-shell="1"] .login-shell--pane .oauth-btn,
 html[data-bgssai-shell="1"] .login-shell--pane .login-code-btn {
   min-height: 44px;
 }
+
+.phone-dial-field { display:flex; align-items:stretch; min-width:0; }
+.phone-dial-field.input, .phone-dial-field.login-input, .phone-dial-field.lg-input { padding-right:8px; }
+.phone-dial-divider { width:1px; flex:0 0 1px; align-self:stretch; margin:8px; background:currentColor; opacity:.16; }
+.phone-dial-number { flex:1; min-width:0; border:0; background:transparent; outline:none; color:inherit; font:inherit; }

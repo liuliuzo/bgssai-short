@@ -8,6 +8,8 @@ import { parseWechatQrConnect } from '../../lib/wechatFastLogin'
 import { useUserStore, isAllowedRole } from '../../store/user'
 import { useBgssaiShell } from '../../hooks/useBgssaiShell'
 import LegalFooter from '../../components/LegalFooter'
+import { PhoneDialField } from '../../components/PhoneDialField'
+import { DEFAULT_DIAL_CODE, composeApiPhone, validatePhoneParts } from '../../lib/phoneDial'
 import './login.css'
 
 const CODE_OK = new Set([0, 200, '0', '200'])
@@ -38,6 +40,7 @@ export default function Login() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
+  const [dialCode, setDialCode] = useState(DEFAULT_DIAL_CODE)
   const [smsCode, setSmsCode] = useState('')
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
@@ -69,12 +72,12 @@ export default function Login() {
     setSending(true)
     try {
       if (loginMethod === 'sms') {
-        const phoneTrim = phone.trim()
-        if (!/^1[3-9]\d{9}$/.test(phoneTrim)) {
-          message.warning('请输入正确的手机号')
+        const phoneError = validatePhoneParts(dialCode, phone)
+        if (phoneError) {
+          message.warning(phoneError)
           return
         }
-        const { data } = await authApi.sendSms({ phone: phoneTrim })
+        const { data } = await authApi.sendSms({ phone: composeApiPhone(dialCode, phone) })
         if (CODE_OK.has(data && data.code)) {
           setCountdown(60)
           const result = (data && data.result) || {}
@@ -105,11 +108,11 @@ export default function Login() {
     setBusy(true)
     try {
       if (loginMethod === 'sms') {
-        if (!/^1[3-9]\d{9}$/.test(phone.trim()) || !/^\d{6}$/.test(smsCode.trim())) {
+        if (validatePhoneParts(dialCode, phone) || !/^\d{6}$/.test(smsCode.trim())) {
           message.warning('请输入手机号和 6 位验证码')
           return
         }
-        const { data } = await authApi.loginSms({ phone: phone.trim(), code: smsCode.trim() })
+        const { data } = await authApi.loginSms({ phone: composeApiPhone(dialCode, phone), code: smsCode.trim() })
         const r = (data && data.result) || {}
         if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
         return
@@ -228,7 +231,14 @@ export default function Login() {
             <>
               <div className="field">
                 <label htmlFor="login-phone">手机号</label>
-                <input id="login-phone" className="input" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="11 位手机号" maxLength={11} />
+                <PhoneDialField
+                  id="login-phone"
+                  dialCode={dialCode}
+                  nationalNumber={phone}
+                  onDialCodeChange={setDialCode}
+                  onNationalNumberChange={setPhone}
+                  wrapperClassName="phone-dial-field input"
+                />
               </div>
               <div className="field">
                 <label htmlFor="login-sms-code">短信验证码</label>
