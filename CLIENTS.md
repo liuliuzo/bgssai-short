@@ -32,4 +32,4 @@ clients/miniprogram/   # 单一微信小程序，双登录入口
 
 ## 在线客服
 
-`support=in-app messaging`（站内留言 / 会话；用户端悬浮入口 + 管理端处理台；不强制第三方 SaaS）。
+`support=in-app messaging`（站内留言 / 会话；用户端悬浮对话气泡 + 管理端处理台；首条消息建会话、无必填联系方式表单；不强制第三方 SaaS）。

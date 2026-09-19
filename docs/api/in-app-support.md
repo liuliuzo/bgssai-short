@@ -20,10 +20,10 @@
 ```json
 {
   "guest_token": "string|optional",
-  "contact_name": "string|optional",
-  "contact_phone": "string|optional",
-  "contact_email": "string|optional",
-  "content": "string|optional 首条留言"
+  "contact_name": "string|optional 兼容字段，访客 UI 不采集",
+  "contact_phone": "string|optional 兼容字段，访客 UI 不采集",
+  "contact_email": "string|optional 兼容字段，访客 UI 不采集",
+  "content": "string|recommended 首条留言；对话气泡 UX 下由首发触发 create"
 }
 ```
 
@@ -41,7 +41,7 @@
 }
 ```
 
-规则：无 `guest_token` 时服务端签发并返回；`content` 非空则写入首条消息且 `status=PENDING`，否则 `OPEN`。
+规则：无 `guest_token` 时服务端签发并返回；`content` 非空则写入首条消息且 `status=PENDING`，否则 `OPEN`。访客端对话气泡 UX：打开即气泡 + 底部输入，首条消息带 `content` 调用本接口建会话；不要求联系方式 / 主题表单。
 
 ### POST `/bgssai/user/support/sessions/mine`
 
