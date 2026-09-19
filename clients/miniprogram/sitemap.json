@@ -1,0 +1,9 @@
+{
+  "desc": "BGSSAI Short miniprogram sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+.shell {
+  min-height: 100vh;
+  padding: 96rpx 48rpx 64rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(61, 139, 253, 0.22), transparent 45%),
+    radial-gradient(circle at 100% 0%, rgba(232, 165, 75, 0.16), transparent 40%),
+    linear-gradient(165deg, #0f1419, #1a2332);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brand {
+  margin-bottom: 64rpx;
+}
+
+.product {
+  display: block;
+  color: #e8a54b;
+  font-size: 24rpx;
+  letter-spacing: 4rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.title {
+  display: block;
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #f2f4f7;
+  margin-bottom: 20rpx;
+}
+
+.hint {
+  display: block;
+  color: #9aa7b5;
+  font-size: 28rpx;
+  line-height: 1.55;
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.entry {
+  margin: 0;
+  padding: 40rpx 36rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(242, 244, 247, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  text-align: left;
+  line-height: 1.4;
+}
+
+.entry::after {
+  border: none;
+}
+
+.entry-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #f2f4f7;
+  margin-bottom: 8rpx;
+}
+
+.entry-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #9aa7b5;
+  font-weight: 400;
+}
+
+.meta {
+  margin-top: 48rpx;
+  color: #6b7785;
+  font-size: 22rpx;
+}

@@ -1,0 +1,18 @@
+<view class="shell">
+  <view class="brand">
+    <text class="product">BGSSAI Short</text>
+    <text class="title">选择入口</text>
+    <text class="hint">一个小程序，两个登录入口。入口只切换 Web 基址与权限面。</text>
+  </view>
+  <view class="entries">
+    <button class="entry" bindtap="openUser">
+      <text class="entry-title">用户入口</text>
+      <text class="entry-desc">创作者制作短剧</text>
+    </button>
+    <button class="entry" bindtap="openAdmin">
+      <text class="entry-title">管理入口</text>
+      <text class="entry-desc">运营与内容管理</text>
+    </button>
+  </view>
+  <text class="meta">env: {{env}}</text>
+</view>

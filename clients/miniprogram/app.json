@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/chooser/index",
+    "pages/webview/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "BGSSAI Short",
+    "navigationBarBackgroundColor": "#0f1419",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0f1419",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

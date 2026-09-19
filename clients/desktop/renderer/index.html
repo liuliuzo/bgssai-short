@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BGSSAI Short</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="brand">
+      <p class="product">BGSSAI Short</p>
+      <h1>选择入口</h1>
+      <p class="hint">一个安装包，两个登录入口。入口只切换 Web 基址与权限面。</p>
+    </header>
+    <section class="entries" aria-label="双入口">
+      <button type="button" class="entry" data-entry="user" id="btn-user">
+        <span class="entry-title">用户入口</span>
+        <span class="entry-desc">创作者制作短剧</span>
+      </button>
+      <button type="button" class="entry" data-entry="admin" id="btn-admin">
+        <span class="entry-title">管理入口</span>
+        <span class="entry-desc">运营与内容管理</span>
+      </button>
+    </section>
+    <footer class="meta">
+      <span id="env-label">env: —</span>
+    </footer>
+  </main>
+  <script src="chooser.js"></script>
+</body>
+</html>
