@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "BGSSAI Short",
+    "slug": "bgssai-short",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bgssai.short"
+    },
+    "android": {
+      "package": "com.bgssai.short",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f1419"
+      }
+    },
+    "extra": {
+      "installable": "single-app dual-entry",
+      "clientEnv": "dev"
+    }
+  }
+}

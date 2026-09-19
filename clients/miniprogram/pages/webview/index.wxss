@@ -1,0 +1,13 @@
+.wrap {
+  min-height: 100vh;
+  background: #0f1419;
+}
+
+.fallback {
+  padding: 80rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32rpx;
+  color: #f2f5f8;
+}

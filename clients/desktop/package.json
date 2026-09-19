@@ -1,0 +1,44 @@
+{
+  "name": "bgssai-short-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BGSSAI Short — single Electron shell with dual login entry (user / admin)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:local": "BGSSAI_CLIENT_ENV=local electron .",
+    "start:dev": "BGSSAI_CLIENT_ENV=dev electron .",
+    "start:prod": "BGSSAI_CLIENT_ENV=prod electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.bgssai.short.desktop",
+    "productName": "BGSSAI Short",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "entry/**",
+      "config.js",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis"]
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Office"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}
