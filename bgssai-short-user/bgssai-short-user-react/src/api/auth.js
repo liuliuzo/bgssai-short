@@ -11,7 +11,9 @@ const loginSms = (data) => http.post('/user/login/sms', data)
 const sendEmail = (data) => http.post('/user/email/send', data)
 const loginEmail = (data) => http.post('/user/login/email', data)
 
+// GET /bgssai/user/oauth/channels -> result.channels：凭证已配齐的渠道
+const oauthChannels = () => http.get('/user/oauth/channels')
 const oauthAuthorizeUrl = (data) => http.post('/user/oauth/authorize-url', data)
 const oauthCallback = (data) => http.post('/user/oauth/callback', data)
 
-export default { login, sendSms, loginSms, sendEmail, loginEmail, oauthAuthorizeUrl, oauthCallback }
+export default { login, sendSms, loginSms, sendEmail, loginEmail, oauthChannels, oauthAuthorizeUrl, oauthCallback }

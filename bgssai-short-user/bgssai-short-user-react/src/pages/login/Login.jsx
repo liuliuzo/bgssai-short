@@ -152,6 +152,26 @@ export default function Login() {
     }
   }
 
+  const [openChannels, setOpenChannels] = useState([])
+  const visibleProviders = OAUTH_PROVIDERS.filter((o) => openChannels.includes(o.key))
+
+  // 只画后端已配好凭证的渠道：先前入口无条件常驻，点下去才报「该登录方式暂不可用」。
+  useEffect(() => {
+    let alive = true
+    authApi
+      .oauthChannels()
+      .then(({ data }) => {
+        const list = data && data.result && data.result.channels
+        if (alive) setOpenChannels(Array.isArray(list) ? list : [])
+      })
+      .catch(() => {
+        if (alive) setOpenChannels([])
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+
   const startOAuth = async (platform) => {
     if (busy) return
     setBusy(true)
@@ -324,12 +344,11 @@ export default function Login() {
           </button>
           <LegalFooter variant="consent" />
 
-          <div className="login-oauth-divider">或使用第三方账号</div>
-          <p className="login-note" style={{ textAlign: 'center', marginTop: 0 }}>
-            首次授权即自动创建账号，无需再注册
-          </p>
+          {visibleProviders.length > 0 ? (
+          <>
+          <div className="login-oauth-divider">第三方账号登录</div>
           <div className="oauth-grid">
-            {OAUTH_PROVIDERS.map((o) => (
+            {visibleProviders.map((o) => (
               <button
                 className="oauth-btn"
                 type="button"
@@ -345,6 +364,8 @@ export default function Login() {
               </button>
             ))}
           </div>
+          </>
+          ) : null}
           <LegalFooter tone="light" variant="login" />
         </div>
       </main>
