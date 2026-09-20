@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
@@ -16,6 +18,14 @@ import com.bgssai.shortai.production.support.ShortJson;
 
 @Component
 public class AiProviderRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(AiProviderRegistry.class);
+    private static final Set<String> DIRECT_VENDOR_CODES = Set.of(
+            KlingAiProvider.CODE,
+            VeoAiProvider.CODE,
+            MiniMaxAiProvider.CODE,
+            SeedanceAiProvider.CODE,
+            OpenAiCompatibleAiProvider.CODE);
 
     private final Map<String, AiProvider> byCode = new HashMap<>();
 
@@ -44,28 +54,47 @@ public class AiProviderRegistry {
     }
 
     /**
-     * Resolves a runnable bean for the model row. Catalog may list vendor codes that
-     * share OPENAI_COMPAT / TENCENT_TOKENHUB implementations; fall back only when
-     * config_json clearly indicates that path.
+     * Resolves a runnable bean. Generation goes through TokenHub unless the model
+     * row explicitly sets allow_direct=true (auditable). Local ffmpeg compose is not a billed model.
      */
     public AiProvider resolve(AiModelConfig model) {
         if (model == null || model.getProviderCode() == null || model.getProviderCode().isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "provider_code required");
         }
         String code = model.getProviderCode().trim();
+        Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
+        boolean allowDirect = isAllowDirect(cfg);
         AiProvider direct = byCode.get(code);
-        if (direct != null) {
+
+        if (direct != null && FfmpegComposeProvider.CODE.equals(direct.providerCode())) {
             return direct;
         }
-        Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
+        if (direct != null && TencentTokenHubAiProvider.CODE.equals(direct.providerCode())) {
+            return direct;
+        }
+
         String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
-        if (TokenHubClientSupport.isTokenHubHost(baseUrl) && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
+        boolean hubHost = TokenHubClientSupport.isTokenHubHost(baseUrl);
+        if (hubHost && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
             return byCode.get(TencentTokenHubAiProvider.CODE);
         }
-        String chatPath = ShortJson.text(cfg.get("chat_path"));
-        if (!chatPath.isBlank() && byCode.containsKey(OpenAiCompatibleAiProvider.CODE)
-                && "TEXT".equalsIgnoreCase(model.getAbilityType())) {
-            return byCode.get(OpenAiCompatibleAiProvider.CODE);
+
+        if (allowDirect && direct != null) {
+            log.info("short generation using allow_direct provider_code={}", code);
+            return direct;
+        }
+
+        if (byCode.containsKey(TencentTokenHubAiProvider.CODE)
+                && (direct == null || DIRECT_VENDOR_CODES.contains(code) || !allowDirect)) {
+            if (direct != null && DIRECT_VENDOR_CODES.contains(code) && !allowDirect) {
+                log.info("short generation rerouted to hub from provider_code={}", code);
+            }
+            return byCode.get(TencentTokenHubAiProvider.CODE);
+        }
+
+        if (direct != null) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "direct provider not allowed without allow_direct: " + code);
         }
         throw new BizException(CommonErrorCode.RULE_REJECT, "unknown provider_code: " + code);
     }
@@ -74,16 +103,19 @@ public class AiProviderRegistry {
         if (model == null) {
             return false;
         }
-        if (supports(model.getProviderCode())) {
+        try {
+            resolve(model);
             return true;
+        } catch (BizException ex) {
+            return false;
         }
-        Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
-        String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
-        if (TokenHubClientSupport.isTokenHubHost(baseUrl) && supports(TencentTokenHubAiProvider.CODE)) {
-            return true;
+    }
+
+    private static boolean isAllowDirect(Map<String, Object> cfg) {
+        Object raw = cfg.get("allow_direct");
+        if (raw instanceof Boolean bool) {
+            return bool;
         }
-        String chatPath = ShortJson.text(cfg.get("chat_path"));
-        return !chatPath.isBlank() && "TEXT".equalsIgnoreCase(model.getAbilityType())
-                && supports(OpenAiCompatibleAiProvider.CODE);
+        return "true".equalsIgnoreCase(ShortJson.text(raw));
     }
 }

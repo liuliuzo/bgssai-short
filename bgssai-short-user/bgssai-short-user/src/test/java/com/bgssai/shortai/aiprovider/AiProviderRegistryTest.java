@@ -17,39 +17,32 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class AiProviderRegistryTest {
 
     @Test
-    void resolveFallsBackToOpenAiCompatForTextChatPath() {
+    void resolveReroutesVendorToHubUnlessAllowDirect() {
         OpenAiCompatibleAiProvider openAi = new OpenAiCompatibleAiProvider(new SysSecretReader(key -> "k"));
-        AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi));
+        TencentTokenHubAiProvider hub = hub();
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi, hub));
         AiModelConfig model = new AiModelConfig();
         model.setProviderCode("HUNYUAN");
         model.setAbilityType("TEXT");
         model.setConfigJson("{\"base_url\":\"https://api.hunyuan.cloud.tencent.com\",\"chat_path\":\"/chat/completions\"}");
-        assertEquals(OpenAiCompatibleAiProvider.CODE, registry.resolve(model).providerCode());
+        assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(model).providerCode());
         assertTrue(registry.resolvable(model));
     }
 
     @Test
+    void resolveAllowsDirectWhenFlagSet() {
+        OpenAiCompatibleAiProvider openAi = new OpenAiCompatibleAiProvider(new SysSecretReader(key -> "k"));
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi, hub()));
+        AiModelConfig model = new AiModelConfig();
+        model.setProviderCode(OpenAiCompatibleAiProvider.CODE);
+        model.setAbilityType("TEXT");
+        model.setConfigJson("{\"allow_direct\":true,\"base_url\":\"https://api.hunyuan.cloud.tencent.com\",\"chat_path\":\"/chat/completions\"}");
+        assertEquals(OpenAiCompatibleAiProvider.CODE, registry.resolve(model).providerCode());
+    }
+
+    @Test
     void resolveFallsBackToTokenHubForTokenhubHost() {
-        ProviderHttp.Client noop = new ProviderHttp.Client() {
-            @Override
-            public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
-                return "{}";
-            }
-
-            @Override
-            public String getJson(String url, Map<String, String> headers, int timeoutSec) {
-                return "{}";
-            }
-
-            @Override
-            public byte[] getBytes(String url, int timeoutSec) {
-                return new byte[0];
-            }
-        };
-        TencentTokenHubAiProvider hub = new TencentTokenHubAiProvider(
-                new SysSecretReader(key -> "k"), noop, ms -> {
-                });
-        AiProviderRegistry registry = new AiProviderRegistry(List.of(hub));
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(hub()));
         AiModelConfig model = new AiModelConfig();
         model.setProviderCode("WAND");
         model.setAbilityType("IMAGE");
@@ -59,26 +52,7 @@ class AiProviderRegistryTest {
 
     @Test
     void resolveFallsBackToTokenHubForBgssaiHubHosts() {
-        ProviderHttp.Client noop = new ProviderHttp.Client() {
-            @Override
-            public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
-                return "{}";
-            }
-
-            @Override
-            public String getJson(String url, Map<String, String> headers, int timeoutSec) {
-                return "{}";
-            }
-
-            @Override
-            public byte[] getBytes(String url, int timeoutSec) {
-                return new byte[0];
-            }
-        };
-        TencentTokenHubAiProvider hub = new TencentTokenHubAiProvider(
-                new SysSecretReader(key -> "k"), noop, ms -> {
-                });
-        AiProviderRegistry registry = new AiProviderRegistry(List.of(hub));
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(hub()));
         AiModelConfig cn = new AiModelConfig();
         cn.setProviderCode("CUSTOM");
         cn.setAbilityType("TEXT");
@@ -92,7 +66,7 @@ class AiProviderRegistryTest {
     }
 
     @Test
-    void unknownVideoVendorWithoutFallbackRejected() {
+    void unknownVideoVendorWithoutHubRejected() {
         AiProviderRegistry registry = new AiProviderRegistry(List.of());
         AiModelConfig model = new AiModelConfig();
         model.setProviderCode("HUNYUAN");
@@ -100,5 +74,26 @@ class AiProviderRegistryTest {
         model.setConfigJson("{\"base_url\":\"https://api.hunyuan.cloud.tencent.com\"}");
         assertFalse(registry.resolvable(model));
         assertThrows(BizException.class, () -> registry.resolve(model));
+    }
+
+    private static TencentTokenHubAiProvider hub() {
+        ProviderHttp.Client noop = new ProviderHttp.Client() {
+            @Override
+            public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
+                return "{}";
+            }
+
+            @Override
+            public String getJson(String url, Map<String, String> headers, int timeoutSec) {
+                return "{}";
+            }
+
+            @Override
+            public byte[] getBytes(String url, int timeoutSec) {
+                return new byte[0];
+            }
+        };
+        return new TencentTokenHubAiProvider(new SysSecretReader(key -> "k"), noop, ms -> {
+        });
     }
 }
