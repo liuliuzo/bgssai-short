@@ -340,17 +340,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Glass chip behind official BGSSAI mark (no third-party trademark glyphs) */
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(var(--lg-blur, 12px)) saturate(var(--lg-saturate, 160%));
-  -webkit-backdrop-filter: blur(var(--lg-blur, 12px)) saturate(var(--lg-saturate, 160%));
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  /* White chip for full-color official brand marks (aligned with bgssai-blog). */
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.35);
   overflow: hidden;
 }
 .oauth-icon img {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
+  display: block;
 }
 
 @media (max-width: 920px) {

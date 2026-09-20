@@ -322,6 +322,7 @@ export default function Login() {
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
             {busy ? '处理中...' : '登录'}
           </button>
+          <LegalFooter variant="consent" />
 
           <div className="login-oauth-divider">或使用第三方账号</div>
           <p className="login-note" style={{ textAlign: 'center', marginTop: 0 }}>

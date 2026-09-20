@@ -8,12 +8,24 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px 14px;
+  align-items: baseline;
+  gap: 2px 0;
   margin: 0;
+  line-height: 1.8;
+}
+
+.legal-footer-item {
+  display: inline;
+  white-space: nowrap;
 }
 
 .legal-footer-pair {
   white-space: nowrap;
+}
+
+.legal-sep {
+  margin: 0 2px;
+  opacity: 0.45;
 }
 
 .legal-footer-links a {
@@ -34,6 +46,25 @@
   font-size: 12px;
   line-height: 1.4;
   opacity: 0.62;
+}
+
+.legal-footer-copy--login {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.legal-consent {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+  color: #64748b;
+}
+
+.legal-consent a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .legal-footer--light {

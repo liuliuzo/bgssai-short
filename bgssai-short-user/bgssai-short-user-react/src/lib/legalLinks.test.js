@@ -9,6 +9,8 @@ import {
   hasForbiddenLegalPath,
   hasInventedLicenseNumber,
   legalPageUrl,
+  COPYRIGHT_LINE,
+  LOGIN_CONSENT_PAGES,
 } from './legalLinks.js'
 
 const REQUIRED_SLUGS = [
@@ -52,6 +54,13 @@ describe('legalLinks', () => {
     assert.equal(legalPageUrl(LEGAL_HUB, 'zh'), 'https://www.bgssai.com/legal/')
     assert.equal(legalPageUrl(LEGAL_HUB, 'en'), 'https://www.bgssai.com/en/legal/')
     assert.equal(hasInventedLicenseNumber(bilingualLabel(LEGAL_HUB)), false)
+  })
+
+
+  it('login consent is terms + privacy only; copyright has no ICP', () => {
+    assert.deepEqual(LOGIN_CONSENT_PAGES.map((p) => p.slug), ['terms-of-service', 'privacy-policy'])
+    assert.equal(COPYRIGHT_LINE, '© 2026 昆山兵贵神速智能科技有限公司')
+    assert.equal(hasInventedLicenseNumber(COPYRIGHT_LINE), false)
   })
 
   it('rejects invented license numbers and retired legal paths', () => {
