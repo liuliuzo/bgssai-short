@@ -55,7 +55,7 @@
 | 就绪探针（两端同构，公开） | GET | `/bgssai/health/readiness` | `health-check.md` |
 | 全量健康报告（两端同构，公开） | GET | `/bgssai/health` | `health-check.md` |
 | MCP 协议（用户端，PAT） | POST | `/api/mcp` | `MCP.md`（Connectors：Claude / Codex / Cursor / Grok Bot / bgssai-bot） |
-| MCP 令牌创建 / 列表 / 吊销 | POST | `/bgssai/mcp-tokens/create` · `/list` · `/revoke` | `MCP.md` |
+| MCP 令牌创建 / 列表 / 吊销 | POST | `/api/mcp/tokens/create` · `/list` · `/revoke` | `MCP.md` |
 | 套餐 / 加量 / 支付回调 | GET/POST | `/bgssai/user/subscription/**` · `/credit-packs/**` · `/bgssai/user/payment/*/notify` | `SUBSCRIPTION-CREDIT.md` |
 | 管理端商户与加量包 | GET/POST | `/bgssai/admin/pay/**` · `/bgssai/admin/credit-packs/**` · `/bgssai/admin/creators/adjust-quota` | `SUBSCRIPTION-CREDIT.md` |
 | 短剧制作闭环 | GET/POST | `/bgssai/user/short-works/**` · `/scripts/**` · `/characters/**` · `/shots/**` · `/ai-tasks/**` · `/films/**` · `/reviews/**` · `/dubbings/**` · `/subtitles/**` · `/previz/**` · `/story-map/**` · `/quality/**` · `/preview/**` · `/continuity/**` · `/bgssai/admin/reviews/**` · `/bgssai/admin/creators/**` · `/bgssai/admin/quality/**` | `SHORT-PRODUCTION.md` |

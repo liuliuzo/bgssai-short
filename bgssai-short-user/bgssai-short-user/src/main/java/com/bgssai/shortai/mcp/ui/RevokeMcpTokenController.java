@@ -23,7 +23,7 @@ public class RevokeMcpTokenController {
         this.tokenService = tokenService;
     }
 
-    @PostMapping("/bgssai/mcp-tokens/revoke")
+    @PostMapping({"/api/mcp/tokens/revoke", "/bgssai/mcp-tokens/revoke"})
     public ApiResponse handle(@RequestBody Map<String, Object> body) {
         Long id = null;
         if (body != null && body.get("id") != null) {

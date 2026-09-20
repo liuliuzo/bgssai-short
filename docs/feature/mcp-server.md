@@ -30,9 +30,9 @@
 详见 [`../api/MCP.md`](../api/MCP.md)。
 
 - `POST /api/mcp`（MCP JSON-RPC，Bearer PAT）
-- `POST /bgssai/mcp-tokens/create` body `{ token_name }`
-- `POST /bgssai/mcp-tokens/list`
-- `POST /bgssai/mcp-tokens/revoke` body `{ id }`
+- `POST /api/mcp/tokens/create` body `{ token_name }`
+- `POST /api/mcp/tokens/list`
+- `POST /api/mcp/tokens/revoke` body `{ id }`
 
 ## 五、流程 / 状态机
 
