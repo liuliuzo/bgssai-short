@@ -209,6 +209,8 @@ public class ShortAiTaskWorker {
             for (ShortAiTask task : shortAiTaskMapper.selectByExample(ex)) {
                 Date started = task.getStartedTime() == null ? task.getQueuedTime() : task.getStartedTime();
                 if (started == null) {
+                    failIfRunning(task, "ORPHAN_RUNNING",
+                            "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务");
                     continue;
                 }
                 int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
