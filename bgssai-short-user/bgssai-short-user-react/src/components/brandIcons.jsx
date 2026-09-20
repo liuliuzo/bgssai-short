@@ -1,63 +1,58 @@
 /**
- * OAuth / brand icons — officially published BGSSAI platform marks only.
- *
- * Do NOT embed third-party trademark SVGs (WeChat / Alipay / Douyin / Baidu logos).
- * Channel identity is the text label; the glyph is always the BGSSAI mark.
- *
- * Asset source of truth: docs/brand/ASSET-SOURCES.md
- * Mark files: /brand/bgss-mark.png (synced from docs/demo-static/web/assets/).
+ * OAuth / brand marks: officially published platform assets (PNG), not redraws.
+ * Sources documented in src/assets/oauth/SOURCES.md.
  */
+import wechatPng from '../assets/oauth/wechat.png'
+import alipayPng from '../assets/oauth/alipay.png'
+import douyinPng from '../assets/oauth/douyin.png'
+import baiduPng from '../assets/oauth/baidu.png'
+import weiboPng from '../assets/oauth/weibo.png'
 
-const MARK_SRC = '/brand/bgss-mark.png'
+function brandImg(src, label) {
+  return function BrandIcon({ size = 18, className, style, title = label }) {
+    return (
+      <img
+        src={src}
+        width={size}
+        height={size}
+        className={className}
+        style={{ display: 'block', objectFit: 'contain', ...style }}
+        alt=""
+        title={title}
+        aria-label={title}
+        draggable={false}
+      />
+    )
+  }
+}
 
-function PlatformMarkIcon({ size = 18, className, style, title = 'BGSSAI' }) {
+export const BrandWechat = brandImg(wechatPng, '微信')
+export const BrandAlipay = brandImg(alipayPng, '支付宝')
+export const BrandDouyin = brandImg(douyinPng, '抖音')
+export const BrandBaidu = brandImg(baiduPng, '百度')
+export const BrandWeibo = brandImg(weiboPng, '微博')
+
+export function BrandBgssai({ size = 18, className, style, title = 'BGSSAI' }) {
   return (
-    <img
-      src={MARK_SRC}
+    <svg
       width={size}
       height={size}
-      alt=""
-      title={title}
+      viewBox="0 0 24 24"
       className={className}
-      style={{
-        borderRadius: Math.max(3, Math.round(size * 0.18)),
-        objectFit: 'contain',
-        display: 'block',
-        ...style,
-      }}
+      style={style}
       role="img"
       aria-label={title}
-    />
+    >
+      <rect width="24" height="24" rx="6" fill="#071d49" />
+      <path
+        fill="#fff"
+        d="M7.2 6.4h5.1c2.4 0 3.9 1.2 3.9 3.1 0 1.2-.6 2.1-1.7 2.6 1.4.4 2.2 1.5 2.2 2.9 0 2.1-1.6 3.6-4.3 3.6H7.2V6.4zm2.5 4.7h2.3c1.1 0 1.7-.5 1.7-1.3s-.6-1.3-1.7-1.3H9.7v2.6zm0 5.4h2.6c1.2 0 1.9-.6 1.9-1.5s-.7-1.5-1.9-1.5H9.7v3z"
+      />
+    </svg>
   )
 }
 
-/** @deprecated name kept for import compatibility — renders BGSSAI mark, not WeChat trademark */
-export function BrandWechat(props) {
-  return <PlatformMarkIcon title="微信登录" {...props} />
-}
-
-/** @deprecated name kept for import compatibility — renders BGSSAI mark, not Alipay trademark */
-export function BrandAlipay(props) {
-  return <PlatformMarkIcon title="支付宝登录" {...props} />
-}
-
-/** @deprecated name kept for import compatibility — renders BGSSAI mark, not Baidu trademark */
-export function BrandBaidu(props) {
-  return <PlatformMarkIcon title="百度登录" {...props} />
-}
-
-/** @deprecated name kept for import compatibility — renders BGSSAI mark, not Douyin trademark */
-export function BrandDouyin(props) {
-  return <PlatformMarkIcon title="抖音登录" {...props} />
-}
-
-export function BrandBgssai(props) {
-  return <PlatformMarkIcon title="BGSSAI 账号" {...props} />
-}
-
-export { PlatformMarkIcon }
-
-// OAuth channels: label text names the provider; icon is always the platform mark.
+// Login OAuth channels (product contract: WECHAT / ALIPAY / DOUYIN / BAIDU + BGSSAI).
 export const OAUTH_PROVIDERS = [
   { key: 'wechat', label: '微信', color: '#07c160', Icon: BrandWechat },
   { key: 'alipay', label: '支付宝', color: '#1677ff', Icon: BrandAlipay },
