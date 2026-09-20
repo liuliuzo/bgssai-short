@@ -3,49 +3,67 @@
  * Paths match bgssai-website docs/legal/README.md EXACTLY.
  * This module is outbound links. Status: 需法务审阅.
  * Do not invent ICP / license numbers.
+ *
+ * Login UI (aligned with bgssai-blog v003): consent = 用户协议 + 隐私政策 (zh);
+ * login footer = copyright line only. App footer keeps five bilingual pairs.
  */
 
 export const LEGAL_REVIEW_STATUS = '需法务审阅'
 
 export const WEBSITE_ORIGIN = 'https://www.bgssai.com'
 
+export const COPYRIGHT_HOLDER = '昆山兵贵神速智能科技有限公司'
+export const COPYRIGHT_YEAR = 2026
+export const COPYRIGHT_LINE = `© ${COPYRIGHT_YEAR} ${COPYRIGHT_HOLDER}`
+
+/** Shorter bilingual labels (match blog) so the footer wraps cleanly with · separators. */
 export const LEGAL_PAGES = Object.freeze([
   {
+    key: 'terms',
     slug: 'terms-of-service',
     path_zh: '/terms-of-service/',
     path_en: '/en/terms-of-service/',
-    label_zh: '服务条款',
-    label_en: 'Terms of Service',
+    label_zh: '用户协议',
+    label_en: 'Terms',
   },
   {
+    key: 'privacy',
     slug: 'privacy-policy',
     path_zh: '/privacy-policy/',
     path_en: '/en/privacy-policy/',
     label_zh: '隐私政策',
-    label_en: 'Privacy Policy',
+    label_en: 'Privacy',
   },
   {
+    key: 'pi_inventory',
     slug: 'personal-information-inventory',
     path_zh: '/personal-information-inventory/',
     path_en: '/en/personal-information-inventory/',
     label_zh: '个人信息收集清单',
-    label_en: 'Personal Information Inventory',
+    label_en: 'PI Inventory',
   },
   {
+    key: 'third_party_sharing',
     slug: 'third-party-sharing',
     path_zh: '/third-party-sharing/',
     path_en: '/en/third-party-sharing/',
     label_zh: '第三方信息共享清单',
-    label_en: 'Third-Party Sharing',
+    label_en: 'Third-party Sharing',
   },
   {
+    key: 'permissions',
     slug: 'app-permissions',
     path_zh: '/app-permissions/',
     path_en: '/en/app-permissions/',
-    label_zh: '应用权限',
-    label_en: 'App Permissions',
+    label_zh: '应用权限说明',
+    label_en: 'Permissions',
   },
 ])
+
+/** Login / register consent uses only these two pages (Chinese labels + Chinese URLs). */
+export const LOGIN_CONSENT_PAGES = Object.freeze(
+  LEGAL_PAGES.filter((p) => p.key === 'terms' || p.key === 'privacy'),
+)
 
 export const LEGAL_HUB = Object.freeze({
   slug: 'legal',
