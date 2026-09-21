@@ -14,9 +14,10 @@
   - 令牌在网页「MCP Connectors」页创建，明文仅创建时显示一次
   - 每人最多 5 枚；吊销立即生效
 - 令牌管理（需登录 JWT，`@NeedAop`）：
-  - `POST /bgssai/mcp-tokens/create` body `{ "token_name": "Cursor" }` → `result.token` 仅一次
-  - `POST /bgssai/mcp-tokens/list` → 掩码列表
-  - `POST /bgssai/mcp-tokens/revoke` body `{ "id": 1 }`
+  - `POST /api/mcp/tokens/create` body `{ "token_name": "Cursor" }` → `result.token` 仅一次
+  - `POST /api/mcp/tokens/list` → 掩码列表
+  - `POST /api/mcp/tokens/revoke` body `{ "id": 1 }`
+  - 过渡别名：`POST /bgssai/mcp-tokens/create|list|revoke`
 
 限流：每用户 60 次/分钟；超限 JSON-RPC `-32000`（不回 HTTP 429）。不支持 JSON-RPC 批量数组（`-32600`）。
 

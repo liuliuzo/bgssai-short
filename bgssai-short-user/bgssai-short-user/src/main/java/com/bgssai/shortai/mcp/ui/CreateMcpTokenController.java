@@ -24,7 +24,7 @@ public class CreateMcpTokenController {
         this.tokenService = tokenService;
     }
 
-    @PostMapping("/bgssai/mcp-tokens/create")
+    @PostMapping({"/api/mcp/tokens/create", "/bgssai/mcp-tokens/create"})
     @RateLimit(capacity = 10, refillPerMinute = 10, keyBy = RateLimit.Key.USER)
     public ApiResponse handle(@RequestBody(required = false) Map<String, Object> body) {
         String name = body == null || body.get("token_name") == null ? null : String.valueOf(body.get("token_name"));

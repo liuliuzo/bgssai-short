@@ -21,7 +21,7 @@ public class ListMcpTokensController {
         this.tokenService = tokenService;
     }
 
-    @PostMapping("/bgssai/mcp-tokens/list")
+    @PostMapping({"/api/mcp/tokens/list", "/bgssai/mcp-tokens/list"})
     public ApiResponse handle(@RequestBody(required = false) Object ignored) {
         ApiResponse r = new ApiResponse();
         r.setCode("0");

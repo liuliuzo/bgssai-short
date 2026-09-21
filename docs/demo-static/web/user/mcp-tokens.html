@@ -26,9 +26,9 @@
         为 Claude / Codex / Cursor / Grok Bot / bgssai-bot 配置同一 MCP 端点
         <code>POST /api/mcp</code>。先创建令牌，再按工具粘贴配置。当前工具仅登录日志与健康探针。
       </p>
-      <p>查询 API：<code>POST /bgssai/mcp-tokens/list</code>（需请求头 <code>Jwttoken</code>）</p>
-      <p>动作 API：<code>POST /bgssai/mcp-tokens/create</code> body <code>{token_name}</code>；
-        <code>POST /bgssai/mcp-tokens/revoke</code> body <code>{id}</code></p>
+      <p>查询 API：<code>POST /api/mcp/tokens/list</code>（需请求头 <code>Jwttoken</code>）</p>
+      <p>动作 API：<code>POST /api/mcp/tokens/create</code> body <code>{token_name}</code>；
+        <code>POST /api/mcp/tokens/revoke</code> body <code>{id}</code></p>
       <p>MCP 端点鉴权：<code>Authorization: Bearer bgs_mcp_...</code></p>
 
       <h3 style="font-size:15px;margin:16px 0 8px">Claude</h3>
