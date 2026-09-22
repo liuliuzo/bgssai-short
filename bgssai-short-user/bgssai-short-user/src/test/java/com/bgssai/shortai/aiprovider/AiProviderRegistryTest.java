@@ -56,12 +56,12 @@ class AiProviderRegistryTest {
         AiModelConfig cn = new AiModelConfig();
         cn.setProviderCode("CUSTOM");
         cn.setAbilityType("TEXT");
-        cn.setConfigJson("{\"base_url\":\"https://tokenhub-cn.bgssai.com\",\"hub\":\"cn\"}");
+        cn.setConfigJson("{\"base_url\":\"https://www.bgssai-tokenhub.cn\",\"hub\":\"cn\"}");
         assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(cn).providerCode());
         AiModelConfig global = new AiModelConfig();
         global.setProviderCode("CUSTOM");
         global.setAbilityType("TEXT");
-        global.setConfigJson("{\"base_url\":\"https://tokenhub-global.bgssai.com\",\"hub\":\"global\"}");
+        global.setConfigJson("{\"base_url\":\"https://www.bgssai-tokenhub.com\",\"hub\":\"global\"}");
         assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(global).providerCode());
     }
 

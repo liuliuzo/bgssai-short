@@ -17,7 +17,11 @@ class TokenHubClientSupportTest {
         assertEquals(TokenHubClientSupport.HUB_GLOBAL, TokenHubClientSupport.resolveHub(
                 Map.of("hub", "global"), "deepseek-chat"));
         assertEquals(TokenHubClientSupport.HUB_CN, TokenHubClientSupport.resolveHub(
-                Map.of("base_url", "https://tokenhub-cn.bgssai.com"), "x"));
+                Map.of("base_url", "https://www.bgssai-tokenhub.cn"), "x"));
+        assertEquals(TokenHubClientSupport.HUB_CN, TokenHubClientSupport.resolveHub(
+                Map.of("base_url", "https://dev.user.bgssai-tokenhub.cn/v1"), "gpt-4o-mini"));
+        assertEquals(TokenHubClientSupport.HUB_GLOBAL, TokenHubClientSupport.resolveHub(
+                Map.of("base_url", "https://dev.user.bgssai-tokenhub.com/v1"), "deepseek-chat"));
         assertEquals(TokenHubClientSupport.HUB_GLOBAL, TokenHubClientSupport.resolveHub(
                 Map.of(), "gpt-4o-mini"));
         assertEquals(TokenHubClientSupport.HUB_CN, TokenHubClientSupport.resolveHub(
