@@ -36,11 +36,11 @@ public final class TokenHubClientSupport {
         }
         String base = ShortJson.text(cfg == null ? null : cfg.get("base_url")).toLowerCase(Locale.ROOT);
         if (base.contains("tokenhub-global") || base.contains("bgssai-tokenhub-global")
-                || base.contains("tokenhub-intl") || base.contains("www.bgssai-tokenhub.com")) {
+                || base.contains("tokenhub-intl") || base.contains("bgssai-tokenhub.com")) {
             return HUB_GLOBAL;
         }
         if (base.contains("tokenhub-cn") || base.contains("bgssai-tokenhub-cn")
-                || base.contains("tokenhub.tencentmaas.com")) {
+                || base.contains("bgssai-tokenhub.cn") || base.contains("tokenhub.tencentmaas.com")) {
             return HUB_CN;
         }
         String model = modelCode == null ? "" : modelCode.trim().toLowerCase(Locale.ROOT);
