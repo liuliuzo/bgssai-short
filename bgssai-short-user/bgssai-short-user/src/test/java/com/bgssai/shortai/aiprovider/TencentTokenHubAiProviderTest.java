@@ -131,13 +131,13 @@ class TencentTokenHubAiProviderTest {
                     }
                     return "";
                 }), http, ms -> {
-                }, "https://tokenhub-cn.bgssai.com/", "https://tokenhub-global.bgssai.com/");
+                }, "https://www.bgssai-tokenhub.cn/", "https://www.bgssai-tokenhub.com/");
         AiProviderRequest req = request("TEXT", "hy4-preview", "写剧本");
         req.getModel().setConfigJson(
-                "{\"hub\":\"cn\",\"base_url\":\"https://tokenhub-cn.bgssai.com\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+                "{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
         AiProviderResult result = provider.execute(req);
         assertEquals("hub", result.getTextContent());
-        assertTrue(http.postedUrls.get(0).startsWith("https://tokenhub-cn.bgssai.com/v1/chat/completions"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.cn/v1/chat/completions"));
         assertEquals("Bearer sk-hub", http.postedHeaders.get(0).get("Authorization"));
     }
 
@@ -149,13 +149,13 @@ class TencentTokenHubAiProviderTest {
                 new SysSecretReader(secretRef -> SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY.equals(secretRef)
                         ? "sk-global" : "sk-cn"),
                 http, ms -> {
-                }, "https://tokenhub-cn.bgssai.com", "https://tokenhub-global.bgssai.com");
+                }, "https://www.bgssai-tokenhub.cn", "https://www.bgssai-tokenhub.com");
         AiProviderRequest req = request("TEXT", "gpt-4o-mini", "hello");
         req.getModel().setConfigJson(
                 "{\"hub\":\"global\",\"secret_ref\":\"ai.tokenhub_global.api_key\",\"chat_path\":\"/v1/chat/completions\"}");
         AiProviderResult result = provider.execute(req);
         assertEquals("intl", result.getTextContent());
-        assertTrue(http.postedUrls.get(0).startsWith("https://tokenhub-global.bgssai.com/v1/chat/completions"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.com/v1/chat/completions"));
         assertEquals("Bearer sk-global", http.postedHeaders.get(0).get("Authorization"));
     }
 
@@ -182,7 +182,7 @@ class TencentTokenHubAiProviderTest {
         model.setPriceUnit("PER_CALL");
         model.setTimeoutSec(60);
         model.setConfigJson(
-                "{\"hub\":\"cn\",\"base_url\":\"https://tokenhub-cn.bgssai.com\",\"poll_interval_ms\":0,\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+                "{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\",\"poll_interval_ms\":0,\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
         AiProviderRequest request = new AiProviderRequest();
         request.setAbilityType(ability);
         request.setModel(model);

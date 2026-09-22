@@ -52,9 +52,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     @Autowired
     public TencentTokenHubAiProvider(SysSecretReader secretReader,
-            @Value("${bgssai.llm.tokenhub-cn-base-url:${bgssai.llm.gateway-base-url:https://tokenhub-cn.bgssai.com}}")
+            @Value("${bgssai.llm.tokenhub-cn-base-url:${bgssai.llm.gateway-base-url:https://www.bgssai-tokenhub.cn}}")
                     String cnBaseUrl,
-            @Value("${bgssai.llm.tokenhub-global-base-url:https://tokenhub-global.bgssai.com}")
+            @Value("${bgssai.llm.tokenhub-global-base-url:https://www.bgssai-tokenhub.com}")
                     String globalBaseUrl) {
         this(secretReader, new ProviderHttp.JdkClient(), ms -> {
             if (ms > 0) {

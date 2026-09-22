@@ -30,15 +30,15 @@
 
 `TencentTokenHubAiProvider` 只负责供应商协议转换与结果归一化；作品、剧集、镜头、字幕、BGM 归属校验均在
 Service / Worker 内完成。`AiProviderRegistry` 按 `TENCENT_TOKENHUB` 注册该实现，并对
-`tokenhub-cn.bgssai.com` / `tokenhub-global.bgssai.com` / 历史 `tokenhub.tencentmaas.com`
+`www.bgssai-tokenhub.cn` / `www.bgssai-tokenhub.com` / 历史 `tokenhub.tencentmaas.com`
 host 做 resolvable 回退。
 
 ## 3. 模型与端点映射
 
 | 中枢 | 默认 base_url | secret_ref |
 | --- | --- | --- |
-| CN | `https://tokenhub-cn.bgssai.com` | `ai.tokenhub_cn.api_key` |
-| Global | `https://tokenhub-global.bgssai.com` | `ai.tokenhub_global.api_key` |
+| CN | `https://www.bgssai-tokenhub.cn` | `ai.tokenhub_cn.api_key` |
+| Global | `https://www.bgssai-tokenhub.com` | `ai.tokenhub_global.api_key` |
 
 鉴权统一为 `Authorization: Bearer <api_key>`。properties 仅可写中枢 base URL，**禁止**写 API Key。
 
@@ -109,13 +109,13 @@ TokenHub `config_json` 共同字段：
 ```json
 {
   "hub": "cn",
-  "base_url": "https://tokenhub-cn.bgssai.com",
+  "base_url": "https://www.bgssai-tokenhub.cn",
   "secret_ref": "ai.tokenhub_cn.api_key",
   "poll_interval_ms": 3000
 }
 ```
 
-Global 行使用 `"hub":"global"` 与 `https://tokenhub-global.bgssai.com` / `ai.tokenhub_global.api_key`。
+Global 行使用 `"hub":"global"` 与 `https://www.bgssai-tokenhub.com` / `ai.tokenhub_global.api_key`。
 
 各端点可由 `chat_path`、`submit_path`、`task_path`、`text2video_path`、`image2video_path` 覆盖，便于
 供应商升级时通过管理端调整；代码内保留本文件 §3 的安全默认值。
