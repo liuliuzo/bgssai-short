@@ -342,7 +342,6 @@ export default function Login() {
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
             {busy ? '处理中...' : '登录'}
           </button>
-          <LegalFooter variant="consent" />
 
           {visibleProviders.length > 0 ? (
           <>
@@ -366,7 +365,7 @@ export default function Login() {
           </div>
           </>
           ) : null}
-          <LegalFooter tone="light" variant="login" />
+          <LegalFooter variant="consent" />
         </div>
       </main>
       {wechatFastLoginDialog}

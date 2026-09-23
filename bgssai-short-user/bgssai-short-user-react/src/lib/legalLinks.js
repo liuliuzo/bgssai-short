@@ -5,15 +5,14 @@
  * Do not invent ICP / license numbers.
  *
  * Login UI (aligned with bgssai-blog v003): consent = 用户协议 + 隐私政策 (zh);
- * login footer = copyright line only. App footer keeps five bilingual pairs.
+ * login footer = copyright line only. App footer shows terms and privacy in the current language.
  */
 
-export const LEGAL_REVIEW_STATUS = '需法务审阅'
 
 export const WEBSITE_ORIGIN = 'https://www.bgssai.com'
 
 export const COPYRIGHT_HOLDER = '昆山兵贵神速智能科技有限公司'
-export const COPYRIGHT_YEAR = 2026
+export const COPYRIGHT_YEAR = new Date().getFullYear()
 export const COPYRIGHT_LINE = `© ${COPYRIGHT_YEAR} ${COPYRIGHT_HOLDER}`
 
 /** Shorter bilingual labels (match blog) so the footer wraps cleanly with · separators. */
@@ -33,30 +32,6 @@ export const LEGAL_PAGES = Object.freeze([
     path_en: '/en/privacy-policy/',
     label_zh: '隐私政策',
     label_en: 'Privacy',
-  },
-  {
-    key: 'pi_inventory',
-    slug: 'personal-information-inventory',
-    path_zh: '/personal-information-inventory/',
-    path_en: '/en/personal-information-inventory/',
-    label_zh: '个人信息收集清单',
-    label_en: 'PI Inventory',
-  },
-  {
-    key: 'third_party_sharing',
-    slug: 'third-party-sharing',
-    path_zh: '/third-party-sharing/',
-    path_en: '/en/third-party-sharing/',
-    label_zh: '第三方信息共享清单',
-    label_en: 'Third-party Sharing',
-  },
-  {
-    key: 'permissions',
-    slug: 'app-permissions',
-    path_zh: '/app-permissions/',
-    path_en: '/en/app-permissions/',
-    label_zh: '应用权限说明',
-    label_en: 'Permissions',
   },
 ])
 
