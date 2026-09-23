@@ -1,3 +1,4 @@
+import LegalFooter from './components/LegalFooter'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useUserStore, isAllowedRole } from './store/user'
 import MainLayout from './layouts/MainLayout'
@@ -36,6 +37,7 @@ function NotFoundRedirect() {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route
         path="/login"
@@ -69,5 +71,7 @@ export default function App() {
 
       <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
+    <LegalFooter />
+    </>
   )
 }

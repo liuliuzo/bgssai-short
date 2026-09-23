@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { message } from 'antd'
 import authApi from '../../api/auth'
 import { useUserStore, isAllowedRole } from '../../store/user'
-import LegalFooter from '../../components/LegalFooter'
 import './login.css'
 
 const CODE_OK = new Set([0, 200, '0', '200'])
@@ -98,7 +97,6 @@ export default function Login() {
             {loading ? '登录中...' : '登录'}
           </button>
         </form>
-        <LegalFooter tone="dark" variant="login" />
       </div>
     </div>
   )

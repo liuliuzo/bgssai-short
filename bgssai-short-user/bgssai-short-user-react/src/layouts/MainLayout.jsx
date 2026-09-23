@@ -4,7 +4,6 @@ import { Dropdown, Drawer, message } from 'antd'
 import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined , DownloadOutlined, AppstoreOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
-import LegalFooter from '../components/LegalFooter'
 import SupportWidget from '../components/SupportWidget'
 import './main-layout.css'
 
@@ -140,8 +139,6 @@ export default function MainLayout() {
         <main className="pa-content">
           <Outlet />
         </main>
-
-        <LegalFooter tone="light" variant="app" />
 
         {inShell && (
           <nav className="pa-shell-tabbar" aria-label="壳内主导航">

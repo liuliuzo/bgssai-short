@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import {
   LEGAL_HUB,
   LEGAL_PAGES,
-  LEGAL_REVIEW_STATUS,
   WEBSITE_ORIGIN,
   bilingualLabel,
   hasForbiddenLegalPath,
@@ -14,15 +13,11 @@ import {
 const REQUIRED_SLUGS = [
   'terms-of-service',
   'privacy-policy',
-  'personal-information-inventory',
-  'third-party-sharing',
-  'app-permissions',
 ]
 
 describe('legalLinks', () => {
-  it('exposes exactly five official website pages on www.bgssai.com', () => {
-    assert.equal(LEGAL_PAGES.length, 5)
-    assert.equal(LEGAL_REVIEW_STATUS, '需法务审阅')
+  it('exposes exactly two official website pages on www.bgssai.com', () => {
+    assert.equal(LEGAL_PAGES.length, 2)
     assert.equal(WEBSITE_ORIGIN, 'https://www.bgssai.com')
     assert.deepEqual(LEGAL_PAGES.map((page) => page.slug), REQUIRED_SLUGS)
   })

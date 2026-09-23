@@ -366,7 +366,6 @@ export default function Login() {
           </div>
           </>
           ) : null}
-          <LegalFooter tone="light" variant="login" />
         </div>
       </main>
       {wechatFastLoginDialog}
