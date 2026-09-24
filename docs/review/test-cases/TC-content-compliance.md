@@ -1,0 +1,19 @@
+# 测试用例：合规预检与内容审核（content-compliance）
+
+- **功能文档**: `docs/feature/content-compliance.md`
+- **范围**: in-scope
+- **验收标准数**: 9
+- **生成用例数**: 9
+- **环境**: User `https://dev.user.bgssai-short.com` · Admin `https://dev.admin.bgssai-short.com`
+
+| 用例ID | 关联需求/AC | 优先级 | 端(user/admin) | 前置条件 | 测试步骤 | 期望结果 | 测试数据 | 环境 | 结果(待测) | 备注 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-SHORT-CONTENT-COMPLIAN-01 | AC-01 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：台词中含 `BLOCK` 级内容时，剧本定稿被拒并定位到 `scene_no` / `line_no`，给出改写建议。 | 台词中含 `BLOCK` 级内容时，剧本定稿被拒并定位到 `scene_no` / `line_no`，给出改写建议。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-02 | AC-02 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：含 `BLOCK` 项的镜头在分镜工作台标红且「生成」按钮禁用；修改文本后重新预检自动解除。 | 含 `BLOCK` 项的镜头在分镜工作台标红且「生成」按钮禁用；修改文本后重新预检自动解除。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-03 | AC-03 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：`WARN` 级不阻塞流程，但提交生成前弹窗列出全部 `WARN` 项并需确认。 | `WARN` 级不阻塞流程，但提交生成前弹窗列出全部 `WARN` 项并需确认。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-04 | AC-04 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：提交审核后该集全部编辑入口变只读；撤回后恢复可编辑。`PENDING` 状态下用户端可见 | 提交审核后该集全部编辑入口变只读；撤回后恢复可编辑。`PENDING` 状态下用户端可见 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-05 | AC-05 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：管理端队列按提交时间正序，处理后从待审队列移除并出现在已处理列表。 | 管理端队列按提交时间正序，处理后从待审队列移除并出现在已处理列表。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-06 | AC-06 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：驳回必须带至少一条结构化驳回项；用户端逐项可见风险类别、集数、镜头或台词定位、 | 驳回必须带至少一条结构化驳回项；用户端逐项可见风险类别、集数、镜头或台词定位、 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-07 | AC-07 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：1 整改仅涉及字幕 / 台词文本类修改时，可走轻量重合成（仅重烧字幕）后直接重提， | 1 整改仅涉及字幕 / 台词文本类修改时，可走轻量重合成（仅重烧字幕）后直接重提， | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-08 | AC-08 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：全部剧集审核通过后作品状态自动变为 `COMPLETED`。 | 全部剧集审核通过后作品状态自动变为 `COMPLETED`。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-CONTENT-COMPLIAN-09 | AC-09 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：任一审核动作在 `short_review_record` 留下不可删除的记录，含审核人 `user_id` 与时间。 | 任一审核动作在 `short_review_record` 留下不可删除的记录，含审核人 `user_id` 与时间。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |

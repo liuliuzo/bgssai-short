@@ -1,0 +1,18 @@
+# 测试用例：订阅套餐与加量 credit（subscription-credit）
+
+- **功能文档**: `docs/feature/subscription-credit.md`
+- **范围**: in-scope
+- **验收标准数**: 8
+- **生成用例数**: 8
+- **环境**: User `https://dev.user.bgssai-short.com` · Admin `https://dev.admin.bgssai-short.com`
+
+| 用例ID | 关联需求/AC | 优先级 | 端(user/admin) | 前置条件 | 测试步骤 | 期望结果 | 测试数据 | 环境 | 结果(待测) | 备注 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-SHORT-SUBSCRIP-CREDIT-01 | AC-01 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：用户端套餐列表返回五档，金额与发放额与目录一致，不以客户端报价为准。 | 用户端套餐列表返回五档，金额与发放额与目录一致，不以客户端报价为准。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-02 | AC-02 | P0 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：购买 PRO 微信支付：创建订单金额等于目录 `price_cent`，返回 `code_url`；用户端弹出扫码弹窗（二维码由 `code_url` 渲染，可复制链接），轮询 `order/status` 至 `paid` 后刷新余额；沙箱回调 HMAC 验签通过后订阅 `active`，`balance_cent` 重置为该档 `monthly_bala | 购买 PRO 微信支付：创建订单金额等于目录 `price_cent`，返回 `code_url`；用户端弹出扫码弹窗（二维码由 `code_url` 渲染，可复制链接），轮询 `order/status` 至 `paid` 后刷新余额；沙箱回调 HMAC 验签通过后订阅 `active`，`balance_cent` 重置为该档 `monthly_balance_cent`。支付宝当面付同 UX。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-03 | AC-03 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：购买加量包后仅增加 `extra_balance_cent`，套餐到期不扣减该字段。 | 购买加量包后仅增加 `extra_balance_cent`，套餐到期不扣减该字段。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-04 | AC-04 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：同一 `order_no` 重复通知只发放一次。 | 同一 `order_no` 重复通知只发放一次。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-05 | AC-05 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：回调金额与订单 `amount_cent` 不一致则拒绝，不改订单状态。 | 回调金额与订单 `amount_cent` 不一致则拒绝，不改订单状态。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-06 | AC-06 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：任务成功扣费：先周期后加量；余额不足 `4007`；月度上限触顶 `4015`。 | 任务成功扣费：先周期后加量；余额不足 `4007`；月度上限触顶 `4015`。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-07 | AC-07 | P0 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：管理端保存微信 / 支付宝商户（路径对齐 VPN `/bgssai/admin/pay/alipay-configs/save` 与 wechat）；保存加量包；`adjust-quota` 无备注被拒。 | 管理端保存微信 / 支付宝商户（路径对齐 VPN `/bgssai/admin/pay/alipay-configs/save` 与 wechat）；保存加量包；`adjust-quota` 无备注被拒。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-SUBSCRIP-CREDIT-08 | AC-08 | P1 | both | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 按需打开用户端 https://dev.user.bgssai-short.com 或管理端 https://dev.admin.bgssai-short.com<br>2. 按验收标准执行：生产模式无收款商户时下单失败 `60013`。 | 生产模式无收款商户时下单失败 `60013`。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |

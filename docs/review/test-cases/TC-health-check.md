@@ -1,0 +1,20 @@
+# 测试用例：需求：健康检查（health-check）
+
+- **功能文档**: `docs/feature/health-check.md`
+- **范围**: in-scope
+- **验收标准数**: 10
+- **生成用例数**: 10
+- **环境**: User `https://dev.user.bgssai-short.com` · Admin `https://dev.admin.bgssai-short.com`
+
+| 用例ID | 关联需求/AC | 优先级 | 端(user/admin) | 前置条件 | 测试步骤 | 期望结果 | 测试数据 | 环境 | 结果(待测) | 备注 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-SHORT-HEALTH-CHECK-01 | AC-01 | P1 | api | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 对 User `https://dev.user.bgssai-short.com` 与 Admin `https://dev.admin.bgssai-short.com` 分别调用相关接口<br>2. 按验收标准执行：依赖全部正常 → 三个端点均 HTTP 200，`result.status` 均为 `UP` | 三个端点均 HTTP 200，`result.status` 均为 `UP` | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-02 | AC-02 | P0 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：数据库不可达 → 存活仍 200 且 `UP`；就绪 503 且 `DOWN`，`components` 中 `db` / `mybatis` 为 `DOWN`；全量 503 | 存活仍 200 且 `UP`；就绪 503 且 `DOWN`，`components` 中 `db` / `mybatis` 为 `DOWN`；全量 503 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-03 | AC-03 | P0 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：数据库不可达时的耗时 → 就绪在部署脚本 `curl --max-time 5` 窗口内返回，不拖成探测超时 | 就绪在部署脚本 `curl --max-time 5` 窗口内返回，不拖成探测超时 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-04 | AC-04 | P0 | api | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 对 User `https://dev.user.bgssai-short.com` 与 Admin `https://dev.admin.bgssai-short.com` 分别调用相关接口<br>2. 按验收标准执行：磁盘剩余低于阈值 → 全量报告整体 `DEGRADED` 且 **HTTP 200**；就绪不受影响仍 `UP` + 200 | 全量报告整体 `DEGRADED` 且 **HTTP 200**；就绪不受影响仍 `UP` + 200 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-05 | AC-05 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：`sys_user` 无有效行 → `mybatis` 组件 `DEGRADED`，整体 `DEGRADED`，HTTP 200 | `mybatis` 组件 `DEGRADED`，整体 `DEGRADED`，HTTP 200 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-06 | AC-06 | P1 | api | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 对 User `https://dev.user.bgssai-short.com` 与 Admin `https://dev.admin.bgssai-short.com` 分别调用相关接口<br>2. 按验收标准执行：单个组件抛异常 → 该组件 `DOWN` 且 `message` 只含异常类型名；其余组件照常检查，端点正常返回 | 该组件 `DOWN` 且 `message` 只含异常类型名；其余组件照常检查，端点正常返回 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-07 | AC-07 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：TTL 窗口内连续调用 → 返回同一份 `checked_at`，组件不被重复检查 | 返回同一份 `checked_at`，组件不被重复检查 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-08 | AC-08 | P0 | api | 未登录 / 无业务令牌 | 1. 对 User `https://dev.user.bgssai-short.com` 与 Admin `https://dev.admin.bgssai-short.com` 分别调用相关接口<br>2. 按验收标准执行：无令牌调用三个端点 → 均正常返回，不出现 `2002` | 均正常返回，不出现 `2002` | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-09 | AC-09 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：响应体审查 → 不含连接串 / 主机 / 端口 / 账号口令 / 绝对路径 / 堆栈 | 不含连接串 / 主机 / 端口 / 账号口令 / 绝对路径 / 堆栈 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-HEALTH-CHECK-10 | AC-10 | P1 | api | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 对 User `https://dev.user.bgssai-short.com` 与 Admin `https://dev.admin.bgssai-short.com` 分别调用相关接口<br>2. 按验收标准执行：聚合与状态映射 → `HealthProbeRunnerTest` 全绿（8 条，钉死聚合规则与 HTTP 映射） | `HealthProbeRunnerTest` 全绿（8 条，钉死聚合规则与 HTTP 映射） | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |

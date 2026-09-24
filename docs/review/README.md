@@ -22,3 +22,16 @@
 - 结论须有证据（文件路径 + 行号 / 命令输出 / PR 链接），不写无出处的判断。
 - 坏合并审计记录按 Standards §11.5 归此目录，与修复 PR 描述口径一致。
 - 仓库初始化时不预置具体检查记录；每完成一次检查即在此目录留痕。
+
+## 功能测试用例
+
+面向 `docs/feature/**` 验收标准的功能测试用例套件落在 [`test-cases/`](./test-cases/)：
+
+| 文件 | 说明 |
+| --- | --- |
+| [`test-cases/README.md`](./test-cases/README.md) | 索引（功能清单、AC/TC 统计、范围说明） |
+| [`test-cases/TEMPLATE.md`](./test-cases/TEMPLATE.md) | 用例表模板 |
+| [`test-cases/STATUS.md`](./test-cases/STATUS.md) | 生成状态摘要 |
+| `test-cases/TC-*.md` | 按功能 slug 展开的用例表 |
+
+约定：用例不含口令 / JWT / PAT / 中间件密钥；真机或真实三方未就绪项在备注标 **PENDING**。

@@ -1,0 +1,21 @@
+# 测试用例：优秀短剧质量流水线（quality-pipeline）
+
+- **功能文档**: `docs/feature/quality-pipeline.md`
+- **范围**: in-scope
+- **验收标准数**: 11
+- **生成用例数**: 11
+- **环境**: User `https://dev.user.bgssai-short.com` · Admin `https://dev.admin.bgssai-short.com`
+
+| 用例ID | 关联需求/AC | 优先级 | 端(user/admin) | 前置条件 | 测试步骤 | 期望结果 | 测试数据 | 环境 | 结果(待测) | 备注 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-SHORT-QUALITY-PIPELINE-01 | AC-01 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：新建作品时可选结构模板；选用后生成的大纲，其节拍与反转集位置与模板一致（覆盖处除外）。 | 新建作品时可选结构模板；选用后生成的大纲，其节拍与反转集位置与模板一致（覆盖处除外）。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-02 | AC-02 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：剧本定稿前自动跑 `G1_SCRIPT`，产出分数与 `issue_list`；每条 issue 点击可直达对应场次并预填重写指令。 | 剧本定稿前自动跑 `G1_SCRIPT`，产出分数与 `issue_list`；每条 issue 点击可直达对应场次并预填重写指令。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-03 | AC-03 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：第 1 集的门禁阈值为 85，其余集为 75；未达标时定稿 / 提交按钮进入「需强制放行」态， | 第 1 集的门禁阈值为 85，其余集为 75；未达标时定稿 / 提交按钮进入「需强制放行」态， | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-04 | AC-04 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：提交批量生成前自动跑 `G2_STORYBOARD`，能检出「连续三镜同景别」「情绪高点未给特写」并给出可执行修改。 | 提交批量生成前自动跑 `G2_STORYBOARD`，能检出「连续三镜同景别」「情绪高点未给特写」并给出可执行修改。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-05 | AC-05 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：画面生成完成后 `G3_VISUAL` 能检出角色一致性偏差与明显画面瑕疵，返工建议直接指向具体 `shot_no`。 | 画面生成完成后 `G3_VISUAL` 能检出角色一致性偏差与明显画面瑕疵，返工建议直接指向具体 `shot_no`。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-06 | AC-06 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：合成后 `G4_FILM` 能检出音画错位、字幕断句问题与首尾无效帧，`fix_action` 可一键跳转修复。 | 合成后 `G4_FILM` 能检出音画错位、字幕断句问题与首尾无效帧，`fix_action` 可一键跳转修复。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-07 | AC-07 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：首集开场默认产出 3 个方案，评审团三视角各自给分与结论；分歧超 20 分的条目高亮标记。 | 首集开场默认产出 3 个方案，评审团三视角各自给分与结论；分歧超 20 分的条目高亮标记。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-08 | AC-08 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：作品完成后质量档案可查：四门分数趋势、返工次数、取舍与放行记录（区分主动取舍与妥协放行， | 作品完成后质量档案可查：四门分数趋势、返工次数、取舍与放行记录（区分主动取舍与妥协放行， | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-09 | AC-09 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：同一对象 5 分钟内重复发起评审不重复计费，返回缓存结果。 | 同一对象 5 分钟内重复发起评审不重复计费，返回缓存结果。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-10 | AC-10 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：单条 issue 标记「已修复」或「不改」后，仅该条做增量校验并局部刷新所属维度分数与门禁总分， | 单条 issue 标记「已修复」或「不改」后，仅该条做增量校验并局部刷新所属维度分数与门禁总分， | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+| TC-SHORT-QUALITY-PIPELINE-11 | AC-11 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：`MINOR` 级 issue 可一键「知悉不改」，处理后从三页（剧情图谱 / 连贯性中心 / 质量报告） | `MINOR` 级 issue 可一键「知悉不改」，处理后从三页（剧情图谱 / 连贯性中心 / 质量报告） | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
