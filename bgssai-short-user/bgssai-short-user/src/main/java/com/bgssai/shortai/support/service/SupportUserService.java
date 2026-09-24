@@ -32,6 +32,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class SupportUserService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.bgssai.shortai.common.session.SingleSessionGuard singleSessionGuard;
+
 
     public static final String STATUS_OPEN = "OPEN";
     public static final String STATUS_PENDING = "PENDING";
@@ -69,6 +72,7 @@ public class SupportUserService {
             if (!JwtUtil.validateToken(token)) {
                 return null;
             }
+            if (singleSessionGuard.check(JwtUtil.getUserIdFromToken(token), JwtUtil.getSessionIdFromToken(token)) != com.bgssai.shortai.common.session.SessionState.VALID) return null;
             return JwtUtil.getUserIdFromToken(token);
         } catch (Exception e) {
             return null;

@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleBizException(BizException ex, HttpServletRequest request) {
         log.warn("[GlobalException] biz path={} code={} msg={}",
                 request.getRequestURI(), ex.getCode(), ex.getMessage());
-        return json(HttpStatus.OK, envelope(ex.getCode(), ex.getMessage()));
+        return json("2003".equals(String.valueOf(ex.getCode())) ? HttpStatus.UNAUTHORIZED : HttpStatus.OK, envelope(ex.getCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

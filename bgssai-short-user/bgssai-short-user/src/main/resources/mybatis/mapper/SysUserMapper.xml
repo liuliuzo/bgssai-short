@@ -22,6 +22,7 @@
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
     <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="current_session_id" jdbcType="VARCHAR" property="currentSessionId" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -282,6 +283,7 @@
   <update id="updateByExampleSelective" parameterType="map">
     update sys_user
     <set>
+      <if test="record.currentSessionId != null">current_session_id = #{record.currentSessionId,jdbcType=VARCHAR},</if>
       <if test="record.id != null">
         id = #{record.id,jdbcType=INTEGER},
       </if>

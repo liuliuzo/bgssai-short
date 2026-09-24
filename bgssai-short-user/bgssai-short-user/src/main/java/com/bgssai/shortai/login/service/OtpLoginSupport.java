@@ -20,9 +20,13 @@ import com.bgssai.shortai.mapper.SysUserMapper;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
 import com.bgssai.shortai.utils.JwtUtil;
+import com.bgssai.shortai.common.session.SingleSessionGuard;
 
 @Service
 public class OtpLoginSupport {
+    @org.springframework.beans.factory.annotation.Autowired
+    private SingleSessionGuard singleSessionGuard;
+
 
     private static final String USER_ROLE = "USER";
     private static final Pattern PHONE = Pattern.compile("^1[3-9]\\d{9}$");
@@ -142,7 +146,9 @@ public class OtpLoginSupport {
     }
 
     private RespUserLogin issue(SysUser user, boolean isNew) {
-        String token = JwtUtil.generateToken(user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE);
+        String sessionId = singleSessionGuard.newSessionId();
+        singleSessionGuard.bindSession(user.getUserId(), sessionId);
+        String token = JwtUtil.generateToken(user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE, sessionId);
         RespUserLogin resp = new RespUserLogin();
         resp.setJwtToken(token);
         resp.setRoleCode(USER_ROLE);

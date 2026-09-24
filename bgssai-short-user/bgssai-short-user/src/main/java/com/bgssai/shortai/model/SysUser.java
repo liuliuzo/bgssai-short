@@ -44,6 +44,12 @@ public class SysUser implements Serializable {
 
     private Date updateTime;
 
+    private String currentSessionId;
+
+    public String getCurrentSessionId() { return currentSessionId; }
+
+    public void setCurrentSessionId(String currentSessionId) { this.currentSessionId = currentSessionId; }
+
     private static final long serialVersionUID = 1L;
 
     public Integer getId() {
