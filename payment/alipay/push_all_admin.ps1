@@ -43,10 +43,10 @@ $apps = @(
     oauthBody=@{ provider='ALIPAY'; client_id='2021006159661313'; client_secret=$blogPrivBody; scope='auth_user'; enabled=$true }
   }
   @{
-    key='builder'; appId='2021006185674173'; admin='https://dev.admin.bgssai-builder.com'; user='https://dev.user.bgssai-builder.com'
+    key='builder'; appId='2021006185674173'; admin='https://dev.admin.bgssai-web.com'; user='https://dev.user.bgssai-web.com'
     priv=(Get-Body (Join-Path $baseKeys 'builder\app_private_key_body.txt')); name='BGSSAIBuilder'
     loginPath='/api/auth/login'; loginBody=@{ account='admin@bgssai.com'; password='password123' }; tokenFrom='data.access_token'
-    notify='/api/payment/notify/alipay'; returnUrl='https://dev.user.bgssai-builder.com/'
+    notify='/api/payment/notify/alipay'; returnUrl='https://dev.user.bgssai-web.com/'
     domainPath=$null
     merchantPath='/api/admin/payment/alipay-merchants/save'
     oauthPath=$null; oauthBody=$null

@@ -9,7 +9,7 @@
 - 境外仅 GEO / SaaS / Tokenhub / Chat 的 Global 仓。Web 用户登录需账号密码、邮箱验证码、手机验证码；境内另支持微信、抖音、百度、支付宝，境外另支持 Google、GitHub。
 - Tokenhub CN/Global 分别接入大陆/国际模型原生 API，服务旗下产品和外部用户；Admin 模型凭证管理参考 Dify。
 - 全产品支持 Bot 下载与授权托管；Wiki/Build 构成工程文档、HTML 设计、人工/Agent 编辑与编程任务的双向闭环。
-- Short / Long 分别制作短剧和长剧；Media 对照 VLC 做播放器，并作为对标 YouTube / YouTube Shorts 的视频播放平台：播主流格式，承接 short 短剧成片与 long 长剧成片直接发布播放。Wechat 参考既定 IM 项目，支持 Web/Android/iOS 及会话内 AI 图片和回复建议。Office 参考 OpenOffice，按实际格式与版本样本验收兼容性及 AI 办公。
+- Short / Long 分别制作短剧和长剧；Media 对照 VLC 做播放器，并作为对标 YouTube / YouTube Shorts 的视频播放平台：播主流格式，承接 short 短剧成片与 long 长剧成片直接发布播放。BGSSAI IM 参考既定 IM 项目，支持 Web/Android/iOS 及会话内 AI 图片和回复建议。Office 参考 OpenOffice，按实际格式与版本样本验收兼容性及 AI 办公。
 - Blog 支持 AI、Markdown、富文本、HTML 发文；Note 对照小红书，两者推荐参考 x-algorithm。Publish 对照传声港；SaaS 包含工作流、CRM、线索与 Hootsuite 式社媒管理；Web（建站，仓 `bgssai-web`）支持预览、管理、编辑和 *.bgssai-web.com 部署；不要把 Web 写成 Build。
 - 参考代码来自工作区 reference-github，参考原型来自 reference-prototypes；未完成实现、缺失参考和未执行的集成验收必须显式记录。数据库脚本版本与线上数据库执行状态分别报告。
 
@@ -71,7 +71,7 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 | [bgssai-workflows](https://github.com/liuliuzo/bgssai-workflows) | 非应用（CI/CD 与运维） | 统一维护管理 Jenkins 部署通道，承载部署与运维任务 | Jenkins 共享库 + Job 清单唯一权威 + 中央全量启停 |
 | [bgssai-logs](https://github.com/liuliuzo/bgssai-logs) | 非应用（日志） | 统一收集全部应用服务器上的日志 | 日志采集 / 清理 / 状态检查 + 批次归档 |
 | **[bgssai-short](https://github.com/liuliuzo/bgssai-short)（本仓）** | 应用 | 承载 AI 短剧制作平台业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
-| 其余产品仓（blog / builder / geo-cn / geo-global / publish / saas / vpn / voiceunion / marklens） | 应用 | 承载各产品自身业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
+| 其余产品仓（blog / web / geo-cn / geo-global / publish / saas / magic / voiceunion / marklens） | 应用 | 承载各产品自身业务 | 业务代码 + 本产品 `sql/` 权威 + 单产品 deploy / stop |
 
 非应用仓之间**不重叠、不互相代管**：数据库脚本只在 database 仓执行，部署编排只在 workflows 仓维护，
 日志与主机清单只在 logs 仓维护，规范与骨架只在 skeleton 仓维护。需要对方的能力时引用对方仓库的权威
