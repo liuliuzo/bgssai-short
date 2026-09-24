@@ -12,10 +12,15 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.bgssai.shortai.common.exception.UnauthorizedException;
 import com.bgssai.shortai.common.logging.MdcSupport;
 import com.bgssai.shortai.utils.JwtUtil;
+import com.bgssai.shortai.common.session.SingleSessionGuard;
+import com.bgssai.shortai.common.session.SessionState;
+import com.bgssai.shortai.common.exception.BizException;
 
 @Aspect
 @Component
 public class JwtTokenAspect {
+    @org.springframework.beans.factory.annotation.Autowired
+    private SingleSessionGuard singleSessionGuard;
 
     @Around("execution(public * com.bgssai.shortai..*(..)) && " + "@within(com.bgssai.shortai.common.aop.NeedAop) || "
             + "@annotation(com.bgssai.shortai.common.aop.NeedAop)")
@@ -32,6 +37,9 @@ public class JwtTokenAspect {
         }
 
         String userId = JwtUtil.getUserIdFromToken(jwtToken);
+        SessionState state = singleSessionGuard.check(userId, JwtUtil.getSessionIdFromToken(jwtToken));
+        if (state == SessionState.SUPERSEDED) throw new BizException("2003", "账号已在其他设备登录");
+        if (state != SessionState.VALID) throw new UnauthorizedException();
         String realName = JwtUtil.getRealNameFromToken(jwtToken);
         String accountType = JwtUtil.getUserAccountType(jwtToken);
         String companyCode = JwtUtil.getCompanyCodeFromToken(jwtToken);

@@ -37,7 +37,7 @@ function IconEye({ size = 18 }) {
 export default function Login() {
   const navigate = useNavigate()
   const setUserInfo = useUserStore((s) => s.setUserInfo)
-  const [loginMethod, setLoginMethod] = useState('password')
+  const [loginMethod, setLoginMethod] = useState('sms')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
@@ -46,6 +46,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [showPw, setShowPw] = useState(false)
+  useEffect(() => { if (new URLSearchParams(window.location.search).get('reason') === 'session_kicked') message.error('账号已在其他设备登录') }, [])
   const [busy, setBusy] = useState(false)
   const [sending, setSending] = useState(false)
   const [countdown, setCountdown] = useState(0)

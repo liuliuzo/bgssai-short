@@ -59,6 +59,11 @@ public class JwtUtil {
 
     public static String generateToken(String userId, String realName, String accountType,
                                        String companyCode, String companyName, String role) {
+        return generateToken(userId, realName, accountType, companyCode, companyName, role, null);
+    }
+
+    public static String generateToken(String userId, String realName, String accountType,
+                                       String companyCode, String companyName, String role, String sessionId) {
         Date expirationDate = new Date(System.currentTimeMillis() + EXPIRATION_TIME_MS);
         var builder = Jwts.builder()
                           .subject(userId)
@@ -71,6 +76,7 @@ public class JwtUtil {
         if (role != null && !role.isEmpty()) {
             builder.claim("role", role);
         }
+        if (sessionId != null && !sessionId.isBlank()) builder.claim("sid", sessionId);
         return builder.compact();
     }
 
@@ -110,6 +116,8 @@ public class JwtUtil {
     public static String getRoleFromToken(String token) {
         return getClaims(token).get("role", String.class);
     }
+
+    public static String getSessionIdFromToken(String token) { return getClaims(token).get("sid", String.class); }
 
     private static Claims getClaims(String token) {
         return Jwts.parser()

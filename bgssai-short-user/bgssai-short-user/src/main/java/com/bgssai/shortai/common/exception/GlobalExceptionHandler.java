@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
         }
         log.warn("[GlobalException] biz path={} code={} msg={}",
                 request.getRequestURI(), ex.getCode(), msg);
-        return json(HttpStatus.OK, envelope(ex.getCode(), msg));
+        return json("2003".equals(String.valueOf(ex.getCode())) ? HttpStatus.UNAUTHORIZED : HttpStatus.OK, envelope(ex.getCode(), msg));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

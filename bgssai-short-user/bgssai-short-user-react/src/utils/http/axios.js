@@ -34,6 +34,12 @@ const gotoLogin = () => {
 // and HTTP-level errors.
 instance.interceptors.response.use(
   (res) => {
+    if (res.data && res.data.code == 2003) {
+      message.error('账号已在其他设备登录')
+      useUserStore.getState().clearUserInfo()
+      window.location.href = '/login?reason=session_kicked'
+      return Promise.reject(new Error('session_kicked'))
+    }
     if (res.data && res.data.code == 2002) {
       gotoLogin()
       return Promise.reject(new Error('token_expired'))
@@ -55,6 +61,11 @@ instance.interceptors.response.use(
     return res
   },
   (error) => {
+    if (String(error?.response?.data?.code) === '2003') {
+      gotoLogin()
+      window.location.href = '/login?reason=session_kicked'
+      return Promise.reject(new Error('账号已在其他设备登录'))
+    }
     if (error && error.response) {
       const status = error.response.status
       switch (status) {

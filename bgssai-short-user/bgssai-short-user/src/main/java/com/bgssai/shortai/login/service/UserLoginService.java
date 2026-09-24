@@ -17,6 +17,7 @@ import com.bgssai.shortai.model.LoginLog;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
 import com.bgssai.shortai.utils.JwtUtil;
+import com.bgssai.shortai.common.session.SingleSessionGuard;
 
 /**
  * User password login.
@@ -27,6 +28,9 @@ import com.bgssai.shortai.utils.JwtUtil;
  */
 @Service
 public class UserLoginService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private SingleSessionGuard singleSessionGuard;
+
 
     private static final Logger log = LoggerFactory.getLogger(UserLoginService.class);
 
@@ -67,13 +71,15 @@ public class UserLoginService {
             throw new BizException(CommonErrorCode.INVALID_CREDENTIALS);
         }
 
+        String sessionId = singleSessionGuard.newSessionId();
+        singleSessionGuard.bindSession(user.getUserId(), sessionId);
         String token = JwtUtil.generateToken(
                 user.getUserId(),
                 user.getRealName(),
                 "01",
                 null,
                 null,
-                USER_ROLE);
+                USER_ROLE, sessionId);
 
         appendLoginLog(user.getUserId(), "LOGIN_SUCCESS", httpReq);
         log.info("user login success userId={}", user.getUserId());

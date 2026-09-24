@@ -21,9 +21,13 @@ import com.bgssai.shortai.model.OauthBindingExample;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
 import com.bgssai.shortai.utils.JwtUtil;
+import com.bgssai.shortai.common.session.SingleSessionGuard;
 
 @Service
 public class OAuthLoginService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private SingleSessionGuard singleSessionGuard;
+
 
     private static final Logger log = LoggerFactory.getLogger(OAuthLoginService.class);
     private static final String USER_ROLE = "USER";
@@ -129,8 +133,10 @@ public class OAuthLoginService {
     }
 
     private RespUserLogin issue(SysUser user) {
+        String sessionId = singleSessionGuard.newSessionId();
+        singleSessionGuard.bindSession(user.getUserId(), sessionId);
         String token = JwtUtil.generateToken(
-                user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE);
+                user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE, sessionId);
         return toResp(user, token);
     }
 }
