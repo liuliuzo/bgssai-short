@@ -1,8 +1,8 @@
 app_name=BGSSAIBuilder
 app_id=2021006185674173
-website=https://dev.user.bgssai-builder.com
-oauth_callback=https://dev.user.bgssai-builder.com
-notify_url=https://dev.user.bgssai-builder.com/api/payment/notify/alipay
+website=https://dev.user.bgssai-web.com
+oauth_callback=https://dev.user.bgssai-web.com
+notify_url=https://dev.user.bgssai-web.com/api/payment/notify/alipay
 sign_type=RSA2
 private_key_file=app_private_key_body.txt (blog: app_private_key_pkcs8.pem)
 alipay_public_key_file=alipay_public_key_body.txt
