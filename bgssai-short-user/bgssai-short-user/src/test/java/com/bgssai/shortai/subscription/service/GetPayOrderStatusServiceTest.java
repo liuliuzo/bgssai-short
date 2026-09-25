@@ -27,7 +27,6 @@ import com.bgssai.shortai.model.PaymentOrderExample;
 import com.bgssai.shortai.payment.channel.ChannelPaidQuery;
 import com.bgssai.shortai.payment.channel.PaymentChannel;
 import com.bgssai.shortai.payment.channel.PaymentChannelRouter;
-import com.bgssai.shortai.payment.config.PaymentProperties;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 
 class GetPayOrderStatusServiceTest {
@@ -43,7 +42,7 @@ class GetPayOrderStatusServiceTest {
 
     @Test
     void rejectsUnknownOrder() {
-        GetPayOrderStatusService service = newService(null, false);
+        GetPayOrderStatusService service = newService(null);
 
         BizException ex = assertThrows(BizException.class, () -> service.query("po-001"));
 
@@ -54,7 +53,7 @@ class GetPayOrderStatusServiceTest {
     void rejectsWrongOwner() {
         PaymentOrder order = createdOrder();
         order.setUserId("other");
-        GetPayOrderStatusService service = newService(order, false);
+        GetPayOrderStatusService service = newService(order);
 
         BizException ex = assertThrows(BizException.class, () -> service.query("po-001"));
 
@@ -64,7 +63,7 @@ class GetPayOrderStatusServiceTest {
     @Test
     void channelQueryCompensationSettlesPaidCreatedOrder() {
         PaymentOrder order = agedCreatedOrder();
-        GetPayOrderStatusService service = newService(order, false);
+        GetPayOrderStatusService service = newService(order);
         when(channel.queryPaidOrder("po-001")).thenReturn(ChannelPaidQuery.of("4200000000000000001", 9900));
         doAnswer(invocation -> {
             PaymentOrder arg = invocation.getArgument(0);
@@ -83,7 +82,7 @@ class GetPayOrderStatusServiceTest {
     @Test
     void channelQueryAmountMismatchDoesNotGrant() {
         PaymentOrder order = agedCreatedOrder();
-        GetPayOrderStatusService service = newService(order, false);
+        GetPayOrderStatusService service = newService(order);
         when(channel.queryPaidOrder("po-001")).thenReturn(ChannelPaidQuery.of("4200000000000000001", 1));
 
         ApiResponse resp = service.query("po-001");
@@ -97,7 +96,7 @@ class GetPayOrderStatusServiceTest {
     @Test
     void channelQueryReturningNullKeepsOrderCreated() {
         PaymentOrder order = agedCreatedOrder();
-        GetPayOrderStatusService service = newService(order, false);
+        GetPayOrderStatusService service = newService(order);
         when(channel.queryPaidOrder("po-001")).thenReturn(null);
 
         ApiResponse resp = service.query("po-001");
@@ -109,23 +108,10 @@ class GetPayOrderStatusServiceTest {
     }
 
     @Test
-    void sandboxSkipsChannelQueryCompensation() {
-        PaymentOrder order = agedCreatedOrder();
-        GetPayOrderStatusService service = newService(order, true);
-
-        ApiResponse resp = service.query("po-001");
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> result = (Map<String, Object>) resp.getResult();
-        assertEquals("created", result.get("status"));
-        verify(channel, never()).queryPaidOrder(anyString());
-    }
-
-    @Test
     void expiredCreatedOrderIsClosedWithoutChannelQuery() {
         PaymentOrder order = agedCreatedOrder();
         order.setExpiresAt(new Date(System.currentTimeMillis() - 60_000L));
-        GetPayOrderStatusService service = newService(order, false);
+        GetPayOrderStatusService service = newService(order);
         when(paymentOrderMapper.updateByExampleSelective(any(PaymentOrder.class), any(PaymentOrderExample.class)))
                 .thenReturn(1);
 
@@ -138,20 +124,17 @@ class GetPayOrderStatusServiceTest {
         verify(paidOrderGrantService, never()).grantIfCreated(any(PaymentOrder.class), anyString());
     }
 
-    private GetPayOrderStatusService newService(PaymentOrder order, boolean sandboxEnabled) {
+    private GetPayOrderStatusService newService(PaymentOrder order) {
         paymentOrderMapper = mock(PaymentOrderMapper.class);
         channel = mock(PaymentChannel.class);
         PaymentChannelRouter router = mock(PaymentChannelRouter.class);
         paidOrderGrantService = mock(PaidOrderGrantService.class);
-        PaymentProperties paymentProperties = mock(PaymentProperties.class);
         when(paymentOrderMapper.selectOneByExample(any(PaymentOrderExample.class))).thenReturn(order);
         when(router.route(anyString())).thenReturn(channel);
-        when(paymentProperties.isSandboxEnabled()).thenReturn(sandboxEnabled);
 
         GetPayOrderStatusService service = new GetPayOrderStatusService();
         ReflectionTestUtils.setField(service, "paymentOrderMapper", paymentOrderMapper);
         ReflectionTestUtils.setField(service, "paymentChannelRouter", router);
-        ReflectionTestUtils.setField(service, "paymentProperties", paymentProperties);
         ReflectionTestUtils.setField(service, "paidOrderGrantService", paidOrderGrantService);
         UserContext.setUserId("user-001");
         return service;

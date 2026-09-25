@@ -1,7 +1,6 @@
 package com.bgssai.shortai.payment.channel;
 
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
-import com.bgssai.shortai.payment.config.PaymentProperties;
 import com.bgssai.shortai.payment.merchant.PayMerchantReader;
 import com.bgssai.shortai.payment.merchant.WechatMerchant;
 import com.wechat.pay.java.core.exception.ValidationException;
@@ -19,9 +17,6 @@ import com.wechat.pay.java.service.payments.model.Transaction;
 public class WechatPaymentChannel implements PaymentChannel {
 
     private static final Logger log = LoggerFactory.getLogger(WechatPaymentChannel.class);
-
-    @Autowired
-    private PaymentProperties paymentProperties;
 
     @Autowired
     private PayMerchantReader payMerchantReader;
@@ -38,10 +33,6 @@ public class WechatPaymentChannel implements PaymentChannel {
     public PrepayResult createPayment(PaymentIntent intent, String tradeNo) {
         log.info("wechat createPayment orderNo={} tradeNo={} amountCent={}",
                 intent.getOrderNo(), tradeNo, intent.getAmountCent());
-        if (paymentProperties.isSandboxEnabled()) {
-            String codeUrl = "weixin://wxpay/bizpayurl?pr=SANDBOX-" + tradeNo;
-            return new PrepayResult(codeUrl, "wx_" + tradeNo, null);
-        }
         WechatMerchant merchant = payMerchantReader.requireActiveWechatMerchant();
         if (!merchant.hasCompleteCredentials()) {
             log.warn("wechat production payment not configured mchId={} missing={}",
@@ -65,37 +56,6 @@ public class WechatPaymentChannel implements PaymentChannel {
 
     @Override
     public NotifyResult verifyAndParseNotify(NotifyContext context) {
-        if (paymentProperties.isSandboxEnabled()) {
-            return verifySandbox(context);
-        }
-        return verifyProduction(context);
-    }
-
-    private NotifyResult verifySandbox(NotifyContext context) {
-        Map<String, String> params = context.getFormParams().isEmpty()
-                ? SignSupport.parseForm(context.getRawBody())
-                : context.getFormParams();
-        boolean verified = SignSupport.verify(params, paymentProperties.getWechatSignKey());
-        if (!verified) {
-            log.warn("wechat sandbox notify verify failed outTradeNo={}", params.get("out_trade_no"));
-            return NotifyResult.rejected();
-        }
-        String orderNo = params.get("out_trade_no");
-        String channelTradeNo = params.get("transaction_id");
-        boolean success = "SUCCESS".equalsIgnoreCase(params.get("trade_state"));
-        Integer amountCent = null;
-        if (params.containsKey("amount")) {
-            try {
-                amountCent = Integer.valueOf(params.get("amount"));
-            } catch (NumberFormatException e) {
-                log.warn("wechat sandbox notify amount parse error orderNo={}", orderNo);
-            }
-        }
-        log.info("wechat sandbox notify parsed orderNo={} success={}", orderNo, success);
-        return new NotifyResult(true, success, orderNo, channelTradeNo, amountCent);
-    }
-
-    private NotifyResult verifyProduction(NotifyContext context) {
         List<WechatMerchant> candidates;
         try {
             candidates = payMerchantReader.listVerifiableWechatMerchants();
@@ -139,9 +99,6 @@ public class WechatPaymentChannel implements PaymentChannel {
     @Override
     public ChannelPaidQuery queryPaidOrder(String outTradeNo) {
         if (outTradeNo == null || outTradeNo.isBlank()) {
-            return null;
-        }
-        if (paymentProperties.isSandboxEnabled()) {
             return null;
         }
         try {

@@ -1,5 +1,6 @@
 package com.bgssai.shortai.payment.channel;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -8,19 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
-import com.bgssai.shortai.payment.config.PaymentProperties;
 import com.bgssai.shortai.payment.merchant.AlipayMerchant;
 import com.bgssai.shortai.payment.merchant.PayMerchantReader;
 import com.bgssai.shortai.payment.util.AmountCent;
-import java.util.List;
 
 @Component
 public class AlipayPaymentChannel implements PaymentChannel {
 
     private static final Logger log = LoggerFactory.getLogger(AlipayPaymentChannel.class);
-
-    @Autowired
-    private PaymentProperties paymentProperties;
 
     @Autowired
     private PayMerchantReader payMerchantReader;
@@ -37,10 +33,6 @@ public class AlipayPaymentChannel implements PaymentChannel {
     public PrepayResult createPayment(PaymentIntent intent, String tradeNo) {
         log.info("alipay createPayment orderNo={} tradeNo={} amountCent={}",
                 intent.getOrderNo(), tradeNo, intent.getAmountCent());
-        if (paymentProperties.isSandboxEnabled()) {
-            String codeUrl = "https://qr.alipay.com/sandbox/" + tradeNo;
-            return new PrepayResult(codeUrl, "ali_" + tradeNo, null);
-        }
         AlipayMerchant merchant = payMerchantReader.requireActiveAlipayMerchant();
         if (!merchant.hasCompleteCredentials()) {
             log.warn("alipay production payment not configured appId={} missing={}",
@@ -68,14 +60,6 @@ public class AlipayPaymentChannel implements PaymentChannel {
         Map<String, String> params = context.getFormParams().isEmpty()
                 ? SignSupport.parseForm(context.getRawBody())
                 : context.getFormParams();
-        if (paymentProperties.isSandboxEnabled()) {
-            boolean verified = SignSupport.verify(params, paymentProperties.getAlipaySignKey());
-            if (!verified) {
-                log.warn("alipay sandbox notify verify failed outTradeNo={}", params.get("out_trade_no"));
-                return NotifyResult.rejected();
-            }
-            return parseAlipayParams(params, true);
-        }
         AlipayMerchant merchant = payMerchantReader.findAlipayMerchantByAppId(params.get("app_id"));
         if (merchant == null) {
             log.warn("alipay notify rejected: app_id not matched to an enabled merchant outTradeNo={}",
@@ -88,17 +72,16 @@ public class AlipayPaymentChannel implements PaymentChannel {
                     merchant.getAppId(), params.get("out_trade_no"));
             return NotifyResult.rejected();
         }
-        return parseAlipayParams(params, false);
+        return parseAlipayParams(params);
     }
 
-    private NotifyResult parseAlipayParams(Map<String, String> params, boolean sandbox) {
+    private NotifyResult parseAlipayParams(Map<String, String> params) {
         String orderNo = params.get("out_trade_no");
         String channelTradeNo = params.get("trade_no");
         boolean success = "TRADE_SUCCESS".equalsIgnoreCase(params.get("trade_status"))
                 || "TRADE_FINISHED".equalsIgnoreCase(params.get("trade_status"));
         Integer amountCent = AmountCent.yuanToCent(params.get("total_amount"));
-        log.info("alipay {} notify parsed orderNo={} success={}",
-                sandbox ? "sandbox" : "prod", orderNo, success);
+        log.info("alipay notify parsed orderNo={} success={}", orderNo, success);
         return new NotifyResult(true, success, orderNo, channelTradeNo, amountCent);
     }
 
@@ -106,9 +89,6 @@ public class AlipayPaymentChannel implements PaymentChannel {
     @Override
     public ChannelPaidQuery queryPaidOrder(String outTradeNo) {
         if (outTradeNo == null || outTradeNo.isBlank()) {
-            return null;
-        }
-        if (paymentProperties.isSandboxEnabled()) {
             return null;
         }
         try {

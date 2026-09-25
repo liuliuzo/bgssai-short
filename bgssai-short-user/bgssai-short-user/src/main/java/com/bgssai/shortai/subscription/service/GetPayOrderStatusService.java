@@ -21,7 +21,6 @@ import com.bgssai.shortai.model.PaymentOrderExample;
 import com.bgssai.shortai.payment.channel.ChannelPaidQuery;
 import com.bgssai.shortai.payment.channel.PaymentChannel;
 import com.bgssai.shortai.payment.channel.PaymentChannelRouter;
-import com.bgssai.shortai.payment.config.PaymentProperties;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.payment.service.PaymentAmountGuard;
 
@@ -33,7 +32,6 @@ public class GetPayOrderStatusService {
 
     @Autowired private PaymentOrderMapper paymentOrderMapper;
     @Autowired private PaymentChannelRouter paymentChannelRouter;
-    @Autowired private PaymentProperties paymentProperties;
     @Autowired private PaidOrderGrantService paidOrderGrantService;
 
     public ApiResponse query(String orderNo) {
@@ -52,7 +50,6 @@ public class GetPayOrderStatusService {
             return ok(toResult(order));
         }
         if ("created".equals(order.getStatus())
-                && !paymentProperties.isSandboxEnabled()
                 && order.getGmtCreate() != null
                 && System.currentTimeMillis() - order.getGmtCreate().getTime() > CHANNEL_QUERY_MIN_AGE_MS) {
             try {
