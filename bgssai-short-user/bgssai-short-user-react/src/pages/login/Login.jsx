@@ -1,3 +1,4 @@
+import ProductMotion from '../../components/ProductMotion.jsx'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { message } from 'antd'
@@ -240,6 +241,7 @@ export default function Login() {
             <span className="s">短剧 · Short</span>
           </div>
 
+          <ProductMotion />
           <h2 className="login-head">欢迎回来</h2>
           <p className="login-sub">登录以继续你的短剧制作</p>
 

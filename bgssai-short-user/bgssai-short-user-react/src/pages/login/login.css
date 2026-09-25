@@ -354,7 +354,7 @@
 
 @media (max-width: 920px) {
   .login-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .login-hero {
     padding: 28px 24px;
