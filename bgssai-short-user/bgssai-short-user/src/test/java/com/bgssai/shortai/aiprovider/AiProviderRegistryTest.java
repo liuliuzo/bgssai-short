@@ -30,14 +30,26 @@ class AiProviderRegistryTest {
     }
 
     @Test
-    void resolveAllowsDirectWhenFlagSet() {
+    void resolveIgnoresAllowDirectAndUsesHub() {
         OpenAiCompatibleAiProvider openAi = new OpenAiCompatibleAiProvider(new SysSecretReader(key -> "k"));
         AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi, hub()));
         AiModelConfig model = new AiModelConfig();
         model.setProviderCode(OpenAiCompatibleAiProvider.CODE);
         model.setAbilityType("TEXT");
         model.setConfigJson("{\"allow_direct\":true,\"base_url\":\"https://api.hunyuan.cloud.tencent.com\",\"chat_path\":\"/chat/completions\"}");
-        assertEquals(OpenAiCompatibleAiProvider.CODE, registry.resolve(model).providerCode());
+        assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(model).providerCode());
+    }
+
+    @Test
+    void resolveRejectsAllowDirectWhenHubIsMissing() {
+        OpenAiCompatibleAiProvider openAi = new OpenAiCompatibleAiProvider(new SysSecretReader(key -> "k"));
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi));
+        AiModelConfig model = new AiModelConfig();
+        model.setProviderCode(OpenAiCompatibleAiProvider.CODE);
+        model.setAbilityType("TEXT");
+        model.setConfigJson("{\"allow_direct\":true,\"base_url\":\"https://api.hunyuan.cloud.tencent.com\"}");
+        assertFalse(registry.resolvable(model));
+        assertThrows(BizException.class, () -> registry.resolve(model));
     }
 
     @Test

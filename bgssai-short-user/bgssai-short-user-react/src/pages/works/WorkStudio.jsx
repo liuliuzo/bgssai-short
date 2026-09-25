@@ -11,6 +11,8 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
+import DramaAssistantDrawer from '../../components/DramaAssistantDrawer'
+import { SHOT_TYPES, CAMERA_MOVEMENTS, DRAMA_STYLES } from '../../utils/CinematographyHelper'
 
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -682,6 +684,40 @@ function StoryboardPane({ work, episodeId }) {
                   return <Tag key={id} color="gold">{card?.card_name || id}</Tag>
                 })}
               </Space>
+              <div style={{ marginTop: 6, marginBottom: 4 }}>
+                <Space wrap size={[4, 4]}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>🎥 运镜基调：</Text>
+                  {CAMERA_MOVEMENTS.slice(1, 6).map((cm) => (
+                    <Tag
+                      key={cm.value}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setDrafts((cur) => {
+                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
+                          return { ...cur, [row.shot_id]: old ? `${old}，【运镜：${cm.label}】` : `【运镜：${cm.label}】` }
+                        })
+                      }}
+                    >
+                      {cm.label.split(' ')[0]}
+                    </Tag>
+                  ))}
+                  {DRAMA_STYLES.slice(0, 3).map((st) => (
+                    <Tag
+                      key={st.key}
+                      color="purple"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setDrafts((cur) => {
+                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
+                          return { ...cur, [row.shot_id]: old ? `${old}，【基调：${st.label}】` : `【基调：${st.label}】` }
+                        })
+                      }}
+                    >
+                      {st.label.split(' ')[0]}
+                    </Tag>
+                  ))}
+                </Space>
+              </div>
               <Text type="secondary">人话分镜（改这里免费，不用写提示词）</Text>
               <TextArea
                 rows={4}
@@ -1254,6 +1290,7 @@ export default function WorkStudio() {
   const navigate = useNavigate()
   const [work, setWork] = useState(null)
   const [episodeId, setEpisodeId] = useState()
+  const [assistantOpen, setAssistantOpen] = useState(false)
 
   const load = useCallback(async () => {
     const { data } = await productionApi.getWork(workId)
@@ -1272,14 +1309,25 @@ export default function WorkStudio() {
 
   return (
     <div>
-      <Title level={4} style={{ marginTop: 0 }}>
-        {work.work_title} <Text type="secondary">{work.work_status_name}</Text>
-      </Title>
-      <Paragraph>
-        <Link to="/works">返回列表</Link>
-        {' · '}
-        {work.genre_name} · {work.episode_count} 集 · 已花费 {((work.cost_spent_cent || 0) / 100).toFixed(2)} 元
-      </Paragraph>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <Title level={4} style={{ marginTop: 0 }}>
+            {work.work_title} <Text type="secondary">{work.work_status_name}</Text>
+          </Title>
+          <Paragraph>
+            <Link to="/works">返回列表</Link>
+            {' · '}
+            {work.genre_name} · {work.episode_count} 集 · 已花费 {((work.cost_spent_cent || 0) / 100).toFixed(2)} 元
+          </Paragraph>
+        </div>
+        <Button
+          type="primary"
+          style={{ background: 'linear-gradient(135deg, #722ed1, #1677ff)', borderColor: 'transparent' }}
+          onClick={() => setAssistantOpen(true)}
+        >
+          🎬 AI协同专家
+        </Button>
+      </div>
       <Space style={{ marginBottom: 12 }}>
         <span>当前剧集</span>
         <Select
@@ -1310,6 +1358,10 @@ export default function WorkStudio() {
           { key: 'compose', label: '成片提审', children: <ComposePane work={work} episodeId={episodeId} onReload={load} /> },
           { key: 'edit-export', label: '剪辑工程', children: <EditExportPage episodeId={episodeId} /> },
         ]}
+      />
+      <DramaAssistantDrawer
+        visible={assistantOpen}
+        onClose={() => setAssistantOpen(false)}
       />
     </div>
   )

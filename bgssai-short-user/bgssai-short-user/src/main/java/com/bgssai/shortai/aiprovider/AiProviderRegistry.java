@@ -54,8 +54,8 @@ public class AiProviderRegistry {
     }
 
     /**
-     * Resolves a runnable bean. Generation goes through TokenHub unless the model
-     * row explicitly sets allow_direct=true (auditable). Local ffmpeg compose is not a billed model.
+     * Resolves a runnable bean. Billed generation always goes through TokenHub.
+     * allow_direct is ignored. Local ffmpeg compose is not a billed model.
      */
     public AiProvider resolve(AiModelConfig model) {
         if (model == null || model.getProviderCode() == null || model.getProviderCode().isBlank()) {
@@ -63,7 +63,6 @@ public class AiProviderRegistry {
         }
         String code = model.getProviderCode().trim();
         Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
-        boolean allowDirect = isAllowDirect(cfg);
         AiProvider direct = byCode.get(code);
 
         if (direct != null && FfmpegComposeProvider.CODE.equals(direct.providerCode())) {
@@ -74,29 +73,20 @@ public class AiProviderRegistry {
         }
 
         String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
-        boolean hubHost = TokenHubClientSupport.isTokenHubHost(baseUrl);
-        if (hubHost && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
+        if (TokenHubClientSupport.isTokenHubHost(baseUrl)
+                && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
             return byCode.get(TencentTokenHubAiProvider.CODE);
         }
 
-        if (allowDirect && direct != null) {
-            log.info("short generation using allow_direct provider_code={}", code);
-            return direct;
-        }
-
-        if (byCode.containsKey(TencentTokenHubAiProvider.CODE)
-                && (direct == null || DIRECT_VENDOR_CODES.contains(code) || !allowDirect)) {
-            if (direct != null && DIRECT_VENDOR_CODES.contains(code) && !allowDirect) {
+        if (byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
+            if (DIRECT_VENDOR_CODES.contains(code) || isAllowDirect(cfg)) {
                 log.info("short generation rerouted to hub from provider_code={}", code);
             }
             return byCode.get(TencentTokenHubAiProvider.CODE);
         }
 
-        if (direct != null) {
-            throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "direct provider not allowed without allow_direct: " + code);
-        }
-        throw new BizException(CommonErrorCode.RULE_REJECT, "unknown provider_code: " + code);
+        throw new BizException(CommonErrorCode.RULE_REJECT,
+                "model calls require the token hub provider: " + code);
     }
 
     public boolean resolvable(AiModelConfig model) {
