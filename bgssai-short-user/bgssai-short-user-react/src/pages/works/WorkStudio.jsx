@@ -1350,13 +1350,20 @@ export default function WorkStudio() {
             {work.genre_name} · {work.episode_count} 集 · 已花费 {((work.cost_spent_cent || 0) / 100).toFixed(2)} 元
           </Paragraph>
         </div>
-        <Button
-          type="primary"
-          style={{ background: 'linear-gradient(135deg, #722ed1, #1677ff)', borderColor: 'transparent' }}
-          onClick={() => setAssistantOpen(true)}
-        >
-          🎬 AI协同专家
-        </Button>
+        <Space wrap>
+          <Button
+            type="primary"
+            style={{ background: 'linear-gradient(135deg, #722ed1, #1677ff)', borderColor: 'transparent' }}
+            onClick={() => setAssistantOpen(true)}
+          >
+            🎬 AI协同专家
+          </Button>
+          <Button
+            onClick={() => navigate(`/works/${workId}/edit-export`)}
+          >
+            📦 导出剪辑工程 (剪映/FCP/EDL)
+          </Button>
+        </Space>
       </div>
       <Space style={{ marginBottom: 12 }}>
         <span>当前剧集</span>
