@@ -12,7 +12,7 @@ import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
 import DramaAssistantDrawer from '../../components/DramaAssistantDrawer'
-import { SHOT_TYPES, CAMERA_MOVEMENTS, DRAMA_STYLES } from '../../utils/CinematographyHelper'
+import { SHOT_TYPES, CAMERA_MOVEMENTS, DRAMA_STYLES, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -714,6 +714,36 @@ function StoryboardPane({ work, episodeId }) {
                       }}
                     >
                       {st.label.split(' ')[0]}
+                    </Tag>
+                  ))}
+                  {QUAD_GRID_ANGLES.map((qa) => (
+                    <Tag
+                      key={qa.value}
+                      color="blue"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setDrafts((cur) => {
+                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
+                          return { ...cur, [row.shot_id]: old ? `${old}，【机位：${qa.label.split(' ')[0]}】` : `【机位：${qa.label.split(' ')[0]}】` }
+                        })
+                      }}
+                    >
+                      {qa.label.split(' ')[0]}
+                    </Tag>
+                  ))}
+                  {CONTINUITY_PRESETS.map((cp) => (
+                    <Tag
+                      key={cp.value}
+                      color="green"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setDrafts((cur) => {
+                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
+                          return { ...cur, [row.shot_id]: old ? `${old}，【衔接：${cp.label}】` : `【衔接：${cp.label}】` }
+                        })
+                      }}
+                    >
+                      {cp.label}
                     </Tag>
                   ))}
                 </Space>

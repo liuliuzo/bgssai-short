@@ -71,6 +71,18 @@ export const QUALITY_MODIFIERS = [
   'award winning cinematography',
 ]
 
+export const QUAD_GRID_ANGLES = [
+  { value: 'FRONT', label: '正面平视 (Front)', prompt: 'eye-level front shot, clear centered face, symmetrical framing' },
+  { value: 'THREE_QUARTER', label: '3/4侧面视角 (3/4 Profile)', prompt: 'cinematic 45-degree three-quarter angle, depth of field' },
+  { value: 'OVER_SHOULDER', label: '过肩对峙 (OTS)', prompt: 'over-the-shoulder conversation confrontation, subtle foreground shoulder blur' },
+  { value: 'CLOSE_UP', label: '微距特写 (Macro Detail)', prompt: 'extreme close-up on eyes, emotional intensity, high dynamic range' },
+]
+
+export const CONTINUITY_PRESETS = [
+  { value: 'MATCH_CUT', label: '同场次首尾帧顺接', prompt: 'seamless match cut, continuity with previous shot end frame, consistent lighting and character position' },
+  { value: 'HARD_CUT', label: '跨场景硬切', prompt: 'hard cut to new location, scene transition, establishing environment' },
+]
+
 /**
  * 组装增强后的镜头视觉提示词
  */
