@@ -1,3 +1,4 @@
+import BotDownloadLayout from './BotDownloadLayout'
 import ProductMotion from '../../components/ProductMotion.jsx'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -193,6 +194,7 @@ export default function Login() {
   }
 
   return (
+    <BotDownloadLayout>
     <div className={`login-shell${inShell ? ' login-shell--pane' : ''}`}>
       {!inShell && (
       <aside className="login-hero">
@@ -374,5 +376,6 @@ export default function Login() {
       {wechatFastLoginDialog}
       <SupportWidget />
     </div>
+    </BotDownloadLayout>
   )
 }
