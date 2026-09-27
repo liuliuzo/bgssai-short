@@ -3,7 +3,7 @@
 .login-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
+  grid-template-columns: minmax(0, 1fr);
   background: var(--bg);
   --radius-sm: 8px;
   --radius: 12px;
@@ -13,110 +13,6 @@
   --shadow-brand: 0 4px 16px rgba(37, 99, 235, 0.28);
   --grad-brand: linear-gradient(135deg, #2563eb, #1e40af);
   --input-bg: #ffffff;
-}
-
-/* ---------- 左：品牌 Hero ---------- */
-.login-hero {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 40px;
-  padding: 52px 56px;
-  color: #f8fafc;
-  background: radial-gradient(760px 520px at 8% -12%, rgba(96, 165, 250, 0.55), transparent 62%),
-    radial-gradient(680px 680px at 112% 18%, rgba(124, 58, 237, 0.5), transparent 58%),
-    radial-gradient(640px 720px at 42% 124%, rgba(249, 115, 22, 0.42), transparent 58%),
-    linear-gradient(150deg, #1e3a8a, #2563eb 46%, #1d4ed8);
-}
-.login-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 44px 44px;
-  -webkit-mask-image: radial-gradient(120% 120% at 20% 0%, #000, transparent 78%);
-  mask-image: radial-gradient(120% 120% at 20% 0%, #000, transparent 78%);
-  pointer-events: none;
-}
-.login-hero > * {
-  position: relative;
-  z-index: 1;
-}
-.login-hero-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.login-hero-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  object-fit: contain;
-  background: #fff;
-}
-.login-hero-mark {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-.login-hero-mark-sub {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(248, 250, 252, 0.72);
-}
-.login-hero-title {
-  margin: 0 0 16px;
-  font-size: 38px;
-  line-height: 1.28;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-.login-hero-desc {
-  margin: 0 0 32px;
-  max-width: 30em;
-  font-size: 15px;
-  line-height: 1.75;
-  color: rgba(248, 250, 252, 0.82);
-}
-.login-hero-features {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 18px;
-}
-.login-hero-feat {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-.login-hero-dot {
-  flex: none;
-  margin-top: 6px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
-}
-.login-hero-feat strong {
-  display: block;
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 3px;
-}
-.login-hero-feat span {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: rgba(248, 250, 252, 0.76);
-}
-.login-hero-foot {
-  font-size: 13px;
-  color: rgba(248, 250, 252, 0.66);
-  letter-spacing: 0.4px;
 }
 
 /* ---------- 右：认证面板 ---------- */
@@ -131,7 +27,7 @@
   max-width: 400px;
 }
 .login-panel-brand {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 22px;
@@ -153,12 +49,6 @@
   font-weight: 800;
   color: var(--text);
 }
-.login-sub {
-  margin: 0 0 24px;
-  font-size: 14px;
-  color: var(--sub);
-}
-
 .login-shell .field {
   margin-bottom: 16px;
 }
@@ -262,11 +152,6 @@
   height: 1px;
   background: var(--border);
 }
-.login-note {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: var(--muted);
-}
 .login-seg {
   display: flex;
   gap: 8px;
@@ -356,24 +241,6 @@
   .login-shell {
     grid-template-columns: minmax(0, 1fr);
   }
-  .login-hero {
-    padding: 28px 24px;
-    gap: 0;
-    justify-content: center;
-    text-align: left;
-  }
-  .login-hero-features,
-  .login-hero-foot {
-    display: none;
-  }
-  .login-hero-title {
-    font-size: 26px;
-    margin-bottom: 10px;
-  }
-  .login-hero-desc {
-    margin-bottom: 0;
-    font-size: 14px;
-  }
   .login-main {
     padding: 32px 20px 44px;
   }
@@ -383,12 +250,6 @@
 }
 
 @media (max-width: 480px) {
-  .login-hero {
-    padding: 24px 20px;
-  }
-  .login-hero-title {
-    font-size: 23px;
-  }
   .oauth-grid {
     gap: 8px;
   }
@@ -425,3 +286,16 @@ html[data-bgssai-shell="1"] .login-shell--pane .login-code-btn {
 .phone-dial-field.input, .phone-dial-field.login-input, .phone-dial-field.lg-input { padding-right:8px; }
 .phone-dial-divider { width:1px; flex:0 0 1px; align-self:stretch; margin:8px; background:currentColor; opacity:.16; }
 .phone-dial-number { flex:1; min-width:0; border:0; background:transparent; outline:none; color:inherit; font:inherit; }
+
+/* 字段名只给读屏（Standards §14）：可见文字只有方式名与占位符 */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
