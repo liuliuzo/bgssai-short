@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Shared ingest contract with bgssai-media (short-drama).
+ * Shared ingest contract with bgssai-media (short).
  */
 public final class MediaIngestContract {
 
@@ -15,7 +15,13 @@ public final class MediaIngestContract {
 
     public static final String LANGUAGE = "zh-CN";
 
-    public static final String INGEST_PATH = "/bgssai/user/media/ingest/short-drama";
+    public static final String INGEST_PATH = "/bgssai/user/media/ingest/short";
+
+    /**
+     * @deprecated Retired endpoint path, use {@link #INGEST_PATH} instead.
+     */
+    @Deprecated
+    public static final String DEPRECATED_INGEST_PATH = "/bgssai/user/media/ingest/short-drama";
 
     public static final String TOKEN_HEADER = "X-Bgssai-Ingest-Token";
 

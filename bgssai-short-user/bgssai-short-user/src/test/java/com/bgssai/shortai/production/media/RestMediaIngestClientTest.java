@@ -43,7 +43,7 @@ class RestMediaIngestClientTest {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("code", "0");
         body.put("result", result);
-        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/media/ingest/short-drama"),
+        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/media/ingest/short"),
                 any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
 
@@ -65,7 +65,7 @@ class RestMediaIngestClientTest {
         props.setIngestToken("tok-1");
         Map<String, Object> result = Map.of("media_id", "md-1", "play_url", "https://play/md-1", "status", "READY");
         ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
-        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/media/ingest/short-drama"),
+        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/media/ingest/short"),
                 captor.capture(), eq(Map.class)))
                 .thenReturn(new ResponseEntity<>(result, HttpStatus.OK));
 

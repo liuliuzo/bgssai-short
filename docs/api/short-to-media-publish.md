@@ -19,11 +19,12 @@ Media 仓对等文件：`docs/contracts/short-to-media-publish.md`。字段必�
 ## Ingest 调用
 
 ```
-POST {bgssai.media.base-url}/bgssai/user/media/ingest/short-drama
+POST {bgssai.media.base-url}/bgssai/user/media/ingest/short
 Content-Type: application/json
 X-Bgssai-Ingest-Token: {token}
 Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
 ```
+> 注：旧路径 `/bgssai/user/media/ingest/short-drama` 已弃用（保留为兼容量）。
 
 `X-Bgssai-Ingest-Token` 为 Media 当前鉴权头。`Idempotency-Key` 与 Body 字段同值；
 Media 今日按 Body `idempotency_key` UNIQUE upsert，头供对端后续闸门复用。
@@ -66,7 +67,7 @@ Body（snake_case，`additionalProperties=false`）：
 
 | 项 | 期望 | 现状（develop 已读） |
 | --- | --- | --- |
-| 路径 `POST /bgssai/user/media/ingest/short-drama` | 必须 | 已有 |
+| 路径 `POST /bgssai/user/media/ingest/short` | 必须 | 已有（`/short-drama` 兼容保留） |
 | Body 字段与幂等键格式 | 必须 | 已有 |
 | 同键 upsert，同一 `media_id` | 必须 | `ShortDramaContractService` + UNIQUE |
 | READY 才给可播 `play_url` | 必须 | MEDIA-01 |

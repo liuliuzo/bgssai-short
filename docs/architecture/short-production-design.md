@@ -103,7 +103,7 @@ films-bgm-generate / films-compose
 
 成片 `compose_status=READY` 且本集 `APPROVED` 后，用户端
 `POST /bgssai/user/films/publish-to-media` 调 Media
-`POST /bgssai/user/media/ingest/short-drama`。剪辑工程导出不是闸门。
+`POST /bgssai/user/media/ingest/short`。剪辑工程导出不是闸门。
 
 幂等键 `short:{work_id}:{episode_id}:{film_id}` 写入 Body 与 `Idempotency-Key` 头。
 已 READY 且已有 `media_id` / `play_url` 时 Short 回放，不再 ingest。

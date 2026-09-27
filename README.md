@@ -9,11 +9,8 @@
 本地参考代码位于工作区 `reference-github/`，参考原型位于 `reference-prototypes/`；参考版本只作对照，不覆盖产品代码。dev / prod 均部署 `develop`，分别使用 `application-dev.properties` / `application-prod.properties`。
 
 
-**本仓位置**：本仓是第 1 条工具集合中的短剧制作产品。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。设计与交互对照 `reference-github/`：waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。
-
-昆山兵贵神速智能科技有限公司 BGSSAI 产品线的产品仓之一，承载 **AI 短剧制作平台**：面向短剧创作者的
-AI 短剧制作应用，把一部短剧从想法做到成片的全流程搬到线上，用 AI 承担其中最费人力的环节。产品定位与
-范围边界见 [`PRODUCT_VISION.md`](./PRODUCT_VISION.md)。
+**本仓位置**：本仓承载 **AI 短剧制作平台**。设计与交互对照 `reference-github/` 目录中的 **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。
+成片做完后可以直接发布到 **`bgssai-media`** 播放平台的 YouTube Shorts 竖屏流。与 **`bgssai-long`**（AI 长剧制作平台）和 **`bgssai-media`**（播放器 + 视频播放平台）构成一个完整的创作、制作与多端播放闭环，三仓一体化协同迭代。产品定位与范围边界见 [`PRODUCT_VISION.md`](./PRODUCT_VISION.md)。
 
 本仓自骨架仓 [`bgssai-skeleton`](https://github.com/liuliuzo/bgssai-skeleton) 初始化而来，以单仓
 （monorepo）方式统一管理一套「管理端 + 用户端」的前后端工程，落地 BGSSAI 全局开发规范

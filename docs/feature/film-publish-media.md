@@ -23,7 +23,7 @@
   8. **UX**：发布 loading；成功展示 `media_id` + `play_url`（打开/复制）；成片区展示最近一次 publish_log。
   9. **可靠性**：瞬时 HTTP 5xx / 超时 / 连接失败重试 1 次；幂等键不变。
   10. **批量**：`POST .../batch` 按剧集顺序发布本作品全部 READY+APPROVED 成片，返回进度字段。
-  11. **下架 / 撤回（skip）**：当前 bgssai-media 未提供 short-drama unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 media 侧补齐后再开需求。
+  11. **下架 / 撤回（skip）**：当前 bgssai-media 未提供 short unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 media 侧补齐后再开需求。
 
 
 ## SHORT-01 交接状态（商业门禁）
@@ -133,7 +133,7 @@
 ### short → media（共享 ingest 契约，MUST 逐字段一致）
 
 ```
-POST {bgssai.media.base-url}/bgssai/user/media/ingest/short-drama
+POST {bgssai.media.base-url}/bgssai/user/media/ingest/short
 Header: Content-Type: application/json
 Header: X-Bgssai-Ingest-Token: {token}
 Header: Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
