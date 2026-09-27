@@ -36,6 +36,14 @@ function IconEye({ size = 18 }) {
   )
 }
 
+// 登录方式一级平铺（Standards §14.2）：密码 / 邮箱验证码 / 手机验证码，默认手机验证码。
+// 字段名只给读屏（sr-only），可见文字只有方式名与占位符，避免同一个词在一屏上写三遍。
+const LOGIN_METHODS = [
+  { key: 'password', label: '密码' },
+  { key: 'email', label: '邮箱验证码' },
+  { key: 'sms', label: '手机验证码' },
+]
+
 export default function Login() {
   const navigate = useNavigate()
   const setUserInfo = useUserStore((s) => s.setUserInfo)
@@ -51,15 +59,20 @@ export default function Login() {
   useEffect(() => { if (new URLSearchParams(window.location.search).get('reason') === 'session_kicked') message.error('账号已在其他设备登录') }, [])
   const [busy, setBusy] = useState(false)
   const [sending, setSending] = useState(false)
-  const [countdown, setCountdown] = useState(0)
+  // 邮箱与手机各自一个重发倒计时（后端按渠道 + 目标分别限频），切换方式不互相影响。
+  const [countdowns, setCountdowns] = useState({ sms: 0, email: 0 })
   const { startWechatFastLogin, wechatFastLoginDialog } = useWechatFastLogin()
   const inShell = useBgssaiShell()
 
+  const ticking = countdowns.sms > 0 || countdowns.email > 0
   useEffect(() => {
-    if (countdown <= 0) return undefined
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    if (!ticking) return undefined
+    const timer = setTimeout(() => {
+      setCountdowns((prev) => ({ sms: Math.max(0, prev.sms - 1), email: Math.max(0, prev.email - 1) }))
+    }, 1000)
     return () => clearTimeout(timer)
-  }, [countdown])
+  }, [countdowns, ticking])
+  const countdown = countdowns[loginMethod] || 0
 
   const loginSucceed = (result) => {
     if (!isAllowedRole(result)) {
@@ -83,13 +96,9 @@ export default function Login() {
         }
         const { data } = await authApi.sendSms({ phone: composeApiPhone(dialCode, phone) })
         if (CODE_OK.has(data && data.code)) {
-          setCountdown(60)
-          const result = (data && data.result) || {}
-          message.success(
-            result.product && result.seq != null
-              ? `验证码已发送（${result.product}#${result.seq}）`
-              : '验证码已发送',
-          )
+          setCountdowns((prev) => ({ ...prev, sms: 60 }))
+          // 发码提示不带内部编号（product#seq 只留在短信正文与日志里，Standards §14.2）。
+          message.success('验证码已发送')
         }
       } else if (loginMethod === 'email') {
         const emailTrim = email.trim()
@@ -99,7 +108,7 @@ export default function Login() {
         }
         const { data } = await authApi.sendEmail({ email: emailTrim })
         if (CODE_OK.has(data && data.code)) {
-          setCountdown(60)
+          setCountdowns((prev) => ({ ...prev, email: 60 }))
           message.success('验证码已发送')
         }
       }
@@ -196,67 +205,35 @@ export default function Login() {
   return (
     <BotDownloadLayout>
     <div className={`login-shell${inShell ? ' login-shell--pane' : ''}`}>
-      {!inShell && (
-      <aside className="login-hero">
-        <div className="login-hero-top">
-          <img className="login-hero-logo" src="/brand/bgss-mark-tile.png" alt="" />
-          <span className="login-hero-mark">BGSSAI 短剧</span>
-          <span className="login-hero-mark-sub">Short</span>
-        </div>
-        <div>
-          <h1 className="login-hero-title">一句话开始做短剧</h1>
-          <p className="login-hero-desc">
-            从作品到剧本、分镜与成片，把短剧制作收成一条可管理的流水线。
-          </p>
-          <ul className="login-hero-features">
-            <li className="login-hero-feat">
-              <span className="login-hero-dot" aria-hidden="true" />
-              <div>
-                <strong>三问体验</strong>
-                <span>先看会是什么样、连不连贯、管起来方不方便，再决定往下生成。</span>
-              </div>
-            </li>
-            <li className="login-hero-feat">
-              <span className="login-hero-dot" aria-hidden="true" />
-              <div>
-                <strong>剧本与分镜</strong>
-                <span>从一句话长出剧本、分镜与文字预演，镜头语言不必从零学。</span>
-              </div>
-            </li>
-            <li className="login-hero-feat">
-              <span className="login-hero-dot" aria-hidden="true" />
-              <div>
-                <strong>成片生成</strong>
-                <span>画面、配音、字幕与合成按管线推进，额度花在看得见的镜头上。</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-        <div className="login-hero-foot">先看懂画面，再花生成额度。</div>
-      </aside>
-      )}
-
       <main className="login-main">
         <div className="login-panel">
           <div className="login-panel-brand">
             <img className="login-panel-logo" src="/brand/bgss-mark-tile.png" alt="" />
-            <span className="s">短剧 · Short</span>
+            <span className="s">短剧 Short</span>
           </div>
 
           <ProductMotion />
           <h2 className="login-head">欢迎回来</h2>
-          <p className="login-sub">登录以继续你的短剧制作</p>
 
           <div className="login-seg" role="tablist" aria-label="登录方式">
-            <button type="button" className={`login-seg-btn${loginMethod === 'password' ? ' active' : ''}`} onClick={() => setLoginMethod('password')}>密码登录</button>
-            <button type="button" className={`login-seg-btn${loginMethod === 'sms' ? ' active' : ''}`} onClick={() => setLoginMethod('sms')}>手机验证码</button>
-            <button type="button" className={`login-seg-btn${loginMethod === 'email' ? ' active' : ''}`} onClick={() => setLoginMethod('email')}>邮箱验证码</button>
+            {LOGIN_METHODS.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                role="tab"
+                aria-selected={loginMethod === m.key}
+                className={`login-seg-btn${loginMethod === m.key ? ' active' : ''}`}
+                onClick={() => setLoginMethod(m.key)}
+              >
+                {m.label}
+              </button>
+            ))}
           </div>
 
           {loginMethod === 'sms' && (
             <>
               <div className="field">
-                <label htmlFor="login-phone">手机号</label>
+                <label className="sr-only" htmlFor="login-phone">手机号</label>
                 <PhoneDialField
                   id="login-phone"
                   dialCode={dialCode}
@@ -267,14 +244,13 @@ export default function Login() {
                 />
               </div>
               <div className="field">
-                <label htmlFor="login-sms-code">短信验证码</label>
+                <label className="sr-only" htmlFor="login-sms-code">短信验证码</label>
                 <div className="login-code-row">
                   <input id="login-sms-code" className="input" value={smsCode} onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位验证码" maxLength={6} />
                   <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
-                    {countdown > 0 ? `${countdown}s` : sending ? '发送中...' : '获取验证码'}
+                    {countdown > 0 ? `${countdown} 秒后重发` : sending ? '发送中...' : '获取验证码'}
                   </button>
                 </div>
-                <p className="login-note">未注册的手机号将自动创建账号</p>
               </div>
             </>
           )}
@@ -282,18 +258,17 @@ export default function Login() {
           {loginMethod === 'email' && (
             <>
               <div className="field">
-                <label htmlFor="login-email">邮箱</label>
-                <input id="login-email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
+                <label className="sr-only" htmlFor="login-email">邮箱</label>
+                <input id="login-email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="请输入邮箱地址" />
               </div>
               <div className="field">
-                <label htmlFor="login-email-code">邮箱验证码</label>
+                <label className="sr-only" htmlFor="login-email-code">邮箱验证码</label>
                 <div className="login-code-row">
                   <input id="login-email-code" className="input" value={emailCode} onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位验证码" maxLength={6} />
                   <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
-                    {countdown > 0 ? `${countdown}s` : sending ? '发送中...' : '获取验证码'}
+                    {countdown > 0 ? `${countdown} 秒后重发` : sending ? '发送中...' : '获取验证码'}
                   </button>
                 </div>
-                <p className="login-note">未注册的邮箱将自动创建账号</p>
               </div>
             </>
           )}
@@ -301,13 +276,13 @@ export default function Login() {
           {loginMethod === 'password' && (
             <>
           <div className="field">
-            <label htmlFor="login-identifier">账号</label>
+            <label className="sr-only" htmlFor="login-identifier">账号</label>
             <input
               id="login-identifier"
               className="input"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="请输入账号"
+              placeholder="手机号 / 邮箱 / 账号"
               autoComplete="username"
               disabled={busy}
               onKeyDown={(e) => e.key === 'Enter' && submit()}
@@ -315,7 +290,7 @@ export default function Login() {
           </div>
 
           <div className="field">
-            <label htmlFor="login-password">密码</label>
+            <label className="sr-only" htmlFor="login-password">密码</label>
             <div style={{ position: 'relative' }}>
               <input
                 id="login-password"
@@ -345,7 +320,7 @@ export default function Login() {
           )}
 
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
-            {busy ? '处理中...' : '登录'}
+            {busy ? '处理中...' : loginMethod === 'password' ? '登录' : '登录 / 注册'}
           </button>
 
           {visibleProviders.length > 0 ? (
@@ -359,7 +334,6 @@ export default function Login() {
                 key={o.key}
                 onClick={() => startOAuth(o.key)}
                 disabled={busy}
-                title={`使用${o.label}登录`}
               >
                 <span className="oauth-icon" style={{ boxShadow: `inset 0 0 0 1.5px ${o.color}2e` }}>
                   <o.Icon size={20} />
