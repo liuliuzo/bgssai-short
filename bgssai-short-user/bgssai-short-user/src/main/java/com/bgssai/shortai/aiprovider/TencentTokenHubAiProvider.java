@@ -1,7 +1,8 @@
 package com.bgssai.shortai.aiprovider;
 
 import java.net.URI;
-import java.util.ArrayList;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,8 +21,9 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
- * provider_code=TENCENT_TOKENHUB. Dual BGSSAI hubs (CN + Global) front TEXT /
- * VIDEO / VOICE / ASR / MUSIC; keys live in sys_secret only.
+ * provider_code=TENCENT_TOKENHUB. The user picks a model id. This client sends
+ * that id to BGSSAI TokenHub's capability API. Vendor hosts and wand paths are
+ * not used for image, video, speech, or text.
  */
 @Component
 public class TencentTokenHubAiProvider implements AiProvider {
@@ -29,15 +31,11 @@ public class TencentTokenHubAiProvider implements AiProvider {
     public static final String CODE = "TENCENT_TOKENHUB";
 
     private static final String CHAT_PATH = "/v1/chat/completions";
-    private static final String MINIMAX_VIDEO_SUBMIT = "/v1/wand/minimax-video-v2/generation";
-    private static final String MINIMAX_VIDEO_TASK = "/v1/wand/minimax-video-v2/tasks/{task_id}";
-    private static final String PIXVERSE_TEXT_VIDEO = "/v1/wand/pixverse/text-to-video";
-    private static final String PIXVERSE_IMAGE_VIDEO = "/v1/wand/pixverse/image-to-video";
-    private static final String PIXVERSE_TASK = "/v1/wand/pixverse/tasks/{task_id}";
-    private static final String KLING_TEXT_VIDEO = "/v1/wand/kling/text-to-video";
-    private static final String KLING_IMAGE_VIDEO = "/v1/wand/kling/image-to-video";
-    private static final String KLING_TASK = "/v1/wand/kling/tasks/{task_id}";
-    private static final String SPEECH_PATH = "/v1/wand/minimax-tts/sync_tts";
+    private static final String IMAGE_PATH = "/v1/images/generations";
+    private static final String VIDEO_PATH = "/v1/videos/generations";
+    private static final long MEDIA_POLL_BUDGET_MS = 180_000L;
+    private static final long MEDIA_POLL_INTERVAL_MS = 3_000L;
+    private static final String SPEECH_PATH = "/v1/audio/speech";
     private static final String ASR_SUBMIT = "/v1/wand/asrproxy/async_create";
     private static final String ASR_TASK = "/v1/wand/asrproxy/tasks/{task_id}";
     private static final String MUSIC_PATH = "/v1/wand/minimax-music/generation";
@@ -90,9 +88,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
         String hub = TokenHubClientSupport.resolveHub(cfg, request.getModel().getModelCode());
-        String base = ProviderHttp.trimSlash(ProviderHttp.firstNonBlank(
-                ShortJson.text(cfg.get("base_url")),
-                TokenHubClientSupport.defaultBaseUrl(hub, cnBaseUrl, globalBaseUrl)));
+        String base = hubBase(ShortJson.text(cfg.get("base_url")), hub);
         String ref = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
                 TokenHubClientSupport.defaultSecretRef(hub));
         String apiKey = TokenHubClientSupport.resolveApiKey(secretReader, hub, ref);
@@ -104,7 +100,8 @@ public class TencentTokenHubAiProvider implements AiProvider {
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
         try {
             return switch (ability) {
-                case "TEXT" -> text(base, apiKey, cfg, request, timeoutSec);
+                case "TEXT" -> text(base, apiKey, request, timeoutSec);
+                case "IMAGE" -> image(base, apiKey, request, timeoutSec);
                 case "VIDEO" -> video(base, apiKey, cfg, request, timeoutSec);
                 case "VOICE" -> speech(base, apiKey, cfg, request, timeoutSec);
                 case "ASR" -> asr(base, apiKey, cfg, request, timeoutSec);
@@ -125,14 +122,13 @@ public class TencentTokenHubAiProvider implements AiProvider {
         }
     }
 
-    private AiProviderResult text(String base, String apiKey, Map<String, Object> cfg,
-            AiProviderRequest request, int timeoutSec) throws Exception {
+    private AiProviderResult text(String base, String apiKey, AiProviderRequest request, int timeoutSec)
+            throws Exception {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", request.getModel().getModelCode());
         body.put("messages", List.of(Map.of("role", "user", "content", ProviderHttp.promptOf(request))));
         body.put("stream", false);
-        String path = path(cfg, "chat_path", CHAT_PATH);
-        Map<String, Object> resp = post(base + path, apiKey, body, Math.min(120, timeoutSec));
+        Map<String, Object> resp = post(base + CHAT_PATH, apiKey, body, Math.min(120, timeoutSec));
         String content = chatContent(resp);
         if (content.isBlank()) {
             throw upstream("model text content missing", resp);
@@ -143,158 +139,71 @@ public class TencentTokenHubAiProvider implements AiProvider {
         return result;
     }
 
+    private AiProviderResult image(String base, String apiKey, AiProviderRequest request, int timeoutSec)
+            throws Exception {
+        String model = requireModel(request);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model);
+        body.put("prompt", ProviderHttp.promptOf(request));
+        body.put("n", 1);
+        body.put("size", "1024x1792");
+        String image = ProviderHttp.imagePayload(request);
+        if (!image.isBlank()) {
+            body.put("image", image);
+        }
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, timeoutSec));
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg);
+        return mediaResult(request, done, "image/png", 0, 1080, 1920, timeoutSec);
+    }
+
     private AiProviderResult video(String base, String apiKey, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
-        String model = request.getModel().getModelCode();
-        if (model == null) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "model_code required");
-        }
-        if (model.startsWith("minimax-video-")) {
-            return minimaxVideo(base, apiKey, cfg, request, timeoutSec);
-        }
-        if (model.startsWith("pixverse-video-")) {
-            return pixverseVideo(base, apiKey, cfg, request, timeoutSec);
-        }
-        if (model.startsWith("kling-video-")) {
-            return klingVideo(base, apiKey, cfg, request, timeoutSec);
-        }
-        throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported video model: " + model);
-    }
-
-    private AiProviderResult minimaxVideo(String base, String apiKey, Map<String, Object> cfg,
-            AiProviderRequest request, int timeoutSec) throws Exception {
-        String image = ProviderHttp.imagePayload(request);
-        String lastImage = ProviderHttp.lastImagePayload(request);
-        List<Map<String, Object>> content = new ArrayList<>();
-        content.add(Map.of("type", "text", "text", ProviderHttp.promptOf(request)));
-        if (!image.isBlank()) {
-            Map<String, Object> frame = new LinkedHashMap<>();
-            frame.put("type", "image_url");
-            frame.put("image_url", Map.of("url", image));
-            frame.put("role", "first_frame");
-            content.add(frame);
-        }
-        if (!lastImage.isBlank()) {
-            Map<String, Object> frame = new LinkedHashMap<>();
-            frame.put("type", "image_url");
-            frame.put("image_url", Map.of("url", lastImage));
-            frame.put("role", "last_frame");
-            content.add(frame);
-        }
-        int duration = duration(request, cfg, 4, 15, 6);
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("model", request.getModel().getModelCode());
-        body.put("content", content);
-        body.put("resolution", ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("resolution")), "768P"));
-        body.put("duration", duration);
-        body.put("ratio", image.isBlank() ? ProviderHttp.aspectRatio(cfg, request) : "adaptive");
-        Map<String, Object> submitted = post(base + path(cfg, "submit_path", MINIMAX_VIDEO_SUBMIT),
-                apiKey, body, Math.min(60, timeoutSec));
-        String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("task_id")),
-                nestedText(submitted, "task", "id"));
-        Map<String, Object> done = poll(base, apiKey, path(cfg, "task_path", MINIMAX_VIDEO_TASK), taskId,
-                timeoutSec, ProviderHttp.pollIntervalMs(cfg), PollKind.MINIMAX_VIDEO);
-        Map<String, Object> task = child(done, "task");
-        String url = ProviderHttp.firstNonBlank(nestedText(task, "content", "url"),
-                ShortJson.text(task.get("url")), ShortJson.text(done.get("url")));
-        int actualDuration = ShortJson.integer(task.get("duration"), duration);
-        return downloadVideo(request, url, actualDuration, 1080, 1920, timeoutSec);
-    }
-
-    private AiProviderResult pixverseVideo(String base, String apiKey, Map<String, Object> cfg,
-            AiProviderRequest request, int timeoutSec) throws Exception {
-        String image = ProviderHttp.imagePayload(request);
+        String model = requireModel(request);
         int duration = duration(request, cfg, 1, 15, 5);
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("model", request.getModel().getModelCode());
+        body.put("model", model);
         body.put("prompt", ProviderHttp.promptOf(request));
-        body.put("duration", duration);
-        body.put("quality", ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("quality")), "720p"));
-        body.put("generate_audio_switch", false);
-        String submitPath;
-        if (image.isBlank()) {
-            submitPath = path(cfg, "text2video_path", PIXVERSE_TEXT_VIDEO);
-            body.put("aspect_ratio", ProviderHttp.aspectRatio(cfg, request));
-        } else {
-            submitPath = path(cfg, "image2video_path", PIXVERSE_IMAGE_VIDEO);
-            body.put("img_id", image);
-        }
-        Map<String, Object> submitted = post(base + submitPath, apiKey, body, Math.min(60, timeoutSec));
-        assertZero(submitted, "ErrCode", "ErrMsg", "pixverse submit failed");
-        String taskId = nestedText(submitted, "Resp", "video_id");
-        Map<String, Object> done = poll(base, apiKey, path(cfg, "task_path", PIXVERSE_TASK), taskId,
-                timeoutSec, ProviderHttp.pollIntervalMs(cfg), PollKind.PIXVERSE_VIDEO);
-        Map<String, Object> resp = child(done, "Resp");
-        String url = ShortJson.text(resp.get("url"));
-        int width = ShortJson.integer(resp.get("outputWidth"), 1080);
-        int height = ShortJson.integer(resp.get("outputHeight"), 1920);
-        return downloadVideo(request, url, duration, width, height, timeoutSec);
-    }
-
-    private AiProviderResult klingVideo(String base, String apiKey, Map<String, Object> cfg,
-            AiProviderRequest request, int timeoutSec) throws Exception {
         String image = ProviderHttp.imagePayload(request);
-        int duration = duration(request, cfg, 5, 15, 5);
-        Map<String, Object> settings = new LinkedHashMap<>();
-        settings.put("resolution", ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("resolution")), "720p"));
-        settings.put("duration", duration);
-        settings.put("multi_shot", false);
-        settings.put("audio", false);
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("model", request.getModel().getModelCode());
-        String submitPath;
-        if (image.isBlank()) {
-            submitPath = path(cfg, "text2video_path", KLING_TEXT_VIDEO);
-            body.put("prompt", ProviderHttp.promptOf(request));
-            settings.put("aspect_ratio", ProviderHttp.aspectRatio(cfg, request));
-        } else {
-            submitPath = path(cfg, "image2video_path", KLING_IMAGE_VIDEO);
-            List<Map<String, Object>> contents = new ArrayList<>();
-            contents.add(Map.of("type", "prompt", "text", ProviderHttp.promptOf(request)));
-            contents.add(Map.of("type", "first_frame", "url", image));
-            String klingLastImage = ProviderHttp.lastImagePayload(request);
-            if (!klingLastImage.isBlank()) {
-                contents.add(Map.of("type", "last_frame", "url", klingLastImage));
-            }
-            body.put("contents", contents);
+        if (!image.isBlank()) {
+            body.put("image", image);
         }
-        body.put("settings", settings);
-        Map<String, Object> submitted = post(base + submitPath, apiKey, body, Math.min(60, timeoutSec));
-        assertZero(submitted, "code", "message", "kling submit failed");
-        String taskId = nestedText(submitted, "data", "id");
-        Map<String, Object> done = poll(base, apiKey, path(cfg, "task_path", KLING_TASK), taskId,
-                timeoutSec, ProviderHttp.pollIntervalMs(cfg), PollKind.KLING_VIDEO);
-        Map<String, Object> item = firstMap(done.get("data"));
-        if (item.isEmpty()) {
-            item = child(done, "data");
+        Map<String, Object> submitted = post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec));
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg);
+        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec);
+        if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
+            ready.setDurationSec(duration);
         }
-        Map<String, Object> output = firstMap(item.get("outputs"));
-        String url = ShortJson.text(output.get("url"));
-        int actualDuration = (int) Math.ceil(decimal(output.get("duration"), duration));
-        return downloadVideo(request, url, actualDuration, 1080, 1920, timeoutSec);
+        return ready;
     }
 
     private AiProviderResult speech(String base, String apiKey, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
-        Map<String, Object> voice = new LinkedHashMap<>();
-        voice.put("voice_id", normalizeVoice(ProviderHttp.firstNonBlank(ShortJson.text(request.param("voice_id")),
-                ShortJson.text(request.param("voice")), ShortJson.text(cfg.get("default_voice_id")), "male-qn-qingse")));
-        voice.put("speed", decimal(request.param("speed"), 1.0));
-        voice.put("vol", decimal(request.param("volume"), 1.0));
-        voice.put("pitch", ShortJson.integer(request.param("pitch"), 0));
+        String model = requireModel(request);
+        String voice = ProviderHttp.firstNonBlank(ShortJson.text(request.param("voice_id")),
+                ShortJson.text(request.param("voice")), ShortJson.text(cfg.get("default_voice_id")), "alloy");
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("model", request.getModel().getModelCode());
-        body.put("text", ProviderHttp.promptOf(request));
-        body.put("voice_setting", voice);
-        body.put("audio_setting", audioSetting());
-        body.put("subtitle_enable", false);
-        body.put("output_format", "url");
-        Map<String, Object> resp = post(base + path(cfg, "speech_path", SPEECH_PATH), apiKey, body,
+        body.put("model", model);
+        body.put("input", ProviderHttp.promptOf(request));
+        body.put("voice", voice);
+        byte[] raw = http.postBytes(base + SPEECH_PATH, bearer(apiKey), ShortJson.toJson(body),
                 Math.min(120, timeoutSec));
-        assertBaseOk(resp, "speech");
-        Map<String, Object> data = child(resp, "data");
-        int durationMs = nestedInt(resp, "extra_info", "audio_length", 0);
-        return audioResult(request, ShortJson.text(data.get("audio")), durationMs, timeoutSec);
+        if (raw == null || raw.length == 0) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model audio missing");
+        }
+        String text = new String(raw, java.nio.charset.StandardCharsets.UTF_8).trim();
+        if (text.startsWith("{")) {
+            Map<String, Object> resp = ShortJson.map(text);
+            assertBaseOk(resp, "speech");
+            Map<String, Object> data = child(resp, "data");
+            String audio = ProviderHttp.firstNonBlank(ShortJson.text(data.get("audio")),
+                    ShortJson.text(resp.get("audio")), mediaUrl(resp));
+            int durationMs = nestedInt(resp, "extra_info", "audio_length", 0);
+            return audioResult(request, audio, durationMs, timeoutSec);
+        }
+        AiProviderResult result = AiProviderResult.binary(raw, "audio/mpeg");
+        result.setUsageAmount(usageAmount(request, 0, 0));
+        return result;
     }
 
     private AiProviderResult asr(String base, String apiKey, Map<String, Object> cfg,
@@ -358,7 +267,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
             String hex = value.startsWith("data:") && value.contains(",")
                     ? value.substring(value.indexOf(',') + 1) : value;
             try {
-                bytes = value.startsWith("data:") ? Base64.getDecoder().decode(hex) : decodeHex(hex);
+                bytes = value.startsWith("data:") ? Base64.getDecoder().decode(hex) : decodeAudio(hex);
             } catch (IllegalArgumentException ex) {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model audio encoding invalid");
             }
@@ -380,6 +289,40 @@ public class TencentTokenHubAiProvider implements AiProvider {
         result.setHeight(height);
         result.setUsageAmount(usageAmount(request, 0, durationSec));
         return result;
+    }
+
+    private Map<String, Object> awaitMedia(String base, String apiKey, String model,
+            Map<String, Object> submitted, Map<String, Object> cfg) throws Exception {
+        if (hasMediaPayload(submitted)) {
+            return submitted;
+        }
+        String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("id")),
+                ShortJson.text(submitted.get("task_id")), nestedText(submitted, "data", "id"),
+                nestedText(submitted, "task", "id"));
+        return pollMedia(base, apiKey, model, taskId, cfg);
+    }
+
+    private Map<String, Object> pollMedia(String base, String apiKey, String model, String taskId,
+            Map<String, Object> cfg) throws Exception {
+        if (taskId == null || taskId.isBlank()) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model submit missing task_id");
+        }
+        String query = base + "/v1/videos/generations/" + encodeQuery(taskId.trim())
+                + "?model=" + encodeQuery(model);
+        long intervalMs = Math.max(MEDIA_POLL_INTERVAL_MS, ProviderHttp.pollIntervalMs(cfg));
+        long deadline = System.currentTimeMillis() + MEDIA_POLL_BUDGET_MS;
+        while (System.currentTimeMillis() < deadline) {
+            Map<String, Object> resp = get(query, apiKey, 60);
+            PollState state = pollState(resp, PollKind.MEDIA);
+            if (state == PollState.SUCCEEDED) {
+                return resp;
+            }
+            if (state == PollState.FAILED) {
+                throw upstream("model task failed", resp);
+            }
+            sleeper.sleep(intervalMs);
+        }
+        throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "model task timeout");
     }
 
     private Map<String, Object> poll(String base, String apiKey, String taskPath, String taskId,
@@ -405,6 +348,19 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private static PollState pollState(Map<String, Object> resp, PollKind kind) {
         return switch (kind) {
+            case MEDIA -> {
+                String status = ProviderHttp.firstNonBlank(ShortJson.text(resp.get("status")),
+                        ShortJson.text(resp.get("task_status")), nestedText(resp, "task", "status"),
+                        nestedText(resp, "data", "status"));
+                PollState named = statusState(status);
+                if (named == PollState.FAILED) {
+                    yield PollState.FAILED;
+                }
+                if (named == PollState.SUCCEEDED && hasMediaPayload(resp)) {
+                    yield PollState.SUCCEEDED;
+                }
+                yield PollState.RUNNING;
+            }
             case MINIMAX_VIDEO -> statusState(ProviderHttp.firstNonBlank(
                     nestedText(resp, "task", "status"), ShortJson.text(resp.get("status"))));
             case PIXVERSE_VIDEO -> {
@@ -474,10 +430,23 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private static BizException upstream(String fallback, Map<String, Object> resp) {
         String message = ProviderHttp.firstNonBlank(
+                errorText(resp.get("error")), errorText(child(resp, "data").get("error")),
                 ShortJson.text(resp.get("message")), ShortJson.text(resp.get("msg")),
                 ShortJson.text(resp.get("ErrMsg")), nestedText(resp, "base_resp", "status_msg"), fallback);
         return new BizException(CommonErrorCode.UPSTREAM_ERROR,
                 TokenHubClientSupport.userFacingMessage(message));
+    }
+
+    private static String errorText(Object error) {
+        if (error instanceof Map<?, ?> map) {
+            return ProviderHttp.firstNonBlank(ShortJson.text(map.get("message")),
+                    ShortJson.text(map.get("msg")), ShortJson.text(map.get("code")));
+        }
+        return ShortJson.text(error);
+    }
+
+    private static String encodeQuery(String value) {
+        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private static Map<String, Object> child(Map<String, Object> source, String key) {
@@ -592,6 +561,14 @@ public class TencentTokenHubAiProvider implements AiProvider {
         }
     }
 
+    private static byte[] decodeAudio(String value) {
+        try {
+            return decodeHex(value);
+        } catch (IllegalArgumentException ex) {
+            return Base64.getDecoder().decode(value);
+        }
+    }
+
     private static byte[] decodeHex(String value) {
         if (value == null || (value.length() & 1) == 1) {
             throw new IllegalArgumentException("invalid hex");
@@ -612,8 +589,105 @@ public class TencentTokenHubAiProvider implements AiProvider {
         return TokenHubClientSupport.userFacingMessage(ex.getMessage());
     }
 
+    private String hubBase(String configured, String hub) {
+        String base = ProviderHttp.trimSlash(configured);
+        if (isOwnHub(base)) {
+            return base;
+        }
+        String injected = ProviderHttp.trimSlash(
+                TokenHubClientSupport.HUB_GLOBAL.equals(hub) ? globalBaseUrl : cnBaseUrl);
+        if (!isOwnHub(injected)) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "模型网关未配置");
+        }
+        return injected;
+    }
+
+    private static boolean isOwnHub(String base) {
+        String lower = base == null ? "" : base.toLowerCase(Locale.ROOT);
+        return lower.contains("bgssai-tokenhub.cn") || lower.contains("bgssai-tokenhub.com");
+    }
+
+    private static String requireModel(AiProviderRequest request) {
+        String model = request.getModel().getModelCode();
+        if (model == null || model.isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "model_code required");
+        }
+        return model.trim();
+    }
+
+    private AiProviderResult mediaResult(AiProviderRequest request, Map<String, Object> resp, String mime,
+            int durationSec, int width, int height, int timeoutSec) throws Exception {
+        String b64 = mediaBase64(resp);
+        if (!b64.isBlank()) {
+            byte[] bytes;
+            try {
+                bytes = Base64.getDecoder().decode(b64);
+            } catch (IllegalArgumentException ex) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model media encoding invalid");
+            }
+            if (bytes.length == 0) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model media missing");
+            }
+            AiProviderResult result = AiProviderResult.binary(bytes, mime);
+            result.setWidth(width);
+            result.setHeight(height);
+            if (durationSec > 0) {
+                result.setDurationSec(durationSec);
+            }
+            result.setUsageAmount(usageAmount(request, 0, durationSec));
+            return result;
+        }
+        String url = mediaUrl(resp);
+        if (url.isBlank()) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model media missing");
+        }
+        if (mime.startsWith("video/")) {
+            return downloadVideo(request, url, durationSec, width, height, timeoutSec);
+        }
+        requireHttps(url, "image url");
+        byte[] bytes = http.getBytes(url, Math.min(120, timeoutSec));
+        AiProviderResult result = AiProviderResult.binary(bytes, mime);
+        result.setWidth(width);
+        result.setHeight(height);
+        result.setUsageAmount(usageAmount(request, 0, 0));
+        return result;
+    }
+
+    private static boolean hasMediaPayload(Map<String, Object> resp) {
+        return resp != null && (!mediaBase64(resp).isBlank() || !mediaUrl(resp).isBlank());
+    }
+
+    private static String mediaBase64(Map<String, Object> resp) {
+        Map<String, Object> item = firstMediaItem(resp);
+        return ProviderHttp.firstNonBlank(ShortJson.text(item.get("b64_json")),
+                ShortJson.text(item.get("b64")), ShortJson.text(resp.get("b64_json")));
+    }
+
+    private static String mediaUrl(Map<String, Object> resp) {
+        Map<String, Object> item = firstMediaItem(resp);
+        String direct = ProviderHttp.firstNonBlank(ShortJson.text(item.get("url")),
+                nestedText(item, "image_url", "url"), ShortJson.text(resp.get("url")),
+                nestedText(child(resp, "task"), "content", "url"), nestedText(resp, "data", "url"));
+        if (!direct.isBlank()) {
+            return direct;
+        }
+        Map<String, Object> output = firstMap(item.get("outputs"));
+        if (output.isEmpty()) {
+            output = firstMap(child(resp, "data").get("outputs"));
+        }
+        return ShortJson.text(output.get("url"));
+    }
+
+    private static Map<String, Object> firstMediaItem(Map<String, Object> resp) {
+        Map<String, Object> fromData = firstMap(resp == null ? null : resp.get("data"));
+        if (!fromData.isEmpty()) {
+            return fromData;
+        }
+        return firstMap(resp == null ? null : resp.get("images"));
+    }
+
     private enum PollKind {
-        MINIMAX_VIDEO, PIXVERSE_VIDEO, KLING_VIDEO, ASR
+        MEDIA, MINIMAX_VIDEO, PIXVERSE_VIDEO, KLING_VIDEO, ASR
     }
 
     private enum PollState {

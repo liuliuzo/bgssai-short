@@ -26,6 +26,8 @@ public class AiModelResolveService {
     private AiModelConfigMapper aiModelConfigMapper;
     @Autowired
     private AiProviderRegistry aiProviderRegistry;
+    @Autowired(required = false)
+    private TokenHubModelCatalog tokenHubModelCatalog;
 
     public AiModelConfig resolve(String abilityType, String modelCode) {
         if (abilityType == null || abilityType.isBlank()) {
@@ -42,14 +44,13 @@ public class AiModelResolveService {
             // Prefer default + registered provider when catalog has duplicate model_code rows.
             ex.setOrderByClause("default_flag desc, id asc");
             List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
-            AiModelConfig picked = pickResolvable(rows);
-            if (picked != null) {
-                return picked;
+            AiModelConfig hubRow = firstHub(rows);
+            if (hubRow != null) {
+                return hubRow;
             }
-            // Graceful fallback: requested model unavailable → ability default.
-            AiModelConfig fallback = resolveDefault(ability);
-            if (fallback != null) {
-                return fallback;
+            AiModelConfig hubModel = syntheticHubModel(ability, modelCode.trim());
+            if (hubModel != null) {
+                return hubModel;
             }
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
                     TokenHubClientSupport.userFacingMessage("model unavailable: " + modelCode));
@@ -94,6 +95,63 @@ public class AiModelResolveService {
             }
         }
         return alternate;
+    }
+
+    private static AiModelConfig firstHub(List<AiModelConfig> rows) {
+        if (rows == null) {
+            return null;
+        }
+        for (AiModelConfig row : rows) {
+            if (isHubConfig(row)) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    private static boolean isHubConfig(AiModelConfig row) {
+        if (row == null) {
+            return false;
+        }
+        String provider = row.getProviderCode() == null ? "" : row.getProviderCode().trim();
+        if ("TENCENT_TOKENHUB".equalsIgnoreCase(provider)) {
+            return true;
+        }
+        String base = ShortJson.text(ShortJson.map(row.getConfigJson()).get("base_url")).toLowerCase(java.util.Locale.ROOT);
+        return base.contains("bgssai-tokenhub.cn") || base.contains("bgssai-tokenhub.com");
+    }
+
+    private AiModelConfig syntheticHubModel(String ability, String modelCode) {
+        if (!safeModelId(modelCode)) {
+            return null;
+        }
+        AiModelConfig model = new AiModelConfig();
+        model.setAbilityType(ability);
+        model.setProviderCode("TENCENT_TOKENHUB");
+        model.setModelCode(modelCode);
+        model.setModelName(modelCode);
+        model.setPriceUnit("PER_CALL");
+        model.setUnitPriceCent(0);
+        model.setTimeoutSec("VIDEO".equals(ability) ? 900 : 180);
+        model.setEnabledFlag(1);
+        model.setConfigJson("{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\","
+                + "\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        return model;
+    }
+
+    private static boolean safeModelId(String modelCode) {
+        if (modelCode == null || modelCode.isBlank() || modelCode.length() > 128) {
+            return false;
+        }
+        for (int i = 0; i < modelCode.length(); i++) {
+            char c = modelCode.charAt(i);
+            boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '-' || c == '_' || c == '.' || c == ':';
+            if (!ok) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private AiModelConfig resolveDefault(String ability) {
@@ -153,6 +211,15 @@ public class AiModelResolveService {
         }
         ex.setOrderByClause("ability_type asc, default_flag desc, quality_level asc, id asc");
         List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        String ability = abilityType == null ? "" : abilityType.trim();
+        if (tokenHubModelCatalog != null && !ability.isBlank()) {
+            List<TokenHubModelCatalog.HubModel> hubModels = tokenHubModelCatalog.modelsFor(ability);
+            if (!hubModels.isEmpty()) {
+                Map<String, Object> result = new LinkedHashMap<>();
+                result.put("model_list", hubChoices(ability, hubModels, rows));
+                return Responses.ok(result);
+            }
+        }
         List<Map<String, Object>> list = new ArrayList<>();
         for (AiModelConfig row : rows) {
             if (!aiProviderRegistry.resolvable(row)) {
@@ -185,5 +252,47 @@ public class AiModelResolveService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("model_list", list);
         return Responses.ok(result);
+    }
+
+    private static List<Map<String, Object>> hubChoices(String ability,
+            List<TokenHubModelCatalog.HubModel> hubModels, List<AiModelConfig> priced) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (TokenHubModelCatalog.HubModel hub : hubModels) {
+            AiModelConfig pricedRow = null;
+            if (priced != null) {
+                for (AiModelConfig row : priced) {
+                    if (hub.id().equals(row.getModelCode())) {
+                        pricedRow = row;
+                        break;
+                    }
+                }
+            }
+            int weight = ModelUsageMeta.tokenMultiplier(hub.id(), "TENCENT_TOKENHUB");
+            String region = ModelUsageMeta.CN;
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("model_id", "hub-" + ability.toLowerCase(java.util.Locale.ROOT) + "-" + hub.id());
+            item.put("ability_type", ability);
+            item.put("model_code", hub.id());
+            item.put("display_name", hub.id());
+            item.put("model_name", hub.id());
+            item.put("quality_level", pricedRow == null || pricedRow.getQualityLevel() == null
+                    ? "STANDARD" : pricedRow.getQualityLevel());
+            item.put("price_unit", pricedRow == null || pricedRow.getPriceUnit() == null
+                    ? "PER_CALL" : pricedRow.getPriceUnit());
+            item.put("unit_price_cent", pricedRow == null || pricedRow.getUnitPriceCent() == null
+                    ? 0 : pricedRow.getUnitPriceCent());
+            int defaultFlag = pricedRow != null && Integer.valueOf(1).equals(pricedRow.getDefaultFlag()) ? 1 : 0;
+            item.put("default_flag", defaultFlag);
+            item.put("region", region);
+            item.put("region_label", ModelUsageMeta.regionLabel(region));
+            item.put("token_multiplier", weight);
+            item.put("usage_hint", ModelUsageMeta.usageHint(weight));
+            list.add(item);
+        }
+        boolean anyDefault = list.stream().anyMatch(item -> Integer.valueOf(1).equals(item.get("default_flag")));
+        if (!anyDefault && !list.isEmpty()) {
+            list.get(0).put("default_flag", 1);
+        }
+        return list;
     }
 }

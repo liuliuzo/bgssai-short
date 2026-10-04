@@ -78,6 +78,20 @@ class AiProviderRegistryTest {
     }
 
     @Test
+    void klingAllowDirectWithoutHubDoesNotResolveToVendor() {
+        KlingAiProvider kling = new KlingAiProvider(new SysSecretReader(key -> "k"));
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(kling));
+        AiModelConfig model = new AiModelConfig();
+        model.setProviderCode(KlingAiProvider.CODE);
+        model.setAbilityType("VIDEO");
+        model.setConfigJson("{\"allow_direct\":true,\"base_url\":\"https://api-beijing.klingai.com\"}");
+        assertFalse(registry.resolvable(model));
+        BizException ex = assertThrows(BizException.class, () -> registry.resolve(model));
+        assertTrue(ex.getMessage().contains("token hub"));
+        assertTrue(!ex.getMessage().contains("klingai"));
+    }
+
+    @Test
     void unknownVideoVendorWithoutHubRejected() {
         AiProviderRegistry registry = new AiProviderRegistry(List.of());
         AiModelConfig model = new AiModelConfig();

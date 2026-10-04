@@ -24,6 +24,10 @@ final class ProviderHttp {
         default byte[] getBytes(String url, Map<String, String> headers, int timeoutSec) throws Exception {
             return getBytes(url, timeoutSec);
         }
+
+        default byte[] postBytes(String url, Map<String, String> headers, String body, int timeoutSec) throws Exception {
+            return postJson(url, headers, body, timeoutSec).getBytes(StandardCharsets.UTF_8);
+        }
     }
 
     interface Sleeper {
@@ -35,12 +39,21 @@ final class ProviderHttp {
 
         @Override
         public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) throws Exception {
+            return new String(postBytes(url, headers, body, timeoutSec), StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public byte[] postBytes(String url, Map<String, String> headers, String body, int timeoutSec) throws Exception {
             HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url))
                     .timeout(Duration.ofSeconds(Math.max(15, timeoutSec)))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
             apply(b, headers);
-            return handleJson(httpClient.send(b.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)));
+            HttpResponse<byte[]> resp = httpClient.send(b.build(), HttpResponse.BodyHandlers.ofByteArray());
+            if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "http " + resp.statusCode());
+            }
+            return resp.body() == null ? new byte[0] : resp.body();
         }
 
         @Override
