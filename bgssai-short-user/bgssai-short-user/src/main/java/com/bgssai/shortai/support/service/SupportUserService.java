@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.bgssai.shortai.supportbridge.SupportOutboxService;
 import org.springframework.util.StringUtils;
 
 import com.bgssai.shortai.common.PageResponse;
@@ -52,6 +55,8 @@ public class SupportUserService {
     private final ShortCsSessionMapper sessionMapper;
     private final ShortCsMessageMapper messageMapper;
     private final ShortCsTicketMapper ticketMapper;
+    @Autowired(required = false)
+    private SupportOutboxService supportOutboxService;
 
     public SupportUserService(ShortCsSessionMapper sessionMapper, ShortCsMessageMapper messageMapper,
             ShortCsTicketMapper ticketMapper) {
@@ -117,10 +122,15 @@ public class SupportUserService {
 
         Map<String, Object> out = toSessionMap(session);
         out.put("guest_token", guestToken);
+        ShortCsMessage created = null;
         if (StringUtils.hasText(content)) {
             String senderType = userId != null ? SENDER_USER : SENDER_GUEST;
-            ShortCsMessage msg = insertMessage(sessionId, senderType, userId != null ? userId : guestToken, content, now);
-            out.put("message", toMessageMap(msg));
+            created = insertMessage(sessionId, senderType, userId != null ? userId : guestToken, content, now);
+            out.put("message", toMessageMap(created));
+        }
+        if (supportOutboxService != null) {
+            supportOutboxService.enqueueSession(sessionId, contactName, "在线客服", content,
+                    created == null ? null : created.getMessageId());
         }
         return out;
     }
@@ -243,6 +253,9 @@ public class SupportUserService {
         ticket.setCreateTime(now);
         ticket.setUpdateTime(now);
         ticketMapper.insertSelective(ticket);
+        if (supportOutboxService != null) {
+            supportOutboxService.enqueueTicket(session.getSessionId(), ticket.getTicketId(), subject);
+        }
 
         String senderType = userId != null ? SENDER_USER : SENDER_GUEST;
         insertMessage(session.getSessionId(), senderType, actor, "【已提工单】" + subject, now);
@@ -277,6 +290,9 @@ public class SupportUserService {
         String senderId = userId != null ? userId : session.getGuestToken();
         Date now = new Date();
         ShortCsMessage msg = insertMessage(session.getSessionId(), senderType, senderId, content, now);
+        if (supportOutboxService != null) {
+            supportOutboxService.enqueueMessage(session.getSessionId(), msg.getMessageId(), content);
+        }
 
         session.setStatus(STATUS_PENDING);
         session.setUnreadAdmin((session.getUnreadAdmin() == null ? 0 : session.getUnreadAdmin()) + 1);
