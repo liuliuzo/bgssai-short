@@ -34,56 +34,117 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
-    void minimaxVideoSubmitsPollsAndDownloads() {
+    void selectedVideoModelIsSentToTokenHub() {
         FakeClient http = new FakeClient();
-        http.posts.add("{\"task_id\":\"m-1\"}");
-        http.gets.add("{\"task\":{\"status\":\"success\",\"duration\":6,\"content\":{\"url\":\"https://cdn.example/m.mp4\"}}}");
+        http.posts.add("{\"data\":[{\"url\":\"https://cdn.example/m.mp4\"}]}");
         http.bytes = new byte[] { 1, 2 };
-        AiProviderResult result = provider(http, "key").execute(request("VIDEO", "minimax-video-h3", "人物奔跑"));
+        AiProviderResult result = provider(http, "key").execute(request("VIDEO", "wan2.6", "人物奔跑"));
         assertArrayEquals(http.bytes, result.getBinaryContent());
-        assertEquals(6, result.getDurationSec());
-        assertTrue(http.postedUrls.get(0).endsWith("/v1/wand/minimax-video-v2/generation"));
-        assertTrue(http.polledUrls.get(0).endsWith("/v1/wand/minimax-video-v2/tasks/m-1"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.cn/v1/videos/generations"));
+        assertTrue(http.postedBodies.get(0).contains("\"model\":\"wan2.6\""));
+        assertTrue(http.polledUrls.isEmpty());
     }
 
     @Test
-    void pixverseImageVideoUsesDocumentedImageField() {
+    void selectedImageModelIgnoresVendorHost() {
         FakeClient http = new FakeClient();
-        http.posts.add("{\"ErrCode\":0,\"Resp\":{\"video_id\":\"p-1\"}}");
-        http.gets.add("{\"ErrCode\":0,\"Resp\":{\"status\":1,\"url\":\"https://cdn.example/p.mp4\",\"outputWidth\":720,\"outputHeight\":1280}}");
-        http.bytes = new byte[] { 3 };
-        AiProviderRequest request = request("VIDEO", "pixverse-video-v6.0", "镜头推进");
-        request.getParams().put("image_url", "https://cdn.example/frame.png");
+        http.posts.add("{\"data\":[{\"b64_json\":\"AQIDBA==\"}]}");
+        AiProviderRequest request = request("IMAGE", "kling-v3", "定妆");
+        request.getModel().setConfigJson(
+                "{\"hub\":\"cn\",\"base_url\":\"https://api-beijing.klingai.com\",\"secret_ref\":\"ai.kling.api_key\"}");
         AiProviderResult result = provider(http, "key").execute(request);
-        assertEquals(720, result.getWidth());
-        assertTrue(http.postedUrls.get(0).endsWith("/v1/wand/pixverse/image-to-video"));
-        assertTrue(http.postedBodies.get(0).contains("\"img_id\":\"https://cdn.example/frame.png\""));
+        assertArrayEquals(new byte[] { 1, 2, 3, 4 }, result.getBinaryContent());
+        assertEquals("image/png", result.getMimeType());
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.cn/v1/images/generations"));
+        assertTrue(http.postedBodies.get(0).contains("\"model\":\"kling-v3\""));
     }
 
     @Test
-    void klingImageVideoUsesContentsContract() {
+    void videoPollsTokenHubTaskForTheSelectedModel() {
         FakeClient http = new FakeClient();
-        http.posts.add("{\"code\":0,\"data\":{\"id\":\"k-1\"}}");
-        http.gets.add("{\"code\":0,\"data\":[{\"status\":\"succeeded\",\"outputs\":[{\"url\":\"https://cdn.example/k.mp4\",\"duration\":5}]}]}");
+        http.posts.add("{\"id\":\"k-1\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"succeeded\",\"data\":[{\"url\":\"https://cdn.example/k.mp4\"}]}");
         http.bytes = new byte[] { 4 };
-        AiProviderRequest request = request("VIDEO", "kling-video-v3", "转身");
+        AiProviderRequest request = request("VIDEO", "kling-v3", "转身");
         request.getParams().put("image_url", "https://cdn.example/frame.png");
         AiProviderResult result = provider(http, "key").execute(request);
-        assertEquals(5, result.getDurationSec());
-        assertTrue(http.postedUrls.get(0).endsWith("/v1/wand/kling/image-to-video"));
-        assertTrue(http.postedBodies.get(0).contains("\"type\":\"first_frame\""));
+        assertArrayEquals(http.bytes, result.getBinaryContent());
+        assertTrue(http.postedBodies.get(0).contains("\"model\":\"kling-v3\""));
+        assertTrue(http.postedBodies.get(0).contains("\"image\":\"https://cdn.example/frame.png\""));
+        assertTrue(http.polledUrls.get(0).contains("/v1/videos/generations/k-1?model=kling-v3"));
     }
 
     @Test
-    void speechDecodesAudioAndUsesSupplierDuration() {
+    void asyncVideoReturnsUrlOnlyAfterSucceeded() {
         FakeClient http = new FakeClient();
-        http.posts.add("{\"base_resp\":{\"status_code\":0},\"data\":{\"audio\":\"0102\"},\"extra_info\":{\"audio_length\":1500}}");
-        AiProviderRequest request = request("VOICE", "minimax-speech-2.8-hd", "你好");
+        http.posts.add("{\"id\":\"job-9\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"running\"}");
+        http.gets.add("{\"status\":\"succeeded\",\"data\":[{\"url\":\"https://cdn.example/job.mp4\"}]}");
+        http.bytes = new byte[] { 9, 8, 7 };
+        List<Long> sleeps = new ArrayList<>();
+        TencentTokenHubAiProvider polling = new TencentTokenHubAiProvider(
+                new SysSecretReader(secretRef -> "key"), http, sleeps::add);
+        AiProviderRequest request = request("VIDEO", "kling-v3", "奔跑");
+        request.getParams().put("image_url", "https://cdn.example/frame.png");
+        AiProviderResult result = polling.execute(request);
+        assertArrayEquals(new byte[] { 9, 8, 7 }, result.getBinaryContent());
+        assertEquals("video/mp4", result.getMimeType());
+        assertEquals(1, http.downloads);
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.cn/v1/videos/generations"));
+        assertTrue(!http.postedUrls.get(0).contains("klingai"));
+        assertTrue(http.postedBodies.get(0).contains("\"model\":\"kling-v3\""));
+        assertTrue(http.postedBodies.get(0).contains("\"image\":\"https://cdn.example/frame.png\""));
+        assertTrue(!http.postedBodies.get(0).contains("duration"));
+        assertEquals(2, http.polledUrls.size());
+        assertTrue(http.polledUrls.get(0).contains("/v1/videos/generations/job-9?model=kling-v3"));
+        assertTrue(http.polledUrls.get(1).endsWith("/v1/videos/generations/job-9?model=kling-v3"));
+        assertTrue(!sleeps.isEmpty());
+        assertTrue(sleeps.get(0) >= 3000L);
+    }
+
+    @Test
+    void failedVideoDoesNotDownloadMedia() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"id\":\"job-f\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"failed\",\"error\":\"上游拒绝\"}");
+        BizException ex = assertThrows(BizException.class,
+                () -> provider(http, "key").execute(request("VIDEO", "kling-v3", "失败")));
+        assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
+        assertTrue(ex.getMessage().contains("上游拒绝"));
+        assertEquals(0, http.downloads);
+        assertTrue(http.polledUrls.get(0).contains("/v1/videos/generations/job-f?model=kling-v3"));
+        assertTrue(!http.postedUrls.get(0).contains("klingai"));
+    }
+
+    @Test
+    void missingHubConfigFailsInsteadOfCallingKling() {
+        FakeClient http = new FakeClient();
+        TencentTokenHubAiProvider polling = new TencentTokenHubAiProvider(
+                new SysSecretReader(secretRef -> "key"), http, ms -> {
+                }, "", "");
+        AiProviderRequest request = request("VIDEO", "kling-v3", "跑");
+        request.getModel().setConfigJson(
+                "{\"allow_direct\":true,\"hub\":\"cn\",\"base_url\":\"https://api-beijing.klingai.com\",\"secret_ref\":\"ai.kling.api_key\"}");
+        BizException ex = assertThrows(BizException.class, () -> polling.execute(request));
+        assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
+        assertTrue(http.postedUrls.isEmpty());
+        assertTrue(http.polledUrls.isEmpty());
+        assertEquals(0, http.downloads);
+        assertTrue(!ex.getMessage().toLowerCase().contains("klingai"));
+    }
+
+    @Test
+    void speechSendsSelectedModelToTokenHub() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"audio\":\"0102\",\"extra_info\":{\"audio_length\":1500}}");
+        AiProviderRequest request = request("VOICE", "qwen-tts", "你好");
         request.getParams().put("voice_id", "v-male-deep-01");
         AiProviderResult result = provider(http, "key").execute(request);
         assertArrayEquals(new byte[] { 1, 2 }, result.getBinaryContent());
         assertEquals(2, result.getDurationSec());
-        assertTrue(http.postedBodies.get(0).contains("\"voice_id\":\"male-qn-qingse\""));
+        assertTrue(http.postedUrls.get(0).endsWith("/v1/audio/speech"));
+        assertTrue(http.postedBodies.get(0).contains("\"model\":\"qwen-tts\""));
+        assertTrue(http.postedBodies.get(0).contains("\"voice\":\"v-male-deep-01\""));
     }
 
     @Test
@@ -199,6 +260,7 @@ class TencentTokenHubAiProviderTest {
         private final List<Map<String, String>> postedHeaders = new ArrayList<>();
         private final List<String> polledUrls = new ArrayList<>();
         private byte[] bytes = new byte[0];
+        private int downloads;
 
         @Override
         public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
@@ -216,6 +278,7 @@ class TencentTokenHubAiProviderTest {
 
         @Override
         public byte[] getBytes(String url, int timeoutSec) {
+            downloads++;
             return bytes;
         }
     }
