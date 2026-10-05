@@ -93,6 +93,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 * **配置分层（强制，违者代码不予合并）**：① 中间件参数（数据库、Redis、ES、OBS、MQTT、端口等）只写 `application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`，禁止进 Admin / 库表；② 业务第三方凭证（短信、邮件、支付、OAuth、LLM API Key 等）由 Admin 维护并落库，禁止只写 properties，且必须在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护 DML 种子（`ON DUPLICATE KEY UPDATE` 仅空值回填）。权威全文见 Standards §1「配置分层：中间件 vs 业务第三方凭证」。AI 助手不得反复提议违反本条，除非用户主动改决策。
 * **持久层三件套手工维护（强制）**：Mapper XML / Example / Entity 是仓库内普通源码，由开发者手工维护。本产品线已下线 MyBatis Generator，不引入任何代码生成工具。改表先改 `sql/DDL.sql`，再手工同步三件套，一次提交。禁止只改 Java 不改 DDL，或只改 DDL 不同步三件套。权威见 Standards §2。
 * 任何需求变更或 bug 修复，必须在同一次提交内同步完成**需求文档 / 原型 / 设计文档 / 代码**四层的对应修改，缺一不可，以防止代码与文档漂移（详见 Standards §0「需求与缺陷变更四层同步完成、缺一不可」）。
+* **提交闸门（强制）**：需求（`docs/feature`）、原型（`docs/demo-static`）、代码（`src/**`、前端工程）、数据库（`sql/**`）四者不一致，不可以提交到仓库中——不得 commit、push、开 PR 或合并，任何分支（含 `feature/*`）都一样。提交前逐项核对四者是否同一口径；发现不一致先对齐再提交，无法判断以哪一层为准时停下来报告用户，不得「先提交、回头补」（详见 Standards §0「提交闸门」）。
 * 接口的 POST 业务参数一律走 JSON Body（POST→body，详见 Standards §3）。
 * 目录权威：`docs/DIRECTORY-LAYOUT.md`。
 * 提交信息遵循 Conventional Commits。
