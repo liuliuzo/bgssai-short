@@ -19,6 +19,8 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 
 ## 当前状态
 
+2026-10-06 的参考映射、源码证据与发布/多端验收顺序见 [产品定位与交付核查](docs/review/product-direction-20261006.md)。Short 已有 Media 发布客户端；真实成片跨仓播放及四端验收尚未在本次执行。
+
 **M0–M4 已完成**（明细见 [`docs/project/milestones.md`](docs/project/milestones.md)）：需求与原型、详细设计与契约、用户端制作全链路和管理端审核 / 模型 / 用量均已落地；M4 补齐了主干两头——原著导入改编（进得来）与剪辑工程导出（出得去），以及首尾帧衔接与分镜画布。生产密钥、OBS 桶与 ffmpeg 真合成仍待运维接入；剪映草稿导出须在装有剪映的机器上真机验证一次。
 
 业务功能一律按 **需求 → 原型 → 详设 → 代码** 顺序推进（Standards §0），不得跳过上游直接编码。
