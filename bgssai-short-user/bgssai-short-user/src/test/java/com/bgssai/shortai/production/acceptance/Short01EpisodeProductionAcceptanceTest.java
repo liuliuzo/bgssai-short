@@ -212,6 +212,7 @@ class Short01EpisodeProductionAcceptanceTest {
         Map<String, Object> result = (Map<String, Object>) resp.getResult();
         assertEquals("t-compose-1", result.get("compose_task_id"));
         assertEquals("https://obs.my-cdn.com/films/a-film.mp4", result.get("download_url"));
+        assertEquals(0, result.get("expired_flag"));
         assertNull(result.get("media_play_url"), "stub media play_url must not surface");
         @SuppressWarnings("unchecked")
         Map<String, Object> evidence = (Map<String, Object>) result.get("production_evidence");
@@ -221,6 +222,48 @@ class Short01EpisodeProductionAcceptanceTest {
         assertEquals("short/dev/u1/w1/a-film.mp4", evidence.get("storage_key"));
         assertEquals(12_345, evidence.get("file_size_byte"));
         assertTrue(Boolean.TRUE.equals(result.get("commercial_ready")));
+    }
+
+    @Test
+    void expiredFilmHidesDownloadAndRejectsDownloadUrl() {
+        FilmService service = new FilmService();
+        WorkAccessService access = mock(WorkAccessService.class);
+        AssetService assets = mock(AssetService.class);
+        ShortFilmMapper filmMapper = mock(ShortFilmMapper.class);
+        ReflectionTestUtils.setField(service, "workAccessService", access);
+        ReflectionTestUtils.setField(service, "assetService", assets);
+        ReflectionTestUtils.setField(service, "shortFilmMapper", filmMapper);
+        ShortAssetMapper assetMapper = mock(ShortAssetMapper.class);
+        when(assetMapper.selectByExample(any())).thenReturn(List.of());
+        ReflectionTestUtils.setField(service, "shortAssetMapper", assetMapper);
+        ReflectionTestUtils.setField(service, "shortAiTaskMapper", mock(ShortAiTaskMapper.class));
+        ReflectionTestUtils.setField(service, "shortWorkMapper", mock(ShortWorkMapper.class));
+
+        ShortEpisode ep = new ShortEpisode();
+        ep.setEpisodeId("ep-1");
+        ep.setWorkId("w-1");
+        ep.setComposeStatus("NONE");
+        ShortWork work = new ShortWork();
+        work.setWorkId("w-1");
+        work.setComposeSettingJson("{}");
+        when(access.requireEpisode("ep-1")).thenReturn(ep);
+        when(access.requireWork("w-1")).thenReturn(work);
+        ShortFilm film = new ShortFilm();
+        film.setFilmAssetId("a-film");
+        film.setComposeStatus("NONE");
+        film.setExpiredFlag(1);
+        film.setComposeTaskId("t-1");
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+
+        ApiResponse resp = service.detail("ep-1");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) resp.getResult();
+        assertNull(result.get("download_url"));
+        assertEquals(1, result.get("expired_flag"));
+        assertEquals(Boolean.FALSE, result.get("commercial_ready"));
+
+        BizException ex = assertThrows(BizException.class, () -> service.downloadUrl("a-film"));
+        assertEquals(CommonErrorCode.FILM_EXPIRED.code(), ex.getCode());
     }
 
     @Test

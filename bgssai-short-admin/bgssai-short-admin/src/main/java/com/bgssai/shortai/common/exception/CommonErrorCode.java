@@ -23,6 +23,7 @@ public enum CommonErrorCode implements ErrorCode {
     RULE_REJECT("4006", "business rule rejected"),
     QUOTA_INSUFFICIENT("4007", "insufficient quota"),
     VERSION_CONFLICT("4009", "version conflict"),
+    FILM_EXPIRED("4012", "finished film expired, compose again before download"),
     DUPLICATE_SUBMIT("4013", "already submitted for review"),
     ABILITY_UNAVAILABLE("4014", "no enabled model for ability"),
     MONTHLY_LIMIT("4015", "monthly usage cap reached"),

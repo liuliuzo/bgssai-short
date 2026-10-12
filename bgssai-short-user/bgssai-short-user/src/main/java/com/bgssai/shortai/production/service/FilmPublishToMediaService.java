@@ -82,17 +82,28 @@ public class FilmPublishToMediaService {
 
         try {
             MediaIngestClient.IngestResult ingested = mediaIngestClient.ingest(payload);
-            CommercialOutcomeGuard.rejectFakeUrl(ingested.playUrl(), "media play_url");
             String classified = CommercialOutcomeGuard.classifyMediaStatus(ingested.status());
             if ("FAILED".equals(classified)) {
                 throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
                         "Media handoff FAILED (status=" + ingested.status() + ")",
                         ingested.httpStatus(), ingested.attempts());
             }
+            Date publishedAt = new Date();
+            if ("PENDING".equals(classified)) {
+                String playUrl = ingested.playUrl() == null ? "" : ingested.playUrl().trim();
+                if (!playUrl.isBlank()) {
+                    CommercialOutcomeGuard.rejectFakeUrl(playUrl, "media play_url");
+                }
+                ingested = new MediaIngestClient.IngestResult(
+                        ingested.mediaId(), playUrl, "PENDING",
+                        ingested.httpStatus(), ingested.attempts(), ingested.message());
+                persistPending(film, ingested, idempotencyKey, publishedAt);
+                return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt, false));
+            }
+            CommercialOutcomeGuard.rejectFakeUrl(ingested.playUrl(), "media play_url");
             ingested = new MediaIngestClient.IngestResult(
                     ingested.mediaId(), ingested.playUrl(), classified,
-                    ingested.httpStatus(), ingested.attempts());
-            Date publishedAt = new Date();
+                    ingested.httpStatus(), ingested.attempts(), ingested.message());
             persistSuccess(film, ingested, idempotencyKey, publishedAt);
             return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt, false));
         } catch (BizException ex) {
@@ -120,7 +131,8 @@ public class FilmPublishToMediaService {
 
         List<String> warnings = new ArrayList<>();
         if (!config.baseUrlConfigured()) {
-            warnings.add("未配置 bgssai.media.base-url：请在 application-*.properties 填写 media 服务地址");
+            warnings.add("MEDIA 主机未配置：bgssai.media.base-url 为空。发布会失败，不会返回假的 media_id。"
+                    + "本仓不填写虚构 IP；主机未分配时保持为空并在文档标明未部署");
         }
         if (!config.tokenConfigured()) {
             warnings.add("未配置 bgssai.media.ingest-token：请写 properties 占位或在 Admin/sys_secret 写入"
@@ -451,6 +463,50 @@ public class FilmPublishToMediaService {
             throw new BizException(CommonErrorCode.RULE_REJECT, "film not found for episode");
         }
         return film;
+    }
+
+    private void persistPending(ShortFilm film, MediaIngestClient.IngestResult ingested,
+            String idempotencyKey, Date publishedAt) {
+        String note = ingested.message() == null || ingested.message().isBlank()
+                ? "Media 已受理，尚未可播放"
+                : ingested.message();
+        if (note.length() > 1000) {
+            note = note.substring(0, 1000);
+        }
+        String playUrl = ingested.playUrl() == null ? "" : ingested.playUrl();
+        Map<String, Object> log = richPublishLog(idempotencyKey, blankToNull(ingested.mediaId()),
+                playUrl.isBlank() ? null : playUrl, "PENDING", ingested.httpStatus(), note,
+                ingested.attempts(), publishedAt);
+        String logJson = ShortJson.toJson(log);
+        ShortFilm patch = new ShortFilm();
+        if (ingested.mediaId() != null && !ingested.mediaId().isBlank()) {
+            patch.setMediaId(ingested.mediaId());
+        }
+        if (!playUrl.isBlank()) {
+            patch.setMediaPlayUrl(playUrl);
+        }
+        patch.setMediaPublishStatus("PENDING");
+        patch.setMediaPublishedAt(publishedAt);
+        patch.setMediaLastError(note);
+        patch.setMediaPublishLog(logJson);
+        patch.setUpdatedTime(publishedAt);
+        ShortFilmExample up = new ShortFilmExample();
+        up.createCriteria().andIdEqualTo(film.getId());
+        shortFilmMapper.updateByExampleSelective(patch, up);
+        if (ingested.mediaId() != null && !ingested.mediaId().isBlank()) {
+            film.setMediaId(ingested.mediaId());
+        }
+        if (!playUrl.isBlank()) {
+            film.setMediaPlayUrl(playUrl);
+        }
+        film.setMediaPublishStatus("PENDING");
+        film.setMediaPublishedAt(publishedAt);
+        film.setMediaLastError(note);
+        film.setMediaPublishLog(logJson);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     private void persistSuccess(ShortFilm film, MediaIngestClient.IngestResult ingested,

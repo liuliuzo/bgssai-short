@@ -24,11 +24,22 @@ SHORT-01 目标是短剧制作链路达到可商用：真实模型生成、OBS �
 
 ## 仍为 PENDING 的商业证明
 
-以下需真实凭证与联调环境，**本 PR 不伪造**：
+以下需真实凭证与联调环境，**不伪造**：
 
 - 付费/生产模型真实出图出片
 - 华为 OBS 成片上传与签名播放
 - Short → Media 全链路 E2E（含 Media 侧可播）
+- prod 是否已经部署 develop 上的登录修复（本仓不能代替运维确认）
+- 多端播放器冒烟（Windows / Web / Android / iOS）
+
+## 2026-10-12 发布与成片状态
+
+- 发布 Body 与 Media 现行契约对齐：`status=READY`、`approved=true`、幂等键不变。
+- Media PENDING（无 `media_id` / `play_url`）落库 PENDING，不记失败、不记可播放成功。
+- Media `code=422` / `playable=false` 记失败，文案用上游 message。
+- `bgssai.media.base-url` 为空时 `4006`，不返回假 `media_id`。dev/prod 仍是约定域名，**没有**写入虚构 MEDIA IP。主机是否已部署：未在本仓确认，不可达即失败。
+- 镜头视频或配音变更会使已有成片过期，并取消 Media 回放；合成成功才清过期。详见 [film-compose-export.md](film-compose-export.md)。
+- 直播 E2E 仍是 **NOT_VERIFIED**。记录见 [../review/p0-5-short-publish-20261012.md](../review/p0-5-short-publish-20261012.md)。
 
 ## 相关代码
 

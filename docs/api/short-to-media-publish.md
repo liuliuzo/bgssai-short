@@ -44,10 +44,18 @@ Body（snake_case，`additionalProperties=false`）：
 | `aspect_ratio` | 是 | `9:16` |
 | `language` | 是 | `zh-CN` |
 | `tags` | 是 | 可空数组 |
+| `status` | 是 | 固定 `READY` |
+| `approved` | 是 | 固定 `true` |
 | `idempotency_key` | 是 | `short:{work_id}:{episode_id}:{film_id}` |
 
-期望响应（可包在统一 `result` 内）：`media_id`、`play_url`、`status`（READY / PENDING / FAILED）。
-统一信封 `code` 仅 `0` / `200` / `OK` 为成功。Media 明确失败可用 HTTP 422 / `code=422`。
+期望响应（可包在统一 `result` 内）：`status`（READY / PENDING / FAILED），以及 READY 时的 `media_id`、`play_url`。
+`playable=false` 不得当成可播放成功。
+
+- **READY**：必须有 `media_id` 与 http(s) `play_url`。`commercial_ready=true`。
+- **PENDING**：Media 可以不给 `media_id` / `play_url`（素材尚未探活）。Short 落库 `PENDING`，`commercial_ready=false`，**不**记成 FAILED，**不**补造播放地址。
+- **FAILED** 或信封 `code=422`：抛错，落库 FAILED，文案用 Media `message`。
+
+统一信封 `code` 仅 `0` / `200` / `OK` 为成功。Media 明确失败用 body `code=422`（HTTP 仍可能是 200）。
 
 ## 幂等
 
@@ -74,6 +82,6 @@ Body（snake_case，`additionalProperties=false`）：
 | FAILED 不冒充 READY | 必须 | HTTP 422 / `playable=false` |
 | 鉴权 `X-Bgssai-Ingest-Token` | 必须 | 已有；亦接受 Bearer / `X-Ingest-Token` |
 | 读 `Idempotency-Key` 头 | 建议 | 尚未；Body 已够用 |
-| 直播 Short 工作室 → 播放器 E2E | 联调 | 双方仍 PENDING，不伪造 |
+| 直播 Short 工作室 → 播放器 E2E | 联调 | **NOT_VERIFIED**。MEDIA_* 主机未在本仓分配，不编造 IP。base-url 为空或主机不可达时发布失败 |
 
 对端无需为本 PR 改契约即可联调。若 Media 未守 UNIQUE，重复发布会双目录——Short 侧 READY 回放可挡住二次点击，挡不住首发并发；并发必须靠 Media UNIQUE。

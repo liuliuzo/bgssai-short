@@ -99,8 +99,10 @@ class FilmPublishToMediaServiceTest {
         assertEquals("9:16", payload.get("aspect_ratio"));
         assertEquals("zh-CN", payload.get("language"));
         assertEquals(List.of("REVENGE"), payload.get("tags"));
+        assertEquals("READY", payload.get("status"));
+        assertEquals(Boolean.TRUE, payload.get("approved"));
         assertEquals("short:w-1:ep-1:fl-1", payload.get("idempotency_key"));
-        assertEquals(12, payload.size());
+        assertEquals(14, payload.size());
     }
 
     @Test
@@ -108,7 +110,9 @@ class FilmPublishToMediaServiceTest {
         Map<String, Object> payload = MediaIngestContract.buildPayload(
                 "w-1", "ep-1", "fl-1", "t", null, "https://v.mp4", 10, List.of());
         assertFalse(payload.containsKey("cover_url"));
-        assertEquals(11, payload.size());
+        assertEquals("READY", payload.get("status"));
+        assertEquals(Boolean.TRUE, payload.get("approved"));
+        assertEquals(13, payload.size());
     }
 
     @Test
@@ -410,6 +414,31 @@ class FilmPublishToMediaServiceTest {
         assertEquals(Boolean.FALSE, result.get("commercial_ready"));
         assertEquals("md-p", result.get("media_id"));
         verify(filmMapper).updateByExampleSelective(any(), any());
+    }
+
+    @Test
+    void pendingWithoutPlayUrlIsStoredAsPendingNotFailed() {
+        ShortFilm film = readyFilm();
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any())).thenReturn(
+                new MediaIngestClient.IngestResult("", "", "PENDING", 200, 1, "asset probe timed out"));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        ApiResponse response = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals("PENDING", result.get("status"));
+        assertEquals(Boolean.FALSE, result.get("commercial_ready"));
+        org.mockito.ArgumentCaptor<ShortFilm> captor = org.mockito.ArgumentCaptor.forClass(ShortFilm.class);
+        verify(filmMapper).updateByExampleSelective(captor.capture(), any());
+        assertEquals("PENDING", captor.getValue().getMediaPublishStatus());
+        assertTrue(captor.getValue().getMediaLastError().contains("probe")
+                || captor.getValue().getMediaLastError().contains("受理"));
     }
 
     @Test

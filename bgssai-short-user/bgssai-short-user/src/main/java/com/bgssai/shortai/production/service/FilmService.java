@@ -305,7 +305,10 @@ public class FilmService {
             ShortFilm film = shortFilmMapper.selectOneByExample(fx);
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("episode_id", ep.getEpisodeId());
-            if (film != null && film.getFilmAssetId() != null) {
+            if (film != null && Integer.valueOf(1).equals(film.getExpiredFlag())) {
+                item.put("expired_flag", 1);
+                item.put("error", "成片已过期，请重新合成后再下载");
+            } else if (film != null && film.getFilmAssetId() != null) {
                 ApiResponse urlResp = assetService.getDownload(film.getFilmAssetId());
                 @SuppressWarnings("unchecked")
                 Map<String, Object> url = (Map<String, Object>) urlResp.getResult();
@@ -350,10 +353,17 @@ public class FilmService {
             result.put("film_duration_sec", film.getFilmDurationSec());
             result.put("compose_task_id", film.getComposeTaskId());
             result.put("composed_time", film.getComposedTime());
+            int expiredFlag = film.getExpiredFlag() == null ? 0 : film.getExpiredFlag();
+            result.put("expired_flag", expiredFlag);
+            result.put("subtitle_stale_flag",
+                    film.getSubtitleStaleFlag() == null ? 0 : film.getSubtitleStaleFlag());
             // Return a playable/presigned URL — the download-url JSON endpoint is not a media src.
             // Placeholder / stub schemes must never surface as commercial playable URLs.
-            String downloadUrl = film.getFilmAssetId() == null ? null
-                    : assetService.resolveUrl(film.getFilmAssetId());
+            // An expired cut keeps the file for comparison but must not be offered as the download.
+            String downloadUrl = null;
+            if (expiredFlag != 1 && film.getFilmAssetId() != null) {
+                downloadUrl = assetService.resolveUrl(film.getFilmAssetId());
+            }
             result.put("download_url", CommercialOutcomeGuard.safeCommercialUrl(downloadUrl));
             result.put("media_id", film.getMediaId());
             result.put("media_play_url", CommercialOutcomeGuard.safeCommercialUrl(film.getMediaPlayUrl()));
@@ -416,10 +426,12 @@ public class FilmService {
                 && asset.getFileSizeByte() != null && asset.getFileSizeByte() > 0;
         boolean taskOk = film.getComposeTaskId() != null && !film.getComposeTaskId().isBlank();
         boolean statusOk = "READY".equals(film.getComposeStatus());
-        // 成片商业就绪只看合成产物与证据链；Media play_url 另行校验，占位不得冒充已发布。
+        boolean notExpired = film.getExpiredFlag() == null || film.getExpiredFlag() == 0;
+        // 成片商业就绪只看合成产物与证据链；过期成片、占位 URL 不得冒充已可发布。
+        evidence.put("expired_flag", film.getExpiredFlag() == null ? 0 : film.getExpiredFlag());
         evidence.put("media_play_url_ok", film.getMediaPlayUrl() == null || film.getMediaPlayUrl().isBlank()
                 || CommercialOutcomeGuard.safeCommercialUrl(film.getMediaPlayUrl()) != null);
-        evidence.put("commercial_ready", statusOk && storageOk && taskOk);
+        evidence.put("commercial_ready", statusOk && storageOk && taskOk && notExpired);
         return evidence;
     }
 
@@ -465,6 +477,15 @@ public class FilmService {
     }
 
     public ApiResponse downloadUrl(String assetId) {
+        if (assetId != null && !assetId.isBlank()) {
+            ShortFilmExample ex = new ShortFilmExample();
+            ex.createCriteria().andFilmAssetIdEqualTo(assetId.trim()).andDeletedFlagEqualTo(0)
+                    .andExpiredFlagEqualTo(1);
+            ShortFilm expired = shortFilmMapper.selectOneByExample(ex);
+            if (expired != null) {
+                throw new BizException(CommonErrorCode.FILM_EXPIRED, "成片已过期，请重新合成后再下载");
+            }
+        }
         return assetService.getDownload(assetId);
     }
 

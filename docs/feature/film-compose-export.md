@@ -142,7 +142,18 @@
   登记在用户端 `PAGE-FLOW.html`。
 - 页面 → API 映射：`../api/page-api-mapping.md` 对应行。
 
-## 八、四层同步检查清单
+## 八、生成到成片的状态（2026-10-12）
+
+代码补上需求里已经写过、但此前没有落到成片行的状态：
+
+- 镜头视频重抽、配音重配：该集 `short_film.compose_status=NONE`、`expired_flag=1`，剧集 `compose_status=NONE`；审核若为 `APPROVED` / `PENDING` 则回落 `NOT_SUBMITTED`。若此前 Media 发布是 READY / PENDING，取消 Short 侧回放（`media_publish_status=NONE`，当前播放链接清空）。历史审核行保留，发布闸门看剧集上的 `review_status`。
+- 合成成功：`expired_flag=0`、`subtitle_stale_flag=0`、`compose_status=READY`。产物必须是非空视频（mime 含 video 或 mp4）。若这集成片曾经发布过，同样取消回放，下次发布用同一幂等键再 POST。
+- 合成任务失败：剧集不再停在 `COMPOSING`。旧成片仍是未过期 READY 时，剧集恢复 READY；否则剧集与成片记 `FAILED`。
+- 过期成片：`films/detail.download_url` 为空；`films/download-url` 返回 `4012`。
+
+仍未验收、本轮不写成通过：付费模型真实出片、华为 OBS 签名播放、仅重烧字幕的独立低价编码、prod 部署是否已带上登录修复。
+
+## 九、四层同步检查清单
 
 - [x] 需求（本文件）
 - [x] 原型（`docs/demo-static/web/user/compose-export.html` 及 `PAGE-FLOW.html`）
