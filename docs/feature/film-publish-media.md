@@ -14,10 +14,14 @@
   2. **视频地址**：对成片素材走既有资产预签名 / 可播放 URL（与 `films/detail.download_url` 同源能力）。
   3. **契约（MUST 与 media 一致）**：见第四节 short → media。
   4. **幂等**：键为 `short:{work_id}:{episode_id}:{film_id}`，写入 Body 并带 `Idempotency-Key` 头。
+     Body 同时带 `status=READY`、`approved=true`（与 Media `ShortDramaPublishJob` 一致）。
      同一成片已 READY 且已有 `media_id` / `play_url` 时，再次发布 **Short 侧回放**（不调 Media，
      `replayed=true`），避免双目录。`force=true` 才用同一键再 POST（期望 Media upsert 同一 `media_id`）。
+     重新合成成功后，Short 把 `media_publish_status` 置回 `NONE` 并清空当前 `play_url`，
+     下次发布必须再 POST（同一键，由 Media UNIQUE upsert），不能回放旧目录。
      PENDING / FAILED 允许重试。Media 对端 MUST UNIQUE upsert，见 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
   5. **配置**：`bgssai.media.base-url` 与 `bgssai.media.ingest-token` 写在各环境 `application-*.properties`（token 仅占位，不提交真实密钥）；运行期优先 properties，空则回退 `sys_secret.bgssai.media.ingest-token`。
+     **主机**：本仓不分配、不编造 `MEDIA_*` IP。dev/prod 的 base-url 是约定域名；地址为空时发布返回 `4006`，文案写明未配置，不返回 `media_id`。域名不可达时返回 `502000` / `504000`，同样不写成成功。
   6. **失败**：media 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error` + `media_publish_log`。
   7. **预检**：`GET .../preflight` 检查配置与闸门；传 `work_id` 时附带批量候选数；不调用 media。
   8. **UX**：发布 loading；成功展示 `media_id` + `play_url`（打开/复制）；成片区展示最近一次 publish_log。
@@ -31,8 +35,8 @@
 | Media `status` | Short 落库 | `commercial_ready` | 含义 |
 | --- | --- | --- | --- |
 | READY / SUCCEEDED | READY | true | 发布成功 |
-| PENDING / PROCESSING / QUEUED | PENDING | false | 已受理未就绪，不是 FAIL |
-| FAILED / ERROR | FAILED + 抛错 | false | 明确失败 |
+| PENDING / PROCESSING / QUEUED | PENDING | false | 已受理未就绪，不是 FAIL。Media 可以不给 `media_id` / `play_url` |
+| FAILED / ERROR，或信封 `code=422` | FAILED + 抛错 | false | 明确失败。文案用 Media 的 `message`，不说成「缺字段」 |
 
 未配置 Media、或返回 `stub://` 等占位 `play_url`：失败，禁止冒充成功。详见 [short-01-commercial-gate.md](short-01-commercial-gate.md)。
 
@@ -154,6 +158,8 @@ Header: Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
 | `aspect_ratio` | string | 是 | 固定 `9:16` |
 | `language` | string | 是 | 固定 `zh-CN` |
 | `tags` | string[] | 是 | 可空数组；常放 genre |
+| `status` | string | 是 | 固定 `READY`（审核通过的成片包） |
+| `approved` | boolean | 是 | 固定 `true`。`false` 会被 Media 以 `422` 拒绝 |
 | `idempotency_key` | string | 是 | `short:{work_id}:{episode_id}:{film_id}` |
 
 期望响应（可包在统一 `result` 内，或顶层）：
@@ -162,7 +168,9 @@ Header: Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
 | --- | --- | --- | --- |
 | `media_id` | string | 是 | media 侧媒体 ID |
 | `play_url` | string | 是 | 播放页 / 直链 |
-| `status` | string | 否 | 缺省按 `READY` |
+| `status` | string | 否 | `READY` 才要求 `media_id` + `play_url`。`PENDING` 允许两者为空，Short 落库 PENDING，`commercial_ready=false`，不抛错。`FAILED` 或信封 `code=422` 抛错 |
+| `playable` | boolean | 否 | 显式 `false` 且 status 为 READY 时不得当成可播放成功 |
+| `message` | string | 否 | PENDING / FAILED 的原因，写入 `media_last_error` |
 
 统一信封若带 `code`：仅 `0` / `200` / `OK` 视为成功；`6xxxx` 等业务码按上游失败处理（文案可读，不重试）。
 

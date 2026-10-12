@@ -310,4 +310,100 @@ class RestMediaIngestClientTest {
         assertTrue(ex.getMessage().contains("FAIL") || ex.getMessage().contains("失败"));
     }
 
+    @Test
+    void pendingWithoutCatalogIdsStaysPending() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("status", "PENDING");
+        result.put("playable", false);
+        result.put("media_id", null);
+        result.put("play_url", null);
+        result.put("message", "origin timed out");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", 0);
+        body.put("result", result);
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        MediaIngestClient.IngestResult out = client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of()));
+        assertEquals("PENDING", out.status());
+        assertEquals("", out.mediaId());
+        assertEquals("", out.playUrl());
+        assertTrue(out.message().contains("timed out"));
+    }
+
+    @Test
+    void mediaCode422IsFailedNotMissingFields() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("status", "FAILED");
+        result.put("playable", false);
+        result.put("message", "storage unconfigured");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", 422);
+        body.put("message", "storage unconfigured");
+        body.put("success", false);
+        body.put("result", result);
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        BizException ex = assertThrows(BizException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        assertTrue(ex.getMessage().contains("storage unconfigured"));
+        assertFalse(ex.getMessage().contains("缺少"));
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(1))
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
+    }
+
+    @Test
+    void readyButNotPlayableIsNotSuccess() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("http://media.local");
+        props.setIngestToken("tok");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("media_id", "md-x");
+        result.put("play_url", "https://play/md-x");
+        result.put("status", "READY");
+        result.put("playable", false);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "0");
+        body.put("result", result);
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        BizException ex = assertThrows(BizException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        assertTrue(ex.getMessage().contains("playable"));
+    }
+
+    @Test
+    void blankHostFailsBeforeCall() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        BgssaiMediaProperties props = new BgssaiMediaProperties();
+        props.setBaseUrl("   ");
+        props.setIngestToken("tok");
+        RestMediaIngestClient client = new RestMediaIngestClient(restTemplate, props,
+                new SysSecretReader(k -> ""), true);
+        BizException ex = assertThrows(BizException.class, () -> client.ingest(
+                MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+        assertTrue(ex.getMessage().contains("未配置") || ex.getMessage().contains("为空"));
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.never())
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
+    }
+
 }

@@ -113,6 +113,8 @@ public class ShortAiTaskWorker {
     @Autowired
     private FrameLinkService frameLinkService;
     @Autowired
+    private FinishedFilmLifecycle finishedFilmLifecycle;
+    @Autowired
     private AiTaskQueue aiTaskQueue;
     @Autowired
     private AiModelResolveService aiModelResolveService;
@@ -327,9 +329,11 @@ public class ShortAiTaskWorker {
             settlement.settle(task, model, Math.max(1, executionUsage.get()));
         } catch (BizException exBiz) {
             failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
+            noteComposeFailed(task);
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
             failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage());
+            noteComposeFailed(task);
         } finally {
             executionUsage.remove();
         }
@@ -440,6 +444,9 @@ public class ShortAiTaskWorker {
         asset.setDurationSec(durationSec);
         shortAssetMapper.updateByPrimaryKeySelective(asset);
         dubbingService.finishDubbingAlign(row, shot, asset.getAssetId(), durationSec);
+        if (finishedFilmLifecycle != null) {
+            finishedFilmLifecycle.expireAfterUpstreamChange(row.getEpisodeId());
+        }
     }
 
     private void finishSubtitleTranscribe(ShortAiTask task, AiModelConfig model) {
@@ -816,8 +823,13 @@ public class ShortAiTaskWorker {
         ShortShotExample up = new ShortShotExample();
         up.createCriteria().andIdEqualTo(shot.getId());
         shortShotMapper.updateByExampleSelective(patch, up);
-        if ("VIDEO".equals(task.getTaskType()) && patch.getLastFrameAssetId() != null) {
-            frameLinkService.markNextStale(shot);
+        if ("VIDEO".equals(task.getTaskType())) {
+            if (finishedFilmLifecycle != null) {
+                finishedFilmLifecycle.expireAfterUpstreamChange(shot.getEpisodeId());
+            }
+            if (patch.getLastFrameAssetId() != null) {
+                frameLinkService.markNextStale(shot);
+            }
         }
     }
 
@@ -937,6 +949,12 @@ public class ShortAiTaskWorker {
         if (result == null || result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "compose provider returned empty film");
         }
+        String filmMime = result.getMimeType() == null ? "" : result.getMimeType().toLowerCase();
+        if (!filmMime.contains("video") && !filmMime.contains("mp4")) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    "compose provider did not return a video asset (mime="
+                            + (result.getMimeType() == null ? "-" : result.getMimeType()) + ")");
+        }
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
                 result, task.getTaskId(), true);
         asset.setDurationSec(duration);
@@ -963,6 +981,12 @@ public class ShortAiTaskWorker {
         patch.setComposedTime(new Date());
         patch.setExportJson(timeline);
         patch.setUpdatedTime(new Date());
+        if (finishedFilmLifecycle != null) {
+            finishedFilmLifecycle.applyFreshCompose(patch, film);
+        } else {
+            patch.setExpiredFlag(0);
+            patch.setSubtitleStaleFlag(0);
+        }
         ShortFilmExample up = new ShortFilmExample();
         up.createCriteria().andIdEqualTo(film.getId());
         shortFilmMapper.updateByExampleSelective(patch, up);
@@ -1379,6 +1403,17 @@ public class ShortAiTaskWorker {
         ShortEpisodeExample ex = new ShortEpisodeExample();
         ex.createCriteria().andEpisodeIdEqualTo(episodeId).andDeletedFlagEqualTo(0);
         return shortEpisodeMapper.selectOneByExample(ex);
+    }
+
+    private void noteComposeFailed(ShortAiTask task) {
+        if (finishedFilmLifecycle == null || task == null || !"COMPOSE".equals(task.getTargetType())) {
+            return;
+        }
+        try {
+            finishedFilmLifecycle.onComposeTaskFailed(task.getEpisodeId());
+        } catch (RuntimeException ex) {
+            log.warn("compose failure state update skipped episodeId={}", task.getEpisodeId(), ex);
+        }
     }
 
     private void fail(ShortAiTask task, String code, String message) {

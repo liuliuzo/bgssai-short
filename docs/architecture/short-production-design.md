@@ -107,7 +107,9 @@ films-bgm-generate / films-compose
 
 幂等键 `short:{work_id}:{episode_id}:{film_id}` 写入 Body 与 `Idempotency-Key` 头。
 已 READY 且已有 `media_id` / `play_url` 时 Short 回放，不再 ingest。
-Media 对端按该键 UNIQUE upsert，禁止双目录。契约见
+重新合成后取消这次回放，下次用同一键再 POST。
+Media 对端按该键 UNIQUE upsert，禁止双目录。Body 带 `status=READY`、`approved=true`。
+PENDING 可以没有 `play_url`，不得记成失败或成功。契约见
 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)，
 配图见 [`../feature/flow-film-publish-media.html`](../feature/flow-film-publish-media.html)。
 

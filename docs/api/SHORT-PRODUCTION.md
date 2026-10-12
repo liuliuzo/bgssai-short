@@ -302,8 +302,9 @@ FFmpeg 混入成片音轨。
 
 ### GET /bgssai/user/films/detail?episode_id=
 
-返回 `compose_status`、`film_asset_id`、`film_duration_sec`、`compose_task_id`、
-`download_url`（可播放的签名/本地 URL，不是 download-url JSON 接口路径；`stub://` 等占位为 null）、
+返回 `compose_status`、`expired_flag`、`subtitle_stale_flag`、`film_asset_id`、`film_duration_sec`、`compose_task_id`、
+`download_url`（可播放的签名/本地 URL，不是 download-url JSON 接口路径；`stub://` 等占位为 null；
+`expired_flag=1` 时为 null）、
 `production_evidence`（`compose_task_id` / `source_task_id` / `model_code` / `cost_cent` /
 `storage_key` / `file_size_byte` / `task_status` / `commercial_ready` / `media_play_url_ok`）、
 `commercial_ready`，以及 `bgm_asset_id`、`bgm_url`、
@@ -312,6 +313,7 @@ FFmpeg 混入成片音轨。
 ### GET /bgssai/user/films/download-url?asset_id=
 
 `{ "download_url", "expires_at" }`。download_url 为同源资产地址。
+该资产若是已过期成片（`expired_flag=1`），返回 `4012`，不签发下载地址。
 
 ### POST /bgssai/user/films/publish-to-media
 
@@ -329,8 +331,11 @@ FFmpeg 混入成片音轨。
 已 READY 且同幂等键则回放（`replayed=true`，不调 Media）。`force=true` 才再 POST。
 
 响应 `result`：`film_id` `episode_id` `work_id` `media_id` `play_url` `status`
-`idempotency_key` `replayed` `published_at` `http_status` `attempts` `publish_log`。media 不可达返回 `502000`；超时 `504000`；
-业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次（键不变）。
+`commercial_ready` `idempotency_key` `replayed` `published_at` `http_status` `attempts` `publish_log`。
+`status=PENDING` 时 `commercial_ready=false`，`media_id` / `play_url` 可空，HTTP 仍成功。
+`status=FAILED` 或 Media `code=422` 抛错。`base-url` 为空返回 `4006`。
+media 不可达返回 `502000`；超时 `504000`；业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次（键不变）。
+重新合成后不再回放旧目录。
 
 ### POST /bgssai/user/films/publish-to-media/batch
 
@@ -338,8 +343,9 @@ FFmpeg 混入成片音轨。
 { "work_id": "w-dm-004", "force": false }
 ```
 
-按剧集顺序发布本作品全部 READY+APPROVED 成片。响应：`total` `succeeded` `failed`
-`progress_percent` `item_list[{progress_index,progress_total,film_id,episode_id,ok,media_id,play_url,idempotency_key,replayed,error}]`。
+按剧集顺序发布本作品全部 READY+APPROVED 成片。响应：`total` `succeeded` `pending` `failed`
+`progress_percent` `item_list[{progress_index,progress_total,film_id,episode_id,ok,media_id,play_url,status,idempotency_key,replayed,error}]`。
+`pending` 不计入 `succeeded`。
 
 ### GET /bgssai/user/films/publish-to-media/preflight?episode_id=&film_id=&work_id=
 

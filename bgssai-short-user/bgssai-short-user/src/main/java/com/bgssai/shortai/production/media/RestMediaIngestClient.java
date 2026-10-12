@@ -48,8 +48,9 @@ public class RestMediaIngestClient implements MediaIngestClient {
         String base = properties.getBaseUrl();
         if (base == null || base.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "Media 未配置：请在 application-*.properties 设置 bgssai.media.base-url"
-                            + "（本地联调示例 http://127.0.0.1:8080）");
+                    "Media 主机未配置：bgssai.media.base-url 为空。"
+                            + "未部署的 Media 不会被写成发布成功，也不会返回假的 media_id。"
+                            + "请在 application-*.properties 填写真实地址（不要编造 IP）");
         }
         String token = resolveToken();
         if (token.isBlank()) {
@@ -123,25 +124,35 @@ public class RestMediaIngestClient implements MediaIngestClient {
     @SuppressWarnings("unchecked")
     IngestResult parseBody(Map<String, Object> body, int httpStatus, int attempt) {
         String bizCode = text(body.get("code"));
-        if (!bizCode.isBlank() && !isSuccessCode(bizCode)) {
-            String bizMsg = text(body.get("message"));
-            if (bizMsg.isBlank()) {
-                bizMsg = text(body.get("msg"));
-            }
-            String message;
-            if (looksLike6xxxx(bizCode)) {
-                message = "Media 业务拒绝（" + bizCode + "）"
-                        + (bizMsg.isBlank() ? "" : "：" + bizMsg);
-            } else {
-                message = "Media 返回错误码 " + bizCode
-                        + (bizMsg.isBlank() ? "" : "：" + bizMsg);
-            }
-            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR, message, httpStatus, attempt);
-        }
         Map<String, Object> result = unwrapResult(body);
+        String statusRaw = text(result.get("status"));
+        String classified = statusRaw.isBlank()
+                ? ""
+                : CommercialOutcomeGuard.classifyMediaStatus(statusRaw);
+        String message = firstNonBlank(text(result.get("message")), text(body.get("message")), text(body.get("msg")));
+        boolean envelopeFail = !bizCode.isBlank() && !isSuccessCode(bizCode);
+
+        // Media PENDING (probe not verified) is HTTP 200 / code 0 with no media_id and no play_url.
+        // That is not a missing-field failure and must not be stored as FAILED.
+        if ("PENDING".equals(classified) && !envelopeFail) {
+            return pendingResult(result, message, httpStatus, attempt);
+        }
+        if (envelopeFail || "FAILED".equals(classified)) {
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                    failureMessage(bizCode, statusRaw, classified, message), httpStatus, attempt);
+        }
+
         String mediaId = text(result.get("media_id"));
         String playUrl = text(result.get("play_url"));
-        String status = text(result.get("status"));
+        if (classified.isBlank()) {
+            classified = "READY";
+        }
+        if ("READY".equals(classified) && playableExplicitlyFalse(result.get("playable"))) {
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
+                    "Media 声明 READY 但 playable=false，不能当成可播放成功"
+                            + (message.isBlank() ? "" : "：" + message),
+                    httpStatus, attempt);
+        }
         if (mediaId.isBlank() || playUrl.isBlank()) {
             throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
                     "Media 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）",
@@ -152,17 +163,58 @@ public class RestMediaIngestClient implements MediaIngestClient {
         } catch (BizException ex) {
             throw new MediaPublishException(CommonErrorCode.RULE_REJECT, ex.getMessage(), httpStatus, attempt);
         }
-        if (status.isBlank()) {
-            status = "READY";
-        }
-        String classified = CommercialOutcomeGuard.classifyMediaStatus(status);
-        if ("FAILED".equals(classified)) {
-            throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 返回失败状态 status=" + status + "（与 PENDING 区分：此为 FAIL）",
-                    httpStatus, attempt);
-        }
         // PENDING stays PENDING; READY/SUCCEEDED normalize to READY. Never invent SUCCEEDED.
-        return new IngestResult(mediaId, playUrl, classified, httpStatus, attempt);
+        return new IngestResult(mediaId, playUrl, classified, httpStatus, attempt, message);
+    }
+
+    private static IngestResult pendingResult(Map<String, Object> result, String message, int httpStatus,
+            int attempt) {
+        String mediaId = text(result.get("media_id"));
+        String playUrl = text(result.get("play_url"));
+        if (!playUrl.isBlank()) {
+            try {
+                CommercialOutcomeGuard.rejectFakeUrl(playUrl, "media play_url");
+            } catch (BizException ex) {
+                throw new MediaPublishException(CommonErrorCode.RULE_REJECT, ex.getMessage(), httpStatus, attempt);
+            }
+        }
+        String note = message.isBlank()
+                ? "Media 已受理，素材尚未验证为可播放（PENDING，不是失败，也不是可播放成功）"
+                : message;
+        return new IngestResult(mediaId, playUrl, "PENDING", httpStatus, attempt, note);
+    }
+
+    private static String failureMessage(String bizCode, String statusRaw, String classified, String message) {
+        if ("FAILED".equals(classified)) {
+            String detail = message.isBlank() ? ("status=" + statusRaw) : message;
+            return "Media 返回失败状态（FAIL，不是 PENDING）：" + detail;
+        }
+        if (looksLike6xxxx(bizCode)) {
+            return "Media 业务拒绝（" + bizCode + "）" + (message.isBlank() ? "" : "：" + message);
+        }
+        if (!bizCode.isBlank()) {
+            return "Media 返回错误码 " + bizCode + (message.isBlank() ? "" : "：" + message);
+        }
+        return message.isBlank() ? "Media 发布失败" : message;
+    }
+
+    private static boolean playableExplicitlyFalse(Object playable) {
+        if (playable instanceof Boolean flag) {
+            return !flag;
+        }
+        return "false".equalsIgnoreCase(text(playable));
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return "";
+        }
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value.trim();
+            }
+        }
+        return "";
     }
 
     private static boolean isRetriable(MediaPublishException ex) {

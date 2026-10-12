@@ -200,7 +200,10 @@
                   成片区展示状态与播放链接。幂等键
                   <code>short:{work_id}:{episode_id}:{film_id}</code>。
                   同一成片已 READY 再点发布走回放（<code>replayed=true</code>），不新建 Media 目录；
-                  <code>force=true</code> 才用同一键再 POST。
+                  <code>force=true</code> 才用同一键再 POST。重新合成后不再回放旧目录。
+                  请求体带 <code>status=READY</code> 与 <code>approved=true</code>。
+                  Media 返回 PENDING（可以没有 media_id / play_url）时弹窗写「已受理，尚未可播放」，
+                  不算成功；FAILED 或 code=422 算失败。base-url 为空直接失败，不编造主机 IP。
                   下架/撤回：media 暂无契约，本仓 skip。
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">

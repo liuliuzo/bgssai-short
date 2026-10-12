@@ -4,9 +4,14 @@ import java.util.Map;
 
 public interface MediaIngestClient {
 
-    record IngestResult(String mediaId, String playUrl, String status, Integer httpStatus, int attempts) {
+    record IngestResult(String mediaId, String playUrl, String status, Integer httpStatus, int attempts,
+            String message) {
+        public IngestResult(String mediaId, String playUrl, String status, Integer httpStatus, int attempts) {
+            this(mediaId, playUrl, status, httpStatus, attempts, "");
+        }
+
         public IngestResult(String mediaId, String playUrl, String status) {
-            this(mediaId, playUrl, status, 200, 1);
+            this(mediaId, playUrl, status, 200, 1, "");
         }
     }
 

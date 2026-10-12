@@ -69,6 +69,10 @@ public final class MediaIngestContract {
         body.put("aspect_ratio", ASPECT_RATIO);
         body.put("language", LANGUAGE);
         body.put("tags", tags == null ? List.of() : tags);
+        // Media packager (ShortDramaPublishJob) sends an explicit READY approved pack.
+        // Omitted fields are still accepted upstream; sending them keeps the gate honest.
+        body.put("status", "READY");
+        body.put("approved", Boolean.TRUE);
         body.put("idempotency_key", idempotencyKey(workId, episodeId, filmId));
         return body;
     }

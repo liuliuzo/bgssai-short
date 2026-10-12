@@ -928,6 +928,21 @@ function showPublishSuccess(result) {
   const mediaId = result?.media_id || ''
   const playUrl = result?.play_url || ''
   const replayed = !!result?.replayed
+  const pending = result?.status === 'PENDING' || result?.commercial_ready === false
+  if (pending && result?.status !== 'READY') {
+    const note = result?.publish_log?.error || 'Media 已受理，素材尚未验证为可播放。这不是发布成功。'
+    Modal.info({
+      title: 'Media 已受理，尚未可播放',
+      width: 520,
+      content: (
+        <div>
+          <Paragraph>{note}</Paragraph>
+          <Paragraph type="secondary">状态 {result?.status || 'PENDING'}。可稍后重试，同一幂等键不会新建目录。</Paragraph>
+        </div>
+      ),
+    })
+    return
+  }
   Modal.success({
     title: replayed ? '已发布到 Media（幂等回放，未新建目录）' : '已发布到 Media',
     width: 520,
@@ -1034,6 +1049,7 @@ function ComposePane({ work, episodeId, onReload }) {
 
   const canPublish = !!film?.film_id
     && film?.compose_status === 'READY'
+    && film?.expired_flag !== 1
     && mediaPreflight?.config_ready !== false
     && !publishing
 
@@ -1083,7 +1099,7 @@ function ComposePane({ work, episodeId, onReload }) {
       if (data?.success) {
         const r = data.result || {}
         setBatchProgress(r)
-        message.success(`批量完成：成功 ${r.succeeded || 0} / 失败 ${r.failed || 0} / 共 ${r.total || 0}`)
+        message.success(`批量完成：可播放 ${r.succeeded || 0} / 已受理未就绪 ${r.pending || 0} / 失败 ${r.failed || 0} / 共 ${r.total || 0}`)
         await load()
         await onReload()
       } else {
@@ -1099,7 +1115,16 @@ function ComposePane({ work, episodeId, onReload }) {
 
   return (
     <Card title="成片与提审">
-      <Paragraph>合成状态 {film?.compose_status || '-'} / 预检 {precheck?.ready ? '可合成' : '未就绪'} / 风险 {precheck?.risk_level || '-'}</Paragraph>
+      <Paragraph>合成状态 {film?.compose_status || '-'} / 预检 {precheck?.ready ? '可合成' : '未就绪'} / 风险 {precheck?.risk_level || '-'}{film?.expired_flag === 1 ? ' / 成片已过期' : ''}</Paragraph>
+      {film?.expired_flag === 1 ? (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="成片已过期"
+          description="镜头重抽或配音重配后，旧成片不能下载，也不能再回放上次的 Media 目录。请重新合成并通过审核后再发布。"
+        />
+      ) : null}
       {(precheck?.blocker_list || []).length ? (
         <Alert
           type="warning"
@@ -1234,10 +1259,10 @@ function ComposePane({ work, episodeId, onReload }) {
           type="info"
           showIcon
           style={{ marginTop: 12 }}
-          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 成功 ${batchProgress.succeeded || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
+          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 可播放 ${batchProgress.succeeded || 0} / 已受理未就绪 ${batchProgress.pending || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
           description={(batchProgress.item_list || []).slice(0, 12).map((it) => (
             <div key={`${it.episode_id}-${it.film_id}`}>
-              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.ok ? `OK ${it.media_id || ''}` : `失败 ${it.error || ''}`}
+              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.ok ? (it.status === 'PENDING' ? `已受理未就绪 ${it.media_id || ''}` : `可播放 ${it.media_id || ''}`) : `失败 ${it.error || ''}`}
             </div>
           ))}
         />
@@ -1270,7 +1295,7 @@ function ComposePane({ work, episodeId, onReload }) {
       ) : null}
       {publishLog ? (
         <Alert
-          type={publishLog.status === 'FAILED' || publishLog.last_error ? 'warning' : 'success'}
+          type={publishLog.status === 'FAILED' ? 'error' : publishLog.status === 'PENDING' ? 'info' : (publishLog.last_error ? 'warning' : 'success')}
           showIcon
           style={{ marginTop: 12 }}
           message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无 media_id'}`}
