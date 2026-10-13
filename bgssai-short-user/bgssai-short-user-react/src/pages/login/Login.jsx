@@ -48,6 +48,11 @@ export default function Login() {
   const navigate = useNavigate()
   const setUserInfo = useUserStore((s) => s.setUserInfo)
   const [loginMethod, setLoginMethod] = useState('sms')
+  const [agreed, setAgreed] = useState(false)
+  const requireAgreement = () => {
+    if (!agreed) { message.warning('请先阅读并同意用户协议与隐私政策'); return false }
+    return true
+  }
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
@@ -118,6 +123,7 @@ export default function Login() {
   }
 
   const submit = async () => {
+    if (!requireAgreement()) return
     setBusy(true)
     try {
       if (loginMethod === 'sms') {
@@ -185,6 +191,7 @@ export default function Login() {
   }, [])
 
   const startOAuth = async (platform) => {
+    if (!requireAgreement()) return
     if (busy) return
     setBusy(true)
     try {
@@ -344,7 +351,7 @@ export default function Login() {
           </div>
           </>
           ) : null}
-          <LegalFooter variant="consent" />
+          <LegalFooter variant="consent" checked={agreed} onChange={setAgreed} />
         </div>
       </main>
       {wechatFastLoginDialog}
