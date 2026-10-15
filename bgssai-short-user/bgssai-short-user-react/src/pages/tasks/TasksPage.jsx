@@ -1,3 +1,4 @@
+import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Select, Space, Table, Tag, Typography } from 'antd'
 import productionApi from '../../api/production'
@@ -39,6 +40,7 @@ export default function TasksPage() {
 
   return (
     <div>
+      <UsageReceipts />
       <Title level={4} style={{ marginTop: 0 }}>任务中心</Title>
       <Paragraph type="secondary">文本 / 图片 / 视频同一套状态机。失败或取消可恢复排队，排队中可取消。成片播放在 Media。</Paragraph>
       <Card>

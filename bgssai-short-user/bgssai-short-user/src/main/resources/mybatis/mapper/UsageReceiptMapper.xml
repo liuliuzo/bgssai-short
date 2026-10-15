@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bgssai.shortai.mapper.UsageReceiptMapper">
+ <resultMap id="Row" type="com.bgssai.shortai.billing.UsageReceiptRow">
+  <id column="id" property="id"/><result column="user_id" property="userId"/><result column="work_ref" property="workRef"/><result column="task_ref" property="taskRef"/><result column="key_fingerprint" property="keyFingerprint"/><result column="request_id" property="requestId"/><result column="receipt_json" property="receiptJson"/><result column="next_poll_at" property="nextPollAt"/><result column="del_flag" property="delFlag"/><result column="gmt_create" property="gmtCreate"/><result column="gmt_modified" property="gmtModified"/>
+ </resultMap>
+ <sql id="Columns">id,user_id,work_ref,task_ref,hub,endpoint,key_fingerprint,model,request_id,receipt_json,reconciled,next_poll_at,del_flag,creator,modifier,gmt_create,gmt_modified</sql>
+ <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id">INSERT INTO tokenhub_usage_receipt(user_id,work_ref,task_ref,hub,endpoint,key_fingerprint,model,request_id,receipt_json,reconciled,next_poll_at) VALUES(#{userId},#{workRef},#{taskRef},#{hub},#{endpoint},#{keyFingerprint},#{model},#{requestId},#{receiptJson},#{reconciled},#{nextPollAt})</insert>
+ <select id="selectByPrimaryKey" resultMap="Row">SELECT <include refid="Columns"/> FROM tokenhub_usage_receipt WHERE id=#{id} AND del_flag=0</select>
+ <select id="selectByExample" resultMap="Row">SELECT <choose><when test="selectedColumns != null and !selectedColumns.isEmpty()"><foreach collection="selectedColumns" item="column" separator=",">${column}</foreach></when><otherwise><include refid="Columns"/></otherwise></choose> FROM tokenhub_usage_receipt WHERE del_flag=0
+ <if test="userId != null">AND user_id=#{userId}</if><if test="workRef != null">AND work_ref=#{workRef}</if><if test="taskRef != null">AND task_ref=#{taskRef}</if><if test="pending">AND reconciled=0</if><if test="dueBefore != null">AND next_poll_at &lt;= #{dueBefore}</if> ORDER BY id DESC</select>
+ <update id="updateByPrimaryKeySelective">UPDATE tokenhub_usage_receipt SET receipt_json=#{receiptJson},reconciled=#{reconciled},next_poll_at=#{nextPollAt} WHERE id=#{id} AND del_flag=0 AND reconciled=0</update>
+</mapper>

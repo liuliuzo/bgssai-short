@@ -118,7 +118,7 @@ public class AiModelResolveService {
             return true;
         }
         String base = ShortJson.text(ShortJson.map(row.getConfigJson()).get("base_url")).toLowerCase(java.util.Locale.ROOT);
-        return base.contains("bgssai-tokenhub.cn") || base.contains("bgssai-tokenhub.com");
+        return com.bgssai.shortai.aiprovider.TokenHubClientSupport.isOfficialHub(base);
     }
 
     private AiModelConfig syntheticHubModel(String ability, String modelCode) {
@@ -212,17 +212,12 @@ public class AiModelResolveService {
         ex.setOrderByClause("ability_type asc, default_flag desc, quality_level asc, id asc");
         List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
         String ability = abilityType == null ? "" : abilityType.trim();
-        if (tokenHubModelCatalog != null && !ability.isBlank()) {
-            List<TokenHubModelCatalog.HubModel> hubModels = tokenHubModelCatalog.modelsFor(ability);
-            if (!hubModels.isEmpty()) {
-                Map<String, Object> result = new LinkedHashMap<>();
-                result.put("model_list", hubChoices(ability, hubModels, rows));
-                return Responses.ok(result);
-            }
-        }
         List<Map<String, Object>> list = new ArrayList<>();
+        if (tokenHubModelCatalog != null && !ability.isBlank()) {
+            list.addAll(hubChoices(ability,tokenHubModelCatalog.modelsFor(ability),rows));
+        }
         for (AiModelConfig row : rows) {
-            if (!aiProviderRegistry.resolvable(row)) {
+            if (!aiProviderRegistry.resolvable(row) || list.stream().anyMatch(item -> row.getModelCode().equals(item.get("model_code")))) {
                 continue;
             }
             Map<String, Object> cfg = ShortJson.map(row.getConfigJson());
@@ -230,7 +225,7 @@ public class AiModelResolveService {
             String region = TokenHubClientSupport.HUB_GLOBAL.equals(hub)
                     ? ModelUsageMeta.INTL
                     : ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
-            int weight = ModelUsageMeta.tokenMultiplier(row.getModelCode(), row.getProviderCode());
+
             String displayName = row.getModelName() == null || row.getModelName().isBlank()
                     ? row.getModelCode() : row.getModelName();
             Map<String, Object> item = new LinkedHashMap<>();
@@ -245,8 +240,8 @@ public class AiModelResolveService {
             item.put("default_flag", row.getDefaultFlag());
             item.put("region", region);
             item.put("region_label", ModelUsageMeta.regionLabel(region));
-            item.put("token_multiplier", weight);
-            item.put("usage_hint", ModelUsageMeta.usageHint(weight));
+            item.put("commercial_price_unit", item.get("price_unit"));
+            item.putAll(tokenHubModelCatalog==null?com.bgssai.shortai.billing.ModelPricing.from(Map.of()):tokenHubModelCatalog.pricingFor(tokenHubModelCatalog.endpointFor(cfg,row.getModelCode()),row.getModelCode()));
             list.add(item);
         }
         Map<String, Object> result = new LinkedHashMap<>();
@@ -254,20 +249,20 @@ public class AiModelResolveService {
         return Responses.ok(result);
     }
 
-    private static List<Map<String, Object>> hubChoices(String ability,
+    private List<Map<String, Object>> hubChoices(String ability,
             List<TokenHubModelCatalog.HubModel> hubModels, List<AiModelConfig> priced) {
         List<Map<String, Object>> list = new ArrayList<>();
         for (TokenHubModelCatalog.HubModel hub : hubModels) {
             AiModelConfig pricedRow = null;
             if (priced != null) {
                 for (AiModelConfig row : priced) {
-                    if (hub.id().equals(row.getModelCode())) {
+                    if (hub.id().equals(row.getModelCode()) && isHubConfig(row)) {
                         pricedRow = row;
                         break;
                     }
                 }
             }
-            int weight = ModelUsageMeta.tokenMultiplier(hub.id(), "TENCENT_TOKENHUB");
+
             String region = ModelUsageMeta.CN;
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("model_id", "hub-" + ability.toLowerCase(java.util.Locale.ROOT) + "-" + hub.id());
@@ -285,8 +280,11 @@ public class AiModelResolveService {
             item.put("default_flag", defaultFlag);
             item.put("region", region);
             item.put("region_label", ModelUsageMeta.regionLabel(region));
-            item.put("token_multiplier", weight);
-            item.put("usage_hint", ModelUsageMeta.usageHint(weight));
+            item.put("commercial_price_unit", item.get("price_unit"));
+            if (pricedRow != null) {
+                var cfg=ShortJson.map(pricedRow.getConfigJson());
+                item.putAll(tokenHubModelCatalog.pricingFor(tokenHubModelCatalog.endpointFor(cfg,hub.id()),hub.id()));
+            } else item.putAll(hub.pricing());
             list.add(item);
         }
         boolean anyDefault = list.stream().anyMatch(item -> Integer.valueOf(1).equals(item.get("default_flag")));

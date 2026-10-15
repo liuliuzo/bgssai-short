@@ -42,6 +42,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private static final Logger log = LoggerFactory.getLogger(TencentTokenHubAiProvider.class);
 
+    @Autowired
+    private com.bgssai.shortai.billing.UsageReceiptService receipts;
+    private final ThreadLocal<com.bgssai.shortai.billing.UsageReceiptRow> activeReceipt=new ThreadLocal<>();
+
     private final SysSecretReader secretReader;
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
@@ -98,6 +102,8 @@ public class TencentTokenHubAiProvider implements AiProvider {
                     TokenHubClientSupport.userFacingMessage("model credential unavailable"));
         }
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
+        var receipt=receipts==null?null:receipts.begin(base,apiKey,request.getModel().getModelCode());
+        activeReceipt.set(receipt);
         try {
             return switch (ability) {
                 case "TEXT" -> text(base, apiKey, request, timeoutSec);
@@ -119,6 +125,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
             log.warn("hub call failed ability={} hub={} model={}", ability, hub,
                     request.getModel().getModelCode(), ex);
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, safe(ex));
+        } finally {
+            activeReceipt.remove();
+            if(receipts!=null)receipts.refresh(receipt,apiKey);
         }
     }
 
@@ -186,7 +195,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         body.put("model", model);
         body.put("input", ProviderHttp.promptOf(request));
         body.put("voice", voice);
-        byte[] raw = http.postBytes(base + SPEECH_PATH, bearer(apiKey), ShortJson.toJson(body),
+        byte[] raw = http.postBytes(base + SPEECH_PATH, generationHeaders(apiKey), ShortJson.toJson(body),
                 Math.min(120, timeoutSec));
         if (raw == null || raw.length == 0) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model audio missing");
@@ -394,11 +403,18 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private Map<String, Object> post(String url, String apiKey, Map<String, Object> body, int timeoutSec)
             throws Exception {
-        return ShortJson.map(http.postJson(url, bearer(apiKey), ShortJson.toJson(body), timeoutSec));
+        return ShortJson.map(http.postJson(url, generationHeaders(apiKey), ShortJson.toJson(body), timeoutSec));
     }
 
     private Map<String, Object> get(String url, String apiKey, int timeoutSec) throws Exception {
         return ShortJson.map(http.getJson(url, bearer(apiKey), timeoutSec));
+    }
+
+    private Map<String,String> generationHeaders(String key) {
+        Map<String,String> headers=new LinkedHashMap<>(bearer(key));
+        var receipt=activeReceipt.get();
+        headers.put("X-Request-Id",receipt==null?java.util.UUID.randomUUID().toString():receipt.requestId);
+        return headers;
     }
 
     private static Map<String, String> bearer(String key) {
@@ -603,8 +619,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private static boolean isOwnHub(String base) {
-        String lower = base == null ? "" : base.toLowerCase(Locale.ROOT);
-        return lower.contains("bgssai-tokenhub.cn") || lower.contains("bgssai-tokenhub.com");
+        return TokenHubClientSupport.isOfficialHub(base);
     }
 
     private static String requireModel(AiProviderRequest request) {

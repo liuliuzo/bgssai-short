@@ -23,6 +23,25 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class TencentTokenHubAiProviderTest {
 
     @Test
+    void legacyGlobalAliasIsPreservedForExecutionAndCatalog() throws Exception {
+        String alias = "https://www.bgssai-tokenhub-global.com";
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}");
+        AiProviderRequest request = request("TEXT", "route", "test");
+        request.getModel().setConfigJson("{\"hub\":\"global\",\"base_url\":\"" + alias + "\"}");
+        assertEquals("ok", provider(http, "key").execute(request).getTextContent());
+        assertEquals(alias + "/v1/chat/completions", http.postedUrls.get(0));
+        var catalog = new com.bgssai.shortai.aimodel.TokenHubModelCatalog(TokenHubClientSupport.DEFAULT_CN_BASE_URL);
+        assertEquals(alias, catalog.endpointFor(Map.of("base_url", alias), "route"));
+        var resolver = com.bgssai.shortai.aimodel.AiModelResolveService.class.getDeclaredMethod("isHubConfig", AiModelConfig.class);
+        resolver.setAccessible(true);
+        request.getModel().setProviderCode("legacy");
+        assertEquals(true, resolver.invoke(null, request.getModel()));
+        assertTrue(!TokenHubClientSupport.isOfficialHub("https://www.bgssai-tokenhub.com.evil.example"));
+        assertTrue(!TokenHubClientSupport.isOfficialHub("https://evil.example/path/bgssai-tokenhub.com"));
+    }
+
+    @Test
     void textUsesOpenAiCompatibleChatContract() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"choices\":[{\"message\":{\"content\":\"ok\"}}],\"usage\":{\"total_tokens\":1200}}");
