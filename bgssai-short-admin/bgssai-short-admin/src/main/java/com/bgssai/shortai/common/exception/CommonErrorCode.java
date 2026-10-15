@@ -12,7 +12,7 @@ public enum CommonErrorCode implements ErrorCode {
     SYSTEM_ERROR("999999", "system error"),
     BIZ_ERROR("100000", "business error"),
     INVALID_PARAM("50000001", "invalid request parameter"),
-    INVALID_CREDENTIALS("4001", "invalid credentials"),
+    INVALID_CREDENTIALS("4001", "账号或密码不正确"),
     UNAUTHORIZED("2002", "token validation failed"),
     FORBIDDEN("4003", "no permission"),
     RESOURCE_NOT_FOUND("404000", "resource not found"),

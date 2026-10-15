@@ -39,6 +39,8 @@ class TencentTokenHubAiProviderTest {
         assertEquals(true, resolver.invoke(null, request.getModel()));
         assertTrue(!TokenHubClientSupport.isOfficialHub("https://www.bgssai-tokenhub.com.evil.example"));
         assertTrue(!TokenHubClientSupport.isOfficialHub("https://evil.example/path/bgssai-tokenhub.com"));
+        assertTrue(TokenHubClientSupport.isOfficialHub("https://dev.user.bgssai-tokenhub.cn"));
+        assertTrue(TokenHubClientSupport.isOfficialHub("https://dev.user.bgssai-tokenhub.com"));
     }
 
     @Test

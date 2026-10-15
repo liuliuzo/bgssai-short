@@ -90,6 +90,7 @@ export default function Login() {
   }
 
   const sendCode = async () => {
+    if (!requireAgreement()) return
     if (countdown > 0 || sending) return
     setSending(true)
     try {
