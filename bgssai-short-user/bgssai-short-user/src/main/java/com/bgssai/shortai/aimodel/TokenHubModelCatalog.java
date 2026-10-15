@@ -21,11 +21,40 @@ import com.bgssai.shortai.production.support.ShortJson;
 @Component
 public class TokenHubModelCatalog {
 
-    public record HubModel(String id, List<String> capabilities) {
+    public record HubModel(String id, List<String> capabilities, Map<String,Object> pricing) {
+        public HubModel(String id,List<String> capabilities){this(id,capabilities,com.bgssai.shortai.billing.ModelPricing.from(Map.of()));}
     }
 
     private static final long SUCCESS_TTL_MS = 10 * 60 * 1000L;
     private static final long FAILURE_TTL_MS = 60 * 1000L;
+
+    private final java.util.concurrent.ConcurrentMap<String,PriceCache> prices = new java.util.concurrent.ConcurrentHashMap<>();
+    private record PriceCache(long until,java.util.Map<String,java.util.Map<String,Object>> rows) {}
+    public Map<String,Object> pricingFor(String endpoint,String model) {
+        String base=endpoint==null?"":endpoint.replaceAll("/+$","");
+        if(base.isBlank())return com.bgssai.shortai.billing.ModelPricing.from(Map.of());
+        PriceCache cache=prices.get(base);
+        if(cache==null || cache.until()<System.currentTimeMillis()) {
+            try {
+                var request=HttpRequest.newBuilder(URI.create(base+"/v1/models")).timeout(Duration.ofSeconds(3)).GET().build();
+                var response=http.send(request,HttpResponse.BodyHandlers.ofString());
+                Map<String,Map<String,Object>> rows=new java.util.LinkedHashMap<>();
+                if(response.statusCode()==200) for(var row:parse(response.body())) rows.put(row.id(),row.pricing());
+                cache=new PriceCache(System.currentTimeMillis()+(response.statusCode()==200?SUCCESS_TTL_MS:FAILURE_TTL_MS),rows);
+            } catch(InterruptedException ex){Thread.currentThread().interrupt();cache=new PriceCache(System.currentTimeMillis()+FAILURE_TTL_MS,Map.of());}
+            catch(Exception ex){cache=new PriceCache(System.currentTimeMillis()+FAILURE_TTL_MS,Map.of());}
+            prices.put(base,cache);
+        }
+        return cache.rows().getOrDefault(model,com.bgssai.shortai.billing.ModelPricing.from(Map.of()));
+    }
+
+    @Value("${bgssai.llm.tokenhub-global-base-url:https://www.bgssai-tokenhub.com}")
+    private String globalBaseUrl="https://www.bgssai-tokenhub.com";
+    public String endpointFor(java.util.Map<String,Object> config,String model) {
+        String configured=ShortJson.text(config.get("base_url")).replaceAll("/+$","");
+        if(configured.contains("bgssai-tokenhub.cn") || configured.contains("bgssai-tokenhub.com"))return configured;
+        return "global".equals(com.bgssai.shortai.aiprovider.TokenHubClientSupport.resolveHub(config,model))?globalBaseUrl:baseUrl;
+    }
 
     private final String baseUrl;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
@@ -87,7 +116,7 @@ public class TokenHubModelCatalog {
         }
     }
 
-    private static List<HubModel> parse(String body) {
+    static List<HubModel> parse(String body) {
         Map<String, Object> root = ShortJson.map(body);
         Object data = root.get("data");
         if (!(data instanceof List<?> rows)) {
@@ -111,7 +140,7 @@ public class TokenHubModelCatalog {
                     }
                 }
             }
-            models.add(new HubModel(String.valueOf(id).trim(), List.copyOf(capabilities)));
+            models.add(new HubModel(String.valueOf(id).trim(), List.copyOf(capabilities), com.bgssai.shortai.billing.ModelPricing.from(map)));
         }
         return List.copyOf(models);
     }

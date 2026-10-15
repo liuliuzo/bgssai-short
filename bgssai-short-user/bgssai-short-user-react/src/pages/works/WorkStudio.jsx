@@ -1,3 +1,5 @@
+import { modelPricingLabel } from '../../modelPricing'
+import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -398,13 +400,7 @@ function CharacterPane({ work }) {
   )
 }
 
-function modelLabel(row) {
-  if (!row) return ''
-  const price = ((Number(row.unit_price_cent) || 0) / 100).toFixed(2)
-  const region = row.region_label || (row.region === 'intl' ? '国外' : '国内')
-  const name = row.display_name || row.model_name || row.model_code
-  return `${name} · ${region} · ${price}元`
-}
+function modelLabel(row) { return modelPricingLabel(row) }
 
 function StoryboardPane({ work, episodeId }) {
   const [canvasView, setCanvasView] = useState(false)
@@ -1364,6 +1360,7 @@ export default function WorkStudio() {
 
   return (
     <div>
+      <UsageReceipts workRef={work.work_id} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <Title level={4} style={{ marginTop: 0 }}>

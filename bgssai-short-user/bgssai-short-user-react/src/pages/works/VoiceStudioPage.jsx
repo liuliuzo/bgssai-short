@@ -1,3 +1,4 @@
+import { modelPricingLabel } from '../../modelPricing'
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
@@ -74,7 +75,7 @@ export default function VoiceStudioPage({ work, episodeId }) {
             style={{ width: 220 }}
             options={voiceModels.map((m) => ({
               value: m.model_code,
-              label: `${m.display_name || m.model_name || m.model_code} · ${m.region_label || (m.region === 'intl' ? '国外' : '国内')}`,
+              label: modelPricingLabel(m),
             }))}
           />
           <Button type="primary" onClick={async () => {
@@ -158,7 +159,7 @@ export default function VoiceStudioPage({ work, episodeId }) {
             style={{ width: 220 }}
             options={asrModels.map((m) => ({
               value: m.model_code,
-              label: `${m.display_name || m.model_name || m.model_code} · ${m.region_label || (m.region === 'intl' ? '国外' : '国内')}`,
+              label: modelPricingLabel(m),
             }))}
           />
           <Button type="primary" onClick={async () => {

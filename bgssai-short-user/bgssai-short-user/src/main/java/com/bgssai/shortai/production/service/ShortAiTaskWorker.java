@@ -323,6 +323,7 @@ public class ShortAiTaskWorker {
 
     private void run(ShortAiTask task) {
         executionUsage.set(0);
+        com.bgssai.shortai.billing.UsageScope.set(task.getUserId(),task.getWorkId(),task.getTaskId());
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             complete(task, model);
@@ -336,6 +337,7 @@ public class ShortAiTaskWorker {
             noteComposeFailed(task);
         } finally {
             executionUsage.remove();
+            com.bgssai.shortai.billing.UsageScope.clear();
         }
     }
 
