@@ -93,8 +93,11 @@ public final class TokenHubClientSupport {
             String host = uri.getHost();
             return "https".equalsIgnoreCase(uri.getScheme()) && uri.getUserInfo() == null
                     && uri.getRawQuery() == null && uri.getRawFragment() == null && host != null
-                    && java.util.Set.of("bgssai-tokenhub.cn", "www.bgssai-tokenhub.cn",
+                    && java.util.Set.of(
+                        "bgssai-tokenhub.cn", "www.bgssai-tokenhub.cn",
+                        "dev.user.bgssai-tokenhub.cn", "dev.admin.bgssai-tokenhub.cn",
                         "bgssai-tokenhub.com", "www.bgssai-tokenhub.com",
+                        "dev.user.bgssai-tokenhub.com", "dev.admin.bgssai-tokenhub.com",
                         "bgssai-tokenhub-global.com", "www.bgssai-tokenhub-global.com").contains(host.toLowerCase(Locale.ROOT));
         } catch (Exception ignored) { return false; }
     }
@@ -113,10 +116,18 @@ public final class TokenHubClientSupport {
             return "模型暂时不可用，请稍后重试或更换模型";
         }
         String msg = raw.trim();
-        if (TOKENHUB_WORD.matcher(msg).find() || msg.toLowerCase(Locale.ROOT).contains("tencentmaas")
+        String lower = msg.toLowerCase(Locale.ROOT);
+        if (lower.contains("remote host terminated the handshake")
+                || lower.contains("connection reset")
+                || lower.contains("unexpected eof while reading")
+                || lower.contains("sslhandshake")
+                || lower.contains("handshake_failure")) {
+            return "模型网关连接失败，请稍后重试";
+        }
+        if (TOKENHUB_WORD.matcher(msg).find() || lower.contains("tencentmaas")
                 || SECRET_REF.matcher(msg).find() || BEARER_LEAK.matcher(msg).find()
-                || msg.toLowerCase(Locale.ROOT).contains("api key missing")
-                || msg.toLowerCase(Locale.ROOT).contains("secret_ref")) {
+                || lower.contains("api key missing")
+                || lower.contains("secret_ref")) {
             return "模型暂时不可用，请稍后重试或更换模型";
         }
         if (msg.length() > 240) {

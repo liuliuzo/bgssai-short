@@ -88,7 +88,7 @@
 ### 失败响应
 
 ```json
-{ "code": "4001", "message": "invalid credentials", "success": false }
+{ "code": "4001", "message": "账号或密码不正确", "success": false }
 ```
 
 ```json

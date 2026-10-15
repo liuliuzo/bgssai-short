@@ -26,7 +26,7 @@ class ErrorCodeContractTest {
     @Test
     void invalidCredentialsMatchesContract() {
         assertEquals("4001", CommonErrorCode.INVALID_CREDENTIALS.code());
-        assertEquals("invalid credentials", CommonErrorCode.INVALID_CREDENTIALS.message());
+        assertEquals("账号或密码不正确", CommonErrorCode.INVALID_CREDENTIALS.message());
     }
 
     @Test

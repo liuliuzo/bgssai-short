@@ -55,11 +55,10 @@ public class AdminLoginService {
     public RespAdminLogin login(ReqAdminLogin req, HttpServletRequest httpReq) {
         log.info("admin login attempt identifier={}", req.getIdentifier());
 
-        SysUserExample example = new SysUserExample();
         // 逻辑删除的账号不是账号：不带 del_flag=0 过滤的话，被删账号仍能通过密码校验拿到 token，
         // 随后每个业务请求都被会话闸门拦掉，用户看到的是「登录成功却处处失效」的误导文案。
-        example.createCriteria().andUserNameEqualTo(req.getIdentifier()).andDelFlagEqualTo(false);
-        SysUser user = sysUserMapper.selectOneByExample(example);
+        // 标识支持用户名或邮箱（管理端占位符写「用户名 / 邮箱」）。
+        SysUser user = findAdminByIdentifier(req.getIdentifier());
 
         if (user == null) {
             log.warn("admin login failed: user not found identifier={}", req.getIdentifier());
@@ -104,6 +103,26 @@ public class AdminLoginService {
         resp.setUserName(user.getUserName());
         resp.setRealName(user.getRealName());
         return resp;
+    }
+
+
+    private SysUser findAdminByIdentifier(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return null;
+        }
+        String id = identifier.trim();
+        SysUserExample byName = new SysUserExample();
+        byName.createCriteria().andUserNameEqualTo(id).andDelFlagEqualTo(false);
+        SysUser user = sysUserMapper.selectOneByExample(byName);
+        if (user != null) {
+            return user;
+        }
+        if (!id.contains("@")) {
+            return null;
+        }
+        SysUserExample byEmail = new SysUserExample();
+        byEmail.createCriteria().andEmailEqualTo(id).andDelFlagEqualTo(false);
+        return sysUserMapper.selectOneByExample(byEmail);
     }
 
     private void appendLoginLog(String userId, String action, HttpServletRequest httpReq) {
