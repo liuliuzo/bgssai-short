@@ -58,7 +58,7 @@ public class UsageReceiptService {
   if(!row.requestId.equals(value.path("request_id").asString(""))) return;
   String status=value.path("billing_status").asString("pending");
   if(!Set.of("pending","settled","unpaid","unpriced","reversed").contains(status)) return;
-  row.receiptJson=body;row.reconciled=!"pending".equals(status);
+  row.receiptJson=body;row.reconciled=!"pending".equals(status) && value.path("billed_tokens").isIntegralNumber() && value.path("billed_tokens").asLong(-1)>=0;
  }
  @Scheduled(fixedDelay=60000)
  public void recoverPending(){

@@ -7,3 +7,5 @@
 完整 Maven 测试已通过（具体数量见 PR），相关最终变更定向测试与 npm test、Vite production build 通过。真实供应商收费调用、跨主机生产 MySQL 验收、浏览器人工验收未执行。sql/DDL.sql 与 sql/UPGRADE-20261015-usage-receipt.sql 已同步但未在线执行，部署前由数据库/Jenkins流程执行。dev/prod 均部署 develop，各用原环境 properties；此次未部署、未合并。
 
 边界：旧网关未支持 receipt、凭证轮换丢失原 key、供应商未上报真实用量时保持 pending，后台只补查不重发生成。最近100条列表按用户与作品/任务隔离。账本不存 API key；只存不可逆凭证指纹。任务失败可能已经产生供应商用量，必须保留记录。媒体的时长与商业计费次数不冒充原始 token。
+
+Additional recovery regression: continue polling when quota is known but money remains pending, and when money is settled but quota is not yet recovered. Added one transaction-fixture test per backend; focused receipt suite rerun after this change.

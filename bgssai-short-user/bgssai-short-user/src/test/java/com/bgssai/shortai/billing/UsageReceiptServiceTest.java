@@ -61,4 +61,10 @@ class UsageReceiptServiceTest {
   var receipt=(java.util.Map<?,?>)service.list("owner","work","task").getFirst().get("receipt");
   assertEquals("pending",receipt.get("billing_status"));assertNull(receipt.get("billed_tokens"));assertNull(receipt.get("debit_fen"));
  }
+ @Test void reconciliationWaitsForBothQuotaAndMoneyStatus(){
+  var row=service.begin(endpoint,"original-key","model");String prefix="{\"request_id\":\""+row.requestId+"\",\"billing_status\":\"";
+  service.accept(row,prefix+"pending\",\"billed_tokens\":150}");assertFalse(row.reconciled);
+  service.accept(row,prefix+"settled\",\"debit_fen\":5}");assertFalse(row.reconciled);
+  service.accept(row,prefix+"settled\",\"billed_tokens\":0,\"debit_fen\":0}");assertTrue(row.reconciled);
+ }
 }
