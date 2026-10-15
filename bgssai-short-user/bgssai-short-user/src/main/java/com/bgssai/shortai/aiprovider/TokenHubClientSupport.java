@@ -87,6 +87,18 @@ public final class TokenHubClientSupport {
         return "";
     }
 
+    public static boolean isOfficialHub(String value) {
+        try {
+            java.net.URI uri = java.net.URI.create(value);
+            String host = uri.getHost();
+            return "https".equalsIgnoreCase(uri.getScheme()) && uri.getUserInfo() == null
+                    && uri.getRawQuery() == null && uri.getRawFragment() == null && host != null
+                    && java.util.Set.of("bgssai-tokenhub.cn", "www.bgssai-tokenhub.cn",
+                        "bgssai-tokenhub.com", "www.bgssai-tokenhub.com",
+                        "bgssai-tokenhub-global.com", "www.bgssai-tokenhub-global.com").contains(host.toLowerCase(Locale.ROOT));
+        } catch (Exception ignored) { return false; }
+    }
+
     public static boolean isTokenHubHost(String baseUrl) {
         if (baseUrl == null || baseUrl.isBlank()) {
             return false;

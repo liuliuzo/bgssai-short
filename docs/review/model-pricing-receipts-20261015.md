@@ -9,3 +9,5 @@
 边界：旧网关未支持 receipt、凭证轮换丢失原 key、供应商未上报真实用量时保持 pending，后台只补查不重发生成。最近100条列表按用户与作品/任务隔离。账本不存 API key；只存不可逆凭证指纹。任务失败可能已经产生供应商用量，必须保留记录。媒体的时长与商业计费次数不冒充原始 token。
 
 Additional recovery regression: continue polling when quota is known but money remains pending, and when money is settled but quota is not yet recovered. Added one transaction-fixture test per backend; focused receipt suite rerun after this change.
+
+追加官方域名别名复核：精确 URL host 同时识别 CN、Global .com 与历史 -global.com，执行、模型配置解析及目录保留明确配置的原端点，拒绝相似后缀/路径冒充。TencentTokenHubAiProviderTest、TokenHubClientSupportTest、UsageReceiptServiceTest 合计 24/24 通过。

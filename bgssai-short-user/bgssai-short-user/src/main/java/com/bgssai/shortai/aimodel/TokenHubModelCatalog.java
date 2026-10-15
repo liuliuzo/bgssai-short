@@ -52,7 +52,7 @@ public class TokenHubModelCatalog {
     private String globalBaseUrl="https://www.bgssai-tokenhub.com";
     public String endpointFor(java.util.Map<String,Object> config,String model) {
         String configured=ShortJson.text(config.get("base_url")).replaceAll("/+$","");
-        if(configured.contains("bgssai-tokenhub.cn") || configured.contains("bgssai-tokenhub.com"))return configured;
+        if(com.bgssai.shortai.aiprovider.TokenHubClientSupport.isOfficialHub(configured))return configured;
         return "global".equals(com.bgssai.shortai.aiprovider.TokenHubClientSupport.resolveHub(config,model))?globalBaseUrl:baseUrl;
     }
 

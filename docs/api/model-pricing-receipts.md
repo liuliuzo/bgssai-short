@@ -9,3 +9,5 @@
 选择器合并目录模型与本地已配置模型，并以实际 primary 路由的 endpoint 读取价格，避免把 CN 价格贴到 Global 调用。回退模型的费用以该次实际 receipt 为准。Long 外层事务失败不回滚已经派发的对账记录；Short worker 线程保存 user/work/task 上下文。新增表也提供独立 sql/UPGRADE-20261015-usage-receipt.sql，尚未在线执行。
 
 对账完成条件：金额状态为合法非pending终态且billed_tokens为非负整数；额度已知但金额pending，或金额已落账但额度尚未恢复，都必须继续GET。
+
+官方 Hub 地址按 URL host 精确识别 .cn、.com 及历史 -global.com（含 www）。明确配置的原始端点用于执行、目录取价及回执，不跨别名自动改写。

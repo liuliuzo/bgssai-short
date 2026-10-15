@@ -619,8 +619,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private static boolean isOwnHub(String base) {
-        String lower = base == null ? "" : base.toLowerCase(Locale.ROOT);
-        return lower.contains("bgssai-tokenhub.cn") || lower.contains("bgssai-tokenhub.com");
+        return TokenHubClientSupport.isOfficialHub(base);
     }
 
     private static String requireModel(AiProviderRequest request) {

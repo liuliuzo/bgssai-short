@@ -118,7 +118,7 @@ public class AiModelResolveService {
             return true;
         }
         String base = ShortJson.text(ShortJson.map(row.getConfigJson()).get("base_url")).toLowerCase(java.util.Locale.ROOT);
-        return base.contains("bgssai-tokenhub.cn") || base.contains("bgssai-tokenhub.com");
+        return com.bgssai.shortai.aiprovider.TokenHubClientSupport.isOfficialHub(base);
     }
 
     private AiModelConfig syntheticHubModel(String ability, String modelCode) {
