@@ -130,7 +130,7 @@ export default function SupportInboxPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>在线客服</Title>
       <Paragraph type="secondary">
-        处理用户留言会话与工单：列表、详情、回复、关闭、更新工单状态。对应 POST /bgssai/admin/support/**
+        处理用户留言会话与工单：列表、详情、回复、关闭、更新工单状态。
       </Paragraph>
 
       <Space wrap style={{ marginBottom: 12 }}>
