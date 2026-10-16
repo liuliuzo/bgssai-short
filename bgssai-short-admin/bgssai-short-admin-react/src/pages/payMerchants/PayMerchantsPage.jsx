@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, Modal, Switch, Table, Tabs, Typography, message } from 'antd'
+import { deployEnvLabel } from '../../lib/formatTime'
 import payMerchantsApi from '../../api/payMerchants'
 
 const { Title, Paragraph } = Typography
@@ -15,6 +16,7 @@ function ChannelTable({ rows, loading, onEdit, onActive, nameKey, extraKey }) {
       columns={[
         { title: '商户名', dataIndex: 'merchant_name' },
         { title: extraKey === 'mch_id' ? '商户号' : 'AppId', dataIndex: extraKey === 'mch_id' ? 'mch_id' : 'app_id' },
+        { title: '部署环境 / 支付网关', dataIndex: 'env_mode', render: (v) => `${deployEnvLabel()} · ${v === 'SANDBOX' ? '沙箱网关' : '正式网关'}` },
         { title: '启用', dataIndex: 'is_enabled', render: (v) => (v ? '是' : '否') },
         { title: '收款', dataIndex: 'is_collection_active', render: (v) => (v ? '是' : '否') },
         {
@@ -109,7 +111,7 @@ export default function PayMerchantsPage() {
             </>
           )}
           <Form.Item name="notify_url" label="回调 URL" rules={[{ required: true }]}><Input placeholder="https://…/bgssai/user/payment/{wechat|alipay}/notify" /></Form.Item>
-          <Form.Item name="env_mode" label="环境" initialValue="PRODUCTION"><Input /></Form.Item>
+          <Form.Item name="env_mode" label="支付网关模式（PRODUCTION 正式 / SANDBOX 沙箱）" initialValue="PRODUCTION"><Input /></Form.Item>
           <Form.Item name="is_enabled" label="启用" valuePropName="checked"><Switch /></Form.Item>
         </Form>
       </Modal>

@@ -38,8 +38,8 @@ import com.bgssai.shortai.paymerchant.dto.WechatPayConfigItem;
  *   <li>PMC-04: disabling a merchant also clears its collection flag, so the illegal
  *       "disabled but still collecting" state cannot exist.</li>
  *   <li>PMC-05: the current collection merchant cannot be deleted.</li>
- *   <li>PMC-06/07: credential columns round-trip in plaintext so the console shows the stored value
- *       and edits it in place; blank on save keeps the stored value.</li>
+ *   <li>PMC-06/07: secret credential columns are echoed masked (•••• + last 4);
+ *       blank or the masked echo on save keeps the stored value.</li>
  *   <li>PMC-14: uk_wechat_pay_config_mch_id is a bare single-column unique key, so a soft-deleted row
  *       keeps holding its mch_id and recreating that number revives the row. Revive is a create, not
  *       an edit: the row is rewritten in full so no credential, connectivity state or creation
@@ -92,14 +92,14 @@ public class WechatPayConfigService {
             item.setJsapiAuthDir(row.getJsapiAuthDir());
             item.setNotifyUrl(row.getNotifyUrl());
             item.setEnvMode(row.getEnvMode());
-            // Credentials round-trip in plaintext: the console shows the stored value and edits it in place.
-            item.setMchPrivateKey(row.getMchPrivateKey());
-            item.setApiclientCert(row.getApiclientCert());
-            item.setMchCertP12(row.getMchCertP12());
+            // Secret credentials are echoed masked; blank / masked echo on save keeps the stored value.
+            item.setMchPrivateKey(maskSecret(row.getMchPrivateKey()));
+            item.setApiclientCert(maskSecret(row.getApiclientCert()));
+            item.setMchCertP12(maskSecret(row.getMchCertP12()));
             item.setWechatPublicKey(row.getWechatPublicKey());
             item.setPlatformCert(row.getPlatformCert());
-            item.setApiV3Key(row.getApiV3Key());
-            item.setApiV2Key(row.getApiV2Key());
+            item.setApiV3Key(maskSecret(row.getApiV3Key()));
+            item.setApiV2Key(maskSecret(row.getApiV2Key()));
             item.setLastTestStatus(row.getLastTestStatus());
             item.setLastTestAt(row.getLastTestAt() == null ? null : fmt.format(row.getLastTestAt()));
             item.setLastTestError(row.getLastTestError());
@@ -428,11 +428,24 @@ public class WechatPayConfigService {
     }
 
     /** Credential field: blank collapses to null, which the selective mapper skips (PMC-07). */
+    /** Console echo: •••• + last 4 chars (same as bgssai-magic #155). */
+    static String maskSecret(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        String v = value.strip();
+        return "••••" + (v.length() > 4 ? v.substring(v.length() - 4) : "");
+    }
+
     private static String trimOrNull(String value) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
+        // A masked echo sent back unchanged means "keep the stored value", same as blank.
+        if (trimmed.startsWith("••••")) {
+            return null;
+        }
         return trimmed.isEmpty() ? null : trimmed;
     }
 }

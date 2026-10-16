@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Card, Table, Typography } from 'antd'
 import loginLogsApi from '../../api/loginLogs'
+import { formatDateTime } from '../../lib/formatTime'
 
 const { Title, Paragraph } = Typography
 
@@ -9,7 +10,7 @@ const COLUMNS = [
   { title: '用户 ID', dataIndex: 'user_id' },
   { title: '动作', dataIndex: 'action', width: 180 },
   { title: 'IP', dataIndex: 'ip_address', width: 160 },
-  { title: '时间', dataIndex: 'create_time', width: 200 },
+  { title: '时间', dataIndex: 'create_time', width: 200, render: (v) => formatDateTime(v) },
 ]
 
 // Sample paged list page. Reads the PageResponse envelope:

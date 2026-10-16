@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, Modal, Select, Space, Table, Typography, message } from 'antd'
+import { formatDateTime } from '../../lib/formatTime'
 import reviewsApi from '../../api/reviews'
 
 const { Title, Paragraph } = Typography
@@ -76,7 +77,7 @@ export default function ReviewsPage() {
             { title: '状态', dataIndex: 'review_status', width: 110 },
             { title: '风险', dataIndex: 'risk_level', width: 90 },
             { title: '创作者', dataIndex: 'creator_user_id' },
-            { title: '提交时间', dataIndex: 'submitted_time', width: 180 },
+            { title: '提交时间', dataIndex: 'submitted_time', width: 180, render: (v) => formatDateTime(v) },
             {
               title: '操作',
               width: 90,
