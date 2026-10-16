@@ -13,17 +13,17 @@
   1. 端点 `POST /api/mcp` 不走 JWT / RBAC，由 `Authorization: Bearer bgs_mcp_...` 自校验。
   2. 身份从令牌行 `user_id` 注入 `UserContext`，工具入参禁止 `user_id`。
   3. 每人最多 5 枚令牌；吊销立即失效；明文仅创建时回显一次。
-  4. 工具只读：`list_login_logs` / `get_liveness` / `get_readiness`。不发明短剧领域工具。
+  4. 工具覆盖诊断探针与短剧业务读写：`list_login_logs` / `get_liveness` / `get_readiness` / `list_works` / `get_work` / `create_work` / `list_episodes` / `save_episode_script` / `list_shots` / `submit_render_task`（需 `confirm_cost=true`） / `publish_episode_to_media`（需 `confirm_publish=true`）。
   5. 每用户 60 次/分钟（initialize/ping 不计）。
   6. 连接器页须展示 tagline「Connect your AI tools to bgssai」，并为上述五类 Agent 提供可复制配置片段（后端契约不变）。
 
 ## 三、验收标准
 
-1. 无效令牌 `POST /api/mcp` 返回 HTTP 401 + JSON-RPC error -32001。
-2. `tools/list` 返回 3 个工具：`list_login_logs` / `get_liveness` / `get_readiness`。
-3. 用户端 MCP Connectors 页可创建 / 列表 / 吊销令牌，并展示五类 Agent 配置指引与 tagline。
-4. GET /api/mcp 返回 405。
-5. JSON-RPC 批量数组返回 -32600。
+1. 无效或已吊销令牌 `POST /api/mcp` 返回 HTTP 401 + JSON-RPC error -32001。
+2. `tools/list` 返回登录日志、健康探针及作品/分集/剧本/分镜/渲染任务/Media 发布等业务工具。
+3. 业务读写工具严格校验 PAT 归属，越权拒绝；渲染任务需 `confirm_cost=true` 且幂等去重；发布需 `confirm_publish=true` 且成片已过审。
+4. 用户端 MCP Connectors 页可创建 / 列表 / 吊销令牌，并展示五类 Agent 配置指引与 tagline。
+5. GET /api/mcp 返回 405；JSON-RPC 批量数组返回 -32600。
 
 ## 四、接口契约（snake_case）
 

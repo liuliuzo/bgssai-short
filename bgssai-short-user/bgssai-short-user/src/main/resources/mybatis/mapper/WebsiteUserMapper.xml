@@ -86,7 +86,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.website_user
+    from ledger_user
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -105,7 +105,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.website_user
+    from ledger_user
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -116,25 +116,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from bgssai_website.website_user
+    from ledger_user
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from bgssai_website.website_user
+    delete from ledger_user
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteUserExample">
-    delete from bgssai_website.website_user
+    delete from ledger_user
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteUser" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.website_user (id, user_id, nickname, status, email_verified, last_login_at, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into ledger_user (id, user_id, nickname, status, email_verified, last_login_at, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{nickname,jdbcType=VARCHAR}, #{status,jdbcType=TINYINT}, #{emailVerified,jdbcType=TINYINT}, #{lastLoginAt,jdbcType=TIMESTAMP}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteUser" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.website_user
+    insert into ledger_user
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -207,13 +207,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteUserExample" resultType="java.lang.Long">
-    select count(*) from bgssai_website.website_user
+    select count(*) from ledger_user
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update bgssai_website.website_user
+    update ledger_user
     <set>
       <if test="row.userId != null">
         user_id = #{row.userId,jdbcType=VARCHAR},
@@ -251,7 +251,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update bgssai_website.website_user
+    update ledger_user
     set
       user_id = #{row.userId,jdbcType=VARCHAR},
       nickname = #{row.nickname,jdbcType=VARCHAR},
@@ -268,7 +268,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteUser">
-    update bgssai_website.website_user
+    update ledger_user
     <set>
       <if test="userId != null">
         user_id = #{userId,jdbcType=VARCHAR},
@@ -304,7 +304,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteUser">
-    update bgssai_website.website_user
+    update ledger_user
     set
       user_id = #{userId,jdbcType=VARCHAR},
       nickname = #{nickname,jdbcType=VARCHAR},

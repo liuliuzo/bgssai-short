@@ -34,17 +34,16 @@ import com.bgssai.shortai.mapper.WebsiteUserQuotaMapper;
 import com.bgssai.shortai.mapper.WebsiteUserSubscriptionMapper;
 
 /**
- * 中央账本（官网 bgssai_website 库）直连。产品与官网同在一个 MySQL 实例，跨库读写，不经 HTTP。
+ * 本库账本（ledger_* 镜像表）读写服务。解耦跨库 bgssai_website.* 直连，全部在本产品库内完成读写。
  *
  * <p>三件事：
  * <ul>
- *   <li>isEntitled：读官网订阅，判定「官网付费用户在本产品视为已开通」；</li>
- *   <li>consume：本产品消耗的用量按官网 QuotaWalletService 的口径直接扣官网用量钱包并落用量流水；</li>
- *   <li>reportOwnSubscription / linkWebsiteUser：本产品自己卖出的订阅写进 external_subscription，
- *       让中央账本看得见；用户日后绑定 BGSSAI 账号时回填归属。</li>
+ *   <li>isEntitled：读本库 ledger_user / ledger_user_subscription，判定「付费用户在本产品视为已开通」；</li>
+ *   <li>consume：本产品消耗的用量按双窗口 + 加量包口径扣减本库 ledger_user_quota 并落 ledger_usage_ledger；</li>
+ *   <li>reportOwnSubscription / linkWebsiteUser：本产品自己卖出的订阅写进 ledger_external_subscription，
+ *       用户日后绑定 BGSSAI 账号时回填归属。</li>
  * </ul>
- * 表契约见官网仓 docs/api/BILLING.md 与 docs/api/EXTERNAL-SUBSCRIPTION.md。
- * 中央账本的任何失败只记日志，由调用方兜底，不得影响本产品自己的计费与业务。
+ * 账本的任何失败只记日志，由调用方兜底，不得影响本产品自己的计费与业务。
  */
 @Service
 public class CentralLedgerService {
