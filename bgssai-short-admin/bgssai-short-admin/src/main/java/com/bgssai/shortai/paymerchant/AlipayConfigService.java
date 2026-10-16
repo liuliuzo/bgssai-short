@@ -53,6 +53,7 @@ public class AlipayConfigService {
     /** Mirrors the alipay_config.charset column width in sql/DDL.sql. */
     private static final int CHARSET_MAX_LENGTH = 16;
     private static final String DEFAULT_GATEWAY_URL = "https://openapi.alipay.com/gateway.do";
+    private static final String SANDBOX_GATEWAY_URL = "https://openapi-sandbox.dl.alipaydev.com/gateway.do";
 
     @Autowired
     private AlipayConfigMapper alipayConfigMapper;
@@ -137,11 +138,6 @@ public class AlipayConfigService {
             throw new BizException("60009",
                     "charset must not exceed " + CHARSET_MAX_LENGTH + " characters");
         }
-        String gatewayUrl = trimOrNull(req.getGatewayUrl());
-        gatewayUrl = gatewayUrl == null ? DEFAULT_GATEWAY_URL : gatewayUrl;
-        if (gatewayUrl.length() > 255) {
-            throw new BizException("60009", "gateway_url must not exceed 255 characters");
-        }
         String keyMode = trimOrNull(req.getKeyMode()) == null ? "PUBLIC_KEY" : req.getKeyMode().trim();
         if (!"PUBLIC_KEY".equals(keyMode) && !"CERT".equals(keyMode)) {
             throw new BizException("60009", "key_mode must be PUBLIC_KEY or CERT");
@@ -149,6 +145,13 @@ public class AlipayConfigService {
         String envMode = trimOrNull(req.getEnvMode()) == null ? "PRODUCTION" : req.getEnvMode().trim();
         if (!"SANDBOX".equals(envMode) && !"PRODUCTION".equals(envMode)) {
             throw new BizException("60009", "env_mode must be SANDBOX or PRODUCTION");
+        }
+        String gatewayUrl = trimOrNull(req.getGatewayUrl());
+        gatewayUrl = gatewayUrl == null
+                ? ("SANDBOX".equals(envMode) ? SANDBOX_GATEWAY_URL : DEFAULT_GATEWAY_URL)
+                : gatewayUrl;
+        if (gatewayUrl.length() > 255) {
+            throw new BizException("60009", "gateway_url must not exceed 255 characters");
         }
         String appCertSn = optionalText(req.getAppCertSn(), "app_cert_sn", 128);
         String alipayRootCertSn = optionalText(req.getAlipayRootCertSn(), "alipay_root_cert_sn", 255);
