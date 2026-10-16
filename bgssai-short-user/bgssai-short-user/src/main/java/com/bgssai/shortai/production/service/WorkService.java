@@ -320,7 +320,11 @@ public class WorkService {
         if (req.getEpisodeIdList() == null || req.getEpisodeIdList().isEmpty()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "episode_id_list required");
         }
-        String action = req.getAction() == null ? "ARCHIVE" : req.getAction().trim();
+        // 不再缺省为 ARCHIVE：漏传动作不应把整批剧集归档
+        if (req.getAction() == null || req.getAction().isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "action required");
+        }
+        String action = req.getAction().trim();
         int updated = 0;
         for (String episodeId : req.getEpisodeIdList()) {
             ShortEpisode ep = workAccessService.requireEpisode(episodeId);
@@ -330,6 +334,10 @@ public class WorkService {
             ShortEpisode patch = new ShortEpisode();
             patch.setUpdatedTime(new Date());
             if ("ARCHIVE".equals(action) || "DELETE".equals(action)) {
+                // 与单集删除同一规则：已合成成片的剧集不可删除 / 归档
+                if ("READY".equals(ep.getComposeStatus())) {
+                    throw new BizException(CommonErrorCode.RULE_REJECT, "composed episode cannot be deleted: " + episodeId);
+                }
                 patch.setDeletedFlag(1);
             } else if ("RESET_COMPOSE".equals(action)) {
                 patch.setComposeStatus("NONE");

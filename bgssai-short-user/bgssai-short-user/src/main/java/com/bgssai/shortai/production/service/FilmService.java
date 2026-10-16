@@ -109,6 +109,14 @@ public class FilmService {
                 .andAlignStatusEqualTo("MISALIGNED");
         List<ShortDubbing> misaligned = shortDubbingMapper.selectByExample(dex);
         List<Map<String, Object>> blockers = new ArrayList<>();
+        if (shots.isEmpty()) {
+            // 一个镜头都没有时「全部镜头已出视频」空真成立，会放行空集合成并扣费；按缺口拦下
+            Map<String, Object> blocker = new LinkedHashMap<>();
+            blocker.put("blocker_code", "NO_SHOTS");
+            blocker.put("blocker_desc", "本集尚无镜头，请先完成分镜并生成镜头视频");
+            blocker.put("count", 0);
+            blockers.add(blocker);
+        }
         if (!unlocked.isEmpty()) {
             Map<String, Object> blocker = new LinkedHashMap<>();
             blocker.put("blocker_code", "SHOT_NOT_READY");
@@ -130,7 +138,7 @@ public class FilmService {
             blocker.put("count", misaligned.size());
             blockers.add(blocker);
         }
-        boolean ready = unlocked.isEmpty() && missingVideo.isEmpty()
+        boolean ready = !shots.isEmpty() && unlocked.isEmpty() && missingVideo.isEmpty()
                 && !"BLOCK".equals(scan.get("risk_level")) && misaligned.isEmpty();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("ready", ready);
