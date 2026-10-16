@@ -91,7 +91,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.user_quota
+    from ledger_user_quota
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -110,7 +110,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.user_quota
+    from ledger_user_quota
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -121,25 +121,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from bgssai_website.user_quota
+    from ledger_user_quota
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from bgssai_website.user_quota
+    delete from ledger_user_quota
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteUserQuotaExample">
-    delete from bgssai_website.user_quota
+    delete from ledger_user_quota
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteUserQuota" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.user_quota (id, user_id, plan_code, five_hour_limit_tokens, five_hour_used_tokens, five_hour_window_start, weekly_limit_tokens, weekly_used_tokens, weekly_anchor_at, extra_tokens, quota_version, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into ledger_user_quota (id, user_id, plan_code, five_hour_limit_tokens, five_hour_used_tokens, five_hour_window_start, weekly_limit_tokens, weekly_used_tokens, weekly_anchor_at, extra_tokens, quota_version, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{fiveHourLimitTokens,jdbcType=INTEGER}, #{fiveHourUsedTokens,jdbcType=INTEGER}, #{fiveHourWindowStart,jdbcType=TIMESTAMP}, #{weeklyLimitTokens,jdbcType=INTEGER}, #{weeklyUsedTokens,jdbcType=INTEGER}, #{weeklyAnchorAt,jdbcType=TIMESTAMP}, #{extraTokens,jdbcType=INTEGER}, #{quotaVersion,jdbcType=INTEGER}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteUserQuota" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.user_quota
+    insert into ledger_user_quota
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -242,13 +242,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteUserQuotaExample" resultType="java.lang.Long">
-    select count(*) from bgssai_website.user_quota
+    select count(*) from ledger_user_quota
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update bgssai_website.user_quota
+    update ledger_user_quota
     <set>
       <if test="row.userId != null">
         user_id = #{row.userId,jdbcType=VARCHAR},
@@ -301,7 +301,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update bgssai_website.user_quota
+    update ledger_user_quota
     set
       user_id = #{row.userId,jdbcType=VARCHAR},
       plan_code = #{row.planCode,jdbcType=VARCHAR},
@@ -323,7 +323,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteUserQuota">
-    update bgssai_website.user_quota
+    update ledger_user_quota
     <set>
       <if test="userId != null">
         user_id = #{userId,jdbcType=VARCHAR},
@@ -374,7 +374,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteUserQuota">
-    update bgssai_website.user_quota
+    update ledger_user_quota
     set
       user_id = #{userId,jdbcType=VARCHAR},
       plan_code = #{planCode,jdbcType=VARCHAR},

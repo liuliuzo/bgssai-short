@@ -91,7 +91,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.usage_ledger
+    from ledger_usage_ledger
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -110,7 +110,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.usage_ledger
+    from ledger_usage_ledger
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -121,25 +121,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from bgssai_website.usage_ledger
+    from ledger_usage_ledger
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from bgssai_website.usage_ledger
+    delete from ledger_usage_ledger
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteUsageLedgerExample">
-    delete from bgssai_website.usage_ledger
+    delete from ledger_usage_ledger
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteUsageLedger" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.usage_ledger (id, ledger_id, user_id, product_code, client_id, usage_kind, usage_tokens, prompt_tokens, completion_tokens, conversation_id, remark, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into ledger_usage_ledger (id, ledger_id, user_id, product_code, client_id, usage_kind, usage_tokens, prompt_tokens, completion_tokens, conversation_id, remark, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{ledgerId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{productCode,jdbcType=VARCHAR}, #{clientId,jdbcType=VARCHAR}, #{usageKind,jdbcType=VARCHAR}, #{usageTokens,jdbcType=INTEGER}, #{promptTokens,jdbcType=INTEGER}, #{completionTokens,jdbcType=INTEGER}, #{conversationId,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteUsageLedger" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.usage_ledger
+    insert into ledger_usage_ledger
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -242,13 +242,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteUsageLedgerExample" resultType="java.lang.Long">
-    select count(*) from bgssai_website.usage_ledger
+    select count(*) from ledger_usage_ledger
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update bgssai_website.usage_ledger
+    update ledger_usage_ledger
     <set>
       <if test="row.ledgerId != null">
         ledger_id = #{row.ledgerId,jdbcType=VARCHAR},
@@ -301,7 +301,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update bgssai_website.usage_ledger
+    update ledger_usage_ledger
     set
       ledger_id = #{row.ledgerId,jdbcType=VARCHAR},
       user_id = #{row.userId,jdbcType=VARCHAR},
@@ -323,7 +323,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteUsageLedger">
-    update bgssai_website.usage_ledger
+    update ledger_usage_ledger
     <set>
       <if test="ledgerId != null">
         ledger_id = #{ledgerId,jdbcType=VARCHAR},
@@ -374,7 +374,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteUsageLedger">
-    update bgssai_website.usage_ledger
+    update ledger_usage_ledger
     set
       ledger_id = #{ledgerId,jdbcType=VARCHAR},
       user_id = #{userId,jdbcType=VARCHAR},
