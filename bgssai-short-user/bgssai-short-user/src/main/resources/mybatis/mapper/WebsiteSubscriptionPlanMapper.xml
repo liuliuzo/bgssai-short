@@ -89,7 +89,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.subscription_plan
+    from ledger_subscription_plan
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -108,7 +108,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from bgssai_website.subscription_plan
+    from ledger_subscription_plan
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -119,25 +119,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from bgssai_website.subscription_plan
+    from ledger_subscription_plan
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from bgssai_website.subscription_plan
+    delete from ledger_subscription_plan
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlanExample">
-    delete from bgssai_website.subscription_plan
+    delete from ledger_subscription_plan
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlan" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.subscription_plan (id, plan_code, plan_name, monthly_price_cent, yearly_price_cent, five_hour_limit_tokens, weekly_limit_tokens, sort_no, enabled, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into ledger_subscription_plan (id, plan_code, plan_name, monthly_price_cent, yearly_price_cent, five_hour_limit_tokens, weekly_limit_tokens, sort_no, enabled, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{planCode,jdbcType=VARCHAR}, #{planName,jdbcType=VARCHAR}, #{monthlyPriceCent,jdbcType=INTEGER}, #{yearlyPriceCent,jdbcType=INTEGER}, #{fiveHourLimitTokens,jdbcType=INTEGER}, #{weeklyLimitTokens,jdbcType=INTEGER}, #{sortNo,jdbcType=INTEGER}, #{enabled,jdbcType=BIT}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlan" useGeneratedKeys="true" keyProperty="id">
-    insert into bgssai_website.subscription_plan
+    insert into ledger_subscription_plan
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -228,13 +228,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlanExample" resultType="java.lang.Long">
-    select count(*) from bgssai_website.subscription_plan
+    select count(*) from ledger_subscription_plan
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update bgssai_website.subscription_plan
+    update ledger_subscription_plan
     <set>
       <if test="row.planCode != null">
         plan_code = #{row.planCode,jdbcType=VARCHAR},
@@ -281,7 +281,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update bgssai_website.subscription_plan
+    update ledger_subscription_plan
     set
       plan_code = #{row.planCode,jdbcType=VARCHAR},
       plan_name = #{row.planName,jdbcType=VARCHAR},
@@ -301,7 +301,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlan">
-    update bgssai_website.subscription_plan
+    update ledger_subscription_plan
     <set>
       <if test="planCode != null">
         plan_code = #{planCode,jdbcType=VARCHAR},
@@ -346,7 +346,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteSubscriptionPlan">
-    update bgssai_website.subscription_plan
+    update ledger_subscription_plan
     set
       plan_code = #{planCode,jdbcType=VARCHAR},
       plan_name = #{planName,jdbcType=VARCHAR},

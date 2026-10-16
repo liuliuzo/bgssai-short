@@ -11,9 +11,9 @@ import com.bgssai.shortai.model.OauthBinding;
 import com.bgssai.shortai.model.OauthBindingExample;
 
 /**
- * 本产品账号与官网中央账本之间的桥：把本地 userId 解析成已绑定的官网 user_id（oauth_binding.open_id），
- * 再委托 CentralLedgerService 直连官网库读写，不再经 HTTP 调官网接口。
- * 未绑定则跳过；中央账本任何失败只打日志，不回滚本地扣减。
+ * 本产品账号与账本服务之间的桥：把本地 userId 解析成已绑定的官网 user_id（oauth_binding.open_id），
+ * 再委托 CentralLedgerService 在本库 ledger_* 表完成读写，不跨库访问 bgssai_website，也不经 HTTP 调官网接口。
+ * 未绑定则跳过；账本任何失败只打日志，不回滚本地扣减。
  */
 @Component
 public class BgssaiWebsiteLedgerClient {

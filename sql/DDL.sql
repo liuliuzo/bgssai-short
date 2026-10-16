@@ -1215,3 +1215,155 @@ CREATE TABLE IF NOT EXISTS tokenhub_usage_receipt (
  KEY idx_receipt_owner (user_id, id),
  KEY idx_receipt_pending (reconciled, next_poll_at)
 );
+
+-- ----------------------------
+-- 本库账本镜像表（解耦跨库 bgssai_website.* 直连）
+-- ----------------------------
+DROP TABLE IF EXISTS `ledger_external_subscription`;
+DROP TABLE IF EXISTS `ledger_usage_idempotency`;
+DROP TABLE IF EXISTS `ledger_usage_ledger`;
+DROP TABLE IF EXISTS `ledger_user_quota`;
+DROP TABLE IF EXISTS `ledger_user_subscription`;
+DROP TABLE IF EXISTS `ledger_subscription_plan`;
+DROP TABLE IF EXISTS `ledger_user`;
+
+CREATE TABLE `ledger_user` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '账本用户标识',
+  `nickname` VARCHAR(128) DEFAULT NULL COMMENT '昵称',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-正常',
+  `email_verified` TINYINT NOT NULL DEFAULT 0 COMMENT '邮箱已验证：0/1',
+  `last_login_at` DATETIME DEFAULT NULL COMMENT '最近登录时间',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_user_id` (`user_id`),
+  KEY `idx_ledger_user_status` (`status`, `del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库账本用户镜像表';
+
+CREATE TABLE `ledger_subscription_plan` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `plan_code` VARCHAR(32) NOT NULL COMMENT '套餐编码（FREE/PRO/MAX）',
+  `plan_name` VARCHAR(64) NOT NULL COMMENT '套餐名称',
+  `monthly_price_cent` INT NOT NULL DEFAULT 0 COMMENT '月付价格（分）',
+  `yearly_price_cent` INT NOT NULL DEFAULT 0 COMMENT '年付价格（分）',
+  `five_hour_limit_tokens` INT NOT NULL DEFAULT 0 COMMENT '5小时窗口额度',
+  `weekly_limit_tokens` INT NOT NULL DEFAULT 0 COMMENT '7天窗口额度',
+  `sort_no` INT NOT NULL DEFAULT 0 COMMENT '排序号',
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_plan_code` (`plan_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库账本订阅套餐表';
+
+CREATE TABLE `ledger_user_subscription` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '账本用户标识',
+  `plan_code` VARCHAR(32) NOT NULL COMMENT '套餐编码',
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active' COMMENT '状态（active/expired/canceled）',
+  `period_start` DATETIME DEFAULT NULL COMMENT '当前周期开始时间',
+  `period_end` DATETIME DEFAULT NULL COMMENT '当前周期结束时间',
+  `source` VARCHAR(64) DEFAULT NULL COMMENT '订阅来源',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_user_sub_uid` (`user_id`),
+  KEY `idx_ledger_user_sub_status` (`status`, `period_end`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库账本用户订阅表';
+
+CREATE TABLE `ledger_user_quota` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '账本用户标识',
+  `plan_code` VARCHAR(32) NOT NULL DEFAULT 'FREE' COMMENT '当前套餐编码',
+  `five_hour_limit_tokens` INT NOT NULL DEFAULT 0 COMMENT '5小时窗口限额',
+  `five_hour_used_tokens` INT NOT NULL DEFAULT 0 COMMENT '5小时窗口已用',
+  `five_hour_window_start` DATETIME DEFAULT NULL COMMENT '5小时窗口起点',
+  `weekly_limit_tokens` INT NOT NULL DEFAULT 0 COMMENT '7天窗口限额',
+  `weekly_used_tokens` INT NOT NULL DEFAULT 0 COMMENT '7天窗口已用',
+  `weekly_anchor_at` DATETIME DEFAULT NULL COMMENT '7天窗口锚点',
+  `extra_tokens` INT NOT NULL DEFAULT 0 COMMENT '加量包剩余额度',
+  `quota_version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_user_quota_uid` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库账本用户额度钱包表';
+
+CREATE TABLE `ledger_usage_ledger` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `ledger_id` VARCHAR(64) NOT NULL COMMENT '流水唯一标识',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '账本用户标识',
+  `product_code` VARCHAR(64) NOT NULL COMMENT '产品编码',
+  `client_id` VARCHAR(64) NOT NULL COMMENT '客户端编码',
+  `usage_kind` VARCHAR(64) NOT NULL COMMENT '用量类型',
+  `usage_tokens` INT NOT NULL DEFAULT 0 COMMENT '消耗额度',
+  `prompt_tokens` INT NOT NULL DEFAULT 0 COMMENT '输入Token数',
+  `completion_tokens` INT NOT NULL DEFAULT 0 COMMENT '输出Token数',
+  `conversation_id` VARCHAR(64) DEFAULT NULL COMMENT '会话标识',
+  `remark` VARCHAR(256) DEFAULT NULL COMMENT '备注',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_usage_ledger_id` (`ledger_id`),
+  KEY `idx_ledger_usage_user_time` (`user_id`, `gmt_create`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库账本用量流水表';
+
+CREATE TABLE `ledger_usage_idempotency` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `client_id` VARCHAR(64) NOT NULL COMMENT '客户端编码',
+  `idempotency_key` VARCHAR(128) NOT NULL COMMENT '幂等键',
+  `ledger_id` VARCHAR(64) NOT NULL COMMENT '关联流水标识',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '账本用户标识',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_usage_idem_key` (`client_id`, `idempotency_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库账本用量扣减幂等表';
+
+CREATE TABLE `ledger_external_subscription` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `subscription_id` VARCHAR(64) NOT NULL COMMENT '外部订阅唯一标识',
+  `client_id` VARCHAR(64) NOT NULL COMMENT '上报客户端编码',
+  `product_code` VARCHAR(64) NOT NULL COMMENT '产品编码',
+  `external_user_id` VARCHAR(64) NOT NULL COMMENT '产品本地用户标识',
+  `external_order_no` VARCHAR(128) NOT NULL COMMENT '产品本地订单号',
+  `user_id` VARCHAR(64) DEFAULT NULL COMMENT '关联账本用户标识',
+  `plan_code` VARCHAR(32) NOT NULL COMMENT '套餐编码',
+  `plan_name` VARCHAR(64) DEFAULT NULL COMMENT '套餐名称',
+  `amount_cent` INT NOT NULL DEFAULT 0 COMMENT '订单金额（分）',
+  `currency` VARCHAR(16) NOT NULL DEFAULT 'CNY' COMMENT '币种',
+  `status` VARCHAR(32) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态（ACTIVE/EXPIRED/CANCELED/REFUNDED）',
+  `period_start` DATETIME DEFAULT NULL COMMENT '周期开始时间',
+  `period_end` DATETIME DEFAULT NULL COMMENT '周期结束时间',
+  `reported_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最近上报时间',
+  `remark` VARCHAR(256) DEFAULT NULL COMMENT '备注',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT 'system' COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT 'system' COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ledger_ext_sub_id` (`subscription_id`),
+  UNIQUE KEY `uk_ledger_ext_sub_order` (`client_id`, `external_order_no`),
+  KEY `idx_ledger_ext_sub_ext_user` (`client_id`, `external_user_id`),
+  KEY `idx_ledger_ext_sub_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库自有订阅上报账本表';

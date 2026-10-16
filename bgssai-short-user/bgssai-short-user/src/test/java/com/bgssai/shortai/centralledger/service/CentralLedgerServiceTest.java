@@ -199,6 +199,30 @@ class CentralLedgerServiceTest {
                 any(WebsiteExternalSubscriptionExample.class));
     }
 
+    @Test
+    void websiteMapperXmlsUseLocalLedgerTablesWithoutCrossSchemaPrefix() throws Exception {
+        String[][] expected = new String[][] {
+                { "WebsiteUserMapper.xml", "ledger_user" },
+                { "WebsiteSubscriptionPlanMapper.xml", "ledger_subscription_plan" },
+                { "WebsiteUserSubscriptionMapper.xml", "ledger_user_subscription" },
+                { "WebsiteUserQuotaMapper.xml", "ledger_user_quota" },
+                { "WebsiteUsageLedgerMapper.xml", "ledger_usage_ledger" },
+                { "WebsiteUsageIdempotencyMapper.xml", "ledger_usage_idempotency" },
+                { "WebsiteExternalSubscriptionMapper.xml", "ledger_external_subscription" }
+        };
+        for (String[] pair : expected) {
+            String resourcePath = "/mybatis/mapper/" + pair[0];
+            try (java.io.InputStream in = CentralLedgerServiceTest.class.getResourceAsStream(resourcePath)) {
+                assertNotNull(in, "Missing mapper XML: " + resourcePath);
+                String xml = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                assertFalse(xml.contains("bgssai_website."),
+                        pair[0] + " must not reference cross-schema bgssai_website.");
+                assertTrue(xml.contains(pair[1]),
+                        pair[0] + " must reference local table " + pair[1]);
+            }
+        }
+    }
+
     private static void assertRequiresNew(String methodName, Class<?>... parameterTypes) throws Exception {
         Transactional transactional = CentralLedgerService.class
                 .getMethod(methodName, parameterTypes)
