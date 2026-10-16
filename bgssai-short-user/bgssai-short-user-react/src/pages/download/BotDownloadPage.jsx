@@ -76,7 +76,7 @@ export default function BotDownloadPage() {
 
       <Title level={3} style={{ marginTop: 0 }}>下载 BGSSAI BOT</Title>
       <Paragraph type="secondary">
-        BGSSAI BOT 对标 Grok Bot。装好之后可以把本应用托管给 Bot 直接操作。
+        装好 BGSSAI BOT 之后可以把本应用托管给 Bot 直接操作。
         本页不要求登录。安装包由本站提供，不上官网。
       </Paragraph>
 
