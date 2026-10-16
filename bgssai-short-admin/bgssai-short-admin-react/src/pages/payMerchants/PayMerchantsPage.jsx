@@ -17,6 +17,7 @@ function ChannelTable({ rows, loading, onEdit, onActive, nameKey, extraKey }) {
         { title: '商户名', dataIndex: 'merchant_name' },
         { title: extraKey === 'mch_id' ? '商户号' : 'AppId', dataIndex: extraKey === 'mch_id' ? 'mch_id' : 'app_id' },
         { title: '部署环境 / 支付网关', dataIndex: 'env_mode', render: (v) => `${deployEnvLabel()} · ${v === 'SANDBOX' ? '沙箱网关' : '正式网关'}` },
+        { title: '凭据••••末四位', key: 'secret_mask', render: (_, row) => row.app_private_key || row.mch_private_key || row.api_v3_key || '—' },
         { title: '启用', dataIndex: 'is_enabled', render: (v) => (v ? '是' : '否') },
         { title: '收款', dataIndex: 'is_collection_active', render: (v) => (v ? '是' : '否') },
         {
@@ -71,7 +72,7 @@ export default function PayMerchantsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>支付商户</Title>
-      <Paragraph type="secondary">支付宝 / 微信商户配置。凭证按现有接口明文回显，仅内部管理台使用。</Paragraph>
+      <Paragraph type="secondary">支付宝 / 微信商户配置。列表只显示 ••••末四位；编辑不回填凭据，留空保存保持库中原值。</Paragraph>
       <Card extra={<Button type="primary" onClick={() => { form.resetFields(); setOpen(true) }}>新建</Button>}>
         <Tabs
           onChange={setChannel}
@@ -79,12 +80,32 @@ export default function PayMerchantsPage() {
             {
               key: 'alipay',
               label: '支付宝',
-              children: <ChannelTable rows={alipay} loading={loading} extraKey="app_id" onEdit={(row) => { form.setFieldsValue(row); setChannel('alipay'); setOpen(true) }} onActive={async (id) => { await payMerchantsApi.activeAlipay(id); load() }} />,
+              children: <ChannelTable rows={alipay} loading={loading} extraKey="app_id" onEdit={(row) => {
+                form.setFieldsValue({
+                  ...row,
+                  app_private_key: '',
+                  alipay_public_key: '',
+                })
+                setChannel('alipay')
+                setOpen(true)
+              }} onActive={async (id) => { await payMerchantsApi.activeAlipay(id); load() }} />,
             },
             {
               key: 'wechat',
               label: '微信',
-              children: <ChannelTable rows={wechat} loading={loading} extraKey="mch_id" onEdit={(row) => { form.setFieldsValue(row); setChannel('wechat'); setOpen(true) }} onActive={async (id) => { await payMerchantsApi.activeWechat(id); load() }} />,
+              children: <ChannelTable rows={wechat} loading={loading} extraKey="mch_id" onEdit={(row) => {
+                form.setFieldsValue({
+                  ...row,
+                  api_v3_key: '',
+                  mch_private_key: '',
+                  wechat_public_key: '',
+                  apiclient_cert: undefined,
+                  mch_cert_p12: undefined,
+                  api_v2_key: undefined,
+                })
+                setChannel('wechat')
+                setOpen(true)
+              }} onActive={async (id) => { await payMerchantsApi.activeWechat(id); load() }} />,
             },
           ]}
         />
@@ -96,18 +117,18 @@ export default function PayMerchantsPage() {
           {channel === 'alipay' ? (
             <>
               <Form.Item name="app_id" label="AppId" rules={[{ required: true }]}><Input /></Form.Item>
-              <Form.Item name="app_private_key" label="应用私钥"><Input.TextArea rows={3} /></Form.Item>
-              <Form.Item name="alipay_public_key" label="支付宝公钥"><Input.TextArea rows={3} /></Form.Item>
+              <Form.Item name="app_private_key" label="应用私钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
+              <Form.Item name="alipay_public_key" label="支付宝公钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
             </>
           ) : (
             <>
               <Form.Item name="mch_id" label="商户号" rules={[{ required: true }]}><Input /></Form.Item>
               <Form.Item name="app_id" label="AppId" rules={[{ required: true }]}><Input /></Form.Item>
               <Form.Item name="merchant_serial_no" label="商户证书序列号" rules={[{ required: true }]}><Input placeholder="API 证书序列号，生产下单必填" /></Form.Item>
-              <Form.Item name="api_v3_key" label="APIv3 Key"><Input /></Form.Item>
-              <Form.Item name="mch_private_key" label="商户私钥"><Input.TextArea rows={3} /></Form.Item>
+              <Form.Item name="api_v3_key" label="APIv3 Key"><Input placeholder="留空表示保持库中原值" /></Form.Item>
+              <Form.Item name="mch_private_key" label="商户私钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
               <Form.Item name="wechat_public_key_id" label="微信支付公钥 ID"><Input /></Form.Item>
-              <Form.Item name="wechat_public_key" label="微信支付公钥"><Input.TextArea rows={3} /></Form.Item>
+              <Form.Item name="wechat_public_key" label="微信支付公钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
             </>
           )}
           <Form.Item name="notify_url" label="回调 URL" rules={[{ required: true }]}><Input placeholder="https://…/bgssai/user/payment/{wechat|alipay}/notify" /></Form.Item>
