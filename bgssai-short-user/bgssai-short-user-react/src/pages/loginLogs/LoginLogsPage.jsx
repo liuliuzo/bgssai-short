@@ -1,18 +1,31 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Card, Table, Typography } from 'antd'
+import { Card, Table, Tag, Typography } from 'antd'
+import dayjs from 'dayjs'
 import loginLogsApi from '../../api/loginLogs'
 
 const { Title, Paragraph } = Typography
 
+const ACTIONS = {
+  LOGIN_SUCCESS: { text: '登录成功', color: 'green' },
+  LOGIN_FAIL_PASSWORD: { text: '口令错误', color: 'red' },
+  LOGIN_FAIL_ROLE: { text: '无权限', color: 'orange' },
+  LOGIN_FAIL_NO_ROLE: { text: '无角色', color: 'orange' },
+  LOGOUT: { text: '退出登录', color: 'default' },
+}
+
+const formatTime = (v) => (v == null || v === '' ? '-' : dayjs(v).format('YYYY-MM-DD HH:mm:ss'))
+const formatAction = (value) => {
+  const known = ACTIONS[value]
+  return known ? <Tag color={known.color}>{known.text}</Tag> : value || '-'
+}
+
 const COLUMNS = [
   { title: 'ID', dataIndex: 'id', width: 80 },
-  { title: '动作', dataIndex: 'action', width: 180 },
+  { title: '动作', dataIndex: 'action', width: 180, render: formatAction },
   { title: 'IP', dataIndex: 'ip_address', width: 160 },
-  { title: '时间', dataIndex: 'create_time', width: 200 },
+  { title: '时间', dataIndex: 'create_time', width: 200, render: formatTime },
 ]
 
-// Sample paged list page. Reads the PageResponse envelope:
-// { result: [...], page_num, page_size, total_size }.
 export default function LoginLogsPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
@@ -23,7 +36,7 @@ export default function LoginLogsPage() {
   const load = useCallback(async (num, size) => {
     setLoading(true)
     try {
-      const { data } = await loginLogsApi.list({ page_num: num, page_size: size })
+      const { data } = await loginLogsApi.list({ page_num: num, page_size: size, _t: Date.now() })
       setRows(Array.isArray(data?.result) ? data.result : [])
       setTotal(Number(data?.total_size) || 0)
       setPageNum(Number(data?.page_num) || num)
@@ -34,16 +47,24 @@ export default function LoginLogsPage() {
   }, [])
 
   useEffect(() => {
+    let cancelled = false
     load(1, 20)
+    const retry = setTimeout(() => { if (!cancelled) load(1, 20) }, 1500)
+    const onVisible = () => { if (document.visibilityState === 'visible') load(1, 20) }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      cancelled = true
+      clearTimeout(retry)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
   }, [load])
 
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>我的登录日志</Title>
-      <Paragraph type="secondary">
-        示例分页列表，对应后端 GET /bgssai/user/login-logs（@NeedAop 鉴权 + PageHelper 物理分页，仅返回本人记录）。
-      </Paragraph>
-
+      <Paragraph type="secondary">最近登录与安全相关操作记录，仅展示本人账号。</Paragraph>
       <Card>
         <Table
           rowKey="id"
@@ -51,6 +72,7 @@ export default function LoginLogsPage() {
           loading={loading}
           columns={COLUMNS}
           dataSource={rows}
+          locale={{ emptyText: '暂无登录记录' }}
           pagination={{
             current: pageNum,
             pageSize,
