@@ -27,7 +27,7 @@ ffmpeg，缺失时返回 `ABILITY_UNAVAILABLE`）。无 MOCK 兜底。端点映�
 
 ## 本切片未实现（映射表仍指向需求，调用返回 `4006`）
 
-`POST /bgssai/user/episodes/batch`、质量门 / 剧情图谱 / 用量 / AI 模型配置 /
+质量门 / 剧情图谱 / 用量 / AI 模型配置 /
 充值申请 / `ai-tasks/pause` / `ai-tasks/resume` / 提示词 check-diff / 场景卡批量定妆以外的扩展接口。
 
 `GET /bgssai/user/quality/templates` 返回空 `template_list`，创建作品不依赖模板。
@@ -67,6 +67,10 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
 ### POST /bgssai/user/short-works/archive
 
 `{ "work_id", "archived_flag": 1 }`
+
+### POST /bgssai/user/episodes/batch
+
+`{ "work_id", "episode_id_list", "action" }`。`action` 必填：`ARCHIVE` / `DELETE`（软删）、`RESET_COMPOSE`、`MARK_READY`；缺省或不支持返回 `50000001`。`ARCHIVE` / `DELETE` 与单集删除同一规则：已合成（`compose_status=READY`）的集返回 `4006`。需求中的 `GEN_SCRIPT` / `SUBMIT_GENERATE` / `SUBMIT_REVIEW` / `EXPORT` 批量动作尚未实现。
 
 ### POST /bgssai/user/episodes/create|update|delete
 
@@ -260,7 +264,7 @@ cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 
 返回 `ready`、`unlocked_shots`、`missing_video_shots`、`blocker_list`、`risk_level`、
 `shot_count`、`acceptance_min_shot_count`（固定 3）、`acceptance_shot_count_ok`。
-`ready=true` 要求全部镜头为 `VIDEO_READY`/`LOCKED` 且 `video_asset_id` 非空，且无配音
+`ready=true` 要求本集至少有 1 个镜头（无镜头时 `blocker_list` 含 `NO_SHOTS`），且全部镜头为 `VIDEO_READY`/`LOCKED` 且 `video_asset_id` 非空，且无配音
 `MISALIGNED`、合规无 `BLOCK`。仅有 `IMAGE_READY` 草图不得通过预检。
 `acceptance_shot_count_ok` 为 SHORT-01 联调验收提示（不足 3 镜不阻断 `ready`）。
 

@@ -327,6 +327,9 @@ public class AiTaskService {
 
     public ApiResponse batchProgress(String batchId) {
         String userId = workAccessService.requireUser();
+        if (batchId == null || batchId.isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "batch_id required");
+        }
         ShortAiTaskExample ex = new ShortAiTaskExample();
         ex.createCriteria().andUserIdEqualTo(userId).andBatchIdEqualTo(batchId);
         List<ShortAiTask> rows = shortAiTaskMapper.selectByExample(ex);
