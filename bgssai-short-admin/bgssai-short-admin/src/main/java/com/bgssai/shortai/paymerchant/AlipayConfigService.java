@@ -90,8 +90,8 @@ public class AlipayConfigService {
             item.setEnvMode(row.getEnvMode());
             item.setAppCertSn(row.getAppCertSn());
             item.setAlipayRootCertSn(row.getAlipayRootCertSn());
-            // Credentials round-trip in plaintext: the console shows the stored value and edits it in place.
-            item.setAppPrivateKey(row.getAppPrivateKey());
+            // Secret credentials are echoed masked; blank / masked echo on save keeps the stored value.
+            item.setAppPrivateKey(maskSecret(row.getAppPrivateKey()));
             item.setAlipayPublicKey(row.getAlipayPublicKey());
             item.setAppCertPublicKey(row.getAppCertPublicKey());
             item.setAlipayCertPublicKey(row.getAlipayCertPublicKey());
@@ -422,11 +422,24 @@ public class AlipayConfigService {
         return trimmed;
     }
 
+    /** Console echo: •••• + last 4 chars (same as bgssai-magic #155). */
+    static String maskSecret(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        String v = value.strip();
+        return "••••" + (v.length() > 4 ? v.substring(v.length() - 4) : "");
+    }
+
     private static String trimOrNull(String value) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
+        // A masked echo sent back unchanged means "keep the stored value", same as blank.
+        if (trimmed.startsWith("••••")) {
+            return null;
+        }
         return trimmed.isEmpty() ? null : trimmed;
     }
 }

@@ -39,7 +39,10 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
             "/pay-merchants",
             "/ai-models",
             "/usage-cost",
-            "/quality-templates"
+            "/quality-templates",
+            "/support",
+            "/ai-secrets",
+            "/subscription-plans"
     );
 
     @Override
