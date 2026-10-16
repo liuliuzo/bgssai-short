@@ -1,6 +1,7 @@
 package com.bgssai.shortai.configuration;
 
 import java.net.http.HttpClient;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -58,5 +60,8 @@ public class BgssConfig implements WebMvcConfigurer {
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper()));
+        // 字符串转换器排到 Jackson 前面：@RequestBody String 必须拿到原文（支付回调按原文验签），
+        // 否则 JSON 回调体被当成 String 反序列化失败并回 HTTP 200，渠道视为已处理，订单永远不会变已支付
+        converters.add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
     }
 }
