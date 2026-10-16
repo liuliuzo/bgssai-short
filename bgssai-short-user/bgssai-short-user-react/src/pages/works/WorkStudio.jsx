@@ -838,9 +838,10 @@ function TasksPane({ workId, episodeId }) {
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      // Work-level tasks (OUTLINE etc.) have null episode_id; do not filter by episode
+      // or they never appear in 「本剧任务」.
       const { data } = await productionApi.listTasks({
         work_id: workId,
-        episode_id: episodeId || undefined,
         task_type: taskType || undefined,
         task_status: taskStatus || undefined,
         page_num: 1,
@@ -875,6 +876,7 @@ function TasksPane({ workId, episodeId }) {
         pagination={false}
         columns={[
           { title: '类型', dataIndex: 'task_type_name', width: 90, render: (v, row) => v || row.task_type },
+          { title: '目标', dataIndex: 'target_type', width: 110, render: (v) => v || '-' },
           { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
           { title: '进度', dataIndex: 'progress_percent', width: 80 },
           { title: '费用(分)', dataIndex: 'cost_cent', width: 90 },
