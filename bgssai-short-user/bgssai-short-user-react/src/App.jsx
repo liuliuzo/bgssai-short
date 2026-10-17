@@ -9,6 +9,7 @@ import Home from './pages/home/Home'
 import LoginLogsPage from './pages/loginLogs/LoginLogsPage'
 import McpTokens from './pages/mcp/McpTokens'
 import SubscriptionPage from './pages/subscription/SubscriptionPage'
+import AccountSettingsPage from './pages/account/AccountSettingsPage'
 import UsageBillingPage from './pages/usage/UsageBillingPage'
 import WorksPage from './pages/works/WorksPage'
 import WorkStudio from './pages/works/WorkStudio'
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/login-logs" element={<LoginLogsPage />} />
         <Route path="/mcp-tokens" element={<McpTokens />} />
         <Route path="/subscription" element={<SubscriptionPage />} />
+        <Route path="/account" element={<AccountSettingsPage />} />
         <Route path="/usage" element={<UsageBillingPage />} />
         <Route path="/works" element={<WorksPage />} />
         <Route path="/works/:workId" element={<WorkStudio />} />

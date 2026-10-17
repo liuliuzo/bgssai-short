@@ -91,6 +91,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        if (TokenHubClientSupport.wouldSelectGlobal(cfg, request.getModel().getModelCode())) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                    TokenHubClientSupport.userFacingMessage("cross-region hub disabled for short"));
+        }
         String hub = TokenHubClientSupport.resolveHub(cfg, request.getModel().getModelCode());
         String base = hubBase(ShortJson.text(cfg.get("base_url")), hub);
         String ref = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
@@ -608,10 +612,14 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private String hubBase(String configured, String hub) {
         String base = ProviderHttp.trimSlash(configured);
         if (isOwnHub(base)) {
+            if (TokenHubClientSupport.wouldSelectGlobal(Map.of("base_url", base), null)) {
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                        TokenHubClientSupport.userFacingMessage("cross-region hub disabled for short"));
+            }
             return base;
         }
-        String injected = ProviderHttp.trimSlash(
-                TokenHubClientSupport.HUB_GLOBAL.equals(hub) ? globalBaseUrl : cnBaseUrl);
+        // Short pins CN; ignore hub==global even if profile still carries a global URL.
+        String injected = ProviderHttp.trimSlash(cnBaseUrl);
         if (!isOwnHub(injected)) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "模型网关未配置");
         }

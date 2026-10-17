@@ -28,6 +28,10 @@
 | `4001` | 200 | 凭证错误（账号或密码不正确） |
 | `4003` | 200 | 无权限（角色不满足） |
 | `4012` | 200 | 成片已过期，拒绝下载 |
+| `4018` | 200 | 账号已注销 |
+| `4019` | 200 | 至少保留一种登录方式 |
+| `4020` | 200 | 第三方身份已绑定其他账号 |
+| `4021` | 200 | 存在未结订单或进行中任务 |
 | `50000001` | 200 | 请求参数非法 |
 | `429000` | 429 | 触发限流（响应头含 `Retry-After`） |
 | `999999` | 500 | 系统错误 |
@@ -58,6 +62,7 @@
 | MCP 协议（用户端，PAT） | POST | `/api/mcp` | `MCP.md`（Connectors：Claude / Codex / Cursor / Grok Bot / bgssai-bot） |
 | MCP 令牌创建 / 列表 / 吊销 | POST | `/api/mcp/tokens/create` · `/list` · `/revoke` | `MCP.md` |
 | 套餐 / 加量 / 支付回调 | GET/POST | `/bgssai/user/subscription/**` · `/credit-packs/**` · `/bgssai/user/payment/*/notify` | `SUBSCRIPTION-CREDIT.md` |
+| 账号设置（绑定解绑 / 注销） | GET/POST | `/bgssai/user/account/login-methods/**` · `/bgssai/user/account/deletion/**` | `account-settings.md` |
 | 管理端商户与加量包 | GET/POST | `/bgssai/admin/pay/**` · `/bgssai/admin/credit-packs/**` · `/bgssai/admin/creators/adjust-quota` | `SUBSCRIPTION-CREDIT.md` |
 | 短剧制作闭环 | GET/POST | `/bgssai/user/short-works/**` · `/scripts/**` · `/characters/**` · `/shots/**` · `/ai-tasks/**` · `/films/**` · `/reviews/**` · `/dubbings/**` · `/subtitles/**` · `/previz/**` · `/story-map/**` · `/quality/**` · `/preview/**` · `/continuity/**` · `/bgssai/admin/reviews/**` · `/bgssai/admin/creators/**` · `/bgssai/admin/quality/**` | `SHORT-PRODUCTION.md` |
 | AI 模型与用量 | GET/POST | `/bgssai/admin/ai-models/**` · `/bgssai/admin/usage/**` · `/bgssai/admin/recharge/**` · `/bgssai/user/usage/**` · `/bgssai/user/recharge/**` | `AI-CAPABILITY-USAGE.md` |

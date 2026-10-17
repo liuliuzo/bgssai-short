@@ -30,7 +30,11 @@ public enum CommonErrorCode implements ErrorCode {
     MEDIA_TOO_LARGE("4017", "media too large to package, use LINK_ONLY"),
     UNSUPPORTED_PAY_CHANNEL("60004", "unsupported pay channel"),
     NOTIFY_VERIFY_FAILED("60005", "notify signature verify failed"),
-    PAYMENT_NOT_CONFIGURED("60013", "production payment not configured");
+    PAYMENT_NOT_CONFIGURED("60013", "production payment not configured"),
+    ACCOUNT_DELETED("4018", "账号已注销"),
+    LAST_LOGIN_METHOD("4019", "至少保留一种登录方式"),
+    BINDING_CONFLICT("4020", "该第三方身份已绑定其他账号"),
+    ACCOUNT_HAS_OPEN_ITEMS("4021", "存在未结订单或进行中任务，请先处理");
 
     private final String code;
 

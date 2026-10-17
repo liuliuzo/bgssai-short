@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGSSAI Short — 连接失败</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 0; background: #0f1419; color: #f2f5f8;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .box { max-width: 420px; padding: 32px; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    p { color: #9aa3ad; line-height: 1.5; }
+    button { margin-top: 16px; margin-right: 8px; padding: 8px 14px; border: 0; border-radius: 6px;
+      background: #2d8cff; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>无法加载页面</h1>
+    <p id="detail">网络或会话异常。可返回入口重试，不会重复提交业务请求。</p>
+    <button type="button" id="back">返回入口</button>
+    <button type="button" id="retry">清除本地会话并重试</button>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const detail = document.getElementById('detail');
+    detail.textContent = '错误 ' + (params.get('code') || '') + '：' + (params.get('desc') || '加载失败');
+    document.getElementById('back').onclick = () => window.bgssaiClients.backToGate();
+    document.getElementById('retry').onclick = async () => {
+      await window.bgssaiClients.clearSession();
+      await window.bgssaiClients.backToGate();
+    };
+  </script>
+</body>
+</html>

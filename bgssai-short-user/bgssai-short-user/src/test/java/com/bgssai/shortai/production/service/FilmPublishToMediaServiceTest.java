@@ -102,7 +102,10 @@ class FilmPublishToMediaServiceTest {
         assertEquals("READY", payload.get("status"));
         assertEquals(Boolean.TRUE, payload.get("approved"));
         assertEquals("short:w-1:ep-1:fl-1", payload.get("idempotency_key"));
-        assertEquals(14, payload.size());
+        assertEquals("short", payload.get("catalog_dir"));
+        assertEquals("short", payload.get("product_line"));
+        assertEquals("fl-1", payload.get("publish_version"));
+        assertEquals(17, payload.size());
     }
 
     @Test
@@ -112,7 +115,7 @@ class FilmPublishToMediaServiceTest {
         assertFalse(payload.containsKey("cover_url"));
         assertEquals("READY", payload.get("status"));
         assertEquals(Boolean.TRUE, payload.get("approved"));
-        assertEquals(13, payload.size());
+        assertEquals(16, payload.size());
     }
 
     @Test

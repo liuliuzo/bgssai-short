@@ -1,6 +1,8 @@
 # 订阅套餐与加量 credit 详设
 
-> 对齐需求 `docs/feature/subscription-credit.md`。金额单位：分。
+> 对齐需求 `docs/feature/subscription-credit.md` 与 `REQ-SHORT-COMMON-018/019`。
+> 售价单位：人民币分。额度单位：真实 token（`*_tokens`；兼容字段 `*_cent` 同值）。
+> 界面 K/M/B 紧凑显示；回调按 `order_no` 幂等入账。
 
 ## 1. 组件
 

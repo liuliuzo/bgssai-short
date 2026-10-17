@@ -44,6 +44,10 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
+        throw DirectVendorGuard.rejected(CODE);
+    }
+
+    AiProviderResult executeLegacy(AiProviderRequest request) {
         if (request == null || request.getModel() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }

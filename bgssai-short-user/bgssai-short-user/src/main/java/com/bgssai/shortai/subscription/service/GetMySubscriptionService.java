@@ -77,6 +77,13 @@ public class GetMySubscriptionService {
         result.put("monthly_limit_cent", quota.getMonthlyLimitCent());
         result.put("month_spent_cent", quota.getMonthSpentCent());
         result.put("available_cent", balance + extra);
+        // REQ-SHORT-COMMON-019: wallet integers are real tokens; *_cent kept for compat.
+        result.put("balance_tokens", balance);
+        result.put("extra_tokens", extra);
+        result.put("monthly_limit_tokens", quota.getMonthlyLimitCent() == null ? 0 : quota.getMonthlyLimitCent());
+        result.put("month_spent_tokens", quota.getMonthSpentCent() == null ? 0 : quota.getMonthSpentCent());
+        result.put("available_tokens", balance + extra);
+        result.put("quota_unit", "token");
         ApiResponse resp = new ApiResponse();
         resp.setCode("0");
         resp.setSuccess(true);

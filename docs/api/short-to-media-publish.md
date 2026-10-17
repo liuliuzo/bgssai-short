@@ -85,3 +85,8 @@ Body（snake_case，`additionalProperties=false`）：
 | 直播 Short 工作室 → 播放器 E2E | 联调 | **NOT_VERIFIED**。MEDIA_* 主机未在本仓分配，不编造 IP。base-url 为空或主机不可达时发布失败 |
 
 对端无需为本 PR 改契约即可联调。若 Media 未守 UNIQUE，重复发布会双目录——Short 侧 READY 回放可挡住二次点击，挡不住首发并发；并发必须靠 Media UNIQUE。
+
+
+## 目录与版本（2026-10-17）
+
+交付 Media 时 payload 含 `catalog_dir=short`、`product_line=short`、`publish_version=<film_id>`，与作品/集数/发布状态一并保留。重复交付同 idempotency_key 不产生重复作品。

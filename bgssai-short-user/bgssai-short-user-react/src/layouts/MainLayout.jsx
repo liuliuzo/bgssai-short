@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, Drawer, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined , DownloadOutlined, AppstoreOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined , DownloadOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
 import SupportWidget from '../components/SupportWidget'
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { key: '/tasks', label: '任务中心', icon: <ThunderboltOutlined /> },
   { key: '/usage', label: '用量与账单', icon: <WalletOutlined /> },
   { key: '/subscription', label: '套餐与加量', icon: <AccountBookOutlined /> },
+  { key: '/account', label: '账号设置', icon: <SettingOutlined /> },
   { key: '/mcp-tokens', label: 'MCP 连接器', icon: <ApiOutlined /> },
   { key: '/download/bot', label: '下载 BGSSAI BOT', icon: <DownloadOutlined /> },
   { key: '/login-logs', label: '我的登录日志', icon: <ProfileOutlined /> },
@@ -48,6 +49,12 @@ export default function MainLayout() {
   }
 
   const userMenuItems = [
+    {
+      key: 'account',
+      icon: <SettingOutlined />,
+      label: '账号设置',
+      onClick: () => navigate('/account'),
+    },
     {
       key: 'logout',
       icon: <LogoutOutlined />,

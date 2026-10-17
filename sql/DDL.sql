@@ -36,6 +36,7 @@ CREATE TABLE `sys_user`  (
   `company_id` int(11) NULL DEFAULT NULL COMMENT '公司ID',
   `online` tinyint(1) NULL DEFAULT NULL COMMENT '在线状态(0-在线,1-不在线)',
   `current_session_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '当前有效会话标识；登录时覆盖写入，登出置 NULL，旧会话凭此判定失效',
+  `deleted_at` datetime NULL DEFAULT NULL COMMENT '账号注销时间；非空表示已自助注销',
   `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除状态(0-正常,1-已删除)',
   `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '创建人',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -47,6 +48,25 @@ CREATE TABLE `sys_user`  (
   INDEX `idx_status`(`status`) USING BTREE,
   INDEX `idx_del_flag`(`del_flag`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for account_deletion_log
+-- ----------------------------
+DROP TABLE IF EXISTS `account_deletion_log`;
+CREATE TABLE `account_deletion_log` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` varchar(64) NOT NULL COMMENT '被注销用户',
+  `verify_method` varchar(32) NOT NULL COMMENT 'password / sms / email',
+  `reason` varchar(256) DEFAULT NULL COMMENT '用户填写原因',
+  `anonymized` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否已匿名化',
+  `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+  `creator` varchar(64) DEFAULT NULL COMMENT '创建者',
+  `modifier` varchar(64) DEFAULT NULL COMMENT '修改者',
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_adl_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号注销审计';
 
 -- ----------------------------
 -- Table structure for login_log

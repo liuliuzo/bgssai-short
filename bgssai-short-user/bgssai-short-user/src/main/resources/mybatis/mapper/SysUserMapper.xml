@@ -23,6 +23,7 @@
     <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
     <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
     <result column="current_session_id" jdbcType="VARCHAR" property="currentSessionId" />
+    <result column="deleted_at" jdbcType="TIMESTAMP" property="deletedAt" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -210,6 +211,12 @@
       <if test="updateTime != null">
         update_time,
       </if>
+      <if test="currentSessionId != null">
+        current_session_id,
+      </if>
+      <if test="deletedAt != null">
+        deleted_at,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -272,6 +279,12 @@
       <if test="updateTime != null">
         #{updateTime,jdbcType=TIMESTAMP},
       </if>
+      <if test="currentSessionId != null">
+        #{currentSessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="deletedAt != null">
+        #{deletedAt,jdbcType=TIMESTAMP},
+      </if>
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.SysUserExample" resultType="java.lang.Long">
@@ -284,6 +297,7 @@
     update sys_user
     <set>
       <if test="record.currentSessionId != null">current_session_id = #{record.currentSessionId,jdbcType=VARCHAR},</if>
+      <if test="record.deletedAt != null">deleted_at = #{record.deletedAt,jdbcType=TIMESTAMP},</if>
       <if test="record.id != null">
         id = #{record.id,jdbcType=INTEGER},
       </if>
@@ -435,6 +449,12 @@
       <if test="updateTime != null">
         update_time = #{updateTime,jdbcType=TIMESTAMP},
       </if>
+      <if test="currentSessionId != null">
+        current_session_id = #{currentSessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="deletedAt != null">
+        deleted_at = #{deletedAt,jdbcType=TIMESTAMP},
+      </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
@@ -458,7 +478,9 @@
       create_by = #{createBy,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       update_by = #{updateBy,jdbcType=VARCHAR},
-      update_time = #{updateTime,jdbcType=TIMESTAMP}
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      current_session_id = #{currentSessionId,jdbcType=VARCHAR},
+      deleted_at = #{deletedAt,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=INTEGER}
   </update>
 </mapper>

@@ -46,9 +46,15 @@ public class SysUser implements Serializable {
 
     private String currentSessionId;
 
+    private Date deletedAt;
+
     public String getCurrentSessionId() { return currentSessionId; }
 
     public void setCurrentSessionId(String currentSessionId) { this.currentSessionId = currentSessionId; }
+
+    public Date getDeletedAt() { return deletedAt; }
+
+    public void setDeletedAt(Date deletedAt) { this.deletedAt = deletedAt; }
 
     private static final long serialVersionUID = 1L;
 

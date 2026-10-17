@@ -93,3 +93,15 @@
 2. **改接口路径 / 字段**：同步改契约 Markdown、原型内联 mock 与本表，三处口径一致。
 3. **删页面**：删除本表对应行，并核对对应端 `PAGE-FLOW.html` 无悬空节点。
 4. **CR 校验**：涉及原型或前端路由的 PR，CR 阶段核对本表是否已同步（Standards §9 / §10）。
+
+
+## 账号设置 `/account`
+
+| 操作 | 方法 | 路径 |
+| --- | --- | --- |
+| 登录方式列表 | GET | `/bgssai/user/account/login-methods` |
+| 绑定 OAuth | POST | `/bgssai/user/account/login-methods/bind-oauth` |
+| 绑定手机/邮箱 | POST | `/bgssai/user/account/login-methods/bind-contact` |
+| 解绑 | POST | `/bgssai/user/account/login-methods/unbind` |
+| 注销预览 | GET | `/bgssai/user/account/deletion/preview` |
+| 注销 | POST | `/bgssai/user/account/deletion` |

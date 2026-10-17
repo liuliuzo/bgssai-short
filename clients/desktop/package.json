@@ -10,11 +10,15 @@
     "start:dev": "BGSSAI_CLIENT_ENV=dev electron .",
     "start:prod": "BGSSAI_CLIENT_ENV=prod electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "dist:linux": "electron-builder --linux AppImage",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:mac": "electron-builder --mac dmg"
   },
   "build": {
     "appId": "com.bgssai.short.desktop",
     "productName": "BGSSAI Short",
+    "artifactName": "BGSSAI-Short-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist"
     },
@@ -25,16 +29,24 @@
       "config.js",
       "package.json"
     ],
+    "asar": true,
     "win": {
-      "target": ["nsis"]
+      "target": ["nsis"],
+      "signAndEditExecutable": false
     },
     "mac": {
       "target": ["dmg"],
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "identity": null
     },
     "linux": {
       "target": ["AppImage"],
       "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "BGSSAI Short"
     }
   },
   "devDependencies": {

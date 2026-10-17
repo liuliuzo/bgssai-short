@@ -23,14 +23,15 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class TencentTokenHubAiProviderTest {
 
     @Test
-    void legacyGlobalAliasIsPreservedForExecutionAndCatalog() throws Exception {
+    void legacyGlobalAliasRejectedForShortExecutionButCatalogRecognizesHost() throws Exception {
         String alias = "https://www.bgssai-tokenhub-global.com";
         FakeClient http = new FakeClient();
         http.posts.add("{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}");
         AiProviderRequest request = request("TEXT", "route", "test");
         request.getModel().setConfigJson("{\"hub\":\"global\",\"base_url\":\"" + alias + "\"}");
-        assertEquals("ok", provider(http, "key").execute(request).getTextContent());
-        assertEquals(alias + "/v1/chat/completions", http.postedUrls.get(0));
+        BizException ex = assertThrows(BizException.class, () -> provider(http, "key").execute(request));
+        assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
+        assertTrue(http.postedUrls.isEmpty());
         var catalog = new com.bgssai.shortai.aimodel.TokenHubModelCatalog(TokenHubClientSupport.DEFAULT_CN_BASE_URL);
         assertEquals(alias, catalog.endpointFor(Map.of("base_url", alias), "route"));
         var resolver = com.bgssai.shortai.aimodel.AiModelResolveService.class.getDeclaredMethod("isHubConfig", AiModelConfig.class);
@@ -224,7 +225,7 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
-    void globalHubUsesGlobalSecretAndBaseUrl() {
+    void globalHubRejectedForShortCnPin() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"choices\":[{\"message\":{\"content\":\"intl\"}}],\"usage\":{\"total_tokens\":2}}");
         TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
@@ -235,10 +236,10 @@ class TencentTokenHubAiProviderTest {
         AiProviderRequest req = request("TEXT", "gpt-4o-mini", "hello");
         req.getModel().setConfigJson(
                 "{\"hub\":\"global\",\"secret_ref\":\"ai.tokenhub_global.api_key\",\"chat_path\":\"/v1/chat/completions\"}");
-        AiProviderResult result = provider.execute(req);
-        assertEquals("intl", result.getTextContent());
-        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.com/v1/chat/completions"));
-        assertEquals("Bearer sk-global", http.postedHeaders.get(0).get("Authorization"));
+        BizException ex = assertThrows(BizException.class, () -> provider.execute(req));
+        assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
+        assertTrue(http.postedUrls.isEmpty());
+        assertTrue(!ex.getMessage().toLowerCase().contains("tokenhub"));
     }
 
     @Test

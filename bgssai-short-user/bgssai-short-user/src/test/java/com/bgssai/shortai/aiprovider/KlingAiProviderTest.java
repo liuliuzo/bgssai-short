@@ -27,7 +27,7 @@ class KlingAiProviderTest {
         http.bytes = new byte[] { 1, 2, 3, 4 };
         KlingAiProvider provider = new KlingAiProvider(secret("k"), http, ms -> {
         });
-        AiProviderResult result = provider.execute(request("IMAGE", "kling-v2-1", "a cat"));
+        AiProviderResult result = provider.executeLegacy(request("IMAGE", "kling-v2-1", "a cat"));
         assertArrayEquals(http.bytes, result.getBinaryContent());
         assertEquals("image/png", result.getMimeType());
         assertEquals(1080, result.getWidth());
@@ -50,7 +50,7 @@ class KlingAiProviderTest {
         AiProviderRequest req = request("VIDEO", "kling-v2-6", "人物转头");
         req.getParams().put("image_base64", "aaaabbbb");
         req.getParams().put("duration_sec", 4);
-        AiProviderResult result = provider.execute(req);
+        AiProviderResult result = provider.executeLegacy(req);
         assertArrayEquals(http.bytes, result.getBinaryContent());
         assertEquals("video/mp4", result.getMimeType());
         assertEquals(5, result.getDurationSec());
@@ -70,7 +70,7 @@ class KlingAiProviderTest {
         });
         AiProviderRequest req = request("VIDEO", "kling-v2-6", "夜雨街头");
         req.getParams().put("duration_sec", 8);
-        provider.execute(req);
+        provider.executeLegacy(req);
         assertTrue(http.postedUrls.get(0).endsWith("/v1/videos/text2video"));
         assertTrue(http.postedBodies.get(0).contains("\"aspect_ratio\":\"9:16\""));
         assertTrue(http.postedBodies.get(0).contains("\"duration\":\"10\""));
@@ -80,7 +80,7 @@ class KlingAiProviderTest {
     void missingKeyRejected() {
         KlingAiProvider provider = new KlingAiProvider(secret(""), new FakeTransport(), ms -> {
         });
-        BizException ex = assertThrows(BizException.class, () -> provider.execute(request("IMAGE", "kling-v2-1", "x")));
+        BizException ex = assertThrows(BizException.class, () -> provider.executeLegacy(request("IMAGE", "kling-v2-1", "x")));
         assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
     }
 
@@ -88,7 +88,7 @@ class KlingAiProviderTest {
     void textAbilityRejected() {
         KlingAiProvider provider = new KlingAiProvider(secret("k"), new FakeTransport(), ms -> {
         });
-        BizException ex = assertThrows(BizException.class, () -> provider.execute(request("TEXT", "kling-v2-1", "x")));
+        BizException ex = assertThrows(BizException.class, () -> provider.executeLegacy(request("TEXT", "kling-v2-1", "x")));
         assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
     }
 
@@ -98,7 +98,7 @@ class KlingAiProviderTest {
         http.submitJson = "{\"code\":1200,\"message\":\"invalid api key\"}";
         KlingAiProvider provider = new KlingAiProvider(secret("k"), http, ms -> {
         });
-        BizException ex = assertThrows(BizException.class, () -> provider.execute(request("IMAGE", "kling-v2-1", "x")));
+        BizException ex = assertThrows(BizException.class, () -> provider.executeLegacy(request("IMAGE", "kling-v2-1", "x")));
         assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
         assertEquals("invalid api key", ex.getMessage());
     }
@@ -111,7 +111,7 @@ class KlingAiProviderTest {
                 + "\"task_status_msg\":\"content risk\"}}";
         KlingAiProvider provider = new KlingAiProvider(secret("k"), http, ms -> {
         });
-        BizException ex = assertThrows(BizException.class, () -> provider.execute(request("IMAGE", "kling-v2-1", "x")));
+        BizException ex = assertThrows(BizException.class, () -> provider.executeLegacy(request("IMAGE", "kling-v2-1", "x")));
         assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
         assertEquals("content risk", ex.getMessage());
     }

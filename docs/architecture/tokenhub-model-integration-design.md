@@ -7,8 +7,10 @@
 
 - 以 `provider_code=TENCENT_TOKENHUB` 接入 TEXT / VIDEO / VOICE / ASR / MUSIC，业务 Service
   仍只提交标准化的 `AiProviderRequest`，不感知供应商 JSON。
-- **双中枢**：`config_json.hub=cn|global` 分别走 TokenHub-CN / TokenHub-Global；密钥
-  `ai.tokenhub_cn.api_key` / `ai.tokenhub_global.api_key`（旧 CN 键空值回填兼容）。
+- **Short 固定 CN 中枢**（REQ-SHORT-COMMON-010）：`TokenHubClientSupport.resolveHub` 恒为
+  `cn`；配置或模型若指向 Global 则直接失败，不跨区回退。密钥优先 `ai.tokenhub_cn.api_key`
+  （旧 CN 键空值回填兼容）。直连厂商（VEO/KLING/MINIMAX/SEEDANCE/OPENAI_COMPAT）的
+  `execute` 拒绝，计费生成一律经 registry 走中枢。
 - 用户端只见 `display_name` 模型选择器；错误与 `fail_reason` 脱敏，不含 TokenHub 字样。
 - 所选模型不可用时回退同能力默认模型；重试可换备用模型。
 - 上游返回的临时视频、音频、字幕 URL 只在 Worker 内使用；成功后立即下载并转存对象存储。
