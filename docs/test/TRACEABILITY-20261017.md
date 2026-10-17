@@ -22,6 +22,10 @@
 | REQ-SHORT-COMMON-013 | 语言与真实状态 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-013-P, TC-SHORT-COMMON-013-N | 待测 |
 | REQ-SHORT-COMMON-014 | Bot下载与安装信息 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-014-P, TC-SHORT-COMMON-014-N | 待测 |
 | REQ-SHORT-COMMON-015 | Bot最小授权托管 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-015-P, TC-SHORT-COMMON-015-N | 待测 |
+| REQ-SHORT-COMMON-016 | 账号注销 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-016-P, TC-SHORT-COMMON-016-N | 待测 |
+| REQ-SHORT-COMMON-017 | 登录方式绑定与解绑 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-017-P, TC-SHORT-COMMON-017-N | 待测 |
+| REQ-SHORT-COMMON-018 | 额度套餐开通与续费 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-018-P, TC-SHORT-COMMON-018-N | 待测 |
+| REQ-SHORT-COMMON-019 | 额度按token计量显示 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-019-P, TC-SHORT-COMMON-019-N | 待测 |
 | REQ-SHORT-PLATFORM-001 | Windows核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-001-P, TC-SHORT-PLATFORM-001-N | 待测 |
 | REQ-SHORT-PLATFORM-002 | macOS核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-002-P, TC-SHORT-PLATFORM-002-N | 待测 |
 | REQ-SHORT-PLATFORM-003 | Linux核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-003-P, TC-SHORT-PLATFORM-003-N | 待测 |
