@@ -137,9 +137,9 @@ export default function McpTokens() {
   return (
     <div style={{ padding: 24, maxWidth: 960 }}>
       <div style={{ marginBottom: 20 }}>
-        <Title level={3} style={{ marginBottom: 4 }}>MCP Connectors</Title>
+        <Title level={3} style={{ marginBottom: 4 }}>MCP 连接器</Title>
         <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: 15 }}>
-          Connect your AI tools to bgssai
+          把 AI 工具连接到本应用，用个人访问令牌调用开放能力
         </Paragraph>
       </div>
 

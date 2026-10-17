@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Alert, Button, Card, Space, Table, Typography } from 'antd'
 import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import { instance } from '../../utils/http/axios'
-import { useUserStore } from '../../store/user'
+import { useUserStore, isAllowedRole } from '../../store/user'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -16,6 +16,7 @@ function formatSize(bytes) {
 export default function BotDownloadPage() {
   const navigate = useNavigate()
   const userInfo = useUserStore((s) => s.userInfo)
+  const loggedIn = !!(userInfo && isAllowedRole(userInfo))
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -64,28 +65,26 @@ export default function BotDownloadPage() {
   ]
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 20px 60px' }}>
-      <Space style={{ marginBottom: 20 }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(userInfo ? '/home' : '/login')}
-        >
-          {userInfo ? '返回首页' : '前往登录页'}
-        </Button>
-      </Space>
+    <div style={loggedIn ? undefined : { maxWidth: 880, margin: '0 auto', padding: '32px 20px 60px' }}>
+      {!loggedIn ? (
+        <Space style={{ marginBottom: 20 }}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/login')}>
+            前往登录页
+          </Button>
+        </Space>
+      ) : null}
 
-      <Title level={3} style={{ marginTop: 0 }}>下载 BGSSAI BOT</Title>
+      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 BGSSAI BOT</Title>
       <Paragraph type="secondary">
-        装好 BGSSAI BOT 之后可以把本应用托管给 Bot 直接操作。
-        本页不要求登录。安装包由本站提供，不上官网。
+        安装后可将本应用托管给 Bot 直接操作。本页可在未登录时访问；安装包由本站提供。
       </Paragraph>
 
       {items.length === 0 && !loading ? (
         <Alert
           type="info"
           showIcon
-          message="本站尚未发布安装包"
-          description="目录为空时不会列出假文件。发布时把 BGSSAI-Bot-Setup.exe 放到本应用的 Bot 下载目录即可。"
+          message="安装包即将上线"
+          description="当前尚未发布可下载的安装包，请稍后再来，或关注产品更新通知。"
           style={{ marginBottom: 24 }}
         />
       ) : (
@@ -100,9 +99,11 @@ export default function BotDownloadPage() {
         </Card>
       )}
 
-      <Paragraph style={{ marginTop: 24 }}>
-        <Link to="/login">登录本应用</Link>
-      </Paragraph>
+      {!loggedIn ? (
+        <Paragraph style={{ marginTop: 24 }}>
+          <Link to="/login">登录本应用</Link>
+        </Paragraph>
+      ) : null}
     </div>
   )
 }

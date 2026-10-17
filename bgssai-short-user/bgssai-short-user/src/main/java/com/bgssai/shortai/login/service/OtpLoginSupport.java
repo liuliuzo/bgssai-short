@@ -40,6 +40,9 @@ public class OtpLoginSupport {
     private final SysUserMapper sysUserMapper;
     private final ConcurrentHashMap<String, Long> cooldown = new ConcurrentHashMap<>();
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private LoginAuditService loginAuditService;
+
     public OtpLoginSupport(InMemoryOtpStore otpStore,
                            TencentSmsSender tencentSmsSender,
                            SmtpMailSender smtpMailSender,
@@ -149,6 +152,9 @@ public class OtpLoginSupport {
         String sessionId = singleSessionGuard.newSessionId();
         singleSessionGuard.bindSession(user.getUserId(), sessionId);
         String token = JwtUtil.generateToken(user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE, sessionId);
+        if (loginAuditService != null) {
+            loginAuditService.record(user.getUserId(), "LOGIN_SUCCESS");
+        }
         RespUserLogin resp = new RespUserLogin();
         resp.setJwtToken(token);
         resp.setRoleCode(USER_ROLE);

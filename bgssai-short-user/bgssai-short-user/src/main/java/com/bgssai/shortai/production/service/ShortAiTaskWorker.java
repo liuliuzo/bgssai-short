@@ -327,7 +327,11 @@ public class ShortAiTaskWorker {
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             complete(task, model);
-            settlement.settle(task, model, Math.max(1, executionUsage.get()));
+            boolean settled = settlement.settle(task, model, Math.max(1, executionUsage.get()));
+            if (!settled) {
+                failIfRunning(task, "SETTLE_RACE",
+                        "任务结果未能落账（可能已被超时回收），请在任务中心重试");
+            }
         } catch (BizException exBiz) {
             failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
             noteComposeFailed(task);

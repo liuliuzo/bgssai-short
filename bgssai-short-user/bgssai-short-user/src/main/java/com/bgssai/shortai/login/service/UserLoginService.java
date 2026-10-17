@@ -11,9 +11,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.login.dto.req.ReqUserLogin;
 import com.bgssai.shortai.login.dto.resp.RespUserLogin;
-import com.bgssai.shortai.mapper.LoginLogMapper;
 import com.bgssai.shortai.mapper.SysUserMapper;
-import com.bgssai.shortai.model.LoginLog;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
 import com.bgssai.shortai.utils.JwtUtil;
@@ -43,7 +41,7 @@ public class UserLoginService {
     private PasswordService passwordService;
 
     @Autowired
-    private LoginLogMapper loginLogMapper;
+    private LoginAuditService loginAuditService;
 
     /**
      * Authenticate and return a token.
@@ -67,7 +65,7 @@ public class UserLoginService {
 
         if (!passwordService.matches(user, req.getPassword())) {
             log.warn("user login failed: wrong password identifier={}", req.getIdentifier());
-            appendLoginLog(user.getUserId(), "LOGIN_FAIL_PASSWORD", httpReq);
+            loginAuditService.record(user.getUserId(), "LOGIN_FAIL_PASSWORD", httpReq);
             throw new BizException(CommonErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -81,7 +79,7 @@ public class UserLoginService {
                 null,
                 USER_ROLE, sessionId);
 
-        appendLoginLog(user.getUserId(), "LOGIN_SUCCESS", httpReq);
+        loginAuditService.record(user.getUserId(), "LOGIN_SUCCESS", httpReq);
         log.info("user login success userId={}", user.getUserId());
 
         RespUserLogin resp = new RespUserLogin();
@@ -92,33 +90,5 @@ public class UserLoginService {
         resp.setUserName(user.getUserName());
         resp.setRealName(user.getRealName());
         return resp;
-    }
-
-    private void appendLoginLog(String userId, String action, HttpServletRequest httpReq) {
-        try {
-            String ip = resolveIp(httpReq);
-            String ua = httpReq != null ? httpReq.getHeader("User-Agent") : null;
-            LoginLog loginLog = new LoginLog();
-            loginLog.setUserId(userId);
-            loginLog.setAction(action);
-            loginLog.setIpAddress(ip);
-            loginLog.setUserAgent(ua);
-            loginLog.setDelFlag(false);
-            loginLogMapper.insertSelective(loginLog);
-        } catch (Exception e) {
-            log.warn("[UserLoginService] login log insert failed userId={} err={}", userId, e.getMessage());
-        }
-    }
-
-    private static String resolveIp(HttpServletRequest req) {
-        if (req == null) return null;
-        String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) {
-            int comma = xff.indexOf(',');
-            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
-        }
-        String real = req.getHeader("X-Real-IP");
-        if (real != null && !real.isEmpty()) return real.trim();
-        return req.getRemoteAddr();
     }
 }

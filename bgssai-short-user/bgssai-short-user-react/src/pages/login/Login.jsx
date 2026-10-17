@@ -124,35 +124,39 @@ export default function Login() {
   }
 
   const submit = async () => {
-    if (!requireAgreement()) return
-    setBusy(true)
-    try {
-      if (loginMethod === 'sms') {
-        if (validatePhoneParts(dialCode, phone) || !/^\d{6}$/.test(smsCode.trim())) {
-          message.warning('请输入手机号和 6 位验证码')
-          return
-        }
-        const { data } = await authApi.loginSms({ phone: composeApiPhone(dialCode, phone), code: smsCode.trim() })
-        const r = (data && data.result) || {}
-        if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
+    if (loginMethod === 'sms') {
+      if (validatePhoneParts(dialCode, phone) || !/^\d{6}$/.test(smsCode.trim())) {
+        message.warning('请输入手机号和 6 位验证码')
         return
       }
-      if (loginMethod === 'email') {
-        if (!email.trim().includes('@') || !/^\d{6}$/.test(emailCode.trim())) {
-          message.warning('请输入邮箱和 6 位验证码')
-          return
-        }
-        const { data } = await authApi.loginEmail({ email: email.trim(), email_code: emailCode.trim() })
-        const r = (data && data.result) || {}
-        if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
+    } else if (loginMethod === 'email') {
+      if (!email.trim().includes('@') || !/^\d{6}$/.test(emailCode.trim())) {
+        message.warning('请输入邮箱和 6 位验证码')
         return
       }
+    } else {
       if (!identifier.trim()) {
         message.warning('请输入账号')
         return
       }
       if (!password) {
         message.warning('请输入密码')
+        return
+      }
+    }
+    if (!requireAgreement()) return
+    setBusy(true)
+    try {
+      if (loginMethod === 'sms') {
+        const { data } = await authApi.loginSms({ phone: composeApiPhone(dialCode, phone), code: smsCode.trim() })
+        const r = (data && data.result) || {}
+        if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
+        return
+      }
+      if (loginMethod === 'email') {
+        const { data } = await authApi.loginEmail({ email: email.trim(), email_code: emailCode.trim() })
+        const r = (data && data.result) || {}
+        if (CODE_OK.has(data && data.code) && r.jwt_token) loginSucceed(r)
         return
       }
       const { data } = await authApi.login({
