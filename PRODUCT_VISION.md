@@ -22,20 +22,18 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 愿景唯一权威：`bgssai-skeleton/docs/PRODUCT-LINE-VISION.md`。本段是各仓副本，变更以该文件为准。
 
-**本仓位置**：本仓是第 1 条工具集合中的 **AI 短剧制作平台**。成片做完后可以直接发布到 `bgssai-media` 的 YouTube Shorts 竖屏流；本仓不做播放社区。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。
+**本仓位置**：本仓是第 1 条工具集合中的 **短剧制作平台**。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`，也不把厂商直连当作产品通道。用户界面只选择模型。成片发布与在线观看在 Media 系列（`bgssai-media-pc`、`bgssai-media-web`、`bgssai-media-android`、`bgssai-media-ios`）；用户在各端创作者中心发布，本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。
 
 **对照（只读 `reference-github/`，不照搬品牌与仓库结构）：** **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。对标的是短剧从文字到成片的任务流与交互，不是把其中任一项目当本仓实现。
 
 **生态闭环与协同迭代**：
-- **`bgssai-short`**（AI 短剧制作平台）与 **`bgssai-long`**（AI 长剧制作平台）作为上游创作与制作双翼，与下游 **`bgssai-media`**（播放器 + 视频播放平台，对标 YouTube 与 Shorts，对照 VLC）**共同构成一个完整闭环，三仓紧密联动、一起迭代**。
-- 短剧制作完成后，通过统一摄入契约（`POST /bgssai/user/media/ingest/short`）一键发布至 `bgssai-media`，打通在 Windows PC 桌面端、Web 在线、Android、iOS 上的全场景多端播放体验。
+- **`bgssai-short`**（短剧制作平台）与 **`bgssai-long`**（长剧制作平台）做上游制作，两仓都是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。下游是 Media 视频解决方案：`bgssai-media-pc` 是参考 VLC 的 PC 播放器加播放平台，`bgssai-media-web`、`bgssai-media-android`、`bgssai-media-ios` 是各端播放平台，对标 YouTube 与 YouTube Shorts。
+- 短剧制作完成后，通过统一摄入契约（`POST /bgssai/user/media/ingest/short`）进入 Media 目录。四端用户都通过创作者中心发布作品，并在线观看。
 
 > 本文件是产品「AI 短剧制作平台」的愿景与定位，是需求（`docs/feature/**`）的上位背景；需求版本变更时
 > 同步回顾本文件受影响处（Standards §0）。
 >
-> **当前状态**：M0–M3 基础范围已完成（见 `docs/project/milestones.md`）。生产模型统一通过腾讯云
-> TokenHub 接入：文本为 Hy4 / Kimi K3 / DeepSeek-V4-Pro，视频为 MiniMax / PixVerse / Kling，
-> 声音为 Hy-ASR / MiniMax-Speech / MiniMax-Music；既有直连 Provider 保留为可选通道。素材默认本地回退或华为云 OBS。
+> **当前状态**：M0–M3 基础范围已完成（见 `docs/project/milestones.md`）。2026-10-17 起，本仓作为境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`。文本、视频、声音仍按既有目录选模型（文本 Hy4 / Kimi K3 / DeepSeek-V4-Pro，视频 MiniMax / PixVerse / Kling，声音 Hy-ASR / MiniMax-Speech / MiniMax-Music）。厂商直连不再作为产品通道。素材默认本地回退或华为云 OBS。
 
 ## 一、产品定位
 
