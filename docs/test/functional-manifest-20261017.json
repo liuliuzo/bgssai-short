@@ -1,0 +1,1301 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "repo": "liuliuzo/bgssai-short",
+  "local_repo": "bgssai-short",
+  "baseline": "aa74224179ae7b43fcafa99565b9271e37fdabc6",
+  "requirement_file": "docs/feature/opc-requirements-20261017.md",
+  "requirements": [
+    {
+      "id": "REQ-SHORT-PRODUCT-001",
+      "title": "剧本与分镜版本",
+      "cases": [
+        "TC-SHORT-PRODUCT-001-P",
+        "TC-SHORT-PRODUCT-001-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PRODUCT-002",
+      "title": "角色场景与素材生成",
+      "cases": [
+        "TC-SHORT-PRODUCT-002-P",
+        "TC-SHORT-PRODUCT-002-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PRODUCT-003",
+      "title": "配音字幕与合成",
+      "cases": [
+        "TC-SHORT-PRODUCT-003-P",
+        "TC-SHORT-PRODUCT-003-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PRODUCT-004",
+      "title": "长任务恢复与幂等",
+      "cases": [
+        "TC-SHORT-PRODUCT-004-P",
+        "TC-SHORT-PRODUCT-004-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PRODUCT-005",
+      "title": "Media成片发布",
+      "cases": [
+        "TC-SHORT-PRODUCT-005-P",
+        "TC-SHORT-PRODUCT-005-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-001",
+      "title": "自助注册与本地账号",
+      "cases": [
+        "TC-SHORT-COMMON-001-P",
+        "TC-SHORT-COMMON-001-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-002",
+      "title": "邮箱与手机验证码",
+      "cases": [
+        "TC-SHORT-COMMON-002-P",
+        "TC-SHORT-COMMON-002-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-003",
+      "title": "平台管理权限隔离",
+      "cases": [
+        "TC-SHORT-COMMON-003-P",
+        "TC-SHORT-COMMON-003-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-004",
+      "title": "第三方授权独立会话",
+      "cases": [
+        "TC-SHORT-COMMON-004-P",
+        "TC-SHORT-COMMON-004-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-005",
+      "title": "数据归属与失效会话",
+      "cases": [
+        "TC-SHORT-COMMON-005-P",
+        "TC-SHORT-COMMON-005-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-006",
+      "title": "微信区域登录",
+      "cases": [
+        "TC-SHORT-COMMON-006-P",
+        "TC-SHORT-COMMON-006-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-007",
+      "title": "抖音区域登录",
+      "cases": [
+        "TC-SHORT-COMMON-007-P",
+        "TC-SHORT-COMMON-007-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-008",
+      "title": "百度区域登录",
+      "cases": [
+        "TC-SHORT-COMMON-008-P",
+        "TC-SHORT-COMMON-008-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-009",
+      "title": "支付宝区域登录",
+      "cases": [
+        "TC-SHORT-COMMON-009-P",
+        "TC-SHORT-COMMON-009-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-010",
+      "title": "同区模型原生能力",
+      "cases": [
+        "TC-SHORT-COMMON-010-P",
+        "TC-SHORT-COMMON-010-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-011",
+      "title": "无感选模与倍率",
+      "cases": [
+        "TC-SHORT-COMMON-011-P",
+        "TC-SHORT-COMMON-011-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-012",
+      "title": "额度与用量可追溯",
+      "cases": [
+        "TC-SHORT-COMMON-012-P",
+        "TC-SHORT-COMMON-012-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-013",
+      "title": "语言与真实状态",
+      "cases": [
+        "TC-SHORT-COMMON-013-P",
+        "TC-SHORT-COMMON-013-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-014",
+      "title": "Bot下载与安装信息",
+      "cases": [
+        "TC-SHORT-COMMON-014-P",
+        "TC-SHORT-COMMON-014-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-015",
+      "title": "Bot最小授权托管",
+      "cases": [
+        "TC-SHORT-COMMON-015-P",
+        "TC-SHORT-COMMON-015-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PLATFORM-001",
+      "title": "Windows核心交付",
+      "cases": [
+        "TC-SHORT-PLATFORM-001-P",
+        "TC-SHORT-PLATFORM-001-N"
+      ],
+      "file": "docs/test/TC-opc-platform-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PLATFORM-002",
+      "title": "macOS核心交付",
+      "cases": [
+        "TC-SHORT-PLATFORM-002-P",
+        "TC-SHORT-PLATFORM-002-N"
+      ],
+      "file": "docs/test/TC-opc-platform-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PLATFORM-003",
+      "title": "Linux核心交付",
+      "cases": [
+        "TC-SHORT-PLATFORM-003-P",
+        "TC-SHORT-PLATFORM-003-N"
+      ],
+      "file": "docs/test/TC-opc-platform-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PLATFORM-004",
+      "title": "iOS核心交付",
+      "cases": [
+        "TC-SHORT-PLATFORM-004-P",
+        "TC-SHORT-PLATFORM-004-N"
+      ],
+      "file": "docs/test/TC-opc-platform-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PLATFORM-005",
+      "title": "Android核心交付",
+      "cases": [
+        "TC-SHORT-PLATFORM-005-P",
+        "TC-SHORT-PLATFORM-005-N"
+      ],
+      "file": "docs/test/TC-opc-platform-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-REGRESSION-001",
+      "title": "单会话失效",
+      "cases": [
+        "TC-SHORT-REGRESSION-001-P",
+        "TC-SHORT-REGRESSION-001-N"
+      ],
+      "file": "docs/test/TC-feature-gaps-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-REGRESSION-002",
+      "title": "登录页单一入口",
+      "cases": [
+        "TC-SHORT-REGRESSION-002-P",
+        "TC-SHORT-REGRESSION-002-N"
+      ],
+      "file": "docs/test/TC-feature-gaps-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-REGRESSION-003",
+      "title": "法律入口去重",
+      "cases": [
+        "TC-SHORT-REGRESSION-003-P",
+        "TC-SHORT-REGRESSION-003-N"
+      ],
+      "file": "docs/test/TC-feature-gaps-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-REGRESSION-004",
+      "title": "动态效果与可访问性",
+      "cases": [
+        "TC-SHORT-REGRESSION-004-P",
+        "TC-SHORT-REGRESSION-004-N"
+      ],
+      "file": "docs/test/TC-feature-gaps-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-REGRESSION-005",
+      "title": "用量回执持久化",
+      "cases": [
+        "TC-SHORT-REGRESSION-005-P",
+        "TC-SHORT-REGRESSION-005-N"
+      ],
+      "file": "docs/test/TC-feature-gaps-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-REGRESSION-006",
+      "title": "在线客服与工单入口",
+      "cases": [
+        "TC-SHORT-REGRESSION-006-P",
+        "TC-SHORT-REGRESSION-006-N"
+      ],
+      "file": "docs/test/TC-feature-gaps-20261017.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-SHORT-PRODUCT-001-P",
+      "requirement": "REQ-SHORT-PRODUCT-001",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-001-N",
+      "requirement": "REQ-SHORT-PRODUCT-001",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-002-P",
+      "requirement": "REQ-SHORT-PRODUCT-002",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-002-N",
+      "requirement": "REQ-SHORT-PRODUCT-002",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-003-P",
+      "requirement": "REQ-SHORT-PRODUCT-003",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-003-N",
+      "requirement": "REQ-SHORT-PRODUCT-003",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-004-P",
+      "requirement": "REQ-SHORT-PRODUCT-004",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-004-N",
+      "requirement": "REQ-SHORT-PRODUCT-004",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-005-P",
+      "requirement": "REQ-SHORT-PRODUCT-005",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-005-N",
+      "requirement": "REQ-SHORT-PRODUCT-005",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-001-P",
+      "requirement": "REQ-SHORT-COMMON-001",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-001-N",
+      "requirement": "REQ-SHORT-COMMON-001",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-002-P",
+      "requirement": "REQ-SHORT-COMMON-002",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-002-N",
+      "requirement": "REQ-SHORT-COMMON-002",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-003-P",
+      "requirement": "REQ-SHORT-COMMON-003",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-003-N",
+      "requirement": "REQ-SHORT-COMMON-003",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-004-P",
+      "requirement": "REQ-SHORT-COMMON-004",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-004-N",
+      "requirement": "REQ-SHORT-COMMON-004",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-005-P",
+      "requirement": "REQ-SHORT-COMMON-005",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-005-N",
+      "requirement": "REQ-SHORT-COMMON-005",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-006-P",
+      "requirement": "REQ-SHORT-COMMON-006",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-006-N",
+      "requirement": "REQ-SHORT-COMMON-006",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-007-P",
+      "requirement": "REQ-SHORT-COMMON-007",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-007-N",
+      "requirement": "REQ-SHORT-COMMON-007",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-008-P",
+      "requirement": "REQ-SHORT-COMMON-008",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-008-N",
+      "requirement": "REQ-SHORT-COMMON-008",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-009-P",
+      "requirement": "REQ-SHORT-COMMON-009",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-009-N",
+      "requirement": "REQ-SHORT-COMMON-009",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-010-P",
+      "requirement": "REQ-SHORT-COMMON-010",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-010-N",
+      "requirement": "REQ-SHORT-COMMON-010",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-011-P",
+      "requirement": "REQ-SHORT-COMMON-011",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-011-N",
+      "requirement": "REQ-SHORT-COMMON-011",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-012-P",
+      "requirement": "REQ-SHORT-COMMON-012",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-012-N",
+      "requirement": "REQ-SHORT-COMMON-012",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-013-P",
+      "requirement": "REQ-SHORT-COMMON-013",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-013-N",
+      "requirement": "REQ-SHORT-COMMON-013",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-014-P",
+      "requirement": "REQ-SHORT-COMMON-014",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-014-N",
+      "requirement": "REQ-SHORT-COMMON-014",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-015-P",
+      "requirement": "REQ-SHORT-COMMON-015",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-015-N",
+      "requirement": "REQ-SHORT-COMMON-015",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-001-P",
+      "requirement": "REQ-SHORT-PLATFORM-001",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-001-N",
+      "requirement": "REQ-SHORT-PLATFORM-001",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-002-P",
+      "requirement": "REQ-SHORT-PLATFORM-002",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-002-N",
+      "requirement": "REQ-SHORT-PLATFORM-002",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-003-P",
+      "requirement": "REQ-SHORT-PLATFORM-003",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-003-N",
+      "requirement": "REQ-SHORT-PLATFORM-003",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-004-P",
+      "requirement": "REQ-SHORT-PLATFORM-004",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-004-N",
+      "requirement": "REQ-SHORT-PLATFORM-004",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-005-P",
+      "requirement": "REQ-SHORT-PLATFORM-005",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PLATFORM-005-N",
+      "requirement": "REQ-SHORT-PLATFORM-005",
+      "file": "TC-opc-platform-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-001-P",
+      "requirement": "REQ-SHORT-REGRESSION-001",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-001-N",
+      "requirement": "REQ-SHORT-REGRESSION-001",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-002-P",
+      "requirement": "REQ-SHORT-REGRESSION-002",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-002-N",
+      "requirement": "REQ-SHORT-REGRESSION-002",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-003-P",
+      "requirement": "REQ-SHORT-REGRESSION-003",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-003-N",
+      "requirement": "REQ-SHORT-REGRESSION-003",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-004-P",
+      "requirement": "REQ-SHORT-REGRESSION-004",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-004-N",
+      "requirement": "REQ-SHORT-REGRESSION-004",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-005-P",
+      "requirement": "REQ-SHORT-REGRESSION-005",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-005-N",
+      "requirement": "REQ-SHORT-REGRESSION-005",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-006-P",
+      "requirement": "REQ-SHORT-REGRESSION-006",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-REGRESSION-006-N",
+      "requirement": "REQ-SHORT-REGRESSION-006",
+      "file": "TC-feature-gaps-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    }
+  ],
+  "coverage": [
+    {
+      "source": "docs/feature/_TEMPLATE-feature.md",
+      "title": "功能名称（feature-id）",
+      "classification": "索引或模板，不作为独立业务功能",
+      "legacy": [],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/ai-capability-usage.md",
+      "title": "AI 能力配置与用量成本（ai-capability-usage）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-ai-capability-usage.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/ai-model-integration.md",
+      "title": "TokenHub 多模型接入（ai-model-integration）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-ai-model-integration.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/asset-consistency-panel.md",
+      "title": "资产一致性面板（asset-consistency-panel）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-asset-consistency-panel.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/bot-download-entry.md",
+      "title": "Bot 下载入口体验",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-COMMON-014"
+      ],
+      "cases": [
+        "TC-SHORT-COMMON-014-P",
+        "TC-SHORT-COMMON-014-N"
+      ]
+    },
+    {
+      "source": "docs/feature/bot-mobile-downloads.md",
+      "title": "Bot 全平台安装包识别修复",
+      "classification": "专项或共同契约用例",
+      "legacy": [
+        "docs/review/test-cases/TC-bot-mobile-downloads.md"
+      ],
+      "requirements": [
+        "REQ-SHORT-COMMON-014"
+      ],
+      "cases": [
+        "TC-SHORT-COMMON-014-P",
+        "TC-SHORT-COMMON-014-N"
+      ]
+    },
+    {
+      "source": "docs/feature/character-bible.md",
+      "title": "角色卡与场景卡（character-bible）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-character-bible.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/content-compliance.md",
+      "title": "合规预检与内容审核（content-compliance）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-content-compliance.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/edit-project-export.md",
+      "title": "剪辑工程导出（edit-project-export）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-edit-project-export.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/film-compose-export.md",
+      "title": "成片合成与导出（film-compose-export）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-film-compose-export.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/film-publish-media.md",
+      "title": "成片发布到 bgssai-media（film-publish-media）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-film-publish-media.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/frame-continuity.md",
+      "title": "首尾帧衔接（frame-continuity）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-frame-continuity.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/health-check.md",
+      "title": "需求：健康检查（health-check）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-health-check.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/in-app-support.md",
+      "title": "站内在线客服（留言 / 会话）",
+      "classification": "专项或共同契约用例",
+      "legacy": [
+        "docs/review/test-cases/TC-in-app-support.md"
+      ],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-006"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-006-P",
+        "TC-SHORT-REGRESSION-006-N"
+      ]
+    },
+    {
+      "source": "docs/feature/launch-audit-20260907.md",
+      "title": "视频生成结果下载修复",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-launch-audit-20260907.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/legal-entry-dedup.md",
+      "title": "协议入口去重（2026-09-29）",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-003"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-003-P",
+        "TC-SHORT-REGRESSION-003-N"
+      ]
+    },
+    {
+      "source": "docs/feature/legal-fan-out.md",
+      "title": "官网法律页分发（legal-fan-out）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-legal-fan-out.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/login-page-cleanup-20260926.md",
+      "title": "用户登录页整理（2026-09-26）",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-002"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-002-P",
+        "TC-SHORT-REGRESSION-002-N"
+      ]
+    },
+    {
+      "source": "docs/feature/mcp-server.md",
+      "title": "MCP 服务（用户端）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-mcp-server.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/mobile-in-bot-shell.md",
+      "title": "用户端壳内窄栏布局（mobile-in-bot-shell）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-mobile-in-bot-shell.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/model-pricing-receipts.md",
+      "title": "模型定价与真实用量对账（2026-10-15）",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-005"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-005-P",
+        "TC-SHORT-REGRESSION-005-N"
+      ]
+    },
+    {
+      "source": "docs/feature/otp-entry-20260924.md",
+      "title": "验证码登录即注册",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-002"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-002-P",
+        "TC-SHORT-REGRESSION-002-N"
+      ]
+    },
+    {
+      "source": "docs/feature/previz-text-storyboard.md",
+      "title": "文字预演与提示词优化（previz-text-storyboard）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-previz-text-storyboard.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/product-motion.md",
+      "title": "用户端动态视觉（2026-09-25）",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-004"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-004-P",
+        "TC-SHORT-REGRESSION-004-N"
+      ]
+    },
+    {
+      "source": "docs/feature/quality-pipeline.md",
+      "title": "优秀短剧质量流水线（quality-pipeline）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-quality-pipeline.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/README.md",
+      "title": "docs/feature（功能需求 + 详细设计）",
+      "classification": "索引或模板，不作为独立业务功能",
+      "legacy": [],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/script-studio.md",
+      "title": "剧本工作台与节奏体检（script-studio）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-script-studio.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/short-01-commercial-gate.md",
+      "title": "SHORT-01 商业门禁（成片生产 → Media）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-short-01-commercial-gate.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/short-work-management.md",
+      "title": "作品与剧集管理（short-work-management）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-short-work-management.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/shot-generation.md",
+      "title": "画面生成与任务中心（shot-generation）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-shot-generation.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/single-session-completion.md",
+      "title": "补齐单会话登录",
+      "classification": "专项或共同契约用例",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-REGRESSION-001"
+      ],
+      "cases": [
+        "TC-SHORT-REGRESSION-001-P",
+        "TC-SHORT-REGRESSION-001-N"
+      ]
+    },
+    {
+      "source": "docs/feature/source-import.md",
+      "title": "原著导入与改编（source-import）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-source-import.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/story-map.md",
+      "title": "剧情图谱与走位示意（story-map）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-story-map.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/storyboard-canvas.md",
+      "title": "分镜画布编排（storyboard-canvas）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-storyboard-canvas.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/storyboard-workbench.md",
+      "title": "分镜工作台（storyboard-workbench）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-storyboard-workbench.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/subscription-credit.md",
+      "title": "订阅套餐与加量 credit（subscription-credit）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-subscription-credit.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/ux-three-questions.md",
+      "title": "三个问题体验主线（ux-three-questions）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-ux-three-questions.md"
+      ],
+      "requirements": [],
+      "cases": []
+    },
+    {
+      "source": "docs/feature/voice-subtitle.md",
+      "title": "配音与字幕（voice-subtitle）",
+      "classification": "历史套件保留",
+      "legacy": [
+        "docs/review/test-cases/TC-voice-subtitle.md"
+      ],
+      "requirements": [],
+      "cases": []
+    }
+  ],
+  "historical_suites": [
+    {
+      "path": "docs/review/test-cases/TC-ai-capability-usage.md",
+      "sha256": "ef4562d0abb06e46f066476bf32ae1d3934a57c8bb5398490cc064f595e73bc6"
+    },
+    {
+      "path": "docs/review/test-cases/TC-ai-model-integration.md",
+      "sha256": "7ee2a19339075255a32411c965c526da6019ecade892d402e15a05836bd6d359"
+    },
+    {
+      "path": "docs/review/test-cases/TC-asset-consistency-panel.md",
+      "sha256": "619a7aac509db1a5876fa3541f012bffe0a0d9f28edd99744db461fcabd19f49"
+    },
+    {
+      "path": "docs/review/test-cases/TC-bot-mobile-downloads.md",
+      "sha256": "e929fc7a97629354f155f961d4b85a3acce9f9e6751736364b97f0418c2a84a6"
+    },
+    {
+      "path": "docs/review/test-cases/TC-character-bible.md",
+      "sha256": "4eb7aa4f89a2219a1135e76fe94ee98219ffeb5c63e2715236604d55186115f6"
+    },
+    {
+      "path": "docs/review/test-cases/TC-content-compliance.md",
+      "sha256": "5a8d86aeef9ccaa388b75a23ea5d9a2e81ef20b0d11120d7293aa5b1280979ab"
+    },
+    {
+      "path": "docs/review/test-cases/TC-edit-project-export.md",
+      "sha256": "8b714a87abcbb43ce8478660aaaff47ed3bed265d7ad679fae93f53176fad695"
+    },
+    {
+      "path": "docs/review/test-cases/TC-film-compose-export.md",
+      "sha256": "43d255c07c3d720696064a3be6348616c61fd6e59e9f4fc42a0d05ed8de5ebd4"
+    },
+    {
+      "path": "docs/review/test-cases/TC-film-publish-media.md",
+      "sha256": "4d8388de3507fbd15091bc06e33bb3658a9c817f999dcc37ef4d1caf3bcd8aff"
+    },
+    {
+      "path": "docs/review/test-cases/TC-frame-continuity.md",
+      "sha256": "0790b3af9b571629978b5ad5256e9880668ffaff8808b0ef7dd922b7ad38395f"
+    },
+    {
+      "path": "docs/review/test-cases/TC-health-check.md",
+      "sha256": "1bbe0d8f175f7ed26b5b6049fec7a6dc9fb5a4817a6188fabc4210dc1b53c743"
+    },
+    {
+      "path": "docs/review/test-cases/TC-in-app-support.md",
+      "sha256": "0410bc8c10f4b4865f27db878bde50c3fd5a19c4e697418edd0a29302e242a99"
+    },
+    {
+      "path": "docs/review/test-cases/TC-launch-audit-20260907.md",
+      "sha256": "db453d5cec54abaf665b153e90c4bccb6baf9cf422a7e7b986adecb61a230702"
+    },
+    {
+      "path": "docs/review/test-cases/TC-legal-fan-out.md",
+      "sha256": "5b02dc3e218997c2515f4e2c687e4ee1ff9a54214c5f792b1d3ad698b3025e89"
+    },
+    {
+      "path": "docs/review/test-cases/TC-mcp-server.md",
+      "sha256": "02007921cf91812078682dd674ce83fb7fadc9ca4a51d64cfd033a3653fce6f8"
+    },
+    {
+      "path": "docs/review/test-cases/TC-mobile-in-bot-shell.md",
+      "sha256": "35746196dbca8a2c1efe2dd91f5f3fe0dfa2dcaf603560afe263e37eeb869cfe"
+    },
+    {
+      "path": "docs/review/test-cases/TC-previz-text-storyboard.md",
+      "sha256": "f45d18752a6b6b11eafea8a27a41fb136d292834ab47d8fa63065995662257ab"
+    },
+    {
+      "path": "docs/review/test-cases/TC-quality-pipeline.md",
+      "sha256": "3af624bf3f3cb40e91089242bd8f1049f7d003a546778a6a2d84fa575b0533c2"
+    },
+    {
+      "path": "docs/review/test-cases/TC-script-studio.md",
+      "sha256": "fb19244ae53bddbcd70d3f1208ac3baf6c182d5da99fc622e2a7f0c4716da6e1"
+    },
+    {
+      "path": "docs/review/test-cases/TC-short-01-commercial-gate.md",
+      "sha256": "4381668a63d40522af2fc36eb5f44466f6ffcdc779296e88481123b968e86e62"
+    },
+    {
+      "path": "docs/review/test-cases/TC-short-work-management.md",
+      "sha256": "2715d95190eec4fb859a99824d3507fb6fd8be9051d4d8c57dc7c376983ea9e3"
+    },
+    {
+      "path": "docs/review/test-cases/TC-shot-generation.md",
+      "sha256": "005b1f91a06dcaad64c186a56d5130637013d1bbc5df525c7958a7e01c308364"
+    },
+    {
+      "path": "docs/review/test-cases/TC-source-import.md",
+      "sha256": "91240b4c126d425f89d762d7f8d55a4e5007d3e9dc061691a9bebd95fd3164cb"
+    },
+    {
+      "path": "docs/review/test-cases/TC-story-map.md",
+      "sha256": "510c5107ca77580662cdc230606672b277f94a4d7d0be960a2aa1440621b9be7"
+    },
+    {
+      "path": "docs/review/test-cases/TC-storyboard-canvas.md",
+      "sha256": "20db0b4bfb76ff7e7313ee6028d74d522336daa622cb18a4e817c93ca663b438"
+    },
+    {
+      "path": "docs/review/test-cases/TC-storyboard-workbench.md",
+      "sha256": "1a0cd968c094c589ec313163e16c20b36d686961d14d98e1d0fc79a0bdfcb62e"
+    },
+    {
+      "path": "docs/review/test-cases/TC-subscription-credit.md",
+      "sha256": "23a91c0e36b993f4239d42c6f915ebdfa392730a625b04ee471e4f22cf5f9603"
+    },
+    {
+      "path": "docs/review/test-cases/TC-ux-three-questions.md",
+      "sha256": "df369b8aee89a2e63ebdf9acdf6b051f14fe90818208c588f86103bc4bcaebff"
+    },
+    {
+      "path": "docs/review/test-cases/TC-voice-subtitle.md",
+      "sha256": "35c6e4f19e18828af6941146fbb43b428d0cb48eb066d92b2165d2a76ea460e2"
+    },
+    {
+      "path": "docs/test/TC-dev-20261015.md",
+      "sha256": "4af0d947ba0fd76944a461d80e96e049779ae137fda8a6cabe7c45813f5016da"
+    }
+  ],
+  "progress": {
+    "待测": 62,
+    "通过": 4,
+    "失败": 0,
+    "阻塞": 0,
+    "不适用": 0
+  },
+  "suite_counts": {
+    "TC-dev-20261015.md": {
+      "待测": 0,
+      "通过": 4,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-feature-gaps-20261017.md": {
+      "待测": 12,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-opc-common-20261017.md": {
+      "待测": 30,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-opc-platform-20261017.md": {
+      "待测": 10,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-opc-product-20261017.md": {
+      "待测": 10,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    }
+  },
+  "design_only": true
+}

@@ -59,3 +59,9 @@
 | MCP 服务 | 用户端 Streamable HTTP MCP + PAT；MCP Connectors（Claude / Codex / Cursor / Grok Bot / bgssai-bot）；tagline「Connect your AI tools to bgssai」；只读包装登录日志与健康探针 | `../api/MCP.md` | `../demo-static/web/user/mcp-tokens.html` |
 | 站内在线客服 | 对话气泡留言 / 会话 + 聊内提工单；管理端处理台含工单状态；会话 OPEN/PENDING/CLOSED | [`in-app-support.md`](./in-app-support.md) · [`../api/in-app-support.md`](../api/in-app-support.md) | 用户端 `support-chat` · 管理端 `support-inbox` |
 | 壳内窄栏布局 | Bot / Chat 旁嵌用户端时切触控窄栏；独立桌面不改；管理端跳过 | [`mobile-in-bot-shell.md`](./mobile-in-bot-shell.md) | 用户端 `shell-pane.html` |
+
+<!-- OPC-20261017 START -->
+## 2026-10-17 用户规划补充
+
+[opc-requirements-20261017.md](opc-requirements-20261017.md)：本产品职责、共同契约、五端边界、验收条件及逐条功能用例。仅需求与测试设计，不代表实施完成。
+<!-- OPC-20261017 END -->
