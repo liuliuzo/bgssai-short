@@ -26,7 +26,7 @@
 
 [需求](../feature/opc-requirements-20261017.md) · [逐需求矩阵](TRACEABILITY-20261017.md) · [存量覆盖索引](REQUIREMENT-COVERAGE.md)
 
-本轮新增35条可验收需求、70条用例；均为待测。历史测试不因本次补充改变结果。
+本轮新增38条可验收需求、76条用例；均为待测。历史测试不因本次补充改变结果。
 
 - [TC-opc-product-20261017.md](TC-opc-product-20261017.md)
 - [TC-opc-common-20261017.md](TC-opc-common-20261017.md)

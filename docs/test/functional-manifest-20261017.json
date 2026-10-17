@@ -52,6 +52,33 @@
       "file": "docs/test/TC-opc-product-20261017.md"
     },
     {
+      "id": "REQ-SHORT-PRODUCT-006",
+      "title": "角色场景资产库与跨镜头一致性锚定",
+      "cases": [
+        "TC-SHORT-PRODUCT-006-P",
+        "TC-SHORT-PRODUCT-006-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PRODUCT-007",
+      "title": "可视多轨时间轴精编与音画时序对齐",
+      "cases": [
+        "TC-SHORT-PRODUCT-007-P",
+        "TC-SHORT-PRODUCT-007-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-PRODUCT-008",
+      "title": "竖屏短剧画幅与黄金卡点节奏模板",
+      "cases": [
+        "TC-SHORT-PRODUCT-008-P",
+        "TC-SHORT-PRODUCT-008-N"
+      ],
+      "file": "docs/test/TC-opc-product-20261017.md"
+    },
+    {
       "id": "REQ-SHORT-COMMON-001",
       "title": "自助注册与本地账号",
       "cases": [
@@ -394,6 +421,48 @@
       "kind": "N"
     },
     {
+      "id": "TC-SHORT-PRODUCT-006-P",
+      "requirement": "REQ-SHORT-PRODUCT-006",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-006-N",
+      "requirement": "REQ-SHORT-PRODUCT-006",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-007-P",
+      "requirement": "REQ-SHORT-PRODUCT-007",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-007-N",
+      "requirement": "REQ-SHORT-PRODUCT-007",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-008-P",
+      "requirement": "REQ-SHORT-PRODUCT-008",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-PRODUCT-008-N",
+      "requirement": "REQ-SHORT-PRODUCT-008",
+      "file": "TC-opc-product-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
       "id": "TC-SHORT-COMMON-001-P",
       "requirement": "REQ-SHORT-COMMON-001",
       "file": "TC-opc-common-20261017.md",
@@ -621,7 +690,7 @@
       "id": "TC-SHORT-COMMON-017-P",
       "requirement": "REQ-SHORT-COMMON-017",
       "file": "TC-opc-common-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
@@ -635,14 +704,14 @@
       "id": "TC-SHORT-COMMON-018-P",
       "requirement": "REQ-SHORT-COMMON-018",
       "file": "TC-opc-common-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
       "id": "TC-SHORT-COMMON-018-N",
       "requirement": "REQ-SHORT-COMMON-018",
       "file": "TC-opc-common-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "N"
     },
     {
@@ -663,70 +732,70 @@
       "id": "TC-SHORT-PLATFORM-001-P",
       "requirement": "REQ-SHORT-PLATFORM-001",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
       "id": "TC-SHORT-PLATFORM-001-N",
       "requirement": "REQ-SHORT-PLATFORM-001",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "N"
     },
     {
       "id": "TC-SHORT-PLATFORM-002-P",
       "requirement": "REQ-SHORT-PLATFORM-002",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
       "id": "TC-SHORT-PLATFORM-002-N",
       "requirement": "REQ-SHORT-PLATFORM-002",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "N"
     },
     {
       "id": "TC-SHORT-PLATFORM-003-P",
       "requirement": "REQ-SHORT-PLATFORM-003",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
       "id": "TC-SHORT-PLATFORM-003-N",
       "requirement": "REQ-SHORT-PLATFORM-003",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "N"
     },
     {
       "id": "TC-SHORT-PLATFORM-004-P",
       "requirement": "REQ-SHORT-PLATFORM-004",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
       "id": "TC-SHORT-PLATFORM-004-N",
       "requirement": "REQ-SHORT-PLATFORM-004",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "N"
     },
     {
       "id": "TC-SHORT-PLATFORM-005-P",
       "requirement": "REQ-SHORT-PLATFORM-005",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "P"
     },
     {
       "id": "TC-SHORT-PLATFORM-005-N",
       "requirement": "REQ-SHORT-PLATFORM-005",
       "file": "TC-opc-platform-20261017.md",
-      "status": "待测",
+      "status": "阻塞",
       "kind": "N"
     },
     {
@@ -1338,10 +1407,10 @@
     }
   ],
   "progress": {
-    "待测": 70,
+    "待测": 63,
     "通过": 4,
     "失败": 0,
-    "阻塞": 0,
+    "阻塞": 13,
     "不适用": 0
   },
   "suite_counts": {
@@ -1360,21 +1429,21 @@
       "不适用": 0
     },
     "TC-opc-common-20261017.md": {
-      "待测": 38,
+      "待测": 35,
       "通过": 0,
       "失败": 0,
-      "阻塞": 0,
+      "阻塞": 3,
       "不适用": 0
     },
     "TC-opc-platform-20261017.md": {
-      "待测": 10,
+      "待测": 0,
       "通过": 0,
       "失败": 0,
-      "阻塞": 0,
+      "阻塞": 10,
       "不适用": 0
     },
     "TC-opc-product-20261017.md": {
-      "待测": 10,
+      "待测": 16,
       "通过": 0,
       "失败": 0,
       "阻塞": 0,

@@ -7,6 +7,9 @@
 | REQ-SHORT-PRODUCT-003 | 配音字幕与合成 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-003-P, TC-SHORT-PRODUCT-003-N | 待测 |
 | REQ-SHORT-PRODUCT-004 | 长任务恢复与幂等 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-004-P, TC-SHORT-PRODUCT-004-N | 待测 |
 | REQ-SHORT-PRODUCT-005 | Media成片发布 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-005-P, TC-SHORT-PRODUCT-005-N | 待测 |
+| REQ-SHORT-PRODUCT-006 | 角色场景资产库与跨镜头一致性锚定 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-006-P, TC-SHORT-PRODUCT-006-N | 待测 |
+| REQ-SHORT-PRODUCT-007 | 可视多轨时间轴精编与音画时序对齐 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-007-P, TC-SHORT-PRODUCT-007-N | 待测 |
+| REQ-SHORT-PRODUCT-008 | 竖屏短剧画幅与黄金卡点节奏模板 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-008-P, TC-SHORT-PRODUCT-008-N | 待测 |
 | REQ-SHORT-COMMON-001 | 自助注册与本地账号 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-001-P, TC-SHORT-COMMON-001-N | 待测 |
 | REQ-SHORT-COMMON-002 | 邮箱与手机验证码 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-002-P, TC-SHORT-COMMON-002-N | 待测 |
 | REQ-SHORT-COMMON-003 | 平台管理权限隔离 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-003-P, TC-SHORT-COMMON-003-N | 待测 |
@@ -23,22 +26,17 @@
 | REQ-SHORT-COMMON-014 | Bot下载与安装信息 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-014-P, TC-SHORT-COMMON-014-N | 待测 |
 | REQ-SHORT-COMMON-015 | Bot最小授权托管 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-015-P, TC-SHORT-COMMON-015-N | 待测 |
 | REQ-SHORT-COMMON-016 | 账号注销 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-016-P, TC-SHORT-COMMON-016-N | 待测 |
-| REQ-SHORT-COMMON-017 | 登录方式绑定与解绑 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-017-P, TC-SHORT-COMMON-017-N | 待测 |
-| REQ-SHORT-COMMON-018 | 额度套餐开通与续费 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-018-P, TC-SHORT-COMMON-018-N | 待测 |
+| REQ-SHORT-COMMON-017 | 登录方式绑定与解绑 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-017-P, TC-SHORT-COMMON-017-N | P:阻塞 / N:待测 |
+| REQ-SHORT-COMMON-018 | 额度套餐开通与续费 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-018-P, TC-SHORT-COMMON-018-N | 阻塞 |
 | REQ-SHORT-COMMON-019 | 额度按token计量显示 | [TC-opc-common-20261017.md](TC-opc-common-20261017.md) | TC-SHORT-COMMON-019-P, TC-SHORT-COMMON-019-N | 待测 |
-| REQ-SHORT-PLATFORM-001 | Windows核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-001-P, TC-SHORT-PLATFORM-001-N | 待测 |
-| REQ-SHORT-PLATFORM-002 | macOS核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-002-P, TC-SHORT-PLATFORM-002-N | 待测 |
-| REQ-SHORT-PLATFORM-003 | Linux核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-003-P, TC-SHORT-PLATFORM-003-N | 待测 |
-| REQ-SHORT-PLATFORM-004 | iOS核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-004-P, TC-SHORT-PLATFORM-004-N | 待测 |
-| REQ-SHORT-PLATFORM-005 | Android核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-005-P, TC-SHORT-PLATFORM-005-N | 待测 |
+| REQ-SHORT-PLATFORM-001 | Windows核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-001-P, TC-SHORT-PLATFORM-001-N | 阻塞 |
+| REQ-SHORT-PLATFORM-002 | macOS核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-002-P, TC-SHORT-PLATFORM-002-N | 阻塞 |
+| REQ-SHORT-PLATFORM-003 | Linux核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-003-P, TC-SHORT-PLATFORM-003-N | 阻塞 |
+| REQ-SHORT-PLATFORM-004 | iOS核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-004-P, TC-SHORT-PLATFORM-004-N | 阻塞 |
+| REQ-SHORT-PLATFORM-005 | Android核心交付 | [TC-opc-platform-20261017.md](TC-opc-platform-20261017.md) | TC-SHORT-PLATFORM-005-P, TC-SHORT-PLATFORM-005-N | 阻塞 |
 | REQ-SHORT-REGRESSION-001 | 单会话失效 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-001-P, TC-SHORT-REGRESSION-001-N | 待测 |
 | REQ-SHORT-REGRESSION-002 | 登录页单一入口 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-002-P, TC-SHORT-REGRESSION-002-N | 待测 |
 | REQ-SHORT-REGRESSION-003 | 法律入口去重 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-003-P, TC-SHORT-REGRESSION-003-N | 待测 |
 | REQ-SHORT-REGRESSION-004 | 动态效果与可访问性 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-004-P, TC-SHORT-REGRESSION-004-N | 待测 |
 | REQ-SHORT-REGRESSION-005 | 用量回执持久化 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-005-P, TC-SHORT-REGRESSION-005-N | 待测 |
 | REQ-SHORT-REGRESSION-006 | 在线客服与工单入口 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-006-P, TC-SHORT-REGRESSION-006-N | 待测 |
-
-
-## 2026-10-17 实施备注
-
-本轮代码已覆盖注销、绑定解绑、CN 中枢锁定、额度 token 显示、套餐到期展示、Media catalog_dir，以及桌面/移动壳改进。用例状态仍为待测；平台签名安装包与真实支付/OAuth 渠道缺环境时记阻塞，不得标通过。
