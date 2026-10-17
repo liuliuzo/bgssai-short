@@ -187,6 +187,42 @@
       "file": "docs/test/TC-opc-common-20261017.md"
     },
     {
+      "id": "REQ-SHORT-COMMON-016",
+      "title": "账号注销",
+      "cases": [
+        "TC-SHORT-COMMON-016-P",
+        "TC-SHORT-COMMON-016-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-017",
+      "title": "登录方式绑定与解绑",
+      "cases": [
+        "TC-SHORT-COMMON-017-P",
+        "TC-SHORT-COMMON-017-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-018",
+      "title": "额度套餐开通与续费",
+      "cases": [
+        "TC-SHORT-COMMON-018-P",
+        "TC-SHORT-COMMON-018-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
+      "id": "REQ-SHORT-COMMON-019",
+      "title": "额度按token计量显示",
+      "cases": [
+        "TC-SHORT-COMMON-019-P",
+        "TC-SHORT-COMMON-019-N"
+      ],
+      "file": "docs/test/TC-opc-common-20261017.md"
+    },
+    {
       "id": "REQ-SHORT-PLATFORM-001",
       "title": "Windows核心交付",
       "cases": [
@@ -563,6 +599,62 @@
     {
       "id": "TC-SHORT-COMMON-015-N",
       "requirement": "REQ-SHORT-COMMON-015",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-016-P",
+      "requirement": "REQ-SHORT-COMMON-016",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-016-N",
+      "requirement": "REQ-SHORT-COMMON-016",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-017-P",
+      "requirement": "REQ-SHORT-COMMON-017",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-017-N",
+      "requirement": "REQ-SHORT-COMMON-017",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-018-P",
+      "requirement": "REQ-SHORT-COMMON-018",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-018-N",
+      "requirement": "REQ-SHORT-COMMON-018",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-COMMON-019-P",
+      "requirement": "REQ-SHORT-COMMON-019",
+      "file": "TC-opc-common-20261017.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-COMMON-019-N",
+      "requirement": "REQ-SHORT-COMMON-019",
       "file": "TC-opc-common-20261017.md",
       "status": "待测",
       "kind": "N"
@@ -1254,7 +1346,7 @@
     }
   ],
   "progress": {
-    "待测": 62,
+    "待测": 70,
     "通过": 4,
     "失败": 0,
     "阻塞": 0,
@@ -1276,7 +1368,7 @@
       "不适用": 0
     },
     "TC-opc-common-20261017.md": {
-      "待测": 30,
+      "待测": 38,
       "通过": 0,
       "失败": 0,
       "阻塞": 0,
