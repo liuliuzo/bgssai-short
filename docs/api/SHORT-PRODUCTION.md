@@ -57,7 +57,7 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
 
 ### GET /bgssai/user/short-works/detail?work_id=
 
-含 `episode_list`（六阶段状态）。
+含 `episode_list`（六阶段状态，附 `script_status_name` / `storyboard_status_name` / `dubbing_status_name` / `compose_status_name` / `review_status_name` 中文名）。
 
 ### POST /bgssai/user/short-works/update
 
