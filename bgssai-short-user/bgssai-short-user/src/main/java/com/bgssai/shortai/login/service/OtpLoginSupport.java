@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.account.service.AccountGuard;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.login.dto.resp.RespCodeSend;
 import com.bgssai.shortai.login.dto.resp.RespUserLogin;
@@ -100,6 +101,8 @@ public class OtpLoginSupport {
         if (user == null) {
             user = provision(phone, phone, null);
             isNew = true;
+        } else {
+            AccountGuard.rejectIfDeleted(user);
         }
         return issue(user, isNew);
     }
@@ -117,6 +120,8 @@ public class OtpLoginSupport {
             String userName = "e" + suffix + UUID.randomUUID().toString().replace("-", "").substring(0, 4);
             user = provision(userName, null, email);
             isNew = true;
+        } else {
+            AccountGuard.rejectIfDeleted(user);
         }
         return issue(user, isNew);
     }

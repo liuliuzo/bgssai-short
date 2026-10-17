@@ -30,7 +30,10 @@ class MultiVideoProviderTest {
         AiProviderRequest req = request("VIDEO", "MINIMAX", "MiniMax-Hailuo-2.3",
                 "https://api.minimaxi.com", "ai.minimax.api_key");
         req.getParams().put("image_base64", "aaaa");
-        AiProviderResult result = provider.execute(req);
+        // Direct vendor execute is disabled; legacy path remains for transport regression only.
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.bgssai.shortai.common.exception.BizException.class, () -> provider.execute(req));
+        AiProviderResult result = provider.executeLegacy(req);
         assertArrayEquals(http.bytes, result.getBinaryContent());
         assertEquals("video/mp4", result.getMimeType());
         assertTrue(http.postedUrls.get(0).endsWith("/v1/video_generation"));
@@ -46,26 +49,25 @@ class MultiVideoProviderTest {
         http.bytes = new byte[] { 3 };
         SeedanceAiProvider provider = new SeedanceAiProvider(secret("k"), http, ms -> {
         });
-        AiProviderResult result = provider.execute(request("VIDEO", "SEEDANCE", "doubao-seedance-2-0-260128",
-                "https://ark.cn-beijing.volces.com/api/v3", "ai.seedance.api_key"));
+        AiProviderRequest req = request("VIDEO", "SEEDANCE", "doubao-seedance-2-0-260128",
+                "https://ark.cn-beijing.volces.com/api/v3", "ai.seedance.api_key");
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.bgssai.shortai.common.exception.BizException.class, () -> provider.execute(req));
+        AiProviderResult result = provider.executeLegacy(req);
         assertArrayEquals(http.bytes, result.getBinaryContent());
         assertTrue(http.postedBodies.get(0).contains("\"ratio\":\"9:16\""));
     }
 
     @Test
-    void veoPollsOperationAndDecodes() {
+    void veoDirectVendorDisabled() {
         FakeHttp http = new FakeHttp();
-        http.postJson = "{\"name\":\"operations/op-1\"}";
-        http.getByUrl.put("https://generativelanguage.googleapis.com/v1beta/operations/op-1",
-                "{\"done\":true,\"response\":{\"generateVideoResponse\":{\"generatedSamples\":["
-                        + "{\"video\":{\"bytesBase64Encoded\":\"AQID\"}}]}}}");
         VeoAiProvider provider = new VeoAiProvider(secret("k"), http, ms -> {
         });
-        AiProviderResult result = provider.execute(request("VIDEO", "VEO", "veo-3.1-generate-preview",
-                "https://generativelanguage.googleapis.com/v1beta", "ai.veo.api_key"));
-        assertEquals("video/mp4", result.getMimeType());
-        assertEquals(3, result.getBinaryContent().length);
-        assertTrue(http.postedUrls.get(0).contains(":predictLongRunning"));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.bgssai.shortai.common.exception.BizException.class,
+                () -> provider.execute(request("VIDEO", "VEO", "veo-3.1-generate-preview",
+                        "https://generativelanguage.googleapis.com/v1beta", "ai.veo.api_key")));
+        assertTrue(http.postedUrls.isEmpty());
     }
 
     private static SysSecretReader secret(String value) {

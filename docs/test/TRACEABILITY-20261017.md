@@ -37,3 +37,8 @@
 | REQ-SHORT-REGRESSION-004 | 动态效果与可访问性 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-004-P, TC-SHORT-REGRESSION-004-N | 待测 |
 | REQ-SHORT-REGRESSION-005 | 用量回执持久化 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-005-P, TC-SHORT-REGRESSION-005-N | 待测 |
 | REQ-SHORT-REGRESSION-006 | 在线客服与工单入口 | [TC-feature-gaps-20261017.md](TC-feature-gaps-20261017.md) | TC-SHORT-REGRESSION-006-P, TC-SHORT-REGRESSION-006-N | 待测 |
+
+
+## 2026-10-17 实施备注
+
+本轮代码已覆盖注销、绑定解绑、CN 中枢锁定、额度 token 显示、套餐到期展示、Media catalog_dir，以及桌面/移动壳改进。用例状态仍为待测；平台签名安装包与真实支付/OAuth 渠道缺环境时记阻塞，不得标通过。

@@ -60,6 +60,10 @@ public final class MediaIngestContract {
         body.put("source_work_id", workId);
         body.put("source_episode_id", episodeId);
         body.put("source_film_id", filmId);
+        // Media catalog: Short productions land under the short directory (Long uses long).
+        body.put("catalog_dir", "short");
+        body.put("product_line", "short");
+        body.put("publish_version", filmId);
         body.put("title", title);
         if (coverUrl != null && !coverUrl.isBlank()) {
             body.put("cover_url", coverUrl);

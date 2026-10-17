@@ -53,34 +53,8 @@ public class VeoAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        if (request == null || request.getModel() == null) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
-        }
-        if (!"VIDEO".equals(request.getAbilityType())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "VEO unsupported ability: " + request.getAbilityType());
-        }
-        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        String ref = ShortJson.text(cfg.get("secret_ref"));
-        if (ref.isBlank()) {
-            ref = SysSecretReader.AI_VEO_API_KEY;
-        }
-        String apiKey = secretReader.get(ref);
-        if (apiKey.isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "AI api key missing for " + ref);
-        }
-        String base = ProviderHttp.trimSlash(ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("base_url")), DEFAULT_BASE_URL));
-        int timeoutSec = ProviderHttp.timeoutSec(request, 600);
-        try {
-            return video(base, apiKey, cfg, request, timeoutSec);
-        } catch (BizException ex) {
-            throw ex;
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "veo interrupted");
-        } catch (Exception ex) {
-            log.warn("VEO call failed", ex);
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, safe(ex));
-        }
+        // Direct Google Generative Language calls are disabled (REQ-SHORT-COMMON-010).
+        throw DirectVendorGuard.rejected(CODE);
     }
 
     private AiProviderResult video(String base, String apiKey, Map<String, Object> cfg,

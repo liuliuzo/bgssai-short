@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.account.service.AccountGuard;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.login.dto.req.ReqUserLogin;
@@ -62,6 +63,7 @@ public class UserLoginService {
             log.warn("user login failed: user not found identifier={}", req.getIdentifier());
             throw new BizException(CommonErrorCode.INVALID_CREDENTIALS);
         }
+        AccountGuard.rejectIfDeleted(user);
 
         if (!passwordService.matches(user, req.getPassword())) {
             log.warn("user login failed: wrong password identifier={}", req.getIdentifier());

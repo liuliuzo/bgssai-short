@@ -63,6 +63,11 @@ public class KlingAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
+        throw DirectVendorGuard.rejected(CODE);
+    }
+
+    /** Retained for unit coverage of legacy transport; production path never calls this. */
+    AiProviderResult executeLegacy(AiProviderRequest request) {
         if (request == null || request.getModel() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }

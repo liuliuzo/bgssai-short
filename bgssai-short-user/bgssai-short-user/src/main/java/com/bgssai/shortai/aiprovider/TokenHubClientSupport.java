@@ -26,30 +26,32 @@ public final class TokenHubClientSupport {
     private TokenHubClientSupport() {
     }
 
+    /**
+     * Short is a CN-only product: every model call is pinned to the CN hub.
+     * Global / overseas hosts and model prefixes must not redirect traffic.
+     */
     public static String resolveHub(Map<String, Object> cfg, String modelCode) {
+        return HUB_CN;
+    }
+
+    /** True when config or model would have selected Global before the CN pin. */
+    public static boolean wouldSelectGlobal(Map<String, Object> cfg, String modelCode) {
         String hub = ShortJson.text(cfg == null ? null : cfg.get("hub")).trim().toLowerCase(Locale.ROOT);
         if ("global".equals(hub) || "intl".equals(hub) || "overseas".equals(hub)) {
-            return HUB_GLOBAL;
-        }
-        if ("cn".equals(hub) || "domestic".equals(hub) || "china".equals(hub)) {
-            return HUB_CN;
+            return true;
         }
         String base = ShortJson.text(cfg == null ? null : cfg.get("base_url")).toLowerCase(Locale.ROOT);
         if (base.contains("tokenhub-global") || base.contains("bgssai-tokenhub-global")
-                || base.contains("tokenhub-intl") || base.contains("bgssai-tokenhub.com")) {
-            return HUB_GLOBAL;
+                || base.contains("tokenhub-intl")) {
+            return true;
         }
-        if (base.contains("tokenhub-cn") || base.contains("bgssai-tokenhub-cn")
-                || base.contains("bgssai-tokenhub.cn") || base.contains("tokenhub.tencentmaas.com")) {
-            return HUB_CN;
+        if (base.contains("bgssai-tokenhub.com") && !base.contains("bgssai-tokenhub.cn")) {
+            return true;
         }
         String model = modelCode == null ? "" : modelCode.trim().toLowerCase(Locale.ROOT);
-        if (model.startsWith("gpt-") || model.startsWith("claude") || model.startsWith("gemini")
+        return model.startsWith("gpt-") || model.startsWith("claude") || model.startsWith("gemini")
                 || model.startsWith("grok") || model.startsWith("o1") || model.startsWith("o3")
-                || model.startsWith("o4")) {
-            return HUB_GLOBAL;
-        }
-        return HUB_CN;
+                || model.startsWith("o4");
     }
 
     public static String defaultBaseUrl(String hub, String cnDefault, String globalDefault) {

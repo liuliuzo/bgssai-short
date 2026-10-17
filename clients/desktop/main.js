@@ -1,11 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, session } = require('electron');
 const { getConfig } = require('./config');
 
 let mainWindow = null;
 let currentEntryId = null;
+const PARTITION = 'persist:bgssai-short';
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -19,12 +20,22 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      partition: PARTITION,
+      spellcheck: false,
     },
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc, url, isMainFrame) => {
+    if (!isMainFrame || !mainWindow) return;
+    // Network / session errors recover to gate without duplicate side effects.
+    mainWindow.loadFile(path.join(__dirname, 'entry', 'error.html'), {
+      query: { code: String(code), desc: String(desc || ''), url: String(url || '') },
+    });
   });
 
   showEntryGate();
@@ -43,7 +54,7 @@ function openEntry(entryId) {
   }
   currentEntryId = entryId;
   mainWindow.loadURL(entry.url);
-  return { ok: true, entry };
+  return { ok: true, entry, persistPartition: PARTITION };
 }
 
 app.whenReady().then(() => {
@@ -66,9 +77,12 @@ ipcMain.handle('clients:get-bootstrap', () => {
   const config = getConfig();
   return {
     product: 'bgssai-short',
-    installable: 'single-app dual-entry',
+    productName: 'BGSSAI Short',
+    installable: 'electron-builder nsis/dmg/AppImage (unsigned in CI)',
     profile: config.profile,
     currentEntryId,
+    persistPartition: PARTITION,
+    platforms: ['win32', 'darwin', 'linux'],
     entries: Object.values(config.entries).map((e) => ({
       id: e.id,
       label: e.label,
@@ -81,5 +95,11 @@ ipcMain.handle('clients:open-entry', (_event, entryId) => openEntry(entryId));
 
 ipcMain.handle('clients:back-to-gate', () => {
   showEntryGate();
+  return { ok: true };
+});
+
+ipcMain.handle('clients:clear-session', async () => {
+  const ses = session.fromPartition(PARTITION);
+  await ses.clearStorageData();
   return { ok: true };
 });

@@ -2,12 +2,17 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, DatePicker, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import dayjs from 'dayjs'
 import usageApi from '../../api/usage'
+import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 
 const { Title, Paragraph, Text } = Typography
 const { RangePicker } = DatePicker
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
+}
+
+function tokenCell(v) {
+  return <span title={formatTokenExact(v)}>{formatTokenAmount(v)}</span>
 }
 
 export default function UsageBillingPage() {
@@ -91,10 +96,16 @@ export default function UsageBillingPage() {
       </Space>
       <Card loading={loading} style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
-          <Text>可用 {yuan(summary?.available_cent)} 元</Text>
-          <Text>周期 {yuan(summary?.balance_cent)} 元 / 加量 {yuan(summary?.extra_balance_cent)} 元</Text>
-          <Text>本月已用 {yuan(summary?.month_spent_cent)} 元 / 上限 {yuan(summary?.monthly_limit_cent)} 元</Text>
-          <Text>近一集均价 {yuan(summary?.recent_episode_avg_cost_cent)} 元</Text>
+          <Text title={formatTokenExact(summary?.available_cent)}>可用 {formatTokenAmount(summary?.available_cent)}</Text>
+          <Text title={formatTokenExact(summary?.balance_cent)}>
+            周期 {formatTokenAmount(summary?.balance_cent)} / 加量 {formatTokenAmount(summary?.extra_balance_cent)}
+          </Text>
+          <Text title={formatTokenExact(summary?.month_spent_cent)}>
+            本月已用 {formatTokenAmount(summary?.month_spent_cent)} / 上限 {formatTokenAmount(summary?.monthly_limit_cent)}
+          </Text>
+          <Text title={formatTokenExact(summary?.recent_episode_avg_cost_cent)}>
+            近一集均价 {formatTokenAmount(summary?.recent_episode_avg_cost_cent)}
+          </Text>
           <Text>约还能做 {summary?.estimated_remaining_episode_count ?? 0} 集</Text>
           {summary?.low_balance_flag === 1 ? <Text type="danger">余额偏低预警</Text> : null}
         </Space>
@@ -107,7 +118,7 @@ export default function UsageBillingPage() {
           dataSource={summary?.by_work_list || []}
           columns={[
             { title: '作品', dataIndex: 'work_title' },
-            { title: '成本(元)', dataIndex: 'cost_cent', render: yuan },
+            { title: '成本', dataIndex: 'cost_cent', render: tokenCell },
             { title: '任务数', dataIndex: 'task_count' },
           ]}
         />
@@ -120,14 +131,14 @@ export default function UsageBillingPage() {
           dataSource={summary?.by_ability_list || []}
           columns={[
             { title: '能力', dataIndex: 'ability_type_name' },
-            { title: '成本(元)', dataIndex: 'cost_cent', render: yuan },
+            { title: '成本', dataIndex: 'cost_cent', render: tokenCell },
             { title: '任务数', dataIndex: 'task_count' },
           ]}
         />
       </Card>
       <Card
         title="用量流水"
-        extra={episodeTotal == null ? null : <Text type="secondary">本集累计 {yuan(episodeTotal)} 元</Text>}
+        extra={episodeTotal == null ? null : <Text type="secondary" title={formatTokenExact(episodeTotal)}>本集累计 {formatTokenAmount(episodeTotal)}</Text>}
         style={{ marginBottom: 16 }}
       >
         <Table
@@ -152,8 +163,8 @@ export default function UsageBillingPage() {
               render: (_, row) => `${row.work_title || row.work_id || '-'} · E${row.episode_no ?? '-'} · 镜 ${row.shot_no ?? '-'}`,
             },
             { title: '用量', dataIndex: 'usage_amount', width: 70 },
-            { title: '单价(元)', dataIndex: 'unit_price_cent', width: 90, render: yuan },
-            { title: '金额(元)', dataIndex: 'cost_cent', width: 90, render: yuan },
+            { title: '单价', dataIndex: 'unit_price_cent', width: 90, render: tokenCell },
+            { title: '扣减额度', dataIndex: 'cost_cent', width: 90, render: tokenCell },
           ]}
         />
       </Card>

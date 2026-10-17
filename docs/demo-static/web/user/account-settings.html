@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 账号设置</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+  <link rel="stylesheet" href="../assets/liquid-glass.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+    <div class="side-sec">账户</div>
+    <a class="side-link" href="subscription.html">套餐与加量</a>
+    <a class="side-link active" href="account-settings.html">账号设置</a>
+    <a class="side-link" href="usage-billing.html">用量与账单</a>
+    <div class="side-foot">
+      <div class="who">演示用户</div>
+      <div class="bal" title="418,912,345">剩余 418.9M</div>
+      <a href="login.html">退出登录</a>
+    </div>
+  </aside>
+  <main class="app-main">
+    <header class="app-top">
+      <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
+      <span class="top-title">账号设置</span>
+    </header>
+    <div class="app-page">
+      <div class="card">
+        <div class="card-hd"><h2>额度概览</h2></div>
+        <p>剩余额度 <strong title="418,912,345">418.9M</strong> · 到期 2026-11-17 12:00:00</p>
+        <p><a href="subscription.html">开通 / 续费 / 加量</a></p>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-hd"><h2>已绑定登录方式</h2></div>
+        <table>
+          <thead><tr><th>类型</th><th>标识</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>password</td><td>账号密码</td><td><button type="button" class="btn btn-sm">解绑</button></td></tr>
+            <tr><td>phone</td><td>138****8000</td><td><button type="button" class="btn btn-sm">解绑</button></td></tr>
+            <tr><td>oauth / wechat</td><td>微信用户</td><td><button type="button" class="btn btn-sm">解绑</button></td></tr>
+          </tbody>
+        </table>
+        <p class="text-muted">至少保留一种登录方式；冲突绑定拒绝且不合并账号；解绑需重新验证。</p>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-hd"><h2>账号注销</h2></div>
+        <ul>
+          <li>注销后无法再用密码、验证码或第三方授权登录原账号</li>
+          <li>个人资料匿名化；注销前凭证全部失效</li>
+          <li>未结订单与进行中任务需先处理</li>
+        </ul>
+        <button type="button" class="btn btn-danger">注销账号</button>
+        <p class="text-muted">iOS / Android 客户端顶栏「账号」进入同一路由 <code>/account</code>。</p>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

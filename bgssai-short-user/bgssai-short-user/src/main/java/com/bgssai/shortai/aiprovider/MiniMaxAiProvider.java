@@ -53,6 +53,10 @@ public class MiniMaxAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
+        throw DirectVendorGuard.rejected(CODE);
+    }
+
+    AiProviderResult executeLegacy(AiProviderRequest request) {
         Map<String, Object> cfg = require(request);
         String apiKey = apiKey(cfg);
         String base = ProviderHttp.trimSlash(ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("base_url")), DEFAULT_BASE_URL));

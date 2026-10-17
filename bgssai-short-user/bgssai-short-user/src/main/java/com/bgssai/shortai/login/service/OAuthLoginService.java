@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.account.service.AccountGuard;
 import com.bgssai.shortai.login.dto.req.ReqOAuthCallback;
 import com.bgssai.shortai.login.dto.resp.RespUserLogin;
 import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
@@ -47,7 +48,12 @@ public class OAuthLoginService {
 
         OauthBinding binding = findBinding(req.getPlatform(), userInfo.getOpenId());
         if (binding != null) {
-            SysUser user = findUser(binding.getUserId());
+            SysUser user = findUserAny(binding.getUserId());
+            AccountGuard.rejectIfDeleted(user);
+            if (user == null) {
+                throw new com.bgssai.shortai.common.exception.BizException(
+                        com.bgssai.shortai.common.exception.CommonErrorCode.ACCOUNT_DELETED);
+            }
             log.info("三方授权登录命中已绑定账号 platform={} userId={}", req.getPlatform(), binding.getUserId());
             linkCentralLedger(req.getPlatform(), binding.getUserId(), userInfo.getOpenId());
             return withNewUser(issue(user), Boolean.FALSE);
@@ -101,6 +107,12 @@ public class OAuthLoginService {
     private SysUser findUser(String userId) {
         SysUserExample ex = new SysUserExample();
         ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(false);
+        return sysUserMapper.selectOneByExample(ex);
+    }
+
+    private SysUser findUserAny(String userId) {
+        SysUserExample ex = new SysUserExample();
+        ex.createCriteria().andUserIdEqualTo(userId);
         return sysUserMapper.selectOneByExample(ex);
     }
 

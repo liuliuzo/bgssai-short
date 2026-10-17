@@ -24,11 +24,14 @@
   "current_period_end": "2026-09-14 12:00:00",
   "balance_cent": 80000, "extra_balance_cent": 5000,
   "monthly_limit_cent": 100000, "month_spent_cent": 20000,
-  "available_cent": 85000
+  "available_cent": 85000,
+  "balance_tokens": 80000, "extra_tokens": 5000,
+  "monthly_limit_tokens": 100000, "month_spent_tokens": 20000,
+  "available_tokens": 85000, "quota_unit": "token"
 } }
 ```
 
-无行时按 FREE 惰性建档。
+无行时按 FREE 惰性建档。额度字段按真实 token 计量；界面用 K/M/B 紧凑写法（如 418.9M），悬停精确整数；`*_cent` 为兼容别名，数值与 token 相同。售价仍为人民币分。支付成功以回调入账，重复 `out_trade_no` 只入账一次。
 
 ### POST /bgssai/user/subscription/order/create
 

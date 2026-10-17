@@ -6,11 +6,18 @@ import {
   PAY_ORDER_POLL_INTERVAL_MS,
   resolvePollOutcome,
 } from './payOrderPoll'
+import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 
 const { Title, Paragraph, Text } = Typography
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
+}
+
+function TokenText({ value }) {
+  return (
+    <span title={formatTokenExact(value)}>{formatTokenAmount(value)}</span>
+  )
 }
 
 export default function SubscriptionPage() {
@@ -70,7 +77,7 @@ export default function SubscriptionPage() {
         const status = data?.result?.status
         const outcome = resolvePollOutcome(status, payOrder.expires_at)
         if (outcome === 'paid') {
-          message.success('支付成功，已开通')
+          message.success('支付成功，额度已按回调入账')
           closePayModal()
           load()
           return
@@ -85,7 +92,7 @@ export default function SubscriptionPage() {
           closePayModal()
         }
       } catch {
-        // 轮询瞬时失败不打断扫码；连续失败由用户关闭重试
+        // keep polling
       }
     }
 
@@ -122,7 +129,7 @@ export default function SubscriptionPage() {
       })
       setModalOpen(true)
       setPolling(true)
-      message.info('请使用手机扫码完成支付')
+      message.info('请使用手机扫码完成支付；额度以支付回调入账为准')
     } catch (e) {
       message.error(e?.message || '下单失败')
     }
@@ -132,17 +139,25 @@ export default function SubscriptionPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>套餐与加量</Title>
       <Paragraph type="secondary">
-        订阅套餐按月发放额度，加量包单独累计、不清零。支持微信与支付宝扫码支付。
+        查看 BGSSAI 额度套餐、剩余额度与到期时间；开通、续费或加量后，额度以支付成功回调入账（重复回调只入账一次）。
       </Paragraph>
       <Card loading={loading} style={{ marginBottom: 16 }}>
-        <Space size="large">
+        <Space size="large" wrap>
           <Text>当前套餐 {me?.plan_name || me?.plan_code || '-'}</Text>
-          <Text>可用 {yuan(me?.available_cent)} 元</Text>
-          <Text>周期额度 {yuan(me?.balance_cent)} 元</Text>
-          <Text>加量余额 {yuan(me?.extra_balance_cent)} 元</Text>
+          <Text>状态 {me?.status || '-'}</Text>
+          <Text>到期时间 {me?.current_period_end || '-'}</Text>
+          <Text title={formatTokenExact(me?.available_tokens ?? me?.available_cent)}>
+            剩余额度 <TokenText value={me?.available_tokens ?? me?.available_cent} />
+          </Text>
+          <Text title={formatTokenExact(me?.balance_tokens ?? me?.balance_cent)}>
+            周期额度 <TokenText value={me?.balance_tokens ?? me?.balance_cent} />
+          </Text>
+          <Text title={formatTokenExact(me?.extra_tokens ?? me?.extra_balance_cent)}>
+            加量余额 <TokenText value={me?.extra_tokens ?? me?.extra_balance_cent} />
+          </Text>
         </Space>
       </Card>
-      <Card title="订阅套餐" style={{ marginBottom: 16 }}>
+      <Card title="开通 / 续费" style={{ marginBottom: 16 }}>
         <Table
           rowKey="plan_code"
           size="small"
@@ -152,13 +167,17 @@ export default function SubscriptionPage() {
             { title: '档位', dataIndex: 'plan_code' },
             { title: '名称', dataIndex: 'plan_name' },
             { title: '售价(元)', dataIndex: 'price_cent', render: yuan },
-            { title: '月度发放(元)', dataIndex: 'monthly_balance_cent', render: yuan },
+            {
+              title: '月度发放',
+              dataIndex: 'monthly_balance_cent',
+              render: (v) => <TokenText value={v} />,
+            },
             {
               title: '操作',
               render: (_, row) => (
                 <Space>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'WECHAT'))}>微信</Button>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'ALIPAY'))}>支付宝</Button>
+                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'WECHAT'))}>微信开通/续费</Button>
+                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'ALIPAY'))}>支付宝开通/续费</Button>
                 </Space>
               ),
             },
@@ -173,14 +192,18 @@ export default function SubscriptionPage() {
           dataSource={packs}
           columns={[
             { title: '包', dataIndex: 'name' },
-            { title: '到账(元)', dataIndex: 'credit_cent', render: yuan },
+            {
+              title: '到账额度',
+              dataIndex: 'credit_cent',
+              render: (v) => <TokenText value={v} />,
+            },
             { title: '售价(元)', dataIndex: 'price_cent', render: yuan },
             {
               title: '操作',
               render: (_, row) => (
                 <Space>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'WECHAT'))}>微信</Button>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'ALIPAY'))}>支付宝</Button>
+                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'WECHAT'))}>微信加量</Button>
+                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'ALIPAY'))}>支付宝加量</Button>
                 </Space>
               ),
             },
@@ -198,6 +221,11 @@ export default function SubscriptionPage() {
             { title: '名称', dataIndex: 'biz_name' },
             { title: '类型', dataIndex: 'order_type' },
             { title: '金额(元)', dataIndex: 'amount_cent', render: yuan },
+            {
+              title: '发放额度',
+              dataIndex: 'grant_cent',
+              render: (v) => (v == null ? '-' : <TokenText value={v} />),
+            },
             { title: '状态', dataIndex: 'status' },
             { title: '时间', dataIndex: 'created_at' },
           ]}
