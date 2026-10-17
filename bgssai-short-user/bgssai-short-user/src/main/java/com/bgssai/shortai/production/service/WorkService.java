@@ -160,10 +160,15 @@ public class WorkService {
             item.put("episode_synopsis", ep.getEpisodeSynopsis());
             item.put("ending_hook", ep.getEndingHook());
             item.put("script_status", ep.getScriptStatus());
+            item.put("script_status_name", ShortLabels.episodeStageName(ep.getScriptStatus()));
             item.put("storyboard_status", ep.getStoryboardStatus());
+            item.put("storyboard_status_name", ShortLabels.episodeStageName(ep.getStoryboardStatus()));
             item.put("dubbing_status", ep.getDubbingStatus());
+            item.put("dubbing_status_name", ShortLabels.episodeStageName(ep.getDubbingStatus()));
             item.put("compose_status", ep.getComposeStatus());
+            item.put("compose_status_name", ShortLabels.episodeStageName(ep.getComposeStatus()));
             item.put("review_status", ep.getReviewStatus());
+            item.put("review_status_name", ShortLabels.reviewStatusName(ep.getReviewStatus()));
             item.put("film_duration_sec", ep.getFilmDurationSec());
             episodeList.add(item);
         }

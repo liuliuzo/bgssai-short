@@ -36,6 +36,7 @@ public class OAuthLoginService {
     @Autowired private OAuthProviderFactory oauthProviderFactory;
     @Autowired private OauthBindingMapper oauthBindingMapper;
     @Autowired private SysUserMapper sysUserMapper;
+    @Autowired private LoginAuditService loginAuditService;
     /** 中央账本直连：首次绑定 BGSSAI 账号时回填本产品订阅归属；单测不装配时为空。 */
     @Autowired(required = false) private BgssaiWebsiteLedgerClient websiteLedgerClient;
 
@@ -137,6 +138,7 @@ public class OAuthLoginService {
         singleSessionGuard.bindSession(user.getUserId(), sessionId);
         String token = JwtUtil.generateToken(
                 user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE, sessionId);
+        loginAuditService.record(user.getUserId(), "LOGIN_SUCCESS");
         return toResp(user, token);
     }
 }

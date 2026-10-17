@@ -61,6 +61,19 @@ class UsageReceiptServiceTest {
   var receipt=(java.util.Map<?,?>)service.list("owner","work","task").getFirst().get("receipt");
   assertEquals("pending",receipt.get("billing_status"));assertNull(receipt.get("billed_tokens"));assertNull(receipt.get("debit_fen"));
  }
+ @Test void listDegradesToEmptyWhenTableMissingInsteadOfThrowing(){
+  UsageReceiptMapper broken=new UsageReceiptMapper(){
+   public int insertSelective(UsageReceiptRow row){throw new UnsupportedOperationException();}
+   public UsageReceiptRow selectByPrimaryKey(Long id){return null;}
+   public java.util.List<UsageReceiptRow> selectByExample(UsageReceiptExample example){
+    throw new org.springframework.jdbc.BadSqlGrammarException("select","sql",
+      new java.sql.SQLException("Table 'tokenhub_usage_receipt' doesn't exist"));
+   }
+   public int updateByPrimaryKeySelective(UsageReceiptRow row){return 0;}
+  };
+  var degraded=new UsageReceiptService(broken,row->"k",manager);
+  assertTrue(degraded.list("owner",null,null).isEmpty());
+ }
  @Test void reconciliationWaitsForBothQuotaAndMoneyStatus(){
   var row=service.begin(endpoint,"original-key","model");String prefix="{\"request_id\":\""+row.requestId+"\",\"billing_status\":\"";
   service.accept(row,prefix+"pending\",\"billed_tokens\":150}");assertFalse(row.reconciled);

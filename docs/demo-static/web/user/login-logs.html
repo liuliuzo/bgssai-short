@@ -25,7 +25,7 @@
         仅返回当前登录用户本人记录，user_id 取自 JWT（UserContext），不从请求参数取；
         管理端原型见 ../admin/login-logs.html（返回全量记录）。
         响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
-        鉴权：请求头 Jwttoken（@NeedAop）
+        最近登录与安全相关操作记录，仅展示本人账号
       -->
       <table>
         <thead>

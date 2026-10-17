@@ -132,14 +132,14 @@ export default function SubscriptionPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>套餐与加量</Title>
       <Paragraph type="secondary">
-        套餐发放周期余额 balance_cent；加量包进入 extra_balance_cent。金额为分，页面展示为元。微信 Native / 支付宝当面付扫码支付。
+        订阅套餐按月发放额度，加量包单独累计、不清零。支持微信与支付宝扫码支付。
       </Paragraph>
       <Card loading={loading} style={{ marginBottom: 16 }}>
         <Space size="large">
-          <Text>当前套餐 {me?.plan_code || '-'}</Text>
+          <Text>当前套餐 {me?.plan_name || me?.plan_code || '-'}</Text>
           <Text>可用 {yuan(me?.available_cent)} 元</Text>
-          <Text>周期 {yuan(me?.balance_cent)} 元</Text>
-          <Text>加量 {yuan(me?.extra_balance_cent)} 元</Text>
+          <Text>周期额度 {yuan(me?.balance_cent)} 元</Text>
+          <Text>加量余额 {yuan(me?.extra_balance_cent)} 元</Text>
         </Space>
       </Card>
       <Card title="订阅套餐" style={{ marginBottom: 16 }}>

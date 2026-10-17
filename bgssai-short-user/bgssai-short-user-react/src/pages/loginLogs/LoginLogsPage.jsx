@@ -28,7 +28,7 @@ const COLUMNS = [
 
 export default function LoginLogsPage() {
   const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [pageNum, setPageNum] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [total, setTotal] = useState(0)

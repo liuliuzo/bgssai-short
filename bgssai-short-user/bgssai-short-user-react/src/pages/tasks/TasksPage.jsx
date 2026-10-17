@@ -7,7 +7,7 @@ const { Title, Paragraph } = Typography
 
 export default function TasksPage() {
   const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [pageNum, setPageNum] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [total, setTotal] = useState(0)
@@ -65,9 +65,9 @@ export default function TasksPage() {
           columns={[
             { title: '类型', dataIndex: 'task_type_name', width: 90, render: (v, row) => v || row.task_type },
             { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
-            { title: '目标', dataIndex: 'target_type', width: 110 },
+            { title: '目标', dataIndex: 'target_type_name', width: 110, render: (v, row) => v || row.target_type },
             { title: '进度', dataIndex: 'progress_percent', width: 80 },
-            { title: '费用(分)', dataIndex: 'cost_cent', width: 90 },
+            { title: '费用(元)', dataIndex: 'cost_cent', width: 90, render: (v) => ((Number(v) || 0) / 100).toFixed(2) },
             { title: '失败原因', dataIndex: 'fail_reason' },
             {
               title: '操作',

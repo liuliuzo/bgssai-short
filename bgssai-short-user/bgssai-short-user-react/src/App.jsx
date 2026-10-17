@@ -1,5 +1,5 @@
 import LegalFooter from './components/LegalFooter'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useUserStore, isAllowedRole } from './store/user'
 import MainLayout from './layouts/MainLayout'
 import Login from './pages/login/Login'
@@ -30,9 +30,25 @@ function RequireGuest({ children }) {
   return children
 }
 
-function NotFoundRedirect() {
+/** Logged-in users keep the app shell; guests still reach the public download page. */
+function SoftAuthShell() {
   const userInfo = useUserStore((s) => s.userInfo)
-  return <Navigate to={userInfo && isAllowedRole(userInfo) ? '/home' : '/login'} replace />
+  if (userInfo && isAllowedRole(userInfo)) {
+    return <MainLayout />
+  }
+  return <Outlet />
+}
+
+function NotFoundPage() {
+  const userInfo = useUserStore((s) => s.userInfo)
+  const authed = userInfo && isAllowedRole(userInfo)
+  return (
+    <div style={{ maxWidth: 520, margin: '80px auto', padding: 24, textAlign: 'center' }}>
+      <h2 style={{ marginTop: 0 }}>页面不存在</h2>
+      <p style={{ color: '#666' }}>你访问的地址无效或已被移除。</p>
+      <a href={authed ? '/home' : '/login'}>{authed ? '返回首页' : '去登录'}</a>
+    </div>
+  )
 }
 
 export default function App() {
@@ -47,8 +63,11 @@ export default function App() {
           </RequireGuest>
         }
       />
-      <Route path="/download/bot" element={<BotDownloadPage />} />
       <Route path="/oauth-callback" element={<OAuthCallback />} />
+
+      <Route element={<SoftAuthShell />}>
+        <Route path="/download/bot" element={<BotDownloadPage />} />
+      </Route>
 
       <Route
         element={
@@ -69,7 +88,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
       </Route>
 
-      <Route path="*" element={<NotFoundRedirect />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
     <LegalFooter />
     </>

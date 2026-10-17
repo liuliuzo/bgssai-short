@@ -12,8 +12,8 @@ export default function Home() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>首页</Title>
       <Paragraph type="secondary">
-        从建剧、写剧本、定妆、拆镜到成片和提审。平台不再提供 Mock 兜底：某个能力没接通会直接报错，
-        不会返回假结果。想先看完整流程长什么样，可以打开示例作品《悬疑法医手记》。
+        从建剧、写剧本、定妆、拆镜到成片和提审，按步骤完成一部短剧。
+        想先看完整流程，可以打开示例作品体验制作链路。
       </Paragraph>
       <Space style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={() => navigate('/works')}>我的作品</Button>
@@ -24,10 +24,7 @@ export default function Home() {
         <Descriptions column={1} size="small">
           <Descriptions.Item label="用户名">{userInfo?.user_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="姓名">{userInfo?.real_name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="角色">
-            {userInfo?.role_name || '-'}（{userInfo?.role_code || '-'}）
-          </Descriptions.Item>
-          <Descriptions.Item label="用户 ID">{userInfo?.user_id || '-'}</Descriptions.Item>
+          <Descriptions.Item label="角色">{userInfo?.role_name || '-'}</Descriptions.Item>
         </Descriptions>
       </Card>
     </div>

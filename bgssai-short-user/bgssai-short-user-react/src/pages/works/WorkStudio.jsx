@@ -2,7 +2,7 @@ import { modelPricingLabel } from '../../modelPricing'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import VoiceStudioPage from './VoiceStudioPage'
@@ -53,13 +53,16 @@ async function waitTask(workId, taskId) {
   return rows[0] || null
 }
 
+/** Poll until terminal, covering model timeout_sec (120) + worker grace (120). */
 async function waitTasks(workId, taskIds) {
   const ids = [...new Set((taskIds || []).filter(Boolean))]
   if (!ids.length) return []
-  for (let i = 0; i < 80; i += 1) {
+  let lastMatched = []
+  for (let i = 0; i < 160; i += 1) {
     const { data } = await productionApi.listTasks({ work_id: workId, page_num: 1, page_size: 100 })
     const rows = data?.result || []
     const matched = ids.map((id) => rows.find((item) => item.task_id === id)).filter(Boolean)
+    lastMatched = matched
     const done = matched.length === ids.length
       && matched.every((row) => row.task_status === 'SUCCEEDED'
         || row.task_status === 'FAILED'
@@ -67,7 +70,24 @@ async function waitTasks(workId, taskIds) {
     if (done) return matched
     await sleep(1500)
   }
-  return []
+  return lastMatched
+}
+
+function reportTaskOutcome(task, successText) {
+  if (!task) {
+    message.warning('任务仍在执行或已超时，请到任务中心查看最新状态')
+    return false
+  }
+  if (task.task_status === 'FAILED' || task.task_status === 'CANCELED') {
+    message.error(task.fail_reason || task.fail_reason_code || '任务失败，请稍后重试')
+    return false
+  }
+  if (task.task_status === 'SUCCEEDED') {
+    if (successText) message.success(successText)
+    return true
+  }
+  message.warning('任务尚未结束，请到任务中心查看进度')
+  return false
 }
 
 async function waitBatch(workId, batchId, taskIds) {
@@ -84,12 +104,13 @@ async function waitBatch(workId, batchId, taskIds) {
   return waitTasks(workId, taskIds)
 }
 
-function ScriptPane({ work, episodeId, onReload }) {
+function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
   const [outline, setOutline] = useState([])
   const [script, setScript] = useState(null)
   const [textModels, setTextModels] = useState([])
   const [textModelCode, setTextModelCode] = useState()
   const [loading, setLoading] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   const load = useCallback(async () => {
     if (!work?.work_id) return
@@ -120,13 +141,54 @@ function ScriptPane({ work, episodeId, onReload }) {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    if (!work?.work_id) return undefined
+    let cancelled = false
+    ;(async () => {
+      let taskId = initialOutlineTaskId
+      if (!taskId) {
+        const outlineRes = await productionApi.getOutline(work.work_id)
+        const existing = outlineRes.data?.result?.outline || []
+        if (existing.length) return
+        const { data } = await productionApi.listTasks({
+          work_id: work.work_id,
+          task_type: 'TEXT',
+          page_num: 1,
+          page_size: 50,
+        })
+        const pending = (data?.result || []).find((row) =>
+          row.target_type === 'OUTLINE'
+          && (row.task_status === 'QUEUED' || row.task_status === 'RUNNING'))
+        taskId = pending?.task_id
+      }
+      if (!taskId || cancelled) return
+      setGenerating(true)
+      try {
+        const done = await waitTask(work.work_id, taskId)
+        if (cancelled) return
+        reportTaskOutcome(done, '大纲已生成')
+        await onReload()
+        await load()
+      } finally {
+        if (!cancelled) setGenerating(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [work?.work_id, initialOutlineTaskId, onReload, load])
+
   const runOutline = async () => {
-    const { data } = await productionApi.generateOutline(work.work_id, textModelCode)
-    if (!data?.success) return
-    message.success('大纲任务已提交')
-    await waitTask(work.work_id, data.result.task_id)
-    await onReload()
-    await load()
+    setGenerating(true)
+    try {
+      const { data } = await productionApi.generateOutline(work.work_id, textModelCode)
+      if (!data?.success) return
+      message.success('大纲任务已提交')
+      const done = await waitTask(work.work_id, data.result.task_id)
+      reportTaskOutcome(done, '大纲已生成')
+      await onReload()
+      await load()
+    } finally {
+      setGenerating(false)
+    }
   }
 
   const saveOutline = async () => {
@@ -139,7 +201,8 @@ function ScriptPane({ work, episodeId, onReload }) {
     const { data } = await productionApi.generateScript(episodeId, undefined, textModelCode)
     if (!data?.success) return
     message.success('剧本任务已提交')
-    await waitTask(work.work_id, data.result.task_id)
+    const done = await waitTask(work.work_id, data.result.task_id)
+    reportTaskOutcome(done, '剧本已生成')
     await load()
     await onReload()
   }
@@ -168,16 +231,17 @@ function ScriptPane({ work, episodeId, onReload }) {
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <Card loading={loading} title="全集大纲" extra={<Space>
+      <Card loading={loading || generating} title="全集大纲" extra={<Space>
         <Select
           placeholder="文本模型"
           value={textModelCode}
           onChange={setTextModelCode}
           style={{ width: 220 }}
+          disabled={generating}
           options={textModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
         />
-        <Button onClick={runOutline}>生成大纲</Button>
-        <Button type="primary" onClick={saveOutline}>保存大纲</Button>
+        <Button onClick={runOutline} loading={generating}>生成大纲</Button>
+        <Button type="primary" onClick={saveOutline} disabled={generating}>保存大纲</Button>
       </Space>}>
         <Table
           rowKey="episode_no"
@@ -879,7 +943,7 @@ function TasksPane({ workId, episodeId }) {
           { title: '目标', dataIndex: 'target_type', width: 110, render: (v) => v || '-' },
           { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
           { title: '进度', dataIndex: 'progress_percent', width: 80 },
-          { title: '费用(分)', dataIndex: 'cost_cent', width: 90 },
+          { title: '费用(元)', dataIndex: 'cost_cent', width: 90, render: (v) => ((Number(v) || 0) / 100).toFixed(2) },
           { title: '失败', dataIndex: 'fail_reason' },
           {
             title: '操作',
@@ -1341,9 +1405,11 @@ function ComposePane({ work, episodeId, onReload }) {
 export default function WorkStudio() {
   const { workId, tab } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [work, setWork] = useState(null)
   const [episodeId, setEpisodeId] = useState()
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const outlineTaskId = location.state?.outlineTaskId
 
   const load = useCallback(async () => {
     const { data } = await productionApi.getWork(workId)
@@ -1361,7 +1427,7 @@ export default function WorkStudio() {
   if (!work) return <Card loading />
 
   return (
-    <div>
+    <div className="work-studio">
       <UsageReceipts workRef={work.work_id} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
@@ -1380,34 +1446,36 @@ export default function WorkStudio() {
             style={{ background: 'linear-gradient(135deg, #722ed1, #1677ff)', borderColor: 'transparent' }}
             onClick={() => setAssistantOpen(true)}
           >
-            🎬 AI协同专家
+            AI 协同专家
           </Button>
           <Button
             onClick={() => navigate(`/works/${workId}/edit-export`)}
           >
-            📦 导出剪辑工程 (剪映/FCP/EDL)
+            导出剪辑工程
           </Button>
         </Space>
       </div>
       <Space style={{ marginBottom: 12 }}>
         <span>当前剧集</span>
         <Select
-          style={{ minWidth: 240 }}
+          style={{ minWidth: 280 }}
           value={episodeId}
           onChange={setEpisodeId}
           options={episodes.map((ep) => ({
             value: ep.episode_id,
-            label: `第${ep.episode_no}集 ${ep.episode_title || ''} (${ep.script_status}/${ep.review_status})`,
+            label: `第${ep.episode_no}集 ${ep.episode_title || ''}（${ep.script_status_name || ep.script_status}/${ep.review_status_name || ep.review_status}）`,
           }))}
         />
-        {current ? <Tag>{current.compose_status}</Tag> : null}
+        {current ? <Tag>{current.compose_status_name || current.compose_status}</Tag> : null}
       </Space>
       <Tabs
+        className="work-studio-tabs"
         activeKey={active}
         onChange={(key) => navigate(`/works/${workId}/${key}`)}
+        tabBarGutter={12}
         items={[
           { key: 'source', label: '原著导入', children: <SourceImportPage work={work} /> },
-          { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={load} /> },
+          { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={load} initialOutlineTaskId={outlineTaskId} /> },
           { key: 'characters', label: '资产一致性', children: <CharacterPane work={work} /> },
           { key: 'storyboard', label: '创作台', children: <StoryboardPane work={work} episodeId={episodeId} /> },
           { key: 'voice', label: '配音字幕', children: <VoiceStudioPage work={work} episodeId={episodeId} /> },
@@ -1424,6 +1492,11 @@ export default function WorkStudio() {
         visible={assistantOpen}
         onClose={() => setAssistantOpen(false)}
       />
+      <style>{`
+        .work-studio-tabs .ant-tabs-nav { margin-bottom: 12px; }
+        .work-studio-tabs .ant-tabs-tab { white-space: nowrap; padding: 8px 0; }
+        .work-studio-tabs .ant-tabs-ink-bar { height: 2px; }
+      `}</style>
     </div>
   )
 }

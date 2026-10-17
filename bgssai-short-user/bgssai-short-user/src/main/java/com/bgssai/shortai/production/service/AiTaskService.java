@@ -45,6 +45,7 @@ import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.GenerationTaskStatus;
 import com.bgssai.shortai.production.support.ShotConsistency;
+import com.bgssai.shortai.production.support.ShortLabels;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
@@ -557,6 +558,7 @@ public class AiTaskService {
         item.put("task_status", row.getTaskStatus());
         item.putAll(GenerationTaskStatus.flags(row.getTaskStatus(), row.getTaskType()));
         item.put("target_type", row.getTargetType());
+        item.put("target_type_name", ShortLabels.targetTypeName(row.getTargetType()));
         item.put("target_id", row.getTargetId());
         item.put("progress_percent", row.getProgressPercent());
         item.put("fail_reason_code", row.getFailReasonCode());

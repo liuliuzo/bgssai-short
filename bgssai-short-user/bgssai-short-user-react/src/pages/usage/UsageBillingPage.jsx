@@ -64,12 +64,12 @@ export default function UsageBillingPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>用量与账单</Title>
       <Paragraph type="secondary">
-        失败任务不计费；余额低于近一集均价 3 倍时 low_balance_flag=1。
+        失败任务不计费。余额低于近一集均价的 3 倍时会提示余额偏低。
       </Paragraph>
       <Space style={{ marginBottom: 12 }} wrap>
         <RangePicker value={range} onChange={setRange} />
-        <Input placeholder="work_id" value={workId} onChange={(e) => setWorkId(e.target.value || undefined)} style={{ width: 160 }} allowClear />
-        <Input placeholder="episode_id" value={episodeId} onChange={(e) => setEpisodeId(e.target.value || undefined)} style={{ width: 160 }} allowClear />
+        <Input placeholder="作品 ID" value={workId} onChange={(e) => setWorkId(e.target.value || undefined)} style={{ width: 160 }} allowClear />
+        <Input placeholder="剧集 ID" value={episodeId} onChange={(e) => setEpisodeId(e.target.value || undefined)} style={{ width: 160 }} allowClear />
         <Select
           allowClear
           placeholder="能力"
@@ -92,8 +92,8 @@ export default function UsageBillingPage() {
       <Card loading={loading} style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
           <Text>可用 {yuan(summary?.available_cent)} 元</Text>
-          <Text>周期 {yuan(summary?.balance_cent)} / 加量 {yuan(summary?.extra_balance_cent)}</Text>
-          <Text>本月已用 {yuan(summary?.month_spent_cent)} / 上限 {yuan(summary?.monthly_limit_cent)}</Text>
+          <Text>周期 {yuan(summary?.balance_cent)} 元 / 加量 {yuan(summary?.extra_balance_cent)} 元</Text>
+          <Text>本月已用 {yuan(summary?.month_spent_cent)} 元 / 上限 {yuan(summary?.monthly_limit_cent)} 元</Text>
           <Text>近一集均价 {yuan(summary?.recent_episode_avg_cost_cent)} 元</Text>
           <Text>约还能做 {summary?.estimated_remaining_episode_count ?? 0} 集</Text>
           {summary?.low_balance_flag === 1 ? <Text type="danger">余额偏低预警</Text> : null}

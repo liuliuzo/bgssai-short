@@ -35,7 +35,7 @@ const DEFAULTS = {
 export default function WorksPage() {
   const navigate = useNavigate()
   const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [pageNum, setPageNum] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [total, setTotal] = useState(0)
@@ -66,7 +66,9 @@ export default function WorksPage() {
       message.success('已创建，正在生成大纲')
       setOpen(false)
       form.resetFields()
-      navigate(`/works/${data.result.work_id}/script`)
+      navigate(`/works/${data.result.work_id}/script`, {
+        state: { outlineTaskId: data.result.task_id },
+      })
     }
   }
 
