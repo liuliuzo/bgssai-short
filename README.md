@@ -14,7 +14,7 @@
 
 本仓自骨架仓 [`bgssai-skeleton`](https://github.com/liuliuzo/bgssai-skeleton) 初始化而来，以单仓
 （monorepo）方式统一管理一套「管理端 + 用户端」的前后端工程，落地 BGSSAI 全局开发规范
-（`docs/BGSSAI-Standards.md`）中的强制约定：单接口单 Controller、扁平代码、JSON 强制 snake_case、
+（[全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)）中的强制约定：单接口单 Controller、扁平代码、JSON 强制 snake_case、
 MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji、properties 禁用 `${}` 占位符等。
 
 ## 当前状态
@@ -80,12 +80,12 @@ API（账号、内容审核、AI 能力与用量管理），用户端承载创�
 全项目文档（需求 / 原型 / 架构 / API 契约 / 安全）统一收敛在仓库根 **`docs/`** 目录：
 
 - 目录结构规约：`docs/DIRECTORY-LAYOUT.md`
-- 全局开发规范（最高优先级约束）：`docs/BGSSAI-Standards.md`
+- 全局开发规范（最高优先级约束）：[全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)
 - 产品愿景：`PRODUCT_VISION.md`
 
 前端工程不承载需求 / 设计 / 接口文档，一律依据 `docs/` 开发。
 
-> `docs/BGSSAI-Standards.md` 与 `docs/DIRECTORY-LAYOUT.md` 是骨架仓 `bgssai-skeleton` 的**同步副本**，
+> [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) 与 `docs/DIRECTORY-LAYOUT.md` 是骨架仓 `bgssai-skeleton` 的**同步副本**，
 > 本仓不改本体：需要改规范时先在骨架仓定稿，再整份同步回本仓。
 
 ## 数据库脚本
@@ -126,4 +126,4 @@ cd bgssai-short-user/bgssai-short-user-react   && npm install && npm run dev   #
 3. 详设与契约：`docs/architecture` / `docs/api`（含 `docs/api/page-api-mapping.md`）/ `docs/security`。
 4. 代码与数据库：`src/**`、前端工程与 `sql/**`；改表后手工同步持久层三件套。
 
-顺序不可颠倒、不可跳跃；同一次变更四层同步完成、当次交清（详见 `docs/BGSSAI-Standards.md` §0）。
+顺序不可颠倒、不可跳跃；同一次变更四层同步完成、当次交清（详见 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) §0）。

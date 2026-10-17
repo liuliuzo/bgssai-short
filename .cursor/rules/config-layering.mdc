@@ -5,7 +5,7 @@ alwaysApply: true
 
 # 配置分层（强制）
 
-与用户已澄清的全产品线口径对齐。权威全文见本仓 `docs/BGSSAI-Standards.md` §1「配置分层：中间件 vs 业务第三方凭证」。
+与用户已澄清的全产品线口径对齐。权威全文见本仓 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) §1「配置分层：中间件 vs 业务第三方凭证」。
 
 ## 1. 中间件参数 — 只写 application-*.properties
 

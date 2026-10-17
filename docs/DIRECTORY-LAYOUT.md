@@ -1,7 +1,7 @@
 # docs 目录结构规约（单一权威）
 
 > 本文件是本仓库 `docs/` 目录组织的**单一权威**。新增 / 整理任何文档前先读本规约；与其它文档
-> （含 `docs/BGSSAI-Standards.md` §9、`CLAUDE.md`）中旧的目录表述不一致处，**一律以本文件为准**。
+> （含 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) §9、`CLAUDE.md`）中旧的目录表述不一致处，**一律以本文件为准**。
 
 ## 目录拓扑（强制）
 
@@ -47,8 +47,8 @@ docs/
 **禁止**在上述「否」的目录下新建 `admin/` · `user/` 子目录或 `*-admin.md` · `*-user.md` 双份副本——同一概念
 两份文档必然漂移（Standards §0「全产出版本一致」、§11 型六）。
 
-> `docs/` 顶层只设上述 7 类目录（另有本规约与 `BGSSAI-Standards.md`、`README.md` 三份根级文件）。
-> 数据库脚本**不在 `docs/` 维护**，统一收敛到仓库根 `sql/`（见 `docs/BGSSAI-Standards.md` §9）；
+> `docs/` 顶层只设上述 7 类目录（另有本规约与 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)、`README.md` 三份根级文件）。
+> 数据库脚本**不在 `docs/` 维护**，统一收敛到仓库根 `sql/`（见 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) §9）；
 > 云资源清单 / 外部 API / 运维参考资料归入 `docs/architecture`。
 
 ## 原型目录 `docs/demo-static`（强制）

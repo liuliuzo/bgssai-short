@@ -69,4 +69,4 @@ echo '{"tool_name":"CronCreate","tool_input":{"cron":"*/15 * * * *","prompt":"ch
 echo '{"tool_name":"Bash","tool_input":{"command":"echo \"0 3 * * * /opt/backup/db-dump.sh\" | crontab -"}}' | python3 $H
 ```
 
-判定口径与例外边界另见 Standards §12。本仓库若无 `docs/BGSSAI-Standards.md`，则以本文件为准。
+判定口径与例外边界另见 Standards §12。本仓库若无 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)，则以本文件为准。

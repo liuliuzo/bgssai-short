@@ -816,14 +816,6 @@
   ],
   "coverage": [
     {
-      "source": "docs/feature/_TEMPLATE-feature.md",
-      "title": "功能名称（feature-id）",
-      "classification": "索引或模板，不作为独立业务功能",
-      "legacy": [],
-      "requirements": [],
-      "cases": []
-    },
-    {
       "source": "docs/feature/ai-capability-usage.md",
       "title": "AI 能力配置与用量成本（ai-capability-usage）",
       "classification": "历史套件保留",

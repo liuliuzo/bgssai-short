@@ -7,7 +7,7 @@
 
 | 入口 | 内容 |
 | --- | --- |
-| `BGSSAI-Standards.md` | 全局开发规范（最高优先级强制约束，自动导入每次会话） |
+| [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) | 全局开发规范（最高优先级强制约束，自动导入每次会话） |
 | `DIRECTORY-LAYOUT.md` | 本 `docs/` 目录组织的单一权威 |
 | `feature/` | 功能需求澄清 + 详细设计（需求是版本基准与单一事实来源） |
 | `demo-static/` | 可运行 HTML 原型 + 页面跳转真值（接口字段 / 响应结构 / 跳转关系的权威参照）。按端分目录：`web/admin`（管理端）、`web/user`（用户端）、`ios`、`android`（仅用户端） |

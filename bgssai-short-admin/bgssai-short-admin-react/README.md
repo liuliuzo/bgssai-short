@@ -51,4 +51,4 @@ npm run build:deploy
 - 需求 PRD：`../../docs/feature/`
 - 架构设计：`../../docs/architecture/`
 - 安全设计：`../../docs/security/`
-- 规范：`../../docs/BGSSAI-Standards.md`
+- 规范：[全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)
