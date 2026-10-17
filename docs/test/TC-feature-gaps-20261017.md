@@ -1,0 +1,22 @@
+# bgssai-short：存量需求补充功能用例
+
+需求：[本轮功能需求](../feature/opc-requirements-20261017.md)。编写日期：2026-10-17。需求基线：用户本轮规划及本仓 `aa74224179ae7b43fcafa99565b9271e37fdabc6`。
+
+本文件只记录测试设计，尚未执行。每个分号分隔的输入/平台/提供方组合须独立记录实际结果；全部组合通过才能将该行改为通过，部分未执行仍为待测或阻塞。使用测试账号和隔离资源，不填写真实密码、Key、Token或个人资料。外部发送/发布用受控测试接收方，生产验收另行安排。
+
+| 用例ID | 关联需求 | 优先级 | 端 | 前置条件与数据 | 测试步骤 | 期望结果 | 结果 | 备注 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-SHORT-REGRESSION-001-P | REQ-SHORT-REGRESSION-001 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 同一测试账户在设备甲登录，再在乙通过另一已支持方式登录；2. 乙读取业务数据。 | 乙会话有效；账号当前会话与乙一致。 | 待测 | 正向；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[single-session-completion.md](../../docs/feature/single-session-completion.md) |
+| TC-SHORT-REGRESSION-001-N | REQ-SHORT-REGRESSION-001 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 用甲旧令牌调用读写接口；2. 重复使用甲旧刷新或授权结果。 | 返回HTTP401及既有code=2003等本仓约定的失效语义，提示账号已在其他设备登录；不产生写入。 | 待测 | 异常/边界；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[single-session-completion.md](../../docs/feature/single-session-completion.md) |
+| TC-SHORT-REGRESSION-002-P | REQ-SHORT-REGRESSION-002 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 分别以桌面和375px窄屏打开登录页；2. 切换每种登录方式及中英文；3. 键盘完成输入。 | 同一功能不重复出现；字段、提交、语言及协议可见可达。 | 待测 | 正向；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[login-page-cleanup-20260926.md](../../docs/feature/login-page-cleanup-20260926.md)、[otp-entry-20260924.md](../../docs/feature/otp-entry-20260924.md) |
+| TC-SHORT-REGRESSION-002-N | REQ-SHORT-REGRESSION-002 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 连续切换方式后提交空字段或错误验证码；2. 缩到320px并放大字体。 | 错误定位正确；不残留旧表单信息；关键按钮不被遮挡或溢出。 | 待测 | 异常/边界；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[login-page-cleanup-20260926.md](../../docs/feature/login-page-cleanup-20260926.md)、[otp-entry-20260924.md](../../docs/feature/otp-entry-20260924.md) |
+| TC-SHORT-REGRESSION-003-P | REQ-SHORT-REGRESSION-003 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 从登录、注册或设置的现有协议入口打开五份文本；2. 切换语言；3. 返回原表单。 | 入口唯一且文本对应当前产品语言，原表单可继续，未虚构证照或审定状态。 | 待测 | 正向；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[legal-entry-dedup.md](../../docs/feature/legal-entry-dedup.md) |
+| TC-SHORT-REGRESSION-003-N | REQ-SHORT-REGRESSION-003 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 打开不存在语言文档或页面底部出现重复协议；2. 未同意时提交需同意的操作。 | 缺失明确；不靠重复入口替代正确文本；按现有同意契约校验。 | 待测 | 异常/边界；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[legal-entry-dedup.md](../../docs/feature/legal-entry-dedup.md) |
+| TC-SHORT-REGRESSION-004-P | REQ-SHORT-REGRESSION-004 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 打开含动效页面；2. 完成核心操作；3. 开启系统prefers-reduced-motion后刷新。 | 页面内容与操作不依赖动画完成；减少动画时静止或简化，交互仍可用。 | 待测 | 正向；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[product-motion.md](../../docs/feature/product-motion.md) |
+| TC-SHORT-REGRESSION-004-N | REQ-SHORT-REGRESSION-004 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 动画资源失败、窄屏、快速切页及连续提交。 | 不遮挡按钮或重复发请求，不因特效错误导致白屏。 | 待测 | 异常/边界；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[product-motion.md](../../docs/feature/product-motion.md) |
+| TC-SHORT-REGRESSION-005-P | REQ-SHORT-REGRESSION-005 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 选择模型执行小任务；2. 记录任务ID、倍率与余额；3. 刷新或重启客户端后按任务查看回执。 | 回执仍存在，模型、用量与扣减可对应；空缓存不丢历史任务。 | 待测 | 正向；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[model-pricing-receipts.md](../../docs/feature/model-pricing-receipts.md) |
+| TC-SHORT-REGRESSION-005-N | REQ-SHORT-REGRESSION-005 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 同一执行ID重复请求/结算；2. 无效模型或余额不足；3. 旧回执在改价后回读。 | 不重复执行或扣减；错误不生成虚假成功回执；历史仍按执行时价格版本解释。 | 待测 | 异常/边界；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[model-pricing-receipts.md](../../docs/feature/model-pricing-receipts.md) |
+| TC-SHORT-REGRESSION-006-P | REQ-SHORT-REGRESSION-006 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 从本产品提交测试咨询；2. 内部客服回复并转工单；3. 用户刷新查看进度。 | 来源产品和用户正确，回复实际送达，工单状态可追踪。 | 待测 | 正向；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[in-app-support.md](../../docs/feature/in-app-support.md) |
+| TC-SHORT-REGRESSION-006-N | REQ-SHORT-REGRESSION-006 | P1 | user | 隔离测试环境；已记录被测版本；有版权测试剧本、两个角色、两个场景、三镜头/三集样例、真实CN模型和Media测试空间；各参数组分别执行。 | 1. 离线重连、重复提交或用户乙访问甲工单。 | 不丢消息或重复建单，越权拒绝，失败不显示已处理。 | 待测 | 异常/边界；实际结果、证据、缺陷号和执行人待执行后填写。 现有需求：[in-app-support.md](../../docs/feature/in-app-support.md) |
+
+执行后记录：被测commit、部署/制品版本、环境、平台/渠道参数、执行时间、执行人、实际结果、证据链接与缺陷号；同步[进度](PROGRESS.md)。结果仅使用待测、通过、失败、阻塞、不适用；不适用必须写原因，功能未实现不能写不适用。
