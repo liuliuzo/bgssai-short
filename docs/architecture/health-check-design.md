@@ -2,7 +2,7 @@
 
 需求基线见 [`../feature/health-check.md`](../feature/health-check.md)，对外契约见
 [`../api/health-check.md`](../api/health-check.md)，全产品线强制口径见
-[`../BGSSAI-Standards.md`](../BGSSAI-Standards.md) §13。
+[[全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) §13。
 
 本文描述本产品健康检查实现的结构与关键取舍。结构自骨架仓 `bgssai-skeleton` 继承，本产品只在
 「扩展点」一节说明的位置追加自己的组件，不改端点、状态枚举与字段口径。

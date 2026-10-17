@@ -1,5 +1,7 @@
 # AGENTS.md
 
+本仓工具指南只在 `AGENTS.md` 维护；`CLAUDE.md` 通过 `@AGENTS.md` 导入，不再保留正文副本。
+
 ## 产品线验收基线（2026-09-11）
 
 本次用户确认的完整需求与验收条目以 [骨架仓产品线验收基线](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/feature/product-line-acceptance.md) 为准。规划是目标，已实现和已验证状态以本仓 `docs/review/acceptance-20260911.md` 为准，不得把文件存在或单元测试通过写成全功能通过。
@@ -25,7 +27,6 @@
 
 **本仓位置**：本仓是第 1 条工具集合中的短剧制作平台。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。成片发布与在线观看在 Media 系列（`bgssai-media-pc` / `bgssai-media-web` / `bgssai-media-android` / `bgssai-media-ios`），本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。设计与交互对照 `reference-github/`：waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。
 
-> 本文件与 `CLAUDE.md` 内容保持一致（供不同 AI 工具各自读取），改一处必须同步改另一处。
 
 ## 仓库定位
 
@@ -56,7 +57,7 @@ AI 短剧制作应用，让用户以更低门槛把一部短剧从想法做到�
 
 ## 职责边界（本仓不做什么）
 
-* 不维护规范本体：编码与研发规范、目录拓扑的唯一权威在 `bgssai-skeleton`。本仓 `docs/BGSSAI-Standards.md`
+* 不维护规范本体：编码与研发规范、目录拓扑的唯一权威在 `bgssai-skeleton`。本仓 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)
   是骨架仓的**同步副本**，发现规范缺口应回骨架仓改本体再同步，**严禁**只在本仓改出第二套口径。
 * 不维护 Jenkins 共享库与 Job 清单（`bgssai-workflows`）、不执行建库 / 清库（`bgssai-database`）、
   不采集服务器日志（`bgssai-logs`）。本仓只保留 20 余行的 `Jenkinsfile` / `jenkins/Jenkinsfile.stop` 作为单产品部署 / 关停壳子。
@@ -89,7 +90,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 
 ## 仓库强制约定
 
-* 全局开发规范（最高优先级约束，自动导入每次会话）：@docs/BGSSAI-Standards.md
+* 全局开发规范（每次会话先读取唯一来源）：https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md
 * **用户端工程归属（强制）**：用户端 Web、iOS、Android、桌面和小程序全部放在 `bgssai-<产品>-user/`，不放仓库根 `clients/`。iOS / Android 为原生界面，不用 WebView 套网站。管理端放 `bgssai-<产品>-admin/`。全文见骨架仓 Standards §9「用户端工程归属」。
 * **配置分层（强制，违者代码不予合并）**：① 中间件参数（数据库、Redis、ES、OBS、MQTT、端口等）只写 `application-local.properties` / `application-dev.properties` / `application-test.properties` / `application-prod.properties`，禁止进 Admin / 库表；② 业务第三方凭证（短信、邮件、支付、OAuth、LLM API Key 等）由 Admin 维护并落库，禁止只写 properties，且必须在 `sql/DML.sql`（及 `sql/<env>/DML.sql`）维护 DML 种子（`ON DUPLICATE KEY UPDATE` 仅空值回填）。权威全文见 Standards §1「配置分层：中间件 vs 业务第三方凭证」。AI 助手不得反复提议违反本条，除非用户主动改决策。
 * **持久层三件套手工维护（强制）**：Mapper XML / Example / Entity 是仓库内普通源码，由开发者手工维护。本产品线已下线 MyBatis Generator，不引入任何代码生成工具。改表先改 `sql/DDL.sql`，再手工同步三件套，一次提交。禁止只改 Java 不改 DDL，或只改 DDL 不同步三件套。权威见 Standards §2。
@@ -101,7 +102,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 * **部署通道（强制）**：应用部署、建库/清库、运维派发只走 Jenkins（本仓 `Jenkinsfile` / `jenkins/Jenkinsfile.stop`，仅手动触发；见 `bgssai-workflows/jenkins/README.md`）。不得用 GitHub Actions 做部署或建库；本仓不保留部署类 `.github/workflows`。部署失败不得自动重部署。
 * 一切产出物（代码 / 文档 / 原型 / 提交信息 / PR 描述 / 评审与回信）**全局禁用 emoji 及装饰性图形符号**；语义性符号（→、×、§ 等用于流程示意、表格与条款引用者）不属装饰性符号，允许使用。
 * **AI 成本红线（Standards §12）**：不得创建 PR 后会持续唤醒 AI 的 heartbeat / automation / 后台轮询；PR 状态仅在当前会话单次查询或用户下次交互时再查。
-* `docs/BGSSAI-Standards.md` 与 `docs/DIRECTORY-LAYOUT.md` 为骨架仓同步副本，**本仓不改本体**；需要改规范时先在骨架仓定稿，再整份同步回本仓。
+* [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) 与 `docs/DIRECTORY-LAYOUT.md` 为骨架仓同步副本，**本仓不改本体**；需要改规范时先在骨架仓定稿，再整份同步回本仓。
 
 ## 工程命名与拓扑
 
@@ -155,3 +156,4 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 
 用户不看、也看不懂修改细节。对用户**只汇报整体进度与结果**（做到哪一步、是否完成、要不要拍板）。执行过程中也不要在对话里复述改了什么，不要逐步播报文件或 diff。禁止输出文件清单、diff、命令日志、commit SHA、逐仓 PR 表、工具过程。需要时最多给一个链接。
 
+全局规范须读取[骨架仓唯一来源](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)；本地多仓工作区可读取 `bgssai-skeleton/docs/BGSSAI-Standards.md`，单仓检出时读取上述 GitHub 文件。本仓只保留自身补充，不复制全局规范。

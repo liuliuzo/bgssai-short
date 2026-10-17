@@ -111,7 +111,7 @@ Media 平台自身的分发与数据回流、多人协作与权限细分（一�
 - 数据库：MySQL 8（`bgssai_short`），管理端与用户端共享一个库。
 - 工程基线：自骨架仓 `bgssai-skeleton` 初始化，鉴权 / 统一响应 / 分页 / traceId / 限流 / CORS /
   健康检查等基础链路开箱可用（清单见 `README.md`）。
-- 约束：遵循 `docs/BGSSAI-Standards.md` 全部强制条款。
+- 约束：遵循 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) 全部强制条款。
 - AI 能力接入（M1 定口径）：业务侧只认能力类型（`TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` /
   `MUSIC` / `COMPOSE`），
   具体供应商与模型、单价、开关由管理端 `ai_model_config` 配置解析，换供应商不改业务代码

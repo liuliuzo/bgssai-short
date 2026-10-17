@@ -7,12 +7,12 @@
 
 | 内容 | 归属 |
 | --- | --- |
-| 检查所依据的规范条款 | `docs/BGSSAI-Standards.md` |
+| 检查所依据的规范条款 | [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) |
 | 被检查的需求 / 设计 / 契约 / 原型正文 | `docs/feature` / `docs/architecture` / `docs/api` / `docs/demo-static` |
 | 进度 / 排期 / 发布记录 | `docs/project` |
 | **某次检查「查了什么、发现什么、怎么处置」** | **本目录** |
 
-本目录只放**检查记录**，不放规范正文——规范的单一权威是 `docs/BGSSAI-Standards.md`；检查中发现的规范缺口
+本目录只放**检查记录**，不放规范正文——规范的单一权威是 [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)；检查中发现的规范缺口
 应改规范本体，不在检查记录里另立一套口径。
 
 ## 约定
@@ -30,7 +30,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | [`test-cases/README.md`](./test-cases/README.md) | 索引（功能清单、AC/TC 统计、范围说明） |
-| [`test-cases/TEMPLATE.md`](./test-cases/TEMPLATE.md) | 用例表模板 |
+| [[功能测试模板](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/test/TEMPLATE.md)](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/test/TEMPLATE.md) | 用例表模板 |
 | [`test-cases/STATUS.md`](./test-cases/STATUS.md) | 生成状态摘要 |
 | `test-cases/TC-*.md` | 按功能 slug 展开的用例表 |
 

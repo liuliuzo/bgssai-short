@@ -2,7 +2,7 @@
 
 本文件是健康检查功能的**需求基线与单一事实来源**。契约见 [`../api/health-check.md`](../api/health-check.md)，
 详细设计见 [`../architecture/health-check-design.md`](../architecture/health-check-design.md)，
-全产品线强制口径见 [`../BGSSAI-Standards.md`](../BGSSAI-Standards.md) §13。
+全产品线强制口径见 [[全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) §13。
 
 > 本功能自骨架仓 `bgssai-skeleton` 继承而来，是**全产品线统一口径**的落地实现：口径权威在
 > Standards §13，本产品只做「对齐」不做「发明」。骨架里的实现改了，本仓要跟；本仓自行发明的

@@ -13,7 +13,7 @@
 | 验收标准合计（in-scope） | 229 |
 | 生成用例合计（in-scope） | 230 |
 | 用例目录 | `TC-<slug>.md` |
-| 模板 | `TEMPLATE.md` |
+| 模板 | [功能测试模板](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/test/TEMPLATE.md) |
 | 产品缩写（用例ID） | `SHORT` |
 | 编写日期 | 2026-09-24 |
 

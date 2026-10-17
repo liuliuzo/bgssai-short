@@ -6,7 +6,6 @@
 
 | 来源 | 关联方式/范围 | 历史用例（结果未改写） | 本轮用例 |
 | --- | --- | --- | --- |
-| [功能名称（feature-id）](../../docs/feature/_TEMPLATE-feature.md) | 索引或模板，不作为独立业务功能 | — | — |
 | [AI 能力配置与用量成本（ai-capability-usage）](../../docs/feature/ai-capability-usage.md) | 历史套件保留 | [TC-ai-capability-usage.md](../../docs/review/test-cases/TC-ai-capability-usage.md) | — |
 | [TokenHub 多模型接入（ai-model-integration）](../../docs/feature/ai-model-integration.md) | 历史套件保留 | [TC-ai-model-integration.md](../../docs/review/test-cases/TC-ai-model-integration.md) | — |
 | [资产一致性面板（asset-consistency-panel）](../../docs/feature/asset-consistency-panel.md) | 历史套件保留 | [TC-asset-consistency-panel.md](../../docs/review/test-cases/TC-asset-consistency-panel.md) | — |

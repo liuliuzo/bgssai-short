@@ -12,7 +12,7 @@
   四层缺一不可。
 - 本目录**不按端拆分**：管理端与用户端共用同一套数据结构与契约，同一功能一份需求文档，端差异在文内分
   小节说明；严禁建 `admin/` · `user/` 子目录或双份副本。
-- 新建功能文档可复制 `_TEMPLATE-feature.md`。
+- 新建功能文档可复制 [功能需求模板](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/feature/_TEMPLATE-feature.md)。
 
 ## 本产品业务功能（AI 短剧制作全链路）
 

@@ -67,4 +67,4 @@
 
 用户端登录、注册只呈现用户协议与隐私政策两份文件的一行同意文案，已有勾选框保持原交互。管理端登录不放同意行。Web 全路由使用统一页脚，年份动态读取，备案号沿用本仓既有号码；无备案号时不展示。中英界面各显示当前语言。原生客户端只收敛已有同意及设置入口。内部审阅备注不进入产品界面，法务正文保持原内容。
 
-标准见 [bgssai-skeleton docs/BGSSAI-Standards.md 第 15 节](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md#15-法务同意行与页脚统一口径全产品线强制)。官网用户端沿用服务条款、隐私政策、法律信息和语言切换的页脚底栏。
+标准见 [bgssai-skeleton https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md 第 15 节](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md#15-法务同意行与页脚统一口径全产品线强制)。官网用户端沿用服务条款、隐私政策、法律信息和语言切换的页脚底栏。
