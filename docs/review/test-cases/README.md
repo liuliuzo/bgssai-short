@@ -31,7 +31,7 @@
 | `content-compliance` | 合规预检与内容审核（content-compliance） | in-scope | 9 | 9 | TC-content-compliance.md |  |
 | `edit-project-export` | 剪辑工程导出（edit-project-export） | in-scope | 12 | 12 | TC-edit-project-export.md |  |
 | `film-compose-export` | 成片合成与导出（film-compose-export） | in-scope | 9 | 9 | TC-film-compose-export.md |  |
-| `film-publish-media` | 成片发布到 bgssai-media（film-publish-media） | in-scope | 8 | 8 | TC-film-publish-media.md |  |
+| `film-publish-media` | 成片发布到 bgssai-tube（film-publish-media） | in-scope | 8 | 8 | TC-film-publish-media.md |  |
 | `frame-continuity` | 首尾帧衔接（frame-continuity） | in-scope | 8 | 8 | TC-frame-continuity.md |  |
 | `health-check` | 需求：健康检查（health-check） | in-scope | 10 | 10 | TC-health-check.md |  |
 | `in-app-support` | 站内在线客服（留言 / 会话） | in-scope | 5 | 5 | TC-in-app-support.md |  |
@@ -42,7 +42,7 @@
 | `previz-text-storyboard` | 文字预演与提示词优化（previz-text-storyboard） | in-scope | 9 | 9 | TC-previz-text-storyboard.md |  |
 | `quality-pipeline` | 优秀短剧质量流水线（quality-pipeline） | in-scope | 11 | 11 | TC-quality-pipeline.md |  |
 | `script-studio` | 剧本工作台与节奏体检（script-studio） | in-scope | 8 | 8 | TC-script-studio.md |  |
-| `short-01-commercial-gate` | SHORT-01 商业门禁（成片生产 → Media） | in-scope | 3 | 3 | TC-short-01-commercial-gate.md |  |
+| `short-01-commercial-gate` | SHORT-01 商业门禁（成片生产 → Tube） | in-scope | 3 | 3 | TC-short-01-commercial-gate.md |  |
 | `short-work-management` | 作品与剧集管理（short-work-management） | in-scope | 5 | 6 | TC-short-work-management.md |  |
 | `shot-generation` | 画面生成与任务中心（shot-generation） | in-scope | 12 | 12 | TC-shot-generation.md |  |
 | `source-import` | 原著导入与改编（source-import） | in-scope | 9 | 9 | TC-source-import.md |  |

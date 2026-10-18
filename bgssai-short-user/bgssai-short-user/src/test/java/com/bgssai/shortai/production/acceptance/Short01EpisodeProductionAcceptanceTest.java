@@ -53,7 +53,7 @@ import com.bgssai.shortai.storage.ObjectStorage;
 
 /**
  * SHORT-01 P0 一集生产验收骨架：契约锁定失败口径与证据字段；
- * 真实模型 / OBS / Media E2E 见 docs/review，本类不标 PASS。
+ * 真实模型 / OBS / Tube E2E 见 docs/review，本类不标 PASS。
  */
 class Short01EpisodeProductionAcceptanceTest {
 

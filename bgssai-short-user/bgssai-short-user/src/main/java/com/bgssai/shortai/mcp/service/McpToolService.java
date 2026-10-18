@@ -196,7 +196,7 @@ public class McpToolService {
                         prop("shot_id", "string", "可选分镜 ID（单镜渲染时指定）"),
                         prop("model_code", "string", "可选模型编码"),
                         prop("confirm_cost", "boolean", "计费确认开关，必须显式传 true 才允许提交"))));
-        tools.add(tool("publish_episode_to_media", "将当前用户已合成且审核通过的分集成片发布到 bgssai-media。必须显式传入 confirm_publish=true。",
+        tools.add(tool("publish_episode_to_media", "将当前用户已合成且审核通过的分集成片发布到 bgssai-tube。必须显式传入 confirm_publish=true。",
                 schema(List.of("episode_id", "confirm_publish"),
                         prop("episode_id", "string", "分集 ID（必填）"),
                         prop("film_id", "string", "可选成片 ID"),
@@ -606,14 +606,14 @@ public class McpToolService {
 
     private String publishEpisodeToMediaJson(JsonNode args) {
         if (!boolArg(args, "confirm_publish")) {
-            throw new IllegalArgumentException("发布成片到 Media 属于对外公开操作，必须显式传入 confirm_publish=true 确认发布");
+            throw new IllegalArgumentException("发布成片到 Tube 属于对外公开操作，必须显式传入 confirm_publish=true 确认发布");
         }
         String userId = requireCallerUserId();
         String episodeId = requireTextArg(args, "episode_id");
         ShortEpisode episode = requireOwnedEpisode(userId, episodeId);
         if (!"APPROVED".equals(episode.getReviewStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "剧集审核未通过（review_status=" + episode.getReviewStatus() + "，需 APPROVED）后才能发布到 Media");
+                    "剧集审核未通过（review_status=" + episode.getReviewStatus() + "，需 APPROVED）后才能发布到 Tube");
         }
 
         FilmPublishToMediaReq req = new FilmPublishToMediaReq();

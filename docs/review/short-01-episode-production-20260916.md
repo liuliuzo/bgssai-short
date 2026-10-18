@@ -8,7 +8,7 @@
 
 ## 结论
 
-**PARTIAL / 契约 + 剧本已锁**。真实付费模型出片、华为 OBS 成片、有声成片浏览器可播、Short→Media 直播 E2E 仍为 **NOT_VERIFIED**。  
+**PARTIAL / 契约 + 剧本已锁**。真实付费模型出片、华为 OBS 成片、有声成片浏览器可播、Short→Tube 直播 E2E 仍为 **NOT_VERIFIED**。  
 **禁止**把单测绿、mock、或占位 URL 记为 SHORT-01 全量 PASS。
 
 | 项 | 结论 | 证据 |
@@ -25,7 +25,7 @@
 | 本机 FFmpeg 三镜合成有声可探测 | 环境条件 PASS / 否则 skip | `threeClipComposeWithSubtitleAndDubbingProducesPlayableMp4`（无 ffmpeg 则 assume skip，记 NOT_VERIFIED） |
 | 真实 Tokenhub IMAGE/VIDEO/VOICE | **NOT_VERIFIED** | 本环境无生产/联调密钥 |
 | 华为 OBS 成片上传与签名播放 | **NOT_VERIFIED** | 非 local 已 fail-fast；未跑真实 OBS |
-| Short→Media 可播 E2E | **NOT_VERIFIED** | 见商业门禁；本 PR 不伪造 |
+| Short→Tube 可播 E2E | **NOT_VERIFIED** | 见商业门禁；本 PR 不伪造 |
 | 首尾帧衔接真人出片 | **NOT_VERIFIED** | 状态机有单测；真人联调缺凭证 |
 
 ## 本轮代码改动
@@ -71,10 +71,10 @@
 2. 本机无 ffmpeg → `ABILITY_UNAVAILABLE`，不得假成片。
 3. 成功：`compose_status=READY`，`production_evidence.commercial_ready=true`，`download_url` 非 stub。
 
-### E7 对象存储与 Media
+### E7 对象存储与 Tube
 
 1. `storage_key` 指向真实 OBS/本地对象，`file_size_byte>0`。
-2. 发布 Media：`play_url` 经 `CommercialOutcomeGuard`；PENDING ≠ FAIL ≠ READY。
+2. 发布 Tube：`play_url` 经 `CommercialOutcomeGuard`；PENDING ≠ FAIL ≠ READY。
 
 ## 自动化怎么跑
 
@@ -85,7 +85,7 @@ mvn -B -ntp -pl bgssai-short-user/bgssai-short-user -am test \
 
 ## 明确不宣称
 
-- 不宣称真实付费模型已出片或 OBS/Media 联调通过。
+- 不宣称真实付费模型已出片或 OBS/Tube 联调通过。
 - 不写入伪造 API Key / OBS 密钥。
 - 不把占位 URL、SVG 种子、空字节资产标为 PASS。
 

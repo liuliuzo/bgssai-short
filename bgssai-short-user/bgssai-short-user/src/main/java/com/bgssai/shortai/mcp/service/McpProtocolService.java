@@ -33,7 +33,7 @@ public class McpProtocolService {
             Set.of("2025-06-18", "2025-03-26", "2024-11-05");
 
     private static final String SERVER_INSTRUCTIONS =
-            "BGSSAI Short MCP 服务：提供短剧作品、分集、剧本、分镜、异步渲染任务与 Media 发布工具，以及登录日志与存活/就绪探针。所有业务工具强制校验令牌所属用户归属；提交渲染/合成需 confirm_cost=true，对外发布需 confirm_publish=true。";
+            "BGSSAI Short MCP 服务：提供短剧作品、分集、剧本、分镜、异步渲染任务与 Tube 发布工具，以及登录日志与存活/就绪探针。所有业务工具强制校验令牌所属用户归属；提交渲染/合成需 confirm_cost=true，对外发布需 confirm_publish=true。";
 
     private static final int PARSE_ERROR = -32700;
     private static final int INVALID_REQUEST = -32600;

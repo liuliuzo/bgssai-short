@@ -4,9 +4,9 @@
 
 ## 产品分工
 
-`bgssai-short` 是 AI 短剧制作平台，面向创作者完成故事/剧本、分集、角色与场景、分镜、素材生成、配音字幕、合成及导出。成片可以直接发布到 `bgssai-media`。Short 负责制作与发布交接，Media 负责目录、分发与播放；`bgssai-long` 负责长篇改编及长剧制作。
+`bgssai-short` 是 AI 短剧制作平台，面向创作者完成故事/剧本、分集、角色与场景、分镜、素材生成、配音字幕、合成及导出。成片可以直接发布到 `bgssai-tube`。Short 负责制作与发布交接，Tube 负责目录、分发与播放；`bgssai-long` 负责长篇改编及长剧制作。
 
-既有需求入口：[制作功能目录](../feature/README.md)、[成片合成与导出](../feature/film-compose-export.md)、[成片发布到 Media](../feature/film-publish-media.md)。
+既有需求入口：[制作功能目录](../feature/README.md)、[成片合成与导出](../feature/film-compose-export.md)、[成片发布到 Tube](../feature/film-publish-media.md)。
 
 ## 六个参考项目的具体用途
 
@@ -21,7 +21,7 @@
 | [openframe / 9f978a5](https://github.com/murongg/openframe/blob/9f978a5d906388593f54ccdfa06b400d14430d49/README.md) | 剧本提取角色/道具/场景/分镜、视频合并、FCPXML/EDL 导出 | 结构化资产与剪辑工程导出 |
 | [ZJT / 5cc1f0cb](https://github.com/jeffstric/ZJT/blob/5cc1f0cbc143b00aded02225e306d76351101ab0/README.md) | 专家 Agent 分工、分镜画布、模型选择与视频合成 | 专业创作步骤与人工干预点；Agent 编排的产品参考 |
 
-参考交互与能力拆解后在现有产品工程中实现，不以整仓复制替代产品设计。六个项目均用于 Short 和 Long 的制作参考，不是 Media 的播放内核。
+参考交互与能力拆解后在现有产品工程中实现，不以整仓复制替代产品设计。六个项目均用于 Short 和 Long 的制作参考，不是 Tube 的播放内核。
 
 ## 当前源码证据
 
@@ -29,28 +29,28 @@
 | --- | --- | --- |
 | 制作与合成 | [FfmpegComposeProvider](../../bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aiprovider/FfmpegComposeProvider.java) 及制作功能目录 | 已有实现路径；未在本次调用付费模型或产出真实短剧 |
 | 发布闸门与结果记录 | [FilmPublishToMediaService](../../bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/FilmPublishToMediaService.java) | 已实现 READY、审核、素材等发布条件、单集/批量发布与结果记录 |
-| 跨仓 HTTP 交接 | [RestMediaIngestClient](../../bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/media/RestMediaIngestClient.java) | 已调用 Media 摄入，携带鉴权及幂等键；有失败重试与响应校验 |
-| 本仓验证入口 | [发布服务测试](../../bgssai-short-user/bgssai-short-user/src/test/java/com/bgssai/shortai/production/service/FilmPublishToMediaServiceTest.java)、[客户端测试](../../bgssai-short-user/bgssai-short-user/src/test/java/com/bgssai/shortai/production/media/RestMediaIngestClientTest.java) | 单测能验证本仓规则，不能证明成片在 Media 或移动端实际播放 |
+| 跨仓 HTTP 交接 | [RestMediaIngestClient](../../bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/media/RestMediaIngestClient.java) | 已调用 Tube 摄入，携带鉴权及幂等键；有失败重试与响应校验 |
+| 本仓验证入口 | [发布服务测试](../../bgssai-short-user/bgssai-short-user/src/test/java/com/bgssai/shortai/production/service/FilmPublishToMediaServiceTest.java)、[客户端测试](../../bgssai-short-user/bgssai-short-user/src/test/java/com/bgssai/shortai/production/media/RestMediaIngestClientTest.java) | 单测能验证本仓规则，不能证明成片在 Tube 或移动端实际播放 |
 
 ## 发布与播放的验收顺序
 
-沿现有 [Short → Media 契约](../api/short-to-media-publish.md) 验收：
+沿现有 [Short → Tube 契约](../api/short-to-media-publish.md) 验收：
 
 ```mermaid
 flowchart LR
-    A[Short 成片就绪且审核通过] --> B[带幂等键发布到 Media]
-    B --> C{Media 摄入结果}
-    C -->|READY| D[Media 目录与播放]
+    A[Short 成片就绪且审核通过] --> B[带幂等键发布到 Tube]
+    B --> C{Tube 摄入结果}
+    C -->|READY| D[Tube 目录与播放]
     C -->|PENDING| E[记录待就绪结果]
     C -->|FAILED| F[显示错误并允许重试]
 ```
 
 1. 真实生成/合成：从同一作品取得有声画、字幕及可访问文件的成片，记录模型、输入、输出与耗时。
-2. 实际跨仓发布：从 Short 工作室发布，核对 Media 目录、分集与源作品对应；READY 后打开 Media 播放页验证声画和拖动。
+2. 实际跨仓发布：从 Short 工作室发布，核对 Tube 目录、分集与源作品对应；READY 后打开 Tube 播放页验证声画和拖动。
 3. 幂等与失败：同一成片重复发布保持目录稳定；网络失败、PENDING、素材过期与审核未通过分别验收，不能都按发布成功处理。
-4. 多端播放：同一 Media 条目依次在 Windows、Web、Android、iOS 播放；记录端版本、设备及播放样本。Media 客户端壳存在不代表本项通过。
+4. 多端播放：同一 Tube 条目依次在 Windows、Web、Android、iOS 播放；记录端版本、设备及播放样本。Tube 客户端壳存在不代表本项通过。
 
-优先打通真实成片到 Media Web 的一集闭环，再验证批量、重试与多端；六个参考项目的增强项按既有制作需求逐项验收。任何实际功能变更均须先落需求、HTML 原型、详设，再同步代码与 SQL。
+优先打通真实成片到 Tube Web 的一集闭环，再验证批量、重试与多端；六个参考项目的增强项按既有制作需求逐项验收。任何实际功能变更均须先落需求、HTML 原型、详设，再同步代码与 SQL。
 
 ## 本次交付边界
 

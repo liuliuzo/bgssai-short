@@ -73,7 +73,7 @@ public final class CommercialOutcomeGuard {
     }
 
     /**
-     * Normalizes Media handoff status into READY / PENDING / FAILED.
+     * Normalizes Tube handoff status into READY / PENDING / FAILED.
      * Unknown values fail closed (not commercial READY).
      */
     public static String classifyMediaStatus(String status) {

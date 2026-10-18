@@ -248,7 +248,7 @@ public class ProductionDtos {
     public static class FilmPublishToMediaReq {
         private String episodeId;
         private String filmId;
-        /** When true, skip short-side READY replay and re-POST media (same idempotency key). */
+        /** When true, skip short-side READY replay and re-POST tube (same idempotency key). */
         private Boolean force;
         public String getEpisodeId() { return episodeId; }
         public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }

@@ -10,7 +10,7 @@
 
 
 **本仓位置**：本仓承载 **AI 短剧制作平台**。设计与交互对照 `reference-github/` 目录中的 **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。
-成片做完后可以直接发布到 **`bgssai-media`** 播放平台的 YouTube Shorts 竖屏流。与 **`bgssai-long`**（AI 长剧制作平台）和 **`bgssai-media`**（播放器 + 视频播放平台）构成一个完整的创作、制作与多端播放闭环，三仓一体化协同迭代。产品定位与范围边界见 [`PRODUCT_VISION.md`](./PRODUCT_VISION.md)。
+成片做完后可以直接发布到 **`bgssai-tube`** 播放平台的 YouTube Shorts 竖屏流。与 **`bgssai-long`**（AI 长剧制作平台）和 **`bgssai-tube`**（播放器 + 视频播放平台）构成一个完整的创作、制作与多端播放闭环，三仓一体化协同迭代。产品定位与范围边界见 [`PRODUCT_VISION.md`](./PRODUCT_VISION.md)。
 
 本仓自骨架仓 [`bgssai-skeleton`](https://github.com/liuliuzo/bgssai-skeleton) 初始化而来，以单仓
 （monorepo）方式统一管理一套「管理端 + 用户端」的前后端工程，落地 BGSSAI 全局开发规范
@@ -19,7 +19,7 @@ MyBatis Example 模式、PageHelper 物理分页、禁用 Lombok、禁用 emoji�
 
 ## 当前状态
 
-2026-10-06 的参考映射、源码证据与发布/多端验收顺序见 [产品定位与交付核查](docs/review/product-direction-20261006.md)。Short 已有 Media 发布客户端；真实成片跨仓播放及四端验收尚未在本次执行。
+2026-10-06 的参考映射、源码证据与发布/多端验收顺序见 [产品定位与交付核查](docs/review/product-direction-20261006.md)。Short 已有 Tube 发布客户端；真实成片跨仓播放及四端验收尚未在本次执行。
 
 **M0–M4 已完成**（明细见 [`docs/project/milestones.md`](docs/project/milestones.md)）：需求与原型、详细设计与契约、用户端制作全链路和管理端审核 / 模型 / 用量均已落地；M4 补齐了主干两头——原著导入改编（进得来）与剪辑工程导出（出得去），以及首尾帧衔接与分镜画布。生产密钥、OBS 桶与 ffmpeg 真合成仍待运维接入；剪映草稿导出须在装有剪映的机器上真机验证一次。
 

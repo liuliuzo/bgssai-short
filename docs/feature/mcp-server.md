@@ -20,7 +20,7 @@
 ## 三、验收标准
 
 1. 无效或已吊销令牌 `POST /api/mcp` 返回 HTTP 401 + JSON-RPC error -32001。
-2. `tools/list` 返回登录日志、健康探针及作品/分集/剧本/分镜/渲染任务/Media 发布等业务工具。
+2. `tools/list` 返回登录日志、健康探针及作品/分集/剧本/分镜/渲染任务/Tube 发布等业务工具。
 3. 业务读写工具严格校验 PAT 归属，越权拒绝；渲染任务需 `confirm_cost=true` 且幂等去重；发布需 `confirm_publish=true` 且成片已过审。
 4. 用户端 MCP Connectors 页可创建 / 列表 / 吊销令牌，并展示五类 Agent 配置指引与 tagline。
 5. GET /api/mcp 返回 405；JSON-RPC 批量数组返回 -32600。

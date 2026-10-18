@@ -15,7 +15,7 @@
 | [合规预检与内容审核（content-compliance）](../../docs/feature/content-compliance.md) | 历史套件保留 | [TC-content-compliance.md](../../docs/review/test-cases/TC-content-compliance.md) | — |
 | [剪辑工程导出（edit-project-export）](../../docs/feature/edit-project-export.md) | 历史套件保留 | [TC-edit-project-export.md](../../docs/review/test-cases/TC-edit-project-export.md) | — |
 | [成片合成与导出（film-compose-export）](../../docs/feature/film-compose-export.md) | 历史套件保留 | [TC-film-compose-export.md](../../docs/review/test-cases/TC-film-compose-export.md) | — |
-| [成片发布到 bgssai-media（film-publish-media）](../../docs/feature/film-publish-media.md) | 历史套件保留 | [TC-film-publish-media.md](../../docs/review/test-cases/TC-film-publish-media.md) | — |
+| [成片发布到 bgssai-tube（film-publish-media）](../../docs/feature/film-publish-media.md) | 历史套件保留 | [TC-film-publish-media.md](../../docs/review/test-cases/TC-film-publish-media.md) | — |
 | [首尾帧衔接（frame-continuity）](../../docs/feature/frame-continuity.md) | 历史套件保留 | [TC-frame-continuity.md](../../docs/review/test-cases/TC-frame-continuity.md) | — |
 | [需求：健康检查（health-check）](../../docs/feature/health-check.md) | 历史套件保留 | [TC-health-check.md](../../docs/review/test-cases/TC-health-check.md) | — |
 | [站内在线客服（留言 / 会话）](../../docs/feature/in-app-support.md) | 专项或共同契约用例 | [TC-in-app-support.md](../../docs/review/test-cases/TC-in-app-support.md) | [REQ-SHORT-REGRESSION-006](TC-feature-gaps-20261017.md)：TC-SHORT-REGRESSION-006-P, TC-SHORT-REGRESSION-006-N |
@@ -32,7 +32,7 @@
 | [优秀短剧质量流水线（quality-pipeline）](../../docs/feature/quality-pipeline.md) | 历史套件保留 | [TC-quality-pipeline.md](../../docs/review/test-cases/TC-quality-pipeline.md) | — |
 | [docs/feature（功能需求 + 详细设计）](../../docs/feature/README.md) | 索引或模板，不作为独立业务功能 | — | — |
 | [剧本工作台与节奏体检（script-studio）](../../docs/feature/script-studio.md) | 历史套件保留 | [TC-script-studio.md](../../docs/review/test-cases/TC-script-studio.md) | — |
-| [SHORT-01 商业门禁（成片生产 → Media）](../../docs/feature/short-01-commercial-gate.md) | 历史套件保留 | [TC-short-01-commercial-gate.md](../../docs/review/test-cases/TC-short-01-commercial-gate.md) | — |
+| [SHORT-01 商业门禁（成片生产 → Tube）](../../docs/feature/short-01-commercial-gate.md) | 历史套件保留 | [TC-short-01-commercial-gate.md](../../docs/review/test-cases/TC-short-01-commercial-gate.md) | — |
 | [作品与剧集管理（short-work-management）](../../docs/feature/short-work-management.md) | 历史套件保留 | [TC-short-work-management.md](../../docs/review/test-cases/TC-short-work-management.md) | — |
 | [画面生成与任务中心（shot-generation）](../../docs/feature/shot-generation.md) | 历史套件保留 | [TC-shot-generation.md](../../docs/review/test-cases/TC-shot-generation.md) | — |
 | [补齐单会话登录](../../docs/feature/single-session-completion.md) | 专项或共同契约用例 | — | [REQ-SHORT-REGRESSION-001](TC-feature-gaps-20261017.md)：TC-SHORT-REGRESSION-001-P, TC-SHORT-REGRESSION-001-N |

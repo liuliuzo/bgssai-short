@@ -325,7 +325,7 @@ class McpToolServiceTest {
         assertTrue(noConfirm.text().contains("confirm_publish=true"));
         verify(filmPublishToMediaService, never()).publish(any(FilmPublishToMediaReq.class));
 
-        // Unapproved episode -> rejected before Media ingest
+        // Unapproved episode -> rejected before Tube ingest
         ShortEpisode pendingEp = new ShortEpisode();
         pendingEp.setEpisodeId("e-101");
         pendingEp.setWorkId("w-101");

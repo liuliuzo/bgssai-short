@@ -32,7 +32,7 @@
 | 画面生成与任务中心 | 批量任务失控、失败无从续跑、花了多少钱不知道 | [`shot-generation.md`](./shot-generation.md) | [`flow-generation-task.html`](./flow-generation-task.html) · [`state-shot-lifecycle.html`](./state-shot-lifecycle.html) | 用户端 `task-center` |
 | 配音与字幕 | 音色跨集不一致、音画对不齐、字幕逐句手打 | [`voice-subtitle.md`](./voice-subtitle.md) | [`flow-post-production.html`](./flow-post-production.html) | 用户端 `voice-studio` |
 | 成片合成与导出 | 要学剪辑软件，每集重复体力活，导出规格易出错 | [`film-compose-export.md`](./film-compose-export.md) | [`flow-post-production.html`](./flow-post-production.html) | 用户端 `compose-export` |
-| 成片发布到 Media | 成片就绪后需推到 bgssai-media 才能播放分发 | [`film-publish-media.md`](./film-publish-media.md) | [`flow-film-publish-media.html`](./flow-film-publish-media.html) | 用户端 `compose-export` |
+| 成片发布到 Tube | 成片就绪后需推到 bgssai-tube 才能播放分发 | [`film-publish-media.md`](./film-publish-media.md) | [`flow-film-publish-media.html`](./flow-film-publish-media.html) | 用户端 `compose-export` |
 | 分镜画布编排 | 一集四五十镜只有纵向列表，看不出全貌，批量操作只能一个个勾 | [`storyboard-canvas.md`](./storyboard-canvas.md) | [`flow-storyboard-canvas.html`](./flow-storyboard-canvas.html) | 用户端 `storyboard-canvas` |
 | 首尾帧衔接 | 每镜只有首帧，镜头之间各拍各的：人物位置、姿态、光线镜镜突变 | [`frame-continuity.md`](./frame-continuity.md) | [`flow-frame-continuity.html`](./flow-frame-continuity.html) | 用户端 `storyboard` |
 | 原著导入与改编 | 只能从一句话梗概起步，手里握着网文 IP、成品剧本、已有大纲的人进不来 | [`source-import.md`](./source-import.md) | [`flow-source-import.html`](./flow-source-import.html) | 用户端 `source-import` |

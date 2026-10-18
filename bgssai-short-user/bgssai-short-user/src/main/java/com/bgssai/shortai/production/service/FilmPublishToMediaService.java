@@ -65,7 +65,7 @@ public class FilmPublishToMediaService {
         CommercialOutcomeGuard.rejectFakeUrl(videoUrl, "film video_url");
         if (!MediaIngestContract.isHttpUrl(videoUrl)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "film video_url must be http(s) for Media ingest");
+                    "film video_url must be http(s) for Tube ingest");
         }
         String coverUrl = null;
         if (work.getCoverAssetId() != null && !work.getCoverAssetId().isBlank()) {
@@ -85,14 +85,14 @@ public class FilmPublishToMediaService {
             String classified = CommercialOutcomeGuard.classifyMediaStatus(ingested.status());
             if ("FAILED".equals(classified)) {
                 throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                        "Media handoff FAILED (status=" + ingested.status() + ")",
+                        "Tube handoff FAILED (status=" + ingested.status() + ")",
                         ingested.httpStatus(), ingested.attempts());
             }
             Date publishedAt = new Date();
             if ("PENDING".equals(classified)) {
                 String playUrl = ingested.playUrl() == null ? "" : ingested.playUrl().trim();
                 if (!playUrl.isBlank()) {
-                    CommercialOutcomeGuard.rejectFakeUrl(playUrl, "media play_url");
+                    CommercialOutcomeGuard.rejectFakeUrl(playUrl, "tube play_url");
                 }
                 ingested = new MediaIngestClient.IngestResult(
                         ingested.mediaId(), playUrl, "PENDING",
@@ -100,7 +100,7 @@ public class FilmPublishToMediaService {
                 persistPending(film, ingested, idempotencyKey, publishedAt);
                 return Responses.ok(toResult(film, ingested, idempotencyKey, publishedAt, false));
             }
-            CommercialOutcomeGuard.rejectFakeUrl(ingested.playUrl(), "media play_url");
+            CommercialOutcomeGuard.rejectFakeUrl(ingested.playUrl(), "tube play_url");
             ingested = new MediaIngestClient.IngestResult(
                     ingested.mediaId(), ingested.playUrl(), classified,
                     ingested.httpStatus(), ingested.attempts(), ingested.message());
@@ -120,7 +120,7 @@ public class FilmPublishToMediaService {
 
     /**
      * Dev-friendly preflight: config + film gates + last publish_log snapshot.
-     * Does not call media.
+     * Does not call tube.
      */
     public ApiResponse preflight(String episodeId, String filmId, String workId) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -131,11 +131,11 @@ public class FilmPublishToMediaService {
 
         List<String> warnings = new ArrayList<>();
         if (!config.baseUrlConfigured()) {
-            warnings.add("MEDIA 主机未配置：bgssai.media.base-url 为空。发布会失败，不会返回假的 media_id。"
+            warnings.add("TUBE 主机未配置：bgssai.tube.base-url 为空。发布会失败，不会返回假的 media_id。"
                     + "本仓不填写虚构 IP；主机未分配时保持为空并在文档标明未部署");
         }
         if (!config.tokenConfigured()) {
-            warnings.add("未配置 bgssai.media.ingest-token：请写 properties 占位或在 Admin/sys_secret 写入"
+            warnings.add("未配置 bgssai.tube.ingest-token：请写 properties 占位或在 Admin/sys_secret 写入"
                     + "（勿提交真实密钥）");
         }
 
@@ -341,7 +341,7 @@ public class FilmPublishToMediaService {
             return false;
         }
         try {
-            CommercialOutcomeGuard.rejectFakeUrl(film.getMediaPlayUrl(), "media play_url");
+            CommercialOutcomeGuard.rejectFakeUrl(film.getMediaPlayUrl(), "tube play_url");
         } catch (BizException ex) {
             return false;
         }
@@ -390,23 +390,23 @@ public class FilmPublishToMediaService {
 
     static void assertPublishable(ShortFilm film, ShortEpisode episode) {
         if (film == null || (film.getDeletedFlag() != null && film.getDeletedFlag() == 1)) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "成片不存在，无法发布到 Media");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "成片不存在，无法发布到 Tube");
         }
         if (!"READY".equals(film.getComposeStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "成片未就绪（compose_status=" + nullToDash(film.getComposeStatus())
-                            + "，需 READY）后才能发布到 Media");
+                            + "，需 READY）后才能发布到 Tube");
         }
         if (film.getExpiredFlag() != null && film.getExpiredFlag() == 1) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "成片已过期，请重新合成后再发布到 Media");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "成片已过期，请重新合成后再发布到 Tube");
         }
         if (film.getFilmAssetId() == null || film.getFilmAssetId().isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "成片素材缺失，无法发布到 Media");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "成片素材缺失，无法发布到 Tube");
         }
         if (!"APPROVED".equals(episode.getReviewStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "剧集审核未通过（review_status=" + nullToDash(episode.getReviewStatus())
-                            + "，需 APPROVED）后才能发布到 Media");
+                            + "，需 APPROVED）后才能发布到 Tube");
         }
     }
 
@@ -468,7 +468,7 @@ public class FilmPublishToMediaService {
     private void persistPending(ShortFilm film, MediaIngestClient.IngestResult ingested,
             String idempotencyKey, Date publishedAt) {
         String note = ingested.message() == null || ingested.message().isBlank()
-                ? "Media 已受理，尚未可播放"
+                ? "Tube 已受理，尚未可播放"
                 : ingested.message();
         if (note.length() > 1000) {
             note = note.substring(0, 1000);
@@ -535,7 +535,7 @@ public class FilmPublishToMediaService {
 
     private void persistFailure(ShortFilm film, String idempotencyKey, Integer httpStatus, int attempts,
             String error) {
-        String msg = error == null ? "media publish failed" : error;
+        String msg = error == null ? "tube publish failed" : error;
         if (msg.length() > 1000) {
             msg = msg.substring(0, 1000);
         }

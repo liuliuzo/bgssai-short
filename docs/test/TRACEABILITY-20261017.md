@@ -6,7 +6,7 @@
 | REQ-SHORT-PRODUCT-002 | 角色场景与素材生成 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-002-P, TC-SHORT-PRODUCT-002-N | 待测 |
 | REQ-SHORT-PRODUCT-003 | 配音字幕与合成 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-003-P, TC-SHORT-PRODUCT-003-N | 待测 |
 | REQ-SHORT-PRODUCT-004 | 长任务恢复与幂等 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-004-P, TC-SHORT-PRODUCT-004-N | 待测 |
-| REQ-SHORT-PRODUCT-005 | Media成片发布 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-005-P, TC-SHORT-PRODUCT-005-N | 待测 |
+| REQ-SHORT-PRODUCT-005 | Tube成片发布 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-005-P, TC-SHORT-PRODUCT-005-N | 待测 |
 | REQ-SHORT-PRODUCT-006 | 角色场景资产库与跨镜头一致性锚定 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-006-P, TC-SHORT-PRODUCT-006-N | 待测 |
 | REQ-SHORT-PRODUCT-007 | 可视多轨时间轴精编与音画时序对齐 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-007-P, TC-SHORT-PRODUCT-007-N | 待测 |
 | REQ-SHORT-PRODUCT-008 | 竖屏短剧画幅与黄金卡点节奏模板 | [TC-opc-product-20261017.md](TC-opc-product-20261017.md) | TC-SHORT-PRODUCT-008-P, TC-SHORT-PRODUCT-008-N | 待测 |

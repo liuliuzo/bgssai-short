@@ -185,26 +185,26 @@
                   <button class="btn btn-default btn-sm">重新合成 2.00 元</button>
                   <button class="btn btn-default btn-sm">仅重烧字幕 0.20 元</button>
                   <button class="btn btn-primary btn-sm">导出</button>
-                  <button class="btn btn-primary btn-sm">发布到 Media</button>
+                  <button class="btn btn-primary btn-sm">发布到 Tube</button>
                   <button class="btn btn-default btn-sm">批量发布 READY 集</button>
                 </div>
                 <div class="note" style="margin:12px 0 0">
-                  审核已通过且成片 READY 时可「发布到 Media」：调用
+                  审核已通过且成片 READY 时可「发布到 Tube」：调用
                   <code>POST /bgssai/user/films/publish-to-media</code>；整剧可用
                   <code>POST /bgssai/user/films/publish-to-media/batch</code>（按集顺序，带进度）。
                   按钮有 loading；成功弹窗展示 <code>media_id</code> /
-                  <code>play_url</code>（可打开 / 复制）；失败区分 Media 不可达、业务码 6xxxx、成片未 READY。
+                  <code>play_url</code>（可打开 / 复制）；失败区分 Tube 不可达、业务码 6xxxx、成片未 READY。
                   进入页先调 <code>GET /bgssai/user/films/publish-to-media/preflight</code>：
-                  缺 <code>bgssai.media.base-url</code> / <code>ingest-token</code> 时黄条提示；
+                  缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时黄条提示；
                   传 <code>work_id</code> 可看批量候选数。若存在最近一次发布记录（publish_log），
                   成片区展示状态与播放链接。幂等键
                   <code>short:{work_id}:{episode_id}:{film_id}</code>。
-                  同一成片已 READY 再点发布走回放（<code>replayed=true</code>），不新建 Media 目录；
+                  同一成片已 READY 再点发布走回放（<code>replayed=true</code>），不新建 Tube 目录；
                   <code>force=true</code> 才用同一键再 POST。重新合成后不再回放旧目录。
                   请求体带 <code>status=READY</code> 与 <code>approved=true</code>。
-                  Media 返回 PENDING（可以没有 media_id / play_url）时弹窗写「已受理，尚未可播放」，
+                  Tube 返回 PENDING（可以没有 media_id / play_url）时弹窗写「已受理，尚未可播放」，
                   不算成功；FAILED 或 code=422 算失败。base-url 为空直接失败，不编造主机 IP。
-                  下架/撤回：media 暂无契约，本仓 skip。
+                  下架/撤回：tube 暂无契约，本仓 skip。
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">
                   过期分两级：<strong>重抽镜头、重配音</strong>会让成片整体过期——须重新合成，
