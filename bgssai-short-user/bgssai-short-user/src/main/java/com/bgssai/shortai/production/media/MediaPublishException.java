@@ -4,7 +4,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.ErrorCode;
 
 /**
- * Media ingest failure that carries HTTP status / attempt count for publish_log.
+ * Tube ingest failure that carries HTTP status / attempt count for publish_log.
  */
 public class MediaPublishException extends BizException {
 

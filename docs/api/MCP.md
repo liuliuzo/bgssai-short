@@ -35,7 +35,7 @@
 | `save_episode_script` | 保存或更新当前用户本人分集的剧本正文与版本 |
 | `list_shots` | 查询当前用户本人分集下的分镜镜头列表 |
 | `submit_render_task` | 提交分集或分镜 AI 渲染/合成任务（需显式 `confirm_cost=true`，支持幂等去重） |
-| `publish_episode_to_media` | 将已过审成片发布到 Media 平台（需显式 `confirm_publish=true`） |
+| `publish_episode_to_media` | 将已过审成片发布到 Tube 平台（需显式 `confirm_publish=true`） |
 
 所有业务读写工具均按 PAT 绑定的 `user_id` 严格校验资源归属（跨用户访问拒绝），计费任务与对外发布须显式传入确认参数。
 

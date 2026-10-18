@@ -44,7 +44,7 @@
     },
     {
       "id": "REQ-SHORT-PRODUCT-005",
-      "title": "Media成片发布",
+      "title": "Tube成片发布",
       "cases": [
         "TC-SHORT-PRODUCT-005-P",
         "TC-SHORT-PRODUCT-005-N"
@@ -984,7 +984,7 @@
     },
     {
       "source": "docs/feature/film-publish-media.md",
-      "title": "成片发布到 bgssai-media（film-publish-media）",
+      "title": "成片发布到 bgssai-tube（film-publish-media）",
       "classification": "历史套件保留",
       "legacy": [
         "docs/review/test-cases/TC-film-publish-media.md"
@@ -1172,7 +1172,7 @@
     },
     {
       "source": "docs/feature/short-01-commercial-gate.md",
-      "title": "SHORT-01 商业门禁（成片生产 → Media）",
+      "title": "SHORT-01 商业门禁（成片生产 → Tube）",
       "classification": "历史套件保留",
       "legacy": [
         "docs/review/test-cases/TC-short-01-commercial-gate.md"
@@ -1319,7 +1319,7 @@
     },
     {
       "path": "docs/review/test-cases/TC-film-publish-media.md",
-      "sha256": "4d8388de3507fbd15091bc06e33bb3658a9c817f999dcc37ef4d1caf3bcd8aff"
+      "sha256": "694d6e20ea081f7a454b2b8bdb396fa0e79d1057fc1b9f100fe1285f22a7143a"
     },
     {
       "path": "docs/review/test-cases/TC-frame-continuity.md",
@@ -1363,7 +1363,7 @@
     },
     {
       "path": "docs/review/test-cases/TC-short-01-commercial-gate.md",
-      "sha256": "4381668a63d40522af2fc36eb5f44466f6ffcdc779296e88481123b968e86e62"
+      "sha256": "951f6f5a031d36679184656efab04b7075e630a679ab4a59b60b55ce695bcf3f"
     },
     {
       "path": "docs/review/test-cases/TC-short-work-management.md",

@@ -549,7 +549,7 @@ function StoryboardPane({ work, episodeId }) {
         type="info"
         showIcon
         message="先定妆、再写镜、再出图、再出视频"
-        description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。成片播放在 Media，这里只做出片。"
+        description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。成片播放在 Tube，这里只做出片。"
       />
       <Card size="small" title="资产一致性" extra={<Text type="secondary">勾选镜头后绑定，减少跨镜换脸</Text>}>
         <Space wrap>
@@ -971,17 +971,17 @@ function formatPublishError(data, fallback) {
   if (code === '4006' || /READY|APPROVED|过期|未就绪|审核/.test(msg)) {
     return { title: '无法发布（闸门未通过）', detail: msg }
   }
-  if (code === '502000' || /不可达|不可用|连接失败|Media 服务/.test(msg)) {
-    return { title: 'Media 服务不可用', detail: msg }
+  if (code === '502000' || /不可达|不可用|连接失败|Tube 服务/.test(msg)) {
+    return { title: 'Tube 服务不可用', detail: msg }
   }
   if (code === '504000' || /超时/.test(msg)) {
-    return { title: 'Media 请求超时', detail: msg }
+    return { title: 'Tube 请求超时', detail: msg }
   }
   if (/6\d{4}/.test(msg) || /^6\d{4}$/.test(code)) {
-    return { title: 'Media 业务拒绝', detail: msg }
+    return { title: 'Tube 业务拒绝', detail: msg }
   }
   if (/未配置|base-url|ingest-token/.test(msg)) {
-    return { title: 'Media 配置缺失', detail: msg }
+    return { title: 'Tube 配置缺失', detail: msg }
   }
   return { title: '发布失败', detail: msg }
 }
@@ -992,9 +992,9 @@ function showPublishSuccess(result) {
   const replayed = !!result?.replayed
   const pending = result?.status === 'PENDING' || result?.commercial_ready === false
   if (pending && result?.status !== 'READY') {
-    const note = result?.publish_log?.error || 'Media 已受理，素材尚未验证为可播放。这不是发布成功。'
+    const note = result?.publish_log?.error || 'Tube 已受理，素材尚未验证为可播放。这不是发布成功。'
     Modal.info({
-      title: 'Media 已受理，尚未可播放',
+      title: 'Tube 已受理，尚未可播放',
       width: 520,
       content: (
         <div>
@@ -1006,7 +1006,7 @@ function showPublishSuccess(result) {
     return
   }
   Modal.success({
-    title: replayed ? '已发布到 Media（幂等回放，未新建目录）' : '已发布到 Media',
+    title: replayed ? '已发布到 Tube（幂等回放，未新建目录）' : '已发布到 Tube',
     width: 520,
     content: (
       <div>
@@ -1144,7 +1144,7 @@ function ComposePane({ work, episodeId, onReload }) {
     const count = mediaPreflight?.batch_ready_count || 0
     const ok = await new Promise((resolve) => {
       Modal.confirm({
-        title: '批量发布到 Media',
+        title: '批量发布到 Tube',
         content: `将发布本作品全部 READY 且已过审的成片（约 ${count} 集）。确认继续？`,
         okText: '开始批量发布',
         cancelText: '取消',
@@ -1184,7 +1184,7 @@ function ComposePane({ work, episodeId, onReload }) {
           showIcon
           style={{ marginBottom: 12 }}
           message="成片已过期"
-          description="镜头重抽或配音重配后，旧成片不能下载，也不能再回放上次的 Media 目录。请重新合成并通过审核后再发布。"
+          description="镜头重抽或配音重配后，旧成片不能下载，也不能再回放上次的 Tube 目录。请重新合成并通过审核后再发布。"
         />
       ) : null}
       {(precheck?.blocker_list || []).length ? (
@@ -1201,9 +1201,9 @@ function ComposePane({ work, episodeId, onReload }) {
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message="Media 发布预检：配置未就绪"
+          message="Tube 发布预检：配置未就绪"
           description={(mediaPreflight.warnings || []).join('；')
-            || '请配置 bgssai.media.base-url / ingest-token（或 sys_secret）后再发布'}
+            || '请配置 bgssai.tube.base-url / ingest-token（或 sys_secret）后再发布'}
         />
       ) : null}
       {mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
@@ -1211,7 +1211,7 @@ function ComposePane({ work, episodeId, onReload }) {
           type="info"
           showIcon
           style={{ marginBottom: 12 }}
-          message="当前成片暂不可发布到 Media"
+          message="当前成片暂不可发布到 Tube"
           description={mediaPreflight.gate_reason}
         />
       ) : null}
@@ -1301,7 +1301,7 @@ function ComposePane({ work, episodeId, onReload }) {
           loading={publishing}
           disabled={!canPublish || batchPublishing}
           onClick={runPublish}
-        >发布到 Media</Button>
+        >发布到 Tube</Button>
         <Button
           loading={batchPublishing}
           disabled={batchPublishing || publishing || mediaPreflight?.config_ready === false

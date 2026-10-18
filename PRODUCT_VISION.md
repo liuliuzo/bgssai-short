@@ -22,13 +22,13 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 愿景唯一权威：`bgssai-skeleton/docs/PRODUCT-LINE-VISION.md`。本段是各仓副本，变更以该文件为准。
 
-**本仓位置**：本仓是第 1 条工具集合中的 **短剧制作平台**。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`，也不把厂商直连当作产品通道。用户界面只选择模型。成片发布与在线观看在 Media 系列（`bgssai-media-pc`、`bgssai-media-web`、`bgssai-media-android`、`bgssai-media-ios`）；用户在各端创作者中心发布，本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。
+**本仓位置**：本仓是第 1 条工具集合中的 **短剧制作平台**。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`，也不把厂商直连当作产品通道。用户界面只选择模型。成片发布与在线观看在 Tube 系列（`bgssai-tube-pc`、`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios`）；用户在各端创作者中心发布，本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。
 
 **对照（只读 `reference-github/`，不照搬品牌与仓库结构）：** **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。对标的是短剧从文字到成片的任务流与交互，不是把其中任一项目当本仓实现。
 
 **生态闭环与协同迭代**：
-- **`bgssai-short`**（短剧制作平台）与 **`bgssai-long`**（长剧制作平台）做上游制作，两仓都是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。下游是 Media 视频解决方案：`bgssai-media-pc` 是参考 VLC 的 PC 播放器加播放平台，`bgssai-media-web`、`bgssai-media-android`、`bgssai-media-ios` 是各端播放平台，对标 YouTube 与 YouTube Shorts。
-- 短剧制作完成后，通过统一摄入契约（`POST /bgssai/user/media/ingest/short`）进入 Media 目录。四端用户都通过创作者中心发布作品，并在线观看。
+- **`bgssai-short`**（短剧制作平台）与 **`bgssai-long`**（长剧制作平台）做上游制作，两仓都是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。下游是 Tube 视频解决方案：`bgssai-tube-pc` 是参考 VLC 的 PC 播放器加播放平台，`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios` 是各端播放平台，对标 YouTube 与 YouTube Shorts。
+- 短剧制作完成后，通过统一摄入契约（`POST /bgssai/user/tube/ingest/short`）进入 Tube 目录。四端用户都通过创作者中心发布作品，并在线观看。
 
 > 本文件是产品「AI 短剧制作平台」的愿景与定位，是需求（`docs/feature/**`）的上位背景；需求版本变更时
 > 同步回顾本文件受影响处（Standards §0）。
@@ -95,14 +95,14 @@ P2 人群本轮只借助通用能力满足，不做品牌定制化功能。
   素材、任务与审核能力；成片之外同时交付**可继续编辑的剪辑工程**——AI 出的片子几乎不可能一次到
   发布水准，剪辑点、语速、转场、花字这些修改本来就属于剪辑活，平台负责把时间轴排好交出去，
   不把创作者锁在平台内做他在剪映里做得更好的事。
-- 成片可直接发布到 `bgssai-media`，沿用 [成片发布需求](docs/feature/film-publish-media.md)；目录、播放及分发平台由 Media 承担。Short 暂不承载投放渠道运营、播放社区、版权交易与直播。
+- 成片可直接发布到 `bgssai-tube`，沿用 [成片发布需求](docs/feature/film-publish-media.md)；目录、播放及分发平台由 Tube 承担。Short 暂不承载投放渠道运营、播放社区、版权交易与直播。
 - 不做：模型自研与训练。AI 能力通过外部服务接入，本产品负责流程编排、素材管理与结果可控。
 
 商业模式（2026-08-14 起）：**订阅套餐 + 加量 credit**。FREE / PRO / MAX 档发放周期余额（分），
 生成按模型单价从周期额度扣，用尽后扣加量钱包；微信 Native / 支付宝当面付。运营仍可在管理端手工调余额并留痕。
 
 本轮明确**不做**的具体项：横屏与非 9:16 画幅、移动端 App（原型仅占位）、模型自研与微调、
-Media 平台自身的分发与数据回流、多人协作与权限细分（一个作品当前只归属一个创作者）、自动续费代扣与退款自动化。
+Tube 平台自身的分发与数据回流、多人协作与权限细分（一个作品当前只归属一个创作者）、自动续费代扣与退款自动化。
 
 ## 五、技术基线
 

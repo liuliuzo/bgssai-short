@@ -199,7 +199,7 @@ class FilmPublishToMediaServiceTest {
         when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
         when(assetService.resolveUrl("as-cover")).thenReturn(null);
         when(mediaIngestClient.ingest(any())).thenThrow(
-                new BizException(CommonErrorCode.UPSTREAM_ERROR, "media service unavailable: 404"));
+                new BizException(CommonErrorCode.UPSTREAM_ERROR, "tube service unavailable: 404"));
 
         FilmPublishToMediaReq req = new FilmPublishToMediaReq();
         req.setEpisodeId("ep-1");
@@ -452,7 +452,7 @@ class FilmPublishToMediaServiceTest {
         when(workAccessService.requireWork("w-1")).thenReturn(work());
         when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
         when(mediaIngestClient.ingest(any())).thenThrow(
-                new BizException(CommonErrorCode.RULE_REJECT, "Media 未配置：请设置 bgssai.media.base-url"));
+                new BizException(CommonErrorCode.RULE_REJECT, "Tube 未配置：请设置 bgssai.tube.base-url"));
 
         FilmPublishToMediaReq req = new FilmPublishToMediaReq();
         req.setFilmId("fl-1");

@@ -20,7 +20,7 @@ import com.bgssai.shortai.production.support.ShortJson;
 /**
  * Finished-film state after generate / compose.
  * <p>
- * Shot video and dubbing changes expire the previous cut so publish cannot replay an old Media
+ * Shot video and dubbing changes expire the previous cut so publish cannot replay an old Tube
  * catalog row. A successful compose clears that expiry and drops the short-side READY replay.
  * A failed compose must not leave the episode stuck in COMPOSING.
  */
@@ -28,7 +28,7 @@ import com.bgssai.shortai.production.support.ShortJson;
 public class FinishedFilmLifecycle {
 
     static final String SUPERSEDED =
-            "成片已重新合成，上次 Media 目录不再回放；下次发布用同一幂等键更新素材";
+            "成片已重新合成，上次 Tube 目录不再回放；下次发布用同一幂等键更新素材";
 
     @Autowired
     private ShortFilmMapper shortFilmMapper;
@@ -86,7 +86,7 @@ public class FinishedFilmLifecycle {
     }
 
     /**
-     * A new mp4 replaced the previous cut. Clear expiry and stop replaying the old Media row.
+     * A new mp4 replaced the previous cut. Clear expiry and stop replaying the old Tube row.
      */
     public void applyFreshCompose(ShortFilm patch, ShortFilm previous) {
         patch.setExpiredFlag(0);

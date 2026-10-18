@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "bgssai.media")
-public class BgssaiMediaProperties {
+@ConfigurationProperties(prefix = "bgssai.tube")
+public class BgssaiTubeProperties {
 
     private String baseUrl = "";
 

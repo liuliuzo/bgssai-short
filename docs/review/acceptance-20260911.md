@@ -10,9 +10,9 @@
 
 **PARTIAL**。
 
-- **已阻断假成功**：未配置 Provider / Media / 非 local 的 OBS 静默 LocalFile 回落，以及 `stub://` 等占位 URL，均不得报 SUCCEEDED/READY 商业成功（见 `docs/feature/short-01-commercial-gate.md`）。
-- **Short→Media**：区分 PENDING（交接受理、`commercial_ready=false`）与 FAIL（明确失败）；不得把 PENDING 计为 succeeded。
-- **仍 PENDING**：真实模型生成、OBS 成片、Short→Media 直播 E2E（不伪造供应商凭证）。
+- **已阻断假成功**：未配置 Provider / Tube / 非 local 的 OBS 静默 LocalFile 回落，以及 `stub://` 等占位 URL，均不得报 SUCCEEDED/READY 商业成功（见 `docs/feature/short-01-commercial-gate.md`）。
+- **Short→ Tube**：区分 PENDING（交接受理、`commercial_ready=false`）与 FAIL（明确失败）；不得把 PENDING 计为 succeeded。
+- **仍 PENDING**：真实模型生成、OBS 成片、Short→Tube 直播 E2E（不伪造供应商凭证）。
 
 此前 Windows 字幕滤镜盘符问题已修复并保留。
 

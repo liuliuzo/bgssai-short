@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import com.bgssai.shortai.common.CommercialOutcomeGuard;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
-import com.bgssai.shortai.configuration.BgssaiMediaProperties;
+import com.bgssai.shortai.configuration.BgssaiTubeProperties;
 import com.bgssai.shortai.secret.SysSecretReader;
 
 @Component
@@ -27,18 +27,18 @@ public class RestMediaIngestClient implements MediaIngestClient {
     static final int MAX_ATTEMPTS = 2;
 
     private final RestTemplate restTemplate;
-    private final BgssaiMediaProperties properties;
+    private final BgssaiTubeProperties properties;
     private final SysSecretReader secretReader;
 
     @Autowired
-    public RestMediaIngestClient(RestTemplate restTemplate, BgssaiMediaProperties properties,
+    public RestMediaIngestClient(RestTemplate restTemplate, BgssaiTubeProperties properties,
             SysSecretReader secretReader) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.secretReader = secretReader;
     }
 
-    RestMediaIngestClient(RestTemplate restTemplate, BgssaiMediaProperties properties,
+    RestMediaIngestClient(RestTemplate restTemplate, BgssaiTubeProperties properties,
             SysSecretReader secretReader, boolean testCtor) {
         this(restTemplate, properties, secretReader);
     }
@@ -48,15 +48,15 @@ public class RestMediaIngestClient implements MediaIngestClient {
         String base = properties.getBaseUrl();
         if (base == null || base.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "Media 主机未配置：bgssai.media.base-url 为空。"
-                            + "未部署的 Media 不会被写成发布成功，也不会返回假的 media_id。"
+                    "Tube 主机未配置：bgssai.tube.base-url 为空。"
+                            + "未部署的 Tube 不会被写成发布成功，也不会返回假的 media_id。"
                             + "请在 application-*.properties 填写真实地址（不要编造 IP）");
         }
         String token = resolveToken();
         if (token.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "Media 未配置：请设置 bgssai.media.ingest-token，或在 Admin / sys_secret"
-                            + " 写入键 bgssai.media.ingest-token（勿把真实密钥提交到仓库）");
+                    "Tube 未配置：请设置 bgssai.tube.ingest-token，或在 Admin / sys_secret"
+                            + " 写入键 bgssai.tube.ingest-token（勿把真实密钥提交到仓库）");
         }
         String url = trimSlash(base) + MediaIngestContract.INGEST_PATH;
         MediaPublishException lastRetriable = null;
@@ -89,7 +89,7 @@ public class RestMediaIngestClient implements MediaIngestClient {
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 int status = response.getStatusCode().value();
                 throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                        "Media 发布失败：HTTP " + status, status, attempt);
+                        "Tube 发布失败：HTTP " + status, status, attempt);
             }
             return parseBody(response.getBody(), response.getStatusCode().value(), attempt);
         } catch (MediaPublishException ex) {
@@ -102,12 +102,12 @@ public class RestMediaIngestClient implements MediaIngestClient {
             throw mapAccess(ex, attempt);
         } catch (RestClientException ex) {
             throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 服务不可用：" + shortMsg(ex), null, attempt, ex);
+                    "Tube 服务不可用：" + shortMsg(ex), null, attempt, ex);
         }
     }
 
     /**
-     * Config readiness for UX preflight (does not call media).
+     * Config readiness for UX preflight (does not call tube).
      */
     public ConfigStatus configStatus() {
         boolean baseOk = properties.getBaseUrl() != null && !properties.getBaseUrl().isBlank();
@@ -132,7 +132,7 @@ public class RestMediaIngestClient implements MediaIngestClient {
         String message = firstNonBlank(text(result.get("message")), text(body.get("message")), text(body.get("msg")));
         boolean envelopeFail = !bizCode.isBlank() && !isSuccessCode(bizCode);
 
-        // Media PENDING (probe not verified) is HTTP 200 / code 0 with no media_id and no play_url.
+        // Tube PENDING (probe not verified) is HTTP 200 / code 0 with no media_id and no play_url.
         // That is not a missing-field failure and must not be stored as FAILED.
         if ("PENDING".equals(classified) && !envelopeFail) {
             return pendingResult(result, message, httpStatus, attempt);
@@ -149,17 +149,17 @@ public class RestMediaIngestClient implements MediaIngestClient {
         }
         if ("READY".equals(classified) && playableExplicitlyFalse(result.get("playable"))) {
             throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 声明 READY 但 playable=false，不能当成可播放成功"
+                    "Tube 声明 READY 但 playable=false，不能当成可播放成功"
                             + (message.isBlank() ? "" : "：" + message),
                     httpStatus, attempt);
         }
         if (mediaId.isBlank() || playUrl.isBlank()) {
             throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）",
+                    "Tube 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）",
                     httpStatus, attempt);
         }
         try {
-            CommercialOutcomeGuard.rejectFakeUrl(playUrl, "media play_url");
+            CommercialOutcomeGuard.rejectFakeUrl(playUrl, "tube play_url");
         } catch (BizException ex) {
             throw new MediaPublishException(CommonErrorCode.RULE_REJECT, ex.getMessage(), httpStatus, attempt);
         }
@@ -173,13 +173,13 @@ public class RestMediaIngestClient implements MediaIngestClient {
         String playUrl = text(result.get("play_url"));
         if (!playUrl.isBlank()) {
             try {
-                CommercialOutcomeGuard.rejectFakeUrl(playUrl, "media play_url");
+                CommercialOutcomeGuard.rejectFakeUrl(playUrl, "tube play_url");
             } catch (BizException ex) {
                 throw new MediaPublishException(CommonErrorCode.RULE_REJECT, ex.getMessage(), httpStatus, attempt);
             }
         }
         String note = message.isBlank()
-                ? "Media 已受理，素材尚未验证为可播放（PENDING，不是失败，也不是可播放成功）"
+                ? "Tube 已受理，素材尚未验证为可播放（PENDING，不是失败，也不是可播放成功）"
                 : message;
         return new IngestResult(mediaId, playUrl, "PENDING", httpStatus, attempt, note);
     }
@@ -187,15 +187,15 @@ public class RestMediaIngestClient implements MediaIngestClient {
     private static String failureMessage(String bizCode, String statusRaw, String classified, String message) {
         if ("FAILED".equals(classified)) {
             String detail = message.isBlank() ? ("status=" + statusRaw) : message;
-            return "Media 返回失败状态（FAIL，不是 PENDING）：" + detail;
+            return "Tube 返回失败状态（FAIL，不是 PENDING）：" + detail;
         }
         if (looksLike6xxxx(bizCode)) {
-            return "Media 业务拒绝（" + bizCode + "）" + (message.isBlank() ? "" : "：" + message);
+            return "Tube 业务拒绝（" + bizCode + "）" + (message.isBlank() ? "" : "：" + message);
         }
         if (!bizCode.isBlank()) {
-            return "Media 返回错误码 " + bizCode + (message.isBlank() ? "" : "：" + message);
+            return "Tube 返回错误码 " + bizCode + (message.isBlank() ? "" : "：" + message);
         }
-        return message.isBlank() ? "Media 发布失败" : message;
+        return message.isBlank() ? "Tube 发布失败" : message;
     }
 
     private static boolean playableExplicitlyFalse(Object playable) {
@@ -231,13 +231,13 @@ public class RestMediaIngestClient implements MediaIngestClient {
 
     private static MediaPublishException withAttempts(MediaPublishException ex, int attempts) {
         if (ex == null) {
-            return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR, "Media 发布失败", null, attempts);
+            return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR, "Tube 发布失败", null, attempts);
         }
         if (ex.getAttempts() == attempts) {
             return ex;
         }
         String suffix = attempts > 1 ? "（已重试）" : "";
-        String msg = ex.getMessage() == null ? "Media 发布失败" : ex.getMessage();
+        String msg = ex.getMessage() == null ? "Tube 发布失败" : ex.getMessage();
         if (attempts > 1 && !msg.contains("已重试")) {
             msg = msg + suffix;
         }
@@ -249,22 +249,22 @@ public class RestMediaIngestClient implements MediaIngestClient {
         String bodySnippet = shortMsg(ex.getResponseBodyAsString());
         if (status >= 500) {
             return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 服务异常（HTTP " + status + "）"
+                    "Tube 服务异常（HTTP " + status + "）"
                             + (bodySnippet.isBlank() ? "" : "：" + bodySnippet),
                     status, attempt, ex);
         }
         if (status == 401 || status == 403) {
             return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 鉴权失败（HTTP " + status + "）：请检查 ingest-token 是否与 media 侧一致",
+                    "Tube 鉴权失败（HTTP " + status + "）：请检查 ingest-token 是否与 tube 侧一致",
                     status, attempt, ex);
         }
         if (status == 404) {
             return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Media 接口不存在（HTTP 404）：请确认 bgssai.media.base-url 指向正确的 media 服务",
+                    "Tube 接口不存在（HTTP 404）：请确认 bgssai.tube.base-url 指向正确的 tube 服务",
                     status, attempt, ex);
         }
         return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                "Media 发布失败（HTTP " + status + "）"
+                "Tube 发布失败（HTTP " + status + "）"
                         + (bodySnippet.isBlank() ? "" : "：" + bodySnippet),
                 status, attempt, ex);
     }
@@ -272,10 +272,10 @@ public class RestMediaIngestClient implements MediaIngestClient {
     private MediaPublishException mapAccess(ResourceAccessException ex, int attempt) {
         if (isTimeout(ex)) {
             return new MediaPublishException(CommonErrorCode.UPSTREAM_TIMEOUT,
-                    "Media 请求超时：请确认 media 服务可达后重试", null, attempt, ex);
+                    "Tube 请求超时：请确认 tube 服务可达后重试", null, attempt, ex);
         }
         return new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                "Media 服务不可达（连接失败）：请确认 media 已启动且 base-url 正确", null, attempt, ex);
+                "Tube 服务不可达（连接失败）：请确认 tube 已启动且 base-url 正确", null, attempt, ex);
     }
 
     private static boolean isTimeout(Throwable ex) {

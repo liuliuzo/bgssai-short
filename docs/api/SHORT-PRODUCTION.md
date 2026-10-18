@@ -321,7 +321,7 @@ FFmpeg 混入成片音轨。
 
 ### POST /bgssai/user/films/publish-to-media
 
-将 READY 且审核 `APPROVED` 的成片推送到 bgssai-media（共享 ingest 契约见
+将 READY 且审核 `APPROVED` 的成片推送到 bgssai-tube（共享 ingest 契约见
 [`../feature/film-publish-media.md`](../feature/film-publish-media.md)、
 [`short-to-media-publish.md`](./short-to-media-publish.md)）。
 
@@ -332,13 +332,13 @@ FFmpeg 混入成片音轨。
 `episode_id` / `film_id` 至少其一。`force` 可选。闸门：`compose_status=READY`、`expired_flag=0`、有
 `film_asset_id`、本集 `review_status=APPROVED`、`video_url` 为 http(s)。
 
-已 READY 且同幂等键则回放（`replayed=true`，不调 Media）。`force=true` 才再 POST。
+已 READY 且同幂等键则回放（`replayed=true`，不调 Tube）。`force=true` 才再 POST。
 
 响应 `result`：`film_id` `episode_id` `work_id` `media_id` `play_url` `status`
 `commercial_ready` `idempotency_key` `replayed` `published_at` `http_status` `attempts` `publish_log`。
 `status=PENDING` 时 `commercial_ready=false`，`media_id` / `play_url` 可空，HTTP 仍成功。
-`status=FAILED` 或 Media `code=422` 抛错。`base-url` 为空返回 `4006`。
-media 不可达返回 `502000`；超时 `504000`；业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次（键不变）。
+`status=FAILED` 或 Tube `code=422` 抛错。`base-url` 为空返回 `4006`。
+tube 不可达返回 `502000`；超时 `504000`；业务码 6xxxx 文案可读。瞬时 5xx/超时重试一次（键不变）。
 重新合成后不再回放旧目录。
 
 ### POST /bgssai/user/films/publish-to-media/batch
@@ -353,10 +353,10 @@ media 不可达返回 `502000`；超时 `504000`；业务码 6xxxx 文案可读�
 
 ### GET /bgssai/user/films/publish-to-media/preflight?episode_id=&film_id=&work_id=
 
-不调用 media。返回配置就绪、闸门结论、`warnings[]`，以及可选最近一次 `publish_log`；
+不调用 tube。返回配置就绪、闸门结论、`warnings[]`，以及可选最近一次 `publish_log`；
 带 `work_id` 时返回 `batch_ready_count` / `batch_candidate_list`。
 
-下架/撤回：media 暂无契约，本仓 skip（见需求文档）。
+下架/撤回：tube 暂无契约，本仓 skip（见需求文档）。
 
 `films/detail` 额外返回最近一次发布字段：`media_id` `media_play_url`
 `media_publish_status` `media_published_at` `media_last_error`，存在历史时附带 `publish_log`

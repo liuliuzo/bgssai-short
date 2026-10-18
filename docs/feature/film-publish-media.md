@@ -1,33 +1,33 @@
-# 成片发布到 bgssai-media（film-publish-media）
+# 成片发布到 bgssai-tube（film-publish-media）
 
 ## 一、背景与目标
 
-- 背景：成片合成与审核通过后，创作者仍需把可播放 MP4 推到 `bgssai-media`，才能在媒体侧播放与分发；short 与 media 约定了统一 ingest 契约，short 侧落地客户端。
+- 背景：成片合成与审核通过后，创作者仍需把可播放 MP4 推到 `bgssai-tube`，才能在媒体侧播放与分发；short 与 tube 约定了统一 ingest 契约，short 侧落地客户端。
 - 目标：单集一键发布 + 作品批量发布 READY 集；闸门从严；幂等重发安全；可读错误与 publish_log。
 - 关联角色：`USER`。
 
 ## 二、需求澄清（WHAT）
 
-- 用户故事：作为 `USER`，我希望在成片就绪且审核通过后，把本集成片（或整部作品全部 READY 集）发布到 bgssai-media，并拿到 `media_id` / 播放链接。
+- 用户故事：作为 `USER`，我希望在成片就绪且审核通过后，把本集成片（或整部作品全部 READY 集）发布到 bgssai-tube，并拿到 `media_id` / 播放链接。
 - 业务规则：
   1. **闸门（从严）**：`short_film.compose_status=READY`、`expired_flag=0`、存在可播放 `film_asset_id`；且本集 `review_status=APPROVED`。任一不满足返回 `4006`。
   2. **视频地址**：对成片素材走既有资产预签名 / 可播放 URL（与 `films/detail.download_url` 同源能力）。
-  3. **契约（MUST 与 media 一致）**：见第四节 short → media。
+  3. **契约（MUST 与 tube 一致）**：见第四节 short → media。
   4. **幂等**：键为 `short:{work_id}:{episode_id}:{film_id}`，写入 Body 并带 `Idempotency-Key` 头。
-     Body 同时带 `status=READY`、`approved=true`（与 Media `ShortDramaPublishJob` 一致）。
-     同一成片已 READY 且已有 `media_id` / `play_url` 时，再次发布 **Short 侧回放**（不调 Media，
-     `replayed=true`），避免双目录。`force=true` 才用同一键再 POST（期望 Media upsert 同一 `media_id`）。
+     Body 同时带 `status=READY`、`approved=true`（与 Tube `ShortDramaPublishJob` 一致）。
+     同一成片已 READY 且已有 `media_id` / `play_url` 时，再次发布 **Short 侧回放**（不调 Tube，
+     `replayed=true`），避免双目录。`force=true` 才用同一键再 POST（期望 Tube upsert 同一 `media_id`）。
      重新合成成功后，Short 把 `media_publish_status` 置回 `NONE` 并清空当前 `play_url`，
-     下次发布必须再 POST（同一键，由 Media UNIQUE upsert），不能回放旧目录。
-     PENDING / FAILED 允许重试。Media 对端 MUST UNIQUE upsert，见 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
-  5. **配置**：`bgssai.media.base-url` 与 `bgssai.media.ingest-token` 写在各环境 `application-*.properties`（token 仅占位，不提交真实密钥）；运行期优先 properties，空则回退 `sys_secret.bgssai.media.ingest-token`。
+     下次发布必须再 POST（同一键，由 Tube UNIQUE upsert），不能回放旧目录。
+     PENDING / FAILED 允许重试。Tube 对端 MUST UNIQUE upsert，见 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
+  5. **配置**：`bgssai.tube.base-url` 与 `bgssai.tube.ingest-token` 写在各环境 `application-*.properties`（token 仅占位，不提交真实密钥）；运行期优先 properties，空则回退 `sys_secret.bgssai.tube.ingest-token`。
      **主机**：本仓不分配、不编造 `MEDIA_*` IP。dev/prod 的 base-url 是约定域名；地址为空时发布返回 `4006`，文案写明未配置，不返回 `media_id`。域名不可达时返回 `502000` / `504000`，同样不写成成功。
-  6. **失败**：media 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error` + `media_publish_log`。
-  7. **预检**：`GET .../preflight` 检查配置与闸门；传 `work_id` 时附带批量候选数；不调用 media。
+  6. **失败**：tube 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error` + `media_publish_log`。
+  7. **预检**：`GET .../preflight` 检查配置与闸门；传 `work_id` 时附带批量候选数；不调用 tube。
   8. **UX**：发布 loading；成功展示 `media_id` + `play_url`（打开/复制）；成片区展示最近一次 publish_log。
   9. **可靠性**：瞬时 HTTP 5xx / 超时 / 连接失败重试 1 次；幂等键不变。
   10. **批量**：`POST .../batch` 按剧集顺序发布本作品全部 READY+APPROVED 成片，返回进度字段。
-  11. **下架 / 撤回（skip）**：当前 bgssai-media 未提供 short unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 media 侧补齐后再开需求。
+  11. **下架 / 撤回（skip）**：当前 bgssai-tube 未提供 short unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 tube 侧补齐后再开需求。
 
 
 ## SHORT-01 交接状态（商业门禁）
@@ -35,17 +35,17 @@
 | Media `status` | Short 落库 | `commercial_ready` | 含义 |
 | --- | --- | --- | --- |
 | READY / SUCCEEDED | READY | true | 发布成功 |
-| PENDING / PROCESSING / QUEUED | PENDING | false | 已受理未就绪，不是 FAIL。Media 可以不给 `media_id` / `play_url` |
-| FAILED / ERROR，或信封 `code=422` | FAILED + 抛错 | false | 明确失败。文案用 Media 的 `message`，不说成「缺字段」 |
+| PENDING / PROCESSING / QUEUED | PENDING | false | 已受理未就绪，不是 FAIL。Tube 可以不给 `media_id` / `play_url` |
+| FAILED / ERROR，或信封 `code=422` | FAILED + 抛错 | false | 明确失败。文案用 Tube 的 `message`，不说成「缺字段」 |
 
-未配置 Media、或返回 `stub://` 等占位 `play_url`：失败，禁止冒充成功。详见 [short-01-commercial-gate.md](short-01-commercial-gate.md)。
+未配置 Tube、或返回 `stub://` 等占位 `play_url`：失败，禁止冒充成功。详见 [short-01-commercial-gate.md](short-01-commercial-gate.md)。
 
 ## 三、验收标准
 
 1. READY + APPROVED 成片可发布，返回 `media_id`、`play_url`、`status`。
-2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 media；文案可读。
+2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 tube；文案可读。
 3. 重复点击发布不炸：已 READY 回放既有 `media_id`，不新建目录；落库最近一次结果与 `media_publish_log`。
-4. 用户端成片区有「发布到 Media」与「批量发布 READY 集」；成功可打开/复制播放链接。
+4. 用户端成片区有「发布到 Tube」与「批量发布 READY 集」；成功可打开/复制播放链接。
 5. 缺 base-url / ingest-token 时 preflight 警告。
 6. 批量返回 `total` / `succeeded` / `failed` / `progress_percent` / `item_list`。
 7. 单测覆盖 payload、闸门、重试；本地 media 404 不影响单测。
@@ -128,7 +128,7 @@
 
 ### GET /bgssai/user/films/publish-to-media/preflight
 
-查询参数：`episode_id` / `film_id` / `work_id`（均可选）。不调用 media。
+查询参数：`episode_id` / `film_id` / `work_id`（均可选）。不调用 tube。
 
 字段：`config_ready` `base_url_configured` `token_configured` `film_ready` `review_approved`
 `publishable` `gate_reason` `warnings[]`，可选 `publish_log`；带 `work_id` 时另有
@@ -137,7 +137,7 @@
 ### short → media（共享 ingest 契约，MUST 逐字段一致）
 
 ```
-POST {bgssai.media.base-url}/bgssai/user/media/ingest/short
+POST {bgssai.tube.base-url}/bgssai/user/tube/ingest/short
 Header: Content-Type: application/json
 Header: X-Bgssai-Ingest-Token: {token}
 Header: Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
@@ -159,7 +159,7 @@ Header: Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
 | `language` | string | 是 | 固定 `zh-CN` |
 | `tags` | string[] | 是 | 可空数组；常放 genre |
 | `status` | string | 是 | 固定 `READY`（审核通过的成片包） |
-| `approved` | boolean | 是 | 固定 `true`。`false` 会被 Media 以 `422` 拒绝 |
+| `approved` | boolean | 是 | 固定 `true`。`false` 会被 Tube 以 `422` 拒绝 |
 | `idempotency_key` | string | 是 | `short:{work_id}:{episode_id}:{film_id}` |
 
 期望响应（可包在统一 `result` 内，或顶层）：
@@ -176,7 +176,7 @@ Header: Idempotency-Key: short:{work_id}:{episode_id}:{film_id}
 
 ### 下架 / 撤回（skip）
 
-media 侧暂无 `unpublish` / `retract` 共享契约 → **本仓不实现**。后续若 media 提供路径与幂等语义，再补 short API 与 UX。
+media 侧暂无 `unpublish` / `retract` 共享契约 → **本仓不实现**。后续若 tube 提供路径与幂等语义，再补 short API 与 UX。
 
 ## 五、流程
 
@@ -197,26 +197,26 @@ media 侧暂无 `unpublish` / `retract` 共享契约 → **本仓不实现**。�
   - `media_last_error` VARCHAR(1024)
   - `media_publish_log` LONGTEXT（JSON：idempotency_key / media_id / play_url / status / http_status / error / attempts / published_at / replayed）
 - 同步 Entity / Mapper XML（用户端与管理端）。
-- `sys_secret` 种子：`bgssai.media.ingest-token`（空值占位）。
+- `sys_secret` 种子：`bgssai.tube.ingest-token`（空值占位）。
 
 ## 七、原型
 
 - 涉及端：web 用户端
 - 页面：`../demo-static/web/user/compose-export.html`
-- 「发布到 Media」+「批量发布 READY 集」+ 最近 publish_log / 批量进度
+- 「发布到 Tube」+「批量发布 READY 集」+ 最近 publish_log / 批量进度
 - 页面 → API：`../api/page-api-mapping.md`
 
 ## 八、联调与验证步骤（smoke）
 
-1. 配置 `bgssai.media.base-url` / `ingest-token`（或 Admin 写 `sys_secret`）；缺配置时 preflight 黄条。
+1. 配置 `bgssai.tube.base-url` / `ingest-token`（或 Admin 写 `sys_secret`）；缺配置时 preflight 黄条。
 2. READY+APPROVED 单集发布：成功可打开/复制 `play_url`。
-3. 未 READY / 未过审：拒绝且不调 media。
-4. Media 宕机：可读 `502000`，库表有 `media_last_error` / `media_publish_log`。
+3. 未 READY / 未过审：拒绝且不调 tube。
+4. Tube 宕机：可读 `502000`，库表有 `media_last_error` / `media_publish_log`。
 5. 重复发布：已 READY 回放既有目录，不二次 ingest；`force=true` 才再 POST。
 6. 批量发布 READY 集：有进度汇总。
 7. `mvn -Dtest=FilmPublishToMediaServiceTest,RestMediaIngestClientTest test`。
 8. 前端：登录 demo → 作品工作台 → 成片提审 → 单集 / 批量发布。
-9. 契约与 Media 对端验收：[`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
+9. 契约与 Tube 对端验收：[`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
 
 ## 九、四层同步检查清单
 
