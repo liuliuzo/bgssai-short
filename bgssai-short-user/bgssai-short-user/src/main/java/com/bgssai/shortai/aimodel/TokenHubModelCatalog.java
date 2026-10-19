@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
  * Reads the model ids TokenHub can run, so the user picker matches the gateway.
@@ -21,8 +24,23 @@ import com.bgssai.shortai.production.support.ShortJson;
 @Component
 public class TokenHubModelCatalog {
 
-    public record HubModel(String id, List<String> capabilities, Map<String,Object> pricing) {
-        public HubModel(String id,List<String> capabilities){this(id,capabilities,com.bgssai.shortai.billing.ModelPricing.from(Map.of()));}
+    public record HubModel(String id, List<String> capabilities, Map<String, Object> pricing, String ownedBy) {
+        public HubModel(String id, List<String> capabilities) {
+            this(id, capabilities, com.bgssai.shortai.billing.ModelPricing.from(Map.of()), "");
+        }
+
+        public HubModel(String id, List<String> capabilities, Map<String, Object> pricing) {
+            this(id, capabilities, pricing, "");
+        }
+
+        public HubModel {
+            if (capabilities == null) {
+                capabilities = List.of();
+            }
+            if (ownedBy == null) {
+                ownedBy = "";
+            }
+        }
     }
 
     private static final long SUCCESS_TTL_MS = 10 * 60 * 1000L;
@@ -58,18 +76,43 @@ public class TokenHubModelCatalog {
     }
 
     private final String baseUrl;
+    private final SysSecretReader secrets;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
     private volatile List<HubModel> cached = List.of();
     private volatile long freshUntil;
 
+    public TokenHubModelCatalog(String baseUrl) {
+        this(baseUrl, null);
+    }
+
+    @Autowired
     public TokenHubModelCatalog(
             @Value("${bgssai.llm.tokenhub-cn-base-url:${bgssai.llm.gateway-base-url:https://www.bgssai-tokenhub.cn}}")
-            String baseUrl) {
+            String baseUrl,
+            SysSecretReader secrets) {
         String trimmed = baseUrl == null ? "" : baseUrl.trim();
         while (trimmed.endsWith("/")) {
             trimmed = trimmed.substring(0, trimmed.length() - 1);
         }
         this.baseUrl = trimmed;
+        this.secrets = secrets;
+    }
+
+    /** Models from the last successful catalog read. Empty when the gateway has not answered. */
+    public List<HubModel> snapshot() {
+        refresh();
+        return cached;
+    }
+
+    /** Keeps a catalog another caller just read, so the next default pick uses the same list. */
+    public void remember(List<HubModel> models) {
+        if (models == null || models.isEmpty()) {
+            return;
+        }
+        synchronized (this) {
+            cached = List.copyOf(models);
+            freshUntil = System.currentTimeMillis() + SUCCESS_TTL_MS;
+        }
     }
 
     public List<HubModel> modelsFor(String abilityType) {
@@ -97,10 +140,13 @@ public class TokenHubModelCatalog {
                 return;
             }
             try {
-                HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/v1/models"))
-                        .timeout(Duration.ofSeconds(3))
-                        .GET()
-                        .build();
+                HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(baseUrl + "/v1/models"))
+                        .timeout(Duration.ofSeconds(3));
+                String apiKey = apiKey();
+                if (!apiKey.isBlank()) {
+                    requestBuilder.header("Authorization", "Bearer " + apiKey);
+                }
+                HttpRequest request = requestBuilder.GET().build();
                 HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() < 200 || response.statusCode() >= 300) {
                     freshUntil = System.currentTimeMillis() + FAILURE_TTL_MS;
@@ -141,9 +187,19 @@ public class TokenHubModelCatalog {
                     }
                 }
             }
-            models.add(new HubModel(String.valueOf(id).trim(), List.copyOf(capabilities), com.bgssai.shortai.billing.ModelPricing.from(map)));
+            Object owned = map.get("owned_by");
+            String ownedBy = owned == null ? "" : String.valueOf(owned).trim();
+            models.add(new HubModel(String.valueOf(id).trim(), List.copyOf(capabilities),
+                    com.bgssai.shortai.billing.ModelPricing.from(map), ownedBy));
         }
         return List.copyOf(models);
+    }
+
+    private String apiKey() {
+        if (secrets == null) {
+            return "";
+        }
+        return TokenHubClientSupport.resolveApiKey(secrets, TokenHubClientSupport.HUB_CN, null);
     }
 
     private static String capabilityOf(String abilityType) {

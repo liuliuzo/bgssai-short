@@ -264,8 +264,10 @@
         高级设置字段（<code>genre</code> / <code>episode_count</code> /
         <code>episode_duration_sec</code> / <code>visual_style</code> / <code>template_id</code>）
         省略走默认值；下拉选项只显示中文文案，枚举值收在 <code>value</code> 属性。
-        提交前会检查大纲（文本）、定妆与图片、配音所用模型在当前网关是否可用。任一步不能跑时停在本页，
-        提示例如「大纲、剧本、分镜现在不能开始：模型服务暂未开通：deepseek，请稍后重试」，不创建作品、不入队。
+        提交前会读取当前网关目录，只采用目录里实际有的默认模型：图片为可灵 <code>kling-v3</code>，
+        配音为已登记语音能力的 MiniMax 模型。任一步不能跑时停在本页，
+        提示例如「大纲、剧本、分镜现在不能开始：模型服务暂未开通：deepseek，请稍后重试」
+        或「配音现在不能开始：该模型暂未开放：minimax-speech-2.8-hd，请稍后重试」，不创建作品、不入队。
         创建流程不含预算与质量阈值：<code>cost_budget_cent</code> 是作品设置里的可选项（默认不限），
         <code>quality_threshold_score</code> 由结构模板给默认、创建后可随时调整（调整留痕）。
         模板列表取自 <code>GET /bgssai/user/quality/templates?genre</code>。

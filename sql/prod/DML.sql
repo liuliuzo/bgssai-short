@@ -46,6 +46,10 @@ UPDATE `ai_model_config`
 SET `config_json` = JSON_REMOVE(JSON_SET(COALESCE(`config_json`, '{}'), '$.hub', 'cn', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
 WHERE `provider_code` = 'TENCENT_TOKENHUB' AND `model_id` NOT LIKE 'm-tokenhub-global-%';
 
+-- 图片默认：网关已注册的可灵文生图。不新增密钥。
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-image-kling', 'IMAGE', 'TENCENT_TOKENHUB', 'kling-v3', '可灵文生图', 'STANDARD', 'PER_CALL', 80, 1, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'IMAGE' AND `model_id` <> 'm-tokenhub-image-kling' AND `deleted_flag` = 0;
+
 -- 本库账本默认套餐目录（生产环境幂等回填）
 INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price_cent`, `yearly_price_cent`, `five_hour_limit_tokens`, `weekly_limit_tokens`, `sort_no`, `enabled`, `del_flag`, `creator`, `modifier`) VALUES ('FREE', '免费版', 0, 0, 1000, 10000, 1, 1, 0, 'system', 'system') ON DUPLICATE KEY UPDATE `plan_name` = VALUES(`plan_name`), `five_hour_limit_tokens` = VALUES(`five_hour_limit_tokens`), `weekly_limit_tokens` = VALUES(`weekly_limit_tokens`), `enabled` = 1, `del_flag` = 0;
 INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price_cent`, `yearly_price_cent`, `five_hour_limit_tokens`, `weekly_limit_tokens`, `sort_no`, `enabled`, `del_flag`, `creator`, `modifier`) VALUES ('PRO', '专业版', 9900, 99900, 20000, 100000, 2, 1, 0, 'system', 'system') ON DUPLICATE KEY UPDATE `plan_name` = VALUES(`plan_name`), `five_hour_limit_tokens` = VALUES(`five_hour_limit_tokens`), `weekly_limit_tokens` = VALUES(`weekly_limit_tokens`), `enabled` = 1, `del_flag` = 0;

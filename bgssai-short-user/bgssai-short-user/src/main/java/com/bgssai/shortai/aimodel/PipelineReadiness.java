@@ -48,21 +48,29 @@ public class PipelineReadiness {
     private final SysSecretReader secrets;
     private final String baseUrl;
     private final GatewayClient client;
+    private final TokenHubModelCatalog catalogCache;
     private final ConcurrentHashMap<String, Cached> cache = new ConcurrentHashMap<>();
 
     @Autowired
     public PipelineReadiness(AiModelResolveService models, SysSecretReader secrets,
+            TokenHubModelCatalog catalogCache,
             @Value("${bgssai.llm.tokenhub-cn-base-url:${bgssai.llm.gateway-base-url:https://www.bgssai-tokenhub.cn}}")
                     String baseUrl) {
-        this(models, secrets, baseUrl, new JdkGatewayClient());
+        this(models, secrets, baseUrl, new JdkGatewayClient(), catalogCache);
     }
 
     PipelineReadiness(AiModelResolveService models, SysSecretReader secrets, String baseUrl,
             GatewayClient client) {
+        this(models, secrets, baseUrl, client, null);
+    }
+
+    private PipelineReadiness(AiModelResolveService models, SysSecretReader secrets, String baseUrl,
+            GatewayClient client, TokenHubModelCatalog catalogCache) {
         this.models = models;
         this.secrets = secrets;
         this.baseUrl = trim(baseUrl);
         this.client = client;
+        this.catalogCache = catalogCache;
     }
 
     public void assertReady(String taskType, String selectedModel) {
@@ -83,10 +91,13 @@ public class PipelineReadiness {
             log.warn("gateway catalog unavailable");
             throw blocked("模型网关连接失败，大纲、剧本、分镜、定妆、图片和配音现在都不能开始，请稍后重试");
         }
+        if (catalogCache != null && !catalog.isEmpty()) {
+            catalogCache.remember(List.copyOf(catalog.values()));
+        }
         String ability = taskType.trim().toUpperCase(Locale.ROOT);
         List<String> blocks = new ArrayList<>();
         for (Step step : STEPS) {
-            String modelCode = modelCode(step, ability, selectedModel);
+            String modelCode = modelCode(step, ability, selectedModel, catalog);
             String reason = reasonFor(step, modelCode, catalog, key);
             if (reason != null) {
                 blocks.add(step.label + "（" + reason + "）");
@@ -97,14 +108,21 @@ public class PipelineReadiness {
         }
     }
 
-    private String modelCode(Step step, String taskAbility, String selectedModel) {
-        String override = step.ability.equals(taskAbility) ? selectedModel : null;
+    private String modelCode(Step step, String taskAbility, String selectedModel,
+            Map<String, TokenHubModelCatalog.HubModel> catalog) {
+        String override = step.ability.equals(taskAbility) && selectedModel != null && !selectedModel.isBlank()
+                ? selectedModel.trim() : null;
+        String configured = "";
         try {
             AiModelConfig model = models.resolve(step.ability, override);
-            return model == null || model.getModelCode() == null ? "" : model.getModelCode().trim();
+            configured = model == null || model.getModelCode() == null ? "" : model.getModelCode().trim();
         } catch (RuntimeException ex) {
-            return "";
+            configured = override == null ? "" : override;
         }
+        if (override != null) {
+            return configured;
+        }
+        return CatalogModelAlign.choose(step.ability, configured, List.copyOf(catalog.values()));
     }
 
     private String reasonFor(Step step, String modelCode,
