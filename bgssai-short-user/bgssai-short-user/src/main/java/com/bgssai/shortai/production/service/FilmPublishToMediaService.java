@@ -403,11 +403,23 @@ public class FilmPublishToMediaService {
         if (film.getFilmAssetId() == null || film.getFilmAssetId().isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "成片素材缺失，无法发布到 Tube");
         }
+        if (film.getFilmDurationSec() != null && film.getFilmDurationSec() <= 0) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "成片时长无效（film_duration_sec=" + film.getFilmDurationSec() + "），无法发布到 Tube");
+        }
         if (!"APPROVED".equals(episode.getReviewStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "剧集审核未通过（review_status=" + nullToDash(episode.getReviewStatus())
                             + "，需 APPROVED）后才能发布到 Tube");
         }
+    }
+
+    public static boolean isValidAspectRatio(String aspectRatio) {
+        String normalized = (aspectRatio == null || aspectRatio.isBlank()) ? "9:16" : aspectRatio.trim();
+        return "9:16".equals(normalized)
+                || "16:9".equals(normalized)
+                || "1:1".equals(normalized)
+                || "3:4".equals(normalized);
     }
 
     static String buildTitle(ShortWork work, ShortEpisode episode) {

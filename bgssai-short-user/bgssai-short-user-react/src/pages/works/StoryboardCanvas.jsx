@@ -198,9 +198,9 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
               onChange={(val) => { setBatchTaskType(val); setCost(null) }}
               style={{ width: 110 }}
               options={[
-                { value: 'IMAGE', label: '🖼️ 首帧出图' },
-                { value: 'VIDEO', label: '🎥 生成视频' },
-                { value: 'VOICE', label: '🎙️ 合成配音' },
+                { value: 'IMAGE', label: '首帧出图' },
+                { value: 'VIDEO', label: '生成视频' },
+                { value: 'VOICE', label: '合成配音' },
               ]}
             />
             <Button size="small" onClick={estimate}>估费用</Button>
@@ -275,13 +275,13 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
                       )}
                       {row.video_url ? (
                         <div style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.65)', padding: '1px 4px', borderRadius: 2, color: '#fff', fontSize: 9 }}>
-                          ▶ 视频
+                          视频
                         </div>
                       ) : null}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: 700 }}>镜 {row.shot_no}</span>
-                      {locked ? <span>🔒</span> : null}
+                      {locked ? <span>已锁</span> : null}
                     </div>
                     <div style={{ color: '#64748b', fontSize: 10, display: 'flex', justifyContent: 'space-between' }}>
                       <span>{row.shot_duration_sec || 3}s</span>
@@ -317,9 +317,9 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
         extra={(
           <Space>
             {editing?.shot_status === 'LOCKED' ? (
-              <Button size="small" onClick={unlockCurrent}>🔓 解锁</Button>
+              <Button size="small" onClick={unlockCurrent}>解锁</Button>
             ) : (
-              <Button size="small" onClick={lockCurrent}>🔒 锁定</Button>
+              <Button size="small" onClick={lockCurrent}>锁定</Button>
             )}
             <Button type="primary" onClick={saveEditor}>保存提示词</Button>
           </Space>
@@ -329,19 +329,19 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
           <div>
             {editing.video_url ? (
               <div style={{ marginBottom: 12 }}>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>🎥 视频成片预览：</Text>
+                <Text strong style={{ display: 'block', marginBottom: 4 }}>视频成片预览：</Text>
                 <video src={editing.video_url} controls style={{ width: '100%', maxHeight: 200, borderRadius: 6, background: '#000' }} />
               </div>
             ) : editing.first_frame_url ? (
               <div style={{ marginBottom: 12 }}>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>🖼️ 首帧画面：</Text>
+                <Text strong style={{ display: 'block', marginBottom: 4 }}>首帧画面：</Text>
                 <img src={editing.first_frame_url} alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} />
               </div>
             ) : null}
 
             {editing.voice_url || editing.audio_url ? (
               <div style={{ marginBottom: 12, background: '#f0fdf4', padding: '6px 10px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Tag color="green">🎙️ 对白配音</Tag>
+                <Tag color="green">对白配音</Tag>
                 <audio controls src={editing.voice_url || editing.audio_url} style={{ height: 26, flex: 1 }} />
               </div>
             ) : null}
@@ -357,7 +357,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             </div>
 
             <Text strong style={{ display: 'block', marginBottom: 4 }}>
-              📝 镜头画面提示词 (人话分镜 / Visual Prompt):
+              镜头画面提示词 (人话分镜 / Visual Prompt):
             </Text>
             <TextArea
               rows={4}
@@ -369,7 +369,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                📐 景别景深 (Shot Scale):
+                景别景深 (Shot Scale):
               </Text>
               <Space wrap size={[4, 4]}>
                 {SHOT_TYPES.map((st) => (
@@ -382,7 +382,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                🎥 运镜方式 (Camera Movement):
+                运镜方式 (Camera Movement):
               </Text>
               <Space wrap size={[4, 4]}>
                 {CAMERA_MOVEMENTS.slice(0, 8).map((cm) => (
@@ -395,7 +395,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                🎭 四机位视角 (Quad-Grid Angle):
+                四机位视角 (Quad-Grid Angle):
               </Text>
               <Space wrap size={[4, 4]}>
                 {QUAD_GRID_ANGLES.map((q) => (
@@ -408,7 +408,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 14 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                🔗 连续性衔接 (Continuity):
+                连续性衔接 (Continuity):
               </Text>
               <Space wrap size={[4, 4]}>
                 {CONTINUITY_PRESETS.map((cp) => (
@@ -420,11 +420,11 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             </div>
 
             <div style={{ borderTop: '1px solid #eef2f7', paddingTop: 12 }}>
-              <Text strong style={{ display: 'block', marginBottom: 8 }}>⚡ 镜头独立派发生成：</Text>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>镜头独立派发生成：</Text>
               <Space wrap>
-                <Button loading={submittingSingle} onClick={() => runSingleShot('IMAGE')}>🖼️ 出首帧图</Button>
-                <Button loading={submittingSingle} onClick={() => runSingleShot('VIDEO')}>🎥 生成视频</Button>
-                <Button loading={submittingSingle} onClick={() => runSingleShot('VOICE')}>🎙️ 合成对白</Button>
+                <Button loading={submittingSingle} onClick={() => runSingleShot('IMAGE')}>出首帧图</Button>
+                <Button loading={submittingSingle} onClick={() => runSingleShot('VIDEO')}>生成视频</Button>
+                <Button loading={submittingSingle} onClick={() => runSingleShot('VOICE')}>合成对白</Button>
               </Space>
             </div>
           </div>

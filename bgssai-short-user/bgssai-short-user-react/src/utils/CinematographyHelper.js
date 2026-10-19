@@ -83,6 +83,17 @@ export const CONTINUITY_PRESETS = [
   { value: 'HARD_CUT', label: '跨场景硬切', prompt: 'hard cut to new location, scene transition, establishing environment' },
 ]
 
+export const ASPECT_RATIOS = [
+  { value: '9:16', label: '竖屏短剧 (9:16 · 含底部/右侧字幕安全区)', safeBottomPct: 18, safeRightPct: 14 },
+  { value: '16:9', label: '横屏剧集 (16:9 · 标准宽银幕安全区)', safeBottomPct: 10, safeRightPct: 8 },
+]
+
+export const RHYTHM_MARKERS = [
+  { code: 'HOOK_3S', key: 'HOOK_3S', label: '黄金3秒钩子', targetSec: 3, desc: '开篇3秒内抛出强冲突或悬念' },
+  { code: 'MID_REVERSAL', key: 'MID_REVERSAL', label: '中段高潮反转', targetSec: 35, desc: '剧集中段关系或局势逆转' },
+  { code: 'CLIFFHANGER_END', key: 'CLIFFHANGER_END', label: '集尾悬念卡点', targetSec: 85, desc: '集尾留白或疑问引导下一集' },
+]
+
 /**
  * 组装增强后的镜头视觉提示词
  */
@@ -110,3 +121,112 @@ export function buildEnhancedPrompt(basePrompt = '', options = {}) {
 
   return parts.filter(Boolean).join(', ')
 }
+
+/**
+ * 对标 Jellyfish & waoowaoo：生成前统一镜头就绪度与资产锚点锁定预检
+ */
+export function evaluateShotReadiness(shot = {}, consistencyPanel = {}) {
+  const blockers = []
+  const warnings = []
+  const promptText = String(shot.previz_text || shot.image_prompt || shot.shot_desc || '').trim()
+  if (!promptText) {
+    blockers.push('缺少镜头画面描述或人话分镜')
+  } else if (promptText.length < 6) {
+    warnings.push('镜头描述较短，建议补充景别、运镜或动作细节')
+  }
+
+  const charList = consistencyPanel.character_list || []
+  const sceneList = consistencyPanel.scene_list || []
+  const propList = consistencyPanel.prop_list || []
+
+  for (const charId of shot.character_ref_json || []) {
+    const card = charList.find((c) => c.character_id === charId)
+    if (card && card.card_status !== 'LOCKED' && card.lock_flag !== 1) {
+      blockers.push(`关联角色「${card.character_name || charId}」尚未锁定定妆`)
+    }
+  }
+  if (shot.scene_card_id) {
+    const sceneCard = sceneList.find((s) => s.scene_card_id === shot.scene_card_id)
+    if (sceneCard && sceneCard.card_status !== 'LOCKED' && sceneCard.lock_flag !== 1) {
+      blockers.push(`关联场景「${sceneCard.card_name || shot.scene_card_id}」尚未锁定参考图`)
+    }
+  }
+  for (const propId of shot.prop_ref_json || []) {
+    const propCard = propList.find((p) => p.scene_card_id === propId)
+    if (propCard && propCard.card_status !== 'LOCKED' && propCard.lock_flag !== 1) {
+      blockers.push(`关联道具「${propCard.card_name || propId}」尚未锁定参考图`)
+    }
+  }
+
+  if (shot.stale_flag === 1) {
+    warnings.push('关联资产定妆已变更，建议重抽以保持跨镜一致')
+  }
+  if (shot.blocked_flag === 1) {
+    blockers.push('镜头处于阻塞状态，请先解除前置依赖')
+  }
+
+  const hasVideo = Boolean(shot.video_asset_id || shot.shot_status === 'VIDEO_READY' || shot.shot_status === 'LOCKED')
+  const hasFirstFrame = Boolean(shot.first_frame_asset_id || shot.first_frame_url)
+  let stage = 'DRAFT'
+  if (hasVideo) {
+    stage = 'VIDEO_READY'
+  } else if (hasFirstFrame) {
+    stage = 'IMAGE_READY'
+  } else if (promptText.length >= 6) {
+    stage = 'PROMPT_READY'
+  }
+
+  return {
+    ready: blockers.length === 0,
+    canGenerateVideo: blockers.length === 0 && hasFirstFrame,
+    stage,
+    blockers,
+    warnings,
+  }
+}
+
+/**
+ * 对标 ArcReel：发布到 bgssai-tube-pc 前的成片交付前置校验
+ */
+export function validateTubePublishPreflight(film = {}, episode = {}, preflight = {}) {
+  const blockers = []
+  if (!film || !film.film_id) {
+    blockers.push('尚未生成成片记录')
+  } else {
+    if (film.compose_status !== 'READY') {
+      blockers.push(`成片状态未就绪（当前为 ${film.compose_status || 'NONE'}，需为 READY）`)
+    }
+    if (film.expired_flag === 1) {
+      blockers.push('成片已因镜头或配音变更而过期，请重新合成')
+    }
+    const durationSec = Number(film.film_duration_sec ?? 1)
+    if (!Number.isFinite(durationSec) || durationSec <= 0) {
+      blockers.push('成片缺少有效正数时长（duration_sec 须大于 0）')
+    }
+    const url = String(film.download_url || '').trim()
+    if (url && (url.startsWith('stub://') || url.startsWith('placeholder://'))) {
+      blockers.push('成片地址为占位地址，禁止交付到 Tube')
+    }
+  }
+  const reviewStatus = episode?.review_status || preflight?.review_status
+  if (reviewStatus && reviewStatus !== 'APPROVED') {
+    blockers.push(`剧集审核未通过（当前为 ${reviewStatus}，需为 APPROVED）`)
+  }
+  if (preflight && preflight.config_ready === false) {
+    blockers.push('Tube 摄入端点配置未就绪（需配置 bgssai.tube.base-url 与 ingest-token）')
+  }
+  const workId = film?.work_id || preflight?.work_id || ''
+  const episodeId = film?.episode_id || episode?.episode_id || preflight?.episode_id || ''
+  const filmId = film?.film_id || preflight?.film_id || ''
+  const idempotencyKey = workId && episodeId && filmId ? `short:${workId}:${episodeId}:${filmId}` : ''
+
+  return {
+    ready: blockers.length === 0,
+    publishable: blockers.length === 0,
+    idempotencyKey,
+    endpoint: '/bgssai/user/tube/ingest/short',
+    blockers,
+  }
+}
+
+
