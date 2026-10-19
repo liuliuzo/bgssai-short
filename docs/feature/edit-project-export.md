@@ -68,6 +68,11 @@
       `bgm.mp3`。作品名中的路径分隔符与 `..` 一律替换为下划线。
   13. **下载**：产物走与成片一致的 30 分钟签名 URL，不暴露对象存储永久地址；链接过期后重新调
       `detail` 接口取新链接即可，无需重新导出。
+  14. **导出基准可见**：剪辑工程页展示本次导出对照的版本。`card_status=LOCKED` 的角色卡必须写出中文标签
+      「角色版本」及定妆标识；本集时间轴在已有锁定镜头或已有锁定角色时视为锁定，卡片必须写出中文标签
+      「时间轴版本」，并列出镜号、时长、角色与字幕，便于和成片抽检对照。未锁定或已作废的角色不带
+      「角色版本」标签，文案写明不能标为与现行时间轴一致。锁定只认 `card_status=LOCKED` /
+      `shot_status=LOCKED`。
 
 ## 三、验收标准
 
@@ -91,6 +96,8 @@
 11. 同一集同一格式连续导出 11 次后，列表只剩最近 10 条，最旧一条转为软删且其下载链接不再可用。
 12. 导出记录状态从 `QUEUED` 经 `RUNNING` 到 `READY`，前端轮询可见；打包过程中出错时状态为 `FAILED`
     并给出可读原因（素材不可达 / 体积超限 / 格式生成失败）。
+13. 剪辑工程页上，已锁定角色卡可见「角色版本」，已锁定时间轴卡可见「时间轴版本」（含镜号、时长、字幕）。
+    已作废角色版本不标成与现行时间轴一致。
 
 ## 四、接口契约（snake_case）
 
@@ -101,7 +108,18 @@
       "missing_shot_list": [ { "shot_no": 7, "shot_desc": "女主推门" },
                              { "shot_no": 15, "shot_desc": "雨中对峙" } ],
       "estimated_media_byte": 486539264, "media_limit_byte": 2147483648,
-      "last_draft_dir": "C:\Users\demo\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft" } }
+      "last_draft_dir": "C:\Users\demo\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft",
+      "character_version_list": [ { "character_id": "c-30001", "character_name": "沈知微",
+        "card_status": "LOCKED", "version_label": "角色版本",
+        "version_text": "沈知微 · 定妆 a-50012 · 2026-10-19 18:30", "consistent_flag": 1, "voided_flag": 0 } ],
+      "voided_character_list": [ { "character_id": "c-30002", "character_name": "陆时衍",
+        "card_status": "DRAFT", "version_label": "", "consistent_flag": 0, "voided_flag": 1,
+        "version_text": "陆时衍 已作废，不能标为与现行时间轴一致" } ],
+      "timeline_version": { "card_status": "LOCKED", "version_label": "时间轴版本", "version_no": 2,
+        "shot_count": 20, "total_duration_sec": 62, "subtitle_count": 16, "consistent_flag": 1,
+        "version_text": "v2 · 20 镜 · 总时长 62 秒 · 字幕 16 条",
+        "shot_list": [ { "shot_no": 1, "shot_duration_sec": 4, "dialogue_text": "三年前那纸",
+          "character_names": "沈知微", "shot_status": "LOCKED" } ] } } }
   ```
 - `POST /bgssai/user/edit-projects/export`
   ```json

@@ -47,7 +47,7 @@
 2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 tube；文案可读。
 3. 重复点击发布不炸：已 READY 回放既有 `media_id`，不新建目录；落库最近一次结果与 `media_publish_log`。
 4. 用户端成片区有「发布到 Tube」与「批量发布 READY 集」；成功可打开/复制播放链接。
-5. 缺 base-url / ingest-token 时 preflight 警告。
+5. 缺 base-url / ingest-token 时 preflight 警告。缺 ingest-token 时发布按钮停用，界面写明「未配置 Tube 令牌」，不编造令牌。
 6. 批量返回 `total` / `succeeded` / `failed` / `progress_percent` / `item_list`。
 7. 单测覆盖 payload、闸门、重试；本地 media 404 不影响单测。
 8. 文档明确 unpublish 为 skip。

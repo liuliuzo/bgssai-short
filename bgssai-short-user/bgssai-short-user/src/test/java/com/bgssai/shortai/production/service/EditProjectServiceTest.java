@@ -191,5 +191,9 @@ class EditProjectServiceTest {
         assertEquals(2, missing.size());
         assertEquals(2, missing.get(0).get("shot_no"));
         assertEquals(3, missing.get(1).get("shot_no"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> timeline = (Map<String, Object>) result.get("timeline_version");
+        assertEquals("DRAFT", timeline.get("card_status"));
+        assertEquals("", timeline.get("version_label"));
     }
 }

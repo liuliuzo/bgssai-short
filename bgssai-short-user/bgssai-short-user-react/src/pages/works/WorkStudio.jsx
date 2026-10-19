@@ -24,6 +24,7 @@ import {
   evaluateShotReadiness,
   validateTubePublishPreflight,
 } from '../../utils/CinematographyHelper'
+import { tubeTokenMissingMessage } from '../../utils/baselineCards'
 
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -1128,9 +1129,11 @@ function ComposePane({ work, episodeId, onReload }) {
     review_status: mediaPreflight?.review_status || 'APPROVED',
   })
 
+  const tokenMissing = tubeTokenMissingMessage(mediaPreflight)
   const canPublish = !!film?.film_id
     && clientPreflight.ready
     && mediaPreflight?.config_ready !== false
+    && !tokenMissing
     && !publishing
 
   const runPublish = async () => {
@@ -1214,14 +1217,24 @@ function ComposePane({ work, episodeId, onReload }) {
           description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
         />
       ) : null}
-      {mediaPreflight && mediaPreflight.config_ready === false ? (
+      {tokenMissing ? (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="未配置 Tube 令牌"
+          description={(mediaPreflight?.warnings || []).filter(Boolean).join('；')
+            || '发布已停用。请在环境配置或管理端写入 Tube 摄入令牌后再发布。此处不填写、也不编造令牌。'}
+        />
+      ) : null}
+      {mediaPreflight && mediaPreflight.config_ready === false && !tokenMissing ? (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
           message="Tube 发布预检：配置未就绪"
           description={(mediaPreflight.warnings || []).join('；')
-            || '请配置 bgssai.tube.base-url / ingest-token（或 sys_secret）后再发布'}
+            || '请配置 bgssai.tube.base-url 后再发布'}
         />
       ) : null}
       {mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
@@ -1320,9 +1333,10 @@ function ComposePane({ work, episodeId, onReload }) {
           disabled={!canPublish || batchPublishing}
           onClick={runPublish}
         >发布到 Tube</Button>
+        {tokenMissing ? <Text type="warning">未配置 Tube 令牌</Text> : null}
         <Button
           loading={batchPublishing}
-          disabled={batchPublishing || publishing || mediaPreflight?.config_ready === false
+          disabled={batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false
             || !(mediaPreflight?.batch_ready_count > 0)}
           onClick={runBatchPublish}
         >
