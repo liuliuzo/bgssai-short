@@ -1,4 +1,4 @@
-import { COPYRIGHT_LINE, LEGAL_PAGES, legalPageUrl } from '../lib/legalLinks'
+import { COPYRIGHT_LINE, LEGAL_PAGES, LOGIN_CONSENT_PAGES, legalPageUrl } from '../lib/legalLinks'
 import './legal-footer.css'
 
 export default function LegalFooter({ variant = 'app', checked, onChange }) {
@@ -11,7 +11,7 @@ export default function LegalFooter({ variant = 'app', checked, onChange }) {
     return (
       <label className="legal-consent">
         <input type="checkbox" checked={!!checked} onChange={(e) => onChange(e.target.checked)} />
-        <span>我已阅读并同意{consentLink(LEGAL_PAGES[0])}与{consentLink(LEGAL_PAGES[1])}。</span>
+        <span>我已阅读并同意{consentLink(LOGIN_CONSENT_PAGES[0])}与{consentLink(LOGIN_CONSENT_PAGES[1])}。</span>
       </label>
     )
   }
