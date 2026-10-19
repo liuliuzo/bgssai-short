@@ -203,7 +203,9 @@
                   <code>force=true</code> 才用同一键再 POST。重新合成后不再回放旧目录。
                   请求体带 <code>status=READY</code> 与 <code>approved=true</code>。
                   Tube 返回 PENDING（可以没有 media_id / play_url）时弹窗写「已受理，尚未可播放」，
-                  不算成功；FAILED 或 code=422 算失败。base-url 为空直接失败，不编造主机 IP。
+                  不算成功；FAILED 或 code=422 算失败。超时或状态对不上时显示 UNKNOWN：
+                  不重复发布，不当成成功或失败，下次用同一幂等键先查 Tube 再决定是否补发。
+                  base-url 为空直接失败，不编造主机 IP。失败镜头重试不会覆盖已锁定的确认版本；引用的角色、场景或道具素材缺失则明确失败，模型只走 tokenhub-cn。
                   下架/撤回：tube 暂无契约，本仓 skip。
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">

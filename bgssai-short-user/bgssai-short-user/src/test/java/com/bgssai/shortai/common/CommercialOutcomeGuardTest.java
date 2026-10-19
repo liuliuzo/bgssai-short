@@ -48,7 +48,9 @@ class CommercialOutcomeGuardTest {
         assertEquals("PENDING", CommercialOutcomeGuard.classifyMediaStatus("PENDING"));
         assertEquals("PENDING", CommercialOutcomeGuard.classifyMediaStatus("PROCESSING"));
         assertEquals("FAILED", CommercialOutcomeGuard.classifyMediaStatus("FAILED"));
-        assertEquals("FAILED", CommercialOutcomeGuard.classifyMediaStatus("UNKNOWN_X"));
+        assertEquals("UNKNOWN", CommercialOutcomeGuard.classifyMediaStatus("UNKNOWN_X"));
+        assertEquals("UNKNOWN", CommercialOutcomeGuard.classifyMediaStatus("UNKNOWN"));
+        assertEquals("NOT_FOUND", CommercialOutcomeGuard.classifyMediaStatus("NOT_FOUND"));
         assertTrue(CommercialOutcomeGuard.isReadyStatus("READY"));
         assertTrue(CommercialOutcomeGuard.isPendingStatus("PENDING"));
         assertTrue(CommercialOutcomeGuard.isFailedStatus("FAILED"));
