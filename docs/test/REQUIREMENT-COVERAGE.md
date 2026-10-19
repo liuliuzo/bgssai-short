@@ -43,3 +43,14 @@
 | [订阅套餐与加量 credit（subscription-credit）](../../docs/feature/subscription-credit.md) | 历史套件保留 | [TC-subscription-credit.md](../../docs/review/test-cases/TC-subscription-credit.md) | — |
 | [三个问题体验主线（ux-three-questions）](../../docs/feature/ux-three-questions.md) | 历史套件保留 | [TC-ux-three-questions.md](../../docs/review/test-cases/TC-ux-three-questions.md) | — |
 | [配音与字幕（voice-subtitle）](../../docs/feature/voice-subtitle.md) | 历史套件保留 | [TC-voice-subtitle.md](../../docs/review/test-cases/TC-voice-subtitle.md) | — |
+
+## 2026-10-19 功能目录增量
+
+2026-10-17 各行保持原样，历史用例结果未改写。本轮把差距审计与既有参考需求链到新编号；新用例均为待测，不是运行通过证明。逐条矩阵见 [TRACEABILITY-20261019.md](TRACEABILITY-20261019.md)。
+
+| 来源 | 关联方式/范围 | 历史用例（结果未改写） | 本轮用例 |
+| --- | --- | --- | --- |
+| [2026-10-19 OPC 静态差距审计](../feature/opc-gap-audit-20261019.md) | AUD-SHORT-20261019-01、AUD-SHORT-20261019-02 | — | [REQ-SHORT-PRODUCT-101](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-101-P, TC-SHORT-PRODUCT-101-N；[REQ-SHORT-PRODUCT-102](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-102-P, TC-SHORT-PRODUCT-102-N |
+| [成片发布到 bgssai-tube（film-publish-media）](../feature/film-publish-media.md) | 既有发布参考，收口未知结果恢复 | [TC-film-publish-media.md](../review/test-cases/TC-film-publish-media.md) | [REQ-SHORT-PRODUCT-101](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-101-P, TC-SHORT-PRODUCT-101-N |
+| [资产一致性面板（asset-consistency-panel）](../feature/asset-consistency-panel.md) | 既有一致性参考，收口成片基准 | [TC-asset-consistency-panel.md](../review/test-cases/TC-asset-consistency-panel.md) | [REQ-SHORT-PRODUCT-102](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-102-P, TC-SHORT-PRODUCT-102-N |
+| [分镜工作台（storyboard-workbench）](../feature/storyboard-workbench.md) | 既有分镜时间轴参考，收口成片基准 | [TC-storyboard-workbench.md](../review/test-cases/TC-storyboard-workbench.md) | [REQ-SHORT-PRODUCT-102](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-102-P, TC-SHORT-PRODUCT-102-N |
