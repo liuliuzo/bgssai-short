@@ -188,4 +188,42 @@ public final class ShotConsistency {
         String desc = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
         return image.isBlank() && desc.isBlank();
     }
+
+    public static Map<String, Object> checkAnchorReadiness(ShortShot shot,
+            List<ShortCharacter> characters, List<ShortSceneCard> cards) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        boolean hasPrompt = !shotNeedsPrompt(shot);
+        List<String> charIds = shot == null ? List.of() : characterIds(shot.getCharacterRefJson());
+        List<String> unlockedCharIds = new ArrayList<>();
+        if (characters != null && !charIds.isEmpty()) {
+            for (String cid : charIds) {
+                for (ShortCharacter c : characters) {
+                    if (c != null && cid.equals(c.getCharacterId())) {
+                        if (c.getLockFlag() == null || c.getLockFlag() == 0) {
+                            unlockedCharIds.add(cid);
+                        }
+                    }
+                }
+            }
+        }
+        String sceneCardId = shot == null || shot.getSceneCardId() == null ? "" : shot.getSceneCardId().trim();
+        boolean sceneBound = !sceneCardId.isEmpty();
+        boolean sceneLocked = false;
+        if (sceneBound && cards != null) {
+            for (ShortSceneCard card : cards) {
+                if (card != null && sceneCardId.equals(card.getSceneCardId())) {
+                    sceneLocked = card.getLockFlag() != null && card.getLockFlag() == 1;
+                    break;
+                }
+            }
+        }
+        boolean ready = hasPrompt && (!charIds.isEmpty() || sceneBound) && unlockedCharIds.isEmpty();
+        result.put("ready", ready);
+        result.put("has_prompt", hasPrompt);
+        result.put("bound_character_count", charIds.size());
+        result.put("unlocked_character_ids", unlockedCharIds);
+        result.put("scene_bound", sceneBound);
+        result.put("scene_locked", sceneLocked);
+        return result;
+    }
 }

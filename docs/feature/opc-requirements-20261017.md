@@ -80,3 +80,13 @@
 - REQ-SHORT-COMMON-017（共同契约）：登录方式绑定与解绑
 - REQ-SHORT-COMMON-018（共同契约）：额度套餐开通与续费
 - REQ-SHORT-COMMON-019（共同契约）：额度按token计量显示
+
+## 2026-10-19 参考项目对标与系统健壮性加固补充
+
+在不改变上述全部既有 `REQ-SHORT-*` 需求 ID 与表格判定口径的前提下，结合 `reference-github` 六大参考项目（`waoowaoo`、`Jellyfish`、`ArcReel`、`LocalMiniDrama`、`openframe`、`ZJT`）完成生产工作台交互与系统边界加固，详见 [reference-ux-hardening-20261019.md](reference-ux-hardening-20261019.md)：
+
+1. **生成前镜头就绪度与一致性锚点预检（对标 `Jellyfish` / `waoowaoo`）**：在镜头生图与生视频提交前校验分镜描述完整性、角色/场景/道具卡片锁定状态、定妆变更过期标记（`stale_flag`）及同场次首尾帧衔接模式（`NONE` / `INHERIT_PREV` / `BOOKEND`），防止未定妆或空描述直接触发扣费生成。
+2. **同区 `bgssai-tokenhub-cn` 路由守卫与倍率/Token 紧凑展示（对标 `ZJT` / `ArcReel`）**：严格校验模型路由归属 `tokenhub-cn`（拒绝 `tokenhub-global` 跨区回退及厂商直连地址），严格校验 `0.5x / 1x / 1.5x` 三档倍率并在提交前检测目录倍率漂移；前端额度与预估消耗按 `K / M / B` 紧凑格式（最多一位小数，如 `418.9M`）展示并在悬停与接口层保留精确整数。
+3. **竖屏画幅安全区与黄金节奏卡点校验（对标 `LocalMiniDrama` / `openframe`）**：支持 `9:16` 竖屏与 `16:9` 横屏画幅校验、移动端安全区字幕防遮挡检测，以及开篇黄金 3 秒钩子、中段反转与集尾悬念卡点诊断。
+4. **Tube 摄入交付前置校验与幂等闭环（对标 `ArcReel`）**：在调用 `POST /bgssai/user/tube/ingest/short` 交接至 `bgssai-tube-pc` 前，强制校验成片 `READY` 未过期、剧集审核 `APPROVED`、真实有效时长 `duration_sec > 0`、可访问 `http(s)` 成片地址（拒绝 `stub://` 等占位地址）及幂等键 `short:{workId}:{episodeId}:{filmId}`。
+

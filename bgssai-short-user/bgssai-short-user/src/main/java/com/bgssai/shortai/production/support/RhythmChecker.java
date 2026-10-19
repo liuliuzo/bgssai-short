@@ -88,6 +88,78 @@ public final class RhythmChecker {
         return text.isEmpty() ? 40 : 62;
     }
 
+    public static List<Map<String, Object>> extractRhythmMarkers(List<Map<String, Object>> sceneList) {
+        List<Map<String, Object>> markers = new ArrayList<>();
+        if (sceneList == null || sceneList.isEmpty()) {
+            return markers;
+        }
+        int elapsedSec = 0;
+        boolean firstLineChecked = false;
+        Map<String, Object> lastLineMarker = null;
+        for (Map<String, Object> scene : sceneList) {
+            int sceneNo = ShortJson.integer(scene.get("scene_no"), 1);
+            List<Map<String, Object>> lines = ShortJson.list(ShortJson.toJson(scene.get("line_list")));
+            if (scene.get("line_list") instanceof List<?>) {
+                lines = castList(scene.get("line_list"));
+            }
+            for (Map<String, Object> line : lines) {
+                String text = ShortJson.text(line.get("line_text"));
+                int sec = ShortJson.integer(line.get("estimated_sec"), Math.max(2, (text.length() + 4) / 5));
+                if (!firstLineChecked) {
+                    firstLineChecked = true;
+                    if (scoreHook(text) >= 80) {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("marker_type", "HOOK_3S");
+                        m.put("scene_no", sceneNo);
+                        m.put("at_sec", elapsedSec);
+                        m.put("line_text", text);
+                        markers.add(m);
+                    }
+                }
+                if (text.contains("竟然") || text.contains("其实") || text.contains("反转")
+                        || text.contains("没想到") || text.contains("真正的")) {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("marker_type", "REVERSAL");
+                    m.put("scene_no", sceneNo);
+                    m.put("at_sec", elapsedSec);
+                    m.put("line_text", text);
+                    markers.add(m);
+                }
+                elapsedSec += sec;
+                if (scoreEnding(text) >= 80) {
+                    lastLineMarker = new LinkedHashMap<>();
+                    lastLineMarker.put("marker_type", "CLIFFHANGER");
+                    lastLineMarker.put("scene_no", sceneNo);
+                    lastLineMarker.put("at_sec", elapsedSec);
+                    lastLineMarker.put("line_text", text);
+                } else {
+                    lastLineMarker = null;
+                }
+            }
+        }
+        if (lastLineMarker != null) {
+            markers.add(lastLineMarker);
+        }
+        return markers;
+    }
+
+    public static Map<String, Object> validateAspectRatioAndSafeZone(String aspectRatio, Integer subtitleMarginPct) {
+        String normalized = (aspectRatio == null || aspectRatio.isBlank()) ? "9:16" : aspectRatio.trim();
+        boolean ratioValid = "9:16".equals(normalized)
+                || "16:9".equals(normalized)
+                || "1:1".equals(normalized)
+                || "3:4".equals(normalized);
+        int margin = subtitleMarginPct == null ? 15 : subtitleMarginPct;
+        boolean safeZoneValid = !"9:16".equals(normalized) || (margin >= 8 && margin <= 25);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("aspect_ratio", normalized);
+        out.put("aspect_ratio_valid", ratioValid);
+        out.put("subtitle_margin_pct", margin);
+        out.put("safe_zone_valid", safeZoneValid);
+        out.put("valid", ratioValid && safeZoneValid);
+        return out;
+    }
+
     @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> castList(Object raw) {
         List<Map<String, Object>> out = new ArrayList<>();
