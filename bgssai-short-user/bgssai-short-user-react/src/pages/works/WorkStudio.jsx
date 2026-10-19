@@ -1,7 +1,7 @@
 import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
 import { formatToken } from '../../utils/formatToken'
 import UsageReceipts from '../../components/UsageReceipts'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
@@ -25,6 +25,12 @@ import {
   validateTubePublishPreflight,
 } from '../../utils/CinematographyHelper'
 import { tubeTokenMissingMessage } from '../../utils/baselineCards'
+import {
+  composeSurfaceFromEntry,
+  episodeComposeTag,
+  episodeComposeTagColor,
+  episodeSelectLabel,
+} from '../../utils/composeStatusSurface'
 
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -1074,10 +1080,9 @@ function showPublishSuccess(result) {
   })
 }
 
-function ComposePane({ work, episodeId, onReload }) {
-  const [precheck, setPrecheck] = useState(null)
-  const [film, setFilm] = useState(null)
-  const [mediaPreflight, setMediaPreflight] = useState(null)
+const LOADING_ENTRY = { phase: 'loading', film: null, precheck: null }
+
+function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, mediaPreflight, onMediaPreflight }) {
   const [publishing, setPublishing] = useState(false)
   const [batchPublishing, setBatchPublishing] = useState(false)
   const [batchProgress, setBatchProgress] = useState(null)
@@ -1086,18 +1091,43 @@ function ComposePane({ work, episodeId, onReload }) {
   const [musicModels, setMusicModels] = useState([])
   const [musicModelCode, setMusicModelCode] = useState()
   const [musicPrompt, setMusicPrompt] = useState('电影感纯音乐，情绪递进，适合作为短剧背景音乐')
+  const requestSeq = useRef(0)
+  const entry = composeEntry || LOADING_ENTRY
+  const film = entry.film
+  const precheck = entry.precheck
+  const statusSettled = entry.phase === 'settled'
+  const surface = composeSurfaceFromEntry(entry)
 
   const load = useCallback(async () => {
     if (!episodeId) return
-    const [p, f, mp] = await Promise.all([
-      productionApi.filmPrecheck(episodeId),
-      productionApi.filmDetail(episodeId),
-      productionApi.publishFilmToMediaPreflight({ episode_id: episodeId, work_id: work?.work_id }),
-    ])
-    setPrecheck(p.data?.result)
-    setFilm(f.data?.result)
-    setMediaPreflight(mp.data?.result || null)
-  }, [episodeId, work?.work_id])
+    const seq = requestSeq.current + 1
+    requestSeq.current = seq
+    const requestedId = episodeId
+    onComposeEntry(requestedId, (prev) => ({
+      phase: 'loading',
+      film: prev?.film ?? null,
+      precheck: prev?.precheck ?? null,
+    }))
+    try {
+      const [p, f, mp] = await Promise.all([
+        productionApi.filmPrecheck(requestedId),
+        productionApi.filmDetail(requestedId),
+        productionApi.publishFilmToMediaPreflight({ episode_id: requestedId, work_id: work?.work_id }),
+      ])
+      if (seq !== requestSeq.current) return
+      const nextPrecheck = p.data?.result ?? null
+      const nextFilm = f.data?.result ?? null
+      onComposeEntry(requestedId, {
+        phase: 'settled',
+        film: nextFilm,
+        precheck: nextPrecheck,
+      })
+      onMediaPreflight(mp.data?.result || null)
+    } catch {
+      if (seq !== requestSeq.current) return
+      onComposeEntry(requestedId, { phase: 'error', film: null, precheck: null })
+    }
+  }, [episodeId, onComposeEntry, onMediaPreflight, work?.work_id])
 
   useEffect(() => { load() }, [load])
 
@@ -1130,7 +1160,8 @@ function ComposePane({ work, episodeId, onReload }) {
   })
 
   const tokenMissing = tubeTokenMissingMessage(mediaPreflight)
-  const canPublish = !!film?.film_id
+  const canPublish = statusSettled
+    && !!film?.film_id
     && clientPreflight.ready
     && mediaPreflight?.config_ready !== false
     && !tokenMissing
@@ -1198,8 +1229,8 @@ function ComposePane({ work, episodeId, onReload }) {
 
   return (
     <Card title="成片与提审">
-      <Paragraph>合成状态 {film?.compose_status || '-'} / 预检 {precheck?.ready ? '可合成' : '未就绪'} / 风险 {precheck?.risk_level || '-'}{film?.expired_flag === 1 ? ' / 成片已过期' : ''}</Paragraph>
-      {film?.expired_flag === 1 ? (
+      <Paragraph>{surface.paneText}</Paragraph>
+      {statusSettled && film?.expired_flag === 1 ? (
         <Alert
           type="warning"
           showIcon
@@ -1208,7 +1239,7 @@ function ComposePane({ work, episodeId, onReload }) {
           description="镜头重抽或配音重配后，旧成片不能下载，也不能再回放上次的 Tube 目录。请重新合成并通过审核后再发布。"
         />
       ) : null}
-      {(precheck?.blocker_list || []).length ? (
+      {statusSettled && (precheck?.blocker_list || []).length ? (
         <Alert
           type="warning"
           showIcon
@@ -1227,7 +1258,7 @@ function ComposePane({ work, episodeId, onReload }) {
             || '发布已停用。请在环境配置或管理端写入 Tube 摄入令牌后再发布。此处不填写、也不编造令牌。'}
         />
       ) : null}
-      {mediaPreflight && mediaPreflight.config_ready === false && !tokenMissing ? (
+      {statusSettled && mediaPreflight && mediaPreflight.config_ready === false && !tokenMissing ? (
         <Alert
           type="warning"
           showIcon
@@ -1237,7 +1268,7 @@ function ComposePane({ work, episodeId, onReload }) {
             || '请配置 bgssai.tube.base-url 后再发布'}
         />
       ) : null}
-      {mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
+      {statusSettled && mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
         <Alert
           type="info"
           showIcon
@@ -1301,7 +1332,7 @@ function ComposePane({ work, episodeId, onReload }) {
           const { data } = await productionApi.composeEstimate(episodeId)
           if (data?.success) setComposeCost(data.result)
         }}>估合成费用</Button>
-        <Button type="primary" disabled={!precheck?.ready} onClick={async () => {
+        <Button type="primary" disabled={!statusSettled || !precheck?.ready} onClick={async () => {
           const { data: estRes } = await productionApi.composeEstimate(episodeId)
           if (!estRes?.success) return
           setComposeCost(estRes.result)
@@ -1336,7 +1367,7 @@ function ComposePane({ work, episodeId, onReload }) {
         {tokenMissing ? <Text type="warning">未配置 Tube 令牌</Text> : null}
         <Button
           loading={batchPublishing}
-          disabled={batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false
+          disabled={!statusSettled || batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false
             || !(mediaPreflight?.batch_ready_count > 0)}
           onClick={runBatchPublish}
         >
@@ -1441,6 +1472,16 @@ export default function WorkStudio() {
   const [work, setWork] = useState(null)
   const [episodeId, setEpisodeId] = useState()
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const [composeByEpisode, setComposeByEpisode] = useState({})
+  const [mediaPreflight, setMediaPreflight] = useState(null)
+  const reportComposeEntry = useCallback((id, updater) => {
+    setComposeByEpisode((prev) => {
+      const cur = prev[id]
+      const next = typeof updater === 'function' ? updater(cur) : updater
+      if (cur && cur.phase === next.phase && cur.film === next.film && cur.precheck === next.precheck) return prev
+      return { ...prev, [id]: next }
+    })
+  }, [])
   const outlineTaskId = location.state?.outlineTaskId
 
   const load = useCallback(async () => {
@@ -1453,8 +1494,10 @@ export default function WorkStudio() {
   useEffect(() => { load() }, [load])
 
   const active = tab || 'script'
+  const composeTab = active === 'compose'
   const episodes = work?.episode_list || []
   const current = useMemo(() => episodes.find((e) => e.episode_id === episodeId), [episodes, episodeId])
+  const chipSurface = composeSurfaceFromEntry(composeByEpisode[episodeId])
 
   if (!work) return <Card loading />
 
@@ -1495,10 +1538,17 @@ export default function WorkStudio() {
           onChange={setEpisodeId}
           options={episodes.map((ep) => ({
             value: ep.episode_id,
-            label: `第${ep.episode_no}集 ${ep.episode_title || ''}（${ep.script_status_name || ep.script_status}/${ep.review_status_name || ep.review_status}）`,
+            label: episodeSelectLabel(ep, {
+              onCompose: composeTab && ep.episode_id === episodeId,
+              surface: chipSurface,
+            }),
           }))}
         />
-        {current ? <Tag>{current.compose_status_name || current.compose_status}</Tag> : null}
+        {current ? (
+          <Tag color={episodeComposeTagColor(composeTab, chipSurface)}>
+            {episodeComposeTag(current, { onCompose: composeTab, surface: chipSurface })}
+          </Tag>
+        ) : null}
       </Space>
       <Tabs
         className="work-studio-tabs"
@@ -1516,7 +1566,17 @@ export default function WorkStudio() {
           { key: 'preview', label: '三问预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
           { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
           { key: 'tasks', label: '本剧任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
-          { key: 'compose', label: '成片提审', children: <ComposePane work={work} episodeId={episodeId} onReload={load} /> },
+          { key: 'compose', label: '成片提审', children: (
+            <ComposePane
+              work={work}
+              episodeId={episodeId}
+              onReload={load}
+              composeEntry={composeByEpisode[episodeId]}
+              onComposeEntry={reportComposeEntry}
+              mediaPreflight={mediaPreflight}
+              onMediaPreflight={setMediaPreflight}
+            />
+          ) },
           { key: 'edit-export', label: '剪辑工程', children: <EditExportPage episodeId={episodeId} /> },
         ]}
       />

@@ -197,6 +197,11 @@
                   进入页先调 <code>GET /bgssai/user/films/publish-to-media/preflight</code>：
                   缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时黄条提示；
                   缺令牌时「发布到 Tube」停用，并写明「未配置 Tube 令牌」，不编造令牌。
+                  进入本页、切换剧集或刷新后，在 <code>films/precheck</code> 与 <code>films/detail</code>
+                  返回前，当前剧集芯片与「合成状态 / 预检 / 风险」都显示「核对中 / 加载中」：
+                  不把还没返回的预检画成「未就绪」，也不把剧集列表上的「已就绪 / 已通过」当作已核对。
+                  返回后两边同一口径；预检未通过时芯片改为「未就绪」，即使列表里该集仍是 READY。
+                  请求失败显示「未能核对」。
                   传 <code>work_id</code> 可看批量候选数。若存在最近一次发布记录（publish_log），
                   成片区展示状态与播放链接。幂等键
                   <code>short:{work_id}:{episode_id}:{film_id}</code>。
