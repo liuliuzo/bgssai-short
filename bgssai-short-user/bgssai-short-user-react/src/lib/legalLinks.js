@@ -4,8 +4,8 @@
  * This module is outbound links. Status: 需法务审阅.
  * Do not invent ICP / license numbers.
  *
- * Login consent stays 用户协议 + 隐私政策 (zh).
- * The shared footer (login and in-app) lists all five official pages, each with zh and en anchors.
+ * Product UI (footer + login consent) lists only terms + privacy (Standards §15).
+ * Inventory / sharing / permissions stay on the website legal hub, not in-product.
  */
 
 
@@ -15,7 +15,7 @@ export const COPYRIGHT_HOLDER = '昆山兵贵神速智能科技有限公司'
 export const COPYRIGHT_YEAR = new Date().getFullYear()
 export const COPYRIGHT_LINE = `© ${COPYRIGHT_YEAR} ${COPYRIGHT_HOLDER}`
 
-/** Official pages. label_* is the consent copy; footer_* is the bilingual footer pair. */
+/** Official pages shown in product UI. label_* is consent copy; footer_* is bilingual footer. */
 export const LEGAL_PAGES = Object.freeze([
   {
     key: 'terms',
@@ -36,36 +36,6 @@ export const LEGAL_PAGES = Object.freeze([
     label_en: 'Privacy',
     footer_zh: '隐私政策',
     footer_en: 'Privacy Policy',
-  },
-  {
-    key: 'inventory',
-    slug: 'personal-information-inventory',
-    path_zh: '/personal-information-inventory/',
-    path_en: '/en/personal-information-inventory/',
-    label_zh: '个人信息收集清单',
-    label_en: 'Personal Information Inventory',
-    footer_zh: '个人信息收集清单',
-    footer_en: 'Personal Information Inventory',
-  },
-  {
-    key: 'sharing',
-    slug: 'third-party-sharing',
-    path_zh: '/third-party-sharing/',
-    path_en: '/en/third-party-sharing/',
-    label_zh: '第三方信息共享清单',
-    label_en: 'Third-Party Sharing',
-    footer_zh: '第三方信息共享清单',
-    footer_en: 'Third-Party Sharing',
-  },
-  {
-    key: 'permissions',
-    slug: 'app-permissions',
-    path_zh: '/app-permissions/',
-    path_en: '/en/app-permissions/',
-    label_zh: '应用权限',
-    label_en: 'App Permissions',
-    footer_zh: '应用权限',
-    footer_en: 'App Permissions',
   },
 ])
 

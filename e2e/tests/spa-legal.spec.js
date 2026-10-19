@@ -3,6 +3,9 @@ import { test, expect } from '@playwright/test'
 const LEGAL = [
   'terms-of-service',
   'privacy-policy',
+]
+
+const FORBIDDEN_LEGAL = [
   'personal-information-inventory',
   'third-party-sharing',
   'app-permissions',
@@ -28,12 +31,17 @@ test.describe('document routes', () => {
     await expect(page.locator('body')).not.toContainText('resource not found')
   })
 
-  test('login page lists five bilingual legal links', async ({ page }) => {
+  test('login page lists two bilingual legal links (terms + privacy)', async ({ page }) => {
     await page.goto('/login')
     for (const slug of LEGAL) {
       await expect(page.locator(`a[href="https://www.bgssai.com/${slug}/"]`).first()).toBeVisible()
       await expect(page.locator(`a[href="https://www.bgssai.com/en/${slug}/"]`).first()).toBeVisible()
     }
+    for (const slug of FORBIDDEN_LEGAL) {
+      await expect(page.locator(`a[href="https://www.bgssai.com/${slug}/"]`)).toHaveCount(0)
+      await expect(page.locator(`a[href="https://www.bgssai.com/en/${slug}/"]`)).toHaveCount(0)
+    }
     await expect(page.locator('body')).not.toContainText('苏ICP')
+    await expect(page.locator('body')).not.toContainText('个人信息收集清单')
   })
 })

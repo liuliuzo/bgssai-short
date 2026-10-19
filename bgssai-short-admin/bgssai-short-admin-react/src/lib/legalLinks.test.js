@@ -1,5 +1,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   LEGAL_HUB,
   LEGAL_PAGES,
@@ -10,19 +13,40 @@ import {
   legalPageUrl,
 } from './legalLinks.js'
 
+const here = dirname(fileURLToPath(import.meta.url))
+
 const REQUIRED_SLUGS = [
   'terms-of-service',
   'privacy-policy',
+]
+
+const FORBIDDEN_SLUGS = [
   'personal-information-inventory',
   'third-party-sharing',
   'app-permissions',
 ]
 
+const FORBIDDEN_LABELS = [
+  '个人信息收集清单',
+  '第三方信息共享清单',
+  '应用权限',
+  'Personal Information Inventory',
+  'Third-Party Sharing',
+  'App Permissions',
+]
+
 describe('legalLinks', () => {
-  it('exposes the five official website pages on www.bgssai.com', () => {
-    assert.equal(LEGAL_PAGES.length, 5)
+  it('exposes terms + privacy only on www.bgssai.com (Standards §15)', () => {
+    assert.equal(LEGAL_PAGES.length, 2)
     assert.equal(WEBSITE_ORIGIN, 'https://www.bgssai.com')
     assert.deepEqual(LEGAL_PAGES.map((page) => page.slug), REQUIRED_SLUGS)
+    const blob = JSON.stringify(LEGAL_PAGES)
+    for (const slug of FORBIDDEN_SLUGS) {
+      assert.equal(blob.includes(slug), false, `LEGAL_PAGES must not include ${slug}`)
+    }
+    for (const label of FORBIDDEN_LABELS) {
+      assert.equal(blob.includes(label), false, `LEGAL_PAGES must not include ${label}`)
+    }
   })
 
   it('uses bilingual labels and exact zh / en website paths', () => {
@@ -62,5 +86,15 @@ describe('legalLinks', () => {
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/legal/children-privacy'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/legal/personal-info-collection'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/terms-of-service/'), false)
+  })
+
+  it('forbids inventory slugs/labels in legalLinks.js source', () => {
+    const src = readFileSync(resolve(here, 'legalLinks.js'), 'utf8')
+    for (const slug of FORBIDDEN_SLUGS) {
+      assert.equal(src.includes(slug), false, `legalLinks.js must not include ${slug}`)
+    }
+    for (const label of FORBIDDEN_LABELS) {
+      assert.equal(src.includes(label), false, `legalLinks.js must not include ${label}`)
+    }
   })
 })
