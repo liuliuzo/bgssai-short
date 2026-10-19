@@ -54,6 +54,12 @@ public class FilmPublishToMediaService {
 
         String idempotencyKey = MediaIngestContract.idempotencyKey(
                 film.getWorkId(), film.getEpisodeId(), film.getFilmId());
+        if (isOpenHandoff(film.getMediaPublishStatus())) {
+            ApiResponse recovered = recoverOpenHandoff(film, idempotencyKey);
+            if (recovered != null) {
+                return recovered;
+            }
+        }
         if (!Boolean.TRUE.equals(req.getForce()) && isReplayable(film, idempotencyKey)) {
             return Responses.ok(toReplayResult(film, idempotencyKey));
         }
@@ -89,6 +95,16 @@ public class FilmPublishToMediaService {
                         ingested.httpStatus(), ingested.attempts());
             }
             Date publishedAt = new Date();
+            if ("UNKNOWN".equals(classified) || "NOT_FOUND".equals(classified)) {
+                ingested = new MediaIngestClient.IngestResult(
+                        ingested.mediaId(), ingested.playUrl(), "UNKNOWN",
+                        ingested.httpStatus(), ingested.attempts(),
+                        ingested.message() == null || ingested.message().isBlank()
+                                ? "Tube 结果未知，未当成成功或失败" : ingested.message());
+                persistUnknown(film, idempotencyKey, ingested.httpStatus(), ingested.attempts(),
+                        ingested.message(), publishedAt);
+                return Responses.ok(toUnknownResult(film, idempotencyKey, publishedAt, ingested.message()));
+            }
             if ("PENDING".equals(classified)) {
                 String playUrl = ingested.playUrl() == null ? "" : ingested.playUrl().trim();
                 if (!playUrl.isBlank()) {
@@ -112,6 +128,11 @@ public class FilmPublishToMediaService {
             if (ex instanceof MediaPublishException mpe) {
                 httpStatus = mpe.getHttpStatus();
                 attempts = mpe.getAttempts();
+            }
+            if (isIndeterminate(ex)) {
+                Date at = new Date();
+                persistUnknown(film, idempotencyKey, httpStatus, attempts, ex.getMessage(), at);
+                return Responses.ok(toUnknownResult(film, idempotencyKey, at, ex.getMessage()));
             }
             persistFailure(film, idempotencyKey, httpStatus, attempts, ex.getMessage());
             throw ex;
@@ -212,6 +233,7 @@ public class FilmPublishToMediaService {
         List<Map<String, Object>> items = new ArrayList<>();
         int succeeded = 0;
         int pending = 0;
+        int unknown = 0;
         int failed = 0;
         int total = candidates.size();
         int index = 0;
@@ -239,8 +261,13 @@ public class FilmPublishToMediaService {
                 item.put("idempotency_key", oneResult.get("idempotency_key"));
                 item.put("replayed", oneResult.get("replayed"));
                 item.put("error", "");
+                String oneStatus = String.valueOf(oneResult.get("status"));
                 if (Boolean.TRUE.equals(oneResult.get("commercial_ready"))) {
                     succeeded += 1;
+                } else if ("UNKNOWN".equals(oneStatus)) {
+                    unknown += 1;
+                    item.put("ok", false);
+                    item.put("outcome", "UNKNOWN");
                 } else {
                     pending += 1;
                 }
@@ -259,10 +286,11 @@ public class FilmPublishToMediaService {
         result.put("total", total);
         result.put("succeeded", succeeded);
         result.put("pending", pending);
+        result.put("unknown", unknown);
         result.put("failed", failed);
         result.put("skipped", 0);
         result.put("progress_percent", total == 0 ? 100
-                : (int) Math.round(100.0 * (succeeded + pending + failed) / total));
+                : (int) Math.round(100.0 * (succeeded + pending + unknown + failed) / total));
         result.put("item_list", items);
         return Responses.ok(result);
     }
@@ -475,6 +503,131 @@ public class FilmPublishToMediaService {
             throw new BizException(CommonErrorCode.RULE_REJECT, "film not found for episode");
         }
         return film;
+    }
+
+    static boolean isOpenHandoff(String status) {
+        if (status == null || status.isBlank()) {
+            return false;
+        }
+        String normalized = status.trim().toUpperCase(java.util.Locale.ROOT);
+        return "PENDING".equals(normalized) || "UNKNOWN".equals(normalized)
+                || "PROCESSING".equals(normalized) || "QUEUED".equals(normalized);
+    }
+
+    static boolean isIndeterminate(BizException ex) {
+        if (ex == null) {
+            return false;
+        }
+        if (CommonErrorCode.UPSTREAM_TIMEOUT.code().equals(ex.getCode())) {
+            return true;
+        }
+        String message = ex.getMessage() == null ? "" : ex.getMessage();
+        return message.contains("结果未知") || message.contains("响应丢失");
+    }
+
+    private ApiResponse recoverOpenHandoff(ShortFilm film, String idempotencyKey) {
+        MediaIngestClient.IngestResult looked;
+        try {
+            looked = mediaIngestClient.lookup(idempotencyKey);
+        } catch (BizException ex) {
+            if (!isIndeterminate(ex) && !CommonErrorCode.RULE_REJECT.code().equals(ex.getCode())) {
+                persistFailure(film, idempotencyKey, null, 1, ex.getMessage());
+                throw ex;
+            }
+            if (CommonErrorCode.RULE_REJECT.code().equals(ex.getCode())) {
+                persistFailure(film, idempotencyKey, null, 1, ex.getMessage());
+                throw ex;
+            }
+            Date at = new Date();
+            persistUnknown(film, idempotencyKey, null, 1, ex.getMessage(), at);
+            return Responses.ok(toUnknownResult(film, idempotencyKey, at, ex.getMessage()));
+        }
+        if (looked == null) {
+            return null;
+        }
+        if (looked.status() == null || looked.status().isBlank()) {
+            Date at = new Date();
+            String note = "接收端状态未知，未再次发布";
+            persistUnknown(film, idempotencyKey, null, 0, note, at);
+            return Responses.ok(toUnknownResult(film, idempotencyKey, at, note));
+        }
+        String raw = looked.status().trim().toUpperCase(java.util.Locale.ROOT);
+        if ("NOT_FOUND".equals(raw)) {
+            if (film.getMediaId() != null && !film.getMediaId().isBlank()) {
+                Date at = new Date();
+                String note = "已有 media_id 但接收端查无此键，未另建作品";
+                persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, note, at);
+                return Responses.ok(toUnknownResult(film, idempotencyKey, at, note));
+            }
+            return null;
+        }
+        String classified = CommercialOutcomeGuard.classifyMediaStatus(raw);
+        Date at = new Date();
+        if ("READY".equals(classified)) {
+            CommercialOutcomeGuard.rejectFakeUrl(looked.playUrl(), "tube play_url");
+            if (looked.mediaId() == null || looked.mediaId().isBlank()
+                    || looked.playUrl() == null || looked.playUrl().isBlank()) {
+                persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, "接收端 READY 但缺少 media_id 或 play_url", at);
+                return Responses.ok(toUnknownResult(film, idempotencyKey, at, "接收端 READY 但缺少 media_id 或 play_url"));
+            }
+            MediaIngestClient.IngestResult adopted = new MediaIngestClient.IngestResult(
+                    looked.mediaId(), looked.playUrl(), "READY", looked.httpStatus(), 0, looked.message());
+            persistSuccess(film, adopted, idempotencyKey, at);
+            Map<String, Object> result = toResult(film, adopted, idempotencyKey, at, true);
+            result.put("recovered", true);
+            return Responses.ok(result);
+        }
+        if ("FAILED".equals(classified)) {
+            persistFailure(film, idempotencyKey, looked.httpStatus(), 0,
+                    looked.message() == null || looked.message().isBlank() ? "Tube 返回失败" : looked.message());
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    looked.message() == null || looked.message().isBlank() ? "Tube 返回失败" : looked.message());
+        }
+        if ("PENDING".equals(classified)) {
+            persistPending(film, new MediaIngestClient.IngestResult(
+                    looked.mediaId(), looked.playUrl(), "PENDING", looked.httpStatus(), 0, looked.message()),
+                    idempotencyKey, at);
+            Map<String, Object> result = toResult(film, new MediaIngestClient.IngestResult(
+                    looked.mediaId(), looked.playUrl(), "PENDING", looked.httpStatus(), 0, looked.message()),
+                    idempotencyKey, at, true);
+            result.put("recovered", true);
+            return Responses.ok(result);
+        }
+        String note = looked.message() == null || looked.message().isBlank()
+                ? "接收端结果未知，未再次发布" : looked.message();
+        persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, note, at);
+        return Responses.ok(toUnknownResult(film, idempotencyKey, at, note));
+    }
+
+    private void persistUnknown(ShortFilm film, String idempotencyKey, Integer httpStatus, int attempts,
+            String error, Date at) {
+        String msg = error == null || error.isBlank() ? "发布结果未知" : error;
+        if (msg.length() > 1000) {
+            msg = msg.substring(0, 1000);
+        }
+        Map<String, Object> log = richPublishLog(idempotencyKey, film.getMediaId(), film.getMediaPlayUrl(),
+                "UNKNOWN", httpStatus, msg, attempts, at);
+        String logJson = ShortJson.toJson(log);
+        ShortFilm patch = new ShortFilm();
+        patch.setMediaPublishStatus("UNKNOWN");
+        patch.setMediaLastError(msg);
+        patch.setMediaPublishLog(logJson);
+        patch.setUpdatedTime(at);
+        ShortFilmExample up = new ShortFilmExample();
+        up.createCriteria().andIdEqualTo(film.getId());
+        shortFilmMapper.updateByExampleSelective(patch, up);
+        film.setMediaPublishStatus("UNKNOWN");
+        film.setMediaLastError(msg);
+        film.setMediaPublishLog(logJson);
+    }
+
+    private static Map<String, Object> toUnknownResult(ShortFilm film, String idempotencyKey, Date at, String note) {
+        MediaIngestClient.IngestResult ingested = new MediaIngestClient.IngestResult(
+                film.getMediaId(), film.getMediaPlayUrl(), "UNKNOWN", null, 0, note);
+        Map<String, Object> result = toResult(film, ingested, idempotencyKey, at, false);
+        result.put("commercial_ready", false);
+        result.put("status", "UNKNOWN");
+        return result;
     }
 
     private void persistPending(ShortFilm film, MediaIngestClient.IngestResult ingested,

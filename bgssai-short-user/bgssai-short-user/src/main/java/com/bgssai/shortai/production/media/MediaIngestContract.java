@@ -17,6 +17,9 @@ public final class MediaIngestContract {
 
     public static final String INGEST_PATH = "/bgssai/user/tube/ingest/short";
 
+    /** Read-only status for the same idempotency key. Does not create a catalog row. */
+    public static final String STATUS_PATH = "/bgssai/user/tube/ingest/short/status";
+
     /**
      * @deprecated Retired endpoint path, use {@link #INGEST_PATH} instead.
      */

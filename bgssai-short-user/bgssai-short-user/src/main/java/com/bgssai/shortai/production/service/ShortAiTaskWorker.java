@@ -787,11 +787,21 @@ public class ShortAiTaskWorker {
             attachConsistencyRefs(consistency, request);
         }
         AiProviderResult result = execute(model, request);
+        ShotVersionGuard.rejectConsistencyLimitation(result == null ? null : result.getTextContent());
         // SHORT-01：空字节不得落成 VIDEO_READY / IMAGE_READY，避免「无素材却成功」。
         if (result == null || result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
                     ("VIDEO".equals(ability) ? "video" : "image")
                             + " provider returned empty content");
+        }
+        boolean confirmedVideo = "VIDEO".equals(task.getTaskType())
+                && ShotVersionGuard.keepConfirmedAsset(shot.getShotStatus(), shot.getVideoAssetId());
+        boolean confirmedImage = !"VIDEO".equals(task.getTaskType())
+                && ShotVersionGuard.keepConfirmedAsset(shot.getShotStatus(), shot.getFirstFrameAssetId());
+        if (confirmedVideo || confirmedImage) {
+            saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), shot.getShotId(),
+                    ability, result, task.getTaskId(), false);
+            return;
         }
         ShortAsset asset = saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), shot.getShotId(),
                 ability, result, task.getTaskId(), true);
@@ -845,30 +855,30 @@ public class ShortAiTaskWorker {
             ShortCharacterExample cx = new ShortCharacterExample();
             cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
             ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
-            if (row != null && "LOCKED".equals(row.getCardStatus())
-                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
-                lockedChars.add(row);
-            }
+            ShotVersionGuard.requireReferencedAsset("角色", characterId, row != null,
+                    row != null && "LOCKED".equals(row.getCardStatus()),
+                    row != null && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank());
+            lockedChars.add(row);
         }
         ShortSceneCard lockedScene = null;
         if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
             ShortSceneCardExample sx = new ShortSceneCardExample();
             sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
             ShortSceneCard row = shortSceneCardMapper.selectOneByExample(sx);
-            if (row != null && "LOCKED".equals(row.getCardStatus())
-                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
-                lockedScene = row;
-            }
+            ShotVersionGuard.requireReferencedAsset("场景", shot.getSceneCardId(), row != null,
+                    row != null && "LOCKED".equals(row.getCardStatus()),
+                    row != null && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank());
+            lockedScene = row;
         }
         List<ShortSceneCard> lockedProps = new ArrayList<>();
         for (String propId : ShotConsistency.propIds(shot.getPropRefJson())) {
             ShortSceneCardExample px = new ShortSceneCardExample();
             px.createCriteria().andSceneCardIdEqualTo(propId).andDeletedFlagEqualTo(0);
             ShortSceneCard row = shortSceneCardMapper.selectOneByExample(px);
-            if (row != null && "LOCKED".equals(row.getCardStatus())
-                    && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank()) {
-                lockedProps.add(row);
-            }
+            ShotVersionGuard.requireReferencedAsset("道具", propId, row != null,
+                    row != null && "LOCKED".equals(row.getCardStatus()),
+                    row != null && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank());
+            lockedProps.add(row);
         }
         return new ConsistencyBundle(lockedChars, lockedScene, lockedProps,
                 ShotConsistency.appearanceFragment(lockedChars, lockedScene, lockedProps));

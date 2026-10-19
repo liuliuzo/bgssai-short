@@ -73,14 +73,18 @@ public final class CommercialOutcomeGuard {
     }
 
     /**
-     * Normalizes Tube handoff status into READY / PENDING / FAILED.
-     * Unknown values fail closed (not commercial READY).
+     * Normalizes Tube handoff status into READY / PENDING / FAILED / UNKNOWN.
+     * Blank stays READY only for the historical success body that omits status.
+     * Any unrecognized status is UNKNOWN: not commercial success and not a definite failure.
      */
     public static String classifyMediaStatus(String status) {
         if (status == null || status.isBlank()) {
             return "READY";
         }
         String normalized = status.trim().toUpperCase(Locale.ROOT);
+        if ("UNKNOWN".equals(normalized) || "INDETERMINATE".equals(normalized) || "NOT_FOUND".equals(normalized)) {
+            return "UNKNOWN".equals(normalized) || "INDETERMINATE".equals(normalized) ? "UNKNOWN" : "NOT_FOUND";
+        }
         if (READY.contains(normalized)) {
             return "READY";
         }
@@ -90,7 +94,7 @@ public final class CommercialOutcomeGuard {
         if (FAILED.contains(normalized)) {
             return "FAILED";
         }
-        return "FAILED";
+        return "UNKNOWN";
     }
 
     private static String schemeOf(String url) {

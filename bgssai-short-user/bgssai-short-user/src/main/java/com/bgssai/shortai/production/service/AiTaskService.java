@@ -474,7 +474,8 @@ public class AiTaskService {
             cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
             ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
             if (row == null) {
-                continue;
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的角色素材缺失：" + characterId);
             }
             if (!"LOCKED".equals(row.getCardStatus()) || row.getRefImageAssetId() == null
                     || row.getRefImageAssetId().isBlank()) {
@@ -487,8 +488,12 @@ public class AiTaskService {
             ShortSceneCardExample sx = new ShortSceneCardExample();
             sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
             ShortSceneCard scene = shortSceneCardMapper.selectOneByExample(sx);
-            if (scene != null && (!"LOCKED".equals(scene.getCardStatus())
-                    || scene.getRefImageAssetId() == null || scene.getRefImageAssetId().isBlank())) {
+            if (scene == null) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的场景素材缺失：" + shot.getSceneCardId());
+            }
+            if (!"LOCKED".equals(scene.getCardStatus())
+                    || scene.getRefImageAssetId() == null || scene.getRefImageAssetId().isBlank()) {
                 throw new BizException(CommonErrorCode.RULE_REJECT,
                         "镜" + shot.getShotNo() + " 引用的场景「" + scene.getCardName()
                                 + "」尚未锁定场景卡，请先定妆");
@@ -498,8 +503,12 @@ public class AiTaskService {
             ShortSceneCardExample px = new ShortSceneCardExample();
             px.createCriteria().andSceneCardIdEqualTo(propId).andDeletedFlagEqualTo(0);
             ShortSceneCard prop = shortSceneCardMapper.selectOneByExample(px);
-            if (prop != null && (!"LOCKED".equals(prop.getCardStatus())
-                    || prop.getRefImageAssetId() == null || prop.getRefImageAssetId().isBlank())) {
+            if (prop == null) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "镜" + shot.getShotNo() + " 引用的道具素材缺失：" + propId);
+            }
+            if (!"LOCKED".equals(prop.getCardStatus())
+                    || prop.getRefImageAssetId() == null || prop.getRefImageAssetId().isBlank()) {
                 throw new BizException(CommonErrorCode.RULE_REJECT,
                         "镜" + shot.getShotNo() + " 引用的道具「" + prop.getCardName()
                                 + "」尚未锁定道具卡，请先定妆");
