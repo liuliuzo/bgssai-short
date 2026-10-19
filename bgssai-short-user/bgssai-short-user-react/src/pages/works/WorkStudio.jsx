@@ -1,4 +1,5 @@
-import { modelPricingLabel } from '../../modelPricing'
+import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
+import { formatToken } from '../../utils/formatToken'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
@@ -14,7 +15,15 @@ import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
 import DramaAssistantDrawer from '../../components/DramaAssistantDrawer'
-import { SHOT_TYPES, CAMERA_MOVEMENTS, DRAMA_STYLES, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
+import {
+  SHOT_TYPES,
+  CAMERA_MOVEMENTS,
+  DRAMA_STYLES,
+  QUAD_GRID_ANGLES,
+  CONTINUITY_PRESETS,
+  evaluateShotReadiness,
+  validateTubePublishPreflight,
+} from '../../utils/CinematographyHelper'
 
 const { Title, Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -660,18 +669,20 @@ function StoryboardPane({ work, episodeId }) {
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
-            （余额 {formatYuan(cost.available_cent)} 元 · {cost.model_code || '-'}）
+            （预计 {formatToken(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} Tokens · 余额 {formatYuan(cost.available_cent)} 元 · {cost.model_code || '-'}）
             {(cost.shot_cost_list || []).length > 0
               ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
               : ''}
           </Paragraph>
         ) : (
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            勾选镜头后估费用。生成前会再弹窗确认预计费用与余额。
+            勾选镜头后估费用（当前勾选 {selected.length} 镜 · 预计 {formatToken(estimateShotBatchTokens(selected, 1000).billed_tokens)} Tokens）。生成前会再弹窗确认预计费用与余额。
           </Paragraph>
         )}
       </Card>
-      {rows.map((row) => (
+      {rows.map((row) => {
+        const readiness = evaluateShotReadiness(row, panel)
+        return (
         <Card
           key={row.shot_id}
           size="small"
@@ -682,6 +693,9 @@ function StoryboardPane({ work, episodeId }) {
                 {row.latest_task.task_type_name || row.latest_task.task_type} {row.latest_task.task_status_name || row.latest_task.task_status}
               </Tag>
             ) : null}
+            <Tag color={readiness.ready ? 'cyan' : 'default'}>
+              {readiness.ready ? '锚点就绪' : '待定妆绑定'}
+            </Tag>
             {row.stale_flag === 1 ? <Tag color="orange">定妆已变，建议重抽</Tag> : null}
             {row.blocked_flag === 1 ? <Tag color="red">未就绪</Tag> : null}
             <Tag color={(row.prompt_score || 0) >= 70 ? 'green' : 'orange'}>提示词 {row.prompt_score ?? '-'} 分</Tag>
@@ -746,7 +760,7 @@ function StoryboardPane({ work, episodeId }) {
               </Space>
               <div style={{ marginTop: 6, marginBottom: 4 }}>
                 <Space wrap size={[4, 4]}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>🎥 运镜基调：</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>运镜基调：</Text>
                   {CAMERA_MOVEMENTS.slice(1, 6).map((cm) => (
                     <Tag
                       key={cm.value}
@@ -888,7 +902,8 @@ function StoryboardPane({ work, episodeId }) {
             </div>
           </Space>
         </Card>
-      ))}
+        )
+      })}
     </Space>
   )
 }
@@ -1109,9 +1124,12 @@ function ComposePane({ work, episodeId, onReload }) {
       }
       : null)
 
+  const clientPreflight = validateTubePublishPreflight(film, {
+    review_status: mediaPreflight?.review_status || 'APPROVED',
+  })
+
   const canPublish = !!film?.film_id
-    && film?.compose_status === 'READY'
-    && film?.expired_flag !== 1
+    && clientPreflight.ready
     && mediaPreflight?.config_ready !== false
     && !publishing
 

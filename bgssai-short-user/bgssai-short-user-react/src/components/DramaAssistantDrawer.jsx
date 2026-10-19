@@ -38,23 +38,23 @@ const AGENT_ROLES = [
 
 const QUICK_ACTIONS = {
   SCRIPT: [
-    { label: '🔥 增加台词火药味与反转', prompt: '请帮我优化这段台词，让双方矛盾更加尖锐，结尾带有一句出人意料的反转回击。' },
-    { label: '🪝 设计集尾留存钩子 (Cliffhanger)', prompt: '请帮我为当前集设计一个抓人的卡点悬念，让观众有强烈的欲望立刻点开下一集。' },
-    { label: '⚡ 精炼对白（去废话）', prompt: '请精简当前对话，去除不必要的客套废话，只保留核心戏剧动机。' },
+    { label: '增加台词火药味与反转', prompt: '请帮我优化这段台词，让双方矛盾更加尖锐，结尾带有一句出人意料的反转回击。' },
+    { label: '设计集尾留存钩子 (Cliffhanger)', prompt: '请帮我为当前集设计一个抓人的卡点悬念，让观众有强烈的欲望立刻点开下一集。' },
+    { label: '精炼对白（去废话）', prompt: '请精简当前对话，去除不必要的客套废话，只保留核心戏剧动机。' },
   ],
   DIRECTOR: [
-    { label: '🎬 拆解为三镜头递进组合', prompt: '请将这段戏拆解为【全景入场 -> 中景对话 -> 特写爆发】的经典分镜组合。' },
-    { label: '🔄 优化相邻镜头首尾衔接', prompt: '请检查当前两个镜头的人物走位与视线方向，确保镜头切接时不发生跳轴。' },
-    { label: '📐 转换为四宫格机位预览', prompt: '请给出这一关键情节的4个不同视角的构图建议（正拍、反拍、特写、俯拍）。' },
+    { label: '拆解为三镜头递进组合', prompt: '请将这段戏拆解为【全景入场 -> 中景对话 -> 特写爆发】的经典分镜组合。' },
+    { label: '优化相邻镜头首尾衔接', prompt: '请检查当前两个镜头的人物走位与视线方向，确保镜头切接时不发生跳轴。' },
+    { label: '转换为四宫格机位预览', prompt: '请给出这一关键情节的4个不同视角的构图建议（正拍、反拍、特写、俯拍）。' },
   ],
   VISUAL: [
-    { label: '✨ 一键注入电影感光影关键词', prompt: 'cinematic lighting, dramatic volumetric light, 8k uhd, photorealistic, sharp focus' },
-    { label: '🌃 转换为悬疑冷调光影', prompt: 'moody dramatic shadows, cool blue undertones, neon reflections, cinematic film grain' },
-    { label: '👑 转换为豪门奢华暖金基调', prompt: 'high-end penthouse interior, luxury gold and marble accents, warm rim light, elegant bokeh' },
+    { label: '一键注入电影感光影关键词', prompt: 'cinematic lighting, dramatic volumetric light, 8k uhd, photorealistic, sharp focus' },
+    { label: '转换为悬疑冷调光影', prompt: 'moody dramatic shadows, cool blue undertones, neon reflections, cinematic film grain' },
+    { label: '转换为豪门奢华暖金基调', prompt: 'high-end penthouse interior, luxury gold and marble accents, warm rim light, elegant bokeh' },
   ],
   EDITOR: [
-    { label: '🎵 建议BGM情绪与音效点', prompt: '请为这组镜头推荐背景音乐风格（如激昂交响、低沉重音鼓点）及关键重音打点位置。' },
-    { label: '✂️ 剪辑节奏卡点建议', prompt: '建议每个镜头的保留时长，以及在对话句尾还是动作高潮处切镜头。' },
+    { label: '建议BGM情绪与音效点', prompt: '请为这组镜头推荐背景音乐风格（如激昂交响、低沉重音鼓点）及关键重音打点位置。' },
+    { label: '剪辑节奏卡点建议', prompt: '建议每个镜头的保留时长，以及在对话句尾还是动作高潮处切镜头。' },
   ],
 }
 
@@ -103,7 +103,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
 
   return (
     <Drawer
-      title="🎬 AI戏剧多专家协同工作台 (Multi-Agent Drama Copilot)"
+      title="AI戏剧多专家协同工作台 (Multi-Agent Drama Copilot)"
       placement="right"
       width={460}
       open={visible}
@@ -135,7 +135,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
       <Divider style={{ margin: '12px 0' }} />
 
       <div style={{ marginBottom: 12 }}>
-        <Text strong style={{ fontSize: 12 }}>⚡ 常用快捷指令：</Text>
+        <Text strong style={{ fontSize: 12 }}>常用快捷指令：</Text>
         <Space wrap style={{ marginTop: 6 }}>
           {(QUICK_ACTIONS[activeRole] || []).map((qa, idx) => (
             <Button

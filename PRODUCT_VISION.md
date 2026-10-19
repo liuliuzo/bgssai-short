@@ -24,16 +24,23 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 **本仓位置**：本仓是第 1 条工具集合中的 **短剧制作平台**。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`，也不把厂商直连当作产品通道。用户界面只选择模型。成片发布与在线观看在 Tube 系列（`bgssai-tube-pc`、`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios`）；用户在各端创作者中心发布，本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。
 
-**对照（只读 `reference-github/`，不照搬品牌与仓库结构）：** **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。对标的是短剧从文字到成片的任务流与交互，不是把其中任一项目当本仓实现。
+**对照（只读 `reference-github/`，不照搬品牌与仓库结构）：** **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。对标的是短剧从文字到成片的任务流与交互，不是把其中任一项目当本仓实现：
+- **`waoowaoo`**：右侧 AI 剧作协同抽屉、按模型能力自适应画幅/时长/分辨率、首帧与首尾帧顺接模式、画布非破坏性多版本精修。
+- **`Jellyfish`**：结构化生产流（剧本拆解 -> 镜头准备 -> 候选确认 -> 镜头就绪 -> 生成工作台）、生成前统一镜头就绪度预检、角色/场景/道具/服装中心化一致性锚定。
+- **`ArcReel`**：可审计可断点续跑的生产管线、生成前代价预估与用量回执追踪、多轨时间轴合成及剪映/FCPXML/EDL 工程草稿导出。
+- **`LocalMiniDrama`**：双视图工作台（精细分镜表 + 批量故事板画布）、破坏性重生成前确认闸门、带失败阶段定位的自动重试。
+- **`openframe`**：人物关系图谱、网文/剧本结构化抽取、关键帧与镜头时间轴编排、FCPXML/EDL 标准剪辑工程导出。
+- **`ZJT`**：多智能体协同分镜设计、用户级算力与 Token 额度透明计量。
 
 **生态闭环与协同迭代**：
-- **`bgssai-short`**（短剧制作平台）与 **`bgssai-long`**（长剧制作平台）做上游制作，两仓都是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。下游是 Tube 视频解决方案：`bgssai-tube-pc` 是参考 VLC 的 PC 播放器加播放平台，`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios` 是各端播放平台，对标 YouTube 与 YouTube Shorts。
-- 短剧制作完成后，通过统一摄入契约（`POST /bgssai/user/tube/ingest/short`）进入 Tube 目录。四端用户都通过创作者中心发布作品，并在线观看。
+- **`bgssai-short`**（短剧制作平台）与 **`bgssai-long`**（长剧制作平台）做上游制作，两仓都是境内应用，调模型严格走 `bgssai-tokenhub-cn`，不跨区回退 `bgssai-tokenhub-global`，也不暴露上游厂商直连密钥。模型选择器仅展示模型名称、能力、可用性及 `0.5x / 1x / 1.5x` 额度倍率；套餐余额与消耗按真实 Token 以 `K / M / B` 紧凑格式展示（最多一位小数，如 `418.9M`，悬停及接口保留精确整数）。
+- 下游是 Tube 视频解决方案：`bgssai-tube-pc` 是参考 VLC 的 PC 播放器加播放平台，`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios` 是各端播放平台，对标 YouTube 与 YouTube Shorts。
+- 短剧制作完成后，须通过合成就绪、有效正数时长（`duration_sec > 0`）、画幅与安全区卡点校验及内容审核（`APPROVED`），再通过带幂等键的统一摄入契约（`POST /bgssai/user/tube/ingest/short`）交接至 `bgssai-tube-pc` 片库目录。四端用户通过创作者中心发布作品并在线观看，本仓专注生产工作台而不做播放平台。
 
 > 本文件是产品「AI 短剧制作平台」的愿景与定位，是需求（`docs/feature/**`）的上位背景；需求版本变更时
 > 同步回顾本文件受影响处（Standards §0）。
 >
-> **当前状态**：M0–M3 基础范围已完成（见 `docs/project/milestones.md`）。2026-10-17 起，本仓作为境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`。文本、视频、声音仍按既有目录选模型（文本 Hy4 / Kimi K3 / DeepSeek-V4-Pro，视频 MiniMax / PixVerse / Kling，声音 Hy-ASR / MiniMax-Speech / MiniMax-Music）。厂商直连不再作为产品通道。素材默认本地回退或华为云 OBS。
+> **当前状态**：M0–M3 基础范围已完成（见 `docs/project/milestones.md`）。2026-10-17 起，本仓作为境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`。2026-10-19 完成对标六大参考项目的 UX 与系统健壮性加固（见 `docs/feature/reference-ux-hardening-20261019.md`）。文本、视频、声音仍按既有目录选模型（文本 Hy4 / Kimi K3 / DeepSeek-V4-Pro，视频 MiniMax / PixVerse / Kling，声音 Hy-ASR / MiniMax-Speech / MiniMax-Music）。厂商直连不再作为产品通道。素材默认本地回退或华为云 OBS。
 
 ## 一、产品定位
 

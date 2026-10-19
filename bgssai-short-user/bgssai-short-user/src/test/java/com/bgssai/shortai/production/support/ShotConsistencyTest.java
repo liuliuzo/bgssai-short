@@ -78,4 +78,29 @@ class ShotConsistencyTest {
         empty.setShotDesc("有描述");
         assertFalse(ShotConsistency.shotNeedsPrompt(empty));
     }
+
+    @Test
+    void checkAnchorReadinessReportsUnlockedCharactersAndReadyState() {
+        ShortShot shot = new ShortShot();
+        shot.setShotDesc("林晚进入宴会厅");
+        shot.setCharacterRefJson("[\"c-1\"]");
+        shot.setSceneCardId("sc-1");
+
+        ShortCharacter unlockedChar = new ShortCharacter();
+        unlockedChar.setCharacterId("c-1");
+        unlockedChar.setLockFlag(0);
+
+        ShortSceneCard lockedScene = new ShortSceneCard();
+        lockedScene.setSceneCardId("sc-1");
+        lockedScene.setLockFlag(1);
+
+        var notReady = ShotConsistency.checkAnchorReadiness(shot, List.of(unlockedChar), List.of(lockedScene));
+        assertEquals(Boolean.FALSE, notReady.get("ready"));
+        assertEquals(List.of("c-1"), notReady.get("unlocked_character_ids"));
+
+        unlockedChar.setLockFlag(1);
+        var ready = ShotConsistency.checkAnchorReadiness(shot, List.of(unlockedChar), List.of(lockedScene));
+        assertEquals(Boolean.TRUE, ready.get("ready"));
+        assertEquals(Boolean.TRUE, ready.get("scene_locked"));
+    }
 }

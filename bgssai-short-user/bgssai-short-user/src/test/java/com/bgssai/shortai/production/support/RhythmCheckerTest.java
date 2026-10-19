@@ -32,5 +32,15 @@ class RhythmCheckerTest {
         assertEquals(82, rhythm.get("hook_score"));
         assertEquals(80, rhythm.get("ending_score"));
         assertTrue(((Integer) rhythm.get("total_score")) >= 60);
+
+        List<Map<String, Object>> markers = RhythmChecker.extractRhythmMarkers(scenes);
+        assertEquals(2, markers.size());
+        assertEquals("HOOK_3S", markers.get(0).get("marker_type"));
+        assertEquals("CLIFFHANGER", markers.get(1).get("marker_type"));
+
+        Map<String, Object> validSafeZone = RhythmChecker.validateAspectRatioAndSafeZone("9:16", 15);
+        assertEquals(Boolean.TRUE, validSafeZone.get("valid"));
+        Map<String, Object> invalidSafeZone = RhythmChecker.validateAspectRatioAndSafeZone("9:16", 3);
+        assertEquals(Boolean.FALSE, invalidSafeZone.get("valid"));
     }
 }

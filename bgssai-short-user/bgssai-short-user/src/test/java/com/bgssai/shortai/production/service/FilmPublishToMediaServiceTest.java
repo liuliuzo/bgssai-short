@@ -532,4 +532,19 @@ class FilmPublishToMediaServiceTest {
         verify(mediaIngestClient).ingest(any());
     }
 
+    @Test
+    void gateRejectsNonPositiveDurationAndValidatesAspectRatio() {
+        ShortFilm film = readyFilm();
+        film.setFilmDurationSec(0);
+        BizException ex = assertThrows(BizException.class,
+                () -> FilmPublishToMediaService.assertPublishable(film, approvedEpisode()));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), ex.getCode());
+        assertTrue(ex.getMessage().contains("film_duration_sec"));
+
+        assertTrue(FilmPublishToMediaService.isValidAspectRatio("9:16"));
+        assertTrue(FilmPublishToMediaService.isValidAspectRatio("16:9"));
+        assertTrue(FilmPublishToMediaService.isValidAspectRatio(null));
+        assertFalse(FilmPublishToMediaService.isValidAspectRatio("21:9"));
+    }
+
 }

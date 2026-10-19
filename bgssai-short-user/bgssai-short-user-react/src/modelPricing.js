@@ -1,3 +1,20 @@
+import { formatTokenAmount, formatTokenExact } from './utils/formatToken.js'
+
+export const ALLOWED_MULTIPLIERS = [0.5, 1, 1.5]
+export const DOMESTIC_GATEWAY_REGION = 'tokenhub-cn'
+
+const RAW_VENDOR_HOST_MARKERS = [
+  'api.openai.com',
+  'openai.azure.com',
+  'api.anthropic.com',
+  'api.deepseek.com',
+  'dashscope.aliyuncs.com',
+  'open.bigmodel.cn',
+  'api.moonshot.cn',
+  'api.minimax.chat',
+  'klingai.com',
+]
+
 const STATUS_LABEL = {
   pending: '待对账',
   settled: '已结算',
@@ -7,10 +24,135 @@ const STATUS_LABEL = {
 }
 
 function fenToYuan(fen) {
-  if (fen == null || fen === '') return null
+  if (fen == null || fen === '' || typeof fen === 'boolean') return null
   const n = Number(fen)
   if (!Number.isFinite(n)) return null
   return (n / 100).toFixed(2)
+}
+
+export function isValidBillingMultiplier(multiplier) {
+  if (multiplier == null || multiplier === '' || typeof multiplier === 'boolean') return false
+  const n = Number(multiplier)
+  return ALLOWED_MULTIPLIERS.some((allowed) => Math.abs(n - allowed) < 1e-9)
+}
+
+export function validateTokenhubCnRoute(row = {}) {
+  const isString = typeof row === 'string'
+  const region = isString
+    ? DOMESTIC_GATEWAY_REGION
+    : String(row?.region || row?.gateway_region || row?.provider || DOMESTIC_GATEWAY_REGION)
+        .trim()
+        .toLowerCase()
+  const endpoint = isString
+    ? row.trim().toLowerCase()
+    : String(row?.endpoint || row?.base_url || '').trim().toLowerCase()
+
+  if (region.includes('global') || region.includes('intl') || endpoint.includes('tokenhub-global') || endpoint.includes('bgssai-tokenhub.com')) {
+    return {
+      valid: false,
+      region: DOMESTIC_GATEWAY_REGION,
+      reason: '境内短剧制作固定走 tokenhub-cn，禁止跨区调用 tokenhub-global',
+    }
+  }
+  for (const marker of RAW_VENDOR_HOST_MARKERS) {
+    if (endpoint.includes(marker)) {
+      return {
+        valid: false,
+        region: DOMESTIC_GATEWAY_REGION,
+        reason: '禁止填写上游厂商直连地址，模型调用须统一经由 tokenhub-cn',
+      }
+    }
+  }
+  if (!isString && row?.billing_multiplier != null && row?.billing_multiplier !== '' && !isValidBillingMultiplier(row.billing_multiplier)) {
+    return {
+      valid: false,
+      region: DOMESTIC_GATEWAY_REGION,
+      reason: `模型额度倍率须为 0.5 / 1 / 1.5 倍（当前为 ${row.billing_multiplier}）`,
+    }
+  }
+  return {
+    valid: true,
+    region: DOMESTIC_GATEWAY_REGION,
+    reason: '',
+  }
+}
+
+export function detectMultiplierDrift(selectedModel = {}, latestCatalogRow = {}) {
+  if (!selectedModel || !latestCatalogRow) {
+    return { changed: false, drifted: false, valid: true, reason: '' }
+  }
+  const routeCheck = validateTokenhubCnRoute(latestCatalogRow)
+  if (!routeCheck.valid) {
+    return {
+      changed: true,
+      drifted: true,
+      valid: false,
+      reason: routeCheck.reason,
+      expectedMultiplier: selectedModel.billing_multiplier ?? null,
+      actualMultiplier: latestCatalogRow.billing_multiplier ?? null,
+    }
+  }
+  const prevMult = selectedModel.billing_multiplier == null ? null : Number(selectedModel.billing_multiplier)
+  const nextMult = latestCatalogRow.billing_multiplier == null ? null : Number(latestCatalogRow.billing_multiplier)
+  if (prevMult != null && nextMult != null && Math.abs(prevMult - nextMult) > 1e-9) {
+    return {
+      changed: true,
+      drifted: true,
+      valid: isValidBillingMultiplier(nextMult),
+      reason: `模型额度倍率已由 ${prevMult}x 变更为 ${nextMult}x，请重新确认后再提交`,
+      expectedMultiplier: prevMult,
+      actualMultiplier: nextMult,
+    }
+  }
+  if (
+    selectedModel.price_version != null &&
+    latestCatalogRow.price_version != null &&
+    String(selectedModel.price_version) !== String(latestCatalogRow.price_version)
+  ) {
+    return {
+      changed: true,
+      drifted: true,
+      valid: true,
+      reason: `模型计价版本已由 v${selectedModel.price_version} 更新为 v${latestCatalogRow.price_version}，请重新确认后再提交`,
+      expectedMultiplier: prevMult,
+      actualMultiplier: nextMult,
+    }
+  }
+  return {
+    changed: false,
+    drifted: false,
+    valid: nextMult == null ? true : isValidBillingMultiplier(nextMult),
+    reason: '',
+    expectedMultiplier: prevMult,
+    actualMultiplier: nextMult,
+  }
+}
+
+export function estimateShotBatchTokens(shotCount, modelRow = {}, baseTokensPerShot = 100) {
+  const count = Array.isArray(shotCount)
+    ? shotCount.length
+    : Math.max(0, Math.trunc(Number(shotCount) || 0))
+  const isModelNumber = typeof modelRow === 'number'
+  const base = Math.max(0, Math.trunc(Number(isModelNumber ? modelRow : baseTokensPerShot) || 0))
+  const rawTokens = count * base
+  const rawMult = isModelNumber
+    ? (typeof baseTokensPerShot === 'number' ? baseTokensPerShot : 1)
+    : (modelRow?.billing_multiplier == null ? 1 : Number(modelRow.billing_multiplier))
+  const validMultiplier = isValidBillingMultiplier(rawMult)
+  const effectiveMultiplier = validMultiplier ? rawMult : 1
+  const billedTokens = Math.round(rawTokens * effectiveMultiplier)
+  return {
+    shotCount: count,
+    shot_count: count,
+    rawTokens,
+    raw_tokens: rawTokens,
+    billedTokens,
+    billed_tokens: billedTokens,
+    multiplier: validMultiplier ? rawMult : null,
+    validMultiplier,
+    compactBilled: formatTokenAmount(billedTokens),
+    exactBilled: formatTokenExact(billedTokens),
+  }
 }
 
 export function modelPricingLabel(row = {}) {
@@ -51,3 +193,4 @@ export function receiptSummary(receipt = {}) {
   const currency = receipt.currency && receipt.currency !== 'CNY' ? `（${receipt.currency}）` : ''
   return `${status} · 实扣 ${billed} ${unit} · 金额 ${amount}${currency}`
 }
+
