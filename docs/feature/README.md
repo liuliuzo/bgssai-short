@@ -67,3 +67,9 @@
 <!-- OPC-20261017 END -->
 
 - [2026-10-19 OPC 静态差距审计与验收补充](opc-gap-audit-20261019.md)
+
+<!-- OPC-20261019 START -->
+## 2026-10-19 功能目录增量
+
+[opc-requirements-20261019.md](opc-requirements-20261019.md)：新增 REQ-SHORT-PRODUCT-101、REQ-SHORT-PRODUCT-102。仅需求与测试设计，不代表实施完成。2026-10-17 需求与用例结果保持原样。
+<!-- OPC-20261019 END -->
