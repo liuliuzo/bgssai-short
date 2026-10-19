@@ -48,6 +48,7 @@
    密钥分别落 `sys_secret.ai.tokenhub_cn.api_key` / `ai.tokenhub_global.api_key`（旧键
    `ai.tencent_tokenhub.api_key` 仅作 CN 空值回填兼容）。`config_json` 只保存 `hub`、`base_url`、
    `secret_ref`、端点路径和非敏感默认参数，禁止保存 API Key；properties 禁止写网关 API Key。
+   已配置的 `bgssai.llm.tokenhub-cn-base-url` 覆盖模型行 `base_url`，DEV 使用 `dev.user` 中枢。
 8. 上游异步任务由当前 `short_ai_task` Worker 内部轮询；轮询间隔、超时由模型 `config_json` 与
    `timeout_sec` 控制。超时、内容审核失败、上游 5xx 分别映射现有失败码，不返回伪造素材。
 9. 管理端模型页必须支持 `ASR` 与 `MUSIC` 筛选、新增和默认切换；用户端模型目录只返回
