@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Card, Input, Select, Space, Statistic, Table, Tag, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import { visibleBaseline } from '../../utils/baselineCards'
 
 const { Paragraph, Text } = Typography
 
@@ -25,8 +26,8 @@ function readableByte(byte) {
   return `${(byte / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
 
-export default function EditExportPage({ episodeId }) {
-  const [precheck, setPrecheck] = useState(null)
+export default function EditExportPage({ episodeId, initialPrecheck = null }) {
+  const [precheck, setPrecheck] = useState(initialPrecheck)
   const [records, setRecords] = useState([])
   const [projectFormat, setProjectFormat] = useState('JIANYING')
   const [jianyingVersion, setJianyingVersion] = useState('V6')
@@ -95,6 +96,8 @@ export default function EditExportPage({ episodeId }) {
 
   const exportable = precheck?.exportable_flag === 1
   const missing = precheck?.missing_shot_list || []
+  const baseline = visibleBaseline(precheck)
+  const timelineShots = baseline.timeline?.shot_list || []
 
   return (
     <div>
@@ -105,6 +108,64 @@ export default function EditExportPage({ episodeId }) {
         message="导出不要求本集已合成、已过审"
         description="剪辑工程是拿出去改的，前置只要求至少有一个镜头出了视频。缺片的镜头会列在下面，时间轴上直接跳过，不插黑场占位。导出不调模型、不计费、不占配额，也不会改动成片与审核状态。"
       />
+
+      <Card title="导出基准" size="small" style={{ marginBottom: 12 }}>
+        <Paragraph type="secondary" style={{ marginTop: 0 }}>
+          已锁定的角色和分镜时间轴才是这次导出对照的版本。已作废的角色版本不会标成与现行时间轴一致。
+        </Paragraph>
+        {baseline.characters.length ? baseline.characters.map((row) => (
+          <Card
+            key={row.character_id}
+            size="small"
+            style={{ marginBottom: 8 }}
+            title={<span>角色版本 · {row.character_name}</span>}
+            extra={<Tag color="green">LOCKED</Tag>}
+          >
+            <Text strong>角色版本</Text>
+            <div>{row.version_text}</div>
+          </Card>
+        )) : (
+          <Paragraph type="secondary">还没有已锁定的角色版本。</Paragraph>
+        )}
+        {baseline.timeline ? (
+          <Card
+            size="small"
+            style={{ marginBottom: 8 }}
+            title={<span>时间轴版本</span>}
+            extra={<Tag color="green">LOCKED</Tag>}
+          >
+            <Text strong>时间轴版本</Text>
+            <div>{baseline.timeline.version_text}</div>
+            {timelineShots.length ? (
+              <Table
+                style={{ marginTop: 8 }}
+                rowKey={(row) => String(row.shot_no)}
+                size="small"
+                pagination={false}
+                dataSource={timelineShots}
+                columns={[
+                  { title: '镜号', dataIndex: 'shot_no', width: 70 },
+                  { title: '时长（秒）', dataIndex: 'shot_duration_sec', width: 100 },
+                  { title: '角色', dataIndex: 'character_names' },
+                  { title: '字幕', dataIndex: 'dialogue_text' },
+                ]}
+              />
+            ) : null}
+          </Card>
+        ) : (
+          <Paragraph type="secondary">时间轴尚未锁定，不显示时间轴版本。</Paragraph>
+        )}
+        {baseline.voided.map((row) => (
+          <Alert
+            key={row.character_id || row.character_name}
+            type="warning"
+            showIcon
+            style={{ marginBottom: 8 }}
+            message="已作废角色版本"
+            description={row.version_text}
+          />
+        ))}
+      </Card>
 
       <Card size="small" style={{ marginBottom: 12 }}>
         <Space size={48} wrap>

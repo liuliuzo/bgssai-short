@@ -25,6 +25,7 @@ import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
+import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortDubbingMapper;
 import com.bgssai.shortai.mapper.ShortEditExportMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
@@ -32,6 +33,8 @@ import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortSubtitleMapper;
 import com.bgssai.shortai.model.ShortAsset;
 import com.bgssai.shortai.model.ShortAssetExample;
+import com.bgssai.shortai.model.ShortCharacter;
+import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortDubbing;
 import com.bgssai.shortai.model.ShortDubbingExample;
 import com.bgssai.shortai.model.ShortEditExport;
@@ -45,6 +48,7 @@ import com.bgssai.shortai.model.ShortSubtitleExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.EditProjectDtos.EditProjectExportReq;
 import com.bgssai.shortai.production.support.EdlWriter;
+import com.bgssai.shortai.production.support.EditBaselineCards;
 import com.bgssai.shortai.production.support.EditTimeline;
 import com.bgssai.shortai.production.support.FcpxmlWriter;
 import com.bgssai.shortai.production.support.JianyingDraftWriter;
@@ -84,6 +88,8 @@ public class EditProjectService {
     private AssetService assetService;
     @Autowired
     private ShortShotMapper shortShotMapper;
+    @Autowired
+    private ShortCharacterMapper shortCharacterMapper;
     @Autowired
     private ShortAssetMapper shortAssetMapper;
     @Autowired
@@ -149,7 +155,21 @@ public class EditProjectService {
         result.put("estimated_media_byte", mediaByte);
         result.put("media_limit_byte", MEDIA_LIMIT_BYTE);
         result.put("last_draft_dir", last == null ? null : last.getDraftDir());
+        List<ShortCharacter> characters = loadCharacters(ep.getWorkId());
+        result.put("character_version_list", EditBaselineCards.lockedCharacterCards(characters));
+        result.put("voided_character_list", EditBaselineCards.voidedCharacterCards(characters, shots));
+        result.put("timeline_version", EditBaselineCards.timelineCard(shots, characters));
         return Responses.ok(result);
+    }
+
+    private List<ShortCharacter> loadCharacters(String workId) {
+        if (shortCharacterMapper == null || workId == null || workId.isBlank()) {
+            return List.of();
+        }
+        ShortCharacterExample ex = new ShortCharacterExample();
+        ex.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> rows = shortCharacterMapper.selectByExample(ex);
+        return rows == null ? List.of() : rows;
     }
 
     public ApiResponse export(EditProjectExportReq req) {

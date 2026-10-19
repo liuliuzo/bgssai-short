@@ -156,8 +156,8 @@ public class FilmPublishToMediaService {
                     + "本仓不填写虚构 IP；主机未分配时保持为空并在文档标明未部署");
         }
         if (!config.tokenConfigured()) {
-            warnings.add("未配置 bgssai.tube.ingest-token：请写 properties 占位或在 Admin/sys_secret 写入"
-                    + "（勿提交真实密钥）");
+            warnings.add("未配置 Tube 令牌：请在环境配置或管理端写入 bgssai.tube.ingest-token"
+                    + "（勿提交真实密钥，不要编造令牌）");
         }
 
         boolean filmReady = false;

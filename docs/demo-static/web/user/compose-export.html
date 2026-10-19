@@ -196,6 +196,7 @@
                   <code>play_url</code>（可打开 / 复制）；失败区分 Tube 不可达、业务码 6xxxx、成片未 READY。
                   进入页先调 <code>GET /bgssai/user/films/publish-to-media/preflight</code>：
                   缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时黄条提示；
+                  缺令牌时「发布到 Tube」停用，并写明「未配置 Tube 令牌」，不编造令牌。
                   传 <code>work_id</code> 可看批量候选数。若存在最近一次发布记录（publish_log），
                   成片区展示状态与播放链接。幂等键
                   <code>short:{work_id}:{episode_id}:{film_id}</code>。

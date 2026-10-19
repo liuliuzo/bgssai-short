@@ -13,7 +13,7 @@
 | 需求ID | 能力 | 功能要求 | 通过/失败判定 | 用例 |
 | --- | --- | --- | --- | --- |
 | REQ-SHORT-PRODUCT-101 | 成片到 Tube 的未知结果恢复 | 导出成片并交给 Tube 后，若发布结果未知，恢复时不重复创建作品。来源见差距审计 AUD-SHORT-20261019-01，对照 [成片发布](film-publish-media.md) 与既有 REQ-SHORT-PRODUCT-004、REQ-SHORT-PRODUCT-005。 | 正向判定：Short 任务与 Tube 作品号一一对应，未知状态可见。异常判定：重试后 Tube 出现两条相同作品，不能通过。 | [TC-SHORT-PRODUCT-101-P / TC-SHORT-PRODUCT-101-N](../test/TC-opc-product-20261019.md) |
-| REQ-SHORT-PRODUCT-102 | 一致性资产与成片基准 | 角色和分镜时间轴与导出成片使用同一版本；成片画面能对上该时间轴。来源见差距审计 AUD-SHORT-20261019-02，对照 [资产一致性](asset-consistency-panel.md)、[分镜工作台](storyboard-workbench.md) 与既有 REQ-SHORT-PRODUCT-006、REQ-SHORT-PRODUCT-007、REQ-SHORT-PRODUCT-008。 | 正向判定：抽检镜头的角色、字幕和时长与时间轴一致。异常判定：成片使用了已作废的角色版本却标一致，不能通过。 | [TC-SHORT-PRODUCT-102-P / TC-SHORT-PRODUCT-102-N](../test/TC-opc-product-20261019.md) |
+| REQ-SHORT-PRODUCT-102 | 一致性资产与成片基准 | 角色和分镜时间轴与导出成片使用同一版本；成片画面能对上该时间轴。剪辑工程上，已锁定角色卡显示「角色版本」，已锁定时间轴卡显示「时间轴版本」（镜号、时长、字幕）。已作废角色版本不得标成与现行时间轴一致。来源见差距审计 AUD-SHORT-20261019-02，对照 [资产一致性](asset-consistency-panel.md)、[分镜工作台](storyboard-workbench.md)、[剪辑工程导出](edit-project-export.md) 与既有 REQ-SHORT-PRODUCT-006、REQ-SHORT-PRODUCT-007、REQ-SHORT-PRODUCT-008。 | 正向判定：抽检镜头的角色、字幕和时长与时间轴一致，且剪辑工程能读到「角色版本」「时间轴版本」。异常判定：成片使用了已作废的角色版本却标一致，不能通过。 | [TC-SHORT-PRODUCT-102-P / TC-SHORT-PRODUCT-102-N](../test/TC-opc-product-20261019.md) |
 
 ## 规则边界与依赖
 

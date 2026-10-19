@@ -507,11 +507,26 @@ tube 不可达返回 `502000`；超时 `504000`；业务码 6xxxx 文案可读�
     "ready_shot_count": 18, "total_shot_count": 20,
     "missing_shot_list": [ { "shot_no": 7, "shot_desc": "女主推门" } ],
     "estimated_media_byte": 486539264, "media_limit_byte": 2147483648,
-    "last_draft_dir": "C:\Users\demo\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft" } }
+    "last_draft_dir": "C:\Users\demo\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft",
+    "character_version_list": [ { "character_id": "c-30001", "character_name": "沈知微",
+      "card_status": "LOCKED", "version_label": "角色版本",
+      "version_text": "沈知微 · 定妆 a-50012 · 2026-10-19 18:30",
+      "consistent_flag": 1, "voided_flag": 0 } ],
+    "voided_character_list": [ { "character_id": "c-30002", "character_name": "陆时衍",
+      "card_status": "DRAFT", "version_label": "", "consistent_flag": 0, "voided_flag": 1,
+      "version_text": "陆时衍 已作废，不能标为与现行时间轴一致" } ],
+    "timeline_version": { "card_status": "LOCKED", "version_label": "时间轴版本", "version_no": 2,
+      "version_text": "v2 · 20 镜 · 总时长 62 秒 · 字幕 16 条",
+      "shot_count": 20, "total_duration_sec": 62, "subtitle_count": 16, "consistent_flag": 1,
+      "shot_list": [ { "shot_no": 1, "shot_duration_sec": 4, "dialogue_text": "三年前那纸",
+        "character_names": "沈知微", "shot_status": "LOCKED" } ] } } }
 ```
 
 `exportable_flag=0` 表示该集没有任何镜头具备可用视频，此时提交导出返回 `4006`。
 `last_draft_dir` 取该用户最近一条导出记录的 `draft_dir`，无历史时为 `null`。
+`character_version_list` 只收 `card_status=LOCKED` 的角色，标签固定为「角色版本」。
+`timeline_version.card_status=LOCKED` 时标签固定为「时间轴版本」，并带镜号、时长、角色与字幕。
+`voided_character_list` 是时间轴仍引用、但已不是 LOCKED 的角色，`consistent_flag=0`，不得标成与现行时间轴一致。
 
 ### POST /bgssai/user/edit-projects/export
 
