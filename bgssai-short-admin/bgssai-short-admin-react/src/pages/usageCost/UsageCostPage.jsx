@@ -58,7 +58,7 @@ export default function UsageCostPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>平台用量与成本</Title>
-      <Paragraph type="secondary">汇总与按创作者下钻；充值申请可在此 COMPLETE / REJECT。</Paragraph>
+      <Paragraph type="secondary">汇总近一段时间内已成功任务的成本，并可按创作者查看。充值申请可在此通过或驳回。</Paragraph>
       <Space style={{ marginBottom: 12 }}>
         <RangePicker value={range} onChange={setRange} />
         <Select
@@ -68,13 +68,13 @@ export default function UsageCostPage() {
           value={abilityType}
           onChange={setAbilityType}
           options={[
-            { value: 'TEXT', label: 'TEXT' },
-            { value: 'IMAGE', label: 'IMAGE' },
-            { value: 'VIDEO', label: 'VIDEO' },
-            { value: 'VOICE', label: 'VOICE' },
-            { value: 'ASR', label: 'ASR' },
-            { value: 'MUSIC', label: 'MUSIC' },
-            { value: 'COMPOSE', label: 'COMPOSE' },
+            { value: 'TEXT', label: '文本' },
+            { value: 'IMAGE', label: '图片' },
+            { value: 'VIDEO', label: '视频' },
+            { value: 'VOICE', label: '配音' },
+            { value: 'ASR', label: '语音识别' },
+            { value: 'MUSIC', label: '音乐生成' },
+            { value: 'COMPOSE', label: '合成' },
           ]}
         />
         <Button onClick={() => load(1, pageSize, range, abilityType)}>查询</Button>
@@ -94,7 +94,7 @@ export default function UsageCostPage() {
           pagination={false}
           dataSource={summary?.by_ability_list || []}
           columns={[
-            { title: '能力', dataIndex: 'ability_type' },
+            { title: '能力', dataIndex: 'ability_type_name', render: (v, row) => v || row.ability_type },
             { title: '成本(元)', dataIndex: 'cost_cent', render: yuan },
             { title: '任务数', dataIndex: 'task_count' },
           ]}
@@ -124,6 +124,7 @@ export default function UsageCostPage() {
             pageSize,
             total,
             showSizeChanger: true,
+            showTotal: (n) => `共 ${n} 条`,
             onChange: (num, size) => load(num, size, range, abilityType),
           }}
           columns={[
@@ -145,7 +146,7 @@ export default function UsageCostPage() {
             { title: '申请号', dataIndex: 'apply_id' },
             { title: '用户', dataIndex: 'user_name' },
             { title: '金额(元)', dataIndex: 'apply_amount_cent', render: yuan },
-            { title: '状态', dataIndex: 'apply_status' },
+            { title: '状态', dataIndex: 'apply_status', render: (v) => ({ SUBMITTED: '已提交', PROCESSING: '处理中', COMPLETED: '已完成', REJECTED: '已驳回' }[v] || v) },
             { title: '用户备注', dataIndex: 'user_remark' },
             {
               title: '操作',
@@ -180,8 +181,8 @@ export default function UsageCostPage() {
         <Form form={form} layout="vertical">
           <Form.Item name="handle_action" label="动作" rules={[{ required: true }]} initialValue="COMPLETE">
             <Select options={[
-              { value: 'COMPLETE', label: 'COMPLETE 通过并加额' },
-              { value: 'REJECT', label: 'REJECT 驳回' },
+              { value: 'COMPLETE', label: '通过并加额' },
+              { value: 'REJECT', label: '驳回' },
             ]}
             />
           </Form.Item>

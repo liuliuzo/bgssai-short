@@ -1,5 +1,6 @@
 import LegalFooter from './components/LegalFooter'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { safeReturnPath } from './lib/safeReturn'
 import { useUserStore, isAllowedRole } from './store/user'
 import MainLayout from './layouts/MainLayout'
 import Login from './pages/login/Login'
@@ -18,23 +19,34 @@ import SupportInboxPage from './pages/support/SupportInboxPage'
 
 function RequireAuth({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
+  const location = useLocation()
   if (!userInfo || !isAllowedRole(userInfo)) {
-    return <Navigate to="/login" replace />
+    const back = `${location.pathname}${location.search}`
+    return <Navigate to={`/login?redirect=${encodeURIComponent(back)}`} replace />
   }
   return children
 }
 
 function RequireGuest({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
+  const location = useLocation()
   if (userInfo && isAllowedRole(userInfo)) {
-    return <Navigate to="/home" replace />
+    const back = safeReturnPath(new URLSearchParams(location.search).get('redirect'))
+    return <Navigate to={back || '/home'} replace />
   }
   return children
 }
 
-function NotFoundRedirect() {
+function NotFoundPage() {
   const userInfo = useUserStore((s) => s.userInfo)
-  return <Navigate to={userInfo && isAllowedRole(userInfo) ? '/home' : '/login'} replace />
+  const authed = userInfo && isAllowedRole(userInfo)
+  return (
+    <div style={{ maxWidth: 520, margin: '80px auto', padding: 24, textAlign: 'center' }}>
+      <h2 style={{ marginTop: 0 }}>页面不存在</h2>
+      <p style={{ color: '#666' }}>你访问的地址无效或已被移除。</p>
+      <a href={authed ? '/home' : '/login'}>{authed ? '返回首页' : '去登录'}</a>
+    </div>
+  )
 }
 
 export default function App() {
@@ -72,7 +84,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
       </Route>
 
-      <Route path="*" element={<NotFoundRedirect />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
     <LegalFooter />
     </>

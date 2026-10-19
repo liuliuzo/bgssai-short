@@ -104,6 +104,33 @@ public final class PromptComposer {
         return sb.toString();
     }
 
+    /** Source tags for the composed image prompt, shown beside the storyboard. */
+    public static List<Map<String, String>> segments(ShortShot shot) {
+        List<Map<String, String>> list = new ArrayList<>();
+        if (shot == null) {
+            return list;
+        }
+        addSegment(list, "DESC", "画面", shot.getShotDesc());
+        addSegment(list, "DIALOGUE", "对白", shot.getDialogueText());
+        addSegment(list, "SIZE", "景别", sizeName(shot.getShotSize()));
+        addSegment(list, "CAMERA", "运镜", cameraName(shot.getCameraMove()));
+        addSegment(list, "LIGHT", "光线", lightName(shot.getLighting()));
+        addSegment(list, "EMOTION", "情绪", emotionName(shot.getEmotion()));
+        addSegment(list, "EXTRA", "补充", shot.getExtraPrompt());
+        return list;
+    }
+
+    private static void addSegment(List<Map<String, String>> list, String source, String label, String text) {
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        Map<String, String> item = new LinkedHashMap<>();
+        item.put("source", source);
+        item.put("label", label);
+        item.put("text", text.trim());
+        list.add(item);
+    }
+
     public static Map<String, Object> check(ShortShot shot, String prompt) {
         String p = prompt == null ? "" : prompt;
         List<Map<String, Object>> issues = new ArrayList<>();

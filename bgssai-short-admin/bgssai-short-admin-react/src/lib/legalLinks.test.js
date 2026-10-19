@@ -13,11 +13,14 @@ import {
 const REQUIRED_SLUGS = [
   'terms-of-service',
   'privacy-policy',
+  'personal-information-inventory',
+  'third-party-sharing',
+  'app-permissions',
 ]
 
 describe('legalLinks', () => {
-  it('exposes exactly two official website pages on www.bgssai.com', () => {
-    assert.equal(LEGAL_PAGES.length, 2)
+  it('exposes the five official website pages on www.bgssai.com', () => {
+    assert.equal(LEGAL_PAGES.length, 5)
     assert.equal(WEBSITE_ORIGIN, 'https://www.bgssai.com')
     assert.deepEqual(LEGAL_PAGES.map((page) => page.slug), REQUIRED_SLUGS)
   })
@@ -29,6 +32,8 @@ describe('legalLinks', () => {
       assert.match(page.label_zh, /[\u4e00-\u9fff]/)
       assert.match(page.label_en, /[A-Za-z]/)
       assert.equal(bilingualLabel(page), `${page.label_zh} / ${page.label_en}`)
+      assert.ok(page.footer_zh)
+      assert.ok(page.footer_en)
       assert.equal(page.path_zh, `/${page.slug}/`)
       assert.equal(page.path_en, `/en/${page.slug}/`)
       const zhUrl = legalPageUrl(page, 'zh')

@@ -19,16 +19,24 @@ const readyScript = (episodeId, forceReadyFlag) =>
 
 const listCharacters = (workId) => http.get('/user/characters/list', { work_id: workId })
 const createCharacter = (body) => http.post('/user/characters/create', body)
-const portraitCharacter = (characterId, modelCode) =>
-  http.post('/user/characters/portrait-generate', { character_id: characterId, model_code: modelCode })
+const portraitCharacter = (characterId, modelCode, candidateCount) =>
+  http.post('/user/characters/portrait-generate', {
+    character_id: characterId,
+    model_code: modelCode,
+    candidate_count: candidateCount,
+  })
 const lockCharacter = (characterId, assetId) =>
   http.post('/user/characters/lock', { character_id: characterId, asset_id: assetId })
 const consistencyPanel = (workId) => http.get('/user/assets/consistency-panel', { work_id: workId })
 const bindShotAssets = (body) => http.post('/user/shots/bind-assets', body)
 const listScenes = (workId, cardType) => http.get('/user/scene-cards/list', { work_id: workId, card_type: cardType })
 const createScene = (body) => http.post('/user/scene-cards/create', body)
-const portraitScene = (sceneCardId, modelCode) =>
-  http.post('/user/scene-cards/portrait-generate', { scene_card_id: sceneCardId, model_code: modelCode })
+const portraitScene = (sceneCardId, modelCode, candidateCount) =>
+  http.post('/user/scene-cards/portrait-generate', {
+    scene_card_id: sceneCardId,
+    model_code: modelCode,
+    candidate_count: candidateCount,
+  })
 const lockScene = (sceneCardId, assetId) =>
   http.post('/user/scene-cards/lock', { scene_card_id: sceneCardId, asset_id: assetId })
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import aiModelsApi from '../../api/aiModels'
+import { yuanToCent } from '../../lib/money'
 
 const { Title, Paragraph } = Typography
 
@@ -9,14 +10,20 @@ function yuan(cent) {
 }
 
 const ABILITY_OPTIONS = [
-  { value: 'TEXT', label: 'TEXT' },
-  { value: 'IMAGE', label: 'IMAGE' },
-  { value: 'VIDEO', label: 'VIDEO' },
-  { value: 'VOICE', label: 'VOICE' },
-  { value: 'ASR', label: 'ASR' },
-  { value: 'MUSIC', label: 'MUSIC' },
-  { value: 'COMPOSE', label: 'COMPOSE' },
+  { value: 'TEXT', label: '文本' },
+  { value: 'IMAGE', label: '图片' },
+  { value: 'VIDEO', label: '视频' },
+  { value: 'VOICE', label: '配音' },
+  { value: 'ASR', label: '语音识别' },
+  { value: 'MUSIC', label: '音乐生成' },
+  { value: 'COMPOSE', label: '合成' },
 ]
+const PROVIDER_OPTIONS = [
+  'ANTHROPIC', 'DASHSCOPE', 'DEEPSEEK', 'FFMPEG', 'GOOGLE', 'HUNYUAN', 'KLING', 'MINIMAX',
+  'MOONSHOT', 'OPENAI', 'OPENAI_COMPAT', 'PIXVERSE', 'SEEDANCE', 'SPACEXAI', 'TENCENT_TOKENHUB',
+  'VEO', 'VIDU', 'VOLCENGINE', 'WAND', 'XIAOMI', 'ZHIPU',
+].map((value) => ({ value, label: value }))
+const ABILITY_NAME = Object.fromEntries(ABILITY_OPTIONS.map((item) => [item.value, item.label]))
 
 export default function AiModelsPage() {
   const [rows, setRows] = useState([])
@@ -40,7 +47,7 @@ export default function AiModelsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>AI 能力与模型</Title>
-      <Paragraph type="secondary">单价单位为分；密钥写在「AI 密钥」页的 sys_secret，本页 config_json 只存 secret_ref。</Paragraph>
+      <Paragraph type="secondary">单价按元填写。调用密钥在「AI 密钥」页维护，本页只保存密钥引用。</Paragraph>
       <Card
         extra={
           <Button type="primary" onClick={() => {
@@ -48,7 +55,7 @@ export default function AiModelsPage() {
             form.setFieldsValue({
               quality_level: 'STANDARD',
               price_unit: 'PER_CALL',
-              unit_price_cent: 50,
+              unit_price_yuan: 0.5,
               timeout_sec: 120,
               max_retry: 2,
               enabled_flag: 1,
@@ -79,7 +86,7 @@ export default function AiModelsPage() {
           dataSource={rows}
           pagination={false}
           columns={[
-            { title: '能力', dataIndex: 'ability_type', width: 90 },
+            { title: '能力', dataIndex: 'ability_type', width: 100, render: (v, row) => row.ability_type_name || ABILITY_NAME[v] || v },
             { title: '模型', dataIndex: 'model_code' },
             { title: '名称', dataIndex: 'model_name' },
             { title: '供应商', dataIndex: 'provider_code', width: 120 },
@@ -127,8 +134,10 @@ export default function AiModelsPage() {
         onCancel={() => setOpen(false)}
         onOk={async () => {
           const values = await form.validateFields()
+          const { unit_price_yuan, ...rest } = values
           const { data } = await aiModelsApi.create({
-            ...values,
+            ...rest,
+            unit_price_cent: yuanToCent(unit_price_yuan),
             default_flag: Number(values.default_flag) === 1 ? 1 : 0,
             enabled_flag: Number(values.enabled_flag) === 1 ? 1 : 0,
           })
@@ -144,7 +153,9 @@ export default function AiModelsPage() {
           <Form.Item name="ability_type" label="能力类型" rules={[{ required: true }]}>
             <Select options={ABILITY_OPTIONS} />
           </Form.Item>
-          <Form.Item name="provider_code" label="供应商" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="provider_code" label="供应商" rules={[{ required: true }]}>
+            <Select showSearch options={PROVIDER_OPTIONS} />
+          </Form.Item>
           <Form.Item name="model_code" label="模型编码" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="model_name" label="模型名称" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="quality_level" label="质量档" rules={[{ required: true }]}>
@@ -164,8 +175,8 @@ export default function AiModelsPage() {
             ]}
             />
           </Form.Item>
-          <Form.Item name="unit_price_cent" label="单价(分)" rules={[{ required: true }]}>
-            <InputNumber style={{ width: '100%' }} min={0} />
+          <Form.Item name="unit_price_yuan" label="单价(元)" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
           </Form.Item>
           <Form.Item name="timeout_sec" label="超时(秒)" rules={[{ required: true }]}>
             <InputNumber style={{ width: '100%' }} min={1} />

@@ -3,6 +3,7 @@ import { Button, Card, DatePicker, Form, Input, InputNumber, Modal, Select, Spac
 import dayjs from 'dayjs'
 import usageApi from '../../api/usage'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
+import { yuanToCent } from '../../lib/money'
 
 const { Title, Paragraph, Text } = Typography
 const { RangePicker } = DatePicker
@@ -191,7 +192,7 @@ export default function UsageBillingPage() {
         onOk={async () => {
           const values = await form.validateFields()
           const { data } = await usageApi.applyRecharge({
-            apply_amount_cent: values.apply_amount_cent,
+            apply_amount_cent: yuanToCent(values.apply_amount_yuan),
             remark: values.remark,
           })
           if (data?.success) {
@@ -202,8 +203,8 @@ export default function UsageBillingPage() {
         }}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="apply_amount_cent" label="金额(分)" rules={[{ required: true }]}>
-            <InputNumber style={{ width: '100%' }} min={1} />
+          <Form.Item name="apply_amount_yuan" label="金额(元)" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0.01} step={0.01} />
           </Form.Item>
           <Form.Item name="remark" label="备注"><Input.TextArea rows={3} /></Form.Item>
         </Form>

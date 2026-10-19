@@ -8,6 +8,7 @@ import { OAUTH_PROVIDERS } from '../../components/brandIcons'
 import { useWechatFastLogin } from '../../components/WechatFastLoginDialog'
 import { parseWechatQrConnect } from '../../lib/wechatFastLogin'
 import { useUserStore, isAllowedRole } from '../../store/user'
+import { safeReturnPath } from '../../lib/safeReturn'
 import { useBgssaiShell } from '../../hooks/useBgssaiShell'
 import LegalFooter from '../../components/LegalFooter'
 import SupportWidget from '../../components/SupportWidget'
@@ -85,8 +86,10 @@ export default function Login() {
       return
     }
     setUserInfo(result)
+    message.destroy()
     message.success('登录成功')
-    navigate('/home', { replace: true })
+    const back = safeReturnPath(new URLSearchParams(window.location.search).get('redirect'))
+    navigate(back || '/home', { replace: true })
   }
 
   const sendCode = async () => {

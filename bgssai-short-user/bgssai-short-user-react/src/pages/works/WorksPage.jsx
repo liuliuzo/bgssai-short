@@ -83,6 +83,7 @@ export default function WorksPage() {
           rowKey="work_id"
           size="small"
           loading={loading}
+          locale={{ emptyText: loading ? ' ' : '暂无数据' }}
           dataSource={rows}
           pagination={{
             current: pageNum,

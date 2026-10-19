@@ -1,5 +1,6 @@
 import LegalFooter from './components/LegalFooter'
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { safeReturnPath } from './lib/safeReturn'
 import { useUserStore, isAllowedRole } from './store/user'
 import MainLayout from './layouts/MainLayout'
 import Login from './pages/login/Login'
@@ -17,16 +18,20 @@ import TasksPage from './pages/tasks/TasksPage'
 
 function RequireAuth({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
+  const location = useLocation()
   if (!userInfo || !isAllowedRole(userInfo)) {
-    return <Navigate to="/login" replace />
+    const back = `${location.pathname}${location.search}`
+    return <Navigate to={`/login?redirect=${encodeURIComponent(back)}`} replace />
   }
   return children
 }
 
 function RequireGuest({ children }) {
   const userInfo = useUserStore((s) => s.userInfo)
+  const location = useLocation()
   if (userInfo && isAllowedRole(userInfo)) {
-    return <Navigate to="/home" replace />
+    const back = safeReturnPath(new URLSearchParams(location.search).get('redirect'))
+    return <Navigate to={back || '/home'} replace />
   }
   return children
 }

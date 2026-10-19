@@ -1,7 +1,5 @@
 package com.bgssai.shortai.loginlog.dto;
 
-import java.util.Date;
-
 /**
  * One login-log row for the list response.
  * Java properties stay camelCase; the global Jackson snake_case strategy (BgssConfig)
@@ -19,7 +17,7 @@ public class LoginLogItem {
 
     private String userAgent;
 
-    private Date createTime;
+    private String createTime;
 
     public Integer getId() {
         return id;
@@ -61,11 +59,11 @@ public class LoginLogItem {
         this.userAgent = userAgent;
     }
 
-    public Date getCreateTime() {
+    public String getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(String createTime) {
         this.createTime = createTime;
     }
 }
