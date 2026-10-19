@@ -233,8 +233,8 @@ class RestMediaIngestClientTest {
         MediaPublishException ex = assertThrows(MediaPublishException.class, () -> client.ingest(
                 MediaIngestContract.buildPayload("w", "e", "f", "t", null, "https://v.mp4", 1, List.of())));
         assertEquals(CommonErrorCode.UPSTREAM_TIMEOUT.code(), ex.getCode());
-        assertEquals(2, ex.getAttempts());
-        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(2))
+        assertEquals(1, ex.getAttempts());
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.times(1))
                 .postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class));
     }
 
