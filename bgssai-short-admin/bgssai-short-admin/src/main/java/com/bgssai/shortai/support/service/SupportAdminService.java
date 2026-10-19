@@ -1,6 +1,5 @@
 package com.bgssai.shortai.support.service;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -13,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.bgssai.shortai.common.AdminAuthGuard;
+import com.bgssai.shortai.common.ShanghaiClock;
 import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.aop.UserContext;
 import com.bgssai.shortai.common.exception.BizException;
@@ -303,7 +303,7 @@ public class SupportAdminService {
         if (d == null) {
             return null;
         }
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
+        return ShanghaiClock.format(d);
     }
 
     private static String str(Map<String, Object> body, String key) {

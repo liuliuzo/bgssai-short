@@ -19,12 +19,18 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
+import com.bgssai.shortai.mapper.ShortFilmMapper;
 import com.bgssai.shortai.mapper.ShortReviewRecordMapper;
+import com.bgssai.shortai.mapper.ShortScriptMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortEpisodeExample;
+import com.bgssai.shortai.model.ShortFilm;
+import com.bgssai.shortai.model.ShortFilmExample;
 import com.bgssai.shortai.model.ShortReviewRecord;
 import com.bgssai.shortai.model.ShortReviewRecordExample;
+import com.bgssai.shortai.model.ShortScript;
+import com.bgssai.shortai.model.ShortScriptExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.dto.ReviewActionReq;
@@ -40,6 +46,10 @@ public class ReviewAdminService {
     private ShortEpisodeMapper shortEpisodeMapper;
     @Autowired
     private ShortWorkMapper shortWorkMapper;
+    @Autowired
+    private ShortScriptMapper shortScriptMapper;
+    @Autowired
+    private ShortFilmMapper shortFilmMapper;
 
     public PageResponse list(int pageNum, int pageSize, String reviewStatus, String keyword) {
         requireAdmin();
@@ -81,6 +91,8 @@ public class ReviewAdminService {
         result.put("reviewed_time", row.getReviewedTime());
         result.put("reviewer_user_id", row.getReviewerUserId());
         result.put("risk_level", row.getRiskLevel());
+        result.put("script_excerpt", scriptExcerpt(row.getEpisodeId()));
+        attachFilm(result, row.getEpisodeId());
         return Responses.ok(result);
     }
 
@@ -192,6 +204,35 @@ public class ReviewAdminService {
         item.put("episode_no", ep == null ? null : ep.getEpisodeNo());
         item.put("episode_title", ep == null ? null : ep.getEpisodeTitle());
         return item;
+    }
+
+    private String scriptExcerpt(String episodeId) {
+        if (episodeId == null || episodeId.isBlank() || shortScriptMapper == null) {
+            return null;
+        }
+        ShortScriptExample ex = new ShortScriptExample();
+        ex.createCriteria().andEpisodeIdEqualTo(episodeId);
+        ex.setOrderByClause("id desc");
+        ShortScript script = shortScriptMapper.selectOneByExample(ex);
+        if (script == null || script.getSceneJson() == null || script.getSceneJson().isBlank()) {
+            return null;
+        }
+        String text = script.getSceneJson().trim();
+        return text.length() > 800 ? text.substring(0, 800) : text;
+    }
+
+    private void attachFilm(Map<String, Object> result, String episodeId) {
+        if (episodeId == null || episodeId.isBlank() || shortFilmMapper == null) {
+            result.put("media_play_url", null);
+            result.put("compose_status", null);
+            return;
+        }
+        ShortFilmExample ex = new ShortFilmExample();
+        ex.createCriteria().andEpisodeIdEqualTo(episodeId).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("id desc");
+        ShortFilm film = shortFilmMapper.selectOneByExample(ex);
+        result.put("media_play_url", film == null ? null : film.getMediaPlayUrl());
+        result.put("compose_status", film == null ? null : film.getComposeStatus());
     }
 
     private ShortReviewRecord requirePending(ReviewActionReq req) {

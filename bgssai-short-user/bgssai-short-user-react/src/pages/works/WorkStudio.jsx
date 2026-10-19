@@ -338,6 +338,10 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
   )
 }
 
+function cardStatusName(status) {
+  return { DRAFT: '草稿', LOCKED: '已锁定', READY: '已就绪' }[status] || status || '-'
+}
+
 function CharacterPane({ work }) {
   const [chars, setChars] = useState([])
   const [scenes, setScenes] = useState([])
@@ -346,6 +350,14 @@ function CharacterPane({ work }) {
   const [imageModelCode, setImageModelCode] = useState()
   const [form] = Form.useForm()
   const [propForm] = Form.useForm()
+  const [portrait, setPortrait] = useState(null)
+  const [portraitCount, setPortraitCount] = useState(4)
+  const [portraitBusy, setPortraitBusy] = useState(false)
+  const selectedModel = imageModels.find((item) => item.model_code === imageModelCode)
+  const unitCent = Number(selectedModel?.unit_price_cent ?? selectedModel?.image_fen_per_unit ?? 0)
+  const portraitPrice = Number.isFinite(unitCent) && unitCent > 0
+    ? `预计 ${(unitCent * portraitCount / 100).toFixed(2)} 元`
+    : '按任务实际对账'
 
   const load = useCallback(async () => {
     const { data } = await productionApi.consistencyPanel(work.work_id)
@@ -392,18 +404,11 @@ function CharacterPane({ work }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {chars.map((row) => (
-          <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name} (${row.card_status}) · ${row.used_shot_count || 0} 镜`} extra={<Space>
-            <Button size="small" onClick={async () => {
-              const { data } = await productionApi.portraitCharacter(row.character_id, imageModelCode)
-              if (!data?.success) return
-              const done = await waitTask(work.work_id, data.result.task_id)
-              if (done && done.task_status !== 'SUCCEEDED') {
-                message.error(`定妆失败：${done.fail_reason || done.fail_reason_code || '未知原因'}`)
-              }
-              load()
-            }}>定妆</Button>
+          <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={<Space>
+            <Button size="small" onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
           </Space>}>
             <Space wrap>
+              {row.ref_image_url ? <img alt="已锁定参考" src={row.ref_image_url} width={72} height={128} style={{ objectFit: 'cover', background: '#111' }} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <img alt="" src={c.file_url} width={72} height={128} style={{ objectFit: 'cover', background: '#111' }} />
@@ -429,19 +434,19 @@ function CharacterPane({ work }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {scenes.map((row) => (
-          <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name} (${row.card_status}) · ${row.used_shot_count || 0} 镜`} extra={
-            <Button size="small" onClick={async () => {
-              const { data } = await productionApi.portraitScene(row.scene_card_id, imageModelCode)
-              await waitTask(work.work_id, data.result.task_id)
-              load()
-            }}>生成参考图</Button>
+          <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
+            <Button size="small" onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
           }>
             <Space wrap>
+              {row.ref_image_url ? <img alt="已锁定参考" src={row.ref_image_url} width={96} height={64} style={{ objectFit: 'cover' }} /> : null}
               {(row.candidate_list || []).map((c) => (
-                <Button key={c.asset_id} size="small" onClick={async () => {
-                  await productionApi.lockScene(row.scene_card_id, c.asset_id)
-                  load()
-                }}>锁定 {c.asset_id.slice(-6)}</Button>
+                <div key={c.asset_id} style={{ textAlign: 'center' }}>
+                  {c.file_url ? <img alt="" src={c.file_url} width={96} height={64} style={{ objectFit: 'cover' }} /> : null}
+                  <Button size="small" onClick={async () => {
+                    await productionApi.lockScene(row.scene_card_id, c.asset_id)
+                    load()
+                  }}>锁定</Button>
+                </div>
               ))}
             </Space>
           </Card>
@@ -458,24 +463,61 @@ function CharacterPane({ work }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {props.map((row) => (
-          <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name} (${row.card_status}) · ${row.used_shot_count || 0} 镜`} extra={
-            <Button size="small" onClick={async () => {
-              const { data } = await productionApi.portraitScene(row.scene_card_id, imageModelCode)
-              await waitTask(work.work_id, data.result.task_id)
-              load()
-            }}>生成参考图</Button>
+          <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
+            <Button size="small" onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
           }>
             <Space wrap>
+              {row.ref_image_url ? <img alt="已锁定参考" src={row.ref_image_url} width={72} height={72} style={{ objectFit: 'cover' }} /> : null}
               {(row.candidate_list || []).map((c) => (
-                <Button key={c.asset_id} size="small" onClick={async () => {
-                  await productionApi.lockScene(row.scene_card_id, c.asset_id)
-                  load()
-                }}>锁定 {c.asset_id.slice(-6)}</Button>
+                <div key={c.asset_id} style={{ textAlign: 'center' }}>
+                  {c.file_url ? <img alt="" src={c.file_url} width={72} height={72} style={{ objectFit: 'cover' }} /> : null}
+                  <Button size="small" onClick={async () => {
+                    await productionApi.lockScene(row.scene_card_id, c.asset_id)
+                    load()
+                  }}>锁定</Button>
+                </div>
               ))}
             </Space>
           </Card>
         ))}
       </Card>
+      <Modal
+        title={portrait ? `确认生成「${portrait.title || ''}」` : '确认生成'}
+        open={!!portrait}
+        confirmLoading={portraitBusy}
+        okText="确认生成"
+        cancelText="取消"
+        onCancel={() => setPortrait(null)}
+        onOk={async () => {
+          if (!portrait) return
+          setPortraitBusy(true)
+          try {
+            const call = portrait.kind === 'character'
+              ? productionApi.portraitCharacter(portrait.id, imageModelCode, portraitCount)
+              : productionApi.portraitScene(portrait.id, imageModelCode, portraitCount)
+            const { data } = await call
+            setPortrait(null)
+            if (!data?.success || !data.result?.task_id) return
+            const done = await waitTask(work.work_id, data.result.task_id)
+            if (done && done.task_status !== 'SUCCEEDED') {
+              message.error(`生成失败：${done.fail_reason || done.fail_reason_code || '未知原因'}`)
+            }
+            load()
+          } finally {
+            setPortraitBusy(false)
+          }
+        }}
+      >
+        <Space direction="vertical">
+          <Select
+            value={portraitCount}
+            onChange={setPortraitCount}
+            style={{ width: 160 }}
+            options={[{ value: 2, label: '2 张' }, { value: 4, label: '4 张' }, { value: 8, label: '8 张' }]}
+          />
+          <span>{portraitPrice}。只有生成成功才会计入用量。</span>
+        </Space>
+      </Modal>
     </Space>
   )
 }
@@ -578,7 +620,7 @@ function StoryboardPane({ work, episodeId }) {
             onChange={setBindChars}
             options={(panel.character_list || []).map((c) => ({
               value: c.character_id,
-              label: `${c.character_name} ${c.card_status}`,
+              label: `${c.character_name} ${cardStatusName(c.card_status)}`,
             }))}
           />
           <Select
@@ -589,7 +631,7 @@ function StoryboardPane({ work, episodeId }) {
             onChange={setBindScene}
             options={(panel.scene_list || []).map((c) => ({
               value: c.scene_card_id,
-              label: `${c.card_name} ${c.card_status}`,
+              label: `${c.card_name} ${cardStatusName(c.card_status)}`,
             }))}
           />
           <Select
@@ -601,7 +643,7 @@ function StoryboardPane({ work, episodeId }) {
             onChange={setBindProps}
             options={(panel.prop_list || []).map((c) => ({
               value: c.scene_card_id,
-              label: `${c.card_name} ${c.card_status}`,
+              label: `${c.card_name} ${cardStatusName(c.card_status)}`,
             }))}
           />
           <Button
@@ -829,6 +871,17 @@ function StoryboardPane({ work, episodeId }) {
                   ))}
                 </Space>
               </div>
+              {row.image_prompt ? (
+                <div style={{ marginBottom: 8 }}>
+                  <Text type="secondary">画面提示词</Text>
+                  <div>{row.image_prompt}</div>
+                  <Space wrap size={4}>
+                    {(row.prompt_segments || []).map((seg) => (
+                      <Tag key={seg.source}>{seg.label}</Tag>
+                    ))}
+                  </Space>
+                </div>
+              ) : null}
               <Text type="secondary">人话分镜（改这里免费，不用写提示词）</Text>
               <TextArea
                 rows={4}

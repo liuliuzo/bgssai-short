@@ -41,9 +41,10 @@ export default function MainLayout() {
     },
   ]
 
-  const initials = userInfo?.real_name
-    ? userInfo.real_name.slice(-2)
-    : (userInfo?.role_name || 'AD').slice(0, 2)
+  const account = (userInfo?.user_name || '').trim()
+  const initials = account.length > 2
+    ? account.slice(0, 2).toUpperCase()
+    : (account.slice(0, 1).toUpperCase() || 'AD')
 
   return (
     <div className="pa-layout lg-bg">

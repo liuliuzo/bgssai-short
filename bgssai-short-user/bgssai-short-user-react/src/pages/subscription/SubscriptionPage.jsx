@@ -175,10 +175,12 @@ export default function SubscriptionPage() {
             {
               title: '操作',
               render: (_, row) => (
+                Number(row.price_cent) === 0 ? <Text type="secondary">免费档无需支付</Text> : (
                 <Space>
                   <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'WECHAT'))}>微信开通/续费</Button>
                   <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'ALIPAY'))}>支付宝开通/续费</Button>
                 </Space>
+                )
               ),
             },
           ]}

@@ -604,6 +604,8 @@ query：`page_num` `page_size` `review_status` `keyword`
 
 ### GET /bgssai/admin/reviews/detail?review_id=
 
+详情在列表字段之外增加 `script_excerpt`（剧集 `scene_json`，最长 800 字）、`media_play_url`、`compose_status`，供审核时看台词摘录和成片地址。
+
 ### POST /bgssai/admin/reviews/approve
 
 `{ "review_id", "review_comment" }`

@@ -1,8 +1,10 @@
 package com.bgssai.shortai.common.exception;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
@@ -30,6 +32,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.ratelimit.RateLimitExceededException;
+import com.bgssai.shortai.configuration.SpaDocumentRequests;
 
 /**
  * 统一异常出口。返回 {@link ResponseEntity} 并显式 {@code Content-Type: application/json}，
@@ -157,18 +160,15 @@ public class GlobalExceptionHandler {
                 envelope(CommonErrorCode.INVALID_PARAM.code(), "unacceptable media type"));
     }
 
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ApiResponse> handleNoHandler(NoHandlerFoundException ex, HttpServletRequest request) {
-        log.warn("[GlobalException] no_handler path={}", request.getRequestURI());
-        return json(HttpStatus.NOT_FOUND,
-                envelope(CommonErrorCode.RESOURCE_NOT_FOUND.code(),
-                        "resource not found: " + request.getRequestURI()));
-    }
-
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiResponse> handleNoResource(NoResourceFoundException ex, HttpServletRequest request) {
-        // Spring Boot 3 / Spring 6: unmapped paths surface as NoResourceFoundException,
-        // not NoHandlerFoundException. Without this handler they fall into system 500.
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public Object handleMissing(Exception ex, HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        if (SpaDocumentRequests.shouldServeIndex(request)) {
+            log.info("[GlobalException] spa_fallback path={}", request.getRequestURI());
+            response.setStatus(HttpServletResponse.SC_OK);
+            request.getRequestDispatcher("/index.html").forward(request, response);
+            return null;
+        }
         log.warn("[GlobalException] no_resource path={}", request.getRequestURI());
         return json(HttpStatus.NOT_FOUND,
                 envelope(CommonErrorCode.RESOURCE_NOT_FOUND.code(),

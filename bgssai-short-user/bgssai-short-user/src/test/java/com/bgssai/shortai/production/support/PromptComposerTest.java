@@ -35,6 +35,15 @@ class PromptComposerTest {
     }
 
     @Test
+    void segmentsNameTheSourcesOfTheImagePrompt() {
+        List<Map<String, String>> segments = PromptComposer.segments(shot());
+        assertFalse(segments.isEmpty());
+        assertEquals("画面", segments.get(0).get("label"));
+        assertEquals("DESC", segments.get(0).get("source"));
+        assertTrue(segments.stream().anyMatch(item -> "对白".equals(item.get("label"))));
+    }
+
+    @Test
     void checkScoresEmptyPromptLow() {
         Map<String, Object> empty = PromptComposer.check(shot(), "");
         assertTrue((Integer) empty.get("prompt_score") < 70);

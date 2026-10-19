@@ -7,11 +7,14 @@ const { Title, Text, Paragraph } = Typography
 const CODE_OK = new Set([0, 200, '0', '200'])
 
 const TICKET_STATUS_OPTIONS = [
-  { value: 'OPEN', label: 'OPEN' },
-  { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
-  { value: 'RESOLVED', label: 'RESOLVED' },
-  { value: 'CLOSED', label: 'CLOSED' },
+  { value: 'OPEN', label: '待处理' },
+  { value: 'IN_PROGRESS', label: '处理中' },
+  { value: 'RESOLVED', label: '已解决' },
+  { value: 'CLOSED', label: '已关闭' },
 ]
+const SESSION_STATUS_NAME = { PENDING: '待接入', OPEN: '进行中', CLOSED: '已关闭' }
+const statusName = (value) => SESSION_STATUS_NAME[value] || value
+const ticketName = (value) => TICKET_STATUS_OPTIONS.find((item) => item.value === value)?.label || value
 
 export default function SupportInboxPage() {
   const [rows, setRows] = useState([])
@@ -141,9 +144,9 @@ export default function SupportInboxPage() {
           value={status}
           onChange={setStatus}
           options={[
-            { value: 'PENDING', label: 'PENDING' },
-            { value: 'OPEN', label: 'OPEN' },
-            { value: 'CLOSED', label: 'CLOSED' },
+            { value: 'PENDING', label: '待接入' },
+            { value: 'OPEN', label: '进行中' },
+            { value: 'CLOSED', label: '已关闭' },
           ]}
         />
         <Input
@@ -171,9 +174,9 @@ export default function SupportInboxPage() {
             >
               <div className="si-item-title">
                 <strong>{row.contact_name || row.user_id || '访客'}</strong>
-                <span className="si-badge">{row.status}</span>
+                <span className="si-badge">{statusName(row.status)}</span>
                 {row.ticket_status && (
-                  <span className="si-ticket-badge">工单 {row.ticket_status}</span>
+                  <span className="si-ticket-badge">工单 {ticketName(row.ticket_status)}</span>
                 )}
                 {Number(row.unread_admin) > 0 && <span className="si-unread">{row.unread_admin}</span>}
               </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Modal, Switch, Table, Typography, message } from 'antd'
 import subscriptionPlansApi from '../../api/subscriptionPlans'
+import { centToYuanNumber, yuanToCent } from '../../lib/money'
 
 const { Title, Paragraph } = Typography
 
@@ -29,7 +30,7 @@ export default function SubscriptionPlansPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>订阅套餐</Title>
-      <Paragraph type="secondary">创建或更新 plan_code；金额单位为分。</Paragraph>
+      <Paragraph type="secondary">售价和月度额度按元填写。</Paragraph>
       <Card extra={<Button type="primary" onClick={() => { form.resetFields(); setOpen(true) }}>新建 / 更新</Button>}>
         <Table
           rowKey="plan_code"
@@ -46,7 +47,18 @@ export default function SubscriptionPlansPage() {
             { title: '启用', dataIndex: 'is_active', render: (v) => (v === 1 ? '是' : '否') },
             {
               title: '操作',
-              render: (_, row) => <Button size="small" onClick={() => { form.setFieldsValue({ ...row, is_active: row.is_active === 1 }); setOpen(true) }}>编辑</Button>,
+              render: (_, row) => <Button size="small" onClick={() => {
+                form.setFieldsValue({
+                  plan_code: row.plan_code,
+                  plan_name: row.plan_name,
+                  price_yuan: centToYuanNumber(row.price_cent),
+                  monthly_balance_yuan: centToYuanNumber(row.monthly_balance_cent),
+                  monthly_limit_yuan: centToYuanNumber(row.monthly_limit_cent),
+                  sort_order: row.sort_order,
+                  is_active: row.is_active === 1,
+                })
+                setOpen(true)
+              }}>编辑</Button>,
             },
           ]}
         />
@@ -54,7 +66,12 @@ export default function SubscriptionPlansPage() {
       <Modal title="订阅套餐" open={open} onCancel={() => setOpen(false)} onOk={async () => {
         const values = await form.validateFields()
         const { data } = await subscriptionPlansApi.save({
-          ...values,
+          plan_code: values.plan_code,
+          plan_name: values.plan_name,
+          price_cent: yuanToCent(values.price_yuan),
+          monthly_balance_cent: yuanToCent(values.monthly_balance_yuan),
+          monthly_limit_cent: yuanToCent(values.monthly_limit_yuan),
+          sort_order: values.sort_order,
           is_active: values.is_active ? 1 : 0,
         })
         if (data?.success) {
@@ -66,9 +83,9 @@ export default function SubscriptionPlansPage() {
         <Form form={form} layout="vertical">
           <Form.Item name="plan_code" label="编码" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="plan_name" label="名称" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="price_cent" label="售价(分)" rules={[{ required: true }]}><InputNumber style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="monthly_balance_cent" label="月度发放(分)" rules={[{ required: true }]}><InputNumber style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="monthly_limit_cent" label="月度上限(分)" rules={[{ required: true }]}><InputNumber style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="price_yuan" label="售价(元)" rules={[{ required: true }]}><InputNumber style={{ width: '100%' }} min={0} step={0.01} /></Form.Item>
+          <Form.Item name="monthly_balance_yuan" label="月度发放(元)" rules={[{ required: true }]}><InputNumber style={{ width: '100%' }} min={0} step={0.01} /></Form.Item>
+          <Form.Item name="monthly_limit_yuan" label="月度上限(元)" rules={[{ required: true }]}><InputNumber style={{ width: '100%' }} min={0} step={0.01} /></Form.Item>
           <Form.Item name="sort_order" label="排序" initialValue={0}><InputNumber style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="is_active" label="启用" valuePropName="checked" initialValue><Switch /></Form.Item>
         </Form>

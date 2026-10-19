@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Card, Table, Tag, Typography } from 'antd'
-import dayjs from 'dayjs'
 import loginLogsApi from '../../api/loginLogs'
+import { formatDateTime } from '../../lib/formatTime'
 
 const { Title, Paragraph } = Typography
 
@@ -13,7 +13,7 @@ const ACTIONS = {
   LOGOUT: { text: '退出登录', color: 'default' },
 }
 
-const formatTime = (v) => (v == null || v === '' ? '-' : dayjs(v).format('YYYY-MM-DD HH:mm:ss'))
+const formatTime = (v) => formatDateTime(v)
 const formatAction = (value) => {
   const known = ACTIONS[value]
   return known ? <Tag color={known.color}>{known.text}</Tag> : value || '-'

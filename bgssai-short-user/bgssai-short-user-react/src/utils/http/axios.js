@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { message } from 'antd'
 import { useUserStore } from '../../store/user'
+import { loginHref } from '../../lib/safeReturn'
 
 // Same-origin /bgssai in production (SPA served by the admin backend).
 // Local dev: Vite proxy forwards /bgssai to localhost:8080 (see vite.config.js).
@@ -26,7 +27,7 @@ instance.interceptors.request.use(
 const gotoLogin = () => {
   useUserStore.getState().clearUserInfo()
   if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/oauth-callback') {
-    window.location.href = '/login'
+    window.location.href = loginHref()
   }
 }
 
@@ -37,7 +38,7 @@ instance.interceptors.response.use(
     if (res.data && res.data.code == 2003) {
       message.error('账号已在其他设备登录')
       useUserStore.getState().clearUserInfo()
-      window.location.href = '/login?reason=session_kicked'
+      window.location.href = loginHref({ reason: 'session_kicked' })
       return Promise.reject(new Error('session_kicked'))
     }
     if (res.data && res.data.code == 2002) {
@@ -63,7 +64,7 @@ instance.interceptors.response.use(
   (error) => {
     if (String(error?.response?.data?.code) === '2003') {
       gotoLogin()
-      window.location.href = '/login?reason=session_kicked'
+      window.location.href = loginHref({ reason: 'session_kicked' })
       return Promise.reject(new Error('账号已在其他设备登录'))
     }
     if (error && error.response) {

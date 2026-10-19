@@ -61,7 +61,10 @@ test('tokenhub CN route and multiplier drift validation', () => {
 
   const okDrift = detectMultiplierDrift({ raw_tokens: 1000, billed_tokens: 1500, billing_multiplier: 1.5 })
   assert.equal(okDrift.drifted, false)
-  const badDrift = detectMultiplierDrift({ raw_tokens: 1000, billed_tokens: 1800, billing_multiplier: 1.5 })
+  const badDrift = detectMultiplierDrift(
+    { billing_multiplier: 1.5, endpoint: 'https://api.tokenhub.cn/v1' },
+    { billing_multiplier: 1, endpoint: 'https://api.tokenhub.cn/v1' },
+  )
   assert.equal(badDrift.drifted, true)
 
   const batch = estimateShotBatchTokens([{ shot_id: 's1' }, { shot_id: 's2' }], 1000, 1.5)

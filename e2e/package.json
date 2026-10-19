@@ -1,0 +1,12 @@
+{
+  "name": "bgssai-short-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:dev": "USER_BASE_URL=https://dev.user.bgssai-short.com ADMIN_BASE_URL=https://dev.admin.bgssai-short.com playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.common.PageResponse;
+import com.bgssai.shortai.common.ShanghaiClock;
 import com.bgssai.shortai.common.aop.UserContext;
 import com.bgssai.shortai.common.exception.UnauthorizedException;
 import com.bgssai.shortai.loginlog.dto.LoginLogItem;
@@ -56,7 +57,7 @@ public class ListLoginLogsService {
             item.setAction(row.getAction());
             item.setIpAddress(row.getIpAddress());
             item.setUserAgent(row.getUserAgent());
-            item.setCreateTime(row.getCreateTime());
+            item.setCreateTime(ShanghaiClock.format(row.getCreateTime()));
             items.add(item);
         }
 

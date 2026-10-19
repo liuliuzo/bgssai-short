@@ -1,12 +1,15 @@
 package com.bgssai.shortai.usage.service;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,10 +28,11 @@ import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
-import com.github.pagehelper.PageHelper;
 
 @Service
 public class UsageAdminService {
+
+    private static final ZoneId SHANGHAI = UsageCostMath.SHANGHAI;
 
     @Autowired
     private AiUsageRecordMapper aiUsageRecordMapper;
@@ -40,78 +44,56 @@ public class UsageAdminService {
     public ApiResponse summary(String startDate, String endDate, String abilityType) {
         requireAdmin();
         DateRange range = parseRange(startDate, endDate);
-        AiUsageRecordExample ex = new AiUsageRecordExample();
-        AiUsageRecordExample.Criteria c = ex.createCriteria();
-        c.andCreatedTimeGreaterThan(range.startExclusive);
-        c.andCreatedTimeLessThan(range.endExclusive);
-        if (abilityType != null && !abilityType.isBlank()) {
-            c.andAbilityTypeEqualTo(abilityType.trim());
-        }
-        List<AiUsageRecord> rows = aiUsageRecordMapper.selectByExample(ex);
+        List<ShortAiTask> tasks = tasksIn(range, abilityType);
+        List<AiUsageRecord> usageRows = usageIn(range, abilityType);
 
         int totalCost = 0;
-        Map<String, int[]> byAbility = new LinkedHashMap<>();
-        Map<String, int[]> byDay = new LinkedHashMap<>();
-        SimpleDateFormat dayFmt = new SimpleDateFormat("yyyy-MM-dd");
-        for (AiUsageRecord row : rows) {
-            int cost = row.getCostCent() == null ? 0 : row.getCostCent();
-            totalCost += cost;
-            String ability = row.getAbilityType() == null ? "UNKNOWN" : row.getAbilityType();
-            int[] a = byAbility.computeIfAbsent(ability, k -> new int[2]);
-            a[0] += cost;
-            a[1] += 1;
-            String day = row.getCreatedTime() == null ? "" : dayFmt.format(row.getCreatedTime());
-            int[] d = byDay.computeIfAbsent(day, k -> new int[2]);
-            d[0] += cost;
-            d[1] += 1;
-        }
-
-        ShortAiTaskExample tex = new ShortAiTaskExample();
-        ShortAiTaskExample.Criteria tc = tex.createCriteria();
-        tc.andCreatedTimeGreaterThan(range.startExclusive);
-        tc.andCreatedTimeLessThan(range.endExclusive);
-        if (abilityType != null && !abilityType.isBlank()) {
-            tc.andTaskTypeEqualTo(abilityType.trim());
-        }
-        List<ShortAiTask> tasks = shortAiTaskMapper.selectByExample(tex);
         int succeeded = 0;
         long durationSum = 0;
         int durationCount = 0;
+        Map<String, int[]> byAbility = new LinkedHashMap<>();
+        Map<String, int[]> byDay = new LinkedHashMap<>();
+        Set<String> rolledTaskIds = new HashSet<>();
+
         for (ShortAiTask task : tasks) {
+            if (task.getTaskId() != null) {
+                rolledTaskIds.add(task.getTaskId());
+            }
             if ("SUCCEEDED".equals(task.getTaskStatus())) {
                 succeeded++;
             }
-            if (task.getStartedTime() != null && task.getFinishedTime() != null) {
-                durationSum += Math.max(0, task.getFinishedTime().getTime() - task.getStartedTime().getTime());
+            int billed = UsageCostMath.billedCent(task.getTaskStatus(), task.getCostCent());
+            totalCost += billed;
+            String ability = task.getTaskType() == null ? "UNKNOWN" : task.getTaskType();
+            addBucket(byAbility, ability, billed, 1);
+            addBucket(byDay, UsageCostMath.shanghaiDay(task.getCreatedTime()), billed, 1);
+            Long seconds = UsageCostMath.generationSeconds(task.getStartedTime(), task.getFinishedTime());
+            if (seconds != null) {
+                durationSum += seconds;
                 durationCount++;
             }
         }
-        double successRate = tasks.isEmpty() ? 0.0 : (succeeded * 1000L / tasks.size()) / 10.0;
-        double avgDuration = durationCount == 0 ? 0.0 : Math.round((durationSum / 1000.0 / durationCount) * 10.0) / 10.0;
+        for (AiUsageRecord row : usageRows) {
+            if (row.getTaskId() != null && rolledTaskIds.contains(row.getTaskId())) {
+                continue;
+            }
+            int cost = row.getCostCent() == null ? 0 : Math.max(0, row.getCostCent());
+            totalCost += cost;
+            String ability = row.getAbilityType() == null ? "UNKNOWN" : row.getAbilityType();
+            addBucket(byAbility, ability, cost, 1);
+            addBucket(byDay, UsageCostMath.shanghaiDay(row.getCreatedTime()), cost, 1);
+        }
 
-        List<Map<String, Object>> byAbilityList = new ArrayList<>();
-        for (Map.Entry<String, int[]> e : byAbility.entrySet()) {
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("ability_type", e.getKey());
-            item.put("cost_cent", e.getValue()[0]);
-            item.put("task_count", e.getValue()[1]);
-            byAbilityList.add(item);
-        }
-        List<Map<String, Object>> byDayList = new ArrayList<>();
-        for (Map.Entry<String, int[]> e : byDay.entrySet()) {
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("day", e.getKey());
-            item.put("cost_cent", e.getValue()[0]);
-            item.put("task_count", e.getValue()[1]);
-            byDayList.add(item);
-        }
+        double successRate = tasks.isEmpty() ? 0.0 : (succeeded * 1000L / tasks.size()) / 10.0;
+        double avgDuration = durationCount == 0 ? 0.0 : Math.round((durationSum * 10.0) / durationCount) / 10.0;
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("total_cost_cent", totalCost);
         result.put("task_count", tasks.size());
         result.put("success_rate_percent", successRate);
         result.put("avg_duration_sec", avgDuration);
-        result.put("by_ability_list", byAbilityList);
-        result.put("by_day_list", byDayList);
+        result.put("by_ability_list", abilityList(byAbility));
+        result.put("by_day_list", dayList(byDay));
         return Responses.ok(result);
     }
 
@@ -120,17 +102,24 @@ public class UsageAdminService {
         int safePageNum = pageNum < 1 ? 1 : pageNum;
         int safePageSize = pageSize < 1 || pageSize > 100 ? 20 : pageSize;
         DateRange range = parseRange(startDate, endDate);
-        AiUsageRecordExample ex = new AiUsageRecordExample();
-        ex.createCriteria()
-                .andCreatedTimeGreaterThan(range.startExclusive)
-                .andCreatedTimeLessThan(range.endExclusive);
-        List<AiUsageRecord> rows = aiUsageRecordMapper.selectByExample(ex);
+        List<ShortAiTask> tasks = tasksIn(range, null);
+        List<AiUsageRecord> usageRows = usageIn(range, null);
         Map<String, int[]> agg = new LinkedHashMap<>();
-        for (AiUsageRecord row : rows) {
+        Set<String> rolledTaskIds = new HashSet<>();
+        for (ShortAiTask task : tasks) {
+            if (task.getTaskId() != null) {
+                rolledTaskIds.add(task.getTaskId());
+            }
+            String uid = task.getUserId() == null ? "" : task.getUserId();
+            addBucket(agg, uid, UsageCostMath.billedCent(task.getTaskStatus(), task.getCostCent()), 1);
+        }
+        for (AiUsageRecord row : usageRows) {
+            if (row.getTaskId() != null && rolledTaskIds.contains(row.getTaskId())) {
+                continue;
+            }
             String uid = row.getUserId() == null ? "" : row.getUserId();
-            int[] a = agg.computeIfAbsent(uid, k -> new int[2]);
-            a[0] += row.getCostCent() == null ? 0 : row.getCostCent();
-            a[1] += 1;
+            int cost = row.getCostCent() == null ? 0 : Math.max(0, row.getCostCent());
+            addBucket(agg, uid, cost, 1);
         }
         List<Map.Entry<String, int[]>> entries = new ArrayList<>(agg.entrySet());
         entries.sort((a, b) -> Integer.compare(b.getValue()[0], a.getValue()[0]));
@@ -161,43 +150,96 @@ public class UsageAdminService {
         return response;
     }
 
-    private static DateRange parseRange(String startDate, String endDate) {
-        Calendar cal = Calendar.getInstance();
-        Date endExclusive;
-        if (endDate == null || endDate.isBlank()) {
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            cal.add(Calendar.DATE, 1);
-            endExclusive = cal.getTime();
-        } else {
-            endExclusive = dayStart(endDate);
-            cal.setTime(endExclusive);
-            cal.add(Calendar.DATE, 1);
-            endExclusive = cal.getTime();
+    private List<ShortAiTask> tasksIn(DateRange range, String abilityType) {
+        ShortAiTaskExample tex = new ShortAiTaskExample();
+        ShortAiTaskExample.Criteria tc = tex.createCriteria();
+        tc.andCreatedTimeGreaterThan(range.startExclusive);
+        tc.andCreatedTimeLessThan(range.endExclusive);
+        if (abilityType != null && !abilityType.isBlank()) {
+            tc.andTaskTypeEqualTo(abilityType.trim());
         }
-        Date startExclusive;
-        if (startDate == null || startDate.isBlank()) {
-            cal.setTime(endExclusive);
-            cal.add(Calendar.DATE, -31);
-            startExclusive = new Date(cal.getTimeInMillis() - 1);
-        } else {
-            startExclusive = new Date(dayStart(startDate).getTime() - 1);
-        }
-        return new DateRange(startExclusive, endExclusive);
+        return shortAiTaskMapper.selectByExample(tex);
     }
 
-    private static Date dayStart(String ymd) {
+    private List<AiUsageRecord> usageIn(DateRange range, String abilityType) {
+        AiUsageRecordExample ex = new AiUsageRecordExample();
+        AiUsageRecordExample.Criteria c = ex.createCriteria();
+        c.andCreatedTimeGreaterThan(range.startExclusive);
+        c.andCreatedTimeLessThan(range.endExclusive);
+        if (abilityType != null && !abilityType.isBlank()) {
+            c.andAbilityTypeEqualTo(abilityType.trim());
+        }
+        return aiUsageRecordMapper.selectByExample(ex);
+    }
+
+    private static void addBucket(Map<String, int[]> buckets, String key, int cost, int count) {
+        int[] bucket = buckets.computeIfAbsent(key == null ? "" : key, k -> new int[2]);
+        bucket[0] += cost;
+        bucket[1] += count;
+    }
+
+    private static List<Map<String, Object>> abilityList(Map<String, int[]> byAbility) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Map.Entry<String, int[]> e : byAbility.entrySet()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("ability_type", e.getKey());
+            item.put("ability_type_name", abilityName(e.getKey()));
+            item.put("cost_cent", e.getValue()[0]);
+            item.put("task_count", e.getValue()[1]);
+            list.add(item);
+        }
+        return list;
+    }
+
+    private static List<Map<String, Object>> dayList(Map<String, int[]> byDay) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Map.Entry<String, int[]> e : byDay.entrySet()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("day", e.getKey());
+            item.put("cost_cent", e.getValue()[0]);
+            item.put("task_count", e.getValue()[1]);
+            list.add(item);
+        }
+        return list;
+    }
+
+    static String abilityName(String code) {
+        if (code == null) {
+            return "未知";
+        }
+        return switch (code) {
+            case "TEXT" -> "文本";
+            case "IMAGE" -> "图片";
+            case "VIDEO" -> "视频";
+            case "VOICE" -> "配音";
+            case "ASR" -> "语音识别";
+            case "MUSIC" -> "音乐生成";
+            case "COMPOSE" -> "合成";
+            default -> code;
+        };
+    }
+
+    private static DateRange parseRange(String startDate, String endDate) {
+        ZonedDateTime endExclusive;
+        if (endDate == null || endDate.isBlank()) {
+            endExclusive = LocalDate.now(SHANGHAI).plusDays(1).atStartOfDay(SHANGHAI);
+        } else {
+            endExclusive = dayStart(endDate).plusDays(1);
+        }
+        ZonedDateTime startExclusive;
+        if (startDate == null || startDate.isBlank()) {
+            startExclusive = endExclusive.minusDays(31).minusNanos(1_000_000);
+        } else {
+            startExclusive = dayStart(startDate).minusNanos(1_000_000);
+        }
+        return new DateRange(Date.from(startExclusive.toInstant()), Date.from(endExclusive.toInstant()));
+    }
+
+    private static ZonedDateTime dayStart(String ymd) {
         try {
-            return new SimpleDateFormat("yyyy-MM-dd").parse(ymd.trim());
+            return LocalDate.parse(ymd.trim()).atStartOfDay(SHANGHAI);
         } catch (Exception ex) {
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            return cal.getTime();
+            return LocalDate.now(SHANGHAI).atStartOfDay(SHANGHAI);
         }
     }
 

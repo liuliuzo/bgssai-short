@@ -118,7 +118,7 @@ export default function McpTokens() {
       key: 'a',
       width: 80,
       render: (_, row) => (
-        <Button type="link" size="small" danger icon={<DeleteOutlined />}
+        <Button type="link" size="small" danger icon={<DeleteOutlined />} aria-label="吊销令牌"
           onClick={() => Modal.confirm({
             title: '吊销令牌',
             content: `确认吊销「${row.token_name}」？AI 客户端将立即无法调用。`,

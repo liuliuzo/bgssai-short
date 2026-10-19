@@ -59,7 +59,9 @@ Body：`model_id`、`enabled_flag`（0/1）。
 
 ### GET /bgssai/admin/usage/summary
 
-Query：`start_date`、`end_date`、`ability_type`（可选）。
+Query：`start_date`、`end_date`、`ability_type`（可选）。日期按 Asia/Shanghai 切日。
+
+`total_cost_cent` 与分项成本只计窗口内 `short_ai_task` 状态为 `SUCCEEDED` 的 `cost_cent`，再补上同一窗口里 `task_id` 未被上述任务覆盖的 `ai_usage_record`。失败任务不计入成本。`avg_duration_sec` 只取 0 到 3600 秒的开始/结束差，超时回收造成的超长间隔不进平均。`by_ability_list` 增加 `ability_type_name`。
 
 ```json
 { "result": {

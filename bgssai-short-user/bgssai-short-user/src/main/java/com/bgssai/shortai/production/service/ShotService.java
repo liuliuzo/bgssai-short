@@ -434,6 +434,7 @@ public class ShotService {
         item.put("camera_move", row.getCameraMove());
         item.put("shot_duration_sec", row.getShotDurationSec());
         item.put("image_prompt", row.getImagePrompt());
+        item.put("prompt_segments", PromptComposer.segments(row));
         item.put("previz_text", row.getPrevizText());
         item.put("look_plain", PromptComposer.lookPlain(row));
         item.put("previz_level", row.getPrevizLevel() == null ? "NONE" : row.getPrevizLevel());

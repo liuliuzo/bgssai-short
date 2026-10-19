@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { message } from 'antd'
 import authApi from '../../api/auth'
 import { useUserStore, isAllowedRole } from '../../store/user'
+import { safeReturnPath } from '../../lib/safeReturn'
 import './login.css'
 
 const CODE_OK = new Set([0, 200, '0', '200'])
@@ -21,7 +21,8 @@ export default function Login() {
       return
     }
     setUserInfo(result)
-    navigate('/home', { replace: true })
+    const back = safeReturnPath(new URLSearchParams(window.location.search).get('redirect'))
+    navigate(back || '/home', { replace: true })
   }
 
   const handleSubmit = async (e) => {
@@ -45,7 +46,6 @@ export default function Login() {
       }
     } catch (err) {
       setError((err && err.message) || '登录失败')
-      message.error((err && err.message) || '登录失败')
     } finally {
       setLoading(false)
     }
