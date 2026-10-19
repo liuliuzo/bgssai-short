@@ -610,6 +610,16 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private String hubBase(String configured, String hub) {
+        // Profile wins over the catalog base_url. DEV sets dev.user so the short
+        // host does not open a TLS session to www, which resets from that network.
+        String injected = ProviderHttp.trimSlash(cnBaseUrl);
+        if (isOwnHub(injected)) {
+            if (TokenHubClientSupport.wouldSelectGlobal(Map.of("base_url", injected), null)) {
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                        TokenHubClientSupport.userFacingMessage("cross-region hub disabled for short"));
+            }
+            return injected;
+        }
         String base = ProviderHttp.trimSlash(configured);
         if (isOwnHub(base)) {
             if (TokenHubClientSupport.wouldSelectGlobal(Map.of("base_url", base), null)) {
@@ -618,12 +628,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
             }
             return base;
         }
-        // Short pins CN; ignore hub==global even if profile still carries a global URL.
-        String injected = ProviderHttp.trimSlash(cnBaseUrl);
-        if (!isOwnHub(injected)) {
-            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "模型网关未配置");
-        }
-        return injected;
+        throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "模型网关未配置");
     }
 
     private static boolean isOwnHub(String base) {

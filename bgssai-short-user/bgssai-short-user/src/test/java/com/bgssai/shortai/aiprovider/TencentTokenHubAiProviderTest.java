@@ -203,6 +203,21 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void devProfileHostWinsOverCatalogWww() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"choices\":[{\"message\":{\"content\":\"dev\"}}],\"usage\":{\"total_tokens\":2}}");
+        TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
+                new SysSecretReader(secretRef -> "sk-hub"), http, ms -> {
+                }, "https://dev.user.bgssai-tokenhub.cn", "https://dev.user.bgssai-tokenhub.com");
+        AiProviderRequest req = request("TEXT", "deepseek-chat", "大纲");
+        req.getModel().setConfigJson(
+                "{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        AiProviderResult result = provider.execute(req);
+        assertEquals("dev", result.getTextContent());
+        assertTrue(http.postedUrls.get(0).startsWith("https://dev.user.bgssai-tokenhub.cn/v1/chat/completions"));
+    }
+
+    @Test
     void textPrefersBgssaiTokenhubWhenGatewayConfigured() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"choices\":[{\"message\":{\"content\":\"hub\"}}],\"usage\":{\"total_tokens\":3}}");

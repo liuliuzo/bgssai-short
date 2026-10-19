@@ -122,6 +122,10 @@ Global 行使用 `"hub":"global"` 与 `https://www.bgssai-tokenhub.com` / `ai.to
 各端点可由 `chat_path`、`submit_path`、`task_path`、`text2video_path`、`image2video_path` 覆盖，便于
 供应商升级时通过管理端调整；代码内保留本文件 §3 的安全默认值。
 
+环境 profile 里的 `bgssai.llm.tokenhub-cn-base-url` 优先于模型行里的 `base_url`。DEV 配
+`https://dev.user.bgssai-tokenhub.cn`，因为短剧 DEV 主机访问 `www.bgssai-tokenhub.cn` 会 TLS 中断。
+模型行仍可写 `www` 作为未配置 profile 时的回退，不把 DEV 地址写进共享 DML。
+
 ## 6. 安全与可观测性
 
 - 日志只记录 `provider_code`、`model_code`、`hub`、上游 `request_id`、task_id、状态和耗时；不记录
