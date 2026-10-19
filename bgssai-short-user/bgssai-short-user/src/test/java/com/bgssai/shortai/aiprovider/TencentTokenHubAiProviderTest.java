@@ -33,7 +33,11 @@ class TencentTokenHubAiProviderTest {
         assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
         assertTrue(http.postedUrls.isEmpty());
         var catalog = new com.bgssai.shortai.aimodel.TokenHubModelCatalog(TokenHubClientSupport.DEFAULT_CN_BASE_URL);
-        assertEquals(alias, catalog.endpointFor(Map.of("base_url", alias), "route"));
+        assertEquals(TokenHubClientSupport.DEFAULT_CN_BASE_URL,
+                catalog.endpointFor(Map.of("base_url", alias), "route"));
+        var devCatalog = new com.bgssai.shortai.aimodel.TokenHubModelCatalog("https://dev.user.bgssai-tokenhub.cn");
+        assertEquals("https://dev.user.bgssai-tokenhub.cn",
+                devCatalog.endpointFor(Map.of("base_url", "https://www.bgssai-tokenhub.cn"), "deepseek-chat"));
         var resolver = com.bgssai.shortai.aimodel.AiModelResolveService.class.getDeclaredMethod("isHubConfig", AiModelConfig.class);
         resolver.setAccessible(true);
         request.getModel().setProviderCode("legacy");
@@ -215,6 +219,11 @@ class TencentTokenHubAiProviderTest {
         AiProviderResult result = provider.execute(req);
         assertEquals("dev", result.getTextContent());
         assertTrue(http.postedUrls.get(0).startsWith("https://dev.user.bgssai-tokenhub.cn/v1/chat/completions"));
+        http.posts.add("{\"choices\":[{\"message\":{\"content\":\"dev\"}}],\"usage\":{\"total_tokens\":2}}");
+        AiProviderRequest bare = request("TEXT", "deepseek-chat", "大纲");
+        bare.getModel().setConfigJson("{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        provider.execute(bare);
+        assertTrue(http.postedUrls.get(1).startsWith("https://dev.user.bgssai-tokenhub.cn/v1/chat/completions"));
     }
 
     @Test

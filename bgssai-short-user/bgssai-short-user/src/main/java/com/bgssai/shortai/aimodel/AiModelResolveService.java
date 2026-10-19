@@ -134,8 +134,7 @@ public class AiModelResolveService {
         model.setUnitPriceCent(0);
         model.setTimeoutSec("VIDEO".equals(ability) ? 900 : 180);
         model.setEnabledFlag(1);
-        model.setConfigJson("{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\","
-                + "\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        model.setConfigJson("{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
         return model;
     }
 

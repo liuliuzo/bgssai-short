@@ -405,6 +405,8 @@ public class AiTaskService {
                 patch.setModelCode(alt.getModelCode());
             }
         }
+        String nextModel = patch.getModelCode() != null ? patch.getModelCode() : task.getModelCode();
+        aiTaskQueue.ensurePipeline(task.getTaskType(), nextModel);
         ShortAiTaskExample up = new ShortAiTaskExample();
         up.createCriteria().andIdEqualTo(task.getId());
         shortAiTaskMapper.updateByExampleSelective(patch, up);

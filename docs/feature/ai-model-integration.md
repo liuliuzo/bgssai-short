@@ -46,9 +46,9 @@
    不删除旧素材；用户明确选用后才参与合成。
 7. TokenHub 生产调用走 **双中枢**：TokenHub-CN（`hub=cn`）与 TokenHub-Global（`hub=global`）。
    密钥分别落 `sys_secret.ai.tokenhub_cn.api_key` / `ai.tokenhub_global.api_key`（旧键
-   `ai.tencent_tokenhub.api_key` 仅作 CN 空值回填兼容）。`config_json` 只保存 `hub`、`base_url`、
-   `secret_ref`、端点路径和非敏感默认参数，禁止保存 API Key；properties 禁止写网关 API Key。
-   已配置的 `bgssai.llm.tokenhub-cn-base-url` 覆盖模型行 `base_url`，DEV 使用 `dev.user` 中枢。
+   `ai.tencent_tokenhub.api_key` 仅作 CN 空值回填兼容）。`config_json` 只保存 `hub`、
+   `secret_ref`、端点路径和非敏感默认参数，不保存网关主机，禁止保存 API Key。网关主机只写环境
+   profile 的 `bgssai.llm.tokenhub-cn-base-url`（DEV 为 `dev.user`，生产为 `www`）。
 8. 上游异步任务由当前 `short_ai_task` Worker 内部轮询；轮询间隔、超时由模型 `config_json` 与
    `timeout_sec` 控制。超时、内容审核失败、上游 5xx 分别映射现有失败码，不返回伪造素材。
 9. 管理端模型页必须支持 `ASR` 与 `MUSIC` 筛选、新增和默认切换；用户端模型目录只返回
@@ -56,6 +56,10 @@
    文案与错误不得出现 TokenHub 字样。
 10. 用户点选的 `model_code` 不可用时，解析层优雅回退到该能力默认（或任一启用）模型；
     重试可带 `fallback_model_flag=1` 换备用模型。
+11. 网关非 2xx 时解析错误 JSON。`provider_not_configured` 对用户展示
+    「模型服务暂未开通：{provider}，请稍后重试」；`code` 只写入服务日志，不写入 `fail_reason`。
+12. 大纲、定妆、分镜、图片、配音、视频的入队和失败任务重试之前，检查文本、图片、配音三个模型
+    在当前环境网关是否可用。任一不可用则返回 `4014`，点明不能开始的步骤，不入队、不扣费。
 
 ## 三、验收标准
 
@@ -72,6 +76,9 @@
 8. TokenHub 视频、语音和音乐的临时下载 URL 均在 Worker 内下载转存；供应商 URL 不写入前端永久状态。
 9. 用户端模型选择器仅展示 `display_name`（及区域/价格），不展示中枢名或 `provider_code`。
 10. 指定模型不可用时回退默认模型；重试 `fallback_model_flag=1` 可换备用模型。
+11. 网关返回 `provider_not_configured` 时，任务失败原因是「模型服务暂未开通：deepseek，请稍后重试」
+    这一类中文，日志保留 `code`，界面不出现 `http 503`。
+12. 文本、图片或配音模型在网关不可用时，创建作品和后续生成在入队前被拒绝，提示里写明不能开始的步骤。
 
 ## 四、接口契约（snake_case）
 

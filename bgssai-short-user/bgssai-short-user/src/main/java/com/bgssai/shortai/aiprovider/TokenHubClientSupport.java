@@ -126,6 +126,13 @@ public final class TokenHubClientSupport {
                 || lower.contains("handshake_failure")) {
             return "模型网关连接失败，请稍后重试";
         }
+        if (lower.contains("provider is not configured")) {
+            String provider = GatewayErrorText.providerName(msg);
+            return "模型服务暂未开通：" + (provider.isEmpty() ? "当前模型" : provider) + "，请稍后重试";
+        }
+        if (lower.matches("http \\d{3}") || lower.matches("download status \\d{3}")) {
+            return "模型服务暂时不可用，请稍后重试";
+        }
         if (TOKENHUB_WORD.matcher(msg).find() || lower.contains("tencentmaas")
                 || SECRET_REF.matcher(msg).find() || BEARER_LEAK.matcher(msg).find()
                 || lower.contains("api key missing")

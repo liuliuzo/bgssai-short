@@ -610,8 +610,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private String hubBase(String configured, String hub) {
-        // Profile wins over the catalog base_url. DEV sets dev.user so the short
-        // host does not open a TLS session to www, which resets from that network.
+        // Gateway host comes from the environment profile. Model rows do not carry it.
         String injected = ProviderHttp.trimSlash(cnBaseUrl);
         if (isOwnHub(injected)) {
             if (TokenHubClientSupport.wouldSelectGlobal(Map.of("base_url", injected), null)) {

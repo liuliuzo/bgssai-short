@@ -48,12 +48,13 @@ public class TokenHubModelCatalog {
         return cache.rows().getOrDefault(model,com.bgssai.shortai.billing.ModelPricing.from(Map.of()));
     }
 
-    @Value("${bgssai.llm.tokenhub-global-base-url:https://www.bgssai-tokenhub.com}")
-    private String globalBaseUrl="https://www.bgssai-tokenhub.com";
     public String endpointFor(java.util.Map<String,Object> config,String model) {
-        String configured=ShortJson.text(config.get("base_url")).replaceAll("/+$","");
+        // The environment profile is the gateway. A host stored on the model row is ignored
+        // once that profile is an official hub, so DEV does not follow a production URL.
+        if(com.bgssai.shortai.aiprovider.TokenHubClientSupport.isOfficialHub(baseUrl))return baseUrl;
+        String configured=ShortJson.text(config==null?null:config.get("base_url")).replaceAll("/+$","");
         if(com.bgssai.shortai.aiprovider.TokenHubClientSupport.isOfficialHub(configured))return configured;
-        return "global".equals(com.bgssai.shortai.aiprovider.TokenHubClientSupport.resolveHub(config,model))?globalBaseUrl:baseUrl;
+        return baseUrl==null||baseUrl.isBlank()?configured:baseUrl;
     }
 
     private final String baseUrl;

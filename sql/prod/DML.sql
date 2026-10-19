@@ -31,19 +31,19 @@ VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'TokenHub-CN g
 ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
 UPDATE ai_model_config
 SET model_code = 'deepseek-chat', model_name = 'DeepSeek Chat', default_flag = 1,
-    config_json = JSON_SET(COALESCE(config_json, '{}'), '$.base_url', 'https://www.bgssai-tokenhub.cn', '$.chat_path', '/v1/chat/completions', '$.secret_ref', 'ai.tencent_tokenhub.api_key')
+    config_json = JSON_REMOVE(JSON_SET(COALESCE(config_json, '{}'), '$.hub', 'cn', '$.chat_path', '/v1/chat/completions', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
 WHERE model_id = 'm-tokenhub-text-deepseek';
 UPDATE ai_model_config SET default_flag = 0
 WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT' AND model_id <> 'm-tokenhub-text-deepseek';
 UPDATE ai_model_config
-SET config_json = JSON_SET(COALESCE(config_json, '{}'), '$.base_url', 'https://www.bgssai-tokenhub.cn')
-WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT';
+SET config_json = JSON_REMOVE(COALESCE(config_json, '{}'), '$.base_url')
+WHERE provider_code = 'TENCENT_TOKENHUB';
 
 -- Dual TokenHub secrets (prod seeds; replace via Admin after deploy)
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', 'sk-bgssai-short-cn-temp', 'BGSSAI TokenHub-CN API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', 'sk-bgssai-short-global-temp', 'BGSSAI TokenHub-Global API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
 UPDATE `ai_model_config`
-SET `config_json` = JSON_SET(COALESCE(`config_json`, '{}'), '$.hub', 'cn', '$.base_url', 'https://www.bgssai-tokenhub.cn', '$.secret_ref', 'ai.tokenhub_cn.api_key')
+SET `config_json` = JSON_REMOVE(JSON_SET(COALESCE(`config_json`, '{}'), '$.hub', 'cn', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
 WHERE `provider_code` = 'TENCENT_TOKENHUB' AND `model_id` NOT LIKE 'm-tokenhub-global-%';
 
 -- 本库账本默认套餐目录（生产环境幂等回填）

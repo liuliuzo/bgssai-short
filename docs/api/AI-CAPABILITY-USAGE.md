@@ -31,7 +31,7 @@ Query：`ability_type`（可选）。需 `PLATFORM_ADMIN`。
     "provider_code": "TENCENT_TOKENHUB", "model_code": "minimax-video-h3", "model_name": "MiniMax-Video-H3",
     "quality_level": "STANDARD", "price_unit": "PER_SECOND", "unit_price_cent": 50,
     "default_flag": 1, "enabled_flag": 1, "timeout_sec": 600, "max_retry": 2,
-    "config_json": "{\"base_url\":\"https://tokenhub.tencentmaas.com\",\"secret_ref\":\"ai.tencent_tokenhub.api_key\",\"submit_path\":\"/v1/wand/minimax-video-v2/generation\"}",
+    "config_json": "{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\",\"submit_path\":\"/v1/wand/minimax-video-v2/generation\"}",
     "updated_time": "2026-08-31 15:02:31" } ] } }
 ```
 
