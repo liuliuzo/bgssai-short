@@ -1,12 +1,15 @@
 package com.bgssai.shortai.production.media;
 
 import java.net.SocketTimeoutException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -74,6 +77,45 @@ public class RestMediaIngestClient implements MediaIngestClient {
         throw withAttempts(lastRetriable, MAX_ATTEMPTS);
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public IngestResult lookup(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "idempotency_key required");
+        }
+        String base = properties.getBaseUrl();
+        if (base == null || base.isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "Tube 主机未配置：无法查询发布结果，也不会改写成成功或失败");
+        }
+        String token = resolveToken();
+        if (token.isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "Tube 未配置 ingest-token，无法查询发布结果");
+        }
+        String url = trimSlash(base) + MediaIngestContract.STATUS_PATH
+                + "?idempotency_key=" + URLEncoder.encode(idempotencyKey.trim(), StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(MediaIngestContract.TOKEN_HEADER, token);
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(headers), Map.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new MediaPublishException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                        "Tube 状态查询没有可读结果", response.getStatusCode().value(), 1);
+            }
+            return parseLookup(response.getBody(), response.getStatusCode().value());
+        } catch (BizException ex) {
+            throw ex;
+        } catch (HttpStatusCodeException ex) {
+            throw mapHttpStatus(ex, 1);
+        } catch (ResourceAccessException ex) {
+            throw mapAccess(ex, 1);
+        } catch (RestClientException ex) {
+            throw new MediaPublishException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                    "Tube 状态查询结果未知：" + shortMsg(ex), null, 1, ex);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private IngestResult postOnce(String url, String token, Map<String, Object> payload, int attempt) {
         HttpHeaders headers = new HttpHeaders();
@@ -136,6 +178,11 @@ public class RestMediaIngestClient implements MediaIngestClient {
         // That is not a missing-field failure and must not be stored as FAILED.
         if ("PENDING".equals(classified) && !envelopeFail) {
             return pendingResult(result, message, httpStatus, attempt);
+        }
+        if ("UNKNOWN".equals(classified) && !envelopeFail) {
+            return new IngestResult(text(result.get("media_id")), text(result.get("play_url")), "UNKNOWN",
+                    httpStatus, attempt,
+                    message.isBlank() ? "Tube 结果未知，不当成成功或失败" : message);
         }
         if (envelopeFail || "FAILED".equals(classified)) {
             throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
@@ -217,12 +264,25 @@ public class RestMediaIngestClient implements MediaIngestClient {
         return "";
     }
 
+    @SuppressWarnings("unchecked")
+    private IngestResult parseLookup(Map<String, Object> body, int httpStatus) {
+        Map<String, Object> result = unwrapResult(body);
+        String statusRaw = text(result.get("status"));
+        String classified = statusRaw.isBlank() ? "UNKNOWN" : CommercialOutcomeGuard.classifyMediaStatus(statusRaw);
+        if ("NOT_FOUND".equalsIgnoreCase(statusRaw) || Boolean.FALSE.equals(result.get("found"))) {
+            classified = "NOT_FOUND";
+        }
+        String message = firstNonBlank(text(result.get("message")), text(body.get("message")));
+        return new IngestResult(text(result.get("media_id")), text(result.get("play_url")), classified,
+                httpStatus, 1, message);
+    }
+
     private static boolean isRetriable(MediaPublishException ex) {
         Integer status = ex.getHttpStatus();
-        if (status != null && status >= 500) {
-            return true;
-        }
         if (CommonErrorCode.UPSTREAM_TIMEOUT.code().equals(ex.getCode())) {
+            return false;
+        }
+        if (status != null && status >= 500) {
             return true;
         }
         String msg = ex.getMessage() == null ? "" : ex.getMessage();
