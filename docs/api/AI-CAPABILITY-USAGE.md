@@ -155,6 +155,7 @@ Query：`ability_type`（可选）。需登录 `USER`。返回该能力下 **启
 
 首批生产目录：TEXT `hy4-preview` / `kimi-k3` / `deepseek-chat`（CN）与 `gpt-4o-mini` /
 `claude-3-5-haiku-latest`（Global）；VIDEO
-`minimax-video-h3` / `pixverse-video-v6.0` / `kling-video-v3`；VOICE
-`minimax-speech-2.8-hd`；ASR `hy-asr-3.0-preview`；MUSIC `minimax-music-v2.6`。
+`minimax-video-h3` / `pixverse-video-v6.0` / `kling-video-v3`；IMAGE `kling-v3`；VOICE
+`minimax-speech-2.8-hd`（仅当网关目录将其登记为语音；否则改用目录中已具备语音能力的 MiniMax 模型，没有则预检拒绝）；
+ASR `hy-asr-3.0-preview`；MUSIC `minimax-music-v2.6`。
 指定 `model_code` 不可用时服务端回退默认模型；重试可带 `fallback_model_flag=1`。

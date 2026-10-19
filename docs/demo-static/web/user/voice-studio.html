@@ -356,7 +356,9 @@
         <code>/align</code> · <code>/align-batch</code>（一键处理：免费项按 <code>suggest_action</code>
         执行，<code>EXTEND_SHOT</code> 项返回清单与 <code>estimated_cost_cent</code> 等确认）·
         <code>/apply-voice-to-character</code>；配音提交可选 <code>model_code</code>，模型来自
-        <code>GET /bgssai/user/ai-models/list?ability_type=VOICE</code>；
+        <code>GET /bgssai/user/ai-models/list?ability_type=VOICE</code>。未传时采用配置的 MiniMax
+        默认，且只有网关目录把它登记为语音能力时才提交；目录改登记了其它 MiniMax 语音模型则用该编号；
+        都没有则停在本页，提示该编号未开放，不改用其它厂商。
         <code>GET /bgssai/user/dubbings/list?episode_id</code> · <code>GET /bgssai/user/voices/list</code>；
         字幕 <code>GET /bgssai/user/subtitles/detail?episode_id</code> · <code>POST /regenerate</code> ·
         <code>/update</code> · <code>/style-save</code> · <code>/transcribe</code>，转写提交

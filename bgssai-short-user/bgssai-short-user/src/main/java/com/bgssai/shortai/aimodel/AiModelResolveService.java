@@ -59,7 +59,7 @@ public class AiModelResolveService {
         if (row == null) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE);
         }
-        return row;
+        return alignDefault(ability, row);
     }
 
     /**
@@ -151,6 +151,40 @@ public class AiModelResolveService {
             }
         }
         return true;
+    }
+
+    /**
+     * Uses the configured default only when the gateway catalog lists it for this ability.
+     * Kling image and MiniMax voice may move to the registered id of the same vendor.
+     * An empty catalog leaves the configured row unchanged.
+     */
+    private AiModelConfig alignDefault(String ability, AiModelConfig row) {
+        if (row == null || tokenHubModelCatalog == null || row.getModelCode() == null) {
+            return row;
+        }
+        List<TokenHubModelCatalog.HubModel> catalog = tokenHubModelCatalog.snapshot();
+        if (catalog.isEmpty()) {
+            return row;
+        }
+        String chosen = CatalogModelAlign.choose(ability, row.getModelCode(), catalog);
+        if (chosen == null || chosen.isBlank() || chosen.equals(row.getModelCode())) {
+            return row;
+        }
+        AiModelConfig copy = new AiModelConfig();
+        copy.setModelId(row.getModelId());
+        copy.setAbilityType(ability);
+        copy.setProviderCode("TENCENT_TOKENHUB");
+        copy.setModelCode(chosen);
+        copy.setModelName(chosen);
+        copy.setQualityLevel(row.getQualityLevel());
+        copy.setPriceUnit(row.getPriceUnit() == null ? "PER_CALL" : row.getPriceUnit());
+        copy.setUnitPriceCent(row.getUnitPriceCent() == null ? 0 : row.getUnitPriceCent());
+        copy.setDefaultFlag(1);
+        copy.setEnabledFlag(1);
+        copy.setTimeoutSec(row.getTimeoutSec());
+        copy.setMaxRetry(row.getMaxRetry());
+        copy.setConfigJson("{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        return copy;
     }
 
     private AiModelConfig resolveDefault(String ability) {

@@ -91,7 +91,7 @@
       <span class="spacer"></span>
       <a class="btn btn-default" href="episode-preview.html">连起来看</a>
       <select style="width:210px" title="画面模型">
-        <option value="kling-v2-1" selected>画面：可灵 kling-v2-1</option>
+        <option value="kling-v3" selected>画面：可灵 kling-v3</option>
         <option value="image-01">画面：海螺 image-01</option>
       </select>
       <select style="width:230px" title="视频模型">
@@ -265,7 +265,9 @@
         命中片段高亮 + <code>risk_category</code> 中文 + 改写建议 + 「采纳改写」），仅在有问题时出现。
         连贯性提示不阻塞生成（该镜生成按钮不禁用），可「忽略这条」——忽略留痕并计入分镜门
         <code>G2_STORYBOARD</code> 评分；未定妆角色 / 场景 / 道具的镜头仍禁用生成（<code>blocked_flag=1</code>）。
-        顶部 VIDEO 模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
+        顶部画面模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=IMAGE</code>，未点选时默认
+        网关目录中的可灵文生图 <code>kling-v3</code>。VIDEO 模型来自
+        <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
         <code>model_code</code> 随单镜或批量任务提交；存在首帧时由 Provider 走图生视频，否则走文生视频。
         首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经
         <code>POST /bgssai/user/shots/frame-link-save</code> 与 <code>/frame-link-batch</code> 维护，
