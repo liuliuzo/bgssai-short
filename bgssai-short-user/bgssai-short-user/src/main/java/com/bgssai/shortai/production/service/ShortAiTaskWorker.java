@@ -830,7 +830,7 @@ public class ShortAiTaskWorker {
                 if (!nextModel.isBlank()) {
                     nextReq.put("model_code", nextModel);
                 }
-                aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), "VIDEO", "SHOT",
+                aiTaskQueue.enqueueContinuation(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), "VIDEO", "SHOT",
                         shot.getShotId(), nextReq, task.getBatchId(), 0,
                         nextModel.isBlank() ? null : nextModel);
             }

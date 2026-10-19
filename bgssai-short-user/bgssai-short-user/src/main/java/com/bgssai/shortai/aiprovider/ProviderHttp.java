@@ -51,7 +51,7 @@ final class ProviderHttp {
             apply(b, headers);
             HttpResponse<byte[]> resp = httpClient.send(b.build(), HttpResponse.BodyHandlers.ofByteArray());
             if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "http " + resp.statusCode());
+                reject(resp.statusCode(), resp.body());
             }
             return resp.body() == null ? new byte[0] : resp.body();
         }
@@ -120,9 +120,15 @@ final class ProviderHttp {
 
         private static String handleJson(HttpResponse<String> resp) {
             if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "http " + resp.statusCode());
+                String body = resp.body() == null ? "" : resp.body();
+                reject(resp.statusCode(), body.getBytes(StandardCharsets.UTF_8));
             }
             return resp.body() == null ? "" : resp.body();
+        }
+
+        private static void reject(int status, byte[] body) {
+            String text = body == null ? "" : new String(body, StandardCharsets.UTF_8);
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, GatewayErrorText.explain(status, text));
         }
     }
 

@@ -37,12 +37,13 @@ host 做 resolvable 回退。
 
 ## 3. 模型与端点映射
 
-| 中枢 | 默认 base_url | secret_ref |
+| 中枢 | 主机（只在环境 profile） | secret_ref |
 | --- | --- | --- |
-| CN | `https://www.bgssai-tokenhub.cn` | `ai.tokenhub_cn.api_key` |
-| Global | `https://www.bgssai-tokenhub.com` | `ai.tokenhub_global.api_key` |
+| CN | `bgssai.llm.tokenhub-cn-base-url` | `ai.tokenhub_cn.api_key` |
+| Global | `bgssai.llm.tokenhub-global-base-url` | `ai.tokenhub_global.api_key` |
 
 鉴权统一为 `Authorization: Bearer <api_key>`。properties 仅可写中枢 base URL，**禁止**写 API Key。
+Short 只使用 CN profile。模型行不保存主机。
 
 | 能力 | 模型 | 提交端点 | 查询端点 | 完成结果 |
 | --- | --- | --- | --- | --- |
@@ -111,20 +112,20 @@ TokenHub `config_json` 共同字段：
 ```json
 {
   "hub": "cn",
-  "base_url": "https://www.bgssai-tokenhub.cn",
   "secret_ref": "ai.tokenhub_cn.api_key",
   "poll_interval_ms": 3000
 }
 ```
 
-Global 行使用 `"hub":"global"` 与 `https://www.bgssai-tokenhub.com` / `ai.tokenhub_global.api_key`。
+Global 行使用 `"hub":"global"` 与 `ai.tokenhub_global.api_key`，不写主机。
 
 各端点可由 `chat_path`、`submit_path`、`task_path`、`text2video_path`、`image2video_path` 覆盖，便于
 供应商升级时通过管理端调整；代码内保留本文件 §3 的安全默认值。
 
-环境 profile 里的 `bgssai.llm.tokenhub-cn-base-url` 优先于模型行里的 `base_url`。DEV 配
-`https://dev.user.bgssai-tokenhub.cn`，因为短剧 DEV 主机访问 `www.bgssai-tokenhub.cn` 会 TLS 中断。
-模型行仍可写 `www` 作为未配置 profile 时的回退，不把 DEV 地址写进共享 DML。
+网关主机只来自环境 profile `bgssai.llm.tokenhub-cn-base-url`。DEV 是
+`https://dev.user.bgssai-tokenhub.cn`，生产是 `https://www.bgssai-tokenhub.cn`。模型行不再保存
+`base_url`：共享 DML 与 `sql/dev`、`sql/prod` 都会 `JSON_REMOVE` 掉已有主机，避免 DEV 库里留着
+生产地址、再靠调用时覆盖。profile 未配置时才回退到代码里的生产默认主机。
 
 ## 6. 安全与可观测性
 
@@ -134,3 +135,18 @@ Global 行使用 `"hub":"global"` 与 `https://www.bgssai-tokenhub.com` / `ai.to
 - 中枢 Key 缺失、空值或停用时在调用前失败；接口、`fail_reason` 与用户错误文案均不回显 Key，也不出现
   TokenHub 品牌字样。
 - 任务重试沿用同一业务参数，新建上游任务；`fallback_model_flag=1` 时可换备用模型；成功计费一次，失败不计费。
+- 网关错误体按 `error.code` 翻译。`provider_not_configured` 的用户文案是
+  「模型服务暂未开通：{provider}，请稍后重试」；`code` 与 `type` 只打日志。
+
+## 7. 开跑前检查
+
+用户发起大纲、定妆、分镜、图片、配音、视频，或重试失败任务时，`PipelineReadiness` 先看当前环境网关：
+
+1. 解析文本、图片、配音三个将要使用的模型。
+2. `GET /v1/models` 确认模型及能力已注册。未注册则该步骤不能开始。
+3. 已注册的模型发一条不会成片的探测（文本不带 messages，图片 `n=0`，配音不带台词）。
+   网关若返回 `provider_not_configured`，该步骤不能开始；若只因探测体不完整返回 400，视为可用。
+4. 任一步骤不可用时接口返回 `4014`，文案点明步骤，例如
+   「大纲、剧本、分镜现在不能开始：模型服务暂未开通：deepseek，请稍后重试」。
+   此时不写 `short_ai_task`，也不扣费。合成走本机 ffmpeg，不走这道检查。
+   镜头图片成功后自动排视频是同一次提交的后续任务，不再重复探测。

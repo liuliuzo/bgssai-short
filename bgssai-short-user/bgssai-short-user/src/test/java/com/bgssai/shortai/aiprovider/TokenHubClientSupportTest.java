@@ -50,5 +50,8 @@ class TokenHubClientSupportTest {
         assertFalse(msg.toLowerCase().contains("api key"));
         assertTrue(msg.contains("模型"));
         assertEquals("写剧本失败，请重试", TokenHubClientSupport.userFacingMessage("写剧本失败，请重试"));
+        assertEquals("模型服务暂未开通：deepseek，请稍后重试",
+                TokenHubClientSupport.userFacingMessage("Provider is not configured: deepseek"));
+        assertEquals("模型服务暂时不可用，请稍后重试", TokenHubClientSupport.userFacingMessage("http 503"));
     }
 }

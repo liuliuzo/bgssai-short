@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
+import com.bgssai.shortai.aimodel.PipelineReadiness;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
@@ -25,15 +26,38 @@ public class AiTaskQueue {
     private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired
     private AiModelResolveService aiModelResolveService;
+    @Autowired
+    private PipelineReadiness pipelineReadiness;
 
     public ShortAiTask enqueue(String userId, String workId, String episodeId, String taskType,
             String targetType, String targetId, Map<String, Object> request, String batchId, int autoNext) {
-        return enqueue(userId, workId, episodeId, taskType, targetType, targetId, request, batchId, autoNext, null);
+        return enqueue(userId, workId, episodeId, taskType, targetType, targetId, request, batchId, autoNext, null, true);
     }
 
     public ShortAiTask enqueue(String userId, String workId, String episodeId, String taskType,
             String targetType, String targetId, Map<String, Object> request, String batchId, int autoNext,
             String modelCode) {
+        return enqueue(userId, workId, episodeId, taskType, targetType, targetId, request, batchId, autoNext,
+                modelCode, true);
+    }
+
+    /** Follow-up task created inside a running generation. The user-facing submit already checked the pipeline. */
+    public ShortAiTask enqueueContinuation(String userId, String workId, String episodeId, String taskType,
+            String targetType, String targetId, Map<String, Object> request, String batchId, int autoNext,
+            String modelCode) {
+        return enqueue(userId, workId, episodeId, taskType, targetType, targetId, request, batchId, autoNext,
+                modelCode, false);
+    }
+
+    public void ensurePipeline(String taskType, String modelCode) {
+        if (pipelineReadiness != null) {
+            pipelineReadiness.assertReady(taskType, modelCode);
+        }
+    }
+
+    private ShortAiTask enqueue(String userId, String workId, String episodeId, String taskType,
+            String targetType, String targetId, Map<String, Object> request, String batchId, int autoNext,
+            String modelCode, boolean checkPipeline) {
         Map<String, Object> req = request == null ? new LinkedHashMap<>() : new LinkedHashMap<>(request);
         String resolvedModelCode = modelCode;
         if (resolvedModelCode == null || resolvedModelCode.isBlank()) {
@@ -41,6 +65,9 @@ public class AiTaskQueue {
             if (fromReq != null && !String.valueOf(fromReq).isBlank()) {
                 resolvedModelCode = String.valueOf(fromReq).trim();
             }
+        }
+        if (checkPipeline) {
+            ensurePipeline(taskType, resolvedModelCode);
         }
         AiModelConfig model = aiModelResolveService.resolve(taskType, resolvedModelCode);
         if (resolvedModelCode == null || resolvedModelCode.isBlank()) {
