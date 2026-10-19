@@ -16,4 +16,10 @@ public interface MediaIngestClient {
     }
 
     IngestResult ingest(Map<String, Object> payload);
+
+    /**
+     * Read the receiver row for an existing idempotency key. Must not create a work.
+     * {@code null} means the client cannot tell, which the publisher stores as UNKNOWN.
+     */
+    IngestResult lookup(String idempotencyKey);
 }
