@@ -199,7 +199,7 @@ public final class ShotConsistency {
             for (String cid : charIds) {
                 for (ShortCharacter c : characters) {
                     if (c != null && cid.equals(c.getCharacterId())) {
-                        if (c.getLockFlag() == null || c.getLockFlag() == 0) {
+                        if (!"LOCKED".equals(c.getCardStatus())) {
                             unlockedCharIds.add(cid);
                         }
                     }
@@ -212,7 +212,7 @@ public final class ShotConsistency {
         if (sceneBound && cards != null) {
             for (ShortSceneCard card : cards) {
                 if (card != null && sceneCardId.equals(card.getSceneCardId())) {
-                    sceneLocked = card.getLockFlag() != null && card.getLockFlag() == 1;
+                    sceneLocked = "LOCKED".equals(card.getCardStatus());
                     break;
                 }
             }
