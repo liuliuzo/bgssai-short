@@ -36,7 +36,7 @@ export default function SupportWidget() {
     }
     const { data } = await supportApi.createSession(body)
     if (!CODE_OK.has(data?.code)) {
-      throw new Error(data?.message || '创建会话失败')
+      throw new Error(data?.message || '会话创建失败，请稍后重试')
     }
     const result = data.result || {}
     if (result.guest_token) setGuestToken(result.guest_token)
@@ -57,7 +57,7 @@ export default function SupportWidget() {
       guest_token: getGuestToken() || undefined,
     })
     if (!CODE_OK.has(data?.code)) {
-      throw new Error(data?.message || '加载会话失败')
+      throw new Error(data?.message || '会话加载失败，请稍后重试')
     }
     const result = data.result || {}
     setStatus(result.session?.status || '')
@@ -149,13 +149,13 @@ export default function SupportWidget() {
         guest_token: getGuestToken() || undefined,
       })
       if (!CODE_OK.has(data?.code)) {
-        throw new Error(data?.message || '提工单失败')
+        throw new Error(data?.message || '提工单失败，请稍后重试')
       }
       setTicket(data.result || null)
       await loadDetail(sessionId)
       message.success('已提工单')
     } catch (e) {
-      message.error(e.message || '提工单失败')
+      message.error(e.message || '提工单失败，请稍后重试')
     } finally {
       setBusy(false)
     }
