@@ -5,26 +5,26 @@
 
 export const SHOT_TYPES = [
   { value: 'EXTREME_WIDE', label: '大远景 (EWS)', prompt: 'extreme wide establishing shot, vast epic environment view, atmospheric scale' },
-  { value: 'WIDE', label: '全景 (Wide)', prompt: 'cinematic wide angle shot, full body framing, balanced environment composition' },
-  { value: 'MEDIUM', label: '中景 (Medium)', prompt: 'medium shot, waist up framing, natural character interaction and posture' },
-  { value: 'CLOSE_UP', label: '特写 (Close-Up)', prompt: 'dramatic close-up shot, intense facial expression, sharp focus on eyes, shallow depth of field' },
+  { value: 'WIDE', label: '全景', prompt: 'cinematic wide angle shot, full body framing, balanced environment composition' },
+  { value: 'MEDIUM', label: '中景', prompt: 'medium shot, waist up framing, natural character interaction and posture' },
+  { value: 'CLOSE_UP', label: '特写', prompt: 'dramatic close-up shot, intense facial expression, sharp focus on eyes, shallow depth of field' },
   { value: 'EXTREME_CLOSE_UP', label: '大特写 (ECU)', prompt: 'macro extreme close-up, hyper-detailed micro facial twitch, emotional tension' },
   { value: 'OVER_SHOULDER', label: '过肩镜头 (OTS)', prompt: 'over-the-shoulder perspective shot, depth staging, dynamic conversation framing' },
-  { value: 'HIGH_ANGLE', label: '俯拍视角 (High Angle)', prompt: 'high angle shot looking down, vulnerable atmosphere, dramatic overhead perspective' },
-  { value: 'LOW_ANGLE', label: '仰拍视角 (Low Angle)', prompt: 'heroic low angle shot looking up, dominant presence, imposing visual power' },
+  { value: 'HIGH_ANGLE', label: '俯拍视角', prompt: 'high angle shot looking down, vulnerable atmosphere, dramatic overhead perspective' },
+  { value: 'LOW_ANGLE', label: '仰拍视角', prompt: 'heroic low angle shot looking up, dominant presence, imposing visual power' },
 ]
 
 export const CAMERA_MOVEMENTS = [
-  { value: 'STATIC', label: '固定机位 (Static)', prompt: 'locked-off tripod static shot, steady composition' },
-  { value: 'PUSH_IN', label: '缓慢推近 (Push In)', prompt: 'slow smooth push-in camera movement, escalating narrative tension' },
-  { value: 'PULL_OUT', label: '缓慢拉远 (Pull Out)', prompt: 'smooth pull-out camera movement, revealing surroundings and isolation' },
-  { value: 'PAN_LEFT', label: '向左摇镜 (Pan Left)', prompt: 'fluid cinematic horizontal pan left, sweeping scene transition' },
-  { value: 'PAN_RIGHT', label: '向右摇镜 (Pan Right)', prompt: 'fluid cinematic horizontal pan right, following visual flow' },
-  { value: 'TILT_UP', label: '向上摇镜 (Tilt Up)', prompt: 'smooth vertical tilt-up movement, revealing subject height and scale' },
-  { value: 'TILT_DOWN', label: '向下摇镜 (Tilt Down)', prompt: 'smooth vertical tilt-down movement, focusing from setting to subject' },
-  { value: 'TRACKING', label: '跟拍跟随 (Tracking)', prompt: 'dynamic tracking shot, steadicam smoothly following character motion' },
-  { value: 'ORBIT', label: '环绕运镜 (Orbit 360)', prompt: 'dramatic 360 degree arc orbit camera movement circling the subject' },
-  { value: 'DOLLY_ZOOM', label: '希区柯克变焦 (Dolly Zoom)', prompt: 'vertigo effect dolly zoom, background warping while subject size remains stable' },
+  { value: 'STATIC', label: '固定机位', prompt: 'locked-off tripod static shot, steady composition' },
+  { value: 'PUSH_IN', label: '缓慢推近', prompt: 'slow smooth push-in camera movement, escalating narrative tension' },
+  { value: 'PULL_OUT', label: '缓慢拉远', prompt: 'smooth pull-out camera movement, revealing surroundings and isolation' },
+  { value: 'PAN_LEFT', label: '向左摇镜', prompt: 'fluid cinematic horizontal pan left, sweeping scene transition' },
+  { value: 'PAN_RIGHT', label: '向右摇镜', prompt: 'fluid cinematic horizontal pan right, following visual flow' },
+  { value: 'TILT_UP', label: '向上摇镜', prompt: 'smooth vertical tilt-up movement, revealing subject height and scale' },
+  { value: 'TILT_DOWN', label: '向下摇镜', prompt: 'smooth vertical tilt-down movement, focusing from setting to subject' },
+  { value: 'TRACKING', label: '跟拍跟随', prompt: 'dynamic tracking shot, steadicam smoothly following character motion' },
+  { value: 'ORBIT', label: '环绕运镜', prompt: 'dramatic 360 degree arc orbit camera movement circling the subject' },
+  { value: 'DOLLY_ZOOM', label: '希区柯克变焦', prompt: 'vertigo effect dolly zoom, background warping while subject size remains stable' },
 ]
 
 export const DRAMA_STYLES = [
@@ -72,10 +72,10 @@ export const QUALITY_MODIFIERS = [
 ]
 
 export const QUAD_GRID_ANGLES = [
-  { value: 'FRONT', label: '正面平视 (Front)', prompt: 'eye-level front shot, clear centered face, symmetrical framing' },
-  { value: 'THREE_QUARTER', label: '3/4侧面视角 (3/4 Profile)', prompt: 'cinematic 45-degree three-quarter angle, depth of field' },
+  { value: 'FRONT', label: '正面平视', prompt: 'eye-level front shot, clear centered face, symmetrical framing' },
+  { value: 'THREE_QUARTER', label: '3/4侧面视角', prompt: 'cinematic 45-degree three-quarter angle, depth of field' },
   { value: 'OVER_SHOULDER', label: '过肩对峙 (OTS)', prompt: 'over-the-shoulder conversation confrontation, subtle foreground shoulder blur' },
-  { value: 'CLOSE_UP', label: '微距特写 (Macro Detail)', prompt: 'extreme close-up on eyes, emotional intensity, high dynamic range' },
+  { value: 'CLOSE_UP', label: '微距特写', prompt: 'extreme close-up on eyes, emotional intensity, high dynamic range' },
 ]
 
 export const CONTINUITY_PRESETS = [
