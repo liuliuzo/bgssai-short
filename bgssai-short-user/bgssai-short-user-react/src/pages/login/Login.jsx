@@ -171,7 +171,7 @@ export default function Login() {
       if (CODE_OK.has(data && data.code) && r.jwt_token) {
         loginSucceed(r)
       } else if (CODE_OK.has(data && data.code)) {
-        message.error('登录失败，请重试')
+        message.error('登录失败，请稍后重试')
       }
     } finally {
       setBusy(false)
