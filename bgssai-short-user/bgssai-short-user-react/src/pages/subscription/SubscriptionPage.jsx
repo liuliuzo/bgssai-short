@@ -7,6 +7,10 @@ import {
   resolvePollOutcome,
 } from './payOrderPoll'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
+import {
+  labelOf, PLAN_CODE_LABEL, SUB_STATUS_LABEL, ORDER_TYPE_LABEL, ORDER_STATUS_LABEL,
+  planDisplayName,
+} from '../../lib/displayLabels'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -143,8 +147,8 @@ export default function SubscriptionPage() {
       </Paragraph>
       <Card loading={loading} style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
-          <Text>当前套餐 {me?.plan_name || me?.plan_code || '-'}</Text>
-          <Text>状态 {me?.status || '-'}</Text>
+          <Text>当前套餐 {planDisplayName(me?.plan_code, me?.plan_name)}</Text>
+          <Text>状态 {labelOf(SUB_STATUS_LABEL, me?.status, me?.status || '-')}</Text>
           <Text>到期时间 {me?.current_period_end || '-'}</Text>
           <Text title={formatTokenExact(me?.available_tokens ?? me?.available_cent)}>
             剩余额度 <TokenText value={me?.available_tokens ?? me?.available_cent} />
@@ -164,7 +168,7 @@ export default function SubscriptionPage() {
           pagination={false}
           dataSource={plans}
           columns={[
-            { title: '档位', dataIndex: 'plan_code' },
+            { title: '档位', dataIndex: 'plan_code', render: (v) => labelOf(PLAN_CODE_LABEL, v, v) },
             { title: '名称', dataIndex: 'plan_name' },
             { title: '售价(元)', dataIndex: 'price_cent', render: yuan },
             {
@@ -221,14 +225,14 @@ export default function SubscriptionPage() {
           columns={[
             { title: '订单号', dataIndex: 'order_no' },
             { title: '名称', dataIndex: 'biz_name' },
-            { title: '类型', dataIndex: 'order_type' },
+            { title: '类型', dataIndex: 'order_type', render: (v) => labelOf(ORDER_TYPE_LABEL, v, v) },
             { title: '金额(元)', dataIndex: 'amount_cent', render: yuan },
             {
               title: '发放额度',
               dataIndex: 'grant_cent',
               render: (v) => (v == null ? '-' : <TokenText value={v} />),
             },
-            { title: '状态', dataIndex: 'status' },
+            { title: '状态', dataIndex: 'status', render: (v) => labelOf(ORDER_STATUS_LABEL, v, v) },
             { title: '时间', dataIndex: 'created_at' },
           ]}
         />

@@ -26,6 +26,10 @@ import {
 } from '../../utils/CinematographyHelper'
 import { tubeTokenMissingMessage } from '../../utils/baselineCards'
 import {
+  labelOf, SCRIPT_STATUS_LABEL, SHOT_STATUS_LABEL, TARGET_TYPE_LABEL,
+  localizePromptShotSize, friendlyFailReason, sanitizeTubeWarning,
+} from '../../lib/displayLabels'
+import {
   composeSurfaceFromEntry,
   episodeComposeTag,
   episodeComposeTagColor,
@@ -310,7 +314,7 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
         <Button onClick={() => ready(1)}>强制定稿</Button>
       </Space>}>
         <Paragraph type="secondary">
-          状态 {script?.script_status || '-'} / 版本 {script?.script_version || 0} / 节奏总分 {rhythm.total_score ?? script?.total_score ?? '-'}
+          状态 {labelOf(SCRIPT_STATUS_LABEL, script?.script_status, script?.script_status || '-')} / 版本 {script?.script_version || 0} / 节奏总分 {rhythm.total_score ?? script?.total_score ?? '-'}
         </Paragraph>
         <Collapse
           items={scenes.map((scene, si) => ({
@@ -735,7 +739,7 @@ function StoryboardPane({ work, episodeId }) {
         <Card
           key={row.shot_id}
           size="small"
-          title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${row.shot_status || 'PENDING'}`}
+          title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${labelOf(SHOT_STATUS_LABEL, row.shot_status || 'PENDING')}`}
           extra={<Space>
             {row.latest_task ? (
               <Tag color={row.latest_task.task_status === 'FAILED' ? 'red' : row.latest_task.task_status === 'SUCCEEDED' ? 'green' : 'blue'}>
@@ -874,7 +878,7 @@ function StoryboardPane({ work, episodeId }) {
               {row.image_prompt ? (
                 <div style={{ marginBottom: 8 }}>
                   <Text type="secondary">画面提示词</Text>
-                  <div>{row.image_prompt}</div>
+                  <div>{localizePromptShotSize(row.image_prompt)}</div>
                   <Space wrap size={4}>
                     {(row.prompt_segments || []).map((seg) => (
                       <Tag key={seg.source}>{seg.label}</Tag>
@@ -1015,11 +1019,11 @@ function TasksPane({ workId, episodeId }) {
         pagination={false}
         columns={[
           { title: '类型', dataIndex: 'task_type_name', width: 90, render: (v, row) => v || row.task_type },
-          { title: '目标', dataIndex: 'target_type', width: 110, render: (v) => v || '-' },
+          { title: '目标', dataIndex: 'target_type_name', width: 110, render: (v, row) => v || labelOf(TARGET_TYPE_LABEL, row.target_type, row.target_type || '-') },
           { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
           { title: '进度', dataIndex: 'progress_percent', width: 80 },
           { title: '费用(元)', dataIndex: 'cost_cent', width: 90, render: (v) => ((Number(v) || 0) / 100).toFixed(2) },
-          { title: '失败', dataIndex: 'fail_reason' },
+          { title: '失败', dataIndex: 'fail_reason', render: (v) => friendlyFailReason(v) || '—' },
           {
             title: '操作',
             width: 180,
@@ -1250,7 +1254,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
     const ok = await new Promise((resolve) => {
       Modal.confirm({
         title: '批量发布到 Tube',
-        content: `将发布本作品全部 READY 且已过审的成片（约 ${count} 集）。确认继续？`,
+        content: `将发布本作品全部已就绪且已过审的成片（约 ${count} 集）。确认继续？`,
         okText: '开始批量发布',
         cancelText: '取消',
         onOk: () => resolve(true),
@@ -1307,7 +1311,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           showIcon
           style={{ marginBottom: 12 }}
           message="未配置 Tube 令牌"
-          description={(mediaPreflight?.warnings || []).filter(Boolean).join('；')
+          description={(mediaPreflight?.warnings || []).filter(Boolean).map(sanitizeTubeWarning).filter(Boolean).join('；')
             || '发布已停用。请在环境配置或管理端写入 Tube 摄入令牌后再发布。此处不填写、也不编造令牌。'}
         />
       ) : null}
@@ -1317,8 +1321,8 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           showIcon
           style={{ marginBottom: 12 }}
           message="Tube 发布预检：配置未就绪"
-          description={(mediaPreflight.warnings || []).join('；')
-            || '请配置 bgssai.tube.base-url 后再发布'}
+          description={(mediaPreflight.warnings || []).map(sanitizeTubeWarning).filter(Boolean).join('；')
+            || 'Tube 主机未配置，请联系管理员完成接入后再发布'}
         />
       ) : null}
       {statusSettled && mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
@@ -1424,7 +1428,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
             || !(mediaPreflight?.batch_ready_count > 0)}
           onClick={runBatchPublish}
         >
-          批量发布 READY 集
+          批量发布已就绪集
           {mediaPreflight?.batch_ready_count != null ? `（${mediaPreflight.batch_ready_count}）` : ''}
         </Button>
         <Button onClick={async () => {

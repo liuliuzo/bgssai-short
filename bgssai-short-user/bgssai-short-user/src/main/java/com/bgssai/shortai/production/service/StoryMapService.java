@@ -161,14 +161,20 @@ public class StoryMapService {
         if (asOfEpisodeNo != null) {
             crit.andAsOfEpisodeNoLessThan(asOfEpisodeNo + 1);
         }
+        Map<String, String> nameById = new LinkedHashMap<>();
+        for (ShortCharacter c : chars) {
+            nameById.put(c.getCharacterId(), c.getCharacterName());
+        }
         List<Map<String, Object>> edges = new ArrayList<>();
         for (ShortCharacterRelation r : shortCharacterRelationMapper.selectByExample(rx)) {
             Map<String, Object> e = new LinkedHashMap<>();
             e.put("relation_id", r.getRelationId());
             e.put("from_character_id", r.getFromCharacterId());
+            e.put("from_character_name", nameById.get(r.getFromCharacterId()));
             e.put("to_character_id", r.getToCharacterId());
+            e.put("to_character_name", nameById.get(r.getToCharacterId()));
             e.put("relation_type", r.getRelationType());
-            e.put("relation_type_name", r.getRelationType());
+            e.put("relation_type_name", relationTypeName(r.getRelationType()));
             e.put("relation_strength", 3);
             e.put("reveal_episode_no", r.getAsOfEpisodeNo());
             e.put("revealed_flag", 1);
@@ -484,5 +490,21 @@ public class StoryMapService {
             throw new ForbiddenException("shot not found");
         }
         return shot;
+    }
+
+    private static String relationTypeName(String code) {
+        if (code == null || code.isBlank()) {
+            return "-";
+        }
+        return switch (code) {
+            case "MENTOR" -> "师徒";
+            case "RIVAL" -> "对立";
+            case "RELATED" -> "关联";
+            case "ALLY" -> "同盟";
+            case "FAMILY" -> "亲属";
+            case "LOVE" -> "情感";
+            case "ENEMY" -> "敌对";
+            default -> code;
+        };
     }
 }

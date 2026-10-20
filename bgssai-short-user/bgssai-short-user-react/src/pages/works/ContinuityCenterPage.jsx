@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import {
+  labelOf, CONTINUITY_TYPE_LABEL, SEVERITY_LABEL, HANDLE_STATUS_LABEL,
+  FORESHADOW_STATUS_LABEL, softenTechId,
+} from '../../lib/displayLabels'
 
 const { Paragraph } = Typography
 
@@ -49,11 +53,11 @@ export default function ContinuityCenterPage({ work }) {
           pagination={false}
           dataSource={overview?.issue_list || []}
           columns={[
-            { title: '类型', dataIndex: 'issue_type', width: 100 },
-            { title: '严重度', dataIndex: 'severity', width: 90 },
+            { title: '类型', dataIndex: 'issue_type', width: 100, render: (v) => labelOf(CONTINUITY_TYPE_LABEL, v, v) },
+            { title: '严重度', dataIndex: 'severity', width: 90, render: (v) => labelOf(SEVERITY_LABEL, v, v) },
             { title: '说明', dataIndex: 'issue_desc' },
-            { title: '镜头', dataIndex: 'shot_id' },
-            { title: '状态', dataIndex: 'handle_status', width: 100 },
+            { title: '镜头', dataIndex: 'shot_id', render: (v) => softenTechId(v, 'shot') },
+            { title: '状态', dataIndex: 'handle_status', width: 100, render: (v) => labelOf(HANDLE_STATUS_LABEL, v, v) },
           ]}
         />
       </Card>
@@ -88,7 +92,7 @@ export default function ContinuityCenterPage({ work }) {
             { title: '埋点集', dataIndex: 'plant_episode_no', width: 90 },
             { title: '回收集', dataIndex: 'payoff_episode_no', width: 90 },
             { title: '描述', dataIndex: 'foreshadow_desc' },
-            { title: '状态', dataIndex: 'status', width: 90 },
+            { title: '状态', dataIndex: 'status', width: 90, render: (v) => labelOf(FORESHADOW_STATUS_LABEL, v, v) },
           ]}
         />
       </Card>

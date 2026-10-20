@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import { labelOf, GATE_STATUS_LABEL, HANDLE_STATUS_LABEL } from '../../lib/displayLabels'
 
 const { Paragraph } = Typography
 
@@ -63,7 +64,7 @@ export default function QualityReportPage({ work, episodeId }) {
       >
         <Paragraph>
           作品阈值 {profile?.quality_threshold_score ?? '-'} · 总分 {profile?.overall_quality_score ?? '-'} ·
-          当前门 {result?.gate_status || '-'} / {result?.score ?? '-'}
+          当前门 {labelOf(GATE_STATUS_LABEL, result?.gate_status, result?.gate_status || '-')} / {result?.score ?? '-'}
         </Paragraph>
         <Table
           rowKey="issue_id"
@@ -74,7 +75,7 @@ export default function QualityReportPage({ work, episodeId }) {
             { title: '维度', dataIndex: 'dimension', width: 120 },
             { title: '问题', dataIndex: 'issue_desc' },
             { title: '建议', dataIndex: 'fix_hint' },
-            { title: '状态', dataIndex: 'handle_status', width: 100 },
+            { title: '状态', dataIndex: 'handle_status', width: 100, render: (v) => labelOf(HANDLE_STATUS_LABEL, v, v) },
             {
               title: '操作',
               width: 200,

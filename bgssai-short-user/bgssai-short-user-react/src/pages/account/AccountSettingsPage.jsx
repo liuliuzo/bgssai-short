@@ -6,6 +6,7 @@ import subscriptionApi from '../../api/subscription'
 import http from '../../utils/http'
 import { useUserStore } from '../../store/user'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
+import { labelOf, LOGIN_METHOD_LABEL } from '../../lib/displayLabels'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -115,8 +116,8 @@ export default function AccountSettingsPage() {
           pagination={false}
           dataSource={methods}
           columns={[
-            { title: '类型', dataIndex: 'method_type' },
-            { title: '平台', dataIndex: 'platform' },
+            { title: '类型', dataIndex: 'method_type', render: (v) => labelOf(LOGIN_METHOD_LABEL, v, v) },
+            { title: '平台', dataIndex: 'platform', render: (v) => labelOf(LOGIN_METHOD_LABEL, v, v) },
             { title: '标识', dataIndex: 'label' },
             {
               title: '操作',
