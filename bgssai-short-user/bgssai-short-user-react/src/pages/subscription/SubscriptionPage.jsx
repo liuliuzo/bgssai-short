@@ -135,7 +135,7 @@ export default function SubscriptionPage() {
       setPolling(true)
       message.info('请使用手机扫码完成支付；额度以支付回调入账为准')
     } catch (e) {
-      message.error(e?.message || '下单失败')
+      message.error(e?.message || '下单失败，请稍后重试')
     }
   }
 
