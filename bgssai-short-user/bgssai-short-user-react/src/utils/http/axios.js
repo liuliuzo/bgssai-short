@@ -90,7 +90,7 @@ instance.interceptors.response.use(
           message.error('服务器内部错误')
           break
         case 502:
-          message.error('网络错误')
+          message.error('网络异常，请稍后重试')
           break
         case 503:
           message.error('服务不可用')
@@ -99,7 +99,7 @@ instance.interceptors.response.use(
           message.error('网络超时')
           break
         default:
-          message.error('请求失败')
+          message.error('请求失败，请稍后重试')
       }
     } else {
       message.error('连接服务器失败')
