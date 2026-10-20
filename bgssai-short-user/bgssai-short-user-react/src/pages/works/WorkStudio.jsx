@@ -722,14 +722,14 @@ function StoryboardPane({ work, episodeId }) {
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
-            （预计 {formatToken(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} Tokens · 余额 {formatYuan(cost.available_cent)} 元 · {cost.model_code || '-'}）
+            （预计 {formatToken(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {cost.model_code || '-'}）
             {(cost.shot_cost_list || []).length > 0
               ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
               : ''}
           </Paragraph>
         ) : (
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            勾选镜头后估费用（当前勾选 {selected.length} 镜 · 预计 {formatToken(estimateShotBatchTokens(selected, 1000).billed_tokens)} Tokens）。生成前会再弹窗确认预计费用与余额。
+            勾选镜头后估费用（当前勾选 {selected.length} 镜 · 预计 {formatToken(estimateShotBatchTokens(selected, 1000).billed_tokens)}）。生成前会再弹窗确认预计费用与余额。
           </Paragraph>
         )}
       </Card>
