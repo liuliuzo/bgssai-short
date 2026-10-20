@@ -111,7 +111,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
         await load()
       }
     } catch (err) {
-      message.error(err.message || '提交失败')
+      message.error(err.message || '提交失败，请稍后重试')
     } finally {
       setSubmittingSingle(false)
     }
