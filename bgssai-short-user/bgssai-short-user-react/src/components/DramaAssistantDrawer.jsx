@@ -103,7 +103,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
 
   return (
     <Drawer
-      title="AI戏剧多专家协同工作台 (Multi-Agent Drama Copilot)"
+      title="AI戏剧多专家协同工作台"
       placement="right"
       width={460}
       open={visible}

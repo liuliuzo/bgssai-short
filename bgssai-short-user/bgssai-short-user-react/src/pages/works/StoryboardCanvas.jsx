@@ -357,7 +357,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             </div>
 
             <Text strong style={{ display: 'block', marginBottom: 4 }}>
-              镜头画面提示词 (人话分镜 / Visual Prompt):
+              镜头画面提示词（人话分镜）：
             </Text>
             <TextArea
               rows={4}
@@ -395,7 +395,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                四机位视角 (Quad-Grid Angle):
+                四机位视角:
               </Text>
               <Space wrap size={[4, 4]}>
                 {QUAD_GRID_ANGLES.map((q) => (
