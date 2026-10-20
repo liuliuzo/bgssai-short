@@ -171,7 +171,7 @@ export function modelPricingLabel(row = {}) {
   if (unit === 'token' && row.input_fen_per_million != null) {
     const inYuan = fenToYuan(row.input_fen_per_million)
     const outYuan = fenToYuan(row.output_fen_per_million)
-    parts.push(`输入/输出 ${inYuan ?? '-'}/${outYuan ?? '-'} 元/百万 token`)
+    parts.push(`输入/输出 ${inYuan ?? '-'}/${outYuan ?? '-'} 元/百万额度`)
   } else if (unit === 'image' && row.image_fen_per_unit != null) {
     parts.push(`${fenToYuan(row.image_fen_per_unit)} 元/张`)
   } else if (['audio_second', 'audio'].includes(unit) && row.audio_fen_per_second != null) {
@@ -187,7 +187,7 @@ export function modelPricingLabel(row = {}) {
 export function receiptSummary(receipt = {}) {
   const status = STATUS_LABEL[receipt.billing_status] || (receipt.billing_status ? String(receipt.billing_status) : '待对账')
   const billed = receipt.billed_tokens == null ? '待对账' : String(receipt.billed_tokens)
-  const unit = receipt.billing_unit || 'token'
+  const unit = receipt.billing_unit || '额度'
   const amountYuan = fenToYuan(receipt.debit_fen)
   const amount = amountYuan == null ? '待对账' : `${amountYuan} 元`
   const currency = receipt.currency && receipt.currency !== 'CNY' ? `（${receipt.currency}）` : ''

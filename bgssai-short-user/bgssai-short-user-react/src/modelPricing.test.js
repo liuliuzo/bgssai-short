@@ -27,6 +27,31 @@ test('real fractional multipliers and version appear without guessing', () => {
   assert.doesNotMatch(modelPricingLabel({ model: 'gpt-any' }), /倍率待确认/)
 })
 
+test('ZH chrome: fen/million and receipt default unit use 额度 not bare English token', () => {
+  assert.match(
+    modelPricingLabel({
+      model: 'm',
+      price_unit: 'token',
+      input_fen_per_million: 100,
+      output_fen_per_million: 200,
+      currency: 'CNY',
+    }),
+    /元\/百万额度/,
+  )
+  assert.doesNotMatch(
+    modelPricingLabel({
+      model: 'm',
+      price_unit: 'token',
+      input_fen_per_million: 100,
+      output_fen_per_million: 200,
+    }),
+    /百万 token/,
+  )
+  assert.match(receiptSummary({ billed_tokens: 150 }), /实扣 150 额度/)
+  // Explicit API billing_unit still passed through
+  assert.match(receiptSummary({ billed_tokens: 10, billing_unit: 'token' }), /实扣 10 token/)
+})
+
 test('receipt displays billed amount once, unknown stays pending, fen shown as yuan', () => {
   assert.match(receiptSummary({ raw_tokens: 100, billed_tokens: 150, billing_multiplier: 1.5, billing_status: 'unpriced' }), /实扣 150/)
   assert.match(receiptSummary({ billing_status: 'unpriced' }), /未定价/)
