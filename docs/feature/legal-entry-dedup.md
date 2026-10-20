@@ -7,6 +7,6 @@
 - 英文提示使用 “By signing in or signing up, you agree to the agreements and privacy terms listed in the footer.”；勾选框使用 “I have read and agree to the agreements and privacy terms listed in the footer.”，按现有界面语言选择。
 - 设置、关于和我的页面在已有全局页脚时只保留「法律信息」入口。没有全局页脚的独立原生客户端保留登录同意行和设置页各自唯一一组链接，不删除唯一可访问入口。
 - 管理端只保留全局页脚；不增加登录同意行。官网法律中心目录和协议正文中的内容引用不属于重复导航；第三方 OAuth 应用自己的条款和隐私地址也不删除。
-- 保留已核实的 ICP 备案号与工信部链接、合法文档目标和语言切换。页脚允许窄屏自动换行，不覆盖正文、下载和客服入口。
+- 保留 `bgssai-short.com` 已核实的 ICP 备案号 `苏ICP备2024070062号-15` 与工信部链接 `https://beian.miit.gov.cn/`（见 [网站 ICP 备案展示](icp-filing-footer.md)）、合法文档目标和语言切换。页脚允许窄屏自动换行，不覆盖正文、下载和客服入口。
 
 验收：登录、注册（若存在）、设置以及路由切换后同一页面每份 BGSSAI 协议最多一处导航入口；唯一入口可打开官网对应语言正文；原勾选校验有效。检查桌面与窄屏布局；原生端源码检查与真机验证分别记录。

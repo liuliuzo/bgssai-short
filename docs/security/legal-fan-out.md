@@ -6,5 +6,5 @@
 - 链接只指向官网 `https://www.bgssai.com` 权威路径（中文无前缀、英文 `/en/`，均带尾斜杠），新标签打开，不携带 JWT、口令或 token。
 - 禁止 `www.bgssai.cn`，禁止 `/legal/user-agreement`、`children-privacy`、`personal-info-collection`。
 - 管理端不新增法律页路由，不把运营后台做成条款托管点。
-- 禁止在页脚或登录区编造 ICP 备案号、公安备案号、增值电信业务经营许可证号。
+- 页脚仅展示 `bgssai-short.com` 已核准的网站 ICP 备案号 `苏ICP备2024070062号-15`（链接 `https://beian.miit.gov.cn/`）；禁止在页脚或登录区编造其他 ICP 备案号、公安备案号、增值电信业务经营许可证号。
 - 本切片不改鉴权、CORS、密钥与回调验签。
