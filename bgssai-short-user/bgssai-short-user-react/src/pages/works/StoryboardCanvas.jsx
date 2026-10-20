@@ -369,7 +369,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                景别景深 (Shot Scale):
+                景别景深:
               </Text>
               <Space wrap size={[4, 4]}>
                 {SHOT_TYPES.map((st) => (
@@ -382,7 +382,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                运镜方式 (Camera Movement):
+                运镜方式:
               </Text>
               <Space wrap size={[4, 4]}>
                 {CAMERA_MOVEMENTS.slice(0, 8).map((cm) => (
@@ -408,7 +408,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
 
             <div style={{ marginBottom: 14 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                连续性衔接 (Continuity):
+                连续性衔接:
               </Text>
               <Space wrap size={[4, 4]}>
                 {CONTINUITY_PRESETS.map((cp) => (

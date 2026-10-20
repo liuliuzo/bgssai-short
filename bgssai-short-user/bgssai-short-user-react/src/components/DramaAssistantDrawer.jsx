@@ -8,28 +8,28 @@ const { TextArea } = Input
 const AGENT_ROLES = [
   {
     key: 'SCRIPT',
-    name: '编剧专家 (Script Doctor)',
+    name: '编剧专家',
     desc: '专注短剧快节奏、矛盾冲突、情绪爆发点与反转对白设计',
     tag: '爽点与对白',
     color: 'magenta',
   },
   {
     key: 'DIRECTOR',
-    name: '分镜导演 (Storyboard Director)',
+    name: '分镜导演',
     desc: '规划镜头组接、景别节奏过渡（全景->特写）与首尾帧衔接',
     tag: '分镜语言',
     color: 'blue',
   },
   {
     key: 'VISUAL',
-    name: '视觉专家 (Visual Artist)',
+    name: '视觉专家',
     desc: '强化光影氛围、构图质感、色彩基调与提示词参数调优',
     tag: '8K光影构图',
     color: 'purple',
   },
   {
     key: 'EDITOR',
-    name: '剪辑顾问 (Editor & Sound)',
+    name: '剪辑顾问',
     desc: '建议背景音乐进出点、音效重音、节奏卡点与工程导出规范',
     tag: '剪辑与声音',
     color: 'cyan',
@@ -39,7 +39,7 @@ const AGENT_ROLES = [
 const QUICK_ACTIONS = {
   SCRIPT: [
     { label: '增加台词火药味与反转', prompt: '请帮我优化这段台词，让双方矛盾更加尖锐，结尾带有一句出人意料的反转回击。' },
-    { label: '设计集尾留存钩子 (Cliffhanger)', prompt: '请帮我为当前集设计一个抓人的卡点悬念，让观众有强烈的欲望立刻点开下一集。' },
+    { label: '设计集尾留存钩子', prompt: '请帮我为当前集设计一个抓人的卡点悬念，让观众有强烈的欲望立刻点开下一集。' },
     { label: '精炼对白（去废话）', prompt: '请精简当前对话，去除不必要的客套废话，只保留核心戏剧动机。' },
   ],
   DIRECTOR: [
