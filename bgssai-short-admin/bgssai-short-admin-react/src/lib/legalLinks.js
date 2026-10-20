@@ -2,7 +2,8 @@
  * Official legal pages live only on bgssai-website.
  * Paths match bgssai-website docs/legal/README.md EXACTLY.
  * This module is outbound links. Status: 需法务审阅.
- * Do not invent ICP / license numbers.
+ * Approved ICP filing for bgssai-short.com: 苏ICP备2024070062号-15.
+ * Do not invent other ICP / license numbers.
  *
  * Product UI (footer + login consent) lists only terms + privacy (Standards §15).
  * Inventory / sharing / permissions stay on the website legal hub, not in-product.
@@ -15,6 +16,9 @@ export const WEBSITE_ORIGIN = 'https://www.bgssai.com'
 export const COPYRIGHT_HOLDER = '昆山兵贵神速智能科技有限公司'
 export const COPYRIGHT_YEAR = new Date().getFullYear()
 export const COPYRIGHT_LINE = `© ${COPYRIGHT_YEAR} ${COPYRIGHT_HOLDER}`
+
+export const ICP_FILING_NUMBER = '苏ICP备2024070062号-15'
+export const ICP_FILING_URL = 'https://beian.miit.gov.cn/'
 
 /** Official pages shown in product UI. label_* is consent copy; footer_* is bilingual footer. */
 export const LEGAL_PAGES = Object.freeze([
@@ -67,7 +71,8 @@ export function bilingualLabel(page) {
 }
 
 export function hasInventedLicenseNumber(text) {
-  return LICENSE_NUMBER_RE.test(String(text || ''))
+  const normalized = String(text || '').replaceAll(ICP_FILING_NUMBER, '')
+  return LICENSE_NUMBER_RE.test(normalized)
 }
 
 export function hasForbiddenLegalPath(text) {

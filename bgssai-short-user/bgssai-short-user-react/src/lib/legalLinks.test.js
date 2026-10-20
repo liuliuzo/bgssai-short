@@ -12,6 +12,8 @@ import {
   hasInventedLicenseNumber,
   legalPageUrl,
   COPYRIGHT_LINE,
+  ICP_FILING_NUMBER,
+  ICP_FILING_URL,
   LOGIN_CONSENT_PAGES,
 } from './legalLinks.js'
 
@@ -80,14 +82,26 @@ describe('legalLinks', () => {
     assert.equal(hasInventedLicenseNumber(bilingualLabel(LEGAL_HUB)), false)
   })
 
-  it('login consent is terms + privacy only; copyright has no ICP', () => {
+  it('login consent is terms + privacy only; copyright and approved ICP filing are defined', () => {
     assert.deepEqual(LOGIN_CONSENT_PAGES.map((p) => p.slug), ['terms-of-service', 'privacy-policy'])
     assert.equal(COPYRIGHT_LINE, `© ${new Date().getFullYear()} 昆山兵贵神速智能科技有限公司`)
+    assert.equal(ICP_FILING_NUMBER, '苏ICP备2024070062号-15')
+    assert.equal(ICP_FILING_URL, 'https://beian.miit.gov.cn/')
     assert.equal(hasInventedLicenseNumber(COPYRIGHT_LINE), false)
+    assert.equal(hasInventedLicenseNumber(ICP_FILING_NUMBER), false)
+  })
+
+  it('renders approved ICP filing link in LegalFooter.jsx', () => {
+    const footerSrc = readFileSync(resolve(here, '../components/LegalFooter.jsx'), 'utf8')
+    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), true)
+    assert.equal(footerSrc.includes('ICP_FILING_URL'), true)
+    assert.equal(footerSrc.includes('target="_blank"'), true)
+    assert.equal(footerSrc.includes('rel="noopener noreferrer"'), true)
   })
 
   it('rejects invented license numbers and retired legal paths', () => {
     assert.equal(hasInventedLicenseNumber('© 2026 昆山兵贵神速智能科技有限公司'), false)
+    assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-15'), false)
     assert.equal(hasInventedLicenseNumber('苏ICP备12345678号'), true)
     assert.equal(hasInventedLicenseNumber('增值电信业务经营许可证'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.cn/legal/user-agreement'), true)

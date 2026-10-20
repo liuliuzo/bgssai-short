@@ -41,7 +41,7 @@ test.describe('document routes', () => {
       await expect(page.locator(`a[href="https://www.bgssai.com/${slug}/"]`)).toHaveCount(0)
       await expect(page.locator(`a[href="https://www.bgssai.com/en/${slug}/"]`)).toHaveCount(0)
     }
-    await expect(page.locator('body')).not.toContainText('苏ICP')
+    await expect(page.locator('a[href="https://beian.miit.gov.cn/"]')).toContainText('苏ICP备2024070062号-15')
     await expect(page.locator('body')).not.toContainText('个人信息收集清单')
   })
 })
