@@ -88,7 +88,7 @@ export default function AccountSettingsPage() {
       }
       message.success('验证码已发送')
     } catch (e) {
-      message.error(e?.message || '发送失败')
+      message.error(e?.message || '发送失败，请稍后重试')
     }
   }
 

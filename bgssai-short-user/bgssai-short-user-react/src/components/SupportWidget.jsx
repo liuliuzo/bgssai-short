@@ -125,12 +125,12 @@ export default function SupportWidget() {
         content: text,
       })
       if (!CODE_OK.has(data?.code)) {
-        throw new Error(data?.message || '发送失败')
+        throw new Error(data?.message || '发送失败，请稍后重试')
       }
       setDraft('')
       await loadDetail(sid)
     } catch (e) {
-      message.error(e.message || '发送失败')
+      message.error(e.message || '发送失败，请稍后重试')
     } finally {
       setBusy(false)
     }
