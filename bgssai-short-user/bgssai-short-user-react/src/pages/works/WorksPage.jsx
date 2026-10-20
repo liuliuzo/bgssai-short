@@ -83,7 +83,7 @@ export default function WorksPage() {
           rowKey="work_id"
           size="small"
           loading={loading}
-          locale={{ emptyText: loading ? ' ' : '暂无数据' }}
+          locale={{ emptyText: loading ? ' ' : '还没有作品，点击右上角「新建作品」开始' }}
           dataSource={rows}
           pagination={{
             current: pageNum,
