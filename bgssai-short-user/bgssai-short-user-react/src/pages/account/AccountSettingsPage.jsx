@@ -54,7 +54,7 @@ export default function AccountSettingsPage() {
       setUnbindRow(null)
       load()
     } catch (e) {
-      message.error(e?.message || '解绑失败')
+      message.error(e?.message || '解绑失败，请稍后重试')
     }
   }
 
@@ -75,7 +75,7 @@ export default function AccountSettingsPage() {
       clearUserInfo()
       navigate('/login', { replace: true })
     } catch (e) {
-      message.error(e?.message || '注销失败')
+      message.error(e?.message || '注销失败，请稍后重试')
     }
   }
 
@@ -230,7 +230,7 @@ function BindContactForm({ onDone, sendCode }) {
       form.resetFields()
       onDone()
     } catch (e) {
-      message.error(e?.message || '绑定失败')
+      message.error(e?.message || '绑定失败，请稍后重试')
     }
   }
   return (
