@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import { draftFlagLabel, labelOf, RELATION_TYPE_LABEL, softenTechId } from '../../lib/displayLabels'
 
 const { Paragraph } = Typography
 
@@ -49,7 +50,7 @@ export default function StoryMapPage({ work, episodeId }) {
         }}>生成图谱</Button>}
       >
         <Paragraph type="secondary">
-          本集时长 {tension?.duration_sec ?? '-'} 秒 · draft_flag={tension?.draft_flag ?? '-'}
+          本集时长 {tension?.duration_sec ?? '-'} 秒 · {draftFlagLabel(tension?.draft_flag)}
         </Paragraph>
         <Table
           rowKey={(r) => `${r.at_sec}-${r.shot_no}`}
@@ -84,9 +85,9 @@ export default function StoryMapPage({ work, episodeId }) {
           pagination={false}
           dataSource={relations?.edge_list || []}
           columns={[
-            { title: '从', dataIndex: 'from_character_id' },
-            { title: '到', dataIndex: 'to_character_id' },
-            { title: '关系', dataIndex: 'relation_type' },
+            { title: '从', dataIndex: 'from_character_id', render: (v, row) => row.from_character_name || softenTechId(v, 'character') },
+            { title: '到', dataIndex: 'to_character_id', render: (v, row) => row.to_character_name || softenTechId(v, 'character') },
+            { title: '关系', dataIndex: 'relation_type', render: (v, row) => row.relation_type_name && row.relation_type_name !== v ? row.relation_type_name : labelOf(RELATION_TYPE_LABEL, v, v) },
             { title: '说明', dataIndex: 'relation_desc' },
           ]}
         />

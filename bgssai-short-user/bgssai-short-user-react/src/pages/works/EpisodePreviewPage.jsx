@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Button, Card, List, Space, Typography } from 'antd'
 import featuresApi from '../../api/features'
+import { labelOf, PREVIZ_LEVEL_LABEL } from '../../lib/displayLabels'
 
 const { Paragraph, Text } = Typography
 
@@ -63,7 +64,7 @@ export default function EpisodePreviewPage({ work, episodeId }) {
               <Paragraph type="secondary">{frame.look_plain}</Paragraph>
               <Space>
                 <Button disabled={cur <= 0} onClick={() => setCur((n) => n - 1)}>上一镜</Button>
-                <Text>镜 {frame.shot_no} / {frames.length} · {frame.duration_sec}s · {frame.previz_level}</Text>
+                <Text>镜 {frame.shot_no} / {frames.length} · {frame.duration_sec}s · {labelOf(PREVIZ_LEVEL_LABEL, frame.previz_level, frame.previz_level)}</Text>
                 <Button disabled={cur >= frames.length - 1} onClick={() => setCur((n) => n + 1)}>下一镜</Button>
               </Space>
             </div>

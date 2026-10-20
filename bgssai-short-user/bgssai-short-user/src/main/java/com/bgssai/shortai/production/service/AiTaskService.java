@@ -1,5 +1,7 @@
 package com.bgssai.shortai.production.service;
 
+import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -372,7 +374,7 @@ public class AiTaskService {
             fail.put("target_id", row.getTargetId());
             fail.put("task_type", row.getTaskType());
             fail.put("fail_reason_code", row.getFailReasonCode());
-            fail.put("fail_reason", row.getFailReason());
+            fail.put("fail_reason", TokenHubClientSupport.userFacingMessage(row.getFailReason()));
             failedTasks.add(fail);
         }
         result.put("failed_task_list", failedTasks);
@@ -573,7 +575,7 @@ public class AiTaskService {
         item.put("target_id", row.getTargetId());
         item.put("progress_percent", row.getProgressPercent());
         item.put("fail_reason_code", row.getFailReasonCode());
-        item.put("fail_reason", row.getFailReason());
+        item.put("fail_reason", TokenHubClientSupport.userFacingMessage(row.getFailReason()));
         item.put("model_code", row.getModelCode());
         item.put("result_json", ShortJson.map(row.getResultJson()));
         item.put("cost_cent", row.getCostCent());

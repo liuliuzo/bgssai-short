@@ -194,7 +194,7 @@ export function validateTubePublishPreflight(film = {}, episode = {}, preflight 
     blockers.push('尚未生成成片记录')
   } else {
     if (film.compose_status !== 'READY') {
-      blockers.push(`成片状态未就绪（当前为 ${film.compose_status || 'NONE'}，需为 READY）`)
+      blockers.push(`成片状态未就绪（当前为 ${film.compose_status || 'NONE'}，需为已就绪）`)
     }
     if (film.expired_flag === 1) {
       blockers.push('成片已因镜头或配音变更而过期，请重新合成')
@@ -210,10 +210,10 @@ export function validateTubePublishPreflight(film = {}, episode = {}, preflight 
   }
   const reviewStatus = episode?.review_status || preflight?.review_status
   if (reviewStatus && reviewStatus !== 'APPROVED') {
-    blockers.push(`剧集审核未通过（当前为 ${reviewStatus}，需为 APPROVED）`)
+    blockers.push(`剧集审核未通过（当前为 ${reviewStatus}，需为已通过）`)
   }
   if (preflight && preflight.config_ready === false) {
-    blockers.push('Tube 摄入端点配置未就绪（需配置 bgssai.tube.base-url 与 ingest-token）')
+    blockers.push('Tube 发布配置未就绪（需配置主机与摄入令牌）')
   }
   const workId = film?.work_id || preflight?.work_id || ''
   const episodeId = film?.episode_id || episode?.episode_id || preflight?.episode_id || ''

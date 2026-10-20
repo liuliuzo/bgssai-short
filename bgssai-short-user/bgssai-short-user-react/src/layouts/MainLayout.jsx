@@ -4,6 +4,7 @@ import { Dropdown, Drawer, message } from 'antd'
 import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined , DownloadOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
+import { roleBadgeLabel } from '../lib/displayLabels'
 import SupportWidget from '../components/SupportWidget'
 import './main-layout.css'
 
@@ -128,7 +129,7 @@ export default function MainLayout() {
         <header className="pa-topbar">
           <div className="pa-topbar-left">
             <span className="pa-topbar-title">AI 短剧制作平台</span>
-            <span className="pa-topbar-badge">{inShell ? 'BOT' : 'USER'}</span>
+            <span className="pa-topbar-badge">{roleBadgeLabel(inShell)}</span>
           </div>
           <div className="pa-topbar-right">
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>

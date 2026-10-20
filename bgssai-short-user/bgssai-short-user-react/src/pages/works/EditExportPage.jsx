@@ -119,7 +119,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
             size="small"
             style={{ marginBottom: 8 }}
             title={<span>角色版本 · {row.character_name}</span>}
-            extra={<Tag color="green">LOCKED</Tag>}
+            extra={<Tag color="green">已锁定</Tag>}
           >
             <Text strong>角色版本</Text>
             <div>{row.version_text}</div>
@@ -132,7 +132,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
             size="small"
             style={{ marginBottom: 8 }}
             title={<span>时间轴版本</span>}
-            extra={<Tag color="green">LOCKED</Tag>}
+            extra={<Tag color="green">已锁定</Tag>}
           >
             <Text strong>时间轴版本</Text>
             <div>{baseline.timeline.version_text}</div>

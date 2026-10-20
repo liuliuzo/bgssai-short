@@ -152,11 +152,11 @@ public class FilmPublishToMediaService {
 
         List<String> warnings = new ArrayList<>();
         if (!config.baseUrlConfigured()) {
-            warnings.add("TUBE 主机未配置：bgssai.tube.base-url 为空。发布会失败，不会返回假的 media_id。"
-                    + "本仓不填写虚构 IP；主机未分配时保持为空并在文档标明未部署");
+            warnings.add("Tube 主机未配置：发布会失败，不会返回假的 media_id。"
+                    + "请联系管理员完成接入后再发布");
         }
         if (!config.tokenConfigured()) {
-            warnings.add("未配置 Tube 令牌：请在环境配置或管理端写入 bgssai.tube.ingest-token"
+            warnings.add("未配置 Tube 令牌：请在环境配置或管理端写入摄入令牌后再发布"
                     + "（勿提交真实密钥，不要编造令牌）");
         }
 

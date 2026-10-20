@@ -1,3 +1,5 @@
+import { COMPOSE_STATUS_LABEL, RISK_LEVEL_LABEL, labelOf } from '../lib/displayLabels.js'
+
 const READY_PASS_WORDS = ['已就绪', '已通过', '可合成', 'READY', 'PASS', 'APPROVED']
 
 export function claimsReadyPass(text) {
@@ -7,7 +9,13 @@ export function claimsReadyPass(text) {
 
 function riskLabel(precheck) {
   const risk = precheck?.risk_level
-  return risk == null || risk === '' ? '-' : String(risk)
+  if (risk == null || risk === '') return '-'
+  return labelOf(RISK_LEVEL_LABEL, risk, String(risk))
+}
+
+function composeLabel(code) {
+  if (code == null || code === '' || code === '-') return '-'
+  return labelOf(COMPOSE_STATUS_LABEL, code, String(code))
 }
 
 /**
@@ -34,15 +42,17 @@ export function composeSurface({ settled = false, error = false, film = null, pr
   }
   const compose = film?.compose_status || '-'
   const preflightReady = Boolean(precheck?.ready)
+  const riskCode = precheck?.risk_level
   const risk = riskLabel(precheck)
   const expired = film?.expired_flag === 1 ? ' / 成片已过期' : ''
-  const affirmative = preflightReady && compose === 'READY' && (risk === 'PASS' || risk === '-')
+  const riskOk = riskCode == null || riskCode === '' || riskCode === 'PASS'
+  const affirmative = preflightReady && compose === 'READY' && riskOk
   let chipText = '未就绪'
   if (affirmative) chipText = '已就绪'
   else if (preflightReady) chipText = '可合成'
   return {
     phase: 'settled',
-    paneText: `合成状态 ${compose} / 预检 ${preflightReady ? '可合成' : '未就绪'} / 风险 ${risk}${expired}`,
+    paneText: `合成状态 ${composeLabel(compose)} / 预检 ${preflightReady ? '可合成' : '未就绪'} / 风险 ${risk}${expired}`,
     chipText,
     allowReadyPassChip: affirmative,
     preflightReady,
