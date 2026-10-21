@@ -19,6 +19,15 @@ public final class TokenHubClientSupport {
     public static final String DEFAULT_CN_BASE_URL = "https://www.bgssai-tokenhub.cn";
     public static final String DEFAULT_GLOBAL_BASE_URL = "https://www.bgssai-tokenhub.com";
 
+    public static final java.util.Set<String> OFFICIAL_HUB_DOMAINS = java.util.Set.of(
+            "bgssai-tokenhub.cn",
+            "www.bgssai-tokenhub.cn",
+            "dev.user.bgssai-tokenhub.cn",
+            "dev.admin.bgssai-tokenhub.cn",
+            "tokenhub.bgssai.cn",
+            "api.tokenhub.bgssai.cn",
+            "dev.user.tokenhub.bgssai.cn");
+
     private static final Pattern TOKENHUB_WORD = Pattern.compile("(?i)token\\s*-?\\s*hub");
     private static final Pattern SECRET_REF = Pattern.compile("(?i)ai\\.[a-z0-9_.]+");
     private static final Pattern BEARER_LEAK = Pattern.compile("(?i)bearer\\s+[a-z0-9._\\-]{8,}");
@@ -95,12 +104,7 @@ public final class TokenHubClientSupport {
             String host = uri.getHost();
             return "https".equalsIgnoreCase(uri.getScheme()) && uri.getUserInfo() == null
                     && uri.getRawQuery() == null && uri.getRawFragment() == null && host != null
-                    && java.util.Set.of(
-                        "bgssai-tokenhub.cn", "www.bgssai-tokenhub.cn",
-                        "dev.user.bgssai-tokenhub.cn", "dev.admin.bgssai-tokenhub.cn",
-                        "bgssai-tokenhub.com", "www.bgssai-tokenhub.com",
-                        "dev.user.bgssai-tokenhub.com", "dev.admin.bgssai-tokenhub.com",
-                        "bgssai-tokenhub-global.com", "www.bgssai-tokenhub-global.com").contains(host.toLowerCase(Locale.ROOT));
+                    && OFFICIAL_HUB_DOMAINS.contains(host.toLowerCase(Locale.ROOT));
         } catch (Exception ignored) { return false; }
     }
 
