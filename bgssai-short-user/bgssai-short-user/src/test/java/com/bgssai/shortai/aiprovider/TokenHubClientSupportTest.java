@@ -29,6 +29,10 @@ class TokenHubClientSupportTest {
         assertTrue(TokenHubClientSupport.wouldSelectGlobal(Map.of("hub", "global"), "x"));
         assertTrue(TokenHubClientSupport.wouldSelectGlobal(Map.of(), "gpt-4o-mini"));
         assertFalse(TokenHubClientSupport.wouldSelectGlobal(Map.of("hub", "cn"), "hy4-preview"));
+        assertTrue(TokenHubClientSupport.isOfficialHub("https://www.bgssai-tokenhub.cn"));
+        assertTrue(TokenHubClientSupport.isOfficialHub("https://dev.user.bgssai-tokenhub.cn"));
+        assertFalse(TokenHubClientSupport.isOfficialHub("https://www.bgssai-tokenhub.com"));
+        assertFalse(TokenHubClientSupport.isOfficialHub("https://www.bgssai-tokenhub-global.com"));
     }
 
     @Test

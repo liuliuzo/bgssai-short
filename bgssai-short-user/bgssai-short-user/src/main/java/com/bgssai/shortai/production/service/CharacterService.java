@@ -16,6 +16,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
+import com.bgssai.shortai.mapper.ShortContinuityIssueMapper;
 import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.model.ShortAiTask;
@@ -23,11 +24,13 @@ import com.bgssai.shortai.model.ShortAsset;
 import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.model.ShortCharacter;
 import com.bgssai.shortai.model.ShortCharacterExample;
+import com.bgssai.shortai.model.ShortContinuityIssue;
 import com.bgssai.shortai.model.ShortSceneCard;
 import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.CharacterReq;
+import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShotConsistency;
 
 @Service
@@ -48,6 +51,8 @@ public class CharacterService {
     private ShortShotMapper shortShotMapper;
     @Autowired
     private ShortAssetMapper shortAssetMapper;
+    @Autowired(required = false)
+    private ShortContinuityIssueMapper shortContinuityIssueMapper;
 
     public ApiResponse listCharacters(String workId) {
         ShortWork work = workAccessService.requireWork(workId);
@@ -90,19 +95,29 @@ public class CharacterService {
     public ApiResponse updateCharacter(CharacterReq req) {
         ShortCharacter row = requireCharacter(req == null ? null : req.getCharacterId());
         ShortCharacter patch = new ShortCharacter();
+        boolean settingChanged = false;
         if (req.getCharacterName() != null) {
             patch.setCharacterName(req.getCharacterName());
+            row.setCharacterName(req.getCharacterName());
+            settingChanged = true;
         }
         if (req.getAppearancePrompt() != null) {
             patch.setAppearancePrompt(req.getAppearancePrompt());
+            row.setAppearancePrompt(req.getAppearancePrompt());
+            settingChanged = true;
         }
         if (req.getCharacterRole() != null) {
             patch.setCharacterRole(req.getCharacterRole());
+            row.setCharacterRole(req.getCharacterRole());
+            settingChanged = true;
         }
         patch.setUpdatedTime(new Date());
         ShortCharacterExample up = new ShortCharacterExample();
         up.createCriteria().andIdEqualTo(row.getId());
         shortCharacterMapper.updateByExampleSelective(patch, up);
+        if (settingChanged) {
+            markShotsStaleForCharacter(row);
+        }
         return Responses.ok("ok");
     }
 
@@ -152,6 +167,8 @@ public class CharacterService {
         ShortCharacterExample up = new ShortCharacterExample();
         up.createCriteria().andIdEqualTo(row.getId());
         shortCharacterMapper.updateByExampleSelective(patch, up);
+        row.setRefImageAssetId(req.getAssetId());
+        row.setCardStatus("LOCKED");
         markShotsStaleForCharacter(row);
         return Responses.ok("ok");
     }
@@ -272,6 +289,9 @@ public class CharacterService {
         ShortShotExample ex = new ShortShotExample();
         ex.createCriteria().andWorkIdEqualTo(character.getWorkId()).andDeletedFlagEqualTo(0);
         Date now = new Date();
+        String label = character.getCharacterName() == null || character.getCharacterName().isBlank()
+                ? character.getCharacterId()
+                : character.getCharacterName();
         for (com.bgssai.shortai.model.ShortShot shot : shortShotMapper.selectByExample(ex)) {
             if ("LOCKED".equals(shot.getShotStatus())) {
                 continue;
@@ -286,6 +306,22 @@ public class CharacterService {
             ShortShotExample up = new ShortShotExample();
             up.createCriteria().andIdEqualTo(shot.getId());
             shortShotMapper.updateByExampleSelective(patch, up);
+            if (shortContinuityIssueMapper != null) {
+                ShortContinuityIssue issue = new ShortContinuityIssue();
+                issue.setIssueId(ShortIds.id("ci-"));
+                issue.setEpisodeId(shot.getEpisodeId());
+                issue.setWorkId(character.getWorkId());
+                issue.setIssueType("CHARACTER");
+                issue.setSeverity("MAJOR");
+                issue.setIssueDesc("角色设定已变更（" + label + "），需重新对齐镜头一致性");
+                issue.setShotId(shot.getShotId());
+                issue.setRelatedShotId(character.getCharacterId());
+                issue.setHandleStatus("OPEN");
+                issue.setDeletedFlag(0);
+                issue.setCreatedTime(now);
+                issue.setUpdatedTime(now);
+                shortContinuityIssueMapper.insertSelective(issue);
+            }
         }
     }
 

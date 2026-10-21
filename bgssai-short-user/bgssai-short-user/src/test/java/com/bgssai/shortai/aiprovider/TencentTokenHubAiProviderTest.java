@@ -41,11 +41,14 @@ class TencentTokenHubAiProviderTest {
         var resolver = com.bgssai.shortai.aimodel.AiModelResolveService.class.getDeclaredMethod("isHubConfig", AiModelConfig.class);
         resolver.setAccessible(true);
         request.getModel().setProviderCode("legacy");
+        assertEquals(false, resolver.invoke(null, request.getModel()));
+        request.getModel().setConfigJson("{\"hub\":\"cn\",\"base_url\":\"https://dev.user.bgssai-tokenhub.cn\"}");
         assertEquals(true, resolver.invoke(null, request.getModel()));
         assertTrue(!TokenHubClientSupport.isOfficialHub("https://www.bgssai-tokenhub.com.evil.example"));
         assertTrue(!TokenHubClientSupport.isOfficialHub("https://evil.example/path/bgssai-tokenhub.com"));
         assertTrue(TokenHubClientSupport.isOfficialHub("https://dev.user.bgssai-tokenhub.cn"));
-        assertTrue(TokenHubClientSupport.isOfficialHub("https://dev.user.bgssai-tokenhub.com"));
+        assertTrue(!TokenHubClientSupport.isOfficialHub("https://dev.user.bgssai-tokenhub.com"));
+        assertTrue(!TokenHubClientSupport.isOfficialHub(alias));
     }
 
     @Test
