@@ -1,3 +1,41 @@
+<!-- page-contract-start -->
+## web 管理端（docs/demo-static/web/admin）
+
+| 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
+| --- | --- | --- | --- | --- |
+| `ai-models.html` | `/ai-models` | - | 与该页一致 | - |
+| `ai-secrets.html` | `/ai-secrets` | - | 与该页一致 | - |
+| `creators.html` | `/creators` | - | 与该页一致 | - |
+| `credit-packs.html` | `/credit-packs` | - | 与该页一致 | - |
+| `home.html` | `/home` | - | 与该页一致 | - |
+| `login.html` | `/login` | - | 与该页一致 | - |
+| `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
+| `pay-merchants.html` | `/pay-merchants` | - | 与该页一致 | - |
+| `quality-templates.html` | `/quality-templates` | - | 与该页一致 | - |
+| `reviews.html` | `/reviews` | - | 与该页一致 | - |
+| `subscription-plans.html` | `/subscription-plans` | - | 与该页一致 | - |
+| `support-inbox.html` | `/support` | - | 与该页一致 | - |
+| `usage-cost.html` | `/usage-cost` | - | 与该页一致 | - |
+
+## web 用户端（docs/demo-static/web/user）
+
+| 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
+| --- | --- | --- | --- | --- |
+| `account-settings.html` | `/account` | - | 与该页一致 | - |
+| `bot-download-entry.html` | `/download/bot` | - | 与该页一致 | - |
+| `home.html` | `/home` | - | 与该页一致 | - |
+| `login.html` | `/login` | - | 与该页一致 | - |
+| `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
+| `mcp-tokens.html` | `/mcp-tokens` | - | 与该页一致 | - |
+| `oauth-callback.html` | `/oauth-callback` | - | 与该页一致 | - |
+| `subscription.html` | `/subscription` | - | 与该页一致 | - |
+| `tasks.html` | `/tasks` | - | 与该页一致 | - |
+| `usage-billing.html` | `/usage` | - | 与该页一致 | - |
+| `works.html` | `/works` | - | 与该页一致 | - |
+| `works.html` | `/works/:workId` | - | 与该页一致 | - |
+| `works.html` | `/works/:workId/:tab` | - | 与该页一致 | - |
+<!-- page-contract-end -->
+
 # 页面 → 后端 API 映射主表
 
 本表是「原型页面 → 后端接口」映射的**主表**（Standards §9 / §10）。后端实现端点时按本表回溯原型字段；
@@ -11,7 +49,7 @@
 > [`../architecture/short-production-design.md`](../architecture/short-production-design.md)。
 > 未纳入本切片的页面（图谱 / 质量 / 配音 / 用量 / AI 模型）「契约」列仍指向需求文档。
 
-## web 管理端（`docs/demo-static/web/admin/`，前端 3001 / 后端 8080，`role_code=PLATFORM_ADMIN`）
+## 归档对照
 
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
@@ -29,7 +67,7 @@
 | `pay-merchants.html` | `/pay-merchants` | `GET /bgssai/admin/pay/wechat-configs` · `POST /bgssai/admin/pay/wechat-configs/save` · `/set-collection-active`；支付宝同构 `/alipay-configs` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SUBSCRIPTION-CREDIT.md`](./SUBSCRIPTION-CREDIT.md) |
 | `support-inbox.html` | `/support` | `POST /bgssai/admin/support/sessions/list` · `/detail` · `POST /bgssai/admin/support/messages/reply` · `POST /bgssai/admin/support/sessions/close` · `POST /bgssai/admin/support/tickets/update_status` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`in-app-support.md`](./in-app-support.md) |
 
-## web 用户端（`docs/demo-static/web/user/`，前端 3002 / 后端 8080，`role_code=USER`）
+## 归档对照
 
 用户端接口一律只返回当前登录用户本人数据，`user_id` 取自 JWT，不从请求参数取。
 
