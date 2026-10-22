@@ -24,7 +24,7 @@ import {
   evaluateShotReadiness,
   validateTubePublishPreflight,
 } from '../../utils/CinematographyHelper'
-import { tubeTokenMissingMessage } from '../../utils/baselineCards'
+import { publishStatusAlertType, tubeTokenMissingMessage } from '../../utils/baselineCards'
 import {
   labelOf, SCRIPT_STATUS_LABEL, SHOT_STATUS_LABEL, TARGET_TYPE_LABEL,
   localizePromptShotSize, friendlyFailReason, sanitizeTubeWarning,
@@ -1069,6 +1069,19 @@ function showPublishSuccess(result) {
   const mediaId = result?.media_id || ''
   const playUrl = result?.play_url || ''
   const replayed = !!result?.replayed
+  if (result?.status === 'UNKNOWN') {
+    Modal.warning({
+      title: '发布结果未知',
+      width: 520,
+      content: (
+        <div>
+          <Paragraph>Tube 没有给出可确认的结果。这不是发布成功，也不是失败。同一成片版本不会另建作品。</Paragraph>
+          <Paragraph type="secondary">作品号 {mediaId || '尚未回写'}。可稍后用同一来源再查一次。</Paragraph>
+        </div>
+      ),
+    })
+    return
+  }
   const pending = result?.status === 'PENDING' || result?.commercial_ready === false
   if (pending && result?.status !== 'READY') {
     const note = result?.publish_log?.error || 'Tube 已受理，素材尚未验证为可播放。这不是发布成功。'
@@ -1441,10 +1454,10 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           type="info"
           showIcon
           style={{ marginTop: 12 }}
-          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 可播放 ${batchProgress.succeeded || 0} / 已受理未就绪 ${batchProgress.pending || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
+          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 可播放 ${batchProgress.succeeded || 0} / 已受理未就绪 ${batchProgress.pending || 0} / 结果未知 ${batchProgress.unknown || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
           description={(batchProgress.item_list || []).slice(0, 12).map((it) => (
             <div key={`${it.episode_id}-${it.film_id}`}>
-              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.ok ? (it.status === 'PENDING' ? `已受理未就绪 ${it.media_id || ''}` : `可播放 ${it.media_id || ''}`) : `失败 ${it.error || ''}`}
+              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.status === 'UNKNOWN' ? `结果未知 ${it.media_id || '作品号未回写'}` : it.ok ? (it.status === 'PENDING' ? `已受理未就绪 ${it.media_id || ''}` : `可播放 ${it.media_id || ''}`) : `失败 ${it.error || ''}`}
             </div>
           ))}
         />
@@ -1464,6 +1477,15 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           />
         </div>
       ) : null}
+      {film?.baseline_note ? (
+        <Alert
+          type={film.consistent_flag === 1 ? 'success' : 'warning'}
+          showIcon
+          style={{ marginTop: 12 }}
+          message={film.consistent_flag === 1 ? '成片与锁定版本一致' : '成片不能标成与现行时间轴一致'}
+          description={film.baseline_note}
+        />
+      ) : null}
       {publishError ? (
         <Alert
           type="error"
@@ -1477,7 +1499,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
       ) : null}
       {publishLog ? (
         <Alert
-          type={publishLog.status === 'FAILED' ? 'error' : publishLog.status === 'PENDING' ? 'info' : (publishLog.last_error ? 'warning' : 'success')}
+          type={publishStatusAlertType(publishLog.status)}
           showIcon
           style={{ marginTop: 12 }}
           message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无 media_id'}`}

@@ -157,6 +157,7 @@
 
 - 镜头视频重抽、配音重配：该集 `short_film.compose_status=NONE`、`expired_flag=1`，剧集 `compose_status=NONE`；审核若为 `APPROVED` / `PENDING` 则回落 `NOT_SUBMITTED`。若此前 Tube 发布是 READY / PENDING，取消 Short 侧回放（`media_publish_status=NONE`，当前播放链接清空）。历史审核行保留，发布闸门看剧集上的 `review_status`。
 - 合成成功：`expired_flag=0`、`subtitle_stale_flag=0`、`compose_status=READY`。产物必须是非空视频（mime 含 video 或 mp4）。若这集成片曾经发布过，同样取消回放，下次发布用同一幂等键再 POST。
+- 成片基准：`export_json` 同时写入 `character_version_list`、`voided_character_list`、`timeline_version`、`aspect_ratio`、`spot_check`、`consistent_flag`、`baseline_note`。`spot_check` 与时间轴卡片使用同一份镜号、时长、字幕和角色，9:16 与 16:9 只改画幅、不改镜头顺序。时间轴仍引用已作废角色时 `consistent_flag=0`，文案写明不能标为与现行时间轴一致。`films/detail` 原样返回这些字段。
 - 合成任务失败：剧集不再停在 `COMPOSING`。旧成片仍是未过期 READY 时，剧集恢复 READY；否则剧集与成片记 `FAILED`。
 - 过期成片：`films/detail.download_url` 为空；`films/download-url` 返回 `4012`。
 

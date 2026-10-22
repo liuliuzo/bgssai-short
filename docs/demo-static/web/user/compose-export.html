@@ -180,6 +180,9 @@
                   <div class="k">时长</div><div>88 秒（目标 90 秒，偏差 2.2%）</div>
                   <div class="k">成片门 G4</div><div><span class="text-ok font-bold">95</span> 已通过</div>
                   <div class="k">审核</div><div><span class="st done">已通过</span> 2026-08-13 09:12</div>
+                  <div class="k">角色版本</div><div>沈知微 · 已锁定定妆</div>
+                  <div class="k">时间轴版本</div><div>v2 · 镜 1 时长 4 秒 · 字幕「这份收购案，谁批准的？」</div>
+                  <div class="k">作废角色</div><div>陆时衍已作废，不能标为与现行时间轴一致</div>
                 </div>
                 <div class="toolbar" style="margin-top:12px">
                   <button class="btn btn-default btn-sm">重新合成 2.00 元</button>
@@ -209,8 +212,9 @@
                   <code>force=true</code> 才用同一键再 POST。重新合成后不再回放旧目录。
                   请求体带 <code>status=READY</code> 与 <code>approved=true</code>。
                   Tube 返回 PENDING（可以没有 media_id / play_url）时弹窗写「已受理，尚未可播放」，
-                  不算成功；FAILED 或 code=422 算失败。超时或状态对不上时显示 UNKNOWN：
-                  不重复发布，不当成成功或失败，下次用同一幂等键先查 Tube 再决定是否补发。
+                  不算成功；FAILED 或 code=422 算失败。超时、结果仍未知，或查询没有可读结果时显示 UNKNOWN：
+                  不重复发布，不当成成功或失败。已有作品号时不再另建作品；只有接收端明确查无且本地还没有作品号，才用同一幂等键补发一次。
+                  成片记录绑定同一份角色版本和时间轴版本，抽检镜号、时长和字幕。已作废角色不得标成一致。
                   base-url 为空直接失败，不编造主机 IP。失败镜头重试不会覆盖已锁定的确认版本；引用的角色、场景或道具素材缺失则明确失败，模型只走 tokenhub-cn。
                   下架/撤回：tube 暂无契约，本仓 skip。
                 </div>

@@ -288,7 +288,7 @@ class FilmPublishToMediaServiceTest {
     }
 
     @Test
-    void pendingHandoffIsNotReplayed() {
+    void pendingLookupUnknownDoesNotIngestAgain() {
         ShortFilm film = readyFilm();
         film.setMediaId("md-p");
         film.setMediaPlayUrl("https://p/pending");
@@ -296,19 +296,17 @@ class FilmPublishToMediaServiceTest {
         when(filmMapper.selectOneByExample(any())).thenReturn(film);
         when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
         when(workAccessService.requireWork("w-1")).thenReturn(work());
-        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
-        when(assetService.resolveUrl("as-cover")).thenReturn(null);
-        when(mediaIngestClient.ingest(any()))
-                .thenReturn(new MediaIngestClient.IngestResult("md-p", "https://p/ready", "READY", 200, 1));
+        when(mediaIngestClient.lookup(any())).thenReturn(null);
 
         FilmPublishToMediaReq req = new FilmPublishToMediaReq();
         req.setFilmId("fl-1");
         ApiResponse response = service().publish(req);
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) response.getResult();
-        assertEquals("READY", result.get("status"));
-        assertEquals(Boolean.FALSE, result.get("replayed"));
-        verify(mediaIngestClient).ingest(any());
+        assertEquals("UNKNOWN", result.get("status"));
+        assertEquals("md-p", result.get("media_id"));
+        assertEquals(Boolean.FALSE, result.get("commercial_ready"));
+        verify(mediaIngestClient, never()).ingest(any());
     }
 
     @Test
@@ -545,5 +543,79 @@ class FilmPublishToMediaServiceTest {
         assertTrue(FilmPublishToMediaService.isValidAspectRatio("16:9"));
         assertTrue(FilmPublishToMediaService.isValidAspectRatio(null));
         assertFalse(FilmPublishToMediaService.isValidAspectRatio("21:9"));
+    }
+
+    @Test
+    void pendingWithRecordedMediaIdAndNotFoundDoesNotCreateSecondWork() {
+        ShortFilm film = readyFilm();
+        film.setMediaPublishStatus("PENDING");
+        film.setMediaId("md-kept");
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(mediaIngestClient.lookup(any())).thenReturn(
+                new MediaIngestClient.IngestResult("", "", "NOT_FOUND", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        ApiResponse response = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals("UNKNOWN", result.get("status"));
+        assertEquals("md-kept", result.get("media_id"));
+        verify(mediaIngestClient, never()).ingest(any());
+    }
+
+    @Test
+    void mismatchedMediaIdStaysUnknownAndDoesNotIngest() {
+        ShortFilm film = readyFilm();
+        film.setMediaPublishStatus("UNKNOWN");
+        film.setMediaId("md-kept");
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(approvedEpisode());
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(mediaIngestClient.lookup(any())).thenReturn(
+                new MediaIngestClient.IngestResult("md-other", "https://media/play/md-other", "READY", 200, 1));
+
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setFilmId("fl-1");
+        ApiResponse first = service().publish(req);
+        ApiResponse second = service().publish(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) second.getResult();
+        assertEquals("UNKNOWN", result.get("status"));
+        assertEquals("md-kept", result.get("media_id"));
+        assertEquals(Boolean.FALSE, result.get("commercial_ready"));
+        assertTrue(first.isSuccess());
+        verify(mediaIngestClient, never()).ingest(any());
+    }
+
+    @Test
+    void batchUnknownIsNotCountedAsSuccess() {
+        ShortFilm film = readyFilm();
+        ShortEpisode ep = approvedEpisode();
+        when(workAccessService.requireWork("w-1")).thenReturn(work());
+        when(episodeMapper.selectByExample(any())).thenReturn(List.of(ep));
+        when(filmMapper.selectOneByExample(any())).thenReturn(film);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(ep);
+        when(assetService.resolveUrl("as-film")).thenReturn("https://signed/video.mp4");
+        when(assetService.resolveUrl("as-cover")).thenReturn(null);
+        when(mediaIngestClient.ingest(any())).thenThrow(new MediaPublishException(
+                CommonErrorCode.UPSTREAM_TIMEOUT, "Tube 请求超时", null, 1));
+
+        FilmPublishBatchToMediaReq req = new FilmPublishBatchToMediaReq();
+        req.setWorkId("w-1");
+        ApiResponse response = service().publishBatch(req);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals(1, result.get("total"));
+        assertEquals(0, result.get("succeeded"));
+        assertEquals(1, result.get("unknown"));
+        assertEquals(0, result.get("failed"));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> items = (List<Map<String, Object>>) result.get("item_list");
+        assertEquals("UNKNOWN", items.get(0).get("status"));
+        assertEquals(false, items.get(0).get("ok"));
+        verify(mediaIngestClient, org.mockito.Mockito.times(1)).ingest(any());
     }
 }

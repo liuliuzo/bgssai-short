@@ -388,8 +388,23 @@ public class FilmService {
             if (film.getMediaPublishLog() != null && !film.getMediaPublishLog().isBlank()) {
                 result.put("media_publish_log", film.getMediaPublishLog());
             }
+            copyFilmBaseline(result, film.getExportJson());
         }
         return Responses.ok(result);
+    }
+
+    private static void copyFilmBaseline(Map<String, Object> result, String exportJson) {
+        Map<String, Object> export = ShortJson.map(exportJson);
+        if (export.get("timeline_version") == null && export.get("character_version_list") == null) {
+            return;
+        }
+        result.put("character_version_list", export.get("character_version_list"));
+        result.put("voided_character_list", export.get("voided_character_list"));
+        result.put("timeline_version", export.get("timeline_version"));
+        result.put("consistent_flag", export.get("consistent_flag"));
+        result.put("baseline_note", export.get("baseline_note"));
+        result.put("aspect_ratio", export.get("aspect_ratio"));
+        result.put("spot_check", export.get("spot_check"));
     }
 
     /**
