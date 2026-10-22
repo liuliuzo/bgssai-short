@@ -54,6 +54,36 @@ class EditBaselineCardsTest {
     }
 
     @Test
+    void filmRecordMatchesTimelineAndRefusesVoidedCharacter() {
+        ShortCharacter locked = character("c-1", "沈知微", "LOCKED", "a-50012");
+        ShortCharacter voided = character("c-2", "陆时衍", "DRAFT", "a-old");
+        ShortShot first = shot(1, 4, "LOCKED", "你敢签", "[{\"character_id\":\"c-1\"}]");
+        ShortShot second = shot(2, 5, "LOCKED", "三年前那纸", "[{\"character_id\":\"c-1\"}]");
+
+        Map<String, Object> portrait = EditBaselineCards.filmRecord(List.of(first, second), List.of(locked), "9:16");
+        Map<String, Object> wide = EditBaselineCards.filmRecord(List.of(first, second), List.of(locked), "16:9");
+        assertEquals(1, portrait.get("consistent_flag"));
+        assertEquals("角色版本", ((List<Map<String, Object>>) portrait.get("character_version_list")).get(0).get("version_label"));
+        Map<String, Object> timeline = (Map<String, Object>) portrait.get("timeline_version");
+        assertEquals("时间轴版本", timeline.get("version_label"));
+        assertEquals(timeline.get("shot_list"), portrait.get("spot_check"));
+        assertEquals(wide.get("spot_check"), portrait.get("spot_check"));
+        List<Map<String, Object>> checks = (List<Map<String, Object>>) portrait.get("spot_check");
+        assertEquals(1, checks.get(0).get("shot_no"));
+        assertEquals(4, checks.get(0).get("shot_duration_sec"));
+        assertEquals("你敢签", checks.get(0).get("dialogue_text"));
+        assertEquals("沈知微", checks.get(0).get("character_names"));
+        assertEquals(2, checks.get(1).get("shot_no"));
+
+        ShortShot mixed = shot(3, 4, "LOCKED", "你敢签",
+                "[{\"character_id\":\"c-1\"},{\"character_id\":\"c-2\"}]");
+        Map<String, Object> rejected = EditBaselineCards.filmRecord(List.of(mixed), List.of(locked, voided), "9:16");
+        assertEquals(0, rejected.get("consistent_flag"));
+        assertEquals("", ((List<Map<String, Object>>) rejected.get("voided_character_list")).get(0).get("version_label"));
+        assertTrue(String.valueOf(rejected.get("baseline_note")).contains("不能标为与现行时间轴一致"));
+    }
+
+    @Test
     void unlockedTimelineDoesNotClaimVersionLabel() {
         ShortShot shot = new ShortShot();
         shot.setShotNo(1);
@@ -63,6 +93,17 @@ class EditBaselineCardsTest {
         assertEquals("DRAFT", timeline.get("card_status"));
         assertEquals("", timeline.get("version_label"));
         assertEquals(0, timeline.get("consistent_flag"));
+    }
+
+    private static ShortShot shot(int no, int sec, String status, String dialogue, String characterRef) {
+        ShortShot shot = new ShortShot();
+        shot.setShotNo(no);
+        shot.setShotStatus(status);
+        shot.setShotDurationSec(sec);
+        shot.setShotVersion(2);
+        shot.setDialogueText(dialogue);
+        shot.setCharacterRefJson(characterRef);
+        return shot;
     }
 
     private static ShortCharacter character(String id, String name, String status, String assetId) {

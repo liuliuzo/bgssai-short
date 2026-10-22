@@ -14,6 +14,14 @@ export function visibleBaseline(precheck) {
   return { characters, timeline: timelineLocked, voided }
 }
 
+export function publishStatusAlertType(status) {
+  if (status === 'FAILED') return 'error'
+  if (status === 'UNKNOWN') return 'warning'
+  if (status === 'PENDING' || status === 'PROCESSING' || status === 'QUEUED') return 'info'
+  if (status === 'READY') return 'success'
+  return 'warning'
+}
+
 export function tubeTokenMissingMessage(preflight) {
   if (!preflight) return ''
   if (preflight.token_configured === false) return '未配置 Tube 令牌'

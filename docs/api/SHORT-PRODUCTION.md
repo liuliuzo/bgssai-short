@@ -318,6 +318,8 @@ FFmpeg 混入成片音轨。
 `storage_key` / `file_size_byte` / `task_status` / `commercial_ready` / `media_play_url_ok`）、
 `commercial_ready`，以及 `bgm_asset_id`、`bgm_url`、
 `bgm_candidate_list[{ "asset_id", "file_url", "duration_sec", "created_time", "selected_flag" }]`。
+成片 `export_json` 含基准时另返回 `character_version_list`、`voided_character_list`、`timeline_version`、
+`aspect_ratio`、`spot_check`、`consistent_flag`、`baseline_note`。`consistent_flag=0` 表示不能把成片标成与现行时间轴一致。
 
 ### GET /bgssai/user/films/download-url?asset_id=
 

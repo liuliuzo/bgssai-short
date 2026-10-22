@@ -505,6 +505,15 @@ public class FilmPublishToMediaService {
         return film;
     }
 
+    static boolean mediaIdConflicts(ShortFilm film, MediaIngestClient.IngestResult looked) {
+        if (film == null || looked == null) {
+            return false;
+        }
+        String localId = film.getMediaId() == null ? "" : film.getMediaId().trim();
+        String remoteId = looked.mediaId() == null ? "" : looked.mediaId().trim();
+        return !localId.isEmpty() && !remoteId.isEmpty() && !localId.equals(remoteId);
+    }
+
     static boolean isOpenHandoff(String status) {
         if (status == null || status.isBlank()) {
             return false;
@@ -543,7 +552,10 @@ public class FilmPublishToMediaService {
             return Responses.ok(toUnknownResult(film, idempotencyKey, at, ex.getMessage()));
         }
         if (looked == null) {
-            return null;
+            Date at = new Date();
+            String note = "接收端状态未知，未再次发布";
+            persistUnknown(film, idempotencyKey, null, 0, note, at);
+            return Responses.ok(toUnknownResult(film, idempotencyKey, at, note));
         }
         if (looked.status() == null || looked.status().isBlank()) {
             Date at = new Date();
@@ -563,6 +575,11 @@ public class FilmPublishToMediaService {
         }
         String classified = CommercialOutcomeGuard.classifyMediaStatus(raw);
         Date at = new Date();
+        if (mediaIdConflicts(film, looked) && ("READY".equals(classified) || "PENDING".equals(classified))) {
+            String note = "接收端作品号与已记录的不一致，未另建作品";
+            persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, note, at);
+            return Responses.ok(toUnknownResult(film, idempotencyKey, at, note));
+        }
         if ("READY".equals(classified)) {
             CommercialOutcomeGuard.rejectFakeUrl(looked.playUrl(), "tube play_url");
             if (looked.mediaId() == null || looked.mediaId().isBlank()

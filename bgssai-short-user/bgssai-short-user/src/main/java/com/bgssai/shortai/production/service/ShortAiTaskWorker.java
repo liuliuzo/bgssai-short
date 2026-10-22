@@ -68,6 +68,7 @@ import com.bgssai.shortai.model.ShortSubtitle;
 import com.bgssai.shortai.model.ShortSubtitleExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
+import com.bgssai.shortai.production.support.EditBaselineCards;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -905,6 +906,29 @@ public class ShortAiTaskWorker {
             List<ShortSceneCard> props, String fragment) {
     }
 
+    private String workAspectRatio(String workId) {
+        if (shortWorkMapper == null || workId == null || workId.isBlank()) {
+            return "9:16";
+        }
+        ShortWorkExample wx = new ShortWorkExample();
+        wx.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        ShortWork work = shortWorkMapper.selectOneByExample(wx);
+        if (work == null || work.getAspectRatio() == null || work.getAspectRatio().isBlank()) {
+            return "9:16";
+        }
+        return work.getAspectRatio().trim();
+    }
+
+    private List<ShortCharacter> loadWorkCharacters(String workId) {
+        if (shortCharacterMapper == null || workId == null || workId.isBlank()) {
+            return List.of();
+        }
+        ShortCharacterExample cx = new ShortCharacterExample();
+        cx.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> rows = shortCharacterMapper.selectByExample(cx);
+        return rows == null ? List.of() : rows;
+    }
+
     private void finishCompose(ShortAiTask task, AiModelConfig model) {
         ShortEpisode ep = episode(task.getEpisodeId());
         if (ep == null) {
@@ -932,6 +956,8 @@ public class ShortAiTaskWorker {
         }
         timelineMap.put("shots", shotMeta);
         timelineMap.put("duration_sec", duration);
+        timelineMap.putAll(EditBaselineCards.filmRecord(shots, loadWorkCharacters(ep.getWorkId()),
+                workAspectRatio(ep.getWorkId())));
 
         AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
         request.getParams().put("title", ep.getEpisodeTitle());

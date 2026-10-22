@@ -19,7 +19,7 @@
      `replayed=true`），避免双目录。`force=true` 才用同一键再 POST（期望 Tube upsert 同一 `media_id`）。
      重新合成成功后，Short 把 `media_publish_status` 置回 `NONE` 并清空当前 `play_url`，
      下次发布必须再 POST（同一键，由 Tube UNIQUE upsert），不能回放旧目录。
-     PENDING / FAILED 允许重试。状态为 UNKNOWN（超时、响应丢失、接收端状态对不上）时先按同一幂等键查询 Tube，查到同一 `media_id` 就采纳，查无且本地还没有 `media_id` 才允许再 POST 一次；已有 `media_id` 时不再另建作品。UNKNOWN 不是成功也不是失败。Tube 对端 MUST UNIQUE upsert，见 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
+     PENDING / FAILED 允许重试，但 PENDING、PROCESSING、QUEUED 与 UNKNOWN 都先按同一幂等键查询 Tube。查到同一 `media_id` 就采纳；查询没有可读结果，或返回的作品号与已记录的不一致时记 UNKNOWN，不再 POST。查无且本地还没有 `media_id` 才允许再 POST 一次；已有 `media_id` 时不再另建作品。UNKNOWN 不是成功也不是失败，批量计入 `unknown`。Tube 对端 MUST UNIQUE upsert，见 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
   5. **配置**：`bgssai.tube.base-url` 与 `bgssai.tube.ingest-token` 写在各环境 `application-*.properties`（token 仅占位，不提交真实密钥）；运行期优先 properties，空则回退 `sys_secret.bgssai.tube.ingest-token`。
      **主机**：本仓不分配、不编造 `MEDIA_*` IP。dev/prod 的 base-url 是约定域名；地址为空时发布返回 `4006`，文案写明未配置，不返回 `media_id`。域名不可达时返回 `502000` / `504000`，同样不写成成功。
   6. **失败**：tube 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error` + `media_publish_log`。

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { tubeTokenMissingMessage, visibleBaseline } from './baselineCards.js'
+import { publishStatusAlertType, tubeTokenMissingMessage, visibleBaseline } from './baselineCards.js'
 
 test('locked cards keep Chinese version labels and voided cards stay inconsistent', () => {
   const view = visibleBaseline({
@@ -22,6 +22,13 @@ test('locked cards keep Chinese version labels and voided cards stay inconsisten
   assert.equal(view.timeline.version_label, '时间轴版本')
   assert.equal(view.voided.length, 1)
   assert.equal(view.voided[0].consistent_flag, 0)
+})
+
+test('unknown publish status is visible and is not a success', () => {
+  assert.equal(publishStatusAlertType('UNKNOWN'), 'warning')
+  assert.equal(publishStatusAlertType('PENDING'), 'info')
+  assert.equal(publishStatusAlertType('READY'), 'success')
+  assert.notEqual(publishStatusAlertType('UNKNOWN'), 'success')
 })
 
 test('missing tube token uses the disabled-state copy', () => {

@@ -83,6 +83,29 @@ public final class EditBaselineCards {
         return list;
     }
 
+    /**
+     * 成片导出时记下的基准。抽检列表与时间轴卡片使用同一份镜号、时长、字幕和角色。
+     * 时间轴仍引用已作废角色时，成片不得再标成与现行时间轴一致。
+     */
+    public static Map<String, Object> filmRecord(List<ShortShot> shots, List<ShortCharacter> characters,
+            String aspectRatio) {
+        List<Map<String, Object>> locked = lockedCharacterCards(characters);
+        List<Map<String, Object>> voided = voidedCharacterCards(characters, shots);
+        Map<String, Object> timeline = timelineCard(shots, characters);
+        boolean aligned = "LOCKED".equals(timeline.get("card_status")) && voided.isEmpty();
+        Map<String, Object> record = new LinkedHashMap<>();
+        record.put("character_version_list", locked);
+        record.put("voided_character_list", voided);
+        record.put("timeline_version", timeline);
+        record.put("aspect_ratio", aspectRatio == null || aspectRatio.isBlank() ? "9:16" : aspectRatio.trim());
+        record.put("consistent_flag", aligned ? 1 : 0);
+        record.put("baseline_note", voided.isEmpty()
+                ? (aligned ? "成片与已锁定的角色版本、时间轴版本一致" : "时间轴尚未锁定，不能标成与现行时间轴一致")
+                : "已作废角色版本不能标为与现行时间轴一致");
+        record.put("spot_check", timeline.get("shot_list"));
+        return record;
+    }
+
     public static Map<String, Object> timelineCard(List<ShortShot> shots, List<ShortCharacter> characters) {
         List<Map<String, Object>> shotList = new ArrayList<>();
         int totalSec = 0;
