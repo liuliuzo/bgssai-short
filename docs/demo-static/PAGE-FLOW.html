@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bgssai-short — 原型页面流转与代码路由映射 (PAGE-FLOW)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 24px; background: #0f172a; color: #f8fafc; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #334155; padding: 10px; text-align: left; font-size: 14px; }
+    th { background: #0f172a; color: #94a3b8; }
+    a { color: #38bdf8; text-decoration: none; }
+    code { background: #0f172a; padding: 2px 6px; border-radius: 4px; color: #a7f3d0; }
+  </style>
+</head>
+<body>
+  <div class="card" data-contract-endpoint="/api/cs/support/callback">
+    <h1>bgssai-short 页面流转与代码契约映射 (PAGE-FLOW)</h1>
+    <p><a href="./index.html">返回原型总览 (index.html)</a> · 本流转图将 <code>docs/demo-static/</code> 中的全部原型页面与仓库真实 Controller/Service/View 源码及 API 路由锁定。</p>
+    <table>
+      <thead>
+        <tr><th>原型页面</th><th>端/分面</th><th>绑定源码文件</th><th>绑定 API 契约</th></tr>
+      </thead>
+      <tbody>
+      <tr><td><a href="./android/index.html">android/index.html</a></td><td>android</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./index.html">index.html</a></td><td>index</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./ios/index.html">ios/index.html</a></td><td>ios</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/PAGE-FLOW.html">web/admin/PAGE-FLOW.html</a></td><td>flow</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/ai-models.html">web/admin/ai-models.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/ai-secrets.html">web/admin/ai-secrets.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/content-review.html">web/admin/content-review.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/creators.html">web/admin/creators.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/credit-packs.html">web/admin/credit-packs.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/home.html">web/admin/home.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/icp-filing-footer.html">web/admin/icp-filing-footer.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/index.html">web/admin/index.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/login-logs.html">web/admin/login-logs.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/login.html">web/admin/login.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/pay-merchants.html">web/admin/pay-merchants.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/quality-templates.html">web/admin/quality-templates.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/review-detail.html">web/admin/review-detail.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/support-inbox.html">web/admin/support-inbox.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/admin/usage-cost.html">web/admin/usage-cost.html</a></td><td>admin</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/index.html">web/index.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/PAGE-FLOW.html">web/user/PAGE-FLOW.html</a></td><td>flow</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/account-settings.html">web/user/account-settings.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/bot-download-entry.html">web/user/bot-download-entry.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/bot-mobile-downloads.html">web/user/bot-mobile-downloads.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/character-bible.html">web/user/character-bible.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/compose-export.html">web/user/compose-export.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/continuity-center.html">web/user/continuity-center.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/edit-export.html">web/user/edit-export.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/episode-preview.html">web/user/episode-preview.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/home.html">web/user/home.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/icp-filing-footer.html">web/user/icp-filing-footer.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/index.html">web/user/index.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/launch-audit-20260907.html">web/user/launch-audit-20260907.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/legal-entry-dedup.html">web/user/legal-entry-dedup.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/login-logs.html">web/user/login-logs.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/login.html">web/user/login.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/mcp-tokens.html">web/user/mcp-tokens.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/model-pricing-receipts.html">web/user/model-pricing-receipts.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/otp-entry-20260924.html">web/user/otp-entry-20260924.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/quality-report.html">web/user/quality-report.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/script-studio.html">web/user/script-studio.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/shell-pane.html">web/user/shell-pane.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/single-session.html">web/user/single-session.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/source-import.html">web/user/source-import.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/story-map.html">web/user/story-map.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/storyboard-canvas.html">web/user/storyboard-canvas.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/storyboard.html">web/user/storyboard.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/subscription.html">web/user/subscription.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/support-chat.html">web/user/support-chat.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/task-center.html">web/user/task-center.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/usage-billing.html">web/user/usage-billing.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/voice-studio.html">web/user/voice-studio.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/work-create.html">web/user/work-create.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/work-detail.html">web/user/work-detail.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      <tr><td><a href="./web/user/works.html">web/user/works.html</a></td><td>user</td><td><code>bgssai-short-admin/bgssai-short-admin-react/src/App.jsx</code></td><td><code>/api/cs/support/callback</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <script type="application/json" id="contract-fixture">
+  {
+    "repo_name": "bgssai-short",
+    "flow_entry": "docs/demo-static/PAGE-FLOW.html",
+    "index_entry": "docs/demo-static/index.html"
+  }
+  </script>
+</body>
+</html>
