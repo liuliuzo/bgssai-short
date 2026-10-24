@@ -40,7 +40,7 @@ export default function Login() {
       if (CODE_OK.has(data && data.code) && r.jwt_token) {
         loginSucceed(r)
       } else if (CODE_OK.has(data && data.code)) {
-        setError('登录失败，请重试')
+        setError('登录失败，请稍后重试')
       } else {
         setError((data && data.message) || '登录失败')
       }
