@@ -1518,7 +1518,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
                         await navigator.clipboard.writeText(publishLog.play_url)
                         message.success('已复制')
                       } catch {
-                        message.warning('复制失败')
+                        message.warning('复制失败，请手动选择')
                       }
                     }}
                   >复制</Button>
