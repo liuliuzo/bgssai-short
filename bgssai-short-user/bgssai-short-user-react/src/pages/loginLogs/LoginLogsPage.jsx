@@ -72,7 +72,7 @@ export default function LoginLogsPage() {
           loading={loading}
           columns={COLUMNS}
           dataSource={rows}
-          locale={{ emptyText: '暂无登录记录' }}
+          locale={{ emptyText: '还没有登录记录。' }}
           pagination={{
             current: pageNum,
             pageSize,
