@@ -84,25 +84,25 @@ instance.interceptors.response.use(
           message.error('请求错误，未找到相应资源')
           break
         case 408:
-          message.error('请求超时')
+          message.error('请求超时，请检查网络后重试')
           break
         case 500:
-          message.error('服务器内部错误')
+          message.error('服务暂时异常，请稍后重试')
           break
         case 502:
-          message.error('网络错误')
+          message.error('网络异常，请稍后重试')
           break
         case 503:
-          message.error('服务不可用')
+          message.error('服务暂时不可用，请稍后重试')
           break
         case 504:
-          message.error('网络超时')
+          message.error('网络超时，请稍后重试')
           break
         default:
-          message.error('请求失败')
+          message.error('请求失败，请稍后重试')
       }
     } else {
-      message.error('连接服务器失败')
+      message.error('连接服务器失败，请稍后重试')
     }
     return Promise.reject(error)
   },
