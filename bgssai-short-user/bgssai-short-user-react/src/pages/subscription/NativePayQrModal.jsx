@@ -42,7 +42,7 @@ export default function NativePayQrModal({
             <QRCodeSVG value={codeUrl} size={200} level="M" includeMargin={false} />
           </div>
         ) : (
-          <Text type="danger">未返回支付二维码链接</Text>
+          <Text type="danger">未返回支付二维码链接，请稍后重试</Text>
         )}
         <div style={{ width: '100%' }}>
           <Paragraph style={{ marginBottom: 4 }}>

@@ -120,7 +120,7 @@ export default function SubscriptionPage() {
         return
       }
       if (!result.code_url) {
-        message.error('下单成功但未返回支付链接')
+        message.error('下单成功但未返回支付链接，请稍后重试')
         return
       }
       setPayOrder({
