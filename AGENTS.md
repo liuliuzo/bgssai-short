@@ -157,3 +157,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 用户不看、也看不懂修改细节。对用户**只汇报整体进度与结果**（做到哪一步、是否完成、要不要拍板）。执行过程中也不要在对话里复述改了什么，不要逐步播报文件或 diff。禁止输出文件清单、diff、命令日志、commit SHA、逐仓 PR 表、工具过程。需要时最多给一个链接。
 
 全局规范须读取[骨架仓唯一来源](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md)；本地多仓工作区可读取 `bgssai-skeleton/docs/BGSSAI-Standards.md`，单仓检出时读取上述 GitHub 文件。本仓只保留自身补充，不复制全局规范。
+
+## OBS dev/prod 凭据例外（2026-10-26）
+
+本仓 dev/prod 的 OBS 桶、endpoint 及客户端需要的 region 仍按环境在应用 profile 中写字面量。OBS AK/SK 在 Git 中留空，通过现有 systemd `EnvironmentFile` 注入仅授权本产品对应环境桶的专用凭据；禁止回填主账号密钥、写入前端或输出实际密钥。本例外仅覆盖该两环境的 OBS 凭据，优先于旧“全部凭据随仓库提交”的表述；不把 OBS 配置搬入 Admin/数据库，不新增 properties/YAML 占位符。具体属性名、部署前置条件及运维校验 profile 见 `deploy/README.md`。配置提交、运行时注入、桶读写验证与业务验收须分别报告。

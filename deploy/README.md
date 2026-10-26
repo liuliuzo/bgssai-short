@@ -112,3 +112,32 @@ java -jar bgssai-short-user.jar --spring.profiles.active=prod
 ```
 
 配置全部来自 jar 内的 `application-prod.properties`。日志默认落 `/opt/bgssai/log`。
+
+## OBS dev/prod 环境与运行时凭据（2026-10-26）
+
+本节是本仓 dev/prod OBS 配置的现行约定，覆盖旧文档中把该两环境 OBS AK/SK 随仓库分发的表述。dev 与 prod 均部署 `develop`，只切换对应环境 profile。
+
+| 环境 / 端 | 应用配置 | 桶 |
+| --- | --- | --- |
+| `dev` / `user` | `bgssai-short-user/bgssai-short-user/src/main/resources/application-dev.properties` | `dev-bgssai-short` |
+| `prod` / `user` | `bgssai-short-user/bgssai-short-user/src/main/resources/application-prod.properties` | `prod-bgssai-short` |
+
+区域为 `cn-east-3`，OBS 服务 endpoint 为 `https://obs.cn-east-3.myhuaweicloud.com`。应用配置沿用实际客户端读取的原属性名；不需要区域属性的客户端由 endpoint 确定区域。
+
+Git 中的 OBS AK/SK 字段有意留空，不能用主账号密钥回填。部署前通过 Jenkins 将仅授权本产品对应环境桶的专用凭据写入目标服务已有的 `/etc/bgssai/<SERVICE_NAME>.env`，权限保持 `600`；不要将实际凭据写入提交、PR、日志或前端产物。systemd 的 `EnvironmentFile` 已由现行部署脚本加载，环境变量优先于应用 profile；不恢复 `application-secrets.properties` 导入。
+
+运行时必须覆盖的精确 Spring 属性：
+
+| Access Key 属性 | Secret Key 属性 |
+| --- | --- |
+| `bgssai.obs.access-key` | `bgssai.obs.secret-key` |
+
+可在服务环境文件中使用 `SPRING_APPLICATION_JSON` 提供上述精确属性名；如文件已有该项，必须合并 JSON 内的既有配置，不能整项覆盖掉其他设置。profile 本身不增加环境变量占位符。服务名按 Jenkins 主机清单的 `<PRODUCT>_<END>_SERVICE` 覆盖项解析，未覆盖时采用 `bgssai-short-<end>`。只为表中实际使用或已有存储配置的端提供凭据；没有存储消费者的端不因同仓而新增上传功能。
+
+未完成运行时凭据配送前，不应发布依赖 OBS 的服务；仓库配置存在不代表环境已可用。保留既有上传实现、对象键、访问域名、存储模式和本地回退行为；此次不迁移或删除已有文件，不修改业务上传接口。
+
+### 运维校验配置
+
+`deploy/obs/application-dev.properties` 与 `deploy/obs/application-prod.properties` 是无凭据的运维 profile，由中央仓 `bgssai-workflows/deploy/obs/verify.py` 读取，指定校验的产品、环境、桶、区域和业务接入状态。它们不由 Spring Boot 自动加载，不替代上表应用配置，也不承载 AK/SK。应用 profile 负责业务客户端绑定，运维 profile 负责统一验证目标。
+
+通过 Jenkins 在对应环境使用专用凭据校验临时对象写入、读回与清理，并记录桶名、环境及成功/失败，不记录凭据。应用上线后再验证已有上传/读取入口；运维校验成功不能替代业务验收。没有本次实际执行的环境应记录为“未验证”，不能因为两个配置文件已提交而记为上线完成。
