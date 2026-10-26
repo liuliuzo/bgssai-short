@@ -160,4 +160,4 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 
 ## OBS dev/prod 凭据例外（2026-10-26）
 
-本仓 dev/prod 的 OBS 桶、endpoint 及客户端需要的 region 仍按环境在应用 profile 中写字面量。OBS AK/SK 在 Git 中留空，通过现有 systemd `EnvironmentFile` 注入仅授权本产品对应环境桶的专用凭据；禁止回填主账号密钥、写入前端或输出实际密钥。本例外仅覆盖该两环境的 OBS 凭据，优先于旧“全部凭据随仓库提交”的表述；不把 OBS 配置搬入 Admin/数据库，不新增 properties/YAML 占位符。具体属性名、部署前置条件及运维校验 profile 见 `deploy/README.md`。配置提交、运行时注入、桶读写验证与业务验收须分别报告。
+本仓 dev/prod 的 OBS 桶、endpoint 及客户端需要的 region 仍按环境在应用 profile 中写字面量。OBS AK/SK 在 Git 中留空，通过现有 systemd `EnvironmentFile` 注入本产品的环境专用访问密钥。dev/prod 使用不同 AK/SK，但两把密钥均只授权本产品 dev/prod 两个桶，不构成环境级 IAM 隔离；禁止回填主账号密钥、写入前端或输出实际密钥。本例外仅覆盖该两环境的 OBS 凭据，优先于旧“全部凭据随仓库提交”的表述；不把 OBS 配置搬入 Admin/数据库，不新增 properties/YAML 占位符。具体属性名、部署前置条件及运维校验 profile 见 `deploy/README.md`。配置提交、运行时注入、桶读写验证与业务验收须分别报告。

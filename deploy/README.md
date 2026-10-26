@@ -124,7 +124,9 @@ java -jar bgssai-short-user.jar --spring.profiles.active=prod
 
 区域为 `cn-east-3`，OBS 服务 endpoint 为 `https://obs.cn-east-3.myhuaweicloud.com`。应用配置沿用实际客户端读取的原属性名；不需要区域属性的客户端由 endpoint 确定区域。
 
-Git 中的 OBS AK/SK 字段有意留空，不能用主账号密钥回填。部署前通过 Jenkins 将仅授权本产品对应环境桶的专用凭据写入目标服务已有的 `/etc/bgssai/<SERVICE_NAME>.env`，权限保持 `600`；不要将实际凭据写入提交、PR、日志或前端产物。systemd 的 `EnvironmentFile` 已由现行部署脚本加载，环境变量优先于应用 profile；不恢复 `application-secrets.properties` 导入。
+Git 中的 OBS AK/SK 字段有意留空，不能用主账号密钥回填。部署前通过 Jenkins 将本产品的环境专用访问密钥写入目标服务已有的 `/etc/bgssai/<SERVICE_NAME>.env`，权限保持 `600`；不要将实际凭据写入提交、PR、日志或前端产物。systemd 的 `EnvironmentFile` 已由现行部署脚本加载，环境变量优先于应用 profile；不恢复 `application-secrets.properties` 导入。
+
+dev/prod 分别使用不同的 AK/SK，但同一产品两把密钥的 IAM 权限均覆盖该产品的 dev/prod 两个桶；不授权其他产品桶，也不构成环境级 IAM 隔离。运维 profile 与凭据元数据校验用于防止配置串用，不能据此声称另一环境桶在 IAM 层拒绝访问。
 
 运行时必须覆盖的精确 Spring 属性：
 
