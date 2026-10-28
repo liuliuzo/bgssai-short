@@ -81,7 +81,7 @@ public class AiModelResolveService {
         String exclude = excludeModelCode == null ? "" : excludeModelCode.trim();
         AiModelConfig alternate = null;
         for (AiModelConfig row : rows) {
-            if (!aiProviderRegistry.resolvable(row)) {
+            if (!aiProviderRegistry.resolvable(row) || !domestic(row)) {
                 continue;
             }
             if (!exclude.isBlank() && exclude.equals(row.getModelCode())) {
@@ -102,11 +102,18 @@ public class AiModelResolveService {
             return null;
         }
         for (AiModelConfig row : rows) {
-            if (isHubConfig(row)) {
+            if (isHubConfig(row) && domestic(row)) {
                 return row;
             }
         }
         return null;
+    }
+
+    private static boolean domestic(AiModelConfig row) {
+        if (row == null) {
+            return false;
+        }
+        return !TokenHubClientSupport.wouldSelectGlobal(ShortJson.map(row.getConfigJson()), row.getModelCode());
     }
 
     private static boolean isHubConfig(AiModelConfig row) {
@@ -122,7 +129,7 @@ public class AiModelResolveService {
     }
 
     private AiModelConfig syntheticHubModel(String ability, String modelCode) {
-        if (!safeModelId(modelCode)) {
+        if (!safeModelId(modelCode) || TokenHubClientSupport.wouldSelectGlobal(Map.of(), modelCode)) {
             return null;
         }
         AiModelConfig model = new AiModelConfig();
@@ -215,12 +222,12 @@ public class AiModelResolveService {
             return null;
         }
         for (AiModelConfig row : rows) {
-            if (aiProviderRegistry.supports(row.getProviderCode())) {
+            if (domestic(row) && aiProviderRegistry.supports(row.getProviderCode())) {
                 return row;
             }
         }
         for (AiModelConfig row : rows) {
-            if (aiProviderRegistry.resolvable(row)) {
+            if (domestic(row) && aiProviderRegistry.resolvable(row)) {
                 return row;
             }
         }
@@ -250,17 +257,19 @@ public class AiModelResolveService {
             list.addAll(hubChoices(ability,tokenHubModelCatalog.modelsFor(ability),rows));
         }
         for (AiModelConfig row : rows) {
-            if (!aiProviderRegistry.resolvable(row) || list.stream().anyMatch(item -> row.getModelCode().equals(item.get("model_code")))) {
+            if (!domestic(row) || !aiProviderRegistry.resolvable(row)
+                    || list.stream().anyMatch(item -> row.getModelCode().equals(item.get("model_code")))) {
                 continue;
             }
             Map<String, Object> cfg = ShortJson.map(row.getConfigJson());
-            String hub = TokenHubClientSupport.resolveHub(cfg, row.getModelCode());
-            String region = TokenHubClientSupport.HUB_GLOBAL.equals(hub)
-                    ? ModelUsageMeta.INTL
-                    : ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
+            String region = ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
 
             String displayName = row.getModelName() == null || row.getModelName().isBlank()
                     ? row.getModelCode() : row.getModelName();
+            displayName = TokenHubClientSupport.scrubBrand(displayName);
+            if (displayName.isBlank()) {
+                displayName = TokenHubClientSupport.scrubBrand(row.getModelCode());
+            }
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("model_id", row.getModelId());
             item.put("ability_type", row.getAbilityType());
@@ -286,6 +295,9 @@ public class AiModelResolveService {
             List<TokenHubModelCatalog.HubModel> hubModels, List<AiModelConfig> priced) {
         List<Map<String, Object>> list = new ArrayList<>();
         for (TokenHubModelCatalog.HubModel hub : hubModels) {
+            if (TokenHubClientSupport.wouldSelectGlobal(Map.of(), hub.id())) {
+                continue;
+            }
             AiModelConfig pricedRow = null;
             if (priced != null) {
                 for (AiModelConfig row : priced) {
@@ -301,8 +313,9 @@ public class AiModelResolveService {
             item.put("model_id", "hub-" + ability.toLowerCase(java.util.Locale.ROOT) + "-" + hub.id());
             item.put("ability_type", ability);
             item.put("model_code", hub.id());
-            item.put("display_name", hub.id());
-            item.put("model_name", hub.id());
+            String shown = TokenHubClientSupport.scrubBrand(hub.id());
+            item.put("display_name", shown.isBlank() ? hub.id() : shown);
+            item.put("model_name", shown.isBlank() ? hub.id() : shown);
             item.put("quality_level", pricedRow == null || pricedRow.getQualityLevel() == null
                     ? "STANDARD" : pricedRow.getQualityLevel());
             item.put("price_unit", pricedRow == null || pricedRow.getPriceUnit() == null

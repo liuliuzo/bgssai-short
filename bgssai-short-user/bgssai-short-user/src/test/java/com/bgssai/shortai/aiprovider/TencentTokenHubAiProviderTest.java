@@ -150,7 +150,7 @@ class TencentTokenHubAiProviderTest {
         FakeClient http = new FakeClient();
         TencentTokenHubAiProvider polling = new TencentTokenHubAiProvider(
                 new SysSecretReader(secretRef -> "key"), http, ms -> {
-                }, "", "");
+                }, "");
         AiProviderRequest request = request("VIDEO", "kling-v3", "跑");
         request.getModel().setConfigJson(
                 "{\"allow_direct\":true,\"hub\":\"cn\",\"base_url\":\"https://api-beijing.klingai.com\",\"secret_ref\":\"ai.kling.api_key\"}");
@@ -215,7 +215,7 @@ class TencentTokenHubAiProviderTest {
         http.posts.add("{\"choices\":[{\"message\":{\"content\":\"dev\"}}],\"usage\":{\"total_tokens\":2}}");
         TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
                 new SysSecretReader(secretRef -> "sk-hub"), http, ms -> {
-                }, "https://dev.user.bgssai-tokenhub.cn", "https://dev.user.bgssai-tokenhub.com");
+                }, "https://dev.user.bgssai-tokenhub.cn");
         AiProviderRequest req = request("TEXT", "deepseek-chat", "大纲");
         req.getModel().setConfigJson(
                 "{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
@@ -241,7 +241,7 @@ class TencentTokenHubAiProviderTest {
                     }
                     return "";
                 }), http, ms -> {
-                }, "https://www.bgssai-tokenhub.cn/", "https://www.bgssai-tokenhub.com/");
+                }, "https://www.bgssai-tokenhub.cn/");
         AiProviderRequest req = request("TEXT", "hy4-preview", "写剧本");
         req.getModel().setConfigJson(
                 "{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
@@ -259,7 +259,7 @@ class TencentTokenHubAiProviderTest {
                 new SysSecretReader(secretRef -> SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY.equals(secretRef)
                         ? "sk-global" : "sk-cn"),
                 http, ms -> {
-                }, "https://www.bgssai-tokenhub.cn", "https://www.bgssai-tokenhub.com");
+                }, "https://www.bgssai-tokenhub.cn");
         AiProviderRequest req = request("TEXT", "gpt-4o-mini", "hello");
         req.getModel().setConfigJson(
                 "{\"hub\":\"global\",\"secret_ref\":\"ai.tokenhub_global.api_key\",\"chat_path\":\"/v1/chat/completions\"}");

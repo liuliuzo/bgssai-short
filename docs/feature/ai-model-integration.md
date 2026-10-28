@@ -45,11 +45,12 @@
 6. 合成页提供“AI 生成 BGM”。用户输入音乐描述并选择 `MUSIC` 模型，默认生成纯音乐；成功后保存为
    `short_asset.asset_type=AUDIO`，并把 `bgm_asset_id` 写入作品 `compose_setting_json`。重新生成产生新候选，
    不删除旧素材；用户明确选用后才参与合成。
-7. TokenHub 生产调用走 **双中枢**：TokenHub-CN（`hub=cn`）与 TokenHub-Global（`hub=global`）。
-   密钥分别落 `sys_secret.ai.tokenhub_cn.api_key` / `ai.tokenhub_global.api_key`（旧键
+7. 生产调用只走境内中枢（`hub=cn`）。配置或模型指向境外时直接失败，不跨区回退，也不读取
+   `ai.tokenhub_global.api_key`。密钥落 `sys_secret.ai.tokenhub_cn.api_key`（旧键
    `ai.tencent_tokenhub.api_key` 仅作 CN 空值回填兼容）。`config_json` 只保存 `hub`、
    `secret_ref`、端点路径和非敏感默认参数，不保存网关主机，禁止保存 API Key。网关主机只写环境
    profile 的 `bgssai.llm.tokenhub-cn-base-url`（DEV 为 `dev.user`，生产为 `www`）。
+   用户选择器展示模型名与 `0.5×` / `1×` / `1.5×`，不出现中枢品牌。
 8. 上游异步任务由当前 `short_ai_task` Worker 内部轮询；轮询间隔、超时由模型 `config_json` 与
    `timeout_sec` 控制。超时、内容审核失败、上游 5xx 分别映射现有失败码，不返回伪造素材。
 9. 管理端模型页必须支持 `ASR` 与 `MUSIC` 筛选、新增和默认切换；用户端模型目录只返回
@@ -77,8 +78,8 @@
 4. 批量配音选择 MiniMax-Speech 后，产出可播放 MP3，`audio_duration_sec` 来自供应商返回值并参与对齐。
 5. 对已有配音的一集执行 Hy-ASR 校准，字幕文本与时间戳按返回句子更新；无配音素材时返回可读提示且不扣费。
 6. 输入 BGM 描述并提交 MiniMax-Music，任务成功后返回 `bgm_asset_id`，合成设置与时间轴能读取该素材。
-7. `ai.tokenhub_cn.api_key` / `ai.tokenhub_global.api_key` 为空或停用时，任务以能力不可用失败，
-   日志与接口均不泄露密钥与 TokenHub 品牌；不存在 MOCK 或占位二进制兜底。
+7. `ai.tokenhub_cn.api_key` 为空或停用时，任务以能力不可用失败。境外密钥与境外模型不参与调用。
+   日志与接口均不泄露密钥与中枢品牌；不存在 MOCK 或占位二进制兜底。
 8. TokenHub 视频、语音和音乐的临时下载 URL 均在 Worker 内下载转存；供应商 URL 不写入前端永久状态。
 9. 用户端模型选择器仅展示 `display_name`（及区域/价格），不展示中枢名或 `provider_code`。
 10. 指定模型不可用时回退默认模型；重试 `fallback_model_flag=1` 可换备用模型。
@@ -120,8 +121,8 @@
 - `ai_model_config`、`short_ai_task`、`short_asset`、`ai_usage_record` 复用现有表，不新增列。
 - `short_work.compose_setting_json` 增加 `bgm_asset_id`、`bgm_volume`、`duck_flag` 键。
 - ASR 结果复用 `short_subtitle`；音乐与配音结果复用 `short_asset(asset_type=AUDIO)`。
-- `sys_secret` 增加空值种子 `ai.tokenhub_cn.api_key`、`ai.tokenhub_global.api_key`（及兼容旧键
-  `ai.tencent_tokenhub.api_key`），由 Admin / 运维写入真实值。
+- `sys_secret` 增加空值种子 `ai.tokenhub_cn.api_key`（及兼容旧键
+  `ai.tencent_tokenhub.api_key`），由 Admin / 运维写入真实值。境外键保持停用，短剧不读取。
 
 ## 七、原型
 

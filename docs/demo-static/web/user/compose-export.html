@@ -192,11 +192,11 @@
                   <button class="btn btn-default btn-sm">批量发布 READY 集</button>
                 </div>
                 <div class="note" style="margin:12px 0 0">
-                  审核已通过且成片 READY 时可「发布到 Tube」：调用
-                  <code>POST /bgssai/user/films/publish-to-media</code>；整剧可用
+                  审核已通过且成片 READY 时可「发布到 Tube」：本仓接口
+                  <code>POST /bgssai/user/films/publish-to-media</code> 会转发到
+                  bgssai-tube-pc 的 <code>POST /bgssai/user/tube/ingest/short</code>。整剧可用
                   <code>POST /bgssai/user/films/publish-to-media/batch</code>（按集顺序，带进度）。
-                  按钮有 loading；成功弹窗展示 <code>media_id</code> /
-                  <code>play_url</code>（可打开 / 复制）；失败区分 Tube 不可达、业务码 6xxxx、成片未 READY。
+                  按钮有 loading；成功弹窗展示作品号与播放链接（可打开 / 复制），不出现媒体产品名；失败区分 Tube 不可达、业务码 6xxxx、成片未 READY。
                   进入页先调 <code>GET /bgssai/user/films/publish-to-media/preflight</code>：
                   缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时黄条提示；
                   缺令牌时「发布到 Tube」停用，并写明「未配置 Tube 令牌」，不编造令牌。
@@ -211,11 +211,11 @@
                   同一成片已 READY 再点发布走回放（<code>replayed=true</code>），不新建 Tube 目录；
                   <code>force=true</code> 才用同一键再 POST。重新合成后不再回放旧目录。
                   请求体带 <code>status=READY</code> 与 <code>approved=true</code>。
-                  Tube 返回 PENDING（可以没有 media_id / play_url）时弹窗写「已受理，尚未可播放」，
+                  Tube 返回 PENDING（可以没有作品号 / 播放链接）时弹窗写「已受理，尚未可播放」，
                   不算成功；FAILED 或 code=422 算失败。超时、结果仍未知，或查询没有可读结果时显示 UNKNOWN：
                   不重复发布，不当成成功或失败。已有作品号时不再另建作品；只有接收端明确查无且本地还没有作品号，才用同一幂等键补发一次。
                   成片记录绑定同一份角色版本和时间轴版本，抽检镜号、时长和字幕。已作废角色不得标成一致。
-                  base-url 为空直接失败，不编造主机 IP。失败镜头重试不会覆盖已锁定的确认版本；引用的角色、场景或道具素材缺失则明确失败，模型只走 tokenhub-cn。
+                  base-url 为空直接失败，不编造主机 IP。失败镜头重试不会覆盖已锁定的确认版本；引用的角色、场景或道具素材缺失则明确失败。模型只走境内网关，选择器展示 0.5× / 1× / 1.5×，不出现网关品牌。
                   下架/撤回：tube 暂无契约，本仓 skip。
                 </div>
                 <div class="note note-warn" style="margin:12px 0 0">

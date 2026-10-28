@@ -39,12 +39,16 @@ UPDATE ai_model_config
 SET config_json = JSON_REMOVE(COALESCE(config_json, '{}'), '$.base_url')
 WHERE provider_code = 'TENCENT_TOKENHUB';
 
--- Dual TokenHub secrets (prod seeds; replace via Admin after deploy)
+-- CN gateway key only. Overseas key is disabled and is not a fallback.
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', 'sk-bgssai-short-cn-temp', 'BGSSAI TokenHub-CN API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', 'sk-bgssai-short-global-temp', 'BGSSAI TokenHub-Global API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', '', '短剧不使用境外中枢密钥', 0, 'system') ON DUPLICATE KEY UPDATE `enabled` = 0, `description` = VALUES(`description`);
 UPDATE `ai_model_config`
 SET `config_json` = JSON_REMOVE(JSON_SET(COALESCE(`config_json`, '{}'), '$.hub', 'cn', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
 WHERE `provider_code` = 'TENCENT_TOKENHUB' AND `model_id` NOT LIKE 'm-tokenhub-global-%';
+UPDATE `ai_model_config`
+SET `enabled_flag` = 0, `default_flag` = 0
+WHERE `model_id` LIKE 'm-tokenhub-global-%'
+   OR (`provider_code` = 'TENCENT_TOKENHUB' AND JSON_UNQUOTE(JSON_EXTRACT(`config_json`, '$.hub')) = 'global');
 
 -- 图片默认：网关已注册的可灵文生图。不新增密钥。
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-image-kling', 'IMAGE', 'TENCENT_TOKENHUB', 'kling-v3', '可灵文生图', 'STANDARD', 'PER_CALL', 80, 1, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;

@@ -8,10 +8,11 @@
 - 以 `provider_code=TENCENT_TOKENHUB` 接入 TEXT / VIDEO / VOICE / ASR / MUSIC，业务 Service
   仍只提交标准化的 `AiProviderRequest`，不感知供应商 JSON。
 - **Short 固定 CN 中枢**（REQ-SHORT-COMMON-010）：`TokenHubClientSupport.resolveHub` 恒为
-  `cn`；配置或模型若指向 Global 则直接失败，不跨区回退。密钥优先 `ai.tokenhub_cn.api_key`
+  `cn`；`defaultBaseUrl` 忽略境外主机。配置或模型若指向 Global 则直接失败，不跨区回退，
+  也不读取 `ai.tokenhub_global.api_key`。密钥优先 `ai.tokenhub_cn.api_key`
   （旧 CN 键空值回填兼容）。直连厂商（VEO/KLING/MINIMAX/SEEDANCE/OPENAI_COMPAT）的
-  `execute` 拒绝，计费生成一律经 registry 走中枢。
-- 用户端只见 `display_name` 模型选择器；错误与 `fail_reason` 脱敏，不含 TokenHub 字样。
+  `execute` 拒绝，计费生成一律经 registry 走境内中枢。
+- 用户端只见 `display_name` 与 `0.5×` / `1×` / `1.5×`；错误与 `fail_reason` 脱敏，不含中枢品牌。对账列表不回显网关主机。
 - 所选模型不可用时回退同能力默认模型；重试可换备用模型。
 - 上游返回的临时视频、音频、字幕 URL 只在 Worker 内使用；成功后立即下载并转存对象存储。
 - 同步和异步上游调用统一落入 `short_ai_task` 状态、重试、计费与失败原因，不生成占位结果。
@@ -31,23 +32,23 @@
 ```
 
 `TencentTokenHubAiProvider` 只负责供应商协议转换与结果归一化；作品、剧集、镜头、字幕、BGM 归属校验均在
-Service / Worker 内完成。`AiProviderRegistry` 按 `TENCENT_TOKENHUB` 注册该实现，并对
-`www.bgssai-tokenhub.cn` / `www.bgssai-tokenhub.com` / 历史 `tokenhub.tencentmaas.com`
-host 做 resolvable 回退。
+Service / Worker 内完成。`AiProviderRegistry` 按 `TENCENT_TOKENHUB` 注册该实现。调用主机只来自
+`bgssai.llm.tokenhub-cn-base-url`。境外主机不是回退地址。
 
 ## 3. 模型与端点映射
 
 | 中枢 | 主机（只在环境 profile） | secret_ref |
 | --- | --- | --- |
 | CN | `bgssai.llm.tokenhub-cn-base-url` | `ai.tokenhub_cn.api_key` |
-| Global | `bgssai.llm.tokenhub-global-base-url` | `ai.tokenhub_global.api_key` |
+
+Short 不配置境外 base URL，也不把境外密钥当作空值回退。
 
 鉴权统一为 `Authorization: Bearer <api_key>`。properties 仅可写中枢 base URL，**禁止**写 API Key。
 Short 只使用 CN profile。模型行不保存主机。
 
 | 能力 | 模型 | 提交端点 | 查询端点 | 完成结果 |
 | --- | --- | --- | --- | --- |
-| TEXT | `hy4-preview` / `kimi-k3` / `deepseek-chat`（CN）；`gpt-4o-mini` / `claude-3-5-haiku-latest`（Global） | `POST /v1/chat/completions` | 同步 | `choices[0].message.content` |
+| TEXT | `hy4-preview` / `kimi-k3` / `deepseek-chat`（仅 CN） | `POST /v1/chat/completions` | 同步 | `choices[0].message.content` |
 | VIDEO | `minimax-video-h3` | `POST /v1/wand/minimax-video-v2/generation` | `GET /v1/wand/minimax-video-v2/tasks/{task_id}` | `task.content.url` |
 | VIDEO | `pixverse-video-v6.0` | 文生 `/v1/wand/pixverse/text-to-video`；图生 `/v1/wand/pixverse/image-to-video` | `GET /v1/wand/pixverse/tasks/{task_id}` | `Resp.url` |
 | VIDEO | `kling-video-v3` | 文生 `/v1/wand/kling/text-to-video`；图生 `/v1/wand/kling/image-to-video` | `GET /v1/wand/kling/tasks/{task_id}` | `data[].outputs[].url` |
@@ -117,7 +118,7 @@ TokenHub `config_json` 共同字段：
 }
 ```
 
-Global 行使用 `"hub":"global"` 与 `ai.tokenhub_global.api_key`，不写主机。
+历史 Global 行保持停用。短剧不调用它们，也不在 CN 失败时改走境外。
 
 各端点可由 `chat_path`、`submit_path`、`task_path`、`text2video_path`、`image2video_path` 覆盖，便于
 供应商升级时通过管理端调整；代码内保留本文件 §3 的安全默认值。

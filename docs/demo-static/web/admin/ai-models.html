@@ -59,10 +59,9 @@
         <div class="row">
           <span class="badge badge-info">生产目录</span>
           <div style="font-size:13px">
-            首批文本、视频、语音、ASR 与音乐模型统一走 <code>TENCENT_TOKENHUB</code> 双中枢
-            （CN / Global），密钥分别为 <code>ai.tokenhub_cn.api_key</code> 与
-            <code>ai.tokenhub_global.api_key</code>；配置页只保存 <code>hub</code> /
-            <code>secret_ref</code>，不保存密钥明文。
+            首批文本、视频、语音、ASR 与音乐模型只走境内中枢。密钥为
+            <code>ai.tokenhub_cn.api_key</code>。境外模型行保持停用，不作为回退。
+            配置页只保存 <code>hub</code> / <code>secret_ref</code>，不保存密钥明文。
             真实密钥在 <a href="ai-secrets.html">AI 密钥</a> 页写入 <code>sys_secret</code>。
           </div>
         </div>

@@ -152,7 +152,7 @@ public class FilmPublishToMediaService {
 
         List<String> warnings = new ArrayList<>();
         if (!config.baseUrlConfigured()) {
-            warnings.add("Tube 主机未配置：发布会失败，不会返回假的 media_id。"
+            warnings.add("Tube 主机未配置：发布会失败，不会返回假的作品号。"
                     + "请联系管理员完成接入后再发布");
         }
         if (!config.tokenConfigured()) {
@@ -567,7 +567,7 @@ public class FilmPublishToMediaService {
         if ("NOT_FOUND".equals(raw)) {
             if (film.getMediaId() != null && !film.getMediaId().isBlank()) {
                 Date at = new Date();
-                String note = "已有 media_id 但接收端查无此键，未另建作品";
+                String note = "已有作品号但接收端查无此键，未另建作品";
                 persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, note, at);
                 return Responses.ok(toUnknownResult(film, idempotencyKey, at, note));
             }
@@ -584,8 +584,8 @@ public class FilmPublishToMediaService {
             CommercialOutcomeGuard.rejectFakeUrl(looked.playUrl(), "tube play_url");
             if (looked.mediaId() == null || looked.mediaId().isBlank()
                     || looked.playUrl() == null || looked.playUrl().isBlank()) {
-                persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, "接收端 READY 但缺少 media_id 或 play_url", at);
-                return Responses.ok(toUnknownResult(film, idempotencyKey, at, "接收端 READY 但缺少 media_id 或 play_url"));
+                persistUnknown(film, idempotencyKey, looked.httpStatus(), 0, "接收端已就绪但缺少作品号或播放链接", at);
+                return Responses.ok(toUnknownResult(film, idempotencyKey, at, "接收端已就绪但缺少作品号或播放链接"));
             }
             MediaIngestClient.IngestResult adopted = new MediaIngestClient.IngestResult(
                     looked.mediaId(), looked.playUrl(), "READY", looked.httpStatus(), 0, looked.message());

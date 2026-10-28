@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Collapse, Table } from 'antd'
 import api from '../utils/http'
-import { receiptSummary } from '../modelPricing'
+import { isValidBillingMultiplier, receiptSummary } from '../modelPricing'
 export default function UsageReceipts({ workRef }) {
  const [rows,setRows] = useState([])
  const [error,setError] = useState('')
@@ -15,9 +15,9 @@ export default function UsageReceipts({ workRef }) {
   <p>逐次请求对账。待对账不代表免费。最多显示最近 100 次请求。</p>
   <Button loading={loading} onClick={load}>刷新对账</Button>
   {error && <Alert type="warning" message={error} />}
-  <Table size="small" rowKey={(row)=>`${row.hub}:${row.request_id}`} dataSource={rows} scroll={{x:900}} columns={[
-   {title:'模型 / 任务',render:(_,row)=><>{row.model}<br/>{row.task_ref}</>},
-   {title:'请求',render:(_,row)=><>{row.hub}<br/><code>{row.request_id}</code></>},
+  <Table size="small" rowKey={(row)=>row.request_id || row.task_ref} dataSource={rows} scroll={{x:900}} columns={[
+   {title:'模型 / 任务',render:(_,row)=><>{String(row.model || '').replace(/token\s*-?\s*hub/ig, '')}<br/>{row.task_ref}</>},
+   {title:'倍率 / 请求',render:(_,row)=><>{isValidBillingMultiplier(row.receipt?.billing_multiplier) ? `${Number(row.receipt.billing_multiplier)}×` : '待确认'}<br/><code>{row.request_id}</code></>},
    {title:'实际用量与费用',render:(_,row)=>receiptSummary(row.receipt)}
   ]} />
  </>}]} />

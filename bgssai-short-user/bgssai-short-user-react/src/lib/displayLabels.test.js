@@ -78,6 +78,8 @@ test('friendly fail reason scrubs TLS English', () => {
     '暂时无法拉取任务：连接失败，请稍后重试',
   )
   assert.equal(friendlyFailReason('内容命中拦截词'), '内容命中拦截词')
+  assert.equal(friendlyFailReason('Tube 响应缺少 media_id'), 'Tube 响应缺少 作品号')
+  assert.doesNotMatch(friendlyFailReason('tokenhub gateway down'), /tokenhub/i)
 })
 
 test('sanitizeTubeWarning hides ingest-token key', () => {

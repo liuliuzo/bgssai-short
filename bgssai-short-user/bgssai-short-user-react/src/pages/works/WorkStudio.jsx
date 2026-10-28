@@ -1046,7 +1046,7 @@ function TasksPane({ workId, episodeId }) {
 
 function formatPublishError(data, fallback) {
   const code = data?.code != null ? String(data.code) : ''
-  const msg = data?.message || fallback || '发布失败'
+  const msg = friendlyFailReason(data?.message || fallback || '发布失败')
   if (code === '4006' || /READY|APPROVED|过期|未就绪|审核/.test(msg)) {
     return { title: '无法发布（闸门未通过）', detail: msg }
   }
@@ -1103,12 +1103,12 @@ function showPublishSuccess(result) {
     content: (
       <div>
         <Paragraph style={{ marginBottom: 8 }}>
-          <Text type="secondary">media_id</Text>
+          <Text type="secondary">作品号</Text>
           <br />
           <Text copyable={{ text: mediaId }}>{mediaId || '-'}</Text>
         </Paragraph>
         <Paragraph style={{ marginBottom: 12 }}>
-          <Text type="secondary">play_url</Text>
+          <Text type="secondary">播放链接</Text>
           <br />
           {playUrl ? (
             <Text copyable={{ text: playUrl }}>
@@ -1128,17 +1128,17 @@ function showPublishSuccess(result) {
             <Button onClick={async () => {
               try {
                 await navigator.clipboard.writeText(mediaId)
-                message.success('已复制 media_id')
+                message.success('已复制作品号')
               } catch {
                 message.warning('复制失败，请手动选择')
               }
-            }}>复制 media_id</Button>
+            }}>复制作品号</Button>
           ) : null}
           {playUrl ? (
             <Button onClick={async () => {
               try {
                 await navigator.clipboard.writeText(playUrl)
-                message.success('已复制 play_url')
+                message.success('已复制播放链接')
               } catch {
                 message.warning('复制失败，请手动选择')
               }
@@ -1502,7 +1502,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           type={publishStatusAlertType(publishLog.status)}
           showIcon
           style={{ marginTop: 12 }}
-          message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无 media_id'}`}
+          message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无作品号'}`}
           description={(
             <div>
               {publishLog.play_url ? (

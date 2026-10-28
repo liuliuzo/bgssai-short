@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Shared ingest contract with bgssai-tube (short).
+ * Ingest contract with bgssai-tube-pc. Short posts to
+ * {@code POST /bgssai/user/tube/ingest/short} on {@code bgssai.tube.base-url}.
+ * The playback product name is Tube. User copy calls the returned id 作品号.
  */
 public final class MediaIngestContract {
 

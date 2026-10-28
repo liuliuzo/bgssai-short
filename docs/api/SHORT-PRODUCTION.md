@@ -7,8 +7,8 @@ POST 走 JSON body。鉴权请求头 `Jwttoken`。金额单位分。详设见
 分页：`page_num` / `page_size` / `total_size`（`PageResponse`）。
 
 AI 按 `ai_model_config.provider_code` 路由：首批 TEXT / VIDEO / VOICE / ASR / MUSIC 生产模型统一走
-`TENCENT_TOKENHUB`（双中枢 CN / Global，密钥 `ai.tokenhub_cn.api_key` /
-`ai.tokenhub_global.api_key`；用户端仅见 `display_name`），IMAGE 保留既有直连 Provider，COMPOSE 走本机 `FFMPEG`（部署机需预装
+`TENCENT_TOKENHUB`（仅境内中枢，密钥 `ai.tokenhub_cn.api_key`；用户端仅见 `display_name` 与
+`0.5×` / `1×` / `1.5×`，不展示中枢品牌），IMAGE 保留既有直连 Provider，COMPOSE 走本机 `FFMPEG`（部署机需预装
 ffmpeg，缺失时返回 `ABILITY_UNAVAILABLE`）。无 MOCK 兜底。端点映射见
 [`../architecture/tokenhub-model-integration-design.md`](../architecture/tokenhub-model-integration-design.md)。
 

@@ -8,8 +8,8 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
- * Org-wide TokenHub client helpers: dual hub (CN + Global), secret refs, and
- * user-facing message scrubbing so TokenHub branding never leaks to creators.
+ * CN-only model gateway helpers. Short never calls the overseas hub and never
+ * falls back to it. User-facing copy must not carry the gateway brand.
  */
 public final class TokenHubClientSupport {
 
@@ -17,6 +17,7 @@ public final class TokenHubClientSupport {
     public static final String HUB_GLOBAL = "global";
 
     public static final String DEFAULT_CN_BASE_URL = "https://www.bgssai-tokenhub.cn";
+    /** Overseas host kept only so callers can recognize and reject it. */
     public static final String DEFAULT_GLOBAL_BASE_URL = "https://www.bgssai-tokenhub.com";
 
     public static final java.util.Set<String> OFFICIAL_HUB_DOMAINS = java.util.Set.of(
@@ -63,17 +64,13 @@ public final class TokenHubClientSupport {
                 || model.startsWith("o4");
     }
 
+    /** Short always uses the CN gateway. The overseas default is ignored. */
     public static String defaultBaseUrl(String hub, String cnDefault, String globalDefault) {
-        if (HUB_GLOBAL.equals(hub)) {
-            return ProviderHttp.trimSlash(ProviderHttp.firstNonBlank(globalDefault, DEFAULT_GLOBAL_BASE_URL));
-        }
         return ProviderHttp.trimSlash(ProviderHttp.firstNonBlank(cnDefault, DEFAULT_CN_BASE_URL));
     }
 
     public static String defaultSecretRef(String hub) {
-        return HUB_GLOBAL.equals(hub)
-                ? SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY
-                : SysSecretReader.AI_TOKENHUB_CN_API_KEY;
+        return SysSecretReader.AI_TOKENHUB_CN_API_KEY;
     }
 
     /**
@@ -82,6 +79,9 @@ public final class TokenHubClientSupport {
      */
     public static String resolveApiKey(SysSecretReader secrets, String hub, String configuredRef) {
         String ref = ProviderHttp.firstNonBlank(configuredRef, defaultSecretRef(hub));
+        if (HUB_GLOBAL.equals(hub) || SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY.equals(ref)) {
+            ref = SysSecretReader.AI_TOKENHUB_CN_API_KEY;
+        }
         String key = secrets.get(ref);
         if (!key.isBlank()) {
             return key;
@@ -116,6 +116,14 @@ public final class TokenHubClientSupport {
         return n.contains("tokenhub") || n.contains("bgssai-tokenhub");
     }
 
+    /** Drop gateway brand from a display name. Empty when the name was only the brand. */
+    public static String scrubBrand(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        return TOKENHUB_WORD.matcher(raw).replaceAll("").replaceAll("\\s{2,}", " ").trim();
+    }
+
     /** Scrub infra names from messages that may reach the user SPA or fail_reason. */
     public static String userFacingMessage(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -123,6 +131,9 @@ public final class TokenHubClientSupport {
         }
         String msg = raw.trim();
         String lower = msg.toLowerCase(Locale.ROOT);
+        if (lower.contains("cross-region") || lower.contains("cross region")) {
+            return "该模型暂不可用，请改选其它模型";
+        }
         if (lower.contains("remote host terminated the handshake")
                 || lower.contains("connection reset")
                 || lower.contains("unexpected eof while reading")

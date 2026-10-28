@@ -104,7 +104,7 @@ public class UsageReceiptService {
    List<UsageReceiptRow> rows=mapper.selectByExample(ex);
    List<Map<String,Object>> out=new ArrayList<>();
    for(UsageReceiptRow row:rows){
-    Map<String,Object> value=new LinkedHashMap<>();value.put("hub",row.hub);value.put("request_id",row.requestId);
+    Map<String,Object> value=new LinkedHashMap<>();value.put("hub",userHub(row.hub));value.put("request_id",row.requestId);
     value.put("model",row.model);value.put("work_ref",row.workRef);value.put("task_ref",row.taskRef);
     value.put("receipt",parseReceiptMap(row));out.add(value);
    }
@@ -127,6 +127,10 @@ public class UsageReceiptService {
   Map<String,Object> r=new LinkedHashMap<>();r.put("request_id",row.requestId);r.put("billing_status","pending");
   for(String key:List.of("raw_tokens","billed_tokens","billing_multiplier","billing_unit","price_version","debit_fen","currency")) r.put(key,null);
   return r;
+ }
+ /** User lists only say the domestic region. The gateway host stays on the row. */
+ private static String userHub(String hub){
+  return hub == null || !hub.isBlank() ? "cn" : "cn";
  }
  private static String blankNull(String s){return s==null||s.isBlank()?null:s;}
  private static String summarize(Throwable ex){
