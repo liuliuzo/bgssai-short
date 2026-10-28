@@ -1358,7 +1358,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/ai-models.html",
-      "sha256": "0875fa1a5bf16d1f70379c674b5f80f08fd8fecd893c2732d30e69a88b319cf7",
+      "sha256": "01223afcde19ea4bcd8e64f6b0160dc6f473f713e93de5e9617734d661d27968",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
@@ -1379,7 +1379,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/ai-secrets.html",
-      "sha256": "e30b4789f95f993952ca8637409a821ea510ac397a12dcf9060297b9a5d95ced",
+      "sha256": "b835800266db65b0a9d39aab921dc64c96729dfe07902d2d172dadde6602985d",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
@@ -1799,7 +1799,7 @@
     },
     {
       "path": "docs/demo-static/web/user/compose-export.html",
-      "sha256": "c3293f93c10db2020ed37d2cbdf8b5d8b51afd0812b93f7672b2211527320746",
+      "sha256": "928cccf2c8793a7e793e88108169b4590d3ae13ae84d755640251e939e2d1f4e",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2051,7 +2051,7 @@
     },
     {
       "path": "docs/demo-static/web/user/model-pricing-receipts.html",
-      "sha256": "d5117c64e29b0baaa8b380af479aa36b83a35a8ed825c87a298abb66e6ce5c8b",
+      "sha256": "7ae3387769633649ad4f56d78a88cec19006b732065f38a5440ad1fcb3e3c6d3",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
