@@ -8,7 +8,7 @@
 
 ## 二、需求澄清（WHAT）
 
-- 用户故事：作为 `USER`，我希望在成片就绪且审核通过后，把本集成片（或整部作品全部 READY 集）发布到 bgssai-tube，并拿到 `media_id` / 播放链接。
+- 用户故事：作为 `USER`，我希望在成片就绪且审核通过后，把本集成片（或整部作品全部 READY 集）发布到 bgssai-tube-pc，并看到作品号与播放链接。界面不出现媒体产品名。
 - 业务规则：
   1. **闸门（从严）**：`short_film.compose_status=READY`、`expired_flag=0`、存在可播放 `film_asset_id`；且本集 `review_status=APPROVED`。任一不满足返回 `4006`。
   2. **视频地址**：对成片素材走既有资产预签名 / 可播放 URL（与 `films/detail.download_url` 同源能力）。
@@ -21,10 +21,10 @@
      下次发布必须再 POST（同一键，由 Tube UNIQUE upsert），不能回放旧目录。
      PENDING / FAILED 允许重试，但 PENDING、PROCESSING、QUEUED 与 UNKNOWN 都先按同一幂等键查询 Tube。查到同一 `media_id` 就采纳；查询没有可读结果，或返回的作品号与已记录的不一致时记 UNKNOWN，不再 POST。查无且本地还没有 `media_id` 才允许再 POST 一次；已有 `media_id` 时不再另建作品。UNKNOWN 不是成功也不是失败，批量计入 `unknown`。Tube 对端 MUST UNIQUE upsert，见 [`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
   5. **配置**：`bgssai.tube.base-url` 与 `bgssai.tube.ingest-token` 写在各环境 `application-*.properties`（token 仅占位，不提交真实密钥）；运行期优先 properties，空则回退 `sys_secret.bgssai.tube.ingest-token`。
-     **主机**：本仓不分配、不编造 `MEDIA_*` IP。dev/prod 的 base-url 是约定域名；地址为空时发布返回 `4006`，文案写明未配置，不返回 `media_id`。域名不可达时返回 `502000` / `504000`，同样不写成成功。
+     **主机**：发布目标是 bgssai-tube-pc 的 `POST /bgssai/user/tube/ingest/short`。本仓不分配、不编造主机 IP。dev/prod 的 base-url 是约定域名；地址为空时发布返回 `4006`，文案写明未配置，不返回作品号。域名不可达时返回 `502000` / `504000`，同样不写成成功。
   6. **失败**：tube 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error` + `media_publish_log`。
   7. **预检**：`GET .../preflight` 检查配置与闸门；传 `work_id` 时附带批量候选数；不调用 tube。
-  8. **UX**：发布 loading；成功展示 `media_id` + `play_url`（打开/复制）；成片区展示最近一次 publish_log。
+  8. **UX**：发布 loading；成功展示作品号与播放链接（打开/复制），文案不写媒体产品名；成片区展示最近一次 publish_log。响应字段仍为 `media_id` / `play_url`。
   9. **可靠性**：瞬时 HTTP 5xx 在同一请求里可再试 1 次，幂等键不变。超时不再自动重 POST；结果记 UNKNOWN，下次发布先查状态。连接被明确拒绝仍是失败。
   10. **批量**：`POST .../batch` 按剧集顺序发布本作品全部 READY+APPROVED 成片，返回进度字段。
   11. **下架 / 撤回（skip）**：当前 bgssai-tube 未提供 short unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 tube 侧补齐后再开需求。

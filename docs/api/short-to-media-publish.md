@@ -1,7 +1,9 @@
 # Short → Tube 发布契约（幂等交接）
 
-本文件是 **bgssai-short（本仓）** 对 **bgssai-tube** 的 ingest 调用真值。
+本文件是 **bgssai-short（本仓）** 对 **bgssai-tube-pc** 的 ingest 调用真值。
+调用 `POST {bgssai.tube.base-url}/bgssai/user/tube/ingest/short`。
 Tube 仓对等文件：`docs/contracts/short-to-media-publish.md`。字段必须逐字一致。
+用户界面称作品号与播放链接，不展示媒体产品名。响应字段仍为 `media_id` / `play_url`。
 
 ## 何时发布
 
@@ -82,7 +84,7 @@ Body（snake_case，`additionalProperties=false`）：
 | FAILED 不冒充 READY | 必须 | HTTP 422 / `playable=false` |
 | 鉴权 `X-Bgssai-Ingest-Token` | 必须 | 已有；亦接受 Bearer / `X-Ingest-Token` |
 | 读 `Idempotency-Key` 头 | 建议 | 尚未；Body 已够用 |
-| 直播 Short 工作室 → 播放器 E2E | 联调 | **NOT_VERIFIED**。MEDIA_* 主机未在本仓分配，不编造 IP。base-url 为空或主机不可达时发布失败 |
+| 直播 Short 工作室 → tube-pc 播放器 E2E | 联调 | **NOT_VERIFIED**。主机未在本仓分配，不编造 IP。base-url 为空或主机不可达时发布失败 |
 
 对端无需为本 PR 改契约即可联调。若 Tube 未守 UNIQUE，重复发布会双目录——Short 侧 READY 回放可挡住二次点击，挡不住首发并发；并发必须靠 Tube UNIQUE。
 

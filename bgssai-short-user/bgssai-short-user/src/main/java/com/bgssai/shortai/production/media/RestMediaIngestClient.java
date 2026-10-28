@@ -52,7 +52,7 @@ public class RestMediaIngestClient implements MediaIngestClient {
         if (base == null || base.isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "Tube 主机未配置：bgssai.tube.base-url 为空。"
-                            + "未部署的 Tube 不会被写成发布成功，也不会返回假的 media_id。"
+                            + "未部署的 Tube 不会被写成发布成功，也不会返回假的作品号。"
                             + "请在 application-*.properties 填写真实地址（不要编造 IP）");
         }
         String token = resolveToken();
@@ -202,7 +202,7 @@ public class RestMediaIngestClient implements MediaIngestClient {
         }
         if (mediaId.isBlank() || playUrl.isBlank()) {
             throw new MediaPublishException(CommonErrorCode.UPSTREAM_ERROR,
-                    "Tube 响应缺少 media_id 或 play_url（HTTP " + httpStatus + "）",
+                    "Tube 响应缺少作品号或播放链接（HTTP " + httpStatus + "）",
                     httpStatus, attempt);
         }
         try {

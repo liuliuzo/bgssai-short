@@ -51,7 +51,7 @@ export function validateTokenhubCnRoute(row = {}) {
     return {
       valid: false,
       region: DOMESTIC_GATEWAY_REGION,
-      reason: '境内短剧制作固定走 tokenhub-cn，禁止跨区调用 tokenhub-global',
+      reason: '该模型不在当前可用范围，请改选其它模型',
     }
   }
   for (const marker of RAW_VENDOR_HOST_MARKERS) {
@@ -59,7 +59,7 @@ export function validateTokenhubCnRoute(row = {}) {
       return {
         valid: false,
         region: DOMESTIC_GATEWAY_REGION,
-        reason: '禁止填写上游厂商直连地址，模型调用须统一经由 tokenhub-cn',
+        reason: '不能使用厂商直连地址，请改选目录中的模型',
       }
     }
   }
@@ -155,12 +155,16 @@ export function estimateShotBatchTokens(shotCount, modelRow = {}, baseTokensPerS
   }
 }
 
+function hideGatewayBrand(text) {
+  return String(text || '').replace(/token\s*-?\s*hub/ig, '').replace(/\s{2,}/g, ' ').trim()
+}
+
 export function modelPricingLabel(row = {}) {
-  const name = row.label || row.display_name || row.model_name || row.model_code || row.model || ''
+  const name = hideGatewayBrand(row.label || row.display_name || row.model_name || row.model_code || row.model || '')
   const multiplier = row.billing_multiplier
   const value = multiplier == null ? null : Number(multiplier)
   const parts = [name]
-  if (value != null && Number.isFinite(value) && value >= 0) {
+  if (isValidBillingMultiplier(value)) {
     parts.push(`${value}×`)
   }
   if (row.price_version != null) {
@@ -191,6 +195,7 @@ export function receiptSummary(receipt = {}) {
   const amountYuan = fenToYuan(receipt.debit_fen)
   const amount = amountYuan == null ? '待对账' : `${amountYuan} 元`
   const currency = receipt.currency && receipt.currency !== 'CNY' ? `（${receipt.currency}）` : ''
-  return `${status} · 实扣 ${billed} ${unit} · 金额 ${amount}${currency}`
+  const multiplier = isValidBillingMultiplier(receipt.billing_multiplier) ? `${Number(receipt.billing_multiplier)}× · ` : ''
+  return `${status} · ${multiplier}实扣 ${billed} ${unit} · 金额 ${amount}${currency}`
 }
 

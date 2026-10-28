@@ -36,6 +36,31 @@ class TokenHubClientSupportTest {
     }
 
     @Test
+    void defaultBaseUrlIgnoresOverseasHost() {
+        assertEquals("https://www.bgssai-tokenhub.cn", TokenHubClientSupport.defaultBaseUrl(
+                TokenHubClientSupport.HUB_GLOBAL,
+                "https://www.bgssai-tokenhub.cn",
+                "https://www.bgssai-tokenhub.com"));
+        assertEquals(SysSecretReader.AI_TOKENHUB_CN_API_KEY,
+                TokenHubClientSupport.defaultSecretRef(TokenHubClientSupport.HUB_GLOBAL));
+    }
+
+    @Test
+    void resolveApiKeyNeverReadsOverseasSecret() {
+        SysSecretReader secrets = new SysSecretReader(key -> {
+            if (SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY.equals(key)) {
+                return "overseas";
+            }
+            if (SysSecretReader.AI_TOKENHUB_CN_API_KEY.equals(key)) {
+                return "domestic";
+            }
+            return "";
+        });
+        assertEquals("domestic", TokenHubClientSupport.resolveApiKey(secrets,
+                TokenHubClientSupport.HUB_GLOBAL, SysSecretReader.AI_TOKENHUB_GLOBAL_API_KEY));
+    }
+
+    @Test
     void resolveApiKeyFallsBackToLegacyCnSecret() {
         SysSecretReader secrets = new SysSecretReader(key -> {
             if (SysSecretReader.AI_TENCENT_TOKENHUB_API_KEY.equals(key)) {
@@ -57,5 +82,8 @@ class TokenHubClientSupportTest {
         assertEquals("模型服务暂未开通：deepseek，请稍后重试",
                 TokenHubClientSupport.userFacingMessage("Provider is not configured: deepseek"));
         assertEquals("模型服务暂时不可用，请稍后重试", TokenHubClientSupport.userFacingMessage("http 503"));
+        assertEquals("该模型暂不可用，请改选其它模型",
+                TokenHubClientSupport.userFacingMessage("cross-region hub disabled for short"));
+        assertFalse(TokenHubClientSupport.scrubBrand("TokenHub DeepSeek").toLowerCase().contains("tokenhub"));
     }
 }

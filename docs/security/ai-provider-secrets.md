@@ -15,8 +15,8 @@
 
 | secret_key | 用途 |
 | --- | --- |
-| `ai.tokenhub_cn.api_key` | BGSSAI TokenHub-CN Bearer Key（境内中枢） |
-| `ai.tokenhub_global.api_key` | BGSSAI TokenHub-Global Bearer Key（境外中枢） |
+| `ai.tokenhub_cn.api_key` | BGSSAI TokenHub-CN Bearer Key（境内中枢，短剧唯一调用键） |
+| `ai.tokenhub_global.api_key` | 停用。短剧不读取、不作为境内失败时的回退 |
 | `ai.tencent_tokenhub.api_key` | 旧 CN 键（仅空值回填兼容，新配置请用 `ai.tokenhub_cn.api_key`） |
 | `ai.openai_compat.api_key` | OpenAI 兼容网关默认密钥（可多模型共用同一 ref） |
 | `ai.kling.api_key` | 可灵官方 API Key（Bearer；`provider_code=KLING` 的 IMAGE / VIDEO 共用） |

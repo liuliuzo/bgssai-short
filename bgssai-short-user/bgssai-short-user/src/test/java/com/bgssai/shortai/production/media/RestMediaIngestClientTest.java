@@ -34,7 +34,7 @@ class RestMediaIngestClientTest {
     void postsSnakeCaseBodyAndParsesWrappedResult() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local/");
+        props.setBaseUrl("http://tube-pc.local/");
         props.setIngestToken("tok-1");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("media_id", "md-1");
@@ -43,7 +43,7 @@ class RestMediaIngestClientTest {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("code", "0");
         body.put("result", result);
-        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/tube/ingest/short"),
+        when(restTemplate.postForEntity(eq("http://tube-pc.local/bgssai/user/tube/ingest/short"),
                 any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
 
@@ -61,11 +61,11 @@ class RestMediaIngestClientTest {
     void sendsIdempotencyKeyHeaderMatchingBody() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok-1");
         Map<String, Object> result = Map.of("media_id", "md-1", "play_url", "https://play/md-1", "status", "READY");
         ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
-        when(restTemplate.postForEntity(eq("http://media.local/bgssai/user/tube/ingest/short"),
+        when(restTemplate.postForEntity(eq("http://tube-pc.local/bgssai/user/tube/ingest/short"),
                 captor.capture(), eq(Map.class)))
                 .thenReturn(new ResponseEntity<>(result, HttpStatus.OK));
 
@@ -84,7 +84,7 @@ class RestMediaIngestClientTest {
     void mediaDownBecomesUpstreamBizException() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
                 .thenThrow(new ResourceAccessException("Connection refused"));
@@ -104,7 +104,7 @@ class RestMediaIngestClientTest {
     void mediaBizCode6xxxxSurfacedClearly() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("code", "60021");
@@ -138,7 +138,7 @@ class RestMediaIngestClientTest {
     @Test
     void configStatusReflectsMissingToken() {
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("");
         RestMediaIngestClient client = new RestMediaIngestClient(mock(RestTemplate.class), props,
                 new SysSecretReader(k -> ""), true);
@@ -152,7 +152,7 @@ class RestMediaIngestClientTest {
     void fallsBackToSysSecretWhenPropertiesTokenBlank() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("");
         Map<String, Object> result = Map.of("media_id", "md-2", "play_url", "https://p/2", "status", "READY");
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
@@ -169,7 +169,7 @@ class RestMediaIngestClientTest {
     void genericRestClientExceptionStillUpstream() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
                 .thenThrow(new RestClientException("404 Not Found"));
@@ -184,7 +184,7 @@ class RestMediaIngestClientTest {
     void retriesOnceOnHttp500ThenSucceeds() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> ok = Map.of("media_id", "md-r", "play_url", "https://p/r", "status", "READY");
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
@@ -204,7 +204,7 @@ class RestMediaIngestClientTest {
     void doesNotRetryOnBizCode6xxxx() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("code", "60021");
@@ -223,7 +223,7 @@ class RestMediaIngestClientTest {
     void retriesOnceOnTimeoutThenFails() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
                 .thenThrow(new ResourceAccessException("Read timed out",
@@ -243,7 +243,7 @@ class RestMediaIngestClientTest {
     void stubPlayUrlNeverSucceeds() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("media_id", "md-stub");
@@ -266,7 +266,7 @@ class RestMediaIngestClientTest {
     void pendingStatusIsNotFailedAndNotRewrittenToReady() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("media_id", "md-p");
@@ -290,7 +290,7 @@ class RestMediaIngestClientTest {
     void failedStatusIsFailNotPending() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("media_id", "md-f");
@@ -314,7 +314,7 @@ class RestMediaIngestClientTest {
     void pendingWithoutCatalogIdsStaysPending() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", "PENDING");
@@ -342,7 +342,7 @@ class RestMediaIngestClientTest {
     void mediaCode422IsFailedNotMissingFields() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", "FAILED");
@@ -370,7 +370,7 @@ class RestMediaIngestClientTest {
     void readyButNotPlayableIsNotSuccess() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         BgssaiTubeProperties props = new BgssaiTubeProperties();
-        props.setBaseUrl("http://media.local");
+        props.setBaseUrl("http://tube-pc.local");
         props.setIngestToken("tok");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("media_id", "md-x");

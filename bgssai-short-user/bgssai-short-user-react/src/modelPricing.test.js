@@ -25,6 +25,9 @@ test('real fractional multipliers and version appear without guessing', () => {
   }
   assert.match(modelPricingLabel({ model: 'gpt-any' }), /按任务实际对账/)
   assert.doesNotMatch(modelPricingLabel({ model: 'gpt-any' }), /倍率待确认/)
+  const branded = modelPricingLabel({ model: 'TokenHub DeepSeek', billing_multiplier: 1.5 })
+  assert.match(branded, /1\.5×/)
+  assert.doesNotMatch(branded, /tokenhub/i)
 })
 
 test('ZH chrome: fen/million and receipt default unit use 额度 not bare English token', () => {
@@ -53,7 +56,9 @@ test('ZH chrome: fen/million and receipt default unit use 额度 not bare Englis
 })
 
 test('receipt displays billed amount once, unknown stays pending, fen shown as yuan', () => {
+  assert.match(receiptSummary({ raw_tokens: 100, billed_tokens: 150, billing_multiplier: 1.5, billing_status: 'unpriced' }), /1\.5×/)
   assert.match(receiptSummary({ raw_tokens: 100, billed_tokens: 150, billing_multiplier: 1.5, billing_status: 'unpriced' }), /实扣 150/)
+  assert.doesNotMatch(receiptSummary({ billing_multiplier: 1, billed_tokens: 1 }), /tokenhub/i)
   assert.match(receiptSummary({ billing_status: 'unpriced' }), /未定价/)
   assert.doesNotMatch(receiptSummary({}), /实扣 0/)
   assert.match(receiptSummary({ debit_fen: 300, currency: 'CNY' }), /3\.00 元/)
@@ -83,6 +88,9 @@ test('tokenhub CN route and multiplier drift validation', () => {
 
   assert.equal(validateTokenhubCnRoute('https://api.tokenhub.cn/v1').valid, true)
   assert.equal(validateTokenhubCnRoute('https://api.openai.com/v1').valid, false)
+  const overseas = validateTokenhubCnRoute('https://www.bgssai-tokenhub.com/v1')
+  assert.equal(overseas.valid, false)
+  assert.doesNotMatch(overseas.reason, /tokenhub/i)
 
   const okDrift = detectMultiplierDrift({ raw_tokens: 1000, billed_tokens: 1500, billing_multiplier: 1.5 })
   assert.equal(okDrift.drifted, false)

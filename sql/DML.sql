@@ -2683,9 +2683,9 @@ UPDATE ai_model_config
 SET config_json = JSON_REMOVE(COALESCE(config_json, '{}'), '$.base_url')
 WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT';
 
--- Dual TokenHub client standard (CN + Global; align org-wide HR #49)
+-- Short is CN-only. The overseas key stays disabled and is never a fallback.
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', '', 'BGSSAI TokenHub-CN API Key（境内模型中枢）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', '', 'BGSSAI TokenHub-Global API Key（境外模型中枢）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', '', '短剧不使用境外中枢密钥', 0, 'system') ON DUPLICATE KEY UPDATE `enabled` = 0, `description` = VALUES(`description`);
 UPDATE `sys_secret` cn
 JOIN `sys_secret` legacy ON legacy.`secret_key` = 'ai.tencent_tokenhub.api_key'
 SET cn.`secret_value` = legacy.`secret_value`
@@ -2698,8 +2698,19 @@ SET `config_json` = JSON_REMOVE(JSON_SET(COALESCE(`config_json`, '{}'),
     '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
 WHERE `provider_code` = 'TENCENT_TOKENHUB'
   AND (`model_code` IS NULL OR (`model_code` NOT LIKE 'gpt-%' AND `model_code` NOT LIKE 'claude%' AND `model_code` NOT LIKE 'gemini%' AND `model_code` NOT LIKE 'grok%'));
-INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-global-text-gpt4o-mini', 'TEXT', 'TENCENT_TOKENHUB', 'gpt-4o-mini', 'GPT-4o mini', 'STANDARD', 'PER_KILO_TOKEN', 8, 0, 1, 120, 1, '{"hub":"global","secret_ref":"ai.tokenhub_global.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_name` = VALUES(`model_name`), `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
-INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-global-text-claude-haiku', 'TEXT', 'TENCENT_TOKENHUB', 'claude-3-5-haiku-latest', 'Claude Haiku', 'HIGH', 'PER_KILO_TOKEN', 12, 0, 1, 120, 1, '{"hub":"global","secret_ref":"ai.tokenhub_global.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_name` = VALUES(`model_name`), `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-global-text-gpt4o-mini', 'TEXT', 'TENCENT_TOKENHUB', 'gpt-4o-mini', 'GPT-4o mini', 'STANDARD', 'PER_KILO_TOKEN', 8, 0, 0, 120, 1, '{"hub":"global","secret_ref":"ai.tokenhub_global.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_name` = VALUES(`model_name`), `enabled_flag` = 0, `default_flag` = 0, `config_json` = VALUES(`config_json`);
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-global-text-claude-haiku', 'TEXT', 'TENCENT_TOKENHUB', 'claude-3-5-haiku-latest', 'Claude Haiku', 'HIGH', 'PER_KILO_TOKEN', 12, 0, 0, 120, 1, '{"hub":"global","secret_ref":"ai.tokenhub_global.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_name` = VALUES(`model_name`), `enabled_flag` = 0, `default_flag` = 0, `config_json` = VALUES(`config_json`);
+UPDATE `ai_model_config`
+SET `enabled_flag` = 0, `default_flag` = 0
+WHERE `provider_code` = 'TENCENT_TOKENHUB'
+  AND (
+    `model_id` LIKE 'm-tokenhub-global-%'
+    OR JSON_UNQUOTE(JSON_EXTRACT(`config_json`, '$.hub')) IN ('global', 'intl', 'overseas')
+    OR `model_code` LIKE 'gpt-%'
+    OR `model_code` LIKE 'claude%'
+    OR `model_code` LIKE 'gemini%'
+    OR `model_code` LIKE 'grok%'
+  );
 UPDATE `ai_model_config`
 SET `config_json` = JSON_REMOVE(COALESCE(`config_json`, '{}'), '$.base_url')
 WHERE `provider_code` = 'TENCENT_TOKENHUB';

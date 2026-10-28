@@ -237,7 +237,10 @@ export function friendlyFailReason(raw) {
   if (/bgssai\.tube\.ingest-token|ingest-token|base-url/i.test(msg)) {
     return 'Tube 发布配置未就绪，请联系管理员'
   }
-  return msg
+  if (/token\s*-?\s*hub/i.test(msg)) {
+    return '模型暂时不可用，请稍后重试或更换模型'
+  }
+  return msg.replace(/media_id/gi, '作品号')
 }
 
 /** Mask config-key leaks in Tube preflight warnings shown to users. */

@@ -27,7 +27,7 @@
 <body>
 <h1>Short → Tube 幂等发布交接</h1>
 <dl class="meta">
-  <dt>作用域</dt><dd>成片 READY + 过审 → ingest short → 落库 media_id / play_url</dd>
+  <dt>作用域</dt><dd>成片 READY + 过审 → tube-pc ingest short → 落库作品号 / 播放链接</dd>
   <dt>关联</dt><dd>film-publish-media.md · short-to-media-publish.md</dd>
   <dt>更新</dt><dd>2026-09-12</dd>
 </dl>
@@ -58,7 +58,7 @@
   <text class="small" x="348" y="182" text-anchor="middle">idempotency_key 固定</text>
 
   <rect class="done" x="496" y="140" width="200" height="56" rx="4"/>
-  <text class="lbl" x="596" y="164" text-anchor="middle">落库 media_id / URL</text>
+  <text class="lbl" x="596" y="164" text-anchor="middle">落库作品号 / 播放链接</text>
   <text class="small" x="596" y="182" text-anchor="middle">status READY / PENDING</text>
 
   <rect class="fail" x="744" y="140" width="152" height="56" rx="4"/>
@@ -66,8 +66,8 @@
   <text class="small" x="820" y="182" text-anchor="middle">写 last_error</text>
 
   <rect class="box" x="248" y="256" width="424" height="72" rx="4"/>
-  <text class="lbl" x="460" y="284" text-anchor="middle">Media MUST：idempotency_key UNIQUE upsert</text>
-  <text class="small" x="460" y="304" text-anchor="middle">同一键返回同一 media_id，禁止双目录</text>
+  <text class="lbl" x="460" y="284" text-anchor="middle">Tube MUST：idempotency_key UNIQUE upsert</text>
+  <text class="small" x="460" y="304" text-anchor="middle">同一键返回同一作品号，禁止双目录</text>
 
   <line class="arr" x1="204" y1="52" x2="248" y2="52"/>
   <line class="arr" x1="428" y1="52" x2="472" y2="52"/>

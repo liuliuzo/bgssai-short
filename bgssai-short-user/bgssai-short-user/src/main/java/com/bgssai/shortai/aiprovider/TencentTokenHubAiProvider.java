@@ -50,34 +50,29 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
     private final String cnBaseUrl;
-    private final String globalBaseUrl;
 
     @Autowired
     public TencentTokenHubAiProvider(SysSecretReader secretReader,
             @Value("${bgssai.llm.tokenhub-cn-base-url:${bgssai.llm.gateway-base-url:https://www.bgssai-tokenhub.cn}}")
-                    String cnBaseUrl,
-            @Value("${bgssai.llm.tokenhub-global-base-url:https://www.bgssai-tokenhub.com}")
-                    String globalBaseUrl) {
+                    String cnBaseUrl) {
         this(secretReader, new ProviderHttp.JdkClient(), ms -> {
             if (ms > 0) {
                 Thread.sleep(ms);
             }
-        }, cnBaseUrl, globalBaseUrl);
+        }, cnBaseUrl);
     }
 
     TencentTokenHubAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
             ProviderHttp.Sleeper sleeper) {
-        this(secretReader, http, sleeper, TokenHubClientSupport.DEFAULT_CN_BASE_URL,
-                TokenHubClientSupport.DEFAULT_GLOBAL_BASE_URL);
+        this(secretReader, http, sleeper, TokenHubClientSupport.DEFAULT_CN_BASE_URL);
     }
 
     TencentTokenHubAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
-            ProviderHttp.Sleeper sleeper, String cnBaseUrl, String globalBaseUrl) {
+            ProviderHttp.Sleeper sleeper, String cnBaseUrl) {
         this.secretReader = secretReader;
         this.http = http;
         this.sleeper = sleeper;
         this.cnBaseUrl = ProviderHttp.trimSlash(cnBaseUrl == null ? "" : cnBaseUrl);
-        this.globalBaseUrl = ProviderHttp.trimSlash(globalBaseUrl == null ? "" : globalBaseUrl);
     }
 
     @Override
