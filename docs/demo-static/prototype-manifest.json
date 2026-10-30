@@ -2303,7 +2303,7 @@
     },
     {
       "path": "docs/demo-static/web/user/task-center.html",
-      "sha256": "243c00df610159577c153da9161ae289ad1af9c6c6ee43e0a6c8633be6150506",
+      "sha256": "b8bc34d37169de96974ac770741c139f73ebea4d3d9e730709f604d43908a97d",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
