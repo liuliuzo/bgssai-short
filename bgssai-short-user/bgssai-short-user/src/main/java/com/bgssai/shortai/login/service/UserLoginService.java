@@ -55,9 +55,8 @@ public class UserLoginService {
     public RespUserLogin login(ReqUserLogin req, HttpServletRequest httpReq) {
         log.info("user login attempt identifier={}", req.getIdentifier());
 
-        SysUserExample example = new SysUserExample();
-        example.createCriteria().andUserNameEqualTo(req.getIdentifier());
-        SysUser user = sysUserMapper.selectOneByExample(example);
+        // 标识支持用户名或邮箱（登录页占位符写「手机号 / 邮箱 / 账号」）。先用户名，含 @ 再邮箱。
+        SysUser user = findUserByIdentifier(req.getIdentifier());
 
         if (user == null) {
             log.warn("user login failed: user not found identifier={}", req.getIdentifier());
@@ -92,5 +91,24 @@ public class UserLoginService {
         resp.setUserName(user.getUserName());
         resp.setRealName(user.getRealName());
         return resp;
+    }
+
+    private SysUser findUserByIdentifier(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return null;
+        }
+        String id = identifier.trim();
+        SysUserExample byName = new SysUserExample();
+        byName.createCriteria().andUserNameEqualTo(id);
+        SysUser user = sysUserMapper.selectOneByExample(byName);
+        if (user != null) {
+            return user;
+        }
+        if (!id.contains("@")) {
+            return null;
+        }
+        SysUserExample byEmail = new SysUserExample();
+        byEmail.createCriteria().andEmailEqualTo(id);
+        return sysUserMapper.selectOneByExample(byEmail);
     }
 }

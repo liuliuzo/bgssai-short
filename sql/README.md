@@ -9,7 +9,7 @@
 | --- | --- |
 | `DDL.sql` | 建库 + 建表（登录 / OAuth / MCP / 订阅支付 / 短剧制作闭环）。自顶向下执行一次即建出完整 schema。 |
 | `DML.sql` | 种子数据：示例账号、套餐目录、OAuth 密钥、用户端铺底、短剧业务样例。 |
-| `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401156379` 等。 |
+| `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401156379`、QA 登录账号等。 |
 | `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401191076` 等。 |
 
 > **`DDL.sql` 只能建新库。** 它含 `DROP TABLE IF EXISTS`，对已有数据的库执行等于删库重来。
@@ -58,6 +58,11 @@ SecretId / SecretKey 占位示例见仓库根 `sms/credentials.example.env`（�
 
 登录页不得公示口令。生产环境请改密 `admin`，不要沿用开发口令；铺底段（`USER-VOLUME-SEED` /
 `SHORT-BIZ-SEED`）禁止在生产执行。
+
+开发库另有 QA 账号 `qa_short_a`（`PLATFORM_ADMIN`，邮箱 `qa+short+a@bgssai-test.local`）与
+`qa_short_u`（`USER`，邮箱 `qa+short+u@bgssai-test.local`），只写在 `sql/dev/DML.sql` 末尾。
+口令与 2026-10-15 QA 密钥环境一致，重跑该段会把口令、邮箱和角色盖回种子值。生产种子不包含这两行。
+本仓禁止增量迁移；已有开发库不能整库 init 时，只对开发库执行该段。
 
 ### `demo` 样例作品（登录用户端即可看到）
 
