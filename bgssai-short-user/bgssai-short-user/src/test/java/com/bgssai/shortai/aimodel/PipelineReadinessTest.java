@@ -99,6 +99,23 @@ class PipelineReadinessTest {
     }
 
     @Test
+    void companyImageAndSpeechSchemaRejectionDoesNotBlockCreate() {
+        AiModelResolveService models = org.mockito.Mockito.mock(AiModelResolveService.class);
+        when(models.resolve("TEXT", null)).thenReturn(model("bgssai-chat"));
+        when(models.resolve("IMAGE", null)).thenReturn(model("bgssai-image"));
+        when(models.resolve("VOICE", null)).thenReturn(model("bgssai-tts"));
+        ScriptedGateway gateway = new ScriptedGateway(true, companyCatalog(), 422);
+        PipelineReadiness readiness = new PipelineReadiness(models,
+                new SysSecretReader(key -> "sk-test"),
+                "https://dev.user.bgssai-tokenhub.cn",
+                gateway);
+        readiness.assertReady("TEXT", null);
+        assertTrue(gateway.posted.stream().anyMatch(body -> body.contains("\"model\":\"bgssai-image\"")));
+        assertTrue(gateway.posted.stream().anyMatch(body -> body.contains("\"model\":\"bgssai-tts\"")));
+        assertFalse(gateway.posted.stream().anyMatch(body -> body.contains("kling-v3")));
+    }
+
+    @Test
     void queueDoesNotInsertWhenThePipelineIsBlocked() {
         AiTaskQueue queue = new AiTaskQueue();
         PipelineReadiness readiness = org.mockito.Mockito.mock(PipelineReadiness.class);
@@ -112,6 +129,14 @@ class PipelineReadinessTest {
                 () -> queue.enqueue("u", "w", null, "TEXT", "OUTLINE", "w", java.util.Map.of(), null, 0));
         assertEquals("4014", ex.getCode());
         verify(mapper, never()).insertSelective(any());
+    }
+
+    private static String companyCatalog() {
+        return "{\"data\":["
+                + "{\"id\":\"bgssai-chat\",\"owned_by\":\"BGSSAI\",\"capabilities\":[\"chat\"]},"
+                + "{\"id\":\"bgssai-image\",\"owned_by\":\"BGSSAI\",\"capabilities\":[\"image_generation\"]},"
+                + "{\"id\":\"bgssai-tts\",\"owned_by\":\"BGSSAI\",\"capabilities\":[\"audio_speech\"]}"
+                + "]}";
     }
 
     private static String catalog(boolean minimaxSpeech) {
@@ -138,11 +163,17 @@ class PipelineReadinessTest {
     private static final class ScriptedGateway implements PipelineReadiness.GatewayClient {
         private final boolean deepseekReady;
         private final String catalogBody;
+        private final int validationStatus;
         private final List<String> posted = new ArrayList<>();
 
         private ScriptedGateway(boolean deepseekReady, String catalogBody) {
+            this(deepseekReady, catalogBody, 400);
+        }
+
+        private ScriptedGateway(boolean deepseekReady, String catalogBody, int validationStatus) {
             this.deepseekReady = deepseekReady;
             this.catalogBody = catalogBody;
+            this.validationStatus = validationStatus;
         }
 
         @Override
@@ -158,6 +189,14 @@ class PipelineReadinessTest {
             if (!deepseekReady && json.contains("deepseek-chat")) {
                 return new Reply(503, "{\"error\":{\"message\":\"Provider is not configured: deepseek\","
                         + "\"type\":\"service_unavailable_error\",\"code\":\"provider_not_configured\"}}");
+            }
+            if (validationStatus == 422 && json.contains("bgssai-image")) {
+                return new Reply(422, "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"body\",\"n\"],"
+                        + "\"msg\":\"Input should be greater than or equal to 1\"}]}");
+            }
+            if (validationStatus == 422 && json.contains("bgssai-tts")) {
+                return new Reply(422, "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"input\"],"
+                        + "\"msg\":\"Field required\"}]}");
             }
             return new Reply(400, "{\"error\":{\"message\":\"messages is required\",\"code\":\"invalid_request\"}}");
         }

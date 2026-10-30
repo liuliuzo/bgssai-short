@@ -193,7 +193,8 @@ public class PipelineReadiness {
      * The probe body is intentionally incomplete ({@code n=0} for images, no prompt
      * for text or speech) so a configured provider fails validation instead of
      * starting a billed generation. A missing provider still answers
-     * {@code provider_not_configured} before that validation.
+     * {@code provider_not_configured} before that validation. Company image and
+     * speech models reject this body with HTTP 422; that schema error is ready.
      */
     private static String probeBody(Step step, String modelCode) {
         Map<String, Object> body = new LinkedHashMap<>();
