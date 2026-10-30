@@ -25,8 +25,6 @@ import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
-import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
-import com.bgssai.shortai.mapper.UserSubscriptionMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
@@ -37,11 +35,7 @@ import com.bgssai.shortai.model.ShortSceneCard;
 import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
-import com.bgssai.shortai.model.SubscriptionPlan;
-import com.bgssai.shortai.model.SubscriptionPlanExample;
 import com.bgssai.shortai.model.UserQuota;
-import com.bgssai.shortai.model.UserSubscription;
-import com.bgssai.shortai.model.UserSubscriptionExample;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
@@ -77,10 +71,6 @@ public class AiTaskService {
     private QuotaConsumeService quotaConsumeService;
     @Autowired
     private PaidOrderGrantService paidOrderGrantService;
-    @Autowired
-    private UserSubscriptionMapper userSubscriptionMapper;
-    @Autowired
-    private SubscriptionPlanMapper subscriptionPlanMapper;
     @Autowired
     private AiModelResolveService aiModelResolveService;
 
@@ -546,21 +536,7 @@ public class AiTaskService {
     }
 
     private void ensureWallet(String userId) {
-        UserSubscriptionExample ex = new UserSubscriptionExample();
-        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
-        UserSubscription sub = userSubscriptionMapper.selectOneByExample(ex);
-        if (sub == null) {
-            int grant = 10000;
-            SubscriptionPlanExample pex = new SubscriptionPlanExample();
-            pex.createCriteria().andPlanCodeEqualTo("FREE").andDelFlagEqualTo(0);
-            SubscriptionPlan plan = subscriptionPlanMapper.selectOneByExample(pex);
-            if (plan != null && plan.getMonthlyBalanceCent() != null) {
-                grant = plan.getMonthlyBalanceCent();
-            }
-            paidOrderGrantService.grantSubscription(userId, "FREE", grant);
-        }
-        UserQuota quota = quotaWalletService.requireWallet(userId);
-        quotaWalletService.resetMonthIfNeeded(quota);
+        paidOrderGrantService.ensureFreeTier(userId);
     }
 
     private Map<String, Object> view(ShortAiTask row) {

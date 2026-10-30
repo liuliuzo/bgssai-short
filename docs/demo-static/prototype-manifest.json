@@ -2366,7 +2366,7 @@
     },
     {
       "path": "docs/demo-static/web/user/work-create.html",
-      "sha256": "bf9ebc3841ee1fa769f988d46c4350fb2dae954e60f916d97d4ebd52df9270e4",
+      "sha256": "b6e02d8189c304fa8b56be5459edbb4f1c08f5948a119c9b1cd5e307aab74fd2",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

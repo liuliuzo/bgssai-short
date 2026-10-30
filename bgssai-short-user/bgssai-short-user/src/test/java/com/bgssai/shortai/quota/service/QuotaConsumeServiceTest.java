@@ -3,6 +3,8 @@ package com.bgssai.shortai.quota.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -81,7 +83,7 @@ class QuotaConsumeServiceTest {
     }
 
     @Test
-    void unboundUserRejectedWhenBgssaiWebsiteLedgerClientInjected() {
+    void unboundUserChargesLocalWalletAndDoesNotRequireChatBind() {
         com.bgssai.shortai.mapper.OauthBindingMapper bindingMapper =
                 org.mockito.Mockito.mock(com.bgssai.shortai.mapper.OauthBindingMapper.class);
         com.bgssai.shortai.centralledger.service.CentralLedgerService centralLedger =
@@ -89,15 +91,24 @@ class QuotaConsumeServiceTest {
         com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient ledgerClient =
                 new com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient(bindingMapper, centralLedger);
         service.setBgssaiWebsiteLedgerClient(ledgerClient);
+        com.bgssai.shortai.payment.service.PaidOrderGrantService grant =
+                org.mockito.Mockito.mock(com.bgssai.shortai.payment.service.PaidOrderGrantService.class);
+        ReflectionTestUtils.setField(service, "paidOrderGrantService", grant);
+        when(quotaWalletService.requireWallet("unbound-u")).thenReturn(quota(10000, 0, 0, 10000));
+        when(userQuotaMapper.updateByExampleSelective(any(), any())).thenReturn(1);
 
-        IllegalStateException ex1 = assertThrows(
-                IllegalStateException.class, () -> service.assertAffordable("unbound-u", 20));
-        org.junit.jupiter.api.Assertions.assertTrue(ex1.getMessage().contains("bgssai-chat"));
+        service.assertAffordable("unbound-u", 1);
+        service.consume("unbound-u", 1, "task:t-outline");
 
-        IllegalStateException ex2 = assertThrows(
+        verify(grant, org.mockito.Mockito.atLeastOnce()).ensureFreeTier("unbound-u");
+        verify(centralLedger, never()).consumeQuota(
+                any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any(), any());
+        verify(centralLedger, never()).hasAvailableQuota(any(), org.mockito.ArgumentMatchers.anyLong());
+
+        IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
                 () -> service.consumeLlmQuota("unbound-u", 200L, "bgssai-chat", "idem-1"));
-        org.junit.jupiter.api.Assertions.assertTrue(ex2.getMessage().contains("bgssai-chat"));
+        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("bgssai-chat"));
     }
 
     @Test

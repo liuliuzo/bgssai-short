@@ -1,6 +1,8 @@
 # liuliuzo/bgssai-short 测试进度
 
 > **Infra 2026-10-31 Asia/Shanghai**: company LLM wiring [PR#164](https://github.com/liuliuzo/bgssai-short/pull/164) merged; `dev-short-deploy` #51 SUCCESS; DEV MySQL `ai_model_config` defaults TEXT/IMAGE/VOICE → bgssai-chat/image/tts. Browser FTC wave in progress (`FULL-QA-FTC-2026-10-31.md`); suite pass/fail columns unchanged until browser results.
+>
+> **Outline billing 2026-10-31**: company default `bgssai-chat` calls the platform TokenHub-CN key. A password user with no Chat OAuth bind is billed on the local wallet (FREE granted when there is no subscription). Create returns `4007` before enqueue when that wallet cannot pay. Ops still required: company key present, and `bgssai-chat` listed on the CN gateway. A personal Chat bind is not required. An account that is already bound still uses the central ledger.
 
 2026-10-30 补入尚未进入既有功能清单的用例，结果均为待测。历史结果不改。
 

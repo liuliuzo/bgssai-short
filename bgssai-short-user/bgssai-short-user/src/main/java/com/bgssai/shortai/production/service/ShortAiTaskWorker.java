@@ -74,6 +74,7 @@ import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
+import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.storage.ObjectStorage;
 
 @Component
@@ -131,6 +132,8 @@ public class ShortAiTaskWorker {
 
     @Autowired
     private ShortTaskSettlementService settlement;
+    @Autowired
+    private QuotaConsumeService quotaConsumeService;
 
     private final ThreadLocal<Integer> executionUsage = ThreadLocal.withInitial(() -> 0);
 
@@ -327,6 +330,10 @@ public class ShortAiTaskWorker {
         com.bgssai.shortai.billing.UsageScope.set(task.getUserId(),task.getWorkId(),task.getTaskId());
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
+            if (quotaConsumeService != null) {
+                int cost = task.getCostCent() == null ? 0 : task.getCostCent();
+                quotaConsumeService.assertAffordable(task.getUserId(), cost);
+            }
             complete(task, model);
             boolean settled = settlement.settle(task, model, Math.max(1, executionUsage.get()));
             if (!settled) {

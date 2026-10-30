@@ -14,6 +14,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.mapper.QuotaChangeLogMapper;
+import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.mapper.UserQuotaMapper;
 import com.bgssai.shortai.model.QuotaChangeLog;
 import com.bgssai.shortai.model.UserQuota;
@@ -39,17 +40,20 @@ public class QuotaConsumeService {
     @Autowired(required = false)
     private BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient;
 
+    @Autowired(required = false)
+    private PaidOrderGrantService paidOrderGrantService;
+
     public void setBgssaiWebsiteLedgerClient(BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient) {
         this.bgssaiWebsiteLedgerClient = bgssaiWebsiteLedgerClient;
     }
 
     /**
-     * Pre-submit / estimate affordability gate. When {@link BgssaiWebsiteLedgerClient} is active,
-     * requires a bound bgssai-chat user and verifies quota in bgssai_chat.user_quota.
+     * Pre-submit affordability gate. A bound bgssai-chat account is charged on the central ledger.
+     * An unbound account (password / phone / email) uses the local wallet and the platform
+     * TokenHub key; missing Chat OAuth does not block the model call.
      */
     public void assertAffordable(String userId, int costCent) {
-        if (bgssaiWebsiteLedgerClient != null) {
-            bgssaiWebsiteLedgerClient.requireBoundWebsiteUserId(userId);
+        if (chargeCentralLedger(userId)) {
             if (costCent <= 0) {
                 return;
             }
@@ -58,6 +62,7 @@ public class QuotaConsumeService {
             }
             return;
         }
+        ensureLocalWallet(userId);
         if (costCent <= 0) {
             return;
         }
@@ -102,8 +107,7 @@ public class QuotaConsumeService {
 
     @Transactional
     public void consume(String userId, int costCent, String settlementId) {
-        if (bgssaiWebsiteLedgerClient != null) {
-            bgssaiWebsiteLedgerClient.requireBoundWebsiteUserId(userId);
+        if (chargeCentralLedger(userId)) {
             if (costCent <= 0) {
                 return;
             }
@@ -114,6 +118,7 @@ public class QuotaConsumeService {
             }
             return;
         }
+        ensureLocalWallet(userId);
         if (costCent <= 0) {
             return;
         }
@@ -156,5 +161,17 @@ public class QuotaConsumeService {
         log.info("quota consumed userId={} cost={} balanceAfter={} extraAfter={}",
                 userId, costCent, patch.getBalanceCent(), patch.getExtraBalanceCent());
         debitOutbox.enqueue(settlementId, userId, costCent);
+    }
+
+    /** Central ledger only when this product account is already linked to a chat user. */
+    private boolean chargeCentralLedger(String userId) {
+        return bgssaiWebsiteLedgerClient != null
+                && bgssaiWebsiteLedgerClient.websiteUserIdOf(userId) != null;
+    }
+
+    private void ensureLocalWallet(String userId) {
+        if (paidOrderGrantService != null) {
+            paidOrderGrantService.ensureFreeTier(userId);
+        }
     }
 }

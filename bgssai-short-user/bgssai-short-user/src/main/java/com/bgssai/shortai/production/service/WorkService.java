@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.Responses;
@@ -20,6 +21,7 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
+import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortEpisodeExample;
@@ -31,6 +33,8 @@ import com.bgssai.shortai.production.dto.ProductionDtos.WorkCreateReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.WorkUpdateReq;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortLabels;
+import com.bgssai.shortai.production.support.TaskPrices;
+import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.github.pagehelper.PageHelper;
 
 @Service
@@ -48,6 +52,10 @@ public class WorkService {
     private WorkStatusService workStatusService;
     @Autowired
     private AiTaskQueue aiTaskQueue;
+    @Autowired
+    private AiModelResolveService aiModelResolveService;
+    @Autowired
+    private QuotaConsumeService quotaConsumeService;
 
     public PageResponse list(int pageNum, int pageSize, String workStatus, String genre, String keyword) {
         String userId = workAccessService.requireUser();
@@ -98,6 +106,7 @@ public class WorkService {
         if (count < 1 || count > 80) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "episode_count out of range");
         }
+        quotaConsumeService.assertAffordable(userId, outlineEstimateCent());
         Date now = new Date();
         ShortWork work = new ShortWork();
         work.setWorkId(ShortIds.id("w-"));
@@ -143,6 +152,13 @@ public class WorkService {
         result.put("work_id", work.getWorkId());
         result.put("task_id", task.getTaskId());
         return Responses.ok(result);
+    }
+
+    /** Same snapshot the outline task will settle, so a shortfall fails create before enqueue. */
+    private int outlineEstimateCent() {
+        AiModelConfig model = aiModelResolveService.resolve("TEXT", null);
+        int priced = aiModelResolveService.costCent(model, 1);
+        return priced > 0 ? priced : TaskPrices.cost("TEXT");
     }
 
     public ApiResponse detail(String workId) {

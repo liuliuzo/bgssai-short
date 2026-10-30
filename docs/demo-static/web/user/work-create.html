@@ -268,6 +268,8 @@
         配音为已登记语音能力的 MiniMax 模型。任一步不能跑时停在本页，
         提示例如「大纲、剧本、分镜现在不能开始：模型服务暂未开通：deepseek，请稍后重试」
         或「配音现在不能开始：该模型暂未开放：minimax-speech-2.8-hd，请稍后重试」，不创建作品、不入队。
+        大纲走平台中枢密钥，不要求先绑定 Chat。未绑定时按本产品额度预检（没有订阅则先发免费额度），
+        不够则停在本页并返回 <code>4007</code>，不入队。已绑定 Chat 的账号改扣中央账本。
         创建流程不含预算与质量阈值：<code>cost_budget_cent</code> 是作品设置里的可选项（默认不限），
         <code>quality_threshold_score</code> 由结构模板给默认、创建后可随时调整（调整留痕）。
         模板列表取自 <code>GET /bgssai/user/quality/templates?genre</code>。
