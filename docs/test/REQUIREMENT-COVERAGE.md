@@ -54,3 +54,9 @@
 | [成片发布到 bgssai-tube（film-publish-media）](../feature/film-publish-media.md) | 既有发布参考，收口未知结果恢复 | [TC-film-publish-media.md](../review/test-cases/TC-film-publish-media.md) | [REQ-SHORT-PRODUCT-101](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-101-P, TC-SHORT-PRODUCT-101-N |
 | [资产一致性面板（asset-consistency-panel）](../feature/asset-consistency-panel.md) | 既有一致性参考，收口成片基准 | [TC-asset-consistency-panel.md](../review/test-cases/TC-asset-consistency-panel.md) | [REQ-SHORT-PRODUCT-102](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-102-P, TC-SHORT-PRODUCT-102-N |
 | [分镜工作台（storyboard-workbench）](../feature/storyboard-workbench.md) | 既有分镜时间轴参考，收口成片基准 | [TC-storyboard-workbench.md](../review/test-cases/TC-storyboard-workbench.md) | [REQ-SHORT-PRODUCT-102](TC-opc-product-20261019.md)：TC-SHORT-PRODUCT-102-P, TC-SHORT-PRODUCT-102-N |
+
+## 2026-10-30 补遗
+
+| 来源 | 用例 |
+| --- | --- |
+| [网站 ICP 备案展示](../feature/icp-filing-footer.md) | [REQ-SHORT-SUPP-101](TC-icp-filing-footer.md) |

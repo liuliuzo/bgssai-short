@@ -73,3 +73,5 @@
 
 [opc-requirements-20261019.md](opc-requirements-20261019.md)：新增 REQ-SHORT-PRODUCT-101、REQ-SHORT-PRODUCT-102。仅需求与测试设计，不代表实施完成。2026-10-17 需求与用例结果保持原样。
 <!-- OPC-20261019 END -->
+
+- [2026-10-30 功能测试补遗](functional-test-supplement-20261030.md)

@@ -49,3 +49,9 @@
 
 机器可读清单：[functional-manifest-20261017.json](functional-manifest-20261017.json)、[functional-manifest-20261019.json](functional-manifest-20261019.json)。管理仓 `scripts/validate-functional-docs.py --repo <本仓路径>` 检查需求/用例ID、正反例、状态、链接、覆盖及历史套件指纹；实际运行测试证据另行填写。2026-10-19 套件不计入 20261017 清单的进度合计。
 <!-- OPC-VALIDATION-20261017 END -->
+
+## 2026-10-30 功能用例补遗
+
+这些规格此前没有进入 `docs/test` 的正反向用例。结果均为待测。清单见 [functional-manifest-20261030.json](functional-manifest-20261030.json)。
+
+- [网站 ICP 备案展示](TC-icp-filing-footer.md)

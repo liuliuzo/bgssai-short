@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "date": "2026-10-30",
+  "repo": "liuliuzo/bgssai-short",
+  "local_repo": "bgssai-short",
+  "baseline": "2026-10-17-functional-catalog",
+  "requirement_file": "docs/feature/functional-test-supplement-20261030.md",
+  "requirements": [
+    {
+      "id": "REQ-SHORT-SUPP-101",
+      "title": "页脚展示已核准网站备案号",
+      "cases": [
+        "TC-SHORT-SUPP-101-P",
+        "TC-SHORT-SUPP-101-N"
+      ],
+      "file": "docs/test/TC-icp-filing-footer.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-SHORT-SUPP-101-P",
+      "requirement": "REQ-SHORT-SUPP-101",
+      "file": "TC-icp-filing-footer.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-SUPP-101-N",
+      "requirement": "REQ-SHORT-SUPP-101",
+      "file": "TC-icp-filing-footer.md",
+      "status": "待测",
+      "kind": "N"
+    }
+  ],
+  "coverage": [
+    {
+      "source": "docs/feature/icp-filing-footer.md",
+      "title": "网站 ICP 备案展示",
+      "classification": "2026-10-30 补入功能清单的规格",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-SUPP-101"
+      ],
+      "cases": [
+        "TC-SHORT-SUPP-101-P",
+        "TC-SHORT-SUPP-101-N"
+      ]
+    }
+  ],
+  "historical_suites": [],
+  "progress": {
+    "待测": 2,
+    "通过": 0,
+    "失败": 0,
+    "阻塞": 0,
+    "不适用": 0
+  },
+  "suite_counts": {
+    "TC-icp-filing-footer.md": {
+      "待测": 2,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    }
+  },
+  "design_only": true
+}
