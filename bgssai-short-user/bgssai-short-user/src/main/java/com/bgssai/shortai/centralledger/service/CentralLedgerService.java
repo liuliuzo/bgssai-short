@@ -34,19 +34,59 @@ import com.bgssai.shortai.mapper.WebsiteUserQuotaMapper;
 import com.bgssai.shortai.mapper.WebsiteUserSubscriptionMapper;
 
 /**
- * 本库账本（ledger_* 镜像表）读写服务。解耦跨库 bgssai_website.* 直连，全部在本产品库内完成读写。
+ * 跨库中央账本（bgssai_chat.* 表）读写服务。直接读写同实例 bgssai-chat-cn 的 bgssai_chat.* 表。
  *
  * <p>三件事：
  * <ul>
- *   <li>isEntitled：读本库 ledger_user / ledger_user_subscription，判定「付费用户在本产品视为已开通」；</li>
- *   <li>consume：本产品消耗的用量按双窗口 + 加量包口径扣减本库 ledger_user_quota 并落 ledger_usage_ledger；</li>
- *   <li>reportOwnSubscription / linkWebsiteUser：本产品自己卖出的订阅写进 ledger_external_subscription，
+ *   <li>isEntitled：读 bgssai_chat.website_user / bgssai_chat.user_subscription，判定「付费用户在本产品视为已开通」；</li>
+ *   <li>consume / consumeQuota：本产品消耗的用量按双窗口 + 加量包口径扣减 bgssai_chat.user_quota 并落 bgssai_chat.usage_ledger；</li>
+ *   <li>reportOwnSubscription / linkWebsiteUser：本产品自己卖出的订阅写进 bgssai_chat.external_subscription，
  *       用户日后绑定 BGSSAI 账号时回填归属。</li>
  * </ul>
- * 账本的任何失败只记日志，由调用方兜底，不得影响本产品自己的计费与业务。
  */
 @Service
 public class CentralLedgerService {
+
+    public record ConsumeResult(
+            boolean success,
+            String websiteUserId,
+            long rawTokens,
+            long billedTokens,
+            double multiplier,
+            String usageKind,
+            String idempotencyKey) {
+        public boolean isSuccess() {
+            return success;
+        }
+    }
+
+    public static double resolveMultiplier(String multiplierTierOrModel) {
+        if (multiplierTierOrModel == null || multiplierTierOrModel.trim().isEmpty()) {
+            return 0.5d;
+        }
+        String normalized = multiplierTierOrModel.trim().toLowerCase(java.util.Locale.ROOT);
+        if ("0.5x".equals(normalized) || "0.5".equals(normalized) || "bgssai-chat".equals(normalized)) {
+            return 0.5d;
+        }
+        if ("1.5x".equals(normalized) || "1.5".equals(normalized)
+                || normalized.startsWith("gpt-")
+                || normalized.startsWith("claude")
+                || normalized.startsWith("gemini")
+                || normalized.startsWith("grok")
+                || normalized.startsWith("o1")
+                || normalized.startsWith("o3")
+                || normalized.startsWith("o4")) {
+            return 1.5d;
+        }
+        return 1.0d;
+    }
+
+    public static long calculateBilledTokens(long rawTokens, String multiplierTierOrModel) {
+        if (rawTokens <= 0L) {
+            return 0L;
+        }
+        return Math.max(1L, Math.round(rawTokens * resolveMultiplier(multiplierTierOrModel)));
+    }
 
     private static final Logger log = LoggerFactory.getLogger(CentralLedgerService.class);
 
@@ -114,6 +154,57 @@ public class CentralLedgerService {
         }
         Date end = sub.getPeriodEnd();
         return end == null || end.after(new Date());
+    }
+
+    public boolean hasAvailableQuota(String websiteUserId, long billedTokens) {
+        if (isBlank(websiteUserId)) {
+            return false;
+        }
+        if (billedTokens <= 0L) {
+            return true;
+        }
+        WebsiteUserQuota quota = findQuota(websiteUserId);
+        if (quota == null) {
+            return false;
+        }
+        Date now = new Date();
+        int fiveLimit = nvl(quota.getFiveHourLimitTokens());
+        int weekLimit = nvl(quota.getWeeklyLimitTokens());
+        if (paidPlanExpired(findSubscription(websiteUserId), now)) {
+            WebsiteSubscriptionPlan free = findPlan(PLAN_FREE);
+            if (free != null) {
+                fiveLimit = nvl(free.getFiveHourLimitTokens());
+                weekLimit = nvl(free.getWeeklyLimitTokens());
+            }
+        }
+        int fiveUsed = nvl(quota.getFiveHourUsedTokens());
+        Date fiveStart = quota.getFiveHourWindowStart();
+        if (fiveStart == null || now.getTime() - fiveStart.getTime() >= FIVE_HOURS_MS) {
+            fiveUsed = 0;
+        }
+        int weekUsed = nvl(quota.getWeeklyUsedTokens());
+        Date weekAnchor = quota.getWeeklyAnchorAt();
+        if (weekAnchor == null || now.getTime() - weekAnchor.getTime() >= WEEK_MS) {
+            weekUsed = 0;
+        }
+        int windowRemain = Math.min(Math.max(0, fiveLimit - fiveUsed), Math.max(0, weekLimit - weekUsed));
+        int extra = nvl(quota.getExtraTokens());
+        return (long) windowRemain + extra >= billedTokens;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ConsumeResult consumeQuota(
+            String websiteUserId,
+            long rawTokens,
+            String multiplierTierOrModel,
+            String usageKind,
+            String idempotencyKey,
+            String remark) {
+        double multiplier = resolveMultiplier(multiplierTierOrModel);
+        long billedTokens = calculateBilledTokens(rawTokens, multiplierTierOrModel);
+        int intTokens = billedTokens > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) billedTokens;
+        boolean ok = consume(websiteUserId, intTokens, usageKind, idempotencyKey, remark);
+        return new ConsumeResult(ok, websiteUserId, rawTokens, billedTokens, multiplier, usageKind, idempotencyKey);
     }
 
     /**

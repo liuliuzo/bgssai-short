@@ -85,7 +85,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from ledger_usage_idempotency
+    from bgssai_chat.usage_idempotency
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -104,7 +104,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from ledger_usage_idempotency
+    from bgssai_chat.usage_idempotency
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -115,25 +115,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from ledger_usage_idempotency
+    from bgssai_chat.usage_idempotency
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from ledger_usage_idempotency
+    delete from bgssai_chat.usage_idempotency
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteUsageIdempotencyExample">
-    delete from ledger_usage_idempotency
+    delete from bgssai_chat.usage_idempotency
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteUsageIdempotency" useGeneratedKeys="true" keyProperty="id">
-    insert into ledger_usage_idempotency (id, client_id, idempotency_key, ledger_id, user_id, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into bgssai_chat.usage_idempotency (id, client_id, idempotency_key, ledger_id, user_id, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{clientId,jdbcType=VARCHAR}, #{idempotencyKey,jdbcType=VARCHAR}, #{ledgerId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteUsageIdempotency" useGeneratedKeys="true" keyProperty="id">
-    insert into ledger_usage_idempotency
+    insert into bgssai_chat.usage_idempotency
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -200,13 +200,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteUsageIdempotencyExample" resultType="java.lang.Long">
-    select count(*) from ledger_usage_idempotency
+    select count(*) from bgssai_chat.usage_idempotency
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update ledger_usage_idempotency
+    update bgssai_chat.usage_idempotency
     <set>
       <if test="row.clientId != null">
         client_id = #{row.clientId,jdbcType=VARCHAR},
@@ -241,7 +241,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update ledger_usage_idempotency
+    update bgssai_chat.usage_idempotency
     set
       client_id = #{row.clientId,jdbcType=VARCHAR},
       idempotency_key = #{row.idempotencyKey,jdbcType=VARCHAR},
@@ -257,7 +257,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteUsageIdempotency">
-    update ledger_usage_idempotency
+    update bgssai_chat.usage_idempotency
     <set>
       <if test="clientId != null">
         client_id = #{clientId,jdbcType=VARCHAR},
@@ -290,7 +290,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteUsageIdempotency">
-    update ledger_usage_idempotency
+    update bgssai_chat.usage_idempotency
     set
       client_id = #{clientId,jdbcType=VARCHAR},
       idempotency_key = #{idempotencyKey,jdbcType=VARCHAR},

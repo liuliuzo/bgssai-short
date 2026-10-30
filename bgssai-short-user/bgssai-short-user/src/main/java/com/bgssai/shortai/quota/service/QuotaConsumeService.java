@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bgssai.shortai.centralledger.service.CentralLedgerService;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
+import com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient;
 import com.bgssai.shortai.mapper.QuotaChangeLogMapper;
 import com.bgssai.shortai.mapper.UserQuotaMapper;
 import com.bgssai.shortai.model.QuotaChangeLog;
@@ -34,11 +36,28 @@ public class QuotaConsumeService {
     @Autowired
     private ShortDebitOutbox debitOutbox;
 
+    @Autowired(required = false)
+    private BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient;
+
+    public void setBgssaiWebsiteLedgerClient(BgssaiWebsiteLedgerClient bgssaiWebsiteLedgerClient) {
+        this.bgssaiWebsiteLedgerClient = bgssaiWebsiteLedgerClient;
+    }
+
     /**
-     * Pre-submit / estimate affordability gate. Same 4007 / 4015 rules as {@link #consume}
-     * but does not debit the wallet.
+     * Pre-submit / estimate affordability gate. When {@link BgssaiWebsiteLedgerClient} is active,
+     * requires a bound bgssai-chat user and verifies quota in bgssai_chat.user_quota.
      */
     public void assertAffordable(String userId, int costCent) {
+        if (bgssaiWebsiteLedgerClient != null) {
+            bgssaiWebsiteLedgerClient.requireBoundWebsiteUserId(userId);
+            if (costCent <= 0) {
+                return;
+            }
+            if (!bgssaiWebsiteLedgerClient.hasAvailableQuota(userId, costCent)) {
+                throw new BizException(CommonErrorCode.QUOTA_INSUFFICIENT);
+            }
+            return;
+        }
         if (costCent <= 0) {
             return;
         }
@@ -65,8 +84,36 @@ public class QuotaConsumeService {
         consume(userId, costCent, "quota:" + UUID.randomUUID());
     }
 
+    public CentralLedgerService.ConsumeResult consumeLlmQuota(
+            String userId,
+            long rawTokens,
+            String multiplierTierOrModel,
+            String idempotencyKey) {
+        if (bgssaiWebsiteLedgerClient == null) {
+            throw new IllegalStateException("BgssaiWebsiteLedgerClient is required for LLM quota consumption");
+        }
+        CentralLedgerService.ConsumeResult res = bgssaiWebsiteLedgerClient.consumeLlmQuota(
+                userId, rawTokens, multiplierTierOrModel, "llm_tokens", idempotencyKey, "short llm call");
+        if (res == null || !res.isSuccess()) {
+            throw new BizException(CommonErrorCode.QUOTA_INSUFFICIENT);
+        }
+        return res;
+    }
+
     @Transactional
     public void consume(String userId, int costCent, String settlementId) {
+        if (bgssaiWebsiteLedgerClient != null) {
+            bgssaiWebsiteLedgerClient.requireBoundWebsiteUserId(userId);
+            if (costCent <= 0) {
+                return;
+            }
+            CentralLedgerService.ConsumeResult res = bgssaiWebsiteLedgerClient.consumeBilledTokens(
+                    userId, costCent, "quota_cent", settlementId, "short task debit");
+            if (res == null || !res.isSuccess()) {
+                throw new BizException(CommonErrorCode.QUOTA_INSUFFICIENT);
+            }
+            return;
+        }
         if (costCent <= 0) {
             return;
         }

@@ -21,6 +21,8 @@ public class BgssaiWebsiteLedgerClient {
     private static final Logger log = LoggerFactory.getLogger(BgssaiWebsiteLedgerClient.class);
     private static final String PLATFORM_BGSSAI = "bgssai";
 
+    public static final String UNBOUND_USER_MESSAGE = "请先绑定或使用 bgssai-chat 账号登录后再调用大模型";
+
     private final OauthBindingMapper oauthBindingMapper;
     private final CentralLedgerService centralLedger;
 
@@ -28,6 +30,92 @@ public class BgssaiWebsiteLedgerClient {
                                      CentralLedgerService centralLedger) {
         this.oauthBindingMapper = oauthBindingMapper;
         this.centralLedger = centralLedger;
+    }
+
+    public String requireBoundWebsiteUserId(String localUserId) {
+        String websiteUserId = websiteUserIdOf(localUserId);
+        if (websiteUserId == null || websiteUserId.isBlank()) {
+            throw new IllegalStateException(UNBOUND_USER_MESSAGE);
+        }
+        return websiteUserId;
+    }
+
+    public String requireBoundWebsiteUserId(Long localUserId) {
+        if (localUserId == null) {
+            throw new IllegalStateException(UNBOUND_USER_MESSAGE);
+        }
+        return requireBoundWebsiteUserId(String.valueOf(localUserId));
+    }
+
+    public boolean hasAvailableQuota(String localUserId, long billedTokens) {
+        String websiteUserId = requireBoundWebsiteUserId(localUserId);
+        return centralLedger != null && centralLedger.hasAvailableQuota(websiteUserId, billedTokens);
+    }
+
+    public boolean hasAvailableQuota(Long localUserId, long billedTokens) {
+        if (localUserId == null) {
+            throw new IllegalStateException(UNBOUND_USER_MESSAGE);
+        }
+        return hasAvailableQuota(String.valueOf(localUserId), billedTokens);
+    }
+
+    public CentralLedgerService.ConsumeResult consumeLlmQuota(
+            String localUserId,
+            long rawTokens,
+            String multiplierTierOrModel,
+            String usageKind,
+            String idempotencyKey,
+            String remark) {
+        String websiteUserId = requireBoundWebsiteUserId(localUserId);
+        if (centralLedger == null) {
+            throw new IllegalStateException("CentralLedgerService unavailable");
+        }
+        CentralLedgerService.ConsumeResult res = centralLedger.consumeQuota(
+                websiteUserId, rawTokens, multiplierTierOrModel, usageKind, idempotencyKey, remark);
+        if (res != null) {
+            return res;
+        }
+        double multiplier = CentralLedgerService.resolveMultiplier(multiplierTierOrModel);
+        long billedTokens = CentralLedgerService.calculateBilledTokens(rawTokens, multiplierTierOrModel);
+        int intTokens = billedTokens > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) billedTokens;
+        boolean ok = centralLedger.consume(websiteUserId, intTokens, usageKind, idempotencyKey, remark);
+        return new CentralLedgerService.ConsumeResult(
+                ok, websiteUserId, rawTokens, billedTokens, multiplier, usageKind, idempotencyKey);
+    }
+
+    public CentralLedgerService.ConsumeResult consumeLlmQuota(
+            Long localUserId,
+            long rawTokens,
+            String multiplierTierOrModel,
+            String usageKind,
+            String idempotencyKey,
+            String remark) {
+        if (localUserId == null) {
+            throw new IllegalStateException(UNBOUND_USER_MESSAGE);
+        }
+        return consumeLlmQuota(
+                String.valueOf(localUserId), rawTokens, multiplierTierOrModel, usageKind, idempotencyKey, remark);
+    }
+
+    public CentralLedgerService.ConsumeResult consumeBilledTokens(
+            String localUserId,
+            long billedTokens,
+            String usageKind,
+            String idempotencyKey,
+            String remark) {
+        return consumeLlmQuota(localUserId, billedTokens, "1x", usageKind, idempotencyKey, remark);
+    }
+
+    public CentralLedgerService.ConsumeResult consumeBilledTokens(
+            Long localUserId,
+            long billedTokens,
+            String usageKind,
+            String idempotencyKey,
+            String remark) {
+        if (localUserId == null) {
+            throw new IllegalStateException(UNBOUND_USER_MESSAGE);
+        }
+        return consumeBilledTokens(String.valueOf(localUserId), billedTokens, usageKind, idempotencyKey, remark);
     }
 
     public boolean isEntitled(String userId) {
@@ -86,7 +174,11 @@ public class BgssaiWebsiteLedgerClient {
         }
     }
 
-    private String websiteUserIdOf(String userId) {
+    public String websiteUserIdOf(Long localUserId) {
+        return localUserId == null ? null : websiteUserIdOf(String.valueOf(localUserId));
+    }
+
+    public String websiteUserIdOf(String userId) {
         if (OAuthIds.blank(userId)) {
             return null;
         }

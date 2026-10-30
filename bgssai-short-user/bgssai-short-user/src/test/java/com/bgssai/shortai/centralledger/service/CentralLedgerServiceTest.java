@@ -200,15 +200,15 @@ class CentralLedgerServiceTest {
     }
 
     @Test
-    void websiteMapperXmlsUseLocalLedgerTablesWithoutCrossSchemaPrefix() throws Exception {
+    void websiteMapperXmlsUseBgssaiChatCrossSchemaTables() throws Exception {
         String[][] expected = new String[][] {
-                { "WebsiteUserMapper.xml", "ledger_user" },
-                { "WebsiteSubscriptionPlanMapper.xml", "ledger_subscription_plan" },
-                { "WebsiteUserSubscriptionMapper.xml", "ledger_user_subscription" },
-                { "WebsiteUserQuotaMapper.xml", "ledger_user_quota" },
-                { "WebsiteUsageLedgerMapper.xml", "ledger_usage_ledger" },
-                { "WebsiteUsageIdempotencyMapper.xml", "ledger_usage_idempotency" },
-                { "WebsiteExternalSubscriptionMapper.xml", "ledger_external_subscription" }
+                { "WebsiteUserMapper.xml", "bgssai_chat.website_user", "ledger_user" },
+                { "WebsiteSubscriptionPlanMapper.xml", "bgssai_chat.subscription_plan", "ledger_subscription_plan" },
+                { "WebsiteUserSubscriptionMapper.xml", "bgssai_chat.user_subscription", "ledger_user_subscription" },
+                { "WebsiteUserQuotaMapper.xml", "bgssai_chat.user_quota", "ledger_user_quota" },
+                { "WebsiteUsageLedgerMapper.xml", "bgssai_chat.usage_ledger", "ledger_usage_ledger" },
+                { "WebsiteUsageIdempotencyMapper.xml", "bgssai_chat.usage_idempotency", "ledger_usage_idempotency" },
+                { "WebsiteExternalSubscriptionMapper.xml", "bgssai_chat.external_subscription", "ledger_external_subscription" }
         };
         for (String[] pair : expected) {
             String resourcePath = "/mybatis/mapper/" + pair[0];
@@ -217,8 +217,10 @@ class CentralLedgerServiceTest {
                 String xml = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
                 assertFalse(xml.contains("bgssai_website."),
                         pair[0] + " must not reference cross-schema bgssai_website.");
+                assertFalse(xml.contains(pair[2]),
+                        pair[0] + " must not reference local table " + pair[2]);
                 assertTrue(xml.contains(pair[1]),
-                        pair[0] + " must reference local table " + pair[1]);
+                        pair[0] + " must reference cross-schema table " + pair[1]);
             }
         }
     }
