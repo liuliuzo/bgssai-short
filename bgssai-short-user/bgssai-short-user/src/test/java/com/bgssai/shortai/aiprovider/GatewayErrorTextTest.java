@@ -39,6 +39,21 @@ class GatewayErrorTextTest {
     }
 
     @Test
+    void companyImageAndSpeechSchemaRejectionCountsAsReady() {
+        String image = "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"body\",\"n\"],"
+                + "\"msg\":\"Input should be greater than or equal to 1\"}]}";
+        String speech = "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"input\"],\"msg\":\"Field required\"}]}";
+        assertTrue(GatewayErrorText.probeMeansReady(422, image));
+        assertTrue(GatewayErrorText.probeMeansReady(422, speech));
+        String otherField = "{\"detail\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"model\"],"
+                + "\"msg\":\"model disabled\"}]}";
+        assertFalse(GatewayErrorText.probeMeansReady(422, otherField));
+        String down = "{\"error\":{\"message\":\"Provider is not configured: kling\","
+                + "\"type\":\"service_unavailable_error\",\"code\":\"provider_not_configured\"}}";
+        assertFalse(GatewayErrorText.probeMeansReady(422, down));
+    }
+
+    @Test
     void httpClientKeepsTheGatewayCodeOutOfTheUserMessage() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         byte[] payload = ("{\"error\":{\"message\":\"Provider is not configured: deepseek\","
