@@ -7,6 +7,7 @@
 --   mysql ... < sql/dev/DML.sql
 -- 本文件只写环境相关值。用户端域名每次执行覆盖为 https://dev.user.bgssai-short.com。
 -- 管理端域名不作为 OAuth / 支付回调域。
+-- 末尾 QA 账号只属于开发库，禁止抄进 sql/prod/DML.sql。
 -- =====================================================================
 
 USE `bgssai_short`;
@@ -58,3 +59,12 @@ UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'IMAGE' A
 INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price_cent`, `yearly_price_cent`, `five_hour_limit_tokens`, `weekly_limit_tokens`, `sort_no`, `enabled`, `del_flag`, `creator`, `modifier`) VALUES ('FREE', '免费版', 0, 0, 1000, 10000, 1, 1, 0, 'system', 'system') ON DUPLICATE KEY UPDATE `plan_name` = VALUES(`plan_name`), `five_hour_limit_tokens` = VALUES(`five_hour_limit_tokens`), `weekly_limit_tokens` = VALUES(`weekly_limit_tokens`), `enabled` = 1, `del_flag` = 0;
 INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price_cent`, `yearly_price_cent`, `five_hour_limit_tokens`, `weekly_limit_tokens`, `sort_no`, `enabled`, `del_flag`, `creator`, `modifier`) VALUES ('PRO', '专业版', 9900, 99900, 20000, 100000, 2, 1, 0, 'system', 'system') ON DUPLICATE KEY UPDATE `plan_name` = VALUES(`plan_name`), `five_hour_limit_tokens` = VALUES(`five_hour_limit_tokens`), `weekly_limit_tokens` = VALUES(`weekly_limit_tokens`), `enabled` = 1, `del_flag` = 0;
 INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price_cent`, `yearly_price_cent`, `five_hour_limit_tokens`, `weekly_limit_tokens`, `sort_no`, `enabled`, `del_flag`, `creator`, `modifier`) VALUES ('MAX', '旗舰版', 29900, 299900, 100000, 500000, 3, 1, 0, 'system', 'system') ON DUPLICATE KEY UPDATE `plan_name` = VALUES(`plan_name`), `five_hour_limit_tokens` = VALUES(`five_hour_limit_tokens`), `weekly_limit_tokens` = VALUES(`weekly_limit_tokens`), `enabled` = 1, `del_flag` = 0;
+
+-- =====================================================================
+-- QA 登录账号（仅开发库，对齐 2026-10-15 QA 密钥环境）
+-- qa_short_a 管理端 PLATFORM_ADMIN；qa_short_u 用户端 USER。
+-- 用户名与邮箱都能作为密码登录标识。重跑本段会把口令、邮箱、角色盖回种子，
+-- 避免开发库口令漂移后浏览器 QA 再报 4001。禁止写入生产种子。
+-- =====================================================================
+INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e1e72ce67088450f822c', 'qa_short_a', 'qa_short_a', 'PM3nrTt9PIaRT3p8L07g', 'qa+short+a@bgssai-test.local', 'PLATFORM_ADMIN', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
+INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e47544decfbd4c74bfd2', 'qa_short_u', 'qa_short_u', 'Ckeh8Pqt3eSjN5BWaOh9', 'qa+short+u@bgssai-test.local', 'USER', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
