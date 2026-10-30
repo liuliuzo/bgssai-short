@@ -1,4 +1,7 @@
 # liuliuzo/bgssai-short 测试进度
+
+> **Infra 2026-10-31 Asia/Shanghai**: company LLM wiring [PR#164](https://github.com/liuliuzo/bgssai-short/pull/164) merged; `dev-short-deploy` #51 SUCCESS; DEV MySQL `ai_model_config` defaults TEXT/IMAGE/VOICE → bgssai-chat/image/tts. Browser FTC wave in progress (`FULL-QA-FTC-2026-10-31.md`); suite pass/fail columns unchanged until browser results.
+
 2026-10-30 补入尚未进入既有功能清单的用例，结果均为待测。历史结果不改。
 
 统计更新：2026-10-22。本表按 `docs/test/TC-*.md` 的“结果”列统计，包含既有记录、2026-10-17 的 76 条用例与 2026-10-19 新增 4 条用例；不重新认定历史通过代表当前版本通过，不重复统计 `docs/review/test-cases`。2026-10-19 四条用例结果为阻塞：模拟测试已做，真实 Tube、四端播放和成片画面未验收。2026-10-17 用例结果未改。
