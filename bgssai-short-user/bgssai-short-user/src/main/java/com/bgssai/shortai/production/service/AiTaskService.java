@@ -364,7 +364,8 @@ public class AiTaskService {
             fail.put("target_id", row.getTargetId());
             fail.put("task_type", row.getTaskType());
             fail.put("fail_reason_code", row.getFailReasonCode());
-            fail.put("fail_reason", TokenHubClientSupport.userFacingMessage(row.getFailReason()));
+            fail.put("fail_reason", visibleFailReason(
+                    row.getTaskStatus(), row.getFailReasonCode(), row.getFailReason()));
             failedTasks.add(fail);
         }
         result.put("failed_task_list", failedTasks);
@@ -551,11 +552,31 @@ public class AiTaskService {
         item.put("target_id", row.getTargetId());
         item.put("progress_percent", row.getProgressPercent());
         item.put("fail_reason_code", row.getFailReasonCode());
-        item.put("fail_reason", TokenHubClientSupport.userFacingMessage(row.getFailReason()));
+        item.put("fail_reason", visibleFailReason(
+                row.getTaskStatus(), row.getFailReasonCode(), row.getFailReason()));
         item.put("model_code", row.getModelCode());
         item.put("result_json", ShortJson.map(row.getResultJson()));
         item.put("cost_cent", row.getCostCent());
         item.put("created_time", row.getCreatedTime());
         return item;
+    }
+
+    /**
+     * Success, or a missing fail code, is not a failure. A blank stored reason must stay blank
+     * instead of becoming the generic model-unavailable sentence.
+     */
+    static String visibleFailReason(String taskStatus, String failReasonCode, String failReason) {
+        if (isSuccessStatus(taskStatus) || failReasonCode == null || failReasonCode.isBlank()) {
+            return null;
+        }
+        return TokenHubClientSupport.userFacingMessage(failReason);
+    }
+
+    private static boolean isSuccessStatus(String taskStatus) {
+        if (taskStatus == null || taskStatus.isBlank()) {
+            return false;
+        }
+        String status = taskStatus.trim();
+        return "SUCCEEDED".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status);
     }
 }

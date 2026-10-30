@@ -205,6 +205,8 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id` `work_id`
 
 任务完成后可返回脱敏的 `result_json`；MUSIC 任务仅含 `bgm_asset_id`，不含供应商临时 URL。
+`task_status` 为 `SUCCEEDED` / `SUCCESS`，或 `fail_reason_code` 为空时，`fail_reason` 返回 null，
+不把空原因改写成失败文案。任务中心与作品任务表的失败列留空。
 
 ### GET /bgssai/user/ai-tasks/batch-progress?batch_id=
 

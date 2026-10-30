@@ -23,6 +23,7 @@ import {
   softenTechId,
   localizePromptShotSize,
   friendlyFailReason,
+  visibleFailReason,
   sanitizeTubeWarning,
   roleBadgeLabel,
   planDisplayName,
@@ -70,6 +71,35 @@ test('localizes trailing shot-size tokens in prompts', () => {
   assert.equal(localizePromptShotSize('cold light, medium'), 'cold light，中景')
   assert.equal(localizePromptShotSize('face, close'), 'face，特写')
   assert.equal(localizePromptShotSize('room, wide'), 'room，全景')
+})
+
+test('success or empty fail code leaves the failure column blank', () => {
+  assert.equal(visibleFailReason({
+    task_status: 'SUCCEEDED',
+    task_status_name: '已成功',
+    fail_reason_code: null,
+    fail_reason: '模型暂时不可用，请稍后重试或更换模型',
+  }), '')
+  assert.equal(visibleFailReason({
+    task_status: 'SUCCESS',
+    fail_reason_code: 'MODEL_TIMEOUT',
+    fail_reason: '模型超时',
+  }), '')
+  assert.equal(visibleFailReason({
+    task_status: 'FAILED',
+    fail_reason_code: '',
+    fail_reason: '模型暂时不可用，请稍后重试或更换模型',
+  }), '')
+  assert.equal(visibleFailReason({
+    task_status: 'RUNNING',
+    fail_reason_code: null,
+    fail_reason: null,
+  }), '')
+  assert.equal(visibleFailReason({
+    task_status: 'FAILED',
+    fail_reason_code: 'CONTENT_BLOCKED',
+    fail_reason: '内容命中拦截词',
+  }), '内容命中拦截词')
 })
 
 test('friendly fail reason scrubs TLS English', () => {
