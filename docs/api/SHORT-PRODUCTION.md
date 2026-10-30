@@ -58,6 +58,7 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
 探测体不完整时，网关返回 400，或对公司图片/配音返回 422 且只校验 `n`、`size`、`input`、`voice`、`messages`、`prompt`，都视为该步骤可用，不因此拦截创建。
 图片默认采用网关目录中的 `kling-v3`；配音只采用目录里具备语音能力的 MiniMax 模型，没有则点明配置编号未开放。
 不入队、不扣费。同一检查用于大纲、定妆、分镜、图片、配音、视频的入队和失败任务重试。
+大纲调用使用平台中枢密钥，不要求先绑定 bgssai-chat。未绑定时扣本产品 `user_quota`（没有订阅则先发 FREE）。余额或月度上限不够时创建直接返回 `4007`，不写作品、不入队。已绑定 Chat 的账号仍扣中央账本。
 
 响应：`work_id` `task_id`。
 

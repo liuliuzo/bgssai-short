@@ -25,13 +25,10 @@ import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
-import com.bgssai.shortai.mapper.SubscriptionPlanMapper;
-import com.bgssai.shortai.mapper.UserSubscriptionMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.UserQuota;
-import com.bgssai.shortai.model.UserSubscription;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
@@ -45,7 +42,6 @@ class AiTaskServiceEstimateTest {
     private QuotaWalletService quotaWalletService;
     private QuotaConsumeService quotaConsumeService;
     private ShortShotMapper shortShotMapper;
-    private UserSubscriptionMapper userSubscriptionMapper;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +51,6 @@ class AiTaskServiceEstimateTest {
         quotaWalletService = org.mockito.Mockito.mock(QuotaWalletService.class);
         quotaConsumeService = org.mockito.Mockito.mock(QuotaConsumeService.class);
         shortShotMapper = org.mockito.Mockito.mock(ShortShotMapper.class);
-        userSubscriptionMapper = org.mockito.Mockito.mock(UserSubscriptionMapper.class);
         ReflectionTestUtils.setField(service, "workAccessService", workAccessService);
         ReflectionTestUtils.setField(service, "aiModelResolveService", aiModelResolveService);
         ReflectionTestUtils.setField(service, "quotaWalletService", quotaWalletService);
@@ -69,16 +64,10 @@ class AiTaskServiceEstimateTest {
                 org.mockito.Mockito.mock(ShortAiTaskMapper.class));
         ReflectionTestUtils.setField(service, "paidOrderGrantService",
                 org.mockito.Mockito.mock(PaidOrderGrantService.class));
-        ReflectionTestUtils.setField(service, "userSubscriptionMapper", userSubscriptionMapper);
-        ReflectionTestUtils.setField(service, "subscriptionPlanMapper",
-                org.mockito.Mockito.mock(SubscriptionPlanMapper.class));
         ReflectionTestUtils.setField(service, "aiTaskQueue",
                 org.mockito.Mockito.mock(AiTaskQueue.class));
 
         when(workAccessService.requireUser()).thenReturn("u-1");
-        UserSubscription sub = new UserSubscription();
-        sub.setUserId("u-1");
-        when(userSubscriptionMapper.selectOneByExample(any())).thenReturn(sub);
         UserQuota quota = new UserQuota();
         quota.setBalanceCent(1000);
         quota.setExtraBalanceCent(200);

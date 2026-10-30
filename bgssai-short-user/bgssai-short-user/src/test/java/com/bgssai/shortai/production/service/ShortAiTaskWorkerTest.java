@@ -2,6 +2,7 @@ package com.bgssai.shortai.production.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -15,9 +16,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
+import com.bgssai.shortai.common.exception.BizException;
+import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
+import com.bgssai.shortai.quota.service.QuotaConsumeService;
 
 class ShortAiTaskWorkerTest {
 
@@ -77,6 +81,39 @@ class ShortAiTaskWorkerTest {
         org.mockito.ArgumentCaptor<ShortAiTask> patches = org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
         verify(mapper, org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
         org.junit.jupiter.api.Assertions.assertEquals("FAILED", patches.getValue().getTaskStatus());
+    }
+
+    @Test
+    void quotaShortfallFailsBeforeTheModelAndDoesNotSettle() {
+        ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
+        ShortTaskSettlementService settlement = org.mockito.Mockito.mock(ShortTaskSettlementService.class);
+        AiModelResolveService resolve = org.mockito.Mockito.mock(AiModelResolveService.class);
+        QuotaConsumeService quota = org.mockito.Mockito.mock(QuotaConsumeService.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "settlement", settlement);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+        ReflectionTestUtils.setField(worker, "quotaConsumeService", quota);
+        ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
+        ShortAiTask task = new ShortAiTask();
+        task.setId(9L);
+        task.setTaskId("t-1");
+        task.setUserId("u-1");
+        task.setTaskStatus("QUEUED");
+        task.setTaskType("TEXT");
+        task.setTargetType("OUTLINE");
+        task.setModelCode("bgssai-chat");
+        task.setCostCent(1);
+        when(mapper.selectOneByExample(any())).thenReturn(task);
+        when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
+        when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
+        doThrow(new BizException(CommonErrorCode.QUOTA_INSUFFICIENT)).when(quota).assertAffordable("u-1", 1);
+        worker.tick();
+        verify(settlement, never()).settle(any(), any(), anyInt());
+        org.mockito.ArgumentCaptor<ShortAiTask> patches = org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
+        org.junit.jupiter.api.Assertions.assertEquals("FAILED", patches.getValue().getTaskStatus());
+        org.junit.jupiter.api.Assertions.assertEquals("4007", patches.getValue().getFailReasonCode());
     }
 
     /** 超过「模型 timeout_sec + 宽限」仍在 RUNNING 的任务必须被判超时，否则会永远卡住。 */

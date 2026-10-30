@@ -164,3 +164,11 @@ TokenHub `config_json` 共同字段：
    此时不写 `short_ai_task`，也不扣费。入队时写入的 `model_code` 与这次采用的编号一致。
    合成走本机 ffmpeg，不走这道检查。
    镜头图片成功后自动排视频是同一次提交的后续任务，不再重复探测。
+
+## 8. 公司密钥与账号额度
+
+文本、图片、配音的 HTTP 调用只带平台 `ai.tokenhub_cn.api_key`，不带用户的 bgssai-chat OAuth token。
+结算分两条：已有 `oauth_binding.platform=bgssai` 时扣中央账本；没有绑定时扣本产品 `user_quota`，
+并在没有本地订阅时发放 FREE。创建作品先做额度预检，不足返回 `4007`，不入队。Worker 在请求模型前再查一次。
+运维依赖：中枢公司密钥已配置，且网关目录提供 `bgssai-chat`。个人 Chat 授权不是大纲前置条件。
+账号若已经绑定 Chat，中央账本余额不足仍会在入队前被拒绝。

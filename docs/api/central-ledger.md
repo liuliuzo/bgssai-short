@@ -9,9 +9,12 @@ Under **Plan A**:
    - All text/LLM and multimodal model requests are routed through `bgssai-tokenhub-cn` (`https://www.bgssai-tokenhub.cn` in production, `https://dev.user.bgssai-tokenhub.cn` in dev).
    - Default model is `bgssai-chat` (`0.5x` multiplier tier).
    - User-facing UI and error messages never expose `TokenHub` branding and only display model names with `0.5x / 1x / 1.5x` billing multipliers.
-2. **Mandatory `bgssai-chat` Account Binding & Cross-Database Central Ledger (`bgssai_chat.*`)**:
-   - Calling any LLM/AI model requires the user to be logged in or bound to a `bgssai-chat` account (`oauth_binding.platform = 'bgssai'`). Unbound users are rejected with `请先绑定或使用 bgssai-chat 账号登录后再调用大模型`.
-   - User subscription and quota verification/deduction read and write directly to `bgssai-chat-cn`'s `bgssai_chat.*` tables via MyBatis (`Website*Mapper.xml`), with no HTTP round-trip and no duplicate local `ledger_*` tables.
+2. **Model credential vs quota account**:
+   - The HTTP call uses the platform TokenHub-CN company key (`sys_secret` `ai.tokenhub_cn.api_key` via `secret_ref`). It does not send the user's bgssai-chat OAuth token. Company defaults `bgssai-chat` / `bgssai-image` / `bgssai-tts` work for a password QA user with no personal Chat bind.
+   - Central ledger debit (`bgssai_chat.*`) applies only when `oauth_binding.platform = 'bgssai'` already exists. Unbound users are billed on this product's `user_quota`. If they have no local subscription, the FREE plan balance is granted first (fallback 10000 cent when the plan row is missing).
+   - Create (`POST /bgssai/user/short-works/create`) checks that balance before insert and before the outline task is queued. A shortfall returns `4007` and does not start a task. The worker repeats the check before calling the model, so a later shortfall does not persist an outline and then mark the task `MODEL_TIMEOUT`.
+   - `consumeLlmQuota` still requires a bound chat user. Task settlement does not use that method.
+   - Ops: the company key and a gateway catalog entry for `bgssai-chat` must stay configured. A personal Chat OAuth bind is not required. If the account is already bound, an empty chat quota still blocks with `4007`.
 
 ## 2. Cross-Database Tables (`bgssai_chat.*`)
 
@@ -27,7 +30,7 @@ Under **Plan A**:
 
 ## 3. Quota Check & Deduction Flow
 
-1. **Account Resolution**: `BgssaiWebsiteLedgerClient.requireBoundWebsiteUserId(localUserId)` resolves `oauth_binding.open_id` (`platform = 'bgssai'`). If missing, throws `IllegalStateException("请先绑定或使用 bgssai-chat 账号登录后再调用大模型")`.
+1. **Account Resolution**: Task affordability and settlement call `websiteUserIdOf`. A missing `oauth_binding` (`platform = 'bgssai'`) selects the local wallet. `requireBoundWebsiteUserId` remains for explicit ledger APIs such as `consumeLlmQuota`, and still throws `请先绑定或使用 bgssai-chat 账号登录后再调用大模型` only on that path.
 2. **Multiplier Calculation**:
    - `0.5x`: `bgssai-chat` (default)
    - `1x`: Standard domestic models (`deepseek-*`, `qwen-*`, `glm-*`, `doubao-*`, `kimi-*`, `minimax-*`)

@@ -119,6 +119,28 @@ public class PaidOrderGrantService {
         websiteLedgerClient.reportOwnSubscription(order.getUserId(), report);
     }
 
+    /**
+     * 没有本地订阅时发放 FREE 周期额度。已有订阅不重置余额。
+     * 密码登录等未绑定 bgssai-chat 的账号靠这笔本地额度调用公司默认模型。
+     */
+    public void ensureFreeTier(String userId) {
+        UserSubscriptionExample ex = new UserSubscriptionExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
+        UserSubscription sub = userSubscriptionMapper.selectOneByExample(ex);
+        if (sub == null) {
+            int grant = 10000;
+            SubscriptionPlanExample pex = new SubscriptionPlanExample();
+            pex.createCriteria().andPlanCodeEqualTo("FREE").andDelFlagEqualTo(0);
+            SubscriptionPlan plan = subscriptionPlanMapper.selectOneByExample(pex);
+            if (plan != null && plan.getMonthlyBalanceCent() != null) {
+                grant = plan.getMonthlyBalanceCent();
+            }
+            grantSubscription(userId, "FREE", grant);
+        }
+        UserQuota quota = quotaWalletService.requireWallet(userId);
+        quotaWalletService.resetMonthIfNeeded(quota);
+    }
+
     public void grantSubscription(String userId, String planCode, Integer grantCent) {
         Date now = new Date();
         Calendar cal = Calendar.getInstance();
@@ -172,7 +194,12 @@ public class PaidOrderGrantService {
         UserQuotaExample qex = new UserQuotaExample();
         qex.createCriteria().andIdEqualTo(quota.getId()).andDelFlagEqualTo(0);
         userQuotaMapper.updateByExampleSelective(qPatch, qex);
-        insertLog(userId, "grant_plan", grant - nz(quota.getBalanceCent()), 0,
+        int beforeBalance = nz(quota.getBalanceCent());
+        quota.setBalanceCent(grant);
+        quota.setMonthlyLimitCent(monthlyLimit);
+        quota.setMonthSpentCent(0);
+        quota.setMonthResetDate(now);
+        insertLog(userId, "grant_plan", grant - beforeBalance, 0,
                 grant, nz(quota.getExtraBalanceCent()), monthlyLimit, "plan " + planCode);
     }
 
