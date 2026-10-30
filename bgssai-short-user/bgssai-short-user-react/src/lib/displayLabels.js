@@ -217,6 +217,22 @@ export function localizePromptShotSize(text) {
 }
 
 /**
+ * Failure column copy. Success, or an empty fail code, stays blank even when a stale
+ * sentence is still on the row.
+ */
+export function visibleFailReason(row) {
+  if (row == null || typeof row !== 'object') return ''
+  const status = String(row.task_status || '').trim().toUpperCase()
+  const statusName = String(row.task_status_name || '').trim()
+  if (status === 'SUCCEEDED' || status === 'SUCCESS' || statusName === '已成功' || statusName === '成功') {
+    return ''
+  }
+  const code = row.fail_reason_code
+  if (code == null || String(code).trim() === '') return ''
+  return friendlyFailReason(row.fail_reason)
+}
+
+/**
  * Scrub raw TLS / gateway English from historical fail_reason cells.
  * New failures should already be Chinese from the backend scrubber.
  */
