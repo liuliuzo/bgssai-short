@@ -79,4 +79,56 @@ class QuotaConsumeServiceTest {
         BizException ex = assertThrows(BizException.class, () -> service.consume("u-1", 20));
         assertEquals("4015", ex.getCode());
     }
+
+    @Test
+    void unboundUserRejectedWhenBgssaiWebsiteLedgerClientInjected() {
+        com.bgssai.shortai.mapper.OauthBindingMapper bindingMapper =
+                org.mockito.Mockito.mock(com.bgssai.shortai.mapper.OauthBindingMapper.class);
+        com.bgssai.shortai.centralledger.service.CentralLedgerService centralLedger =
+                org.mockito.Mockito.mock(com.bgssai.shortai.centralledger.service.CentralLedgerService.class);
+        com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient ledgerClient =
+                new com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient(bindingMapper, centralLedger);
+        service.setBgssaiWebsiteLedgerClient(ledgerClient);
+
+        IllegalStateException ex1 = assertThrows(
+                IllegalStateException.class, () -> service.assertAffordable("unbound-u", 20));
+        org.junit.jupiter.api.Assertions.assertTrue(ex1.getMessage().contains("bgssai-chat"));
+
+        IllegalStateException ex2 = assertThrows(
+                IllegalStateException.class,
+                () -> service.consumeLlmQuota("unbound-u", 200L, "bgssai-chat", "idem-1"));
+        org.junit.jupiter.api.Assertions.assertTrue(ex2.getMessage().contains("bgssai-chat"));
+    }
+
+    @Test
+    void boundUserDelegatesQuotaCheckAndDeductionToBgssaiChatCentralLedger() {
+        com.bgssai.shortai.mapper.OauthBindingMapper bindingMapper =
+                org.mockito.Mockito.mock(com.bgssai.shortai.mapper.OauthBindingMapper.class);
+        com.bgssai.shortai.model.OauthBinding binding = new com.bgssai.shortai.model.OauthBinding();
+        binding.setUserId("u-1");
+        binding.setPlatform("bgssai");
+        binding.setOpenId("chat-u-1");
+        when(bindingMapper.selectOneByExample(any())).thenReturn(binding);
+
+        com.bgssai.shortai.centralledger.service.CentralLedgerService centralLedger =
+                org.mockito.Mockito.mock(com.bgssai.shortai.centralledger.service.CentralLedgerService.class);
+        when(centralLedger.hasAvailableQuota("chat-u-1", 40L)).thenReturn(true);
+        when(centralLedger.consumeQuota("chat-u-1", 40L, "1x", "quota_cent", "task:t-1", "short task debit"))
+                .thenReturn(new com.bgssai.shortai.centralledger.service.CentralLedgerService.ConsumeResult(
+                        true, "chat-u-1", 40L, 40L, 1.0d, "quota_cent", "task:t-1"));
+        when(centralLedger.consumeQuota("chat-u-1", 200L, "bgssai-chat", "llm_tokens", "llm:1", "short llm call"))
+                .thenReturn(new com.bgssai.shortai.centralledger.service.CentralLedgerService.ConsumeResult(
+                        true, "chat-u-1", 200L, 100L, 0.5d, "llm_tokens", "llm:1"));
+
+        com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient ledgerClient =
+                new com.bgssai.shortai.login.oauth.BgssaiWebsiteLedgerClient(bindingMapper, centralLedger);
+        service.setBgssaiWebsiteLedgerClient(ledgerClient);
+
+        service.assertAffordable("u-1", 40);
+        service.consume("u-1", 40, "task:t-1");
+        var res = service.consumeLlmQuota("u-1", 200L, "bgssai-chat", "llm:1");
+        org.junit.jupiter.api.Assertions.assertTrue(res.isSuccess());
+        assertEquals(100L, res.billedTokens());
+        assertEquals(0.5d, res.multiplier());
+    }
 }

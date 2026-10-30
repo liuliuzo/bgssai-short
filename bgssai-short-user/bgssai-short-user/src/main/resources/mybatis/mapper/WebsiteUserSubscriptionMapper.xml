@@ -87,7 +87,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from ledger_user_subscription
+    from bgssai_chat.user_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -106,7 +106,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from ledger_user_subscription
+    from bgssai_chat.user_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -117,25 +117,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from ledger_user_subscription
+    from bgssai_chat.user_subscription
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from ledger_user_subscription
+    delete from bgssai_chat.user_subscription
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteUserSubscriptionExample">
-    delete from ledger_user_subscription
+    delete from bgssai_chat.user_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteUserSubscription" useGeneratedKeys="true" keyProperty="id">
-    insert into ledger_user_subscription (id, user_id, plan_code, status, period_start, period_end, source, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into bgssai_chat.user_subscription (id, user_id, plan_code, status, period_start, period_end, source, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{periodStart,jdbcType=TIMESTAMP}, #{periodEnd,jdbcType=TIMESTAMP}, #{source,jdbcType=VARCHAR}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteUserSubscription" useGeneratedKeys="true" keyProperty="id">
-    insert into ledger_user_subscription
+    insert into bgssai_chat.user_subscription
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -214,13 +214,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteUserSubscriptionExample" resultType="java.lang.Long">
-    select count(*) from ledger_user_subscription
+    select count(*) from bgssai_chat.user_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update ledger_user_subscription
+    update bgssai_chat.user_subscription
     <set>
       <if test="row.userId != null">
         user_id = #{row.userId,jdbcType=VARCHAR},
@@ -261,7 +261,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update ledger_user_subscription
+    update bgssai_chat.user_subscription
     set
       user_id = #{row.userId,jdbcType=VARCHAR},
       plan_code = #{row.planCode,jdbcType=VARCHAR},
@@ -279,7 +279,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteUserSubscription">
-    update ledger_user_subscription
+    update bgssai_chat.user_subscription
     <set>
       <if test="userId != null">
         user_id = #{userId,jdbcType=VARCHAR},
@@ -318,7 +318,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteUserSubscription">
-    update ledger_user_subscription
+    update bgssai_chat.user_subscription
     set
       user_id = #{userId,jdbcType=VARCHAR},
       plan_code = #{planCode,jdbcType=VARCHAR},

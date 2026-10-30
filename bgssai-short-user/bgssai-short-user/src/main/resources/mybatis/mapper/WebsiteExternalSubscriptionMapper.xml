@@ -96,7 +96,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from ledger_external_subscription
+    from bgssai_chat.external_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -115,7 +115,7 @@
       </when>
       <otherwise><include refid="Base_Column_List" /></otherwise>
     </choose>
-    from ledger_external_subscription
+    from bgssai_chat.external_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
@@ -126,25 +126,25 @@
   <select id="selectByPrimaryKey" parameterType="Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from ledger_external_subscription
+    from bgssai_chat.external_subscription
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="Long">
-    delete from ledger_external_subscription
+    delete from bgssai_chat.external_subscription
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <delete id="deleteByExample" parameterType="com.bgssai.shortai.model.WebsiteExternalSubscriptionExample">
-    delete from ledger_external_subscription
+    delete from bgssai_chat.external_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.WebsiteExternalSubscription" useGeneratedKeys="true" keyProperty="id">
-    insert into ledger_external_subscription (id, subscription_id, client_id, product_code, external_user_id, external_order_no, user_id, plan_code, plan_name, amount_cent, currency, status, period_start, period_end, reported_at, remark, del_flag, creator, modifier, gmt_create, gmt_modified)
+    insert into bgssai_chat.external_subscription (id, subscription_id, client_id, product_code, external_user_id, external_order_no, user_id, plan_code, plan_name, amount_cent, currency, status, period_start, period_end, reported_at, remark, del_flag, creator, modifier, gmt_create, gmt_modified)
     values (#{id,jdbcType=BIGINT}, #{subscriptionId,jdbcType=VARCHAR}, #{clientId,jdbcType=VARCHAR}, #{productCode,jdbcType=VARCHAR}, #{externalUserId,jdbcType=VARCHAR}, #{externalOrderNo,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{planCode,jdbcType=VARCHAR}, #{planName,jdbcType=VARCHAR}, #{amountCent,jdbcType=INTEGER}, #{currency,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{periodStart,jdbcType=TIMESTAMP}, #{periodEnd,jdbcType=TIMESTAMP}, #{reportedAt,jdbcType=TIMESTAMP}, #{remark,jdbcType=VARCHAR}, #{delFlag,jdbcType=BIT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.WebsiteExternalSubscription" useGeneratedKeys="true" keyProperty="id">
-    insert into ledger_external_subscription
+    insert into bgssai_chat.external_subscription
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -277,13 +277,13 @@
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.bgssai.shortai.model.WebsiteExternalSubscriptionExample" resultType="java.lang.Long">
-    select count(*) from ledger_external_subscription
+    select count(*) from bgssai_chat.external_subscription
     <if test="_parameter != null">
       <include refid="Example_Where_Clause" />
     </if>
   </select>
   <update id="updateByExampleSelective">
-    update ledger_external_subscription
+    update bgssai_chat.external_subscription
     <set>
       <if test="row.subscriptionId != null">
         subscription_id = #{row.subscriptionId,jdbcType=VARCHAR},
@@ -351,7 +351,7 @@
     </if>
   </update>
   <update id="updateByExample">
-    update ledger_external_subscription
+    update bgssai_chat.external_subscription
     set
       subscription_id = #{row.subscriptionId,jdbcType=VARCHAR},
       client_id = #{row.clientId,jdbcType=VARCHAR},
@@ -378,7 +378,7 @@
     </if>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.bgssai.shortai.model.WebsiteExternalSubscription">
-    update ledger_external_subscription
+    update bgssai_chat.external_subscription
     <set>
       <if test="subscriptionId != null">
         subscription_id = #{subscriptionId,jdbcType=VARCHAR},
@@ -444,7 +444,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bgssai.shortai.model.WebsiteExternalSubscription">
-    update ledger_external_subscription
+    update bgssai_chat.external_subscription
     set
       subscription_id = #{subscriptionId,jdbcType=VARCHAR},
       client_id = #{clientId,jdbcType=VARCHAR},
