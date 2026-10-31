@@ -109,6 +109,8 @@
         "started_time": "2026-08-13 10:21:20", "finished_time": null } ],
       "page_num": 1, "page_size": 20, "total_size": 42 } }
   ```
+  `task_status` 为 `SUCCEEDED`（成功）或 `fail_reason_code` 为空时，`fail_reason` 为 null。
+  任务中心与作品「本剧任务」的失败列留空（「—」），不把空原因显示成失败文案。
 - `GET /bgssai/user/ai-tasks/batch-progress?batch_id=b-70001`
   （`total_count` / `succeeded_count` / `failed_count` / `running_count` / `queued_count` / `cost_spent_cent`）
 - `POST /bgssai/user/ai-tasks/retry`（`task_id`；`FAILED` / `CANCELED` 可重入 `QUEUED`，

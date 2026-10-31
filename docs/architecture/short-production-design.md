@@ -82,6 +82,9 @@ films-bgm-generate / films-compose
   -> 前端轮询 list / batch-progress
 ```
 
+列表映射：`SUCCEEDED` / `SUCCESS`，或 `fail_reason_code` 为空时，`fail_reason` 为 null。
+前端失败列留空，不回填「模型暂时不可用」一类文案。有失败码的失败任务仍返回脱敏后的原因。
+
 单价来自 `ai_model_config.unit_price_cent`（按次 `PER_CALL` 时 `usage_amount=1`）。
 余额不足 `4007`，月度触顶 `4015`。提交前若无订阅则按 FREE 惰性建档（与套餐 `me` 一致）。
 

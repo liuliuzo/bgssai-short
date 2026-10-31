@@ -27,7 +27,7 @@ import {
 import { publishStatusAlertType, tubeTokenMissingMessage } from '../../utils/baselineCards'
 import {
   labelOf, SCRIPT_STATUS_LABEL, SHOT_STATUS_LABEL, TARGET_TYPE_LABEL,
-  localizePromptShotSize, friendlyFailReason, sanitizeTubeWarning,
+  localizePromptShotSize, friendlyFailReason, visibleFailReason, sanitizeTubeWarning,
 } from '../../lib/displayLabels'
 import {
   composeSurfaceFromEntry,
@@ -1023,7 +1023,7 @@ function TasksPane({ workId, episodeId }) {
           { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
           { title: '进度', dataIndex: 'progress_percent', width: 80 },
           { title: '费用(元)', dataIndex: 'cost_cent', width: 90, render: (v) => ((Number(v) || 0) / 100).toFixed(2) },
-          { title: '失败', dataIndex: 'fail_reason', render: (v) => friendlyFailReason(v) || '—' },
+          { title: '失败', key: 'fail_reason', render: (_, row) => visibleFailReason(row) || '—' },
           {
             title: '操作',
             width: 180,
