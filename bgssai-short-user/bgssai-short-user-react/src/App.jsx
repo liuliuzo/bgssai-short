@@ -1,5 +1,6 @@
 import LegalFooter from './components/LegalFooter'
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { englishPrefixTarget } from './lib/chineseEntry'
 import { safeReturnPath } from './lib/safeReturn'
 import { useUserStore, isAllowedRole } from './store/user'
 import MainLayout from './layouts/MainLayout'
@@ -45,7 +46,16 @@ function SoftAuthShell() {
   return <Outlet />
 }
 
+function EnglishPrefixRedirect() {
+  const location = useLocation()
+  const target = englishPrefixTarget(location.pathname, location.search, location.hash)
+  return <Navigate to={target || '/login'} replace />
+}
+
 function NotFoundPage() {
+  const location = useLocation()
+  const alias = englishPrefixTarget(location.pathname, location.search, location.hash)
+  if (alias) return <Navigate to={alias} replace />
   const userInfo = useUserStore((s) => s.userInfo)
   const authed = userInfo && isAllowedRole(userInfo)
   return (
@@ -70,6 +80,8 @@ export default function App() {
         }
       />
       <Route path="/oauth-callback" element={<OAuthCallback />} />
+      <Route path="/en" element={<EnglishPrefixRedirect />} />
+      <Route path="/en/*" element={<EnglishPrefixRedirect />} />
 
       <Route element={<SoftAuthShell />}>
         <Route path="/download/bot" element={<BotDownloadPage />} />

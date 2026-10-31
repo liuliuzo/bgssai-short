@@ -9,6 +9,8 @@
 | `credit-packs.html` | `/credit-packs` | - | 与该页一致 | - |
 | `home.html` | `/home` | - | 与该页一致 | - |
 | `login.html` | `/login` | - | 与该页一致 | - |
+| `login.html` | `/en` | - | 与该页一致 | - |
+| `login.html` | `/en/*` | - | 与该页一致 | - |
 | `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
 | `pay-merchants.html` | `/pay-merchants` | - | 与该页一致 | - |
 | `quality-templates.html` | `/quality-templates` | - | 与该页一致 | - |
@@ -25,6 +27,8 @@
 | `bot-download-entry.html` | `/download/bot` | - | 与该页一致 | - |
 | `home.html` | `/home` | - | 与该页一致 | - |
 | `login.html` | `/login` | - | 与该页一致 | - |
+| `login.html` | `/en` | - | 与该页一致 | - |
+| `login.html` | `/en/*` | - | 与该页一致 | - |
 | `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
 | `mcp-tokens.html` | `/mcp-tokens` | - | 与该页一致 | - |
 | `oauth-callback.html` | `/oauth-callback` | - | 与该页一致 | - |
@@ -54,6 +58,8 @@
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
 | `login.html` | `/login` | `POST /bgssai/admin/login`；页脚五条官网法律外链（无新接口，仅外链） | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) · [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md) |
+| `login.html` | `/en` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
+| `login.html` | `/en/*` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/admin/login-logs?page_num&page_size` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`auth-login.md`](./auth-login.md) |
 | `content-review.html` | `/reviews` | `GET /bgssai/admin/reviews/list?page_num&page_size&review_status&risk_level&keyword` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
@@ -75,6 +81,8 @@
 | --- | --- | --- | --- | --- |
 | `shell-pane.html`（布局模式） | 既有用户端路由 + `?bgssai_shell=1` / `?chat_pane=1` | 无新接口；壳参数只改前端布局 | 与所在路由相同；参数不替代 `Jwttoken` | [`../feature/mobile-in-bot-shell.md`](../feature/mobile-in-bot-shell.md) |
 | `login.html` | `/login` | `POST /bgssai/user/login`；登录区 + 页脚五条官网法律双语外链（无新接口）；页内悬浮在线客服复用 support 公开接口 | 公开（IP 限流） | [`auth-login.md`](./auth-login.md) · [`../feature/legal-fan-out.md`](../feature/legal-fan-out.md) · [`in-app-support.md`](./in-app-support.md) |
+| `login.html` | `/en` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
+| `login.html` | `/en/*` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `support-chat.html`（悬浮组件） | 登录页 + 主壳全局 | `POST /bgssai/user/support/sessions/create` · `/mine` · `/detail` · `POST /bgssai/user/support/messages/send` · `POST /bgssai/user/support/tickets/create` | 公开（IP 限流；可选 `Jwttoken` 绑定 user_id；访客凭 `guest_token`） | [`in-app-support.md`](./in-app-support.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段 + 各模块概览接口） | 需 `Jwttoken` | - |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
