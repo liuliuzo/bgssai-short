@@ -55,6 +55,14 @@
               <td>公开（非 <code>PLATFORM_ADMIN</code> 返回 <code>4003</code>）</td>
             </tr>
             <tr>
+              <td><a href="login.html">英文前缀（仍是中文登录）</a></td>
+              <td><code>/en</code> · <code>/en/*</code></td>
+              <td>浏览器直接打开带 <code>/en</code> 的地址</td>
+              <td>替换进入 <code>/login</code>（已登录再进首页）</td>
+              <td class="text-muted">无外壳</td>
+              <td>公开；不提供英文界面</td>
+            </tr>
+            <tr>
               <td><a href="home.html">首页</a></td>
               <td><code>/home</code></td>
               <td>登录成功；品牌 logo；面包屑首项</td>
@@ -225,6 +233,8 @@
           审核与配额变更记录只增不删。</li>
         <li><strong>法律页仅外链</strong>：登录页与页脚只链到官网五条中英法律页（基址
           <code>https://www.bgssai.com</code>），管理端不托管正文、不编造证照编号。状态：需法务审阅。</li>
+        <li><strong>只有中文界面</strong>：<code>/en</code> 与 <code>/en/*</code> 不是英文站，替换进入已有中文登录页
+          <code>/login</code>。其它未知路径仍显示「页面不存在」。</li>
       </ol>
     </div>
 
@@ -246,6 +256,8 @@
   <div class="n-route">/credit-packs</div>
   <div class="n-route">/home</div>
   <div class="n-route">/login</div>
+  <div class="n-route">/en</div>
+  <div class="n-route">/en/*</div>
   <div class="n-route">/login-logs</div>
   <div class="n-route">/pay-merchants</div>
   <div class="n-route">/quality-templates</div>

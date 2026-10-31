@@ -39,6 +39,7 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
      */
     private static final List<String> SPA_ROUTE_PREFIXES = Arrays.asList(
             "/download",
+            "/en",
             "/login",
             "/oauth-callback",
             "/home",

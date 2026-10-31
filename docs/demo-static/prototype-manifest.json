@@ -1337,7 +1337,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/PAGE-FLOW.html",
-      "sha256": "c8e85242f8a2fdbe21ee01dcc64ae39a92e936da88ceea3749b79e83adab4bbe",
+      "sha256": "c6d61b26aff027039d5a54b4188a3ceee50c696b134d335bafa24c55d4d885fc",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1694,7 +1694,7 @@
     },
     {
       "path": "docs/demo-static/web/user/PAGE-FLOW.html",
-      "sha256": "07b63982a1a4c63f44e0c54eb1aeef55a9a00fd3071cc91b0e617f13b6eb7f58",
+      "sha256": "e61ab00324f02b38d5d1785d821ca5822820faea2e68ff83f762536810ca0e6d",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
