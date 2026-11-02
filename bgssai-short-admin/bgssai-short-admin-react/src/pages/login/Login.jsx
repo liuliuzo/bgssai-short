@@ -7,11 +7,41 @@ import './login.css'
 
 const CODE_OK = new Set([0, 200, '0', '200'])
 
+function IconEye({ concealed = false, size = 18 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {concealed ? (
+        <>
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </>
+      ) : (
+        <>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  )
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const setUserInfo = useUserStore((s) => s.setUserInfo)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -79,16 +109,28 @@ export default function Login() {
 
           <div className="admin-login-field admin-login-field-password">
             <label htmlFor="admin-password">密码</label>
-            <input
-              id="admin-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="请输入密码"
-              autoComplete="current-password"
-              disabled={loading}
-              required
-            />
+            <div className="admin-login-pw">
+              <input
+                id="admin-password"
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="请输入密码"
+                autoComplete="current-password"
+                disabled={loading}
+                required
+              />
+              <button
+                className="admin-login-pw-toggle"
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                aria-label={showPw ? '隐藏密码' : '显示密码'}
+                aria-pressed={showPw}
+                aria-controls="admin-password"
+              >
+                <IconEye concealed={showPw} size={18} />
+              </button>
+            </div>
           </div>
 
           {error && <div className="admin-login-error">{error}</div>}

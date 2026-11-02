@@ -82,6 +82,40 @@
   opacity: 0.6;
 }
 
+.admin-login-pw {
+  position: relative;
+}
+
+.admin-login-pw input {
+  padding-right: 42px;
+}
+
+.admin-login-pw-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+}
+
+.admin-login-pw-toggle:hover {
+  color: #f1f5f9;
+}
+
+.admin-login-pw-toggle:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
 .admin-login-error {
   background: #450a0a;
   border: 1px solid #991b1b;
