@@ -1547,7 +1547,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/login.html",
-      "sha256": "1fa3ccfd6a907308dcffaef5c052ec0c8025d93b5cc6995ab74980dcfb3585b2",
+      "sha256": "5619fb5eb83ceaa1de88815cd1230e9f0f13558383752842281dd9c5e1dbc576",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
