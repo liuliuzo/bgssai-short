@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "date": "2026-11-02",
+  "source_sha": "3548e63947aac4cdfdbd96770767d126d7337a99",
+  "scope": "test design and scan; no application runtime acceptance",
+  "new_suite_status": "PASS",
+  "new_suite_errors": [],
+  "baseline_validator": {
+    "repo": "liuliuzo/bgssai-short",
+    "requirements": 41,
+    "new_cases": 82,
+    "source_files": 42,
+    "historical_suites": 30,
+    "historical_duplicate_ids": [],
+    "status": "FAIL",
+    "errors": [
+      "functional-manifest-20261017.json: historical suite changed docs/review/test-cases/TC-ai-model-integration.md",
+      "prototype-drift: docs/demo-static/prototype-manifest.json: prototype_bundle_digest drift (manifest=e5ffdb61dc55 vs live=5a57d0a6752f)",
+      "prototype-drift: docs/demo-static/prototype-manifest.json: code_contract_digest drift (manifest=7d919987f009 vs live=7f2d7d420804; run check-prototype-drift.py --sync --repo bgssai-short after updating prototype)",
+      "prototype-drift: docs/demo-static/prototype-manifest.json: unindexed prototype HTML files: ['docs/demo-static/web/admin/reviews.html', 'docs/demo-static/web/admin/subscription-plans.html', 'docs/demo-static/web/user/oauth-callback.html']",
+      "prototype-drift: code changed without prototype sync: ['bgssai-short-admin/bgssai-short-admin-react/src/App.jsx', 'bgssai-short-admin/bgssai-short-admin-react/src/pages/login/Login.jsx', 'bgssai-short-user/bgssai-short-user-react/src/App.jsx']"
+    ]
+  },
+  "current_validator": {
+    "repo": "liuliuzo/bgssai-short",
+    "requirements": 44,
+    "new_cases": 88,
+    "source_files": 45,
+    "historical_suites": 30,
+    "historical_duplicate_ids": [],
+    "status": "FAIL",
+    "errors": [
+      "functional-manifest-20261017.json: historical suite changed docs/review/test-cases/TC-ai-model-integration.md"
+    ]
+  },
+  "introduced_errors": [],
+  "cached_manifest_summaries_reconciled_from_unchanged_case_cells": [],
+  "diff_check": "PASS",
+  "historical_test_files_unchanged": true,
+  "prototype_checker_command": "python scripts/check-prototype-drift.py --repo <repo>",
+  "prototype_checker_status": "PASS"
+}

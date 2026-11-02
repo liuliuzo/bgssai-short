@@ -60,3 +60,11 @@
 | 来源 | 用例 |
 | --- | --- |
 | [网站 ICP 备案展示](../feature/icp-filing-footer.md) | [REQ-SHORT-SUPP-101](TC-icp-filing-footer.md) |
+
+## 2026-11-02 场景补充
+
+| 需求来源 | 新增用例 |
+| --- | --- |
+| [docs/feature/chinese-only-en-alias.md](../../docs/feature/chinese-only-en-alias.md) | TC-SHORT-SCAN-20261102-001-P, TC-SHORT-SCAN-20261102-001-N |
+| [docs/feature/short-01-commercial-gate.md](../../docs/feature/short-01-commercial-gate.md) | TC-SHORT-SCAN-20261102-002-P, TC-SHORT-SCAN-20261102-002-N |
+| [docs/feature/model-pricing-receipts.md](../../docs/feature/model-pricing-receipts.md) | TC-SHORT-SCAN-20261102-003-P, TC-SHORT-SCAN-20261102-003-N |
