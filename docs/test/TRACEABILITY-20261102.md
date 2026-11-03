@@ -1,0 +1,7 @@
+# bgssai-short 2026-11-02 追溯
+
+| 需求ID | 主题 | 套件 | 用例ID | 状态 |
+| --- | --- | --- | --- | --- |
+| REQ-SHORT-SCAN-20261102-001 | 中文入口别名和未知路由 | [TC-scan-20261102-001.md](TC-scan-20261102-001.md) | TC-SHORT-SCAN-20261102-001-P, TC-SHORT-SCAN-20261102-001-N | 待测 |
+| REQ-SHORT-SCAN-20261102-002 | Tube 受理未就绪与失败分别统计 | [TC-scan-20261102-002.md](TC-scan-20261102-002.md) | TC-SHORT-SCAN-20261102-002-P, TC-SHORT-SCAN-20261102-002-N | 待测 |
+| REQ-SHORT-SCAN-20261102-003 | 结算恢复不重复生成或折算 | [TC-scan-20261102-003.md](TC-scan-20261102-003.md) | TC-SHORT-SCAN-20261102-003-P, TC-SHORT-SCAN-20261102-003-N | 待测 |

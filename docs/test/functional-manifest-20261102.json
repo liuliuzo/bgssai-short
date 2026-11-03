@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "date": "2026-11-02",
+  "repo": "liuliuzo/bgssai-short",
+  "local_repo": "bgssai-short",
+  "baseline": "3548e63947aac4cdfdbd96770767d126d7337a99",
+  "requirement_file": "docs/feature/functional-test-supplement-20261102.md",
+  "requirements": [
+    {
+      "id": "REQ-SHORT-SCAN-20261102-001",
+      "title": "中文入口别名和未知路由",
+      "cases": [
+        "TC-SHORT-SCAN-20261102-001-P",
+        "TC-SHORT-SCAN-20261102-001-N"
+      ],
+      "file": "docs/test/TC-scan-20261102-001.md"
+    },
+    {
+      "id": "REQ-SHORT-SCAN-20261102-002",
+      "title": "Tube 受理未就绪与失败分别统计",
+      "cases": [
+        "TC-SHORT-SCAN-20261102-002-P",
+        "TC-SHORT-SCAN-20261102-002-N"
+      ],
+      "file": "docs/test/TC-scan-20261102-002.md"
+    },
+    {
+      "id": "REQ-SHORT-SCAN-20261102-003",
+      "title": "结算恢复不重复生成或折算",
+      "cases": [
+        "TC-SHORT-SCAN-20261102-003-P",
+        "TC-SHORT-SCAN-20261102-003-N"
+      ],
+      "file": "docs/test/TC-scan-20261102-003.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-SHORT-SCAN-20261102-001-P",
+      "requirement": "REQ-SHORT-SCAN-20261102-001",
+      "file": "TC-scan-20261102-001.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-SCAN-20261102-001-N",
+      "requirement": "REQ-SHORT-SCAN-20261102-001",
+      "file": "TC-scan-20261102-001.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-SCAN-20261102-002-P",
+      "requirement": "REQ-SHORT-SCAN-20261102-002",
+      "file": "TC-scan-20261102-002.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-SCAN-20261102-002-N",
+      "requirement": "REQ-SHORT-SCAN-20261102-002",
+      "file": "TC-scan-20261102-002.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-SCAN-20261102-003-P",
+      "requirement": "REQ-SHORT-SCAN-20261102-003",
+      "file": "TC-scan-20261102-003.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-SCAN-20261102-003-N",
+      "requirement": "REQ-SHORT-SCAN-20261102-003",
+      "file": "TC-scan-20261102-003.md",
+      "status": "待测",
+      "kind": "N"
+    }
+  ],
+  "coverage": [
+    {
+      "source": "docs/feature/chinese-only-en-alias.md",
+      "title": "中文入口别名和未知路由",
+      "classification": "补充可执行边界与异常场景",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-SCAN-20261102-001"
+      ],
+      "cases": [
+        "TC-SHORT-SCAN-20261102-001-P",
+        "TC-SHORT-SCAN-20261102-001-N"
+      ]
+    },
+    {
+      "source": "docs/feature/short-01-commercial-gate.md",
+      "title": "Tube 受理未就绪与失败分别统计",
+      "classification": "补充可执行边界与异常场景",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-SCAN-20261102-002"
+      ],
+      "cases": [
+        "TC-SHORT-SCAN-20261102-002-P",
+        "TC-SHORT-SCAN-20261102-002-N"
+      ]
+    },
+    {
+      "source": "docs/feature/model-pricing-receipts.md",
+      "title": "结算恢复不重复生成或折算",
+      "classification": "补充可执行边界与异常场景",
+      "legacy": [],
+      "requirements": [
+        "REQ-SHORT-SCAN-20261102-003"
+      ],
+      "cases": [
+        "TC-SHORT-SCAN-20261102-003-P",
+        "TC-SHORT-SCAN-20261102-003-N"
+      ]
+    }
+  ],
+  "historical_suites": [],
+  "progress": {
+    "待测": 6,
+    "通过": 0,
+    "失败": 0,
+    "阻塞": 0,
+    "不适用": 0
+  },
+  "suite_counts": {
+    "TC-scan-20261102-001.md": {
+      "待测": 2,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-scan-20261102-002.md": {
+      "待测": 2,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-scan-20261102-003.md": {
+      "待测": 2,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    }
+  },
+  "design_only": true
+}

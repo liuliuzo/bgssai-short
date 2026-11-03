@@ -1,0 +1,1526 @@
+{
+  "schema": 1,
+  "date": "2026-11-02",
+  "repo": "bgssai-short",
+  "source_sha": "3548e63947aac4cdfdbd96770767d126d7337a99",
+  "scan_scope": {
+    "feature_files": "docs/feature/** including Markdown and HTML; supplement itself excluded",
+    "source_method": "tracked source inventory and route/state/guard signature scan; targeted business path review",
+    "source_inventory_count": 946,
+    "source_files": [
+      "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/aimodel/ui/CreateAiModelController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/aimodel/ui/ListAiModelsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/aimodel/ui/SetDefaultAiModelController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/aimodel/ui/ToggleAiModelEnabledController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/aimodel/ui/UpdateAiModelController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/common/AdminAuthGuard.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/configuration/SpaErrorController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/creditpack/ui/ListAdminCreditPacksController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/creditpack/ui/SaveCreditPackController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/health/ui/QueryHealthReportController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/health/ui/QueryLivenessController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/health/ui/QueryReadinessController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/login/ui/AdminLoginController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/loginlog/ui/ListLoginLogsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/paymerchant/ListAlipayConfigsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/paymerchant/ListWechatPayConfigsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/paymerchant/SaveAlipayConfigController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/paymerchant/SaveWechatPayConfigController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/paymerchant/SetAlipayConfigCollectionActiveController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/paymerchant/SetWechatPayConfigCollectionActiveController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/ApproveReviewController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/GetAdminReviewDetailController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/ListAdminReviewsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/ListCreatorsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/QualityAdminControllers.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/RejectReviewController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/production/ui/ToggleCreatorEnabledController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/quota/ui/AdjustQuotaController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/recharge/ui/HandleRechargeController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/recharge/ui/ListRechargeController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/secret/ui/ListSysSecretsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/secret/ui/TestSysSecretController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/secret/ui/UpdateSysSecretController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/subscriptionplan/ui/ListAdminSubscriptionPlansController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/subscriptionplan/ui/SaveSubscriptionPlanController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/support/ui/AdminSupportSessionDetailController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/support/ui/CloseSupportSessionController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/support/ui/ListSupportSessionsController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/support/ui/ReplySupportMessageController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/support/ui/UpdateSupportTicketStatusController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/usage/ui/UsageByCreatorController.java",
+      "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/usage/ui/UsageSummaryController.java",
+      "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/account/ui/AccountDeletionController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/account/ui/AccountLoginMethodController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/ui/ListUserAiModelsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/billing/UsageReceiptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/configuration/SpaErrorController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/download/ui/ListBotDownloadsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/health/ui/QueryHealthReportController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/health/ui/QueryLivenessController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/health/ui/QueryReadinessController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/EmailLoginController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/OAuthAuthorizeUrlController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/OAuthCallbackController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/OAuthChannelsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/SendEmailCodeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/SendSmsCodeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/SmsLoginController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/ui/UserLoginController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/loginlog/ui/ListLoginLogsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/ui/CreateMcpTokenController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/ui/ListMcpTokensController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/ui/McpEndpointController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/ui/RevokeMcpTokenController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/payment/ui/AlipayNotifyController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/payment/ui/WechatNotifyController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ShortAiTaskWorker.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/AdaptSourceController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ArchiveShortWorkController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/BatchEpisodeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/BatchFrameLinkController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/BatchProgressController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/BindShotAssetsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/CancelAiTaskController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ComposeFilmController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ContinuityPreviewControllers.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/CreateCharacterController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/CreateEpisodeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/CreateSceneCardController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/CreateShortWorkController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/DeleteCharacterController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/DeleteEpisodeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/DeleteSourceController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/DubbingControllers.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/EditProjectDetailController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/EditProjectPrecheckController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/EstimateAiTasksController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/EstimateSourceAdaptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ExportEditProjectController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/FilmDetailController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/FilmDownloadUrlController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/FilmExtraControllers.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/FilmPrecheckController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/FilmPublishToMediaController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/FilmTimelineController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GenerateLastFrameController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GenerateOutlineController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GenerateScriptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GetAssetController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GetOutlineController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GetScriptDetailController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/GetShortWorkDetailController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ImportSourceController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListAiTasksController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListCharactersController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListConsistencyPanelController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListEditProjectsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListQualityTemplatesController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListSceneCardsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListScriptVersionsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListShortWorksController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListShotsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListSourcesController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ListUserReviewsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/LockCharacterController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/LockSceneCardController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/LockShotController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/PortraitCharacterController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/PortraitSceneCardController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/PrecheckController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/PrevizControllers.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/QualityControllers.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ReadyScriptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/RecoverAiTaskController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/ReorderShotsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/RetryAiTaskController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/RewriteScriptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/RollbackScriptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SaveFrameLinkController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SaveOutlineController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SaveScriptController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SaveSourceChaptersController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SourceDetailController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SplitShotsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/StoryMapControllers.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SubmitAiTasksController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/SubmitReviewController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/UnlockShotController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/UpdateCharacterController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/UpdateEpisodeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/UpdateShortWorkController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/UpdateShotController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/WithdrawReviewController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/recharge/ui/ApplyRechargeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/recharge/ui/ListRechargeController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/storage/LocalObjectDownloadController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/CreateCreditPackOrderController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/CreateSubscriptionOrderController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/GetMySubscriptionController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/GetPayOrderStatusController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/ListSubscriptionPlansController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/ListUserCreditPacksController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/subscription/ui/ListUserSubscriptionOrdersController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/support/ui/CreateSupportSessionController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/support/ui/CreateSupportTicketController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/support/ui/ListMySupportSessionsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/support/ui/SendSupportMessageController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/support/ui/SupportSessionDetailController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/supportbridge/controller/SupportCallbackController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/usage/ui/UsageRecordsController.java",
+      "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/usage/ui/UsageSummaryController.java"
+    ],
+    "test_source": "docs/test/TC-*.md result columns; docs/review retained separately"
+  },
+  "features": [
+    {
+      "source": "docs/feature/account-deletion-bind-20261017.md",
+      "title": "账号注销与登录方式绑定解绑（2026-10-17）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-016-N",
+        "TC-SHORT-COMMON-016-P",
+        "TC-SHORT-COMMON-017-N",
+        "TC-SHORT-COMMON-017-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/ai-capability-usage.md",
+      "title": "AI 能力配置与用量成本（ai-capability-usage）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-ai-capability-usage.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-AI-CAPABILI-USAGE-01",
+        "TC-SHORT-AI-CAPABILI-USAGE-02",
+        "TC-SHORT-AI-CAPABILI-USAGE-03",
+        "TC-SHORT-AI-CAPABILI-USAGE-04",
+        "TC-SHORT-AI-CAPABILI-USAGE-05",
+        "TC-SHORT-AI-CAPABILI-USAGE-06",
+        "TC-SHORT-AI-CAPABILI-USAGE-07",
+        "TC-SHORT-AI-CAPABILI-USAGE-08",
+        "TC-SHORT-AI-CAPABILI-USAGE-09",
+        "TC-SHORT-AI-CAPABILI-USAGE-10",
+        "TC-SHORT-AI-CAPABILI-USAGE-11"
+      ]
+    },
+    {
+      "source": "docs/feature/ai-model-integration.md",
+      "title": "TokenHub 多模型接入（ai-model-integration）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-ai-model-integration.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-AI-MODEL-INTEGRAT-01",
+        "TC-SHORT-AI-MODEL-INTEGRAT-02",
+        "TC-SHORT-AI-MODEL-INTEGRAT-03",
+        "TC-SHORT-AI-MODEL-INTEGRAT-04",
+        "TC-SHORT-AI-MODEL-INTEGRAT-05",
+        "TC-SHORT-AI-MODEL-INTEGRAT-06",
+        "TC-SHORT-AI-MODEL-INTEGRAT-07",
+        "TC-SHORT-AI-MODEL-INTEGRAT-08",
+        "TC-SHORT-AI-MODEL-INTEGRAT-09",
+        "TC-SHORT-AI-MODEL-INTEGRAT-10"
+      ]
+    },
+    {
+      "source": "docs/feature/asset-consistency-panel.md",
+      "title": "资产一致性面板（asset-consistency-panel）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-PRODUCT-102-N",
+        "TC-SHORT-PRODUCT-102-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-asset-consistency-panel.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-ASSET-CONSISTE-PANEL-01",
+        "TC-SHORT-ASSET-CONSISTE-PANEL-02",
+        "TC-SHORT-ASSET-CONSISTE-PANEL-03",
+        "TC-SHORT-ASSET-CONSISTE-PANEL-04"
+      ]
+    },
+    {
+      "source": "docs/feature/bot-download-entry.md",
+      "title": "Bot 下载入口体验",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-014-N",
+        "TC-SHORT-COMMON-014-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/bot-mobile-downloads.md",
+      "title": "Bot 全平台安装包识别修复",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-014-N",
+        "TC-SHORT-COMMON-014-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-bot-mobile-downloads.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-BOT-MOBILE-DOWNLOAD-01",
+        "TC-SHORT-BOT-MOBILE-DOWNLOAD-02",
+        "TC-SHORT-BOT-MOBILE-DOWNLOAD-03"
+      ]
+    },
+    {
+      "source": "docs/feature/character-bible.md",
+      "title": "角色卡与场景卡（character-bible）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-character-bible.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-CHARACTE-BIBLE-01",
+        "TC-SHORT-CHARACTE-BIBLE-02",
+        "TC-SHORT-CHARACTE-BIBLE-03",
+        "TC-SHORT-CHARACTE-BIBLE-04",
+        "TC-SHORT-CHARACTE-BIBLE-05",
+        "TC-SHORT-CHARACTE-BIBLE-06",
+        "TC-SHORT-CHARACTE-BIBLE-07"
+      ]
+    },
+    {
+      "source": "docs/feature/chinese-only-en-alias.md",
+      "title": "中文产品的 /en 入口",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-SCAN-20261102-001-N",
+        "TC-SHORT-SCAN-20261102-001-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/content-compliance.md",
+      "title": "合规预检与内容审核（content-compliance）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-content-compliance.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-CONTENT-COMPLIAN-01",
+        "TC-SHORT-CONTENT-COMPLIAN-02",
+        "TC-SHORT-CONTENT-COMPLIAN-03",
+        "TC-SHORT-CONTENT-COMPLIAN-04",
+        "TC-SHORT-CONTENT-COMPLIAN-05",
+        "TC-SHORT-CONTENT-COMPLIAN-06",
+        "TC-SHORT-CONTENT-COMPLIAN-07",
+        "TC-SHORT-CONTENT-COMPLIAN-08",
+        "TC-SHORT-CONTENT-COMPLIAN-09"
+      ]
+    },
+    {
+      "source": "docs/feature/edit-project-export.md",
+      "title": "剪辑工程导出（edit-project-export）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-edit-project-export.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-EDIT-PROJECT-EXPORT-01",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-02",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-03",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-04",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-05",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-06",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-07",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-08",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-09",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-10",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-11",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-12"
+      ]
+    },
+    {
+      "source": "docs/feature/film-compose-export.md",
+      "title": "成片合成与导出（film-compose-export）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-film-compose-export.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-FILM-COMPOSE-EXPORT-01",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-02",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-03",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-04",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-05",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-06",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-07",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-08",
+        "TC-SHORT-FILM-COMPOSE-EXPORT-09"
+      ]
+    },
+    {
+      "source": "docs/feature/film-publish-media.md",
+      "title": "成片发布到 bgssai-tube（film-publish-media）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-PRODUCT-101-N",
+        "TC-SHORT-PRODUCT-101-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-film-publish-media.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-FILM-PUBLISH-MEDIA-01",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-02",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-03",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-04",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-05",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-06",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-07",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-08"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-asset-consistency-panel.html",
+      "title": "资产一致性面板 — bgssai short feature",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-PRODUCT-102-N",
+        "TC-SHORT-PRODUCT-102-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-asset-consistency-panel.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-ASSET-CONSISTE-PANEL-01",
+        "TC-SHORT-ASSET-CONSISTE-PANEL-02",
+        "TC-SHORT-ASSET-CONSISTE-PANEL-03",
+        "TC-SHORT-ASSET-CONSISTE-PANEL-04"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-character-consistency.html",
+      "title": "角色一致性指纹与引用链 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-character-bible.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-CHARACTE-BIBLE-01",
+        "TC-SHORT-CHARACTE-BIBLE-02",
+        "TC-SHORT-CHARACTE-BIBLE-03",
+        "TC-SHORT-CHARACTE-BIBLE-04",
+        "TC-SHORT-CHARACTE-BIBLE-05",
+        "TC-SHORT-CHARACTE-BIBLE-06",
+        "TC-SHORT-CHARACTE-BIBLE-07"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-chinese-only-en-alias.html",
+      "title": "中文产品 /en 入口",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-SCAN-20261102-001-N",
+        "TC-SHORT-SCAN-20261102-001-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/flow-edit-project-export.html",
+      "title": "剪辑工程导出：三种格式与前置放宽 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-edit-project-export.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-EDIT-PROJECT-EXPORT-01",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-02",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-03",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-04",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-05",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-06",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-07",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-08",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-09",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-10",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-11",
+        "TC-SHORT-EDIT-PROJECT-EXPORT-12"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-film-publish-media.html",
+      "title": "Short → Tube 幂等发布交接 — bgssai short feature",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-PRODUCT-101-N",
+        "TC-SHORT-PRODUCT-101-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-film-publish-media.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-FILM-PUBLISH-MEDIA-01",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-02",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-03",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-04",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-05",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-06",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-07",
+        "TC-SHORT-FILM-PUBLISH-MEDIA-08"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-frame-continuity.html",
+      "title": "首尾帧衔接：同场次才接，换场本来就该跳 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-frame-continuity.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-FRAME-CONTINUI-01",
+        "TC-SHORT-FRAME-CONTINUI-02",
+        "TC-SHORT-FRAME-CONTINUI-03",
+        "TC-SHORT-FRAME-CONTINUI-04",
+        "TC-SHORT-FRAME-CONTINUI-05",
+        "TC-SHORT-FRAME-CONTINUI-06",
+        "TC-SHORT-FRAME-CONTINUI-07",
+        "TC-SHORT-FRAME-CONTINUI-08"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-generation-task.html",
+      "title": "批量生成任务与预算闸门 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-shot-generation.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SHOT-GENERATI-01",
+        "TC-SHORT-SHOT-GENERATI-02",
+        "TC-SHORT-SHOT-GENERATI-03",
+        "TC-SHORT-SHOT-GENERATI-04",
+        "TC-SHORT-SHOT-GENERATI-05",
+        "TC-SHORT-SHOT-GENERATI-06",
+        "TC-SHORT-SHOT-GENERATI-07",
+        "TC-SHORT-SHOT-GENERATI-08",
+        "TC-SHORT-SHOT-GENERATI-09",
+        "TC-SHORT-SHOT-GENERATI-10",
+        "TC-SHORT-SHOT-GENERATI-11",
+        "TC-SHORT-SHOT-GENERATI-12"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-in-app-support.html",
+      "title": "站内在线客服 — 流程",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-006-N",
+        "TC-SHORT-REGRESSION-006-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-in-app-support.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-IN-APP-SUPPORT-01",
+        "TC-SHORT-IN-APP-SUPPORT-02",
+        "TC-SHORT-IN-APP-SUPPORT-03",
+        "TC-SHORT-IN-APP-SUPPORT-04",
+        "TC-SHORT-IN-APP-SUPPORT-05"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-legal-fan-out.html",
+      "title": "官网法律页分发 — 流程",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-legal-fan-out.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-LEGAL-FAN-OUT-01",
+        "TC-SHORT-LEGAL-FAN-OUT-02",
+        "TC-SHORT-LEGAL-FAN-OUT-03",
+        "TC-SHORT-LEGAL-FAN-OUT-04",
+        "TC-SHORT-LEGAL-FAN-OUT-05"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-mobile-in-bot-shell.html",
+      "title": "壳内窄栏判定 — bgssai-short",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-mobile-in-bot-shell.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-MOBI-IN-BOT-SHEL-01",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-02",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-03",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-04",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-05"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-post-production.html",
+      "title": "后期管线：配音、ASR 字幕、AI 音乐与合成 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-voice-subtitle.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-VOICE-SUBTITLE-01",
+        "TC-SHORT-VOICE-SUBTITLE-02",
+        "TC-SHORT-VOICE-SUBTITLE-03",
+        "TC-SHORT-VOICE-SUBTITLE-04",
+        "TC-SHORT-VOICE-SUBTITLE-05",
+        "TC-SHORT-VOICE-SUBTITLE-06",
+        "TC-SHORT-VOICE-SUBTITLE-07",
+        "TC-SHORT-VOICE-SUBTITLE-08",
+        "TC-SHORT-VOICE-SUBTITLE-09"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-previz-prompt.html",
+      "title": "文字预演阶梯与提示词派生链 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-previz-text-storyboard.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-01",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-02",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-03",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-04",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-05",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-06",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-07",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-08",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-09"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-production-pipeline.html",
+      "title": "短剧制作全链路管线 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-short-work-management.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SHORT-WORK-MANAGEME-01",
+        "TC-SHORT-SHORT-WORK-MANAGEME-02",
+        "TC-SHORT-SHORT-WORK-MANAGEME-03",
+        "TC-SHORT-SHORT-WORK-MANAGEME-04",
+        "TC-SHORT-SHORT-WORK-MANAGEME-05",
+        "TC-SHORT-SHORT-WORK-MANAGEME-06"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-quality-pipeline.html",
+      "title": "优秀短剧质量流水线 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-quality-pipeline.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-QUALITY-PIPELINE-01",
+        "TC-SHORT-QUALITY-PIPELINE-02",
+        "TC-SHORT-QUALITY-PIPELINE-03",
+        "TC-SHORT-QUALITY-PIPELINE-04",
+        "TC-SHORT-QUALITY-PIPELINE-05",
+        "TC-SHORT-QUALITY-PIPELINE-06",
+        "TC-SHORT-QUALITY-PIPELINE-07",
+        "TC-SHORT-QUALITY-PIPELINE-08",
+        "TC-SHORT-QUALITY-PIPELINE-09",
+        "TC-SHORT-QUALITY-PIPELINE-10",
+        "TC-SHORT-QUALITY-PIPELINE-11"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-script-generation.html",
+      "title": "剧本生成与节奏体检 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-script-studio.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SCRIPT-STUDIO-01",
+        "TC-SHORT-SCRIPT-STUDIO-02",
+        "TC-SHORT-SCRIPT-STUDIO-03",
+        "TC-SHORT-SCRIPT-STUDIO-04",
+        "TC-SHORT-SCRIPT-STUDIO-05",
+        "TC-SHORT-SCRIPT-STUDIO-06",
+        "TC-SHORT-SCRIPT-STUDIO-07",
+        "TC-SHORT-SCRIPT-STUDIO-08"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-source-import.html",
+      "title": "原著导入与改编：三种源、分章纠正与节奏体检 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-source-import.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SOURCE-IMPORT-01",
+        "TC-SHORT-SOURCE-IMPORT-02",
+        "TC-SHORT-SOURCE-IMPORT-03",
+        "TC-SHORT-SOURCE-IMPORT-04",
+        "TC-SHORT-SOURCE-IMPORT-05",
+        "TC-SHORT-SOURCE-IMPORT-06",
+        "TC-SHORT-SOURCE-IMPORT-07",
+        "TC-SHORT-SOURCE-IMPORT-08",
+        "TC-SHORT-SOURCE-IMPORT-09"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-story-map.html",
+      "title": "剧情图谱的数据来源与回流 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-story-map.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-STORY-MAP-01",
+        "TC-SHORT-STORY-MAP-02",
+        "TC-SHORT-STORY-MAP-03",
+        "TC-SHORT-STORY-MAP-04",
+        "TC-SHORT-STORY-MAP-05",
+        "TC-SHORT-STORY-MAP-06",
+        "TC-SHORT-STORY-MAP-07",
+        "TC-SHORT-STORY-MAP-08",
+        "TC-SHORT-STORY-MAP-09",
+        "TC-SHORT-STORY-MAP-10",
+        "TC-SHORT-STORY-MAP-11"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-storyboard-canvas.html",
+      "title": "分镜画布：布局由数据算出，拖动就是改顺序 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-storyboard-canvas.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-STORYBOA-CANVAS-01",
+        "TC-SHORT-STORYBOA-CANVAS-02",
+        "TC-SHORT-STORYBOA-CANVAS-03",
+        "TC-SHORT-STORYBOA-CANVAS-04",
+        "TC-SHORT-STORYBOA-CANVAS-05",
+        "TC-SHORT-STORYBOA-CANVAS-06",
+        "TC-SHORT-STORYBOA-CANVAS-07",
+        "TC-SHORT-STORYBOA-CANVAS-08"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-usage-billing.html",
+      "title": "AI 能力解析与计费链路 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-subscription-credit.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SUBSCRIP-CREDIT-01",
+        "TC-SHORT-SUBSCRIP-CREDIT-02",
+        "TC-SHORT-SUBSCRIP-CREDIT-03",
+        "TC-SHORT-SUBSCRIP-CREDIT-04",
+        "TC-SHORT-SUBSCRIP-CREDIT-05",
+        "TC-SHORT-SUBSCRIP-CREDIT-06",
+        "TC-SHORT-SUBSCRIP-CREDIT-07",
+        "TC-SHORT-SUBSCRIP-CREDIT-08"
+      ]
+    },
+    {
+      "source": "docs/feature/flow-ux-three-questions.html",
+      "title": "三个问题体验主线 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-ux-three-questions.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-UX-THREE-QUESTION-01",
+        "TC-SHORT-UX-THREE-QUESTION-02",
+        "TC-SHORT-UX-THREE-QUESTION-03",
+        "TC-SHORT-UX-THREE-QUESTION-04",
+        "TC-SHORT-UX-THREE-QUESTION-05",
+        "TC-SHORT-UX-THREE-QUESTION-06",
+        "TC-SHORT-UX-THREE-QUESTION-07",
+        "TC-SHORT-UX-THREE-QUESTION-08",
+        "TC-SHORT-UX-THREE-QUESTION-09"
+      ]
+    },
+    {
+      "source": "docs/feature/frame-continuity.md",
+      "title": "首尾帧衔接（frame-continuity）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-frame-continuity.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-FRAME-CONTINUI-01",
+        "TC-SHORT-FRAME-CONTINUI-02",
+        "TC-SHORT-FRAME-CONTINUI-03",
+        "TC-SHORT-FRAME-CONTINUI-04",
+        "TC-SHORT-FRAME-CONTINUI-05",
+        "TC-SHORT-FRAME-CONTINUI-06",
+        "TC-SHORT-FRAME-CONTINUI-07",
+        "TC-SHORT-FRAME-CONTINUI-08"
+      ]
+    },
+    {
+      "source": "docs/feature/functional-test-supplement-20261030.md",
+      "title": "2026-10-30 功能测试补遗",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-SUPP-101-N",
+        "TC-SHORT-SUPP-101-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/health-check.md",
+      "title": "需求：健康检查（health-check）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-health-check.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-HEALTH-CHECK-01",
+        "TC-SHORT-HEALTH-CHECK-02",
+        "TC-SHORT-HEALTH-CHECK-03",
+        "TC-SHORT-HEALTH-CHECK-04",
+        "TC-SHORT-HEALTH-CHECK-05",
+        "TC-SHORT-HEALTH-CHECK-06",
+        "TC-SHORT-HEALTH-CHECK-07",
+        "TC-SHORT-HEALTH-CHECK-08",
+        "TC-SHORT-HEALTH-CHECK-09",
+        "TC-SHORT-HEALTH-CHECK-10"
+      ]
+    },
+    {
+      "source": "docs/feature/icp-filing-footer.md",
+      "title": "网站 ICP 备案展示",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-SUPP-101-N",
+        "TC-SHORT-SUPP-101-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/in-app-support.md",
+      "title": "站内在线客服（留言 / 会话）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-006-N",
+        "TC-SHORT-REGRESSION-006-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-in-app-support.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-IN-APP-SUPPORT-01",
+        "TC-SHORT-IN-APP-SUPPORT-02",
+        "TC-SHORT-IN-APP-SUPPORT-03",
+        "TC-SHORT-IN-APP-SUPPORT-04",
+        "TC-SHORT-IN-APP-SUPPORT-05"
+      ]
+    },
+    {
+      "source": "docs/feature/launch-audit-20260907.md",
+      "title": "视频生成结果下载修复",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-launch-audit-20260907.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-LAUNCH-AUDIT-20260907-01",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-02",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-03",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-04",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-05",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-06",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-07",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-08",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-09",
+        "TC-SHORT-LAUNCH-AUDIT-20260907-10"
+      ]
+    },
+    {
+      "source": "docs/feature/legal-entry-dedup.md",
+      "title": "协议入口去重（2026-09-29）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-003-N",
+        "TC-SHORT-REGRESSION-003-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/legal-fan-out.md",
+      "title": "官网法律页分发（legal-fan-out）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-legal-fan-out.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-LEGAL-FAN-OUT-01",
+        "TC-SHORT-LEGAL-FAN-OUT-02",
+        "TC-SHORT-LEGAL-FAN-OUT-03",
+        "TC-SHORT-LEGAL-FAN-OUT-04",
+        "TC-SHORT-LEGAL-FAN-OUT-05"
+      ]
+    },
+    {
+      "source": "docs/feature/login-page-cleanup-20260926.md",
+      "title": "用户登录页整理（2026-09-26）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-002-N",
+        "TC-SHORT-REGRESSION-002-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/mcp-server.md",
+      "title": "MCP 服务（用户端）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-mcp-server.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-MCP-SERVER-01",
+        "TC-SHORT-MCP-SERVER-02",
+        "TC-SHORT-MCP-SERVER-03",
+        "TC-SHORT-MCP-SERVER-04",
+        "TC-SHORT-MCP-SERVER-05"
+      ]
+    },
+    {
+      "source": "docs/feature/mobile-in-bot-shell.md",
+      "title": "用户端壳内窄栏布局（mobile-in-bot-shell）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-mobile-in-bot-shell.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-MOBI-IN-BOT-SHEL-01",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-02",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-03",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-04",
+        "TC-SHORT-MOBI-IN-BOT-SHEL-05"
+      ]
+    },
+    {
+      "source": "docs/feature/model-pricing-receipts.md",
+      "title": "模型定价与真实用量对账（2026-10-15）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-005-N",
+        "TC-SHORT-REGRESSION-005-P",
+        "TC-SHORT-SCAN-20261102-003-N",
+        "TC-SHORT-SCAN-20261102-003-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/opc-gap-audit-20261019.md",
+      "title": "bgssai-short：OPC 规划静态差距审计（2026-10-19）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-001-N",
+        "TC-SHORT-COMMON-001-P",
+        "TC-SHORT-COMMON-002-N",
+        "TC-SHORT-COMMON-002-P",
+        "TC-SHORT-COMMON-003-N",
+        "TC-SHORT-COMMON-003-P",
+        "TC-SHORT-COMMON-004-N",
+        "TC-SHORT-COMMON-004-P",
+        "TC-SHORT-COMMON-006-N",
+        "TC-SHORT-COMMON-006-P",
+        "TC-SHORT-COMMON-007-N",
+        "TC-SHORT-COMMON-007-P",
+        "TC-SHORT-COMMON-008-N",
+        "TC-SHORT-COMMON-008-P",
+        "TC-SHORT-COMMON-009-N",
+        "TC-SHORT-COMMON-009-P",
+        "TC-SHORT-COMMON-010-N",
+        "TC-SHORT-COMMON-010-P",
+        "TC-SHORT-COMMON-011-N",
+        "TC-SHORT-COMMON-011-P",
+        "TC-SHORT-COMMON-012-N",
+        "TC-SHORT-COMMON-012-P",
+        "TC-SHORT-COMMON-014-N",
+        "TC-SHORT-COMMON-014-P",
+        "TC-SHORT-COMMON-015-N",
+        "TC-SHORT-COMMON-015-P",
+        "TC-SHORT-COMMON-018-N",
+        "TC-SHORT-COMMON-018-P",
+        "TC-SHORT-COMMON-019-N",
+        "TC-SHORT-COMMON-019-P",
+        "TC-SHORT-PLATFORM-001-N",
+        "TC-SHORT-PLATFORM-001-P",
+        "TC-SHORT-PLATFORM-002-N",
+        "TC-SHORT-PLATFORM-002-P",
+        "TC-SHORT-PLATFORM-003-N",
+        "TC-SHORT-PLATFORM-003-P",
+        "TC-SHORT-PLATFORM-004-N",
+        "TC-SHORT-PLATFORM-004-P",
+        "TC-SHORT-PLATFORM-005-N",
+        "TC-SHORT-PLATFORM-005-P",
+        "TC-SHORT-PRODUCT-001-N",
+        "TC-SHORT-PRODUCT-001-P",
+        "TC-SHORT-PRODUCT-002-N",
+        "TC-SHORT-PRODUCT-002-P",
+        "TC-SHORT-PRODUCT-003-N",
+        "TC-SHORT-PRODUCT-003-P",
+        "TC-SHORT-PRODUCT-004-N",
+        "TC-SHORT-PRODUCT-004-P",
+        "TC-SHORT-PRODUCT-005-N",
+        "TC-SHORT-PRODUCT-005-P",
+        "TC-SHORT-PRODUCT-006-N",
+        "TC-SHORT-PRODUCT-006-P",
+        "TC-SHORT-PRODUCT-007-N",
+        "TC-SHORT-PRODUCT-007-P",
+        "TC-SHORT-PRODUCT-008-N",
+        "TC-SHORT-PRODUCT-008-P",
+        "TC-SHORT-PRODUCT-101-N",
+        "TC-SHORT-PRODUCT-101-P",
+        "TC-SHORT-PRODUCT-102-N",
+        "TC-SHORT-PRODUCT-102-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/opc-requirements-20261017.md",
+      "title": "bgssai-short：OPC规划功能需求与验收补充",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-001-N",
+        "TC-SHORT-COMMON-001-P",
+        "TC-SHORT-COMMON-002-N",
+        "TC-SHORT-COMMON-002-P",
+        "TC-SHORT-COMMON-003-N",
+        "TC-SHORT-COMMON-003-P",
+        "TC-SHORT-COMMON-004-N",
+        "TC-SHORT-COMMON-004-P",
+        "TC-SHORT-COMMON-005-N",
+        "TC-SHORT-COMMON-005-P",
+        "TC-SHORT-COMMON-006-N",
+        "TC-SHORT-COMMON-006-P",
+        "TC-SHORT-COMMON-007-N",
+        "TC-SHORT-COMMON-007-P",
+        "TC-SHORT-COMMON-008-N",
+        "TC-SHORT-COMMON-008-P",
+        "TC-SHORT-COMMON-009-N",
+        "TC-SHORT-COMMON-009-P",
+        "TC-SHORT-COMMON-010-N",
+        "TC-SHORT-COMMON-010-P",
+        "TC-SHORT-COMMON-011-N",
+        "TC-SHORT-COMMON-011-P",
+        "TC-SHORT-COMMON-012-N",
+        "TC-SHORT-COMMON-012-P",
+        "TC-SHORT-COMMON-013-N",
+        "TC-SHORT-COMMON-013-P",
+        "TC-SHORT-COMMON-014-N",
+        "TC-SHORT-COMMON-014-P",
+        "TC-SHORT-COMMON-015-N",
+        "TC-SHORT-COMMON-015-P",
+        "TC-SHORT-COMMON-016-N",
+        "TC-SHORT-COMMON-016-P",
+        "TC-SHORT-COMMON-017-N",
+        "TC-SHORT-COMMON-017-P",
+        "TC-SHORT-COMMON-018-N",
+        "TC-SHORT-COMMON-018-P",
+        "TC-SHORT-COMMON-019-N",
+        "TC-SHORT-COMMON-019-P",
+        "TC-SHORT-PLATFORM-001-N",
+        "TC-SHORT-PLATFORM-001-P",
+        "TC-SHORT-PLATFORM-002-N",
+        "TC-SHORT-PLATFORM-002-P",
+        "TC-SHORT-PLATFORM-003-N",
+        "TC-SHORT-PLATFORM-003-P",
+        "TC-SHORT-PLATFORM-004-N",
+        "TC-SHORT-PLATFORM-004-P",
+        "TC-SHORT-PLATFORM-005-N",
+        "TC-SHORT-PLATFORM-005-P",
+        "TC-SHORT-PRODUCT-001-N",
+        "TC-SHORT-PRODUCT-001-P",
+        "TC-SHORT-PRODUCT-002-N",
+        "TC-SHORT-PRODUCT-002-P",
+        "TC-SHORT-PRODUCT-003-N",
+        "TC-SHORT-PRODUCT-003-P",
+        "TC-SHORT-PRODUCT-004-N",
+        "TC-SHORT-PRODUCT-004-P",
+        "TC-SHORT-PRODUCT-005-N",
+        "TC-SHORT-PRODUCT-005-P",
+        "TC-SHORT-PRODUCT-006-N",
+        "TC-SHORT-PRODUCT-006-P",
+        "TC-SHORT-PRODUCT-007-N",
+        "TC-SHORT-PRODUCT-007-P",
+        "TC-SHORT-PRODUCT-008-N",
+        "TC-SHORT-PRODUCT-008-P",
+        "TC-SHORT-REGRESSION-001-N",
+        "TC-SHORT-REGRESSION-001-P",
+        "TC-SHORT-REGRESSION-002-N",
+        "TC-SHORT-REGRESSION-002-P",
+        "TC-SHORT-REGRESSION-003-N",
+        "TC-SHORT-REGRESSION-003-P",
+        "TC-SHORT-REGRESSION-004-N",
+        "TC-SHORT-REGRESSION-004-P",
+        "TC-SHORT-REGRESSION-005-N",
+        "TC-SHORT-REGRESSION-005-P",
+        "TC-SHORT-REGRESSION-006-N",
+        "TC-SHORT-REGRESSION-006-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/opc-requirements-20261019.md",
+      "title": "bgssai-short：2026-10-19 功能目录与现行范围",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-PRODUCT-001-N",
+        "TC-SHORT-PRODUCT-001-P",
+        "TC-SHORT-PRODUCT-004-N",
+        "TC-SHORT-PRODUCT-004-P",
+        "TC-SHORT-PRODUCT-005-N",
+        "TC-SHORT-PRODUCT-005-P",
+        "TC-SHORT-PRODUCT-006-N",
+        "TC-SHORT-PRODUCT-006-P",
+        "TC-SHORT-PRODUCT-007-N",
+        "TC-SHORT-PRODUCT-007-P",
+        "TC-SHORT-PRODUCT-008-N",
+        "TC-SHORT-PRODUCT-008-P",
+        "TC-SHORT-PRODUCT-101-N",
+        "TC-SHORT-PRODUCT-101-P",
+        "TC-SHORT-PRODUCT-102-N",
+        "TC-SHORT-PRODUCT-102-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/otp-entry-20260924.md",
+      "title": "验证码登录即注册",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-002-N",
+        "TC-SHORT-REGRESSION-002-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/previz-text-storyboard.md",
+      "title": "文字预演与提示词优化（previz-text-storyboard）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-previz-text-storyboard.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-01",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-02",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-03",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-04",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-05",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-06",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-07",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-08",
+        "TC-SHORT-PREVIZ-TEXT-STORYBOA-09"
+      ]
+    },
+    {
+      "source": "docs/feature/product-motion.md",
+      "title": "用户端动态视觉（2026-09-25）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-004-N",
+        "TC-SHORT-REGRESSION-004-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/quality-pipeline.md",
+      "title": "优秀短剧质量流水线（quality-pipeline）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-quality-pipeline.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-QUALITY-PIPELINE-01",
+        "TC-SHORT-QUALITY-PIPELINE-02",
+        "TC-SHORT-QUALITY-PIPELINE-03",
+        "TC-SHORT-QUALITY-PIPELINE-04",
+        "TC-SHORT-QUALITY-PIPELINE-05",
+        "TC-SHORT-QUALITY-PIPELINE-06",
+        "TC-SHORT-QUALITY-PIPELINE-07",
+        "TC-SHORT-QUALITY-PIPELINE-08",
+        "TC-SHORT-QUALITY-PIPELINE-09",
+        "TC-SHORT-QUALITY-PIPELINE-10",
+        "TC-SHORT-QUALITY-PIPELINE-11"
+      ]
+    },
+    {
+      "source": "docs/feature/quota-token-display-20261017.md",
+      "title": "额度套餐与 token 显示（2026-10-17）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-018-N",
+        "TC-SHORT-COMMON-018-P",
+        "TC-SHORT-COMMON-019-N",
+        "TC-SHORT-COMMON-019-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/README.md",
+      "title": "docs/feature（功能需求 + 详细设计）",
+      "classification": "目录索引，不是独立功能规格",
+      "cases": [
+        "TC-SHORT-PRODUCT-101-N",
+        "TC-SHORT-PRODUCT-101-P",
+        "TC-SHORT-PRODUCT-102-N",
+        "TC-SHORT-PRODUCT-102-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/reference-ux-hardening-20261019.md",
+      "title": "bgssai-short：参考项目对标 UX 与系统健壮性加固（2026-10-19）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-COMMON-010-N",
+        "TC-SHORT-COMMON-010-P",
+        "TC-SHORT-PRODUCT-002-N",
+        "TC-SHORT-PRODUCT-002-P",
+        "TC-SHORT-PRODUCT-005-N",
+        "TC-SHORT-PRODUCT-005-P",
+        "TC-SHORT-PRODUCT-007-N",
+        "TC-SHORT-PRODUCT-007-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/script-studio.md",
+      "title": "剧本工作台与节奏体检（script-studio）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-script-studio.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SCRIPT-STUDIO-01",
+        "TC-SHORT-SCRIPT-STUDIO-02",
+        "TC-SHORT-SCRIPT-STUDIO-03",
+        "TC-SHORT-SCRIPT-STUDIO-04",
+        "TC-SHORT-SCRIPT-STUDIO-05",
+        "TC-SHORT-SCRIPT-STUDIO-06",
+        "TC-SHORT-SCRIPT-STUDIO-07",
+        "TC-SHORT-SCRIPT-STUDIO-08"
+      ]
+    },
+    {
+      "source": "docs/feature/short-01-commercial-gate.md",
+      "title": "SHORT-01 商业门禁（成片生产 → Tube）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-SCAN-20261102-002-N",
+        "TC-SHORT-SCAN-20261102-002-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-short-01-commercial-gate.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SHOR-01-COMM-GATE-01",
+        "TC-SHORT-SHOR-01-COMM-GATE-02",
+        "TC-SHORT-SHOR-01-COMM-GATE-03"
+      ]
+    },
+    {
+      "source": "docs/feature/short-work-management.md",
+      "title": "作品与剧集管理（short-work-management）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-short-work-management.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SHORT-WORK-MANAGEME-01",
+        "TC-SHORT-SHORT-WORK-MANAGEME-02",
+        "TC-SHORT-SHORT-WORK-MANAGEME-03",
+        "TC-SHORT-SHORT-WORK-MANAGEME-04",
+        "TC-SHORT-SHORT-WORK-MANAGEME-05",
+        "TC-SHORT-SHORT-WORK-MANAGEME-06"
+      ]
+    },
+    {
+      "source": "docs/feature/shot-generation.md",
+      "title": "画面生成与任务中心（shot-generation）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-shot-generation.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SHOT-GENERATI-01",
+        "TC-SHORT-SHOT-GENERATI-02",
+        "TC-SHORT-SHOT-GENERATI-03",
+        "TC-SHORT-SHOT-GENERATI-04",
+        "TC-SHORT-SHOT-GENERATI-05",
+        "TC-SHORT-SHOT-GENERATI-06",
+        "TC-SHORT-SHOT-GENERATI-07",
+        "TC-SHORT-SHOT-GENERATI-08",
+        "TC-SHORT-SHOT-GENERATI-09",
+        "TC-SHORT-SHOT-GENERATI-10",
+        "TC-SHORT-SHOT-GENERATI-11",
+        "TC-SHORT-SHOT-GENERATI-12"
+      ]
+    },
+    {
+      "source": "docs/feature/single-session-completion.md",
+      "title": "补齐单会话登录",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-REGRESSION-001-N",
+        "TC-SHORT-REGRESSION-001-P"
+      ],
+      "legacy": [],
+      "legacy_case_ids": []
+    },
+    {
+      "source": "docs/feature/source-import.md",
+      "title": "原著导入与改编（source-import）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-source-import.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SOURCE-IMPORT-01",
+        "TC-SHORT-SOURCE-IMPORT-02",
+        "TC-SHORT-SOURCE-IMPORT-03",
+        "TC-SHORT-SOURCE-IMPORT-04",
+        "TC-SHORT-SOURCE-IMPORT-05",
+        "TC-SHORT-SOURCE-IMPORT-06",
+        "TC-SHORT-SOURCE-IMPORT-07",
+        "TC-SHORT-SOURCE-IMPORT-08",
+        "TC-SHORT-SOURCE-IMPORT-09"
+      ]
+    },
+    {
+      "source": "docs/feature/state-review-compliance.html",
+      "title": "合规预检拦截点与审核泳道 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-content-compliance.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-CONTENT-COMPLIAN-01",
+        "TC-SHORT-CONTENT-COMPLIAN-02",
+        "TC-SHORT-CONTENT-COMPLIAN-03",
+        "TC-SHORT-CONTENT-COMPLIAN-04",
+        "TC-SHORT-CONTENT-COMPLIAN-05",
+        "TC-SHORT-CONTENT-COMPLIAN-06",
+        "TC-SHORT-CONTENT-COMPLIAN-07",
+        "TC-SHORT-CONTENT-COMPLIAN-08",
+        "TC-SHORT-CONTENT-COMPLIAN-09"
+      ]
+    },
+    {
+      "source": "docs/feature/state-shot-lifecycle.html",
+      "title": "镜头生命周期状态机 — bgssai short feature",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-shot-generation.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SHOT-GENERATI-01",
+        "TC-SHORT-SHOT-GENERATI-02",
+        "TC-SHORT-SHOT-GENERATI-03",
+        "TC-SHORT-SHOT-GENERATI-04",
+        "TC-SHORT-SHOT-GENERATI-05",
+        "TC-SHORT-SHOT-GENERATI-06",
+        "TC-SHORT-SHOT-GENERATI-07",
+        "TC-SHORT-SHOT-GENERATI-08",
+        "TC-SHORT-SHOT-GENERATI-09",
+        "TC-SHORT-SHOT-GENERATI-10",
+        "TC-SHORT-SHOT-GENERATI-11",
+        "TC-SHORT-SHOT-GENERATI-12"
+      ]
+    },
+    {
+      "source": "docs/feature/story-map.md",
+      "title": "剧情图谱与走位示意（story-map）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-story-map.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-STORY-MAP-01",
+        "TC-SHORT-STORY-MAP-02",
+        "TC-SHORT-STORY-MAP-03",
+        "TC-SHORT-STORY-MAP-04",
+        "TC-SHORT-STORY-MAP-05",
+        "TC-SHORT-STORY-MAP-06",
+        "TC-SHORT-STORY-MAP-07",
+        "TC-SHORT-STORY-MAP-08",
+        "TC-SHORT-STORY-MAP-09",
+        "TC-SHORT-STORY-MAP-10",
+        "TC-SHORT-STORY-MAP-11"
+      ]
+    },
+    {
+      "source": "docs/feature/storyboard-canvas.md",
+      "title": "分镜画布编排（storyboard-canvas）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-storyboard-canvas.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-STORYBOA-CANVAS-01",
+        "TC-SHORT-STORYBOA-CANVAS-02",
+        "TC-SHORT-STORYBOA-CANVAS-03",
+        "TC-SHORT-STORYBOA-CANVAS-04",
+        "TC-SHORT-STORYBOA-CANVAS-05",
+        "TC-SHORT-STORYBOA-CANVAS-06",
+        "TC-SHORT-STORYBOA-CANVAS-07",
+        "TC-SHORT-STORYBOA-CANVAS-08"
+      ]
+    },
+    {
+      "source": "docs/feature/storyboard-workbench.md",
+      "title": "分镜工作台（storyboard-workbench）",
+      "classification": "功能场景已关联（设计覆盖，不代表执行通过）",
+      "cases": [
+        "TC-SHORT-PRODUCT-102-N",
+        "TC-SHORT-PRODUCT-102-P"
+      ],
+      "legacy": [
+        "docs/review/test-cases/TC-storyboard-workbench.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-STORYBOA-WORKBENC-01",
+        "TC-SHORT-STORYBOA-WORKBENC-02",
+        "TC-SHORT-STORYBOA-WORKBENC-03",
+        "TC-SHORT-STORYBOA-WORKBENC-04",
+        "TC-SHORT-STORYBOA-WORKBENC-05",
+        "TC-SHORT-STORYBOA-WORKBENC-06"
+      ]
+    },
+    {
+      "source": "docs/feature/subscription-credit.md",
+      "title": "订阅套餐与加量 credit（subscription-credit）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-subscription-credit.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-SUBSCRIP-CREDIT-01",
+        "TC-SHORT-SUBSCRIP-CREDIT-02",
+        "TC-SHORT-SUBSCRIP-CREDIT-03",
+        "TC-SHORT-SUBSCRIP-CREDIT-04",
+        "TC-SHORT-SUBSCRIP-CREDIT-05",
+        "TC-SHORT-SUBSCRIP-CREDIT-06",
+        "TC-SHORT-SUBSCRIP-CREDIT-07",
+        "TC-SHORT-SUBSCRIP-CREDIT-08"
+      ]
+    },
+    {
+      "source": "docs/feature/ux-three-questions.md",
+      "title": "三个问题体验主线（ux-three-questions）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-ux-three-questions.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-UX-THREE-QUESTION-01",
+        "TC-SHORT-UX-THREE-QUESTION-02",
+        "TC-SHORT-UX-THREE-QUESTION-03",
+        "TC-SHORT-UX-THREE-QUESTION-04",
+        "TC-SHORT-UX-THREE-QUESTION-05",
+        "TC-SHORT-UX-THREE-QUESTION-06",
+        "TC-SHORT-UX-THREE-QUESTION-07",
+        "TC-SHORT-UX-THREE-QUESTION-08",
+        "TC-SHORT-UX-THREE-QUESTION-09"
+      ]
+    },
+    {
+      "source": "docs/feature/voice-subtitle.md",
+      "title": "配音与字幕（voice-subtitle）",
+      "classification": "保留历史评审案例，当前用例按功能目录执行；历史不并入当前计数",
+      "cases": [],
+      "legacy": [
+        "docs/review/test-cases/TC-voice-subtitle.md"
+      ],
+      "legacy_case_ids": [
+        "TC-SHORT-VOICE-SUBTITLE-01",
+        "TC-SHORT-VOICE-SUBTITLE-02",
+        "TC-SHORT-VOICE-SUBTITLE-03",
+        "TC-SHORT-VOICE-SUBTITLE-04",
+        "TC-SHORT-VOICE-SUBTITLE-05",
+        "TC-SHORT-VOICE-SUBTITLE-06",
+        "TC-SHORT-VOICE-SUBTITLE-07",
+        "TC-SHORT-VOICE-SUBTITLE-08",
+        "TC-SHORT-VOICE-SUBTITLE-09"
+      ]
+    }
+  ],
+  "additional_contracts": [],
+  "new_cases": 6,
+  "limitations": [
+    "文件关联表示测试设计覆盖，不能证明所有代码分支或运行行为已验证。",
+    "本轮没有执行真实付费模型、外部发布、安装包或原生端业务验收；新增案例均待测。",
+    "历史平台范围与现行愿景不一致时保留历史原文，执行以本仓当前AGENTS/PRODUCT_VISION为准。"
+  ]
+}
