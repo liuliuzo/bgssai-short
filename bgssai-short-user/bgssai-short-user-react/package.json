@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/pages/subscription/payOrderPoll.test.js src/lib/bgssaiShell.test.js src/lib/legalLinks.test.js src/lib/displayLabels.test.js src/lib/safeReturn.test.js src/lib/chineseEntry.test.js src/modelPricing.test.js src/utils/baselineCards.test.js src/utils/composeStatusSurface.test.js",
+    "test": "node --test src/pages/subscription/payOrderPoll.test.js src/pages/login/loginFieldError.test.js src/lib/bgssaiShell.test.js src/lib/legalLinks.test.js src/lib/displayLabels.test.js src/lib/safeReturn.test.js src/lib/chineseEntry.test.js src/modelPricing.test.js src/utils/baselineCards.test.js src/utils/composeStatusSurface.test.js",
     "build:deploy": "vite build && node scripts/sync-static.mjs"
   },
   "dependencies": {

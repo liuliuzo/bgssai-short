@@ -110,7 +110,7 @@
   margin-bottom: 14px;
 }
 .login-field-error {
-  margin: 0 0 12px;
+  margin: 8px 0 0;
   padding: 9px 12px;
   border-radius: var(--radius-sm);
   background: #fdecea;
@@ -118,6 +118,7 @@
   color: #b42318;
   font-size: 13px;
   line-height: 1.5;
+  text-align: left;
 }
 .login-panel .field > label,
 .login-field > label {
