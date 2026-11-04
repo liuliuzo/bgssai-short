@@ -141,6 +141,17 @@ public final class TokenHubClientSupport {
                 || lower.contains("handshake_failure")) {
             return "模型网关连接失败，请稍后重试";
         }
+        if (lower.contains("timeout") || lower.contains("timed out")) {
+            return "生成超时，任务可能仍在处理，请到任务中心查看或稍后重试";
+        }
+        if (lower.contains("media missing") || lower.contains("audio missing")
+                || lower.contains("content missing") || lower.contains("empty chat content")
+                || lower.contains("response missing")) {
+            return "没有拿到生成结果，请重试";
+        }
+        if (lower.contains("missing task_id") || lower.contains("missing task id")) {
+            return "生成任务没有返回编号，请重试";
+        }
         if (lower.contains("provider is not configured")) {
             String provider = GatewayErrorText.providerName(msg);
             return "模型服务暂未开通：" + (provider.isEmpty() ? "当前模型" : provider) + "，请稍后重试";

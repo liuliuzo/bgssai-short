@@ -161,7 +161,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
         Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, timeoutSec));
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg);
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
         return mediaResult(request, done, "image/png", 0, 1080, 1920, timeoutSec);
     }
 
@@ -177,7 +177,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
             body.put("image", image);
         }
         Map<String, Object> submitted = post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec));
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg);
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
         AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec);
         if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
             ready.setDurationSec(duration);
@@ -300,25 +300,30 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private Map<String, Object> awaitMedia(String base, String apiKey, String model,
-            Map<String, Object> submitted, Map<String, Object> cfg) throws Exception {
+            Map<String, Object> submitted, Map<String, Object> cfg, int timeoutSec) throws Exception {
         if (hasMediaPayload(submitted)) {
             return submitted;
         }
         String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("id")),
                 ShortJson.text(submitted.get("task_id")), nestedText(submitted, "data", "id"),
                 nestedText(submitted, "task", "id"));
-        return pollMedia(base, apiKey, model, taskId, cfg);
+        return pollMedia(base, apiKey, model, taskId, cfg, timeoutSec);
+    }
+
+    static long mediaPollBudgetMs(int timeoutSec) {
+        long configured = Math.max(1, timeoutSec) * 1000L;
+        return Math.max(MEDIA_POLL_BUDGET_MS, configured);
     }
 
     private Map<String, Object> pollMedia(String base, String apiKey, String model, String taskId,
-            Map<String, Object> cfg) throws Exception {
+            Map<String, Object> cfg, int timeoutSec) throws Exception {
         if (taskId == null || taskId.isBlank()) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model submit missing task_id");
         }
         String query = base + "/v1/videos/generations/" + encodeQuery(taskId.trim())
                 + "?model=" + encodeQuery(model);
         long intervalMs = Math.max(MEDIA_POLL_INTERVAL_MS, ProviderHttp.pollIntervalMs(cfg));
-        long deadline = System.currentTimeMillis() + MEDIA_POLL_BUDGET_MS;
+        long deadline = System.currentTimeMillis() + mediaPollBudgetMs(timeoutSec);
         while (System.currentTimeMillis() < deadline) {
             Map<String, Object> resp = get(query, apiKey, 60);
             PollState state = pollState(resp, PollKind.MEDIA);

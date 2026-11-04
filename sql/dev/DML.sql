@@ -68,3 +68,7 @@ INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price
 -- =====================================================================
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e1e72ce67088450f822c', 'qa_short_a', 'qa_short_a', 'PM3nrTt9PIaRT3p8L07g', 'qa+short+a@bgssai-test.local', 'PLATFORM_ADMIN', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e47544decfbd4c74bfd2', 'qa_short_u', 'qa_short_u', 'Ckeh8Pqt3eSjN5BWaOh9', 'qa+short+u@bgssai-test.local', 'USER', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
+
+-- 公司自托管模型行在共享 DML，default_flag=0，本文件不改默认、不写 ai.openai_compat.api_key。
+-- 直连 https://chat.bgssai.com/v1 前，管理端须同时清空 ai.tokenhub_cn.api_key 与 ai.tencent_tokenhub.api_key
+-- （本文件会把占位符写回这两行），再填写 ai.openai_compat.api_key。

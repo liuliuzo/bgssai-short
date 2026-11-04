@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.bgssai.shortai.aiprovider.CompanyCompatGateway;
 import com.bgssai.shortai.aiprovider.GatewayErrorText;
 import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
 import com.bgssai.shortai.common.exception.BizException;
@@ -29,7 +30,8 @@ import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
  * Before a generation is queued, checks the text, image and voice models the
- * pipeline will call. A blocked step is reported immediately and nothing is queued.
+ * pipeline will call. A video task also checks that a video model is listed,
+ * without posting a generation. A blocked step is reported immediately and nothing is queued.
  */
 @Component
 public class PipelineReadiness {
@@ -79,6 +81,10 @@ public class PipelineReadiness {
         }
         String key = TokenHubClientSupport.resolveApiKey(secrets, TokenHubClientSupport.HUB_CN, null);
         if (key.isBlank()) {
+            if (secrets != null && secrets.has(SysSecretReader.AI_OPENAI_COMPAT_API_KEY)) {
+                assertCompany(taskType.trim().toUpperCase(Locale.ROOT));
+                return;
+            }
             throw blocked("模型网关未配置，大纲、剧本、分镜、定妆、图片和配音现在都不能开始，请稍后重试");
         }
         Map<String, TokenHubModelCatalog.HubModel> catalog;
@@ -103,9 +109,88 @@ public class PipelineReadiness {
                 blocks.add(step.label + "（" + reason + "）");
             }
         }
+        if ("VIDEO".equals(ability)) {
+            Step video = new Step("VIDEO", "video_generation", "镜头视频");
+            String modelCode = modelCode(video, ability, selectedModel, catalog);
+            String reason = catalogReason(video, modelCode, catalog);
+            if (reason != null) {
+                blocks.add(video.label + "（" + reason + "）");
+            }
+        }
         if (!blocks.isEmpty()) {
             throw blocked(format(blocks));
         }
+    }
+
+    private void assertCompany(String taskType) {
+        String key = secrets.get(SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
+        Map<String, TokenHubModelCatalog.HubModel> catalog;
+        try {
+            GatewayClient.Reply reply = client.get(CompanyCompatGateway.DEFAULT_BASE + "/models", key);
+            if (reply.status() < 200 || reply.status() >= 300) {
+                GatewayErrorText.note(reply.status(), reply.body());
+                throw blocked("模型网关连接失败，大纲、剧本、分镜、定妆、图片和配音现在都不能开始，请稍后重试");
+            }
+            catalog = new LinkedHashMap<>();
+            for (TokenHubModelCatalog.HubModel row : TokenHubModelCatalog.parse(reply.body())) {
+                catalog.put(row.id(), row);
+            }
+        } catch (BizException ex) {
+            throw ex;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw blocked("模型网关连接失败，大纲、剧本、分镜、定妆、图片和配音现在都不能开始，请稍后重试");
+        } catch (Exception ex) {
+            log.warn("company gateway catalog unavailable");
+            throw blocked("模型网关连接失败，大纲、剧本、分镜、定妆、图片和配音现在都不能开始，请稍后重试");
+        }
+        List<Step> steps = new ArrayList<>(STEPS);
+        if ("VIDEO".equals(taskType)) {
+            steps.add(new Step("VIDEO", "video_generation", "镜头视频"));
+        }
+        List<String> blocks = new ArrayList<>();
+        for (Step step : steps) {
+            if (!companyReady(step, catalog)) {
+                blocks.add(step.label + "（该模型暂未开放：" + CompanyCompatGateway.defaultModel(step.ability) + "）");
+            }
+        }
+        if (!blocks.isEmpty()) {
+            throw blocked(format(blocks));
+        }
+    }
+
+    private static boolean companyReady(Step step, Map<String, TokenHubModelCatalog.HubModel> catalog) {
+        TokenHubModelCatalog.HubModel preferred = catalog.get(CompanyCompatGateway.defaultModel(step.ability));
+        if (acceptCompany(preferred, step)) {
+            return true;
+        }
+        for (TokenHubModelCatalog.HubModel model : catalog.values()) {
+            if (model != null && CompanyCompatGateway.directModel(step.ability, model.id())
+                    && acceptCompany(model, step)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean acceptCompany(TokenHubModelCatalog.HubModel listed, Step step) {
+        if (listed == null) {
+            return false;
+        }
+        return listed.capabilities() == null || listed.capabilities().isEmpty()
+                || listed.capabilities().contains(step.capability);
+    }
+
+    private static String catalogReason(Step step, String modelCode,
+            Map<String, TokenHubModelCatalog.HubModel> catalog) {
+        if (modelCode == null || modelCode.isBlank()) {
+            return "没有可用模型";
+        }
+        TokenHubModelCatalog.HubModel listed = catalog.get(modelCode);
+        if (listed == null || listed.capabilities() == null || !listed.capabilities().contains(step.capability)) {
+            return "该模型暂未开放：" + modelCode;
+        }
+        return null;
     }
 
     private String modelCode(Step step, String taskAbility, String selectedModel,

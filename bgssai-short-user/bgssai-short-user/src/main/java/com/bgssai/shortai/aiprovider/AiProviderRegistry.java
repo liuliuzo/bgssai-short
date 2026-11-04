@@ -54,8 +54,9 @@ public class AiProviderRegistry {
     }
 
     /**
-     * Resolves a runnable bean. Billed generation always goes through TokenHub.
-     * allow_direct is ignored. Local ffmpeg compose is not a billed model.
+     * Resolves a runnable bean. Billed generation goes through the CN hub.
+     * The company host {@code https://chat.bgssai.com} is the only OpenAI-compatible
+     * exception. allow_direct is ignored. Local ffmpeg compose is not a billed model.
      */
     public AiProvider resolve(AiModelConfig model) {
         if (model == null || model.getProviderCode() == null || model.getProviderCode().isBlank()) {
@@ -73,6 +74,10 @@ public class AiProviderRegistry {
         }
 
         String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
+        if (direct != null && OpenAiCompatibleAiProvider.CODE.equals(code)
+                && CompanyCompatGateway.allows(baseUrl)) {
+            return direct;
+        }
         if (TokenHubClientSupport.isTokenHubHost(baseUrl)
                 && byCode.containsKey(TencentTokenHubAiProvider.CODE)) {
             return byCode.get(TencentTokenHubAiProvider.CODE);

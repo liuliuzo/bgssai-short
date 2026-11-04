@@ -10,8 +10,9 @@
 - **Short 固定 CN 中枢**（REQ-SHORT-COMMON-010）：`TokenHubClientSupport.resolveHub` 恒为
   `cn`；`defaultBaseUrl` 忽略境外主机。配置或模型若指向 Global 则直接失败，不跨区回退，
   也不读取 `ai.tokenhub_global.api_key`。密钥优先 `ai.tokenhub_cn.api_key`
-  （旧 CN 键空值回填兼容）。直连厂商（VEO/KLING/MINIMAX/SEEDANCE/OPENAI_COMPAT）的
-  `execute` 拒绝，计费生成一律经 registry 走境内中枢。
+  （旧 CN 键空值回填兼容）。第三方直连（VEO/KLING/MINIMAX/SEEDANCE，以及指向其它主机的
+  OPENAI_COMPAT）的 `execute` 拒绝，计费生成经 registry 走境内中枢。唯一例外是公司主机
+  `https://chat.bgssai.com`：仅当中枢密钥为空且 `ai.openai_compat.api_key` 已填写时直连。
 - 用户端只见 `display_name` 与 `0.5×` / `1×` / `1.5×`；错误与 `fail_reason` 脱敏，不含中枢品牌。对账列表不回显网关主机。
 - 所选模型不可用时回退同能力默认模型；重试可换备用模型。
 - 上游返回的临时视频、音频、字幕 URL 只在 Worker 内使用；成功后立即下载并转存对象存储。
@@ -79,9 +80,25 @@ TEXT 的 `usage.total_tokens`、PixVerse 的 `tokenhub_usage.total_tokens` 等�
 | Kling VIDEO | `processing` / `submitted` | `succeeded` | `failed` |
 | Hy ASR | `queued` / `in_progress` | `completed` | `failed` |
 
-轮询间隔取 `config_json.poll_interval_ms`，默认视频 3000ms、ASR 2000ms；总时限取
-`ai_model_config.timeout_sec`。超时抛 `PROVIDER_TIMEOUT`，审核失败抛 `PROVIDER_CONTENT_REJECTED`，
-其它上游失败抛 `PROVIDER_ERROR`。Worker 只重试平台允许的超时和 5xx，不重试审核失败或参数错误。
+轮询间隔取 `config_json.poll_interval_ms`，默认视频 3000ms、ASR 2000ms。画面和视频的现行客户端
+走 OpenAI 兼容媒体接口（见 3.3），轮询总时限是 `max(180 秒, timeout_sec)`，避免长视频在 180 秒被提前判失败。
+超时对用户展示「生成超时，任务可能仍在处理，请到任务中心查看或稍后重试」。审核失败与其它上游失败仍按
+既有失败码回写。Worker 只重试平台允许的超时和 5xx，不重试审核失败或参数错误。
+
+### 3.3 现行客户端（OpenAI 兼容媒体）
+
+Java 客户端对画面、视频、配音实际调用的是兼容接口，不读取视频行里的 wand `submit_path`：
+
+| 能力 | 提交 | 未完成时查询 |
+| --- | --- | --- |
+| IMAGE | `POST /v1/images/generations` | 同步，或同一套视频查询直到出图 |
+| VIDEO | `POST /v1/videos/generations` | `GET /v1/videos/generations/{id}?model=` |
+| VOICE | `POST /v1/audio/speech` | 同步；JSON `audio` 或原始音频字节 |
+
+公司直连只接受 `https://chat.bgssai.com`（无用户信息、查询串、片段，端口仅 443）。模型编号限于
+`qwen` / `qwen2*` / `bgssai-chat`、`sd-turbo` / `bgssai-image`、`cogvideox*` / `bgssai-video`、
+`piper` / `bgssai-tts` / `edge-tts`。`qwen-tts` 不当作文本模型。开跑前对公司网关只做 `GET /v1/models`。
+视频任务在中枢上只按目录核对 `video_generation`，不 POST 视频探测，避免探测本身扣费。
 
 ## 4. 业务回写
 

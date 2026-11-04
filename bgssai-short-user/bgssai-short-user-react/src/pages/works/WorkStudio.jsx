@@ -93,6 +93,32 @@ async function waitTasks(workId, taskIds) {
   return lastMatched
 }
 
+function videoWatchCopy(watch) {
+  const progress = watch.progress || {}
+  const queued = Number(progress.queued) || 0
+  const running = Number(progress.running) || 0
+  const succeeded = Number(progress.succeeded) || 0
+  const failed = Number(progress.failed) || 0
+  if (watch.error) {
+    return { type: 'warning', message: '进度暂时读不到', description: '可到任务中心查看，生成还在服务器上继续。' }
+  }
+  if (watch.lingering) {
+    return { type: 'info', message: '视频仍在生成', description: '已等待较久，还没有结束。请到任务中心查看，这里不把它当成失败。' }
+  }
+  if (watch.done && failed > 0) {
+    const reason = progress.failed_task_list && progress.failed_task_list[0] && progress.failed_task_list[0].fail_reason
+    return { type: 'error', message: '有视频没有生成成功', description: reason || `失败 ${failed} 个，可在任务中心恢复` }
+  }
+  if (watch.done) {
+    return { type: 'success', message: '视频已生成', description: `成功 ${succeeded} 个` }
+  }
+  return {
+    type: 'info',
+    message: '视频生成中',
+    description: `排队 ${queued} · 执行中 ${running} · 已完成 ${succeeded}`,
+  }
+}
+
 function reportTaskOutcome(task, successText) {
   if (!task) {
     message.warning('任务仍在执行或已超时，请到任务中心查看最新状态')
@@ -542,6 +568,7 @@ function StoryboardPane({ work, episodeId }) {
   const [bindChars, setBindChars] = useState([])
   const [bindScene, setBindScene] = useState()
   const [bindProps, setBindProps] = useState([])
+  const [videoWatch, setVideoWatch] = useState(null)
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -573,6 +600,55 @@ function StoryboardPane({ work, episodeId }) {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    if (!videoWatch?.batchId || videoWatch.done) return undefined
+    let cancelled = false
+    const started = Date.now()
+    const pull = async () => {
+      try {
+        const { data } = await productionApi.batchProgress(videoWatch.batchId)
+        const result = data?.result
+        if (cancelled || !result) return
+        const queued = Number(result.queued) || 0
+        const running = Number(result.running) || 0
+        const settled = queued + running === 0 && Number(result.total) > 0
+        if (settled) {
+          setVideoWatch((cur) => (cur && cur.batchId === videoWatch.batchId
+            ? { ...cur, progress: result, done: true, lingering: false, error: '' } : cur))
+          const failed = Number(result.failed) || 0
+          if (failed > 0) {
+            const reason = result.failed_task_list && result.failed_task_list[0] && result.failed_task_list[0].fail_reason
+            message.error(reason || `有 ${failed} 个视频没有生成成功，可在任务中心恢复`)
+          } else if (Number(result.succeeded) > 0) {
+            message.success('视频已生成')
+          }
+          load()
+          return
+        }
+        if (Date.now() - started > 20 * 60 * 1000) {
+          setVideoWatch((cur) => (cur && cur.batchId === videoWatch.batchId
+            ? { ...cur, progress: result, done: true, lingering: true, error: '' } : cur))
+          return
+        }
+        setVideoWatch((cur) => (cur && cur.batchId === videoWatch.batchId
+          ? { ...cur, progress: result, error: '' } : cur))
+      } catch {
+        if (!cancelled) {
+          setVideoWatch((cur) => (cur && cur.batchId === videoWatch.batchId
+            ? { ...cur, error: '进度暂时读不到' } : cur))
+        }
+      }
+    }
+    pull()
+    const timer = setInterval(pull, 3000)
+    const refreshShots = setInterval(() => { load().catch(() => {}) }, 15000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+      clearInterval(refreshShots)
+    }
+  }, [videoWatch && videoWatch.batchId, videoWatch && videoWatch.done, load])
+
   const patchRow = (shotId, fields) => {
     setRows((cur) => cur.map((r) => (r.shot_id === shotId ? { ...r, ...fields } : r)))
   }
@@ -599,7 +675,16 @@ function StoryboardPane({ work, episodeId }) {
     if (!ok) return
     const { data } = await productionApi.submitTasks(estimateBody)
     if (data?.success) {
-      message.success(taskType === 'VIDEO' ? '视频已提交，可去任务页等结果' : '草图已提交，出图后先看构图对不对')
+      if (taskType === 'VIDEO') {
+        const batchId = data.result && data.result.batch_id
+        message.success(batchId ? '视频已提交，生成通常要几分钟' : '视频已提交，请到任务中心查看')
+        if (batchId) {
+          setVideoWatch({ batchId, progress: null, done: false, lingering: false, error: '' })
+        }
+        load()
+        return
+      }
+      message.success('草图已提交，出图后先看构图对不对')
       await waitBatch(work.work_id, data.result.batch_id, data.result.task_id_list)
       load()
     }
@@ -613,6 +698,20 @@ function StoryboardPane({ work, episodeId }) {
         message="先定妆、再写镜、再出图、再出视频"
         description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。成片播放在 Tube，这里只做出片。"
       />
+      {videoWatch ? (
+        <Alert
+          type={videoWatchCopy(videoWatch).type}
+          showIcon
+          message={videoWatchCopy(videoWatch).message}
+          description={(
+            <span>
+              {videoWatchCopy(videoWatch).description}
+              {' '}
+              <Link to="/tasks">打开任务中心</Link>
+            </span>
+          )}
+        />
+      ) : null}
       <Card size="small" title="资产一致性" extra={<Text type="secondary">勾选镜头后绑定，减少跨镜换脸</Text>}>
         <Space wrap>
           <Select

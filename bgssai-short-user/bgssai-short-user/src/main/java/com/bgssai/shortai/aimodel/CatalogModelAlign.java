@@ -10,7 +10,8 @@ import java.util.Locale;
  * A configured default is kept only when the gateway catalog lists it for that ability.
  * An unlisted Kling image id may move to the registered Kling image model (prefer {@code kling-v3}).
  * An unlisted MiniMax voice id may move to a MiniMax model that is speech-capable.
- * Models from other vendors are never substituted.
+ * Models from other vendors are never substituted for each other.
+ * When the configured id is still absent, a listed company model of the same ability may be used.
  */
 public final class CatalogModelAlign {
 
@@ -38,6 +39,10 @@ public final class CatalogModelAlign {
             if (registered != null) {
                 return registered;
             }
+        }
+        String company = companyChoice(abilityName, capability, catalog);
+        if (company != null) {
+            return company;
         }
         return wanted;
     }
@@ -123,6 +128,64 @@ public final class CatalogModelAlign {
     private static boolean minimaxFamily(String id, String ownedBy) {
         String blob = ((id == null ? "" : id) + " " + (ownedBy == null ? "" : ownedBy)).toLowerCase(Locale.ROOT);
         return blob.contains("minimax") || blob.contains("海螺");
+    }
+
+    private static String companyChoice(String ability, String capability,
+            List<TokenHubModelCatalog.HubModel> catalog) {
+        for (String id : preferredCompany(ability)) {
+            if (supports(catalog, id, capability)) {
+                return listedId(catalog, id);
+            }
+        }
+        List<TokenHubModelCatalog.HubModel> matches = new ArrayList<>();
+        if (catalog == null) {
+            return null;
+        }
+        for (TokenHubModelCatalog.HubModel model : catalog) {
+            if (model == null || model.id() == null || model.id().isBlank() || model.capabilities() == null
+                    || !model.capabilities().contains(capability)) {
+                continue;
+            }
+            if (companyId(ability, model.id()) || ownedByCompany(model.ownedBy())) {
+                matches.add(model);
+            }
+        }
+        matches.sort(Comparator.comparing(model -> model.id().toLowerCase(Locale.ROOT)));
+        return matches.isEmpty() ? null : matches.get(0).id();
+    }
+
+    private static String listedId(List<TokenHubModelCatalog.HubModel> catalog, String id) {
+        for (TokenHubModelCatalog.HubModel model : catalog) {
+            if (model != null && id.equalsIgnoreCase(model.id())) {
+                return model.id();
+            }
+        }
+        return id;
+    }
+
+    private static List<String> preferredCompany(String ability) {
+        return switch (ability) {
+            case "TEXT" -> List.of("bgssai-chat", "qwen", "qwen2.5", "qwen2");
+            case "IMAGE" -> List.of("bgssai-image", "sd-turbo");
+            case "VIDEO" -> List.of("cogvideox", "cogvideox-5b", "bgssai-video");
+            case "VOICE" -> List.of("bgssai-tts", "piper", "edge-tts");
+            default -> List.of();
+        };
+    }
+
+    private static boolean companyId(String ability, String id) {
+        String value = id == null ? "" : id.toLowerCase(Locale.ROOT);
+        return switch (ability) {
+            case "TEXT" -> "qwen".equals(value) || value.startsWith("qwen2") || "bgssai-chat".equals(value);
+            case "IMAGE" -> "sd-turbo".equals(value) || "bgssai-image".equals(value);
+            case "VIDEO" -> value.startsWith("cogvideox") || "bgssai-video".equals(value);
+            case "VOICE" -> "piper".equals(value) || "bgssai-tts".equals(value) || "edge-tts".equals(value);
+            default -> false;
+        };
+    }
+
+    private static boolean ownedByCompany(String ownedBy) {
+        return ownedBy != null && ownedBy.toLowerCase(Locale.ROOT).contains("bgssai");
     }
 
     private static String capabilityOf(String ability) {

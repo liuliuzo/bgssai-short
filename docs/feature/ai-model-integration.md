@@ -68,12 +68,25 @@
     图片默认是已注册的可灵文生图 `kling-v3`；若库里仍是未注册的可灵编号，改用目录中的可灵文生图
     （优先 `kling-v3`）。配音配置的 MiniMax 编号只有登记了语音能力才采用；尚未登记时，若目录里
     已有具备语音能力的 MiniMax 模型，改用那个已注册编号，否则预检查点明该编号未开放。
-    不改用其它厂商的图片或语音模型，也不编造模型编号。用户点选的编号不改写。
+    不改用其它厂商的图片或语音模型，也不编造模型编号。配置编号仍不在目录里时，才改用已列出的公司模型
+    （见第 15 条）。用户点选的编号不改写。
 14. 公司默认文本模型 `bgssai-chat` 的调用凭证是平台 `ai.tokenhub_cn.api_key`，不读取用户的
     bgssai-chat OAuth token。未绑定 Chat 的账号按本产品 `user_quota` 结算；没有订阅时先发 FREE
     额度。创建作品在写入和入队之前做这笔预检，额度不足返回 `4007`，不创建作品、不启动会失败的大纲任务。
     已绑定 Chat 的账号仍扣中央账本。Worker 在真正请求模型前再查一次，避免大纲已写入而任务被记成
     `MODEL_TIMEOUT`。
+15. 公司自托管多模态（文本 `qwen`、画面 `sd-turbo`、视频 `cogvideox`、配音 `piper`）不把密钥写入仓库，两条路互斥：
+    境内中枢密钥非空时仍走中枢，主机只来自环境 profile。目录里没有当前默认编号时，若同一能力已列出公司模型
+    （优先 `bgssai-chat` / `qwen`、`bgssai-image` / `sd-turbo`、`cogvideox`、`bgssai-tts` / `piper` / `edge-tts`），
+    改用该编号；已经列出的可灵或 MiniMax 不改，也不把一种第三方换成另一种。
+    中枢密钥为空且 `sys_secret.ai.openai_compat.api_key` 已填写时，只允许 `https://chat.bgssai.com/v1`。
+    `api.openai.com`、可灵、海螺等其它主机仍不直连。这时开跑前只 `GET /v1/models`，不对画面、视频、配音发会扣费的探测。
+    DEV 要直连该公司网关：管理端清空 `ai.tokenhub_cn.api_key`（开发库 init 会把占位符写回）后再填写兼容密钥。
+    走中枢则把真实中枢密钥写入 `ai.tokenhub_cn.api_key`，DEV 主机已是 `bgssai.llm.tokenhub-cn-base-url`。
+    配音音色 `default_voice_id` 与画面 `size` 由管理端改成网关实际值，种子只给占位 `zh` 与 `512x768`。
+16. 画面和视频在中枢上的轮询时限是 `max(180 秒, timeout_sec)`。超时对用户写
+    「生成超时，任务可能仍在处理，请到任务中心查看或稍后重试」，文案不出现中枢品牌或密钥名。
+    视频任务入队前按目录核对 `video_generation`，不 POST 视频探测。
 
 ## 三、验收标准
 

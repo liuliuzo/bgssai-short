@@ -1,18 +1,16 @@
 package com.bgssai.shortai.aiprovider;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
@@ -21,7 +19,9 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
- * provider_code=OPENAI_COMPAT — chat completions + best-effort image/voice paths from config_json.
+ * provider_code=OPENAI_COMPAT. Runs only against the company host
+ * {@code https://chat.bgssai.com}. Any other host is rejected so billed
+ * third-party calls stay on the CN hub.
  */
 @Component
 public class OpenAiCompatibleAiProvider implements AiProvider {
@@ -29,12 +29,22 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
     public static final String CODE = "OPENAI_COMPAT";
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleAiProvider.class);
+    private static final long MEDIA_POLL_FLOOR_MS = 180_000L;
 
     private final SysSecretReader secretReader;
-    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).build();
+    private final ProviderHttp.Client http;
+    private final ProviderHttp.Sleeper sleeper;
 
+    @Autowired
     public OpenAiCompatibleAiProvider(SysSecretReader secretReader) {
+        this(secretReader, new ProviderHttp.JdkClient(), Thread::sleep);
+    }
+
+    OpenAiCompatibleAiProvider(SysSecretReader secretReader, ProviderHttp.Client http,
+            ProviderHttp.Sleeper sleeper) {
         this.secretReader = secretReader;
+        this.http = http;
+        this.sleeper = sleeper;
     }
 
     @Override
@@ -44,181 +54,328 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        throw DirectVendorGuard.rejected(CODE);
-    }
-
-    AiProviderResult executeLegacy(AiProviderRequest request) {
         if (request == null || request.getModel() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        String baseUrl = trimSlash(ShortJson.text(cfg.get("base_url")));
-        if (baseUrl.isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "config_json.base_url required");
+        String baseUrl = ProviderHttp.trimSlash(ShortJson.text(cfg.get("base_url")));
+        if (!CompanyCompatGateway.allows(baseUrl)) {
+            throw DirectVendorGuard.rejected(CODE);
         }
-        String secretRef = ShortJson.text(cfg.get("secret_ref"));
-        if (secretRef.isBlank()) {
-            secretRef = SysSecretReader.AI_OPENAI_COMPAT_API_KEY;
-        }
+        String secretRef = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
+                SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
         String apiKey = secretReader.get(secretRef);
         if (apiKey.isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "AI api key missing for " + secretRef);
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                    TokenHubClientSupport.userFacingMessage("AI api key missing for " + secretRef));
         }
-        int timeoutSec = request.getModel().getTimeoutSec() == null ? 60 : request.getModel().getTimeoutSec();
-        String ability = request.getAbilityType();
+        int timeoutSec = ProviderHttp.timeoutSec(request, 180);
+        String ability = request.getAbilityType() == null ? "" : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
         try {
             if ("TEXT".equals(ability)) {
                 return chat(baseUrl, apiKey, cfg, request, timeoutSec);
             }
-            if ("IMAGE".equals(ability) || "VIDEO".equals(ability)) {
+            if ("IMAGE".equals(ability)) {
                 return image(baseUrl, apiKey, cfg, request, timeoutSec);
+            }
+            if ("VIDEO".equals(ability)) {
+                return video(baseUrl, apiKey, cfg, request, timeoutSec);
             }
             if ("VOICE".equals(ability)) {
                 return voice(baseUrl, apiKey, cfg, request, timeoutSec);
             }
-            throw new BizException(CommonErrorCode.RULE_REJECT, "OPENAI_COMPAT unsupported ability: " + ability);
+            throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported ability");
         } catch (BizException ex) {
-            throw ex;
+            throw new BizException(ex.getCode(), TokenHubClientSupport.userFacingMessage(ex.getMessage()));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                    TokenHubClientSupport.userFacingMessage("timeout"));
         } catch (Exception ex) {
-            log.warn("OPENAI_COMPAT call failed ability={} model={}", ability, request.getModel().getModelCode(), ex);
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, ex.getMessage());
+            log.warn("company gateway call failed ability={} model={}", ability,
+                    request.getModel().getModelCode());
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    TokenHubClientSupport.userFacingMessage(ex.getMessage()));
         }
     }
 
     private AiProviderResult chat(String baseUrl, String apiKey, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
-        String path = ShortJson.text(cfg.get("chat_path"));
-        if (path.isBlank()) {
-            path = "/chat/completions";
-        }
-        String prompt = request.getPrompt();
-        if (prompt == null || prompt.isBlank()) {
-            prompt = ShortJson.toJson(request.getParams());
-        }
+        String path = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("chat_path")), "/chat/completions");
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", request.getModel().getModelCode());
-        body.put("messages", List.of(Map.of("role", "user", "content", prompt)));
-        String raw = postJson(baseUrl + path, apiKey, ShortJson.toJson(body), timeoutSec, cfg);
-        Map<String, Object> resp = ShortJson.map(raw);
-        String content = extractChatContent(resp);
+        body.put("messages", List.of(Map.of("role", "user", "content", ProviderHttp.promptOf(request))));
+        String raw = http.postJson(join(baseUrl, path), headers(apiKey, cfg), ShortJson.toJson(body), timeoutSec);
+        String content = extractChatContent(ShortJson.map(raw));
         if (content == null || content.isBlank()) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "empty chat content");
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    TokenHubClientSupport.userFacingMessage("empty chat content"));
         }
         return AiProviderResult.text(content);
     }
 
     private AiProviderResult image(String baseUrl, String apiKey, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
-        String path = ShortJson.text(cfg.get("image_path"));
-        if (path.isBlank()) {
-            path = "/images/generations";
-        }
-        String prompt = request.getPrompt();
-        if (prompt == null || prompt.isBlank()) {
-            prompt = ShortJson.text(request.getParams().get("title")) + " "
-                    + ShortJson.text(request.getParams().get("subtitle"));
-        }
+        String path = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("image_path")), "/images/generations");
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", request.getModel().getModelCode());
-        body.put("prompt", prompt.trim());
+        body.put("prompt", ProviderHttp.promptOf(request));
         body.put("n", 1);
-        String raw = postJson(baseUrl + path, apiKey, ShortJson.toJson(body), timeoutSec, cfg);
-        Map<String, Object> resp = ShortJson.map(raw);
-        Object data = resp.get("data");
-        if (data instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Map<?, ?> first) {
-            Object b64 = first.get("b64_json");
-            if (b64 != null) {
-                byte[] bytes = Base64.getDecoder().decode(String.valueOf(b64));
-                return AiProviderResult.binary(bytes, "image/png");
-            }
-            Object url = first.get("url");
-            if (url != null) {
-                byte[] bytes = httpClient.send(
-                        HttpRequest.newBuilder(URI.create(String.valueOf(url))).GET().timeout(Duration.ofSeconds(timeoutSec)).build(),
-                        HttpResponse.BodyHandlers.ofByteArray()).body();
-                return AiProviderResult.binary(bytes, "image/png");
+        body.put("size", ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("size")), "512x768"));
+        String raw = http.postJson(join(baseUrl, path), headers(apiKey, cfg), ShortJson.toJson(body),
+                Math.min(180, timeoutSec));
+        Map<String, Object> submitted = ShortJson.map(raw);
+        if (!hasMedia(submitted)) {
+            String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("id")),
+                    ShortJson.text(submitted.get("task_id")));
+            if (!taskId.isBlank()) {
+                submitted = awaitMedia(baseUrl, apiKey, request.getModel().getModelCode(), submitted, cfg, timeoutSec);
             }
         }
-        throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "image generation response missing data");
+        return mediaBytes(submitted, apiKey, timeoutSec, "image/png");
+    }
+
+    private AiProviderResult video(String baseUrl, String apiKey, Map<String, Object> cfg,
+            AiProviderRequest request, int timeoutSec) throws Exception {
+        String path = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("video_path")), "/videos/generations");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", request.getModel().getModelCode());
+        body.put("prompt", ProviderHttp.promptOf(request));
+        String size = ShortJson.text(cfg.get("size"));
+        if (!size.isBlank()) {
+            body.put("size", size);
+        }
+        String image = ProviderHttp.imagePayload(request);
+        if (!image.isBlank()) {
+            body.put("image", image);
+        }
+        String last = ProviderHttp.lastImagePayload(request);
+        if (!last.isBlank()) {
+            body.put("last_image", last);
+        }
+        Map<String, Object> submitted = ShortJson.map(http.postJson(join(baseUrl, path), headers(apiKey, cfg),
+                ShortJson.toJson(body), Math.min(60, timeoutSec)));
+        Map<String, Object> done = awaitMedia(baseUrl, apiKey, request.getModel().getModelCode(), submitted, cfg, timeoutSec);
+        AiProviderResult result = mediaBytes(done, apiKey, timeoutSec, "video/mp4");
+        if (result.getDurationSec() == null || result.getDurationSec() <= 0) {
+            int duration = ShortJson.integer(request.param("duration_sec"), 0);
+            if (duration > 0) {
+                result.setDurationSec(duration);
+            }
+        }
+        return result;
     }
 
     private AiProviderResult voice(String baseUrl, String apiKey, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
-        String path = ShortJson.text(cfg.get("audio_path"));
-        if (path.isBlank()) {
-            path = "/audio/speech";
-        }
+        String path = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("speech_path")),
+                ShortJson.text(cfg.get("audio_path")), "/audio/speech");
+        String voice = ProviderHttp.firstNonBlank(ShortJson.text(request.param("voice_id")),
+                ShortJson.text(request.param("voice")), ShortJson.text(cfg.get("default_voice_id")), "zh");
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", request.getModel().getModelCode());
-        body.put("input", request.getPrompt() == null ? "" : request.getPrompt());
-        body.put("voice", ShortJson.text(request.getParams().getOrDefault("voice", "alloy")));
-        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(baseUrl + path))
-                .timeout(Duration.ofSeconds(timeoutSec))
-                .header("Authorization", "Bearer " + apiKey)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(ShortJson.toJson(body), StandardCharsets.UTF_8));
-        applyExtraHeaders(builder, cfg);
-        HttpResponse<byte[]> resp = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
-        if (resp.statusCode() >= 400) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "audio status " + resp.statusCode());
+        body.put("input", ProviderHttp.promptOf(request));
+        body.put("voice", voice);
+        byte[] raw = http.postBytes(join(baseUrl, path), headers(apiKey, cfg), ShortJson.toJson(body),
+                Math.min(120, timeoutSec));
+        if (raw == null || raw.length == 0) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    TokenHubClientSupport.userFacingMessage("model audio missing"));
         }
-        return AiProviderResult.binary(resp.body(), "audio/mpeg");
+        String text = new String(raw, StandardCharsets.UTF_8).trim();
+        if (text.startsWith("{")) {
+            return mediaBytes(ShortJson.map(text), apiKey, timeoutSec, "audio/mpeg");
+        }
+        String mime = raw.length >= 4 && raw[0] == 'R' && raw[1] == 'I' && raw[2] == 'F' && raw[3] == 'F'
+                ? "audio/wav" : "audio/mpeg";
+        return AiProviderResult.binary(raw, mime);
     }
 
-    private String postJson(String url, String apiKey, String json, int timeoutSec, Map<String, Object> cfg)
-            throws Exception {
-        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url))
-                .timeout(Duration.ofSeconds(timeoutSec))
-                .header("Authorization", "Bearer " + apiKey)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8));
-        applyExtraHeaders(builder, cfg);
-        HttpResponse<String> resp = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        if (resp.statusCode() >= 400) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "status " + resp.statusCode());
+    private Map<String, Object> awaitMedia(String baseUrl, String apiKey, String model,
+            Map<String, Object> submitted, Map<String, Object> cfg, int timeoutSec) throws Exception {
+        if (hasMedia(submitted) && !failed(statusOf(submitted))) {
+            return submitted;
         }
-        return resp.body();
+        String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("id")),
+                ShortJson.text(submitted.get("task_id")));
+        if (taskId.isBlank()) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    TokenHubClientSupport.userFacingMessage("model submit missing task_id"));
+        }
+        String template = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("video_task_path")),
+                ShortJson.text(cfg.get("task_path")), "/videos/generations/{task_id}");
+        String encoded = URLEncoder.encode(taskId.trim(), StandardCharsets.UTF_8);
+        String path = template.replace("{task_id}", encoded).replace("{id}", encoded);
+        String url = join(baseUrl, path);
+        String modelQuery = "model=" + URLEncoder.encode(model == null ? "" : model, StandardCharsets.UTF_8);
+        url = url.contains("?") ? url + "&" + modelQuery : url + "?" + modelQuery;
+        long interval = ProviderHttp.pollIntervalMs(cfg);
+        long deadline = System.currentTimeMillis() + Math.max(MEDIA_POLL_FLOOR_MS, timeoutSec * 1000L);
+        Map<String, String> headers = headers(apiKey, cfg);
+        while (true) {
+            Map<String, Object> resp = ShortJson.map(http.getJson(url, headers, 60));
+            String status = statusOf(resp);
+            if (failed(status)) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                        TokenHubClientSupport.userFacingMessage("model task failed"));
+            }
+            if (hasMedia(resp) && (status.isBlank() || success(status))) {
+                return resp;
+            }
+            if (success(status)) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                        TokenHubClientSupport.userFacingMessage("model media missing"));
+            }
+            if (System.currentTimeMillis() >= deadline) {
+                throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                        TokenHubClientSupport.userFacingMessage("model task timeout"));
+            }
+            sleeper.sleep(interval);
+        }
+    }
+
+    private AiProviderResult mediaBytes(Map<String, Object> resp, String apiKey, int timeoutSec, String mime)
+            throws Exception {
+        String b64 = firstB64(resp);
+        if (!b64.isBlank()) {
+            return AiProviderResult.binary(decode(b64), mime);
+        }
+        String url = firstUrl(resp);
+        if (url.startsWith("https://")) {
+            byte[] bytes = http.getBytes(url, Math.min(180, timeoutSec));
+            if (bytes == null || bytes.length == 0) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                        TokenHubClientSupport.userFacingMessage("model media missing"));
+            }
+            return AiProviderResult.binary(bytes, mime);
+        }
+        throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                TokenHubClientSupport.userFacingMessage("model media missing"));
+    }
+
+    private static byte[] decode(String value) {
+        String payload = value.trim();
+        int comma = payload.indexOf(',');
+        if (payload.startsWith("data:") && comma >= 0) {
+            payload = payload.substring(comma + 1);
+        }
+        try {
+            return Base64.getDecoder().decode(payload);
+        } catch (IllegalArgumentException ex) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    TokenHubClientSupport.userFacingMessage("model media missing"));
+        }
+    }
+
+    private static boolean hasMedia(Map<String, Object> resp) {
+        return resp != null && (!firstB64(resp).isBlank() || firstUrl(resp).startsWith("https://"));
     }
 
     @SuppressWarnings("unchecked")
-    private static void applyExtraHeaders(HttpRequest.Builder builder, Map<String, Object> cfg) {
-        Object extra = cfg.get("extra_headers");
-        if (extra instanceof Map<?, ?> map) {
-            for (Map.Entry<?, ?> e : map.entrySet()) {
-                if (e.getKey() != null && e.getValue() != null) {
-                    builder.header(String.valueOf(e.getKey()), String.valueOf(e.getValue()));
-                }
+    private static String firstB64(Map<String, Object> resp) {
+        if (resp == null) {
+            return "";
+        }
+        String top = ShortJson.text(resp.get("b64_json"));
+        if (!top.isBlank()) {
+            return top;
+        }
+        String audio = ShortJson.text(resp.get("audio"));
+        if (!audio.isBlank() && !audio.startsWith("https://")) {
+            return audio;
+        }
+        Object data = resp.get("data");
+        if (data instanceof Map<?, ?> map) {
+            String nested = ProviderHttp.firstNonBlank(ShortJson.text(map.get("b64_json")),
+                    ShortJson.text(map.get("audio")));
+            if (!nested.isBlank() && !nested.startsWith("https://")) {
+                return nested;
             }
         }
+        if (data instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Map<?, ?> first) {
+            return ProviderHttp.firstNonBlank(ShortJson.text(first.get("b64_json")),
+                    ShortJson.text(first.get("audio")));
+        }
+        return "";
     }
 
     @SuppressWarnings("unchecked")
+    private static String firstUrl(Map<String, Object> resp) {
+        if (resp == null) {
+            return "";
+        }
+        String top = ProviderHttp.firstNonBlank(ShortJson.text(resp.get("url")), ShortJson.text(resp.get("audio")));
+        if (top.startsWith("https://")) {
+            return top;
+        }
+        Object data = resp.get("data");
+        if (data instanceof Map<?, ?> map) {
+            String nested = ProviderHttp.firstNonBlank(ShortJson.text(map.get("url")), ShortJson.text(map.get("audio")));
+            if (nested.startsWith("https://")) {
+                return nested;
+            }
+        }
+        if (data instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Map<?, ?> first) {
+            return ProviderHttp.firstNonBlank(ShortJson.text(first.get("url")), ShortJson.text(first.get("audio")));
+        }
+        return "";
+    }
+
+    private static String statusOf(Map<String, Object> resp) {
+        if (resp == null) {
+            return "";
+        }
+        return ShortJson.text(resp.get("status")).trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean success(String status) {
+        return "succeeded".equals(status) || "success".equals(status) || "completed".equals(status)
+                || "complete".equals(status);
+    }
+
+    private static boolean failed(String status) {
+        return "failed".equals(status) || "failure".equals(status) || "error".equals(status)
+                || "cancelled".equals(status) || "canceled".equals(status);
+    }
+
     private static String extractChatContent(Map<String, Object> resp) {
         Object choices = resp.get("choices");
-        if (!(choices instanceof List<?> list) || list.isEmpty()) {
-            return null;
-        }
-        Object first = list.get(0);
-        if (!(first instanceof Map<?, ?> choice)) {
+        if (!(choices instanceof List<?> list) || list.isEmpty() || !(list.get(0) instanceof Map<?, ?> choice)) {
             return null;
         }
         Object message = choice.get("message");
-        if (message instanceof Map<?, ?> msg) {
-            Object content = msg.get("content");
-            return content == null ? null : String.valueOf(content);
+        if (message instanceof Map<?, ?> msg && msg.get("content") != null) {
+            return String.valueOf(msg.get("content"));
         }
         Object text = choice.get("text");
         return text == null ? null : String.valueOf(text);
     }
 
-    private static String trimSlash(String url) {
-        if (url == null) {
-            return "";
+    private static Map<String, String> headers(String apiKey, Map<String, Object> cfg) {
+        Map<String, String> headers = new LinkedHashMap<>();
+        Object extra = cfg.get("extra_headers");
+        if (extra instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    String name = String.valueOf(entry.getKey());
+                    if (!"authorization".equalsIgnoreCase(name)) {
+                        headers.put(name, String.valueOf(entry.getValue()));
+                    }
+                }
+            }
         }
-        String v = url.trim();
-        while (v.endsWith("/")) {
-            v = v.substring(0, v.length() - 1);
+        headers.put("Authorization", "Bearer " + apiKey);
+        return headers;
+    }
+
+    private static String join(String base, String path) {
+        String value = path == null ? "" : path.trim();
+        if (value.isEmpty()) {
+            return base;
         }
-        return v;
+        if (!value.startsWith("/")) {
+            value = "/" + value;
+        }
+        return base + value;
     }
 }

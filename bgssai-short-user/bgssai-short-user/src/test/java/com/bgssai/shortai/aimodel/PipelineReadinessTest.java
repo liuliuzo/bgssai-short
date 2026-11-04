@@ -116,6 +116,40 @@ class PipelineReadinessTest {
     }
 
     @Test
+    void videoTaskChecksTheCatalogAndDoesNotPostAVideoProbe() {
+        AiModelResolveService models = org.mockito.Mockito.mock(AiModelResolveService.class);
+        when(models.resolve("TEXT", null)).thenReturn(model("deepseek-chat"));
+        when(models.resolve("IMAGE", null)).thenReturn(model("kling-v3"));
+        when(models.resolve("VOICE", null)).thenReturn(model("speech-02-hd"));
+        ScriptedGateway gateway = new ScriptedGateway(true, catalog(true));
+        PipelineReadiness readiness = new PipelineReadiness(models,
+                new SysSecretReader(key -> "sk-test"),
+                "https://dev.user.bgssai-tokenhub.cn",
+                gateway);
+        BizException ex = assertThrows(BizException.class, () -> readiness.assertReady("VIDEO", null));
+        assertTrue(ex.getMessage().contains("镜头视频"));
+        assertTrue(ex.getMessage().contains("没有可用模型"));
+        assertEquals(3, gateway.posted.size());
+        assertFalse(gateway.posted.stream().anyMatch(body -> body.contains("cogvideox") || body.contains("/videos")));
+    }
+
+    @Test
+    void compatKeyUsesCompanyCatalogWithoutPostingGeneration() {
+        AiModelResolveService models = org.mockito.Mockito.mock(AiModelResolveService.class);
+        ScriptedGateway gateway = new ScriptedGateway(true, companyDirectCatalog(), 400,
+                "https://chat.bgssai.com/v1/models", "sk-company");
+        PipelineReadiness readiness = new PipelineReadiness(models,
+                new SysSecretReader(key -> SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(key) ? "sk-company" : ""),
+                "https://dev.user.bgssai-tokenhub.cn",
+                gateway);
+        readiness.assertReady("IMAGE", null);
+        readiness.assertReady("VIDEO", null);
+        assertTrue(gateway.posted.isEmpty());
+        assertTrue(gateway.got.stream().allMatch(url -> url.startsWith("https://chat.bgssai.com/v1/models")));
+        verify(models, never()).resolve(any(), any());
+    }
+
+    @Test
     void queueDoesNotInsertWhenThePipelineIsBlocked() {
         AiTaskQueue queue = new AiTaskQueue();
         PipelineReadiness readiness = org.mockito.Mockito.mock(PipelineReadiness.class);
@@ -129,6 +163,10 @@ class PipelineReadinessTest {
                 () -> queue.enqueue("u", "w", null, "TEXT", "OUTLINE", "w", java.util.Map.of(), null, 0));
         assertEquals("4014", ex.getCode());
         verify(mapper, never()).insertSelective(any());
+    }
+
+    private static String companyDirectCatalog() {
+        return "{\"data\":[{\"id\":\"qwen\"},{\"id\":\"sd-turbo\"},{\"id\":\"piper\"},{\"id\":\"cogvideox\"}]}";
     }
 
     private static String companyCatalog() {
@@ -164,22 +202,34 @@ class PipelineReadinessTest {
         private final boolean deepseekReady;
         private final String catalogBody;
         private final int validationStatus;
+        private final String urlPrefix;
+        private final String expectedKey;
         private final List<String> posted = new ArrayList<>();
+        private final List<String> got = new ArrayList<>();
 
         private ScriptedGateway(boolean deepseekReady, String catalogBody) {
             this(deepseekReady, catalogBody, 400);
         }
 
         private ScriptedGateway(boolean deepseekReady, String catalogBody, int validationStatus) {
+            this(deepseekReady, catalogBody, validationStatus,
+                    "https://dev.user.bgssai-tokenhub.cn/v1/models", "sk-test");
+        }
+
+        private ScriptedGateway(boolean deepseekReady, String catalogBody, int validationStatus,
+                String urlPrefix, String expectedKey) {
             this.deepseekReady = deepseekReady;
             this.catalogBody = catalogBody;
             this.validationStatus = validationStatus;
+            this.urlPrefix = urlPrefix;
+            this.expectedKey = expectedKey;
         }
 
         @Override
         public Reply get(String url, String apiKey) {
-            assertTrue(url.startsWith("https://dev.user.bgssai-tokenhub.cn/v1/models"));
-            assertEquals("sk-test", apiKey);
+            got.add(url);
+            assertTrue(url.startsWith(urlPrefix));
+            assertEquals(expectedKey, apiKey);
             return new Reply(200, catalogBody);
         }
 

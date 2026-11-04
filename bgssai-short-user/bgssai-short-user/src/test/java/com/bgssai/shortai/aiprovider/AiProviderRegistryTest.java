@@ -30,6 +30,25 @@ class AiProviderRegistryTest {
     }
 
     @Test
+    void companyHostResolvesToOpenAiCompatEvenWhenHubExists() {
+        OpenAiCompatibleAiProvider openAi = new OpenAiCompatibleAiProvider(new SysSecretReader(key -> "k"));
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi, hub()));
+        AiModelConfig model = new AiModelConfig();
+        model.setProviderCode(OpenAiCompatibleAiProvider.CODE);
+        model.setAbilityType("IMAGE");
+        model.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\"}");
+        assertEquals(OpenAiCompatibleAiProvider.CODE, registry.resolve(model).providerCode());
+        AiModelConfig lookalike = new AiModelConfig();
+        lookalike.setProviderCode(OpenAiCompatibleAiProvider.CODE);
+        lookalike.setConfigJson("{\"base_url\":\"https://chat.bgssai.com.evil/v1\"}");
+        assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(lookalike).providerCode());
+        AiModelConfig insecure = new AiModelConfig();
+        insecure.setProviderCode(OpenAiCompatibleAiProvider.CODE);
+        insecure.setConfigJson("{\"base_url\":\"http://chat.bgssai.com/v1\"}");
+        assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(insecure).providerCode());
+    }
+
+    @Test
     void resolveIgnoresAllowDirectAndUsesHub() {
         OpenAiCompatibleAiProvider openAi = new OpenAiCompatibleAiProvider(new SysSecretReader(key -> "k"));
         AiProviderRegistry registry = new AiProviderRegistry(List.of(openAi, hub()));

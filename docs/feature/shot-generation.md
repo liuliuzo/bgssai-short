@@ -57,7 +57,10 @@
       并过预算闸门，触发拦截时转为站内通知等用户确认，不静默烧钱。
   11. 任务中心列表支持按剧集与批次筛选（list 接口的 `episode_id` / `batch_id` 参数）；
       类型下拉展示中文（剧本 / 图片 / 视频 / 配音 / 合成），枚举值收在选项 value 中。
-  12. 首批 `VIDEO` 模型为 MiniMax-Video-H3、PixVerse-Video-v6、Kling-Video-V3。提交时可传
+  12. 分镜列表提交视频后，本页用已有 `batch_progress`（`queued` / `running` / `succeeded` /
+      `failed` / `failed_task_list`）显示进度，并链到任务中心。不等待短轮询结束后把仍在跑的任务说成失败。
+      超过约 20 分钟仍未结束时，提示到任务中心查看，生成继续在服务器上跑。
+  13. 首批 `VIDEO` 模型为 MiniMax-Video-H3、PixVerse-Video-v6、Kling-Video-V3。提交时可传
       `model_code`；存在首帧时走图生视频，否则走文生视频。上游临时 URL 必须在任务成功后转存对象存储。
 
 ## 三、验收标准

@@ -280,6 +280,12 @@ class TencentTokenHubAiProviderTest {
         assertTrue(http.postedUrls.isEmpty());
     }
 
+    @Test
+    void mediaPollBudgetHonorsModelTimeout() {
+        assertEquals(180_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(60));
+        assertEquals(900_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(900));
+    }
+
     private static TencentTokenHubAiProvider provider(FakeClient http, String key) {
         return new TencentTokenHubAiProvider(new SysSecretReader(secretRef -> key), http, ms -> {
         });

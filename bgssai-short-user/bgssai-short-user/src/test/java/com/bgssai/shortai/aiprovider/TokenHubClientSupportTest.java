@@ -84,6 +84,10 @@ class TokenHubClientSupportTest {
         assertEquals("模型服务暂时不可用，请稍后重试", TokenHubClientSupport.userFacingMessage("http 503"));
         assertEquals("该模型暂不可用，请改选其它模型",
                 TokenHubClientSupport.userFacingMessage("cross-region hub disabled for short"));
+        assertEquals("生成超时，任务可能仍在处理，请到任务中心查看或稍后重试",
+                TokenHubClientSupport.userFacingMessage("model task timeout"));
+        assertFalse(TokenHubClientSupport.userFacingMessage("tokenhub timeout").toLowerCase().contains("tokenhub"));
+        assertEquals("上游拒绝", TokenHubClientSupport.userFacingMessage("上游拒绝"));
         assertFalse(TokenHubClientSupport.scrubBrand("TokenHub DeepSeek").toLowerCase().contains("tokenhub"));
     }
 }

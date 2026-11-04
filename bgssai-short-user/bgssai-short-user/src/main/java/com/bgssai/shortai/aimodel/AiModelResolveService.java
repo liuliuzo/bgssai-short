@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
+import com.bgssai.shortai.aiprovider.CompanyCompatGateway;
+import com.bgssai.shortai.aiprovider.OpenAiCompatibleAiProvider;
 import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.Responses;
@@ -18,6 +20,7 @@ import com.bgssai.shortai.mapper.AiModelConfigMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.AiModelConfigExample;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.secret.SysSecretReader;
 
 @Service
 public class AiModelResolveService {
@@ -28,6 +31,9 @@ public class AiModelResolveService {
     private AiProviderRegistry aiProviderRegistry;
     @Autowired(required = false)
     private TokenHubModelCatalog tokenHubModelCatalog;
+    /** Null in unit tests keeps the hub path. The running app always has this bean. */
+    @Autowired(required = false)
+    private SysSecretReader secrets;
 
     public AiModelConfig resolve(String abilityType, String modelCode) {
         if (abilityType == null || abilityType.isBlank()) {
@@ -45,6 +51,29 @@ public class AiModelResolveService {
             ex.setOrderByClause("default_flag desc, id asc");
             List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
             AiModelConfig hubRow = firstHub(rows);
+            if (hubKeyReady()) {
+                if (hubRow != null) {
+                    return hubRow;
+                }
+                AiModelConfig hubModel = syntheticHubModel(ability, modelCode.trim());
+                if (hubModel != null) {
+                    return hubModel;
+                }
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                        TokenHubClientSupport.userFacingMessage("model unavailable: " + modelCode));
+            }
+            if (compatKeyReady()) {
+                AiModelConfig compatRow = firstCompanyCompat(rows);
+                if (compatRow != null) {
+                    return compatRow;
+                }
+                if (CompanyCompatGateway.directModel(ability, modelCode.trim())) {
+                    AiModelConfig compat = CompanyCompatGateway.synthetic(ability, modelCode.trim());
+                    if (compat != null) {
+                        return compat;
+                    }
+                }
+            }
             if (hubRow != null) {
                 return hubRow;
             }
@@ -54,6 +83,12 @@ public class AiModelResolveService {
             }
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
                     TokenHubClientSupport.userFacingMessage("model unavailable: " + modelCode));
+        }
+        if (!hubKeyReady() && compatKeyReady()) {
+            AiModelConfig compat = resolveCompatDefault(ability);
+            if (compat != null) {
+                return compat;
+            }
         }
         AiModelConfig row = resolveDefault(ability);
         if (row == null) {
@@ -95,6 +130,53 @@ public class AiModelResolveService {
             }
         }
         return alternate;
+    }
+
+    private boolean hubKeyReady() {
+        if (secrets == null) {
+            return true;
+        }
+        return !TokenHubClientSupport.resolveApiKey(secrets, TokenHubClientSupport.HUB_CN, null).isBlank();
+    }
+
+    private boolean compatKeyReady() {
+        return secrets != null && secrets.has(SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
+    }
+
+    private static AiModelConfig firstCompanyCompat(List<AiModelConfig> rows) {
+        if (rows == null) {
+            return null;
+        }
+        for (AiModelConfig row : rows) {
+            if (row == null || !domestic(row)) {
+                continue;
+            }
+            String provider = row.getProviderCode() == null ? "" : row.getProviderCode().trim();
+            if (!OpenAiCompatibleAiProvider.CODE.equalsIgnoreCase(provider)) {
+                continue;
+            }
+            String base = ShortJson.text(ShortJson.map(row.getConfigJson()).get("base_url"));
+            if (CompanyCompatGateway.allows(base)) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    private AiModelConfig resolveCompatDefault(String ability) {
+        AiModelConfigExample ex = new AiModelConfigExample();
+        ex.createCriteria()
+                .andAbilityTypeEqualTo(ability)
+                .andProviderCodeEqualTo(OpenAiCompatibleAiProvider.CODE)
+                .andEnabledFlagEqualTo(1)
+                .andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("default_flag desc, id asc");
+        List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        AiModelConfig listed = firstCompanyCompat(rows);
+        if (listed != null) {
+            return listed;
+        }
+        return CompanyCompatGateway.synthetic(ability, CompanyCompatGateway.defaultModel(ability));
     }
 
     private static AiModelConfig firstHub(List<AiModelConfig> rows) {

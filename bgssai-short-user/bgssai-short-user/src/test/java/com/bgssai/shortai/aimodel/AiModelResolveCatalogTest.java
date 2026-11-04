@@ -1,6 +1,7 @@
 package com.bgssai.shortai.aimodel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
 import com.bgssai.shortai.mapper.AiModelConfigMapper;
 import com.bgssai.shortai.model.AiModelConfig;
+import com.bgssai.shortai.secret.SysSecretReader;
 
 class AiModelResolveCatalogTest {
 
@@ -74,6 +76,38 @@ class AiModelResolveCatalogTest {
         when(mapper.selectByExample(any())).thenReturn(List.of());
         AiModelConfig chosen = service.resolve("IMAGE", "kling-v2-1");
         assertEquals("kling-v2-1", chosen.getModelCode());
+    }
+
+    @Test
+    void compatKeyAloneResolvesCompanyImage() {
+        ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key ->
+                SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(key) ? "sk-company" : ""));
+        when(mapper.selectByExample(any())).thenReturn(List.of());
+        AiModelConfig chosen = service.resolve("IMAGE", null);
+        assertEquals("sd-turbo", chosen.getModelCode());
+        assertEquals("OPENAI_COMPAT", chosen.getProviderCode());
+        assertTrue(chosen.getConfigJson().contains("chat.bgssai.com"));
+    }
+
+    @Test
+    void explicitKlingStaysOnHubWhenOnlyCompatKeyIsSet() {
+        ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key ->
+                SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(key) ? "sk-company" : ""));
+        when(mapper.selectByExample(any())).thenReturn(List.of());
+        AiModelConfig chosen = service.resolve("IMAGE", "kling-v2-1");
+        assertEquals("kling-v2-1", chosen.getModelCode());
+        assertEquals("TENCENT_TOKENHUB", chosen.getProviderCode());
+    }
+
+    @Test
+    void hubKeyWinsWhenBothSecretsAreSet() {
+        ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key -> "sk"));
+        AiModelConfig hub = row("IMAGE", "TENCENT_TOKENHUB", "sd-turbo");
+        AiModelConfig compat = row("IMAGE", "OPENAI_COMPAT", "sd-turbo");
+        compat.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\"}");
+        when(mapper.selectByExample(any())).thenReturn(List.of(hub, compat));
+        AiModelConfig chosen = service.resolve("IMAGE", "sd-turbo");
+        assertEquals("TENCENT_TOKENHUB", chosen.getProviderCode());
     }
 
     private static AiModelConfig row(String ability, String provider, String code) {
