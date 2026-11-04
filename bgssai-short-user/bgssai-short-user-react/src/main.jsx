@@ -13,31 +13,36 @@ syncBgssaiShell(window.location, window.sessionStorage, document)
 
 dayjs.locale('zh-cn')
 
-// 主题令牌：Liquid Glass（半透明容器 + 品牌色 #2563eb），管理端与用户端保持一致。
+// 主题令牌（Ant Design）：2026-11 起与官网、境内 Chat 用户端同一套颜色
+// （品牌蓝 #0d6efd、深色字、浅灰底、白色实底卡片，中文字体优先）；管理端暂不跟着改。
 const theme = {
   token: {
-    colorPrimary: '#2563eb',
-    colorInfo: '#2563eb',
+    colorPrimary: '#0d6efd',
+    colorInfo: '#0d6efd',
+    colorLink: '#0d6efd',
     colorText: '#0f172a',
-    colorTextSecondary: '#64748b',
-    colorTextTertiary: '#94a3b8',
-    colorBorder: 'rgba(255, 255, 255, 0.55)',
-    colorBorderSecondary: 'rgba(255, 255, 255, 0.32)',
-    colorBgLayout: 'transparent',
-    colorBgContainer: 'rgba(255, 255, 255, 0.52)',
-    colorBgElevated: 'rgba(255, 255, 255, 0.74)',
-    borderRadius: 8,
-    boxShadow: '0 10px 36px rgba(15, 23, 42, 0.10)',
-    boxShadowSecondary: '0 18px 52px rgba(15, 23, 42, 0.14)',
+    colorTextSecondary: '#5b6577',
+    colorTextTertiary: '#8a93a6',
+    colorBorder: '#dfe3ea',
+    colorBorderSecondary: '#eceef3',
+    colorBgLayout: '#f6f7f9',
+    colorBgContainer: '#ffffff',
+    colorBgElevated: '#ffffff',
+    borderRadius: 10,
+    borderRadiusSM: 8,
+    borderRadiusLG: 14,
+    controlHeight: 36,
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+    boxShadowSecondary: '0 12px 32px rgba(15, 23, 42, 0.12)',
     fontFamily:
-      '-apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", Arial, sans-serif',
+      '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif',
   },
   components: {
-    Button: { borderRadius: 8, borderRadiusSM: 6, borderRadiusLG: 10, primaryShadow: 'none' },
-    Input: { borderRadius: 8, borderRadiusSM: 6, borderRadiusLG: 10 },
-    Card: { borderRadiusLG: 12 },
-    Modal: { borderRadiusLG: 12 },
-    Table: { borderRadiusLG: 12, headerBg: 'rgba(255, 255, 255, 0.34)' },
+    Button: { fontWeight: 600, primaryShadow: '0 6px 16px -8px rgba(13, 110, 253, 0.7)' },
+    Card: { headerFontSize: 15 },
+    Modal: { borderRadiusLG: 16 },
+    Table: { headerBg: '#f8f9fb', headerColor: '#5b6577', rowHoverBg: '#f5f8ff' },
+    Tag: { borderRadiusSM: 6 },
   },
 }
 

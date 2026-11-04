@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, Drawer, message } from 'antd'
 import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined , DownloadOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
-import { roleBadgeLabel } from '../lib/displayLabels'
 import SupportWidget from '../components/SupportWidget'
 import './main-layout.css'
 
@@ -30,6 +29,28 @@ const SHELL_PRIMARY = [
 
 const SHELL_MORE = NAV_ITEMS.filter((item) => !SHELL_PRIMARY.some((primary) => primary.key === item.key))
 
+// 手机浏览器（不在 Bot 旁栏里）也用旁栏那套底部标签栏 +「更多」：以前手机上 220px 侧栏常驻，
+// 内容区只剩一窄条，标题被挤成一字一行。
+const NARROW_QUERY = '(max-width: 767px)'
+
+function useNarrowViewport() {
+  const read = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(NARROW_QUERY).matches : false)
+  const [narrow, setNarrow] = useState(read)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mql = window.matchMedia(NARROW_QUERY)
+    const onChange = () => setNarrow(mql.matches)
+    onChange()
+    if (mql.addEventListener) mql.addEventListener('change', onChange)
+    else mql.addListener(onChange)
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onChange)
+      else mql.removeListener(onChange)
+    }
+  }, [])
+  return narrow
+}
+
 function isNavActive(pathname, key) {
   if (key === '/home') return pathname === '/home'
   return pathname === key || pathname.startsWith(`${key}/`)
@@ -41,6 +62,8 @@ export default function MainLayout() {
   const userInfo = useUserStore((s) => s.userInfo)
   const clearUserInfo = useUserStore((s) => s.clearUserInfo)
   const inShell = useBgssaiShell()
+  const narrow = useNarrowViewport()
+  const compact = inShell || narrow
   const [moreOpen, setMoreOpen] = useState(false)
 
   const handleLogout = () => {
@@ -74,10 +97,13 @@ export default function MainLayout() {
   }
 
   const moreActive = SHELL_MORE.some((item) => isNavActive(location.pathname, item.key))
+  // 顶栏写当前页面名（以前固定写「AI 短剧制作平台」加一个「用户」标签，是给开发看的端名）。
+  const currentNav = NAV_ITEMS.find((item) => isNavActive(location.pathname, item.key))
+  const pageTitle = currentNav ? currentNav.label : 'AI 短剧制作平台'
 
   return (
-    <div className={`pa-layout lg-bg${inShell ? ' pa-layout--shell' : ''}`}>
-      {!inShell && (
+    <div className={`pa-layout lg-bg${inShell ? ' pa-layout--shell' : ''}${compact ? ' pa-layout--compact' : ''}`}>
+      {!compact && (
         <aside className="pa-sidebar">
           <div className="pa-sidebar-brand">
             <div className="pa-sidebar-brand-main">
@@ -88,7 +114,7 @@ export default function MainLayout() {
               />
               <span className="pa-sidebar-brand-name">AI 短剧制作平台</span>
             </div>
-            <div className="pa-sidebar-brand-sub">用户端</div>
+
           </div>
 
           <nav className="pa-nav">
@@ -128,14 +154,13 @@ export default function MainLayout() {
       <div className="pa-main">
         <header className="pa-topbar">
           <div className="pa-topbar-left">
-            <span className="pa-topbar-title">AI 短剧制作平台</span>
-            <span className="pa-topbar-badge">{roleBadgeLabel(inShell)}</span>
+            <span className="pa-topbar-title">{pageTitle}</span>
           </div>
           <div className="pa-topbar-right">
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
               <button className="pa-user-btn" type="button">
                 <div className="pa-user-avatar">{initials}</div>
-                {!inShell && (
+                {!compact && (
                   <span className="pa-user-name">{userInfo?.real_name || userInfo?.role_name || '用户'}</span>
                 )}
                 <DownOutlined className="pa-user-caret" />
@@ -148,7 +173,7 @@ export default function MainLayout() {
           <Outlet />
         </main>
 
-        {inShell && (
+        {compact && (
           <nav className="pa-shell-tabbar" aria-label="壳内主导航">
             {SHELL_PRIMARY.map((item) => (
               <button
@@ -179,7 +204,7 @@ export default function MainLayout() {
         title="更多"
         placement="bottom"
         height="auto"
-        open={inShell && moreOpen}
+        open={compact && moreOpen}
         onClose={() => setMoreOpen(false)}
         className="pa-shell-more"
       >
