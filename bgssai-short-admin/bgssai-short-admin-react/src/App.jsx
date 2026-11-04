@@ -1,6 +1,7 @@
+import { useLayoutEffect } from 'react'
 import LegalFooter from './components/LegalFooter'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { englishPrefixTarget } from './lib/chineseEntry'
+import { englishPrefixTarget, isEnglishPrefix } from './lib/chineseEntry'
 import { safeReturnPath } from './lib/safeReturn'
 import { useUserStore, isAllowedRole } from './store/user'
 import MainLayout from './layouts/MainLayout'
@@ -40,14 +41,19 @@ function RequireGuest({ children }) {
 
 function EnglishPrefixRedirect() {
   const location = useLocation()
-  const target = englishPrefixTarget(location.pathname, location.search, location.hash)
-  return <Navigate to={target || '/login'} replace />
+  const target = englishPrefixTarget(location.pathname, location.search, location.hash) || '/login'
+  useLayoutEffect(() => {
+    if (isEnglishPrefix(window.location.pathname)) {
+      window.location.replace(target)
+    }
+  }, [target])
+  return <Navigate to={target} replace />
 }
 
 function NotFoundPage() {
   const location = useLocation()
   const alias = englishPrefixTarget(location.pathname, location.search, location.hash)
-  if (alias) return <Navigate to={alias} replace />
+  if (alias) return <EnglishPrefixRedirect />
   const userInfo = useUserStore((s) => s.userInfo)
   const authed = userInfo && isAllowedRole(userInfo)
   return (

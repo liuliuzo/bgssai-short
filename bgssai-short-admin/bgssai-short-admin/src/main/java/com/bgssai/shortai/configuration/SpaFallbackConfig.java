@@ -31,7 +31,7 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
      */
     private static final List<String> SPA_ROUTE_PREFIXES = Arrays.asList(
             "/login",
-            "/en",
+            "/en", // redirected to /login by EnglishEntryRedirectFilter before this forward
             "/home",
             "/login-logs",
             "/reviews",

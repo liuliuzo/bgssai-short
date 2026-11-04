@@ -14,6 +14,8 @@ export function PhoneDialField({
   ariaLabel = '国家区号',
   searchPlaceholder = '搜索国家或区号',
   items,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
 }) {
   const currentDial = dialCode || DEFAULT_DIAL_CODE
 
@@ -49,6 +51,8 @@ export function PhoneDialField({
         placeholder={nationalPlaceholder(currentDial)}
         value={nationalNumber}
         disabled={disabled}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
         onChange={(e) => handleNationalChange(e.target.value)}
       />
     </div>

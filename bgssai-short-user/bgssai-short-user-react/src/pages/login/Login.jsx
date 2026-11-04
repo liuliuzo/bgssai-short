@@ -14,7 +14,22 @@ import LegalFooter from '../../components/LegalFooter'
 import SupportWidget from '../../components/SupportWidget'
 import { PhoneDialField } from '../../components/PhoneDialField'
 import { DEFAULT_DIAL_CODE, composeApiPhone, validatePhoneParts } from '../../lib/phoneDial'
+import {
+  CONSENT_FIELD_ERROR,
+  emailLoginFieldError,
+  passwordLoginFieldError,
+  smsLoginFieldError,
+} from './loginFieldError'
 import './login.css'
+
+function FieldAlert({ fieldError, id }) {
+  if (!fieldError || fieldError.id !== id) return null
+  return (
+    <p className="login-field-error" id={`${id}-error`} role="alert">
+      {fieldError.text}
+    </p>
+  )
+}
 
 const CODE_OK = new Set([0, 200, '0', '200'])
 
@@ -50,18 +65,21 @@ export default function Login() {
   const setUserInfo = useUserStore((s) => s.setUserInfo)
   const [loginMethod, setLoginMethod] = useState('sms')
   const [agreed, setAgreed] = useState(false)
-  const [formError, setFormError] = useState('')
-  const showFormError = (text) => {
-    setFormError(text)
-    message.warning(text)
+  const [fieldError, setFieldError] = useState(null)
+  const clearFieldError = () => setFieldError(null)
+  const showFieldError = (error) => {
+    if (!error) return
+    setFieldError(error)
   }
   const requireAgreement = () => {
     if (!agreed) {
-      showFormError('请先阅读并同意用户协议与隐私政策')
+      showFieldError(CONSENT_FIELD_ERROR)
       return false
     }
     return true
   }
+  const describedBy = (id) => (fieldError?.id === id ? `${id}-error` : undefined)
+  const invalid = (id) => (fieldError?.id === id ? true : undefined)
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
@@ -106,9 +124,9 @@ export default function Login() {
     setSending(true)
     try {
       if (loginMethod === 'sms') {
-        const phoneError = validatePhoneParts(dialCode, phone)
+        const phoneError = smsLoginFieldError(validatePhoneParts(dialCode, phone), smsCode, { requireCode: false })
         if (phoneError) {
-          showFormError(phoneError)
+          showFieldError(phoneError)
           return
         }
         const { data } = await authApi.sendSms({ phone: composeApiPhone(dialCode, phone) })
@@ -118,12 +136,12 @@ export default function Login() {
           message.success('验证码已发送')
         }
       } else if (loginMethod === 'email') {
-        const emailTrim = email.trim()
-        if (!emailTrim.includes('@')) {
-          showFormError('请输入正确的邮箱')
+        const emailError = emailLoginFieldError(email, emailCode, { requireCode: false })
+        if (emailError) {
+          showFieldError(emailError)
           return
         }
-        const { data } = await authApi.sendEmail({ email: emailTrim })
+        const { data } = await authApi.sendEmail({ email: email.trim() })
         if (CODE_OK.has(data && data.code)) {
           setCountdowns((prev) => ({ ...prev, email: 60 }))
           message.success('验证码已发送')
@@ -136,27 +154,26 @@ export default function Login() {
 
   const submit = async () => {
     if (loginMethod === 'sms') {
-      if (validatePhoneParts(dialCode, phone) || !/^\d{6}$/.test(smsCode.trim())) {
-        showFormError('请输入手机号和 6 位验证码')
+      const smsError = smsLoginFieldError(validatePhoneParts(dialCode, phone), smsCode)
+      if (smsError) {
+        showFieldError(smsError)
         return
       }
     } else if (loginMethod === 'email') {
-      if (!email.trim().includes('@') || !/^\d{6}$/.test(emailCode.trim())) {
-        showFormError('请输入邮箱和 6 位验证码')
+      const emailError = emailLoginFieldError(email, emailCode)
+      if (emailError) {
+        showFieldError(emailError)
         return
       }
     } else {
-      if (!identifier.trim()) {
-        showFormError('请输入账号')
-        return
-      }
-      if (!password) {
-        showFormError('请输入密码')
+      const passwordError = passwordLoginFieldError(identifier, password)
+      if (passwordError) {
+        showFieldError(passwordError)
         return
       }
     }
     if (!requireAgreement()) return
-    setFormError('')
+    clearFieldError()
     setBusy(true)
     try {
       if (loginMethod === 'sms') {
@@ -247,7 +264,7 @@ export default function Login() {
                 role="tab"
                 aria-selected={loginMethod === m.key}
                 className={`login-seg-btn${loginMethod === m.key ? ' active' : ''}`}
-                onClick={() => { setFormError(''); setLoginMethod(m.key) }}
+                onClick={() => { clearFieldError(); setLoginMethod(m.key) }}
               >
                 {m.label}
               </button>
@@ -262,19 +279,23 @@ export default function Login() {
                   id="login-phone"
                   dialCode={dialCode}
                   nationalNumber={phone}
-                  onDialCodeChange={setDialCode}
-                  onNationalNumberChange={(value) => { setFormError(''); setPhone(value) }}
+                  onDialCodeChange={(value) => { clearFieldError(); setDialCode(value) }}
+                  onNationalNumberChange={(value) => { clearFieldError(); setPhone(value) }}
+                  aria-invalid={invalid('login-phone')}
+                  aria-describedby={describedBy('login-phone')}
                   wrapperClassName="phone-dial-field input"
                 />
+                <FieldAlert fieldError={fieldError} id="login-phone" />
               </div>
               <div className="field">
                 <label className="sr-only" htmlFor="login-sms-code">短信验证码</label>
                 <div className="login-code-row">
-                  <input id="login-sms-code" className="input" value={smsCode} onChange={(e) => { setFormError(''); setSmsCode(e.target.value.replace(/\D/g, '')) }} placeholder="6 位验证码" maxLength={6} />
+                  <input id="login-sms-code" className="input" value={smsCode} onChange={(e) => { clearFieldError(); setSmsCode(e.target.value.replace(/\D/g, '')) }} placeholder="6 位验证码" maxLength={6} aria-invalid={invalid('login-sms-code')} aria-describedby={describedBy('login-sms-code')} />
                   <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
                     {countdown > 0 ? `${countdown} 秒后重发` : sending ? '发送中...' : '获取验证码'}
                   </button>
                 </div>
+                <FieldAlert fieldError={fieldError} id="login-sms-code" />
               </div>
             </>
           )}
@@ -283,16 +304,18 @@ export default function Login() {
             <>
               <div className="field">
                 <label className="sr-only" htmlFor="login-email">邮箱</label>
-                <input id="login-email" className="input" type="email" value={email} onChange={(e) => { setFormError(''); setEmail(e.target.value) }} placeholder="请输入邮箱地址" />
+                <input id="login-email" className="input" type="email" value={email} onChange={(e) => { clearFieldError(); setEmail(e.target.value) }} placeholder="请输入邮箱地址" aria-invalid={invalid('login-email')} aria-describedby={describedBy('login-email')} />
+                <FieldAlert fieldError={fieldError} id="login-email" />
               </div>
               <div className="field">
                 <label className="sr-only" htmlFor="login-email-code">邮箱验证码</label>
                 <div className="login-code-row">
-                  <input id="login-email-code" className="input" value={emailCode} onChange={(e) => { setFormError(''); setEmailCode(e.target.value.replace(/\D/g, '')) }} placeholder="6 位验证码" maxLength={6} />
+                  <input id="login-email-code" className="input" value={emailCode} onChange={(e) => { clearFieldError(); setEmailCode(e.target.value.replace(/\D/g, '')) }} placeholder="6 位验证码" maxLength={6} aria-invalid={invalid('login-email-code')} aria-describedby={describedBy('login-email-code')} />
                   <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
                     {countdown > 0 ? `${countdown} 秒后重发` : sending ? '发送中...' : '获取验证码'}
                   </button>
                 </div>
+                <FieldAlert fieldError={fieldError} id="login-email-code" />
               </div>
             </>
           )}
@@ -305,12 +328,15 @@ export default function Login() {
               id="login-identifier"
               className="input"
               value={identifier}
-              onChange={(e) => { setFormError(''); setIdentifier(e.target.value) }}
+              onChange={(e) => { clearFieldError(); setIdentifier(e.target.value) }}
               placeholder="手机号 / 邮箱 / 账号"
               autoComplete="username"
               disabled={busy}
+              aria-invalid={invalid('login-identifier')}
+              aria-describedby={describedBy('login-identifier')}
               onKeyDown={(e) => e.key === 'Enter' && submit()}
             />
+            <FieldAlert fieldError={fieldError} id="login-identifier" />
           </div>
 
           <div className="field">
@@ -321,11 +347,13 @@ export default function Login() {
                 className="input"
                 type={showPw ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => { setFormError(''); setPassword(e.target.value) }}
+                onChange={(e) => { clearFieldError(); setPassword(e.target.value) }}
                 placeholder="请输入密码"
                 style={{ paddingRight: 42 }}
                 autoComplete="current-password"
                 disabled={busy}
+                aria-invalid={invalid('login-password')}
+                aria-describedby={describedBy('login-password')}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
               />
               <button
@@ -339,6 +367,7 @@ export default function Login() {
                 <IconEye size={18} />
               </button>
             </div>
+            <FieldAlert fieldError={fieldError} id="login-password" />
           </div>
             </>
           )}
@@ -346,7 +375,6 @@ export default function Login() {
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
             {busy ? '处理中...' : loginMethod === 'password' ? '登录' : '登录 / 注册'}
           </button>
-          {formError ? <p className="login-form-error" role="alert">{formError}</p> : null}
 
           {visibleProviders.length > 0 ? (
           <>
@@ -369,7 +397,14 @@ export default function Login() {
           </div>
           </>
           ) : null}
-          <LegalFooter variant="consent" checked={agreed} onChange={(value) => { setFormError(''); setAgreed(value) }} />
+          <LegalFooter
+            variant="consent"
+            checked={agreed}
+            onChange={(value) => { clearFieldError(); setAgreed(value) }}
+            invalid={invalid('login-consent')}
+            describedBy={describedBy('login-consent')}
+          />
+          <FieldAlert fieldError={fieldError} id="login-consent" />
         </div>
       </main>
       {wechatFastLoginDialog}
