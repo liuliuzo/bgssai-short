@@ -50,8 +50,16 @@ export default function Login() {
   const setUserInfo = useUserStore((s) => s.setUserInfo)
   const [loginMethod, setLoginMethod] = useState('sms')
   const [agreed, setAgreed] = useState(false)
+  const [formError, setFormError] = useState('')
+  const showFormError = (text) => {
+    setFormError(text)
+    message.warning(text)
+  }
   const requireAgreement = () => {
-    if (!agreed) { message.warning('请先阅读并同意用户协议与隐私政策'); return false }
+    if (!agreed) {
+      showFormError('请先阅读并同意用户协议与隐私政策')
+      return false
+    }
     return true
   }
   const [identifier, setIdentifier] = useState('')
@@ -100,7 +108,7 @@ export default function Login() {
       if (loginMethod === 'sms') {
         const phoneError = validatePhoneParts(dialCode, phone)
         if (phoneError) {
-          message.warning(phoneError)
+          showFormError(phoneError)
           return
         }
         const { data } = await authApi.sendSms({ phone: composeApiPhone(dialCode, phone) })
@@ -112,7 +120,7 @@ export default function Login() {
       } else if (loginMethod === 'email') {
         const emailTrim = email.trim()
         if (!emailTrim.includes('@')) {
-          message.warning('请输入正确的邮箱')
+          showFormError('请输入正确的邮箱')
           return
         }
         const { data } = await authApi.sendEmail({ email: emailTrim })
@@ -129,25 +137,26 @@ export default function Login() {
   const submit = async () => {
     if (loginMethod === 'sms') {
       if (validatePhoneParts(dialCode, phone) || !/^\d{6}$/.test(smsCode.trim())) {
-        message.warning('请输入手机号和 6 位验证码')
+        showFormError('请输入手机号和 6 位验证码')
         return
       }
     } else if (loginMethod === 'email') {
       if (!email.trim().includes('@') || !/^\d{6}$/.test(emailCode.trim())) {
-        message.warning('请输入邮箱和 6 位验证码')
+        showFormError('请输入邮箱和 6 位验证码')
         return
       }
     } else {
       if (!identifier.trim()) {
-        message.warning('请输入账号')
+        showFormError('请输入账号')
         return
       }
       if (!password) {
-        message.warning('请输入密码')
+        showFormError('请输入密码')
         return
       }
     }
     if (!requireAgreement()) return
+    setFormError('')
     setBusy(true)
     try {
       if (loginMethod === 'sms') {
@@ -238,7 +247,7 @@ export default function Login() {
                 role="tab"
                 aria-selected={loginMethod === m.key}
                 className={`login-seg-btn${loginMethod === m.key ? ' active' : ''}`}
-                onClick={() => setLoginMethod(m.key)}
+                onClick={() => { setFormError(''); setLoginMethod(m.key) }}
               >
                 {m.label}
               </button>
@@ -254,14 +263,14 @@ export default function Login() {
                   dialCode={dialCode}
                   nationalNumber={phone}
                   onDialCodeChange={setDialCode}
-                  onNationalNumberChange={setPhone}
+                  onNationalNumberChange={(value) => { setFormError(''); setPhone(value) }}
                   wrapperClassName="phone-dial-field input"
                 />
               </div>
               <div className="field">
                 <label className="sr-only" htmlFor="login-sms-code">短信验证码</label>
                 <div className="login-code-row">
-                  <input id="login-sms-code" className="input" value={smsCode} onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位验证码" maxLength={6} />
+                  <input id="login-sms-code" className="input" value={smsCode} onChange={(e) => { setFormError(''); setSmsCode(e.target.value.replace(/\D/g, '')) }} placeholder="6 位验证码" maxLength={6} />
                   <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
                     {countdown > 0 ? `${countdown} 秒后重发` : sending ? '发送中...' : '获取验证码'}
                   </button>
@@ -274,12 +283,12 @@ export default function Login() {
             <>
               <div className="field">
                 <label className="sr-only" htmlFor="login-email">邮箱</label>
-                <input id="login-email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="请输入邮箱地址" />
+                <input id="login-email" className="input" type="email" value={email} onChange={(e) => { setFormError(''); setEmail(e.target.value) }} placeholder="请输入邮箱地址" />
               </div>
               <div className="field">
                 <label className="sr-only" htmlFor="login-email-code">邮箱验证码</label>
                 <div className="login-code-row">
-                  <input id="login-email-code" className="input" value={emailCode} onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位验证码" maxLength={6} />
+                  <input id="login-email-code" className="input" value={emailCode} onChange={(e) => { setFormError(''); setEmailCode(e.target.value.replace(/\D/g, '')) }} placeholder="6 位验证码" maxLength={6} />
                   <button className="login-code-btn" type="button" onClick={sendCode} disabled={sending || countdown > 0}>
                     {countdown > 0 ? `${countdown} 秒后重发` : sending ? '发送中...' : '获取验证码'}
                   </button>
@@ -296,7 +305,7 @@ export default function Login() {
               id="login-identifier"
               className="input"
               value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              onChange={(e) => { setFormError(''); setIdentifier(e.target.value) }}
               placeholder="手机号 / 邮箱 / 账号"
               autoComplete="username"
               disabled={busy}
@@ -312,7 +321,7 @@ export default function Login() {
                 className="input"
                 type={showPw ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setFormError(''); setPassword(e.target.value) }}
                 placeholder="请输入密码"
                 style={{ paddingRight: 42 }}
                 autoComplete="current-password"
@@ -337,6 +346,7 @@ export default function Login() {
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
             {busy ? '处理中...' : loginMethod === 'password' ? '登录' : '登录 / 注册'}
           </button>
+          {formError ? <p className="login-form-error" role="alert">{formError}</p> : null}
 
           {visibleProviders.length > 0 ? (
           <>
@@ -359,7 +369,7 @@ export default function Login() {
           </div>
           </>
           ) : null}
-          <LegalFooter variant="consent" checked={agreed} onChange={setAgreed} />
+          <LegalFooter variant="consent" checked={agreed} onChange={(value) => { setFormError(''); setAgreed(value) }} />
         </div>
       </main>
       {wechatFastLoginDialog}

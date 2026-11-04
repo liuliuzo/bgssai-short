@@ -48,8 +48,8 @@ const theme = {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ConfigProvider locale={zhCN} theme={theme}>
-      <AntdApp>
+    <ConfigProvider locale={zhCN} theme={theme} button={{ autoInsertSpace: false }}>
+      <AntdApp message={{ top: 88 }}>
         <BrowserRouter>
           <App />
         </BrowserRouter>

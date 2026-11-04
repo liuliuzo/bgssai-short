@@ -5,10 +5,20 @@
 
 .legal-consent, .login-consent, .auth-consent, .login-footnote, .th-legal-consent, .login-legal {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: center;
   gap: 6px;
   text-align: left;
+}
+.legal-consent span,
+.login-consent span,
+.auth-consent span,
+.login-footnote span,
+.th-legal-consent span,
+.login-legal span {
+  min-width: 0;
+  flex: 1 1 12em;
 }
 .legal-consent input[type='checkbox'],
 .login-consent input[type='checkbox'],

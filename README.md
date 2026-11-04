@@ -97,7 +97,7 @@ API（账号、内容审核、AI 能力与用量管理），用户端承载创�
 
 前置：JDK 21、Maven 3.9+、Node 18+、MySQL 8。
 
-成片合成走本机 FFmpeg（`provider_code=FFMPEG`），**运行 / 部署机需预装 ffmpeg 并在 PATH 中**，否则合成任务会明确失败并提示「本机未安装 ffmpeg」。文本 / 配音走 OpenAI 兼容网关，API Key 由管理端写入 `sys_secret.ai.openai_compat.api_key`（业务第三方凭证不入 properties）。
+成片合成走本机 FFmpeg（`provider_code=FFMPEG`），**运行 / 部署机需预装 ffmpeg 并在 PATH 中**，否则合成任务会明确失败并提示「本机未安装 ffmpeg」。文本、画面、视频、配音优先走境内中枢：DEV 主机在 `application-dev.properties` 的 `bgssai.llm.tokenhub-cn-base-url`，密钥由管理端写入 `sys_secret.ai.tokenhub_cn.api_key`。中枢密钥为空时，可用同一管理端写入 `sys_secret.ai.openai_compat.api_key`，直连 `https://chat.bgssai.com/v1`（`qwen` / `sd-turbo` / `cogvideox` / `piper`）。业务密钥不入 properties，也不提交真实值。
 
 ```bash
 # 1. 建库并导入 schema 与种子数据

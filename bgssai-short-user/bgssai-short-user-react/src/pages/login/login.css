@@ -253,6 +253,13 @@
   padding: 12px 22px;
   font-size: 15px;
 }
+.login-form-error {
+  margin: 10px 0 0;
+  color: #b45309;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
 .login-submit {
   display: inline-flex;
   align-items: center;
@@ -489,7 +496,12 @@ div.login-alert[role='alert'] {
 .login-panel .legal-consent {
   margin-top: 16px;
   justify-content: flex-start;
+  flex-wrap: wrap;
   color: var(--muted);
+}
+.login-panel .legal-consent span {
+  min-width: 0;
+  flex: 1 1 12em;
 }
 .login-panel .legal-consent input[type='checkbox'] {
   accent-color: var(--brand);

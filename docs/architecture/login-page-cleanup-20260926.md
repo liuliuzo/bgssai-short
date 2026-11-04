@@ -9,3 +9,6 @@
 | `login.css` | `.login-shell` 单列；`.login-panel-brand` 常显；删 `.login-hero*`、`.login-sub`、`.login-note` / `.login-field-note`；新增 `.sr-only` |
 
 后端无改动。
+
+同意句允许在卡片内换行。空提交把同一句提示写在主按钮下方（`role=alert`），顶部提示下移到顶栏之下。
+Ant Design `button.autoInsertSpace` 关闭，两个汉字的按钮不再被插入空格。页面跳转与字段不变，原型 HTML 不改。

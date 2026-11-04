@@ -56,6 +56,32 @@ class CatalogModelAlignTest {
     }
 
     @Test
+    void unlistedVideoMovesToListedCompanyModelAndListedMinimaxStays() {
+        List<TokenHubModelCatalog.HubModel> both = List.of(
+                video("minimax-video-h3", "MiniMax"),
+                video("cogvideox", "BGSSAI"));
+        assertEquals("minimax-video-h3", CatalogModelAlign.choose("VIDEO", "minimax-video-h3", both));
+        List<TokenHubModelCatalog.HubModel> company = List.of(video("cogvideox", "BGSSAI"));
+        assertEquals("cogvideox", CatalogModelAlign.choose("VIDEO", "minimax-video-h3", company));
+    }
+
+    @Test
+    void unlistedImageMovesToSdTurboOnlyWhenKlingIsAbsent() {
+        assertEquals("sd-turbo", CatalogModelAlign.choose("IMAGE", "kling-v2-1",
+                List.of(image("sd-turbo", "BGSSAI"))));
+        assertEquals("kling-v3", CatalogModelAlign.choose("IMAGE", "kling-v2-1",
+                List.of(image("kling-v3", "快手可灵"), image("sd-turbo", "BGSSAI"))));
+    }
+
+    @Test
+    void unlistedVoiceMovesToPiperAndDoesNotUseQwenTts() {
+        assertEquals("piper", CatalogModelAlign.choose("VOICE", "minimax-speech-2.8-hd",
+                List.of(speech("piper", "BGSSAI"))));
+        assertEquals("minimax-speech-2.8-hd", CatalogModelAlign.choose("VOICE", "minimax-speech-2.8-hd",
+                List.of(speech("qwen-tts", "dashscope"))));
+    }
+
+    @Test
     void explicitFamilyIsNotRequiredForAnUnrelatedDefault() {
         List<TokenHubModelCatalog.HubModel> catalog = List.of(chat("kimi-k3"));
         assertEquals("deepseek-chat", CatalogModelAlign.choose("TEXT", "deepseek-chat", catalog));
@@ -67,6 +93,10 @@ class CatalogModelAlignTest {
 
     private static TokenHubModelCatalog.HubModel speech(String id, String owner) {
         return new TokenHubModelCatalog.HubModel(id, List.of("audio_speech"), Map.of(), owner);
+    }
+
+    private static TokenHubModelCatalog.HubModel video(String id, String owner) {
+        return new TokenHubModelCatalog.HubModel(id, List.of("video_generation"), Map.of(), owner);
     }
 
     private static TokenHubModelCatalog.HubModel chat(String id) {
