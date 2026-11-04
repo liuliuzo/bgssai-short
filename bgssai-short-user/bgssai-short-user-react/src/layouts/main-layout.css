@@ -1,9 +1,10 @@
-/* Platform admin console layout — flat light sidebar theme (blog design). */
+/* 用户端外壳：白色侧栏 + 白色顶栏 + 浅灰内容区（2026-11 与官网同一套颜色，不再用毛玻璃）。 */
 
 .pa-layout {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background: var(--lg-bg-page);
 }
 
 /* ---- Sidebar ---- */
@@ -14,8 +15,6 @@
   flex-direction: column;
   background: var(--pa-sidebar-bg);
   border-right: 1px solid var(--pa-sidebar-border);
-  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -55,7 +54,7 @@
 
 .pa-nav {
   flex: 1;
-  padding: 12px 8px;
+  padding: 14px 10px;
 }
 
 .pa-nav-section {
@@ -63,23 +62,23 @@
 }
 
 .pa-nav-section-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--pa-sidebar-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--pa-sidebar-label);
+  letter-spacing: 0.02em;
   padding: 0 12px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .pa-nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 40px;
   padding: 9px 12px;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--pa-sidebar-muted);
   transition: background 0.15s, color 0.15s;
@@ -100,14 +99,19 @@
 }
 
 .pa-nav-item-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  opacity: 0.85;
+  font-size: 16px;
+  color: var(--pa-sidebar-label);
+}
+
+.pa-nav-item:hover .pa-nav-item-icon,
+.pa-nav-item.active .pa-nav-item-icon {
+  color: inherit;
 }
 
 .pa-sidebar-footer {
@@ -127,16 +131,14 @@
 
 /* ---- Topbar ---- */
 .pa-topbar {
-  height: 56px;
+  height: 60px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 28px;
   background: var(--lg-glass-bg);
   border-bottom: 1px solid var(--lg-border);
-  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
   z-index: 10;
 }
 
@@ -147,10 +149,13 @@
 }
 
 .pa-topbar-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--lg-text);
-  letter-spacing: -0.3px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pa-topbar-badge {
@@ -158,12 +163,11 @@
   align-items: center;
   padding: 2px 10px;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.10);
-  border: 1px solid rgba(37, 99, 235, 0.20);
-  font-size: 10px;
+  background: var(--lg-accent-soft);
+  font-size: 12px;
   font-weight: 600;
-  color: #2563eb;
-  letter-spacing: 0.04em;
+  color: var(--lg-accent);
+  white-space: nowrap;
 }
 
 .pa-topbar-right {
@@ -190,16 +194,16 @@
 }
 
 .pa-user-avatar {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: var(--lg-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
+  color: var(--lg-accent);
   flex-shrink: 0;
 }
 
@@ -223,13 +227,13 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px;
+  padding: 28px 32px 40px;
   background: transparent;
 }
 
 /* ---- Emergency stop banner ---- */
 .pa-emergency-banner {
-  background: rgba(220, 38, 38, 0.92);
+  background: var(--lg-danger);
   color: #fff;
   text-align: center;
   padding: 8px 24px;
@@ -239,29 +243,29 @@
   letter-spacing: 0.01em;
 }
 
-/* ---- Bot / Chat 窄栏（仅 data-bgssai-shell，不按窗口宽度切换独立桌面） ---- */
-html[data-bgssai-shell="1"] .pa-layout--shell {
+/* ---- 窄栏：Bot / Chat 旁栏，以及手机浏览器（宽度 ≤767px）共用一套底部标签栏 +「更多」 ---- */
+.pa-layout--compact {
   flex-direction: column;
   height: 100dvh;
   max-width: 100%;
 }
 
-html[data-bgssai-shell="1"] .pa-layout--shell .pa-topbar {
+.pa-layout--compact .pa-topbar {
   height: 48px;
   padding: 0 12px;
   padding-top: env(safe-area-inset-top);
 }
 
-html[data-bgssai-shell="1"] .pa-layout--shell .pa-topbar-title {
+.pa-layout--compact .pa-topbar-title {
   font-size: 14px;
 }
 
-html[data-bgssai-shell="1"] .pa-layout--shell .pa-content {
+.pa-layout--compact .pa-content {
   padding: 12px 12px calc(12px + 64px + env(safe-area-inset-bottom));
   -webkit-overflow-scrolling: touch;
 }
 
-html[data-bgssai-shell="1"] .pa-shell-tabbar {
+.pa-layout--compact .pa-shell-tabbar {
   position: sticky;
   bottom: 0;
   z-index: 20;
@@ -270,13 +274,12 @@ html[data-bgssai-shell="1"] .pa-shell-tabbar {
   justify-content: space-around;
   min-height: 56px;
   padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
-  background: var(--lg-glass-bg);
+  background: #ffffff;
   border-top: 1px solid var(--lg-border);
-  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.05);
 }
 
-html[data-bgssai-shell="1"] .pa-shell-tab {
+.pa-layout--compact .pa-shell-tab {
   flex: 1;
   min-height: 44px;
   min-width: 44px;
@@ -293,24 +296,24 @@ html[data-bgssai-shell="1"] .pa-shell-tab {
   cursor: pointer;
 }
 
-html[data-bgssai-shell="1"] .pa-shell-tab.active {
+.pa-layout--compact .pa-shell-tab.active {
   color: var(--lg-accent);
   font-weight: 700;
 }
 
-html[data-bgssai-shell="1"] .pa-shell-tab-icon {
+.pa-layout--compact .pa-shell-tab-icon {
   font-size: 16px;
   line-height: 1;
 }
 
-html[data-bgssai-shell="1"] .pa-shell-more-list {
+.pa-shell-more .pa-shell-more-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-html[data-bgssai-shell="1"] .pa-shell-more-item {
+.pa-shell-more .pa-shell-more-item {
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -325,7 +328,7 @@ html[data-bgssai-shell="1"] .pa-shell-more-item {
   cursor: pointer;
 }
 
-html[data-bgssai-shell="1"] .pa-shell-more-item.active {
+.pa-shell-more .pa-shell-more-item.active {
   background: var(--pa-sidebar-active);
   color: var(--lg-accent);
   font-weight: 600;
