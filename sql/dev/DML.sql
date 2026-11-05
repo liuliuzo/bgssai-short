@@ -19,7 +19,13 @@ INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`
 -- 腾讯云短信 SdkAppId（BGSSAI 共享控制台 · 开发应用）；SignName / TemplateId 见共享 DML STEP SMS-1
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sdk-app-id', '1401156379', '腾讯云短信 SdkAppId（开发 · 共享控制台）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 
--- 支付 notify_url 随环境写入库内商户行（业务凭证分层）；OAuth redirect_uri 仍在 profile。
+-- 支付 notify_url 随环境写入库内商户行（业务凭证分层）。OAuth redirect_uri 仍在 profile。
+
+-- 微信开放平台网站应用（授权登录，channel/provider=wechat，账号 B，已通过）。
+-- 开发库每次执行都覆盖 AppID / AppSecret，用来换掉误写入的官网或 blog AppID。
+-- 只动 wechat 这两行，不改支付宝、抖音、百度及其它渠道。
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.wechat.app-id', 'wx1b5b8a21ba130fb8', '登录页微信开放平台网站应用 AppID(snsapi_login) · DEV', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.wechat.app-secret', '5100147ce88a93b21dc4a2c0e186e826', '登录页微信开放平台网站应用 AppSecret · DEV', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
 
 -- 支付回调 URL（开发环境用户端域名）
 INSERT INTO `wechat_pay_config` (`merchant_name`, `mch_id`, `app_id`, `notify_url`, `env_mode`, `is_enabled`, `is_collection_active`, `del_flag`, `creator`) VALUES ('BGSSAI Short WeChat', '1112047784', 'wx496f923c7d4ac64e', 'https://dev.user.bgssai-short.com/bgssai/user/payment/wechat/notify', 'PRODUCTION', 1, 1, 0, 'seed') ON DUPLICATE KEY UPDATE `notify_url` = IF(`notify_url` IS NULL OR `notify_url` = '', VALUES(`notify_url`), `notify_url`);
