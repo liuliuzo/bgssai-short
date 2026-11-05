@@ -14,7 +14,7 @@ syncBgssaiShell(window.location, window.sessionStorage, document)
 dayjs.locale('zh-cn')
 
 // 主题令牌（Ant Design）：2026-11 起与官网、境内 Chat 用户端同一套颜色
-// （品牌蓝 #0d6efd、深色字、浅灰底、白色实底卡片，中文字体优先）；管理端暂不跟着改。
+// （品牌蓝 #0d6efd、深色字、浅灰底、白色实底卡片；英文数字用系统界面字体，中文用苹方 / 微软雅黑）；管理端暂不跟着改。
 const theme = {
   token: {
     colorPrimary: '#0d6efd',
@@ -35,7 +35,7 @@ const theme = {
     boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
     boxShadowSecondary: '0 12px 32px rgba(15, 23, 42, 0.12)',
     fontFamily:
-      '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif',
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", Roboto, "Helvetica Neue", Arial, sans-serif',
   },
   components: {
     Button: { fontWeight: 600, primaryShadow: '0 6px 16px -8px rgba(13, 110, 253, 0.7)' },
