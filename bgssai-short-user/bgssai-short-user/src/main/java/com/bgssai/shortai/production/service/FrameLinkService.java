@@ -237,7 +237,9 @@ public class FrameLinkService {
         AiModelConfig model = aiModelResolveService.resolve("VIDEO", modelCode);
         if (!supportsLastFrame(model)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "所选视频模型不支持首尾帧（" + model.getModelCode() + "），请换模型或改用「接上一镜」");
+                    "所选视频模型不支持首尾帧（"
+                            + com.bgssai.shortai.aimodel.ProductModelAlias.forStored("VIDEO", model.getModelCode()).name()
+                            + "），请换模型或改用「接上一镜」");
         }
     }
 

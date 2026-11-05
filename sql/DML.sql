@@ -2742,3 +2742,42 @@ INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `mod
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-compat-image-sd-turbo', 'IMAGE', 'OPENAI_COMPAT', 'sd-turbo', '分镜画面', 'FAST', 'PER_CALL', 20, 0, 1, 180, 1, '{"base_url":"https://chat.bgssai.com/v1","secret_ref":"ai.openai_compat.api_key","image_path":"/images/generations","size":"512x768"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `enabled_flag` = 1, `timeout_sec` = VALUES(`timeout_sec`), `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-compat-video-cogvideox', 'VIDEO', 'OPENAI_COMPAT', 'cogvideox', '镜头视频', 'STANDARD', 'PER_SECOND', 20, 0, 1, 900, 1, '{"base_url":"https://chat.bgssai.com/v1","secret_ref":"ai.openai_compat.api_key","video_path":"/videos/generations","video_task_path":"/videos/generations/{task_id}","poll_interval_ms":3000}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `enabled_flag` = 1, `timeout_sec` = VALUES(`timeout_sec`), `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-compat-voice-piper', 'VOICE', 'OPENAI_COMPAT', 'piper', '台词配音', 'STANDARD', 'PER_CALL', 2, 0, 1, 180, 1, '{"base_url":"https://chat.bgssai.com/v1","secret_ref":"ai.openai_compat.api_key","speech_path":"/audio/speech","default_voice_id":"zh"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `enabled_flag` = 1, `timeout_sec` = VALUES(`timeout_sec`), `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+
+-- 用户可见别名。不改 model_code / model_name（管理端与网关仍用真实编号）。
+-- public_alias、public_name 仅在空值时回填，不覆盖管理端已写入的非空值。
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias', 'bgssai-chat', '$.public_name', 'BGSSAI Chat')
+WHERE `model_id` = 'm-tokenhub-text-bgssai-chat'
+  AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
+  AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
+    OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias', 'bgssai-image', '$.public_name', 'BGSSAI Image')
+WHERE `model_id` = 'm-tokenhub-image-bgssai'
+  AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
+  AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
+    OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias', 'bgssai-tts', '$.public_name', 'BGSSAI TTS')
+WHERE `model_id` = 'm-tokenhub-voice-bgssai-tts'
+  AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
+  AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
+    OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias', 'bgssai-video', '$.public_name', 'BGSSAI Video')
+WHERE `model_id` = 'm-tokenhub-video-cogvideox'
+  AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
+  AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
+    OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias', 'bgssai-asr', '$.public_name', 'BGSSAI ASR')
+WHERE `model_id` = 'm-hunyuan-hy-asr-3.0-preview-asr'
+  AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
+  AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
+    OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));
+UPDATE `ai_model_config`
+SET `config_json` = JSON_SET(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias', 'bgssai-music', '$.public_name', 'BGSSAI Music')
+WHERE `model_id` = 'm-minimax-minimax-music-v2.6-music'
+  AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
+  AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
+    OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));

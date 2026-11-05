@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.Responses;
@@ -109,11 +110,13 @@ public class AiTaskService {
         result.put("task_type", type);
         result.put("task_count", shots.size());
         result.put("estimated_cost_cent", estimated);
-        result.put("model_code", model.getModelCode());
+        ProductModelAlias.hideStoredModel(result, type, model.getModelCode());
         result.put("unit_price_cent", effectiveUnitPrice(model, type));
         result.put("price_unit", model.getPriceUnit());
         if (videoModel != null) {
-            result.put("next_model_code", videoModel.getModelCode());
+            ProductModelAlias.Face next = ProductModelAlias.forStored("VIDEO", videoModel.getModelCode());
+            result.put("next_model_code", next.code());
+            result.put("next_display_name", next.name());
             result.put("next_unit_price_cent", effectiveUnitPrice(videoModel, "VIDEO"));
         }
         result.put("shot_cost_list", shotCostList);
@@ -181,7 +184,7 @@ public class AiTaskService {
         result.put("episode_id", ep.getEpisodeId());
         result.put("duration_sec", durationSec);
         result.put("estimated_cost_cent", estimated);
-        result.put("model_code", model.getModelCode());
+        ProductModelAlias.hideStoredModel(result, "COMPOSE", model.getModelCode());
         result.put("unit_price_cent", effectiveUnitPrice(model, "COMPOSE"));
         result.put("price_unit", model.getPriceUnit());
         result.put("shot_cost_list", List.of());
@@ -208,7 +211,7 @@ public class AiTaskService {
         result.put("task_type", "VOICE");
         result.put("task_count", shots.size());
         result.put("estimated_cost_cent", estimated);
-        result.put("model_code", model.getModelCode());
+        ProductModelAlias.hideStoredModel(result, "VOICE", model.getModelCode());
         result.put("unit_price_cent", effectiveUnitPrice(model, "VOICE"));
         result.put("price_unit", model.getPriceUnit());
         result.put("shot_cost_list", shotCostList);
@@ -240,7 +243,7 @@ public class AiTaskService {
         item.put("shot_no", shot.getShotNo());
         item.put("task_type", type);
         item.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
-        item.put("model_code", model.getModelCode());
+        ProductModelAlias.hideStoredModel(item, type, model.getModelCode());
         item.put("unit_price_cent", effectiveUnitPrice(model, type));
         item.put("estimated_cost_cent", cost);
         return item;
@@ -406,7 +409,8 @@ public class AiTaskService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         result.put("task_status", "QUEUED");
-        result.put("model_code", patch.getModelCode() != null ? patch.getModelCode() : task.getModelCode());
+        ProductModelAlias.hideStoredModel(result, task.getTaskType(),
+                patch.getModelCode() != null ? patch.getModelCode() : task.getModelCode());
         result.put("fallback_model_flag", useFallback ? 1 : 0);
         return Responses.ok(result);
     }
@@ -554,8 +558,8 @@ public class AiTaskService {
         item.put("fail_reason_code", row.getFailReasonCode());
         item.put("fail_reason", visibleFailReason(
                 row.getTaskStatus(), row.getFailReasonCode(), row.getFailReason()));
-        item.put("model_code", row.getModelCode());
-        item.put("result_json", ShortJson.map(row.getResultJson()));
+        ProductModelAlias.hideStoredModel(item, row.getTaskType(), row.getModelCode());
+        item.put("result_json", clientResult(row));
         item.put("cost_cent", row.getCostCent());
         item.put("created_time", row.getCreatedTime());
         return item;
@@ -565,6 +569,21 @@ public class AiTaskService {
      * Success, or a missing fail code, is not a failure. A blank stored reason must stay blank
      * instead of becoming the generic model-unavailable sentence.
      */
+    private static Map<String, Object> clientResult(ShortAiTask row) {
+        Map<String, Object> json = ShortJson.map(row.getResultJson());
+        if (json == null || json.isEmpty()) {
+            return json;
+        }
+        for (String key : List.of("model", "model_code", "model_name", "display_name")) {
+            Object value = json.get(key);
+            if (value instanceof String text && ProductModelAlias.leaks(text)) {
+                ProductModelAlias.Face face = ProductModelAlias.forStored(row.getTaskType(), text);
+                json.put(key, "model_name".equals(key) || "display_name".equals(key) ? face.name() : face.code());
+            }
+        }
+        return json;
+    }
+
     static String visibleFailReason(String taskStatus, String failReasonCode, String failReason) {
         if (isSuccessStatus(taskStatus) || failReasonCode == null || failReasonCode.isBlank()) {
             return null;

@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import usageApi from '../../api/usage'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 import { yuanToCent } from '../../lib/money'
+import { publicModelText } from '../../publicModel'
 
 const { Title, Paragraph, Text } = Typography
 const { RangePicker } = DatePicker
@@ -161,7 +162,12 @@ export default function UsageBillingPage() {
           columns={[
             { title: '时间', dataIndex: 'created_time', width: 160 },
             { title: '能力', dataIndex: 'ability_type_name', width: 80 },
-            { title: '模型', dataIndex: 'model_code', width: 120 },
+            {
+              title: '模型',
+              dataIndex: 'display_name',
+              width: 140,
+              render: (_, row) => publicModelText(row.display_name || row.model_code, row.ability_type),
+            },
             { title: '档位', dataIndex: 'quality_level_name', width: 80 },
             {
               title: '关联',

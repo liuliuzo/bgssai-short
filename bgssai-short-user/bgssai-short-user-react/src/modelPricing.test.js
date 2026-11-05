@@ -27,7 +27,11 @@ test('real fractional multipliers and version appear without guessing', () => {
   assert.doesNotMatch(modelPricingLabel({ model: 'gpt-any' }), /倍率待确认/)
   const branded = modelPricingLabel({ model: 'TokenHub DeepSeek', billing_multiplier: 1.5 })
   assert.match(branded, /1\.5×/)
+  assert.match(branded, /BGSSAI/)
   assert.doesNotMatch(branded, /tokenhub/i)
+  assert.doesNotMatch(branded, /deepseek/i)
+  assert.doesNotMatch(modelPricingLabel({ model: 'kling-v3', ability_type: 'IMAGE' }), /kling/i)
+  assert.match(modelPricingLabel({ display_name: 'BGSSAI Chat', model_code: 'bgssai-chat' }), /BGSSAI Chat/)
 })
 
 test('ZH chrome: fen/million and receipt default unit use 额度 not bare English token', () => {

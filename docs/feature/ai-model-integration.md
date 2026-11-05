@@ -10,9 +10,26 @@
 
 ## 二、需求澄清（WHAT）
 
-### 2.1 首批生产模型目录
+### 2.1 用户可见名称
 
-| 能力类型 | 展示名称 | `model_code` | 默认 | 用户落点 |
+创作者、访客和用户端接口只看见 BGSSAI 产品别名。每个能力对外一个名字：
+
+| 能力 | 用户提交与回显的 `model_code` | 展示名 |
+| --- | --- | --- |
+| `TEXT` | `bgssai-chat` | BGSSAI Chat |
+| `IMAGE` | `bgssai-image` | BGSSAI Image |
+| `VIDEO` | `bgssai-video` | BGSSAI Video |
+| `VOICE` | `bgssai-tts` | BGSSAI TTS |
+| `ASR` | `bgssai-asr` | BGSSAI ASR |
+| `MUSIC` | `bgssai-music` | BGSSAI Music |
+
+`ai_model_config.config_json` 的 `public_alias` / `public_name` 可以再登记一个以 `bgssai-` 开头、且不含上游品牌的别名。种子只在这两项为空时回填，不覆盖管理端已写入的非空值，也不改 `model_code` 与 `model_name`。用户目录按别名折叠成上面这一张表，不返回网关编号、供应商品牌、`provider_code` 或 `config_json`。任务表、用量行和管理端仍保存网关编号，只在服务端使用。本地合成 `ffmpeg-local` 不是模型别名，成片证据原样保留。
+
+选择器、估价、任务、用量、失败原因和错误文案都使用上表。网关未开通时对用户写「模型服务暂未开通，请稍后重试」；模型未登记时写「该模型暂未开放：BGSSAI Chat」（按能力换成对应展示名）。文案不出现上游品牌或网关编号。
+
+### 2.2 服务端模型目录（不对用户展示）
+
+| 能力类型 | 管理端名称 | 网关 `model_code` | 默认 | 服务端落点 |
 | --- | --- | --- | --- | --- |
 | `VIDEO` | MiniMax-Video-H3 | `minimax-video-h3` | 是 | 创作台镜头视频生成 |
 | `VIDEO` | PixVerse-Video-v6 | `pixverse-video-v6.0` | 否 | 创作台镜头视频生成 |
@@ -25,10 +42,11 @@
 | `VOICE` | MiniMax-Speech-2.8-HD | `minimax-speech-2.8-hd` | 是 | 镜头台词配音 |
 | `MUSIC` | MiniMax-Music-v2.6 | `minimax-music-v2.6` | 是 | 成片背景音乐生成 |
 
+上表只描述服务端解析和网关调用。创作台对应步骤只展示 2.1 的别名。
 以上模型统一使用 `provider_code=TENCENT_TOKENHUB`。首批不删除 `OPENAI_COMPAT`、`KLING`、
 `MINIMAX` 等既有直连配置，运营可停用或保留为备用，但同一能力只能有一个默认模型。
 
-### 2.2 能力边界
+### 2.3 能力边界
 
 1. `ability_type` 完整枚举为 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` /
    `COMPOSE`。`VOICE` 仅表示文字转语音，`ASR` 仅表示音视频转文字，`MUSIC` 仅表示背景音乐生成；
@@ -53,13 +71,14 @@
    用户选择器展示模型名与 `0.5×` / `1×` / `1.5×`，不出现中枢品牌。
 8. 上游异步任务由当前 `short_ai_task` Worker 内部轮询；轮询间隔、超时由模型 `config_json` 与
    `timeout_sec` 控制。超时、内容审核失败、上游 5xx 分别映射现有失败码，不返回伪造素材。
-9. 管理端模型页必须支持 `ASR` 与 `MUSIC` 筛选、新增和默认切换；用户端模型目录只返回
-   `display_name`（及 `model_code` 供提交），**不返回** `provider_code` / `config_json` / 密钥，
-   文案与错误不得出现 TokenHub 字样。
+9. 管理端模型页必须支持 `ASR` 与 `MUSIC` 筛选、新增和默认切换，并可看到网关编号。用户端模型目录只返回
+   第 2.1 节的 BGSSAI 别名（`model_code` 与 `display_name` 都是别名，供提交和展示），
+   **不返回** 网关编号、供应商品牌、`provider_code` / `config_json` / 密钥。
+   文案与错误不得出现上游品牌或中枢字样。
 10. 用户点选的 `model_code` 不可用时，解析层优雅回退到该能力默认（或任一启用）模型；
     重试可带 `fallback_model_flag=1` 换备用模型。
 11. 网关非 2xx 时解析错误 JSON。`provider_not_configured` 对用户展示
-    「模型服务暂未开通：{provider}，请稍后重试」；`code` 只写入服务日志，不写入 `fail_reason`。
+    「模型服务暂未开通，请稍后重试」，不带供应商名称；`code` 只写入服务日志，不写入 `fail_reason`。
 12. 大纲、定妆、分镜、图片、配音、视频的入队和失败任务重试之前，检查文本、图片、配音三个模型
     在当前环境网关是否可用。任一不可用则返回 `4014`，点明不能开始的步骤，不入队、不扣费。
     公司图片、配音默认模型已在目录登记，且探测只因字段校验返回 HTTP 422（图片 `n`/`size`，
@@ -91,20 +110,20 @@
 ## 三、验收标准
 
 1. 管理端可看到表中的 TokenHub 模型（图片默认为 `kling-v3`），并能按能力筛选；`ASR`、`MUSIC` 各有独立默认模型。
-2. 在剧本工作台分别选择 Hy4、Kimi K3、DeepSeek-V4-Pro 提交生成，任务行记录对应 `model_code`，
-   省略选择时使用 Hy4。
-3. 同一首帧分别选择 MiniMax-Video-H3、PixVerse-Video-v6、Kling-Video-V3 生成，三条任务分别调用
-   正确的 TokenHub 端点，结果均转存对象存储而非长期引用供应商临时 URL。
-4. 批量配音选择 MiniMax-Speech 后，产出可播放 MP3，`audio_duration_sec` 来自供应商返回值并参与对齐。
-5. 对已有配音的一集执行 Hy-ASR 校准，字幕文本与时间戳按返回句子更新；无配音素材时返回可读提示且不扣费。
-6. 输入 BGM 描述并提交 MiniMax-Music，任务成功后返回 `bgm_asset_id`，合成设置与时间轴能读取该素材。
+2. 剧本工作台只出现 BGSSAI Chat。提交 `bgssai-chat` 或省略选择时，用户看到的任务与估价都是该别名；
+   任务表内部仍可记下网关编号。
+3. 分镜视频选择器只出现 BGSSAI Video。服务端按该能力的默认网关编号调用，结果转存对象存储，
+   不把供应商临时 URL 或供应商品牌回给用户。
+4. 批量配音选择 BGSSAI TTS 后，产出可播放 MP3，`audio_duration_sec` 来自返回值并参与对齐。
+5. 对已有配音的一集用 BGSSAI ASR 校准，字幕文本与时间戳按返回句子更新；无配音素材时返回可读提示且不扣费。
+6. 输入 BGM 描述并提交 BGSSAI Music，任务成功后返回 `bgm_asset_id`，合成设置与时间轴能读取该素材。
 7. `ai.tokenhub_cn.api_key` 为空或停用时，任务以能力不可用失败。境外密钥与境外模型不参与调用。
    日志与接口均不泄露密钥与中枢品牌；不存在 MOCK 或占位二进制兜底。
 8. TokenHub 视频、语音和音乐的临时下载 URL 均在 Worker 内下载转存；供应商 URL 不写入前端永久状态。
-9. 用户端模型选择器仅展示 `display_name`（及区域/价格），不展示中枢名或 `provider_code`。
+9. 用户端模型选择器只展示 BGSSAI 别名（及区域/价格），不展示中枢名、供应商品牌或 `provider_code`。
 10. 指定模型不可用时回退默认模型；重试 `fallback_model_flag=1` 可换备用模型。
-11. 网关返回 `provider_not_configured` 时，任务失败原因是「模型服务暂未开通：deepseek，请稍后重试」
-    这一类中文，日志保留 `code`，界面不出现 `http 503`。
+11. 网关返回 `provider_not_configured` 时，任务失败原因是「模型服务暂未开通，请稍后重试」，
+    日志保留 `code` 与供应商名，界面不出现 `http 503` 或供应商名。
 12. 文本、图片或配音模型在网关不可用时，创建作品和后续生成在入队前被拒绝，提示里写明不能开始的步骤。
     公司图片与配音默认模型已在目录登记，探测只因 `n`/`size` 或 `input`/`voice` 返回 422 时，创建成功入队。
 13. 图片默认任务使用网关目录中的 `kling-v3`。配音在 MiniMax 语音模型尚未登记时被拒绝并点明
@@ -122,12 +141,12 @@
   `POST /bgssai/user/dubbings/submit`、`/regenerate`。
 - `POST /bgssai/user/subtitles/transcribe`
   ```json
-  { "episode_id": "e-20001", "model_code": "hy-asr-3.0-preview", "confirm_overwrite_flag": 1 }
+  { "episode_id": "e-20001", "model_code": "bgssai-asr", "confirm_overwrite_flag": 1 }
   ```
   返回 `batch_id`、`task_id_list`、`task_count`。
 - `POST /bgssai/user/films/bgm-generate`
   ```json
-  { "work_id": "w-10001", "episode_id": "e-20001", "model_code": "minimax-music-v2.6",
+  { "work_id": "w-10001", "episode_id": "e-20001", "model_code": "bgssai-music",
     "prompt": "悬疑、克制、低频弦乐，适合都市复仇短剧", "is_instrumental": 1 }
   ```
   返回 `task_id`；任务成功后的 `result_json` 含 `bgm_asset_id`。
@@ -143,6 +162,7 @@
 ## 六、数据模型影响
 
 - `ai_model_config`、`short_ai_task`、`short_asset`、`ai_usage_record` 复用现有表，不新增列。
+  用户别名写在 `ai_model_config.config_json` 的 `public_alias` / `public_name`。
 - `short_work.compose_setting_json` 增加 `bgm_asset_id`、`bgm_volume`、`duck_flag` 键。
 - ASR 结果复用 `short_subtitle`；音乐与配音结果复用 `short_asset(asset_type=AUDIO)`。
 - `sys_secret` 增加空值种子 `ai.tokenhub_cn.api_key`（及兼容旧键

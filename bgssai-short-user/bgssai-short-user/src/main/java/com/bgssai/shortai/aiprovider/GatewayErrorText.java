@@ -124,7 +124,10 @@ public final class GatewayErrorText {
         String provider = providerName(parsed.message);
         if ("provider_not_configured".equals(parsed.code)
                 || parsed.message.toLowerCase(Locale.ROOT).contains("provider is not configured")) {
-            return "模型服务暂未开通：" + (provider.isEmpty() ? "当前模型" : provider);
+            if (!provider.isEmpty()) {
+                log.warn("provider not configured name={}", provider);
+            }
+            return "模型服务暂未开通";
         }
         if ("unsupported_model".equals(parsed.code)
                 || parsed.message.toLowerCase(Locale.ROOT).contains("not registered")) {

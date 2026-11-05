@@ -24,21 +24,18 @@
      `COMPOSE`）分组，
      每组可配多个模型，其一为 `default_flag=1`；业务侧提交任务时只传 `task_type`，
      由平台解析为当前默认模型（用户可在允许范围内改选，见规则 4）。
-     本产品生成能力支持多模型点选（类 Cursor），创作者提交时选 `model_code`，两段式视频生成可另传
-     `next_model_code` 作为自动接视频的模型。首批生产目录统一走 `TENCENT_TOKENHUB`（密钥
-     `ai.tencent_tokenhub.api_key`）：TEXT 为
-     `hy4-preview` / `kimi-k3` / `deepseek-v4-pro`，VIDEO 为 `minimax-video-h3` /
-     `pixverse-video-v6.0` / `kling-video-v3`，VOICE 为 `minimax-speech-2.8-hd`，ASR 为
-     `hy-asr-3.0-preview`，MUSIC 为 `minimax-music-v2.6`。完整目录、默认值与用户落点见
-     `ai-model-integration.md`。IMAGE 继续使用既有直连 Provider；既有 KLING / MINIMAX / SEEDANCE /
-     VEO 视频直连 Provider 保留为备用，不再作为首批 VIDEO 默认目录。
+     创作者提交时选的 `model_code` 是 BGSSAI 产品别名，两段式视频生成可另传
+     `next_model_code`（同样是别名）作为自动接视频的模型。用户可见名称只有
+     `bgssai-chat` / `bgssai-image` / `bgssai-video` / `bgssai-tts` / `bgssai-asr` / `bgssai-music`。
+     网关编号与供应商目录只在服务端和管理端，见 `ai-model-integration.md`。
+     既有直连 Provider 保留为服务端备用，不出现在用户目录。
      COMPOSE 走 `FFMPEG`（`FfmpegComposeProvider`，本机 ffmpeg 把各镜视频拼成 9:16 成片），
      不调外部模型，但**部署机必须预装 ffmpeg**，否则合成任务报「本机未安装 ffmpeg」。
      缺镜头视频时合成直接失败并点名缺哪几镜，不再退回占位成片。
      **不再提供 `provider_code=MOCK` 的兜底实现**：能力没接通就明确报错，避免假成功让人
      分不清哪些功能是真的通了。
-     用户端只读目录：`GET /bgssai/user/ai-models/list?ability_type=` 返回该能力下启用模型
-     （不含 `config_json` / 密钥），供创作台下拉选择。
+     用户端只读目录：`GET /bgssai/user/ai-models/list?ability_type=` 每个能力只返回一个 BGSSAI 别名
+     （不含网关编号、`config_json` 或密钥），供创作台下拉选择。
   2. 单价按计费单位配置：`price_unit` 取 `PER_CALL`（次）/ `PER_SECOND`（视频秒）/
      `PER_KILO_TOKEN`（千 token）/ `PER_MINUTE`（音频分钟）；`unit_price_cent` 为分。
      单价变更只对**变更后**创建的任务生效，历史任务按 `ai_usage_record` 快照的单价核算，不追溯。

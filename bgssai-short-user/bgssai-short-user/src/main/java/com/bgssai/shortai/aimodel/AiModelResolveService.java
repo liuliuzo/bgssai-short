@@ -40,6 +40,7 @@ public class AiModelResolveService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "ability_type required");
         }
         String ability = abilityType.trim();
+        modelCode = rewriteAlias(ability, modelCode);
         if (modelCode != null && !modelCode.isBlank()) {
             AiModelConfigExample ex = new AiModelConfigExample();
             ex.createCriteria()
@@ -60,7 +61,7 @@ public class AiModelResolveService {
                     return hubModel;
                 }
                 throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
-                        TokenHubClientSupport.userFacingMessage("model unavailable: " + modelCode));
+                        closed(ability, modelCode));
             }
             if (compatKeyReady()) {
                 AiModelConfig compatRow = firstCompanyCompat(rows);
@@ -81,8 +82,7 @@ public class AiModelResolveService {
             if (hubModel != null) {
                 return hubModel;
             }
-            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
-                    TokenHubClientSupport.userFacingMessage("model unavailable: " + modelCode));
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, closed(ability, modelCode));
         }
         if (!hubKeyReady() && compatKeyReady()) {
             AiModelConfig compat = resolveCompatDefault(ability);
@@ -323,7 +323,77 @@ public class AiModelResolveService {
     }
 
     /**
-     * User catalog: display_name + model_code for picker only. No provider_code / hub brand.
+     * A product alias with no row of that exact code means "the BGSSAI model for this ability".
+     * An explicit {@code public_alias} on a row maps back to that row's gateway id.
+     * A real gateway id is left unchanged for server-side callers.
+     */
+    private static String closed(String ability, String modelCode) {
+        ProductModelAlias.Face face = ProductModelAlias.forStored(ability, modelCode);
+        String name = face.name() == null || face.name().isBlank() ? "BGSSAI" : face.name();
+        return "该模型暂未开放：" + name + "，请稍后重试";
+    }
+
+    private String rewriteAlias(String ability, String modelCode) {
+        if (modelCode == null || modelCode.isBlank()) {
+            return modelCode;
+        }
+        String submitted = modelCode.trim();
+        if (hasExactModelCode(ability, submitted)) {
+            return submitted;
+        }
+        if (ProductModelAlias.isCanonical(ability, submitted)) {
+            return null;
+        }
+        AiModelConfig aliased = findByPublicAlias(ability, submitted);
+        if (aliased != null && aliased.getModelCode() != null && !aliased.getModelCode().isBlank()) {
+            return aliased.getModelCode();
+        }
+        return submitted;
+    }
+
+    private boolean hasExactModelCode(String ability, String code) {
+        AiModelConfigExample ex = new AiModelConfigExample();
+        ex.createCriteria()
+                .andAbilityTypeEqualTo(ability)
+                .andModelCodeEqualTo(code)
+                .andEnabledFlagEqualTo(1)
+                .andDeletedFlagEqualTo(0);
+        List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        if (rows == null) {
+            return false;
+        }
+        for (AiModelConfig row : rows) {
+            if (row != null && code.equals(row.getModelCode())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private AiModelConfig findByPublicAlias(String ability, String alias) {
+        if (!ProductModelAlias.isSafeAlias(alias)) {
+            return null;
+        }
+        AiModelConfigExample ex = new AiModelConfigExample();
+        ex.createCriteria()
+                .andAbilityTypeEqualTo(ability)
+                .andEnabledFlagEqualTo(1)
+                .andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("default_flag desc, id asc");
+        List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        if (rows == null) {
+            return null;
+        }
+        for (AiModelConfig row : rows) {
+            if (row != null && domestic(row) && alias.equalsIgnoreCase(ProductModelAlias.explicitAlias(row.getConfigJson()))) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * User catalog: one BGSSAI alias per product model. No provider, gateway id, or vendor name.
      */
     public ApiResponse listEnabled(String abilityType) {
         AiModelConfigExample ex = new AiModelConfigExample();
@@ -333,31 +403,34 @@ public class AiModelResolveService {
         }
         ex.setOrderByClause("ability_type asc, default_flag desc, quality_level asc, id asc");
         List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
-        String ability = abilityType == null ? "" : abilityType.trim();
-        List<Map<String, Object>> list = new ArrayList<>();
-        if (tokenHubModelCatalog != null && !ability.isBlank()) {
-            list.addAll(hubChoices(ability,tokenHubModelCatalog.modelsFor(ability),rows));
-        }
-        for (AiModelConfig row : rows) {
-            if (!domestic(row) || !aiProviderRegistry.resolvable(row)
-                    || list.stream().anyMatch(item -> row.getModelCode().equals(item.get("model_code")))) {
-                continue;
+        java.util.Map<String, AiModelConfig> chosen = new java.util.LinkedHashMap<>();
+        java.util.Map<String, ProductModelAlias.Face> faces = new java.util.LinkedHashMap<>();
+        if (rows != null) {
+            for (AiModelConfig row : rows) {
+                if (!domestic(row) || !aiProviderRegistry.resolvable(row)) {
+                    continue;
+                }
+                ProductModelAlias.Face face = ProductModelAlias.faceOf(
+                        row.getAbilityType(), row.getModelCode(), row.getConfigJson());
+                if (face == null || face.code() == null || face.code().isBlank() || chosen.containsKey(face.code())) {
+                    continue;
+                }
+                chosen.put(face.code(), row);
+                faces.put(face.code(), face);
             }
+        }
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (java.util.Map.Entry<String, AiModelConfig> entry : chosen.entrySet()) {
+            AiModelConfig row = entry.getValue();
+            ProductModelAlias.Face face = faces.get(entry.getKey());
             Map<String, Object> cfg = ShortJson.map(row.getConfigJson());
             String region = ModelUsageMeta.regionCode(row.getProviderCode(), row.getModelCode());
-
-            String displayName = row.getModelName() == null || row.getModelName().isBlank()
-                    ? row.getModelCode() : row.getModelName();
-            displayName = TokenHubClientSupport.scrubBrand(displayName);
-            if (displayName.isBlank()) {
-                displayName = TokenHubClientSupport.scrubBrand(row.getModelCode());
-            }
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("model_id", row.getModelId());
+            item.put("model_id", face.code());
             item.put("ability_type", row.getAbilityType());
-            item.put("model_code", row.getModelCode());
-            item.put("display_name", displayName);
-            item.put("model_name", displayName);
+            item.put("model_code", face.code());
+            item.put("display_name", face.name());
+            item.put("model_name", face.name());
             item.put("quality_level", row.getQualityLevel());
             item.put("price_unit", row.getPriceUnit());
             item.put("unit_price_cent", row.getUnitPriceCent());
@@ -365,60 +438,14 @@ public class AiModelResolveService {
             item.put("region", region);
             item.put("region_label", ModelUsageMeta.regionLabel(region));
             item.put("commercial_price_unit", item.get("price_unit"));
-            item.putAll(tokenHubModelCatalog==null?com.bgssai.shortai.billing.ModelPricing.from(Map.of()):tokenHubModelCatalog.pricingFor(tokenHubModelCatalog.endpointFor(cfg,row.getModelCode()),row.getModelCode()));
+            item.putAll(tokenHubModelCatalog == null
+                    ? com.bgssai.shortai.billing.ModelPricing.from(Map.of())
+                    : tokenHubModelCatalog.pricingFor(
+                            tokenHubModelCatalog.endpointFor(cfg, row.getModelCode()), row.getModelCode()));
             list.add(item);
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("model_list", list);
         return Responses.ok(result);
-    }
-
-    private List<Map<String, Object>> hubChoices(String ability,
-            List<TokenHubModelCatalog.HubModel> hubModels, List<AiModelConfig> priced) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        for (TokenHubModelCatalog.HubModel hub : hubModels) {
-            if (TokenHubClientSupport.wouldSelectGlobal(Map.of(), hub.id())) {
-                continue;
-            }
-            AiModelConfig pricedRow = null;
-            if (priced != null) {
-                for (AiModelConfig row : priced) {
-                    if (hub.id().equals(row.getModelCode()) && isHubConfig(row)) {
-                        pricedRow = row;
-                        break;
-                    }
-                }
-            }
-
-            String region = ModelUsageMeta.CN;
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("model_id", "hub-" + ability.toLowerCase(java.util.Locale.ROOT) + "-" + hub.id());
-            item.put("ability_type", ability);
-            item.put("model_code", hub.id());
-            String shown = TokenHubClientSupport.scrubBrand(hub.id());
-            item.put("display_name", shown.isBlank() ? hub.id() : shown);
-            item.put("model_name", shown.isBlank() ? hub.id() : shown);
-            item.put("quality_level", pricedRow == null || pricedRow.getQualityLevel() == null
-                    ? "STANDARD" : pricedRow.getQualityLevel());
-            item.put("price_unit", pricedRow == null || pricedRow.getPriceUnit() == null
-                    ? "PER_CALL" : pricedRow.getPriceUnit());
-            item.put("unit_price_cent", pricedRow == null || pricedRow.getUnitPriceCent() == null
-                    ? 0 : pricedRow.getUnitPriceCent());
-            int defaultFlag = pricedRow != null && Integer.valueOf(1).equals(pricedRow.getDefaultFlag()) ? 1 : 0;
-            item.put("default_flag", defaultFlag);
-            item.put("region", region);
-            item.put("region_label", ModelUsageMeta.regionLabel(region));
-            item.put("commercial_price_unit", item.get("price_unit"));
-            if (pricedRow != null) {
-                var cfg=ShortJson.map(pricedRow.getConfigJson());
-                item.putAll(tokenHubModelCatalog.pricingFor(tokenHubModelCatalog.endpointFor(cfg,hub.id()),hub.id()));
-            } else item.putAll(hub.pricing());
-            list.add(item);
-        }
-        boolean anyDefault = list.stream().anyMatch(item -> Integer.valueOf(1).equals(item.get("default_flag")));
-        if (!anyDefault && !list.isEmpty()) {
-            list.get(0).put("default_flag", 1);
-        }
-        return list;
     }
 }

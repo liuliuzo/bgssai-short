@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.CommercialOutcomeGuard;
 import com.bgssai.shortai.common.Responses;
@@ -439,7 +440,7 @@ public class FilmService {
             task = shortAiTaskMapper.selectOneByExample(tx);
         }
         if (task != null) {
-            evidence.put("model_code", task.getModelCode());
+            ProductModelAlias.hideStoredModel(evidence, task.getTaskType(), task.getModelCode());
             evidence.put("cost_cent", task.getCostCent());
             evidence.put("task_status", task.getTaskStatus());
             evidence.put("task_type", task.getTaskType());

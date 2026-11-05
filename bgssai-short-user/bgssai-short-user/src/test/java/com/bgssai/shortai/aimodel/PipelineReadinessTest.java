@@ -38,10 +38,12 @@ class PipelineReadinessTest {
         BizException ex = assertThrows(BizException.class, () -> readiness.assertReady("TEXT", null));
         assertEquals(CommonErrorCode.ABILITY_UNAVAILABLE.code(), ex.getCode());
         assertTrue(ex.getMessage().contains("大纲、剧本、分镜"));
-        assertTrue(ex.getMessage().contains("模型服务暂未开通：deepseek"));
+        assertTrue(ex.getMessage().contains("模型服务暂未开通"));
         assertTrue(ex.getMessage().contains("配音"));
-        assertTrue(ex.getMessage().contains("该模型暂未开放：minimax-speech-2.8-hd"));
+        assertTrue(ex.getMessage().contains("该模型暂未开放：BGSSAI TTS"));
         assertTrue(ex.getMessage().contains("请稍后重试"));
+        assertFalse(ex.getMessage().toLowerCase().contains("deepseek"));
+        assertFalse(ex.getMessage().toLowerCase().contains("minimax"));
         assertFalse(ex.getMessage().contains("kling-v2-1"));
         assertFalse(ex.getMessage().contains("qwen-tts"));
         assertFalse(ex.getMessage().contains("provider_not_configured"));
@@ -79,7 +81,8 @@ class PipelineReadinessTest {
                 "https://dev.user.bgssai-tokenhub.cn",
                 gateway);
         BizException ex = assertThrows(BizException.class, () -> readiness.assertReady("IMAGE", "kling-v2-1"));
-        assertTrue(ex.getMessage().contains("该模型暂未开放：kling-v2-1"));
+        assertTrue(ex.getMessage().contains("该模型暂未开放：BGSSAI Image"));
+        assertFalse(ex.getMessage().toLowerCase().contains("kling"));
         assertFalse(gateway.posted.stream().anyMatch(body -> body.contains("\"model\":\"kling-v3\"")));
     }
 
@@ -155,7 +158,7 @@ class PipelineReadinessTest {
         PipelineReadiness readiness = org.mockito.Mockito.mock(PipelineReadiness.class);
         ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
         org.mockito.Mockito.doThrow(new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
-                "大纲、剧本、分镜现在不能开始：模型服务暂未开通：deepseek，请稍后重试"))
+                "大纲、剧本、分镜现在不能开始：模型服务暂未开通，请稍后重试"))
                 .when(readiness).assertReady("TEXT", null);
         ReflectionTestUtils.setField(queue, "pipelineReadiness", readiness);
         ReflectionTestUtils.setField(queue, "shortAiTaskMapper", mapper);

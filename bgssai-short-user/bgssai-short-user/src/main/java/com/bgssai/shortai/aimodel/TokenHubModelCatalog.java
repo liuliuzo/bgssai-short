@@ -19,7 +19,7 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 
 /**
- * Reads the model ids TokenHub can run, so the user picker matches the gateway.
+ * Reads gateway model ids for server-side alignment. User pickers receive product aliases, not these ids.
  */
 @Component
 public class TokenHubModelCatalog {

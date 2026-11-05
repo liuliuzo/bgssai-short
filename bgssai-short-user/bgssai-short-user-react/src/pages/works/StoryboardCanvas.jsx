@@ -3,6 +3,7 @@ import { Alert, Button, Card, Drawer, Input, Select, Space, Tag, Tooltip, Typogr
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
+import { publicModelText } from '../../publicModel'
 
 const { Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -211,7 +212,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
-            （{cost.model_code || '-'} · {batchTaskType}）。确认后提交，与列表视图走同一道预算闸门。
+            （{publicModelText(cost.display_name || cost.model_code, batchTaskType) || '-'} · {batchTaskType}）。确认后提交，与列表视图走同一道预算闸门。
           </Paragraph>
         ) : (
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>

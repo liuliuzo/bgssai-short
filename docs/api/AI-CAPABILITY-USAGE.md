@@ -145,17 +145,16 @@ Query：`ability_type`（可选）。需登录 `USER`。返回该能力下 **启
 
 ```json
 { "result": { "model_list": [
-  { "model_id": "m-tokenhub-video-minimax", "ability_type": "VIDEO",
-    "model_code": "minimax-video-h3", "display_name": "MiniMax-Video-H3",
-    "model_name": "MiniMax-Video-H3", "quality_level": "STANDARD",
+  { "model_id": "bgssai-video", "ability_type": "VIDEO",
+    "model_code": "bgssai-video", "display_name": "BGSSAI Video",
+    "model_name": "BGSSAI Video", "quality_level": "STANDARD",
     "price_unit": "PER_SECOND", "unit_price_cent": 50, "default_flag": 1,
     "region": "cn", "region_label": "国内" }
 ] } }
 ```
 
-首批生产目录：TEXT `hy4-preview` / `kimi-k3` / `deepseek-chat`（CN）与 `gpt-4o-mini` /
-`claude-3-5-haiku-latest`（Global）；VIDEO
-`minimax-video-h3` / `pixverse-video-v6.0` / `kling-video-v3`；IMAGE `kling-v3`；VOICE
-`minimax-speech-2.8-hd`（仅当网关目录将其登记为语音；否则改用目录中已具备语音能力的 MiniMax 模型，没有则预检拒绝）；
-ASR `hy-asr-3.0-preview`；MUSIC `minimax-music-v2.6`。
-指定 `model_code` 不可用时服务端回退默认模型；重试可带 `fallback_model_flag=1`。
+用户目录每个能力只返回一个 BGSSAI 别名：TEXT `bgssai-chat`（BGSSAI Chat）、IMAGE `bgssai-image`、
+VIDEO `bgssai-video`、VOICE `bgssai-tts`、ASR `bgssai-asr`、MUSIC `bgssai-music`。
+`model_id` 与 `model_code` 都是该别名，不含网关编号或供应商品牌。提交别名时服务端解析为该能力的默认网关模型；
+同一别名再次出现在估价、任务和用量里。指定别名不可用时服务端回退该能力默认模型；重试可带 `fallback_model_flag=1`。
+管理端目录仍返回网关编号，见上文管理端示例。
