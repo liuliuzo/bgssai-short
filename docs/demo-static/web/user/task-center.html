@@ -364,8 +364,9 @@
         <code>task_status</code>（<code>QUEUED</code> / <code>PAUSED</code> / <code>RUNNING</code> /
         <code>SUCCEEDED</code> / <code>FAILED</code> / <code>CANCELED</code>）·
         <code>target_type</code> / <code>target_id</code> / <code>target_label</code> ·
-        <code>model_code</code> · <code>progress_percent</code> · <code>retry_count</code> ·
-        <code>fail_reason</code>（网关未开通时为「模型服务暂未开通：deepseek，请稍后重试」，不展示
+        <code>model_code</code> 为 BGSSAI 别名（例如 <code>bgssai-chat</code>），不展示网关编号 ·
+        <code>progress_percent</code> · <code>retry_count</code> ·
+        <code>fail_reason</code>（网关未开通时为「模型服务暂未开通，请稍后重试」，不展示
         <code>http 503</code>；网关 <code>code</code> 只留在服务日志。成功 <code>SUCCEEDED</code> 或
         <code>fail_reason_code</code> 为空时失败列留空，不展示「模型暂时不可用，请稍后重试或更换模型」）·
         <code>fail_reason_code</code>（<code>MODEL_TIMEOUT</code> /

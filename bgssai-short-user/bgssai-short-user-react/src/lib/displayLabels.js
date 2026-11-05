@@ -1,5 +1,7 @@
 /** User-facing Chinese labels. Internal API enums stay English. */
 
+import { scrubVendorText } from '../publicModel.js'
+
 export const ROLE_LABEL = {
   USER: '用户',
   BOT: 'BOT',
@@ -256,7 +258,7 @@ export function friendlyFailReason(raw) {
   if (/token\s*-?\s*hub/i.test(msg)) {
     return '模型暂时不可用，请稍后重试或更换模型'
   }
-  return msg.replace(/media_id/gi, '作品号')
+  return scrubVendorText(msg.replace(/media_id/gi, '作品号'))
 }
 
 /** Mask config-key leaks in Tube preflight warnings shown to users. */

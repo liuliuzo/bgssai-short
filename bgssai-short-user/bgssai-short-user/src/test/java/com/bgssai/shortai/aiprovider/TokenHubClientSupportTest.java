@@ -79,8 +79,9 @@ class TokenHubClientSupportTest {
         assertFalse(msg.toLowerCase().contains("api key"));
         assertTrue(msg.contains("模型"));
         assertEquals("写剧本失败，请重试", TokenHubClientSupport.userFacingMessage("写剧本失败，请重试"));
-        assertEquals("模型服务暂未开通：deepseek，请稍后重试",
-                TokenHubClientSupport.userFacingMessage("Provider is not configured: deepseek"));
+        String unopened = TokenHubClientSupport.userFacingMessage("Provider is not configured: deepseek");
+        assertEquals("模型服务暂未开通，请稍后重试", unopened);
+        assertFalse(unopened.toLowerCase().contains("deepseek"));
         assertEquals("模型服务暂时不可用，请稍后重试", TokenHubClientSupport.userFacingMessage("http 503"));
         assertEquals("该模型暂不可用，请改选其它模型",
                 TokenHubClientSupport.userFacingMessage("cross-region hub disabled for short"));
@@ -88,6 +89,8 @@ class TokenHubClientSupportTest {
                 TokenHubClientSupport.userFacingMessage("model task timeout"));
         assertFalse(TokenHubClientSupport.userFacingMessage("tokenhub timeout").toLowerCase().contains("tokenhub"));
         assertEquals("上游拒绝", TokenHubClientSupport.userFacingMessage("上游拒绝"));
-        assertFalse(TokenHubClientSupport.scrubBrand("TokenHub DeepSeek").toLowerCase().contains("tokenhub"));
+        String branded = TokenHubClientSupport.scrubBrand("TokenHub DeepSeek");
+        assertFalse(branded.toLowerCase().contains("tokenhub"));
+        assertFalse(branded.toLowerCase().contains("deepseek"));
     }
 }

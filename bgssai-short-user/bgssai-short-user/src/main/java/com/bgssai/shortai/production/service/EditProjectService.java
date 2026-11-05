@@ -743,7 +743,10 @@ public class EditProjectService {
         item.put("asset_id", row.getAssetId());
         item.put("package_name", row.getPackageName());
         item.put("missing_shot_list", ShortJson.list(row.getMissingJson()));
-        item.put("fail_reason", row.getFailReason());
+        String failReason = row.getFailReason();
+        item.put("fail_reason", failReason == null || failReason.isBlank()
+                ? failReason
+                : com.bgssai.shortai.aiprovider.TokenHubClientSupport.userFacingMessage(failReason));
         item.put("created_time", row.getCreatedTime());
         item.put("finished_time", row.getFinishedTime());
         return item;

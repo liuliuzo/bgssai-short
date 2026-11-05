@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Card, Input, Select, Space, Statistic, Table, Tag, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
 import { visibleBaseline } from '../../utils/baselineCards'
+import { friendlyFailReason } from '../../lib/displayLabels'
 
 const { Paragraph, Text } = Typography
 
@@ -284,7 +285,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
               width: 220,
               render: (_, r) => (r.export_status === 'READY'
                 ? <Button type="link" size="small" onClick={() => download(r.export_id)}>下载</Button>
-                : <Text type="secondary" style={{ fontSize: 12 }}>{r.fail_reason || '-'}</Text>),
+                : <Text type="secondary" style={{ fontSize: 12 }}>{friendlyFailReason(r.fail_reason) || '-'}</Text>),
             },
           ]}
         />

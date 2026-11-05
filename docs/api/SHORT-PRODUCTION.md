@@ -54,9 +54,9 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
 `MODERN_URBAN`，画幅固定 `VERTICAL_9_16`。创建后插入等量剧集占位，并入队 `TEXT` 大纲任务。
 
 文本、图片或配音模型在当前网关不可用时，整次创建回滚，返回 `4014`。`message` 点明不能开始的步骤，
-例如「以下步骤现在不能开始：大纲、剧本、分镜（模型服务暂未开通：deepseek）；配音（该模型暂未开放：minimax-speech-2.8-hd）。请稍后重试」。
+例如「以下步骤现在不能开始：大纲、剧本、分镜（模型服务暂未开通）；配音（该模型暂未开放：BGSSAI TTS）。请稍后重试」。
 探测体不完整时，网关返回 400，或对公司图片/配音返回 422 且只校验 `n`、`size`、`input`、`voice`、`messages`、`prompt`，都视为该步骤可用，不因此拦截创建。
-图片默认采用网关目录中的 `kling-v3`；配音只采用目录里具备语音能力的 MiniMax 模型，没有则点明配置编号未开放。
+用户请求和响应里的 `model_code` 只使用 BGSSAI 别名。图片、配音在服务端仍按网关目录选择已登记模型，未登记时对用户写「该模型暂未开放：BGSSAI Image」或「该模型暂未开放：BGSSAI TTS」。
 不入队、不扣费。同一检查用于大纲、定妆、分镜、图片、配音、视频的入队和失败任务重试。
 大纲调用使用平台中枢密钥，不要求先绑定 bgssai-chat。未绑定时扣本产品 `user_quota`（没有订阅则先发 FREE）。余额或月度上限不够时创建直接返回 `4007`，不写作品、不入队。已绑定 Chat 的账号仍扣中央账本。
 
@@ -90,7 +90,7 @@ delete：已合成（`compose_status=READY`）返回 `4006`。
 
 ### POST /bgssai/user/scripts/outline-generate
 
-`{ "work_id", "model_code": "hy4-preview" }` → `{ "task_id" }`。`model_code` 可选，省略时使用
+`{ "work_id", "model_code": "bgssai-chat" }` → `{ "task_id" }`。`model_code` 可选，省略时使用
 TEXT 默认模型。完成后写 `short_work.outline_json` 并回写各集标题/梗概/钩子。
 
 ### GET /bgssai/user/scripts/outline?work_id=
@@ -101,7 +101,7 @@ TEXT 默认模型。完成后写 `short_work.outline_json` 并回写各集标题
 
 ### POST /bgssai/user/scripts/generate
 
-`{ "episode_id", "extra_prompt", "model_code": "kimi-k3" }` → `{ "task_id" }`。
+`{ "episode_id", "extra_prompt", "model_code": "bgssai-chat" }` → `{ "task_id" }`。
 `model_code` 可选；大纲未出返回 `4006`。
 
 ### GET /bgssai/user/scripts/detail?episode_id=
@@ -114,7 +114,7 @@ TEXT 默认模型。完成后写 `short_work.outline_json` 并回写各集标题
 
 ### POST /bgssai/user/scripts/rewrite
 
-`{ "episode_id", "scene_no", "line_no", "instruction", "model_code": "deepseek-v4-pro" }`。
+`{ "episode_id", "scene_no", "line_no", "instruction", "model_code": "bgssai-chat" }`。
 `line_no`、`model_code` 可空，分别表示整场和使用 TEXT 默认模型。入队 TEXT 任务。
 
 ### POST /bgssai/user/scripts/ready
@@ -238,7 +238,7 @@ cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 ### POST /bgssai/user/dubbings/submit
 
 ```json
-{ "episode_id": "e-20001", "model_code": "minimax-speech-2.8-hd" }
+{ "episode_id": "e-20001", "model_code": "bgssai-tts" }
 ```
 
 按有台词的镜头入队 VOICE，`model_code` 可选。提交前过费用闸门。返回
@@ -253,7 +253,7 @@ cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 ### POST /bgssai/user/subtitles/transcribe
 
 ```json
-{ "episode_id": "e-20001", "model_code": "hy-asr-3.0-preview", "confirm_overwrite_flag": 1 }
+{ "episode_id": "e-20001", "model_code": "bgssai-asr", "confirm_overwrite_flag": 1 }
 ```
 
 仅为已有配音素材创建 ASR 任务。检测到人工修改字幕且未确认覆盖时返回 `4006`；无配音素材时同样拒绝且
@@ -299,7 +299,7 @@ FFmpeg 混入成片音轨。
 {
   "work_id": "w-10001",
   "episode_id": "e-20001",
-  "model_code": "minimax-music-v2.6",
+  "model_code": "bgssai-music",
   "prompt": "悬疑、克制、低频弦乐，适合都市复仇短剧",
   "is_instrumental": 1
 }
@@ -491,7 +491,7 @@ tube 不可达返回 `502000`；超时 `504000`；业务码 6xxxx 文案可读�
 { "source_id": "src-70001", "chapter_no_from": 1, "chapter_no_to": 5, "target_episode_count": 6 }
 ```
 
-返回 `{ "result": { "char_count": 18420, "estimated_cost_cent": 12, "model_code": "hy4" } }`。
+返回 `{ "result": { "char_count": 18420, "estimated_cost_cent": 12, "model_code": "bgssai-chat", "display_name": "BGSSAI Chat" } }`。
 
 ### POST /bgssai/user/sources/adapt
 

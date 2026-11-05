@@ -17,7 +17,7 @@ const AGENTS = [
   {
     key: 'codex',
     label: 'Codex',
-    hint: 'OpenAI Codex CLI 添加远程 MCP，Bearer 头携带个人访问令牌。',
+    hint: 'Codex CLI 添加远程 MCP，Bearer 头携带个人访问令牌。',
     snippet: (endpoint) => `codex mcp add bgssai-short --url ${endpoint} \\
   --header "Authorization: Bearer bgs_mcp_你的令牌"`,
   },

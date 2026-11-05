@@ -1,4 +1,5 @@
 import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
+import { publicModelText } from '../../publicModel'
 import { formatToken } from '../../utils/formatToken'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -55,7 +56,7 @@ function confirmEstimate(est, title) {
         <div>
           <p>预计费用 {formatYuan(est.estimated_cost_cent)} 元</p>
           <p>余额可用 {formatYuan(est.available_cent)} 元</p>
-          <p>共 {est.task_count || 0} 项（{est.model_code || '-'}）</p>
+          <p>共 {est.task_count || 0} 项（{publicModelText(est.display_name || est.model_code, est.task_type) || '-'}）</p>
           {breakdown ? <p>{breakdown}{(est.shot_cost_list || []).length > 8 ? '…' : ''}</p> : null}
         </div>
       ),
@@ -107,7 +108,7 @@ function videoWatchCopy(watch) {
   }
   if (watch.done && failed > 0) {
     const reason = progress.failed_task_list && progress.failed_task_list[0] && progress.failed_task_list[0].fail_reason
-    return { type: 'error', message: '有视频没有生成成功', description: reason || `失败 ${failed} 个，可在任务中心恢复` }
+    return { type: 'error', message: '有视频没有生成成功', description: friendlyFailReason(reason) || `失败 ${failed} 个，可在任务中心恢复` }
   }
   if (watch.done) {
     return { type: 'success', message: '视频已生成', description: `成功 ${succeeded} 个` }
@@ -125,7 +126,7 @@ function reportTaskOutcome(task, successText) {
     return false
   }
   if (task.task_status === 'FAILED' || task.task_status === 'CANCELED') {
-    message.error(task.fail_reason || task.fail_reason_code || '任务失败，请稍后重试')
+    message.error(friendlyFailReason(task.fail_reason) || task.fail_reason_code || '任务失败，请稍后重试')
     return false
   }
   if (task.task_status === 'SUCCEEDED') {
@@ -530,7 +531,7 @@ function CharacterPane({ work }) {
             if (!data?.success || !data.result?.task_id) return
             const done = await waitTask(work.work_id, data.result.task_id)
             if (done && done.task_status !== 'SUCCEEDED') {
-              message.error(`生成失败：${done.fail_reason || done.fail_reason_code || '未知原因'}`)
+              message.error(`生成失败：${friendlyFailReason(done.fail_reason) || done.fail_reason_code || '未知原因'}`)
             }
             load()
           } finally {
@@ -618,7 +619,7 @@ function StoryboardPane({ work, episodeId }) {
           const failed = Number(result.failed) || 0
           if (failed > 0) {
             const reason = result.failed_task_list && result.failed_task_list[0] && result.failed_task_list[0].fail_reason
-            message.error(reason || `有 ${failed} 个视频没有生成成功，可在任务中心恢复`)
+            message.error(friendlyFailReason(reason) || `有 ${failed} 个视频没有生成成功，可在任务中心恢复`)
           } else if (Number(result.succeeded) > 0) {
             message.success('视频已生成')
           }
@@ -821,7 +822,7 @@ function StoryboardPane({ work, episodeId }) {
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
-            （预计 {formatToken(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {cost.model_code || '-'}）
+            （预计 {formatToken(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {publicModelText(cost.display_name || cost.model_code, cost.task_type) || '-'}）
             {(cost.shot_cost_list || []).length > 0
               ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
               : ''}

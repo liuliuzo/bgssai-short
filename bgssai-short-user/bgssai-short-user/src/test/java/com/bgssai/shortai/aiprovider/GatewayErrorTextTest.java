@@ -21,8 +21,9 @@ class GatewayErrorTextTest {
     void providerNotConfiguredBecomesARetryableSentence() {
         String body = "{\"error\":{\"message\":\"Provider is not configured: deepseek\","
                 + "\"type\":\"service_unavailable_error\",\"code\":\"provider_not_configured\"}}";
-        assertEquals("模型服务暂未开通：deepseek，请稍后重试", GatewayErrorText.explain(503, body));
-        assertEquals("模型服务暂未开通：deepseek", GatewayErrorText.reason(503, body));
+        assertEquals("模型服务暂未开通，请稍后重试", GatewayErrorText.explain(503, body));
+        assertEquals("模型服务暂未开通", GatewayErrorText.reason(503, body));
+        assertFalse(GatewayErrorText.explain(503, body).toLowerCase().contains("deepseek"));
         assertFalse(GatewayErrorText.probeMeansReady(503, body));
         assertFalse(GatewayErrorText.explain(503, body).toLowerCase().contains("provider_not_configured"));
     }
@@ -70,7 +71,8 @@ class GatewayErrorTextTest {
             BizException ex = assertThrows(BizException.class,
                     () -> new ProviderHttp.JdkClient().postJson(url, Map.of(), "{}", 15));
             assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
-            assertEquals("模型服务暂未开通：deepseek，请稍后重试", ex.getMessage());
+            assertEquals("模型服务暂未开通，请稍后重试", ex.getMessage());
+            assertFalse(ex.getMessage().toLowerCase().contains("deepseek"));
         } finally {
             server.stop(0);
         }

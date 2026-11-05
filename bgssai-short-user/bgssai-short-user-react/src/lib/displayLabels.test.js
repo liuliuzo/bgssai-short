@@ -110,6 +110,8 @@ test('friendly fail reason scrubs TLS English', () => {
   assert.equal(friendlyFailReason('内容命中拦截词'), '内容命中拦截词')
   assert.equal(friendlyFailReason('Tube 响应缺少 media_id'), 'Tube 响应缺少 作品号')
   assert.doesNotMatch(friendlyFailReason('tokenhub gateway down'), /tokenhub/i)
+  assert.doesNotMatch(friendlyFailReason('模型服务暂未开通：deepseek，请稍后重试'), /deepseek/i)
+  assert.match(friendlyFailReason('模型服务暂未开通：deepseek，请稍后重试'), /模型服务暂未开通/)
 })
 
 test('sanitizeTubeWarning hides ingest-token key', () => {

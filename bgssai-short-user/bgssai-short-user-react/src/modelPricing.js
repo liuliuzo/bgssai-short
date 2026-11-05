@@ -1,4 +1,5 @@
 import { formatTokenAmount, formatTokenExact } from './utils/formatToken.js'
+import { publicModelText } from './publicModel.js'
 
 export const ALLOWED_MULTIPLIERS = [0.5, 1, 1.5]
 export const DOMESTIC_GATEWAY_REGION = 'tokenhub-cn'
@@ -155,12 +156,12 @@ export function estimateShotBatchTokens(shotCount, modelRow = {}, baseTokensPerS
   }
 }
 
-function hideGatewayBrand(text) {
-  return String(text || '').replace(/token\s*-?\s*hub/ig, '').replace(/\s{2,}/g, ' ').trim()
-}
-
 export function modelPricingLabel(row = {}) {
-  const name = hideGatewayBrand(row.label || row.display_name || row.model_name || row.model_code || row.model || '')
+  const ability = row.ability_type || row.ability
+  const name = publicModelText(
+    row.label || row.display_name || row.model_name || row.model_code || row.model || '',
+    ability,
+  )
   const multiplier = row.billing_multiplier
   const value = multiplier == null ? null : Number(multiplier)
   const parts = [name]

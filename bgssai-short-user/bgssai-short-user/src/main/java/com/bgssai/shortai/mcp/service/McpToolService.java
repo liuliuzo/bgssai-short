@@ -194,7 +194,7 @@ public class McpToolService {
                         prop("episode_id", "string", "分集 ID（必填）"),
                         prop("task_type", "string", "任务类型：IMAGE / VIDEO / VOICE / COMPOSE，默认 COMPOSE"),
                         prop("shot_id", "string", "可选分镜 ID（单镜渲染时指定）"),
-                        prop("model_code", "string", "可选模型编码"),
+                        prop("model_code", "string", "可选 BGSSAI 模型别名，例如 bgssai-chat、bgssai-image、bgssai-video、bgssai-tts"),
                         prop("confirm_cost", "boolean", "计费确认开关，必须显式传 true 才允许提交"))));
         tools.add(tool("publish_episode_to_media", "将当前用户已合成且审核通过的分集成片发布到 bgssai-tube。必须显式传入 confirm_publish=true。",
                 schema(List.of("episode_id", "confirm_publish"),

@@ -91,13 +91,10 @@
       <span class="spacer"></span>
       <a class="btn btn-default" href="episode-preview.html">连起来看</a>
       <select style="width:210px" title="画面模型">
-        <option value="kling-v3" selected>画面：可灵 kling-v3</option>
-        <option value="image-01">画面：海螺 image-01</option>
+        <option value="bgssai-image" selected>画面：BGSSAI Image</option>
       </select>
       <select style="width:230px" title="视频模型">
-        <option value="minimax-video-h3" selected>视频：MiniMax-Video-H3</option>
-        <option value="pixverse-video-v6.0">视频：PixVerse-Video-v6</option>
-        <option value="kling-video-v3">视频：Kling-Video-V3</option>
+        <option value="bgssai-video" selected>视频：BGSSAI Video</option>
       </select>
       <select style="width:170px" title="全部生成的目标级别">
         <option value="DRAFT_IMAGE" selected>目标级别：草图 0.10 / 镜</option>
@@ -266,9 +263,10 @@
         连贯性提示不阻塞生成（该镜生成按钮不禁用），可「忽略这条」——忽略留痕并计入分镜门
         <code>G2_STORYBOARD</code> 评分；未定妆角色 / 场景 / 道具的镜头仍禁用生成（<code>blocked_flag=1</code>）。
         顶部画面模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=IMAGE</code>，未点选时默认
-        网关目录中的可灵文生图 <code>kling-v3</code>。VIDEO 模型来自
+        <code>bgssai-image</code>（BGSSAI Image）。VIDEO 模型来自
         <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
-        <code>model_code</code> 随单镜或批量任务提交；存在首帧时由 Provider 走图生视频，否则走文生视频。
+        <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交；存在首帧时由服务端走图生视频，否则走文生视频。
+        页面与接口不展示网关编号。
         首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经
         <code>POST /bgssai/user/shots/frame-link-save</code> 与 <code>/frame-link-batch</code> 维护，
         列表返回 <code>last_frame_asset_id</code> · <code>last_frame_url</code> · <code>link_effective_flag</code> · <code>link_hint</code>；

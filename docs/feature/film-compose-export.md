@@ -28,8 +28,8 @@
      字幕样式（与 `voice-subtitle.md` 共用同一份 `subtitle_style_json`，合成设置卡内可直接修改，
      两处编辑的是同一事实，不构成漂移）。
   4. **BGM 闪避**：有台词处 BGM 自动降低音量（`duck_flag=1`，默认开），避免压住人声。
-     BGM 可上传已有素材，也可输入音乐描述选择 `MUSIC` 模型生成；首批默认
-     `minimax-music-v2.6` 且默认 `is_instrumental=1`。生成成功后只更新候选素材，用户选用后才写入
+     BGM 可上传已有素材，也可输入音乐描述选择 `MUSIC` 模型生成；用户看到的默认是
+     `bgssai-music`（BGSSAI Music），且默认 `is_instrumental=1`。生成成功后只更新候选素材，用户选用后才写入
      `compose_setting_json.bgm_asset_id` 并参与合成。
   5. **导出规格**：分辨率固定 1080×1920（`VERTICAL_9_16`），帧率 30；导出版本可多选：
      `WITH_SUBTITLE`（烧录字幕）、`NO_SUBTITLE`（纯净版，便于二次发行）、`SRT_ONLY`（仅字幕文件）。

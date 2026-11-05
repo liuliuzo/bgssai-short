@@ -1,4 +1,5 @@
 package com.bgssai.shortai.billing;
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.mapper.UsageReceiptMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,8 +106,11 @@ public class UsageReceiptService {
    List<Map<String,Object>> out=new ArrayList<>();
    for(UsageReceiptRow row:rows){
     Map<String,Object> value=new LinkedHashMap<>();value.put("hub",userHub(row.hub));value.put("request_id",row.requestId);
-    value.put("model",row.model);value.put("work_ref",row.workRef);value.put("task_ref",row.taskRef);
-    value.put("receipt",parseReceiptMap(row));out.add(value);
+    ProductModelAlias.Face face=ProductModelAlias.forStored(null,row.model);
+    value.put("model",face.code());value.put("display_name",face.name());
+    value.put("work_ref",row.workRef);value.put("task_ref",row.taskRef);
+    Map<String,Object> receipt=parseReceiptMap(row);hideReceiptModel(receipt);
+    value.put("receipt",receipt);out.add(value);
    }
    return out;
   }catch(RuntimeException ex){
@@ -121,6 +125,13 @@ public class UsageReceiptService {
   }catch(Exception ex){
    log.warn("usage receipt json parse failed requestId={}", row.requestId);
    return pending(row);
+  }
+ }
+ private static void hideReceiptModel(Map<String,Object> receipt){
+  if(receipt==null) return;
+  Object model=receipt.get("model");
+  if(model instanceof String text && ProductModelAlias.leaks(text)){
+   receipt.put("model",ProductModelAlias.forStored(null,text).code());
   }
  }
  private Map<String,Object> pending(UsageReceiptRow row){

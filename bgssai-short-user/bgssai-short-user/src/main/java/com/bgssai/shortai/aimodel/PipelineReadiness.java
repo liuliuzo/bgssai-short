@@ -151,7 +151,7 @@ public class PipelineReadiness {
         List<String> blocks = new ArrayList<>();
         for (Step step : steps) {
             if (!companyReady(step, catalog)) {
-                blocks.add(step.label + "（该模型暂未开放：" + CompanyCompatGateway.defaultModel(step.ability) + "）");
+                blocks.add(step.label + "（该模型暂未开放：" + publicName(step) + "）");
             }
         }
         if (!blocks.isEmpty()) {
@@ -188,7 +188,7 @@ public class PipelineReadiness {
         }
         TokenHubModelCatalog.HubModel listed = catalog.get(modelCode);
         if (listed == null || listed.capabilities() == null || !listed.capabilities().contains(step.capability)) {
-            return "该模型暂未开放：" + modelCode;
+            return closedLabel(step);
         }
         return null;
     }
@@ -231,7 +231,7 @@ public class PipelineReadiness {
         TokenHubModelCatalog.HubModel listed = catalog.get(modelCode);
         if (listed == null || listed.capabilities() == null
                 || !listed.capabilities().contains(step.capability)) {
-            return "该模型暂未开放：" + modelCode;
+            return closedLabel(step);
         }
         try {
             GatewayClient.Reply reply = client.post(baseUrl + probePath(step.ability), apiKey, probeBody(step, modelCode));
@@ -241,7 +241,7 @@ public class PipelineReadiness {
             GatewayErrorText.note(reply.status(), reply.body());
             String reason = GatewayErrorText.reason(reply.status(), reply.body());
             if ("该模型暂未开放".equals(reason)) {
-                return reason + "：" + modelCode;
+                return closedLabel(step);
             }
             return reason;
         } catch (InterruptedException ex) {
@@ -290,6 +290,15 @@ public class PipelineReadiness {
             body.put("size", "0x0");
         }
         return ShortJson.toJson(body);
+    }
+
+    private static String publicName(Step step) {
+        ProductModelAlias.Face face = ProductModelAlias.canonical(step.ability);
+        return face == null ? "BGSSAI" : face.name();
+    }
+
+    private static String closedLabel(Step step) {
+        return "该模型暂未开放：" + publicName(step);
     }
 
     private static String format(List<String> blocks) {

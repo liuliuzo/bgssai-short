@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.Responses;
@@ -272,7 +273,7 @@ public class SourceService {
         result.put("chapter_count", chapters.size());
         result.put("char_count", charCount);
         result.put("estimated_cost_cent", cost);
-        result.put("model_code", model.getModelCode());
+        ProductModelAlias.hideStoredModel(result, "TEXT", model.getModelCode());
         result.put("unit_price_cent", model.getUnitPriceCent());
         return Responses.ok(result);
     }

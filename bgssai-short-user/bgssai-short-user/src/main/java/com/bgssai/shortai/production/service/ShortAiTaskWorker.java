@@ -1307,7 +1307,9 @@ public class ShortAiTaskWorker {
         }
         if (!frameLinkService.supportsLastFrame(model)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "所选视频模型不支持首尾帧（" + model.getModelCode() + "），请换模型或改用「接上一镜」");
+                    "所选视频模型不支持首尾帧（"
+                            + com.bgssai.shortai.aimodel.ProductModelAlias.forStored("VIDEO", model.getModelCode()).name()
+                            + "），请换模型或改用「接上一镜」");
         }
         attachFrameAsset(shot.getLastFrameAssetId(), request,
                 "last_image_url", "last_image_base64", "last_image_mime");

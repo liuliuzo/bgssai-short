@@ -12,6 +12,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.aop.UserContext;
@@ -173,7 +174,7 @@ public class UsageUserService {
             item.put("record_id", row.getRecordId());
             item.put("ability_type", row.getAbilityType());
             item.put("ability_type_name", ABILITY_NAME.getOrDefault(row.getAbilityType(), row.getAbilityType()));
-            item.put("model_code", row.getModelCode());
+            ProductModelAlias.hideStoredModel(item, row.getAbilityType(), row.getModelCode());
             item.put("quality_level", row.getQualityLevel());
             item.put("quality_level_name", QUALITY_NAME.getOrDefault(row.getQualityLevel(), row.getQualityLevel()));
             item.put("price_unit", row.getPriceUnit());

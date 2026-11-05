@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 
@@ -116,16 +117,21 @@ public final class TokenHubClientSupport {
         return n.contains("tokenhub") || n.contains("bgssai-tokenhub");
     }
 
-    /** Drop gateway brand from a display name. Empty when the name was only the brand. */
+    /** Drop gateway and upstream brand from a display name. */
     public static String scrubBrand(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return "";
-        }
-        return TOKENHUB_WORD.matcher(raw).replaceAll("").replaceAll("\\s{2,}", " ").trim();
+        return ProductModelAlias.scrub(raw);
     }
 
-    /** Scrub infra names from messages that may reach the user SPA or fail_reason. */
+    /** Scrub infra and upstream names from messages that may reach the user SPA or fail_reason. */
     public static String userFacingMessage(String raw) {
+        String scrubbed = ProductModelAlias.scrub(composeUserFacingMessage(raw));
+        if (scrubbed == null || scrubbed.isBlank()) {
+            return "模型暂时不可用，请稍后重试或更换模型";
+        }
+        return scrubbed;
+    }
+
+    private static String composeUserFacingMessage(String raw) {
         if (raw == null || raw.isBlank()) {
             return "模型暂时不可用，请稍后重试或更换模型";
         }
@@ -153,8 +159,7 @@ public final class TokenHubClientSupport {
             return "生成任务没有返回编号，请重试";
         }
         if (lower.contains("provider is not configured")) {
-            String provider = GatewayErrorText.providerName(msg);
-            return "模型服务暂未开通：" + (provider.isEmpty() ? "当前模型" : provider) + "，请稍后重试";
+            return "模型服务暂未开通，请稍后重试";
         }
         if (lower.matches("http \\d{3}") || lower.matches("download status \\d{3}")) {
             return "模型服务暂时不可用，请稍后重试";

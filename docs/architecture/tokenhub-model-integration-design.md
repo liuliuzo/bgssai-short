@@ -13,7 +13,7 @@
   （旧 CN 键空值回填兼容）。第三方直连（VEO/KLING/MINIMAX/SEEDANCE，以及指向其它主机的
   OPENAI_COMPAT）的 `execute` 拒绝，计费生成经 registry 走境内中枢。唯一例外是公司主机
   `https://chat.bgssai.com`：仅当中枢密钥为空且 `ai.openai_compat.api_key` 已填写时直连。
-- 用户端只见 `display_name` 与 `0.5×` / `1×` / `1.5×`；错误与 `fail_reason` 脱敏，不含中枢品牌。对账列表不回显网关主机。
+- 用户端只见 BGSSAI 产品别名（`bgssai-chat` / `bgssai-image` / `bgssai-video` / `bgssai-tts` / `bgssai-asr` / `bgssai-music`，展示名为 BGSSAI Chat / Image / Video / TTS / ASR / Music）与 `0.5×` / `1×` / `1.5×`。客户端提交的 `model_code` 是别名，服务端再映射到网关编号。错误与 `fail_reason` 脱敏，不含中枢品牌或供应商品牌。对账列表不回显网关主机或网关编号。
 - 所选模型不可用时回退同能力默认模型；重试可换备用模型。
 - 上游返回的临时视频、音频、字幕 URL 只在 Worker 内使用；成功后立即下载并转存对象存储。
 - 同步和异步上游调用统一落入 `short_ai_task` 状态、重试、计费与失败原因，不生成占位结果。
@@ -154,7 +154,7 @@ TokenHub `config_json` 共同字段：
   TokenHub 品牌字样。
 - 任务重试沿用同一业务参数，新建上游任务；`fallback_model_flag=1` 时可换备用模型；成功计费一次，失败不计费。
 - 网关错误体按 `error.code` 翻译。`provider_not_configured` 的用户文案是
-  「模型服务暂未开通：{provider}，请稍后重试」；`code` 与 `type` 只打日志。
+  「模型服务暂未开通，请稍后重试」；供应商名、`code` 与 `type` 只打日志。
 
 ## 7. 开跑前检查
 
@@ -176,9 +176,10 @@ TokenHub `config_json` 共同字段：
    （图片 `n` / `size`，配音 `input` / `voice`，文本 `messages` / `prompt`）时，同样视为可用。
    422 落在其它字段，或表示模型未登记、服务未开通时，该步骤不能开始。
 4. 任一步骤不可用时接口返回 `4014`，文案点明步骤，例如
-   「大纲、剧本、分镜现在不能开始：模型服务暂未开通：deepseek，请稍后重试」
-   或「配音现在不能开始：该模型暂未开放：minimax-speech-2.8-hd，请稍后重试」。
-   此时不写 `short_ai_task`，也不扣费。入队时写入的 `model_code` 与这次采用的编号一致。
+   「大纲、剧本、分镜现在不能开始：模型服务暂未开通，请稍后重试」
+   或「配音现在不能开始：该模型暂未开放：BGSSAI TTS，请稍后重试」。
+   此时不写 `short_ai_task`，也不扣费。入队时写入的是服务端采用的网关编号；
+   返回给用户的 `model_code` 是第 1 节的产品别名。
    合成走本机 ffmpeg，不走这道检查。
    镜头图片成功后自动排视频是同一次提交的后续任务，不再重复探测。
 
