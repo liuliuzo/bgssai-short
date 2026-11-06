@@ -20,6 +20,12 @@ INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`
 
 -- 支付 notify_url 随环境写入库内商户行（业务凭证分层）；OAuth redirect_uri 仍在 profile。
 
+-- 微信开放平台网站应用（授权登录，channel/provider=wechat，账号 C，已通过）。
+-- 生产库每次执行都覆盖 AppID / AppSecret，用来换掉误写入的官网、支付或 blog AppID。
+-- 新插入 enabled=0；重复执行不改已有 enabled。只动 wechat 登录这两行。
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.wechat.app-id', 'wxbb02a96a2250cea5', '登录页微信开放平台网站应用 AppID(snsapi_login) · PROD', 0, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.oauth.wechat.app-secret', '712e5d5f743264ed26c25cc167af18bc', '登录页微信开放平台网站应用 AppSecret · PROD', 0, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`);
+
 -- 支付回调 URL（生产环境用户端域名）
 INSERT INTO `wechat_pay_config` (`merchant_name`, `mch_id`, `app_id`, `notify_url`, `env_mode`, `is_enabled`, `is_collection_active`, `del_flag`, `creator`) VALUES ('BGSSAI Short WeChat', '1112047784', 'wx496f923c7d4ac64e', 'https://www.bgssai-short.com/bgssai/user/payment/wechat/notify', 'PRODUCTION', 1, 1, 0, 'seed') ON DUPLICATE KEY UPDATE `notify_url` = IF(`notify_url` IS NULL OR `notify_url` = '', VALUES(`notify_url`), `notify_url`);
 INSERT INTO `alipay_config` (`merchant_name`, `app_id`, `notify_url`, `env_mode`, `is_enabled`, `is_collection_active`, `del_flag`, `creator`) VALUES ('BGSSAI Short Alipay', '2021006196627810', 'https://www.bgssai-short.com/bgssai/user/payment/alipay/notify', 'PRODUCTION', 1, 1, 0, 'seed') ON DUPLICATE KEY UPDATE `notify_url` = IF(`notify_url` IS NULL OR `notify_url` = '', VALUES(`notify_url`), `notify_url`);
