@@ -8,15 +8,22 @@ public class WechatMerchant {
     private final String mchPrivateKey;
     private final String apiV3Key;
     private final String notifyUrl;
+    private final String keyMode;
+    private final String wechatPublicKeyId;
+    private final String wechatPublicKey;
 
     public WechatMerchant(String mchId, String appId, String merchantSerialNo,
-                          String mchPrivateKey, String apiV3Key, String notifyUrl) {
+                          String mchPrivateKey, String apiV3Key, String notifyUrl,
+                          String keyMode, String wechatPublicKeyId, String wechatPublicKey) {
         this.mchId = mchId;
         this.appId = appId;
         this.merchantSerialNo = merchantSerialNo;
         this.mchPrivateKey = mchPrivateKey;
         this.apiV3Key = apiV3Key;
         this.notifyUrl = notifyUrl;
+        this.keyMode = keyMode;
+        this.wechatPublicKeyId = wechatPublicKeyId;
+        this.wechatPublicKey = wechatPublicKey;
     }
 
     public String getMchId() { return mchId; }
@@ -25,10 +32,24 @@ public class WechatMerchant {
     public String getMchPrivateKey() { return mchPrivateKey; }
     public String getApiV3Key() { return apiV3Key; }
     public String getNotifyUrl() { return notifyUrl; }
+    public String getKeyMode() { return keyMode; }
+    public String getWechatPublicKeyId() { return wechatPublicKeyId; }
+    public String getWechatPublicKey() { return wechatPublicKey; }
+
+    /** Stored {@code wechat_pay_config.key_mode}. Unset or {@code PLATFORM_CERT} keeps certificate mode. */
+    public boolean usesPublicKeyMode() {
+        return keyMode != null && "PUBLIC_KEY".equalsIgnoreCase(keyMode.trim());
+    }
 
     public boolean hasCompleteCredentials() {
-        return isPresent(mchId) && isPresent(appId) && isPresent(merchantSerialNo)
-                && isPresent(mchPrivateKey) && isPresent(apiV3Key) && isPresent(notifyUrl);
+        if (!isPresent(mchId) || !isPresent(appId) || !isPresent(merchantSerialNo)
+                || !isPresent(mchPrivateKey) || !isPresent(apiV3Key) || !isPresent(notifyUrl)) {
+            return false;
+        }
+        if (usesPublicKeyMode()) {
+            return isPresent(wechatPublicKeyId) && isPresent(wechatPublicKey);
+        }
+        return true;
     }
 
     public String missingFields() {
@@ -39,6 +60,10 @@ public class WechatMerchant {
         appendIfMissing(missing, "mch_private_key", mchPrivateKey);
         appendIfMissing(missing, "api_v3_key", apiV3Key);
         appendIfMissing(missing, "notify_url", notifyUrl);
+        if (usesPublicKeyMode()) {
+            appendIfMissing(missing, "wechat_public_key_id", wechatPublicKeyId);
+            appendIfMissing(missing, "wechat_public_key", wechatPublicKey);
+        }
         return missing.length() == 0 ? "none" : missing.toString();
     }
 
