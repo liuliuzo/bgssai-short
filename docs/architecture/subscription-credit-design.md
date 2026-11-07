@@ -43,7 +43,7 @@
   -> status=created -> 置 paid，按 order_type 发放
 ```
 
-微信生产：APIv3 平台证书 / 公钥验签 + AEAD 解密。沙箱：HMAC-SHA256（`sign` 字段，canonical 排序排除 sign）；控制器同时接受 form 与 JSON body。
+微信生产：按商户 `key_mode` 验签，再用 APIv3 密钥做 AEAD 解密。`PUBLIC_KEY` 使用库内 `wechat_public_key` 与 `wechat_public_key_id`（`RSAPublicKeyConfig`），下单与查单不请求 `/v3/certificates`；`PLATFORM_CERT` 或未填使用平台证书自动更新（`RSAAutoCertificateConfig`）。回调与查单共用同一套配置。沙箱：HMAC-SHA256（`sign` 字段，canonical 排序排除 sign）；控制器同时接受 form 与 JSON body。
 
 支付宝生产：`AlipaySignature.rsaCheckV1` RSA2，按 `app_id` 路由商户。沙箱：HMAC-SHA256。
 
@@ -78,4 +78,4 @@
 - `bgssai.payment.wechat.sign-key`（仅沙箱 HMAC）
 - `bgssai.payment.alipay.sign-key`（仅沙箱 HMAC）
 
-商户凭据只在 `wechat_pay_config` / `alipay_config`，并由 `sql/DML.sql` + `sql/<env>/DML.sql` 种子恢复（清库后）。支付宝开放平台应用 BGSSAIShort，AppID `2021006196627810`。
+商户凭据只在 `wechat_pay_config` / `alipay_config`，并由 `sql/DML.sql` + `sql/<env>/DML.sql` 种子恢复（清库后）。微信 `key_mode=PUBLIC_KEY` 时下单还要求该行已有 `wechat_public_key` 与 `wechat_public_key_id`，缺一返回 `60013`；运行时只读这两列，不写死公钥或私钥。`PLATFORM_CERT` 不要求这两列。支付宝开放平台应用 BGSSAIShort，AppID `2021006196627810`。

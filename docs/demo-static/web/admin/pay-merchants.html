@@ -27,7 +27,7 @@
       <div class="card">
         <p>路径对齐 VPN：POST /bgssai/admin/pay/wechat-configs/save · POST /bgssai/admin/pay/alipay-configs/save；指定收款 POST .../set-collection-active。</p>
         <ul>
-          <li>微信 Native：mch_id 唯一；空白凭据保留原值；同号软删行复活。生产必填 merchant_serial_no / api_v3_key / mch_private_key / notify_url。</li>
+          <li>微信 Native：mch_id 唯一；空白凭据保留原值；同号软删行复活。生产必填 merchant_serial_no / api_v3_key / mch_private_key / notify_url。key_mode=PUBLIC_KEY 时另须 wechat_public_key_id 与 wechat_public_key，下单用该公钥验签，不下载平台证书。</li>
           <li>支付宝当面付：app_id 唯一；sign_type 仅 RSA2；必填 app_private_key / alipay_public_key / notify_url。</li>
           <li>同渠道至多一行 is_collection_active=1。生产无收款商户或凭据不全时用户下单返回 60013。</li>
           <li>清库后由 sql/DML.sql 种子恢复；支付宝 BGSSAIShort AppID 2021006196627810。</li>
@@ -40,9 +40,10 @@
             <tr><td>mch_id</td><td>商户号（唯一）</td></tr>
             <tr><td>app_id</td><td>AppID</td></tr>
             <tr><td>merchant_serial_no</td><td>商户 API 证书序列号（生产必填）</td></tr>
+            <tr><td>key_mode</td><td>PUBLIC_KEY 或 PLATFORM_CERT。PUBLIC_KEY 时 Native 用微信支付公钥验签，不下载平台证书。</td></tr>
             <tr><td>api_v3_key</td><td>APIv3 密钥</td></tr>
             <tr><td>mch_private_key</td><td>商户私钥 PEM</td></tr>
-            <tr><td>wechat_public_key_id / wechat_public_key</td><td>可选，公钥模式</td></tr>
+            <tr><td>wechat_public_key_id / wechat_public_key</td><td>PUBLIC_KEY 模式必填。PLATFORM_CERT 模式不使用。</td></tr>
             <tr><td>notify_url</td><td>Native 异步通知 URL</td></tr>
             <tr><td>is_enabled</td><td>启用</td></tr>
           </tbody>

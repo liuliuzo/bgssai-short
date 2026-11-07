@@ -31,6 +31,7 @@
 4. **计价**：下单金额只取服务端套餐 / 加量包目录价，忽略客户端传入的金额。
 5. **支付渠道**：微信 Native（`code_url` 二维码）、支付宝当面付预下单（`code_url` 二维码）。渠道代码 `WECHAT` / `ALIPAY`。
 6. **沙箱 / 生产**：`bgssai.payment.sandbox-enabled=true` 时走 HMAC-SHA256 占位下单与回调验签，不读商户行。生产模式必须有启用且标记收款的商户，凭据不全返回 `60013`，不得静默回落沙箱。
+6c. **微信公钥模式**：`wechat_pay_config.key_mode=PUBLIC_KEY` 时，Native 下单、查单与回调使用库内已有的 `wechat_public_key` 与 `wechat_public_key_id` 验签，不下载平台证书。这两项为空返回 `60013`。`key_mode=PLATFORM_CERT` 或未填仍走平台证书。不改售价、沙箱 HMAC 或支付宝当面付。
 7. **回调**：公开路径验签 + 金额核对（分；金额缺失视为不符）+ 幂等。已 `paid` 的订单重复通知不重复发放。已 `closed` / 已过期订单不发放。验签失败返回渠道要求的失败应答（微信 HTTP 401 + FAIL JSON；支付宝 `failure`）。
 7a. **查单补偿**：`order/status` 在非沙箱下对超时未回调的 `created` 订单回查渠道；渠道已支付且金额一致才发放。过期订单先置 `closed`。
 7b. **沙箱默认关闭**：`bgssai.payment.sandbox-enabled` 缺省为 `false`；仅 local/dev/test profile 显式打开。生产不得静默回落沙箱。

@@ -1568,7 +1568,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/pay-merchants.html",
-      "sha256": "0db6cc02c5da7cf30b7e24ee19b7b7a643bcdc61c9513e73233b46c402fc5cfd",
+      "sha256": "8585dd3a6e15db5c284620267e3554d5a7ca2a0db361e060d6749b93d2ebf8bf",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",

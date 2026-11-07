@@ -142,7 +142,10 @@ public class PayMerchantReader {
                 row.getMerchantSerialNo(),
                 row.getMchPrivateKey(),
                 row.getApiV3Key(),
-                resolveNotifyUrl(row.getNotifyUrl(), "/bgssai/user/payment/wechat/notify"));
+                resolveNotifyUrl(row.getNotifyUrl(), "/bgssai/user/payment/wechat/notify"),
+                row.getKeyMode(),
+                row.getWechatPublicKeyId(),
+                row.getWechatPublicKey());
     }
 
     private AlipayMerchant toAlipayMerchant(AlipayConfig row) {

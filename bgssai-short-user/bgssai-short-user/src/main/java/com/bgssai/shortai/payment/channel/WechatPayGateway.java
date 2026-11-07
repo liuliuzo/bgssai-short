@@ -12,7 +12,9 @@ import com.bgssai.shortai.payment.merchant.WechatMerchant;
 import com.bgssai.shortai.payment.util.PemSupport;
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
+import com.wechat.pay.java.core.RSAPublicKeyConfig;
 import com.wechat.pay.java.core.exception.ValidationException;
+import com.wechat.pay.java.core.notification.NotificationConfig;
 import com.wechat.pay.java.core.notification.NotificationParser;
 import com.wechat.pay.java.core.notification.RequestParam;
 import com.wechat.pay.java.service.payments.model.Transaction;
@@ -63,7 +65,10 @@ public class WechatPayGateway {
                 .signType(ctx.header("Wechatpay-Signature-Type"))
                 .body(ctx.getRawBody())
                 .build();
-        NotificationParser parser = new NotificationParser((RSAAutoCertificateConfig) config);
+        if (!(config instanceof NotificationConfig notificationConfig)) {
+            throw new BizException("60013", "wechat notify verifier is not configured");
+        }
+        NotificationParser parser = new NotificationParser(notificationConfig);
         try {
             return parser.parse(requestParam, Transaction.class);
         } catch (ValidationException e) {
@@ -120,21 +125,74 @@ public class WechatPayGateway {
             if (privateKeyPem.isEmpty()) {
                 throw new BizException("60013", "production payment not configured: wechat merchant mch_private_key unreadable");
             }
-            log.info("wechat pay config building mchId={} serialPresent=true", merchant.getMchId());
-            Config built = new RSAAutoCertificateConfig.Builder()
-                    .merchantId(merchant.getMchId())
-                    .privateKey(privateKeyPem)
-                    .merchantSerialNumber(merchant.getMerchantSerialNo())
-                    .apiV3Key(merchant.getApiV3Key())
-                    .build();
+            Config built = createConfig(merchant, privateKeyPem);
             configs.put(key, built);
             fingerprints.put(key, fingerprint);
             return built;
         }
     }
 
+    /**
+     * {@code PUBLIC_KEY} merchants have no platform certificate.
+     * {@link RSAAutoCertificateConfig} always GETs {@code /v3/certificates} while it is built.
+     */
+    Config createConfig(WechatMerchant merchant, String privateKeyPem) {
+        if (merchant.usesPublicKeyMode()) {
+            return buildPublicKeyConfig(merchant, privateKeyPem);
+        }
+        return buildPlatformCertificateConfig(merchant, privateKeyPem);
+    }
+
+    private Config buildPublicKeyConfig(WechatMerchant merchant, String privateKeyPem) {
+        String publicKeyPem = normalizeStoredPem(merchant.getWechatPublicKey());
+        if (publicKeyPem.isEmpty() || !isPresent(merchant.getWechatPublicKeyId())) {
+            throw new BizException("60013", "production payment not configured: wechat merchant missing "
+                    + merchant.missingFields());
+        }
+        log.info("wechat pay config building mchId={} keyMode=PUBLIC_KEY", merchant.getMchId());
+        try {
+            return new RSAPublicKeyConfig.Builder()
+                    .merchantId(merchant.getMchId())
+                    .privateKey(privateKeyPem)
+                    .merchantSerialNumber(merchant.getMerchantSerialNo())
+                    .publicKey(publicKeyPem)
+                    .publicKeyId(merchant.getWechatPublicKeyId().trim())
+                    .apiV3Key(merchant.getApiV3Key())
+                    .build();
+        } catch (IllegalArgumentException ex) {
+            log.warn("wechat public key config rejected mchId={} error={}",
+                    merchant.getMchId(), ex.getClass().getSimpleName());
+            throw new BizException("60013",
+                    "production payment not configured: wechat merchant wechat_public_key unreadable");
+        }
+    }
+
+    Config buildPlatformCertificateConfig(WechatMerchant merchant, String privateKeyPem) {
+        log.info("wechat pay config building mchId={} keyMode=PLATFORM_CERT", merchant.getMchId());
+        return new RSAAutoCertificateConfig.Builder()
+                .merchantId(merchant.getMchId())
+                .privateKey(privateKeyPem)
+                .merchantSerialNumber(merchant.getMerchantSerialNo())
+                .apiV3Key(merchant.getApiV3Key())
+                .build();
+    }
+
+    private static String normalizeStoredPem(String material) {
+        if (material == null) {
+            return "";
+        }
+        return material.trim().replace("\\n", "\n");
+    }
+
+    private static boolean isPresent(String value) {
+        return value != null && !value.isBlank();
+    }
+
     private static String fingerprint(WechatMerchant merchant) {
         return String.valueOf(merchant.getMchId()) + '|'
+                + String.valueOf(merchant.getKeyMode()) + '|'
+                + String.valueOf(merchant.getWechatPublicKeyId()) + '|'
+                + String.valueOf(merchant.getWechatPublicKey()) + '|'
                 + String.valueOf(merchant.getMerchantSerialNo()) + '|'
                 + String.valueOf(merchant.getApiV3Key()) + '|'
                 + String.valueOf(merchant.getMchPrivateKey());

@@ -119,7 +119,7 @@ curl -sS -X POST 'http://127.0.0.1:8080/bgssai/user/payment/wechat/notify' \
 
 ### 生产
 
-- Admin 配置启用收款商户（`wechat_pay_config` / `alipay_config`，凭据落库并由 DML 种子恢复；微信必填 `merchant_serial_no`）。支付宝 BGSSAIShort AppID `2021006196627810`。
+- Admin 配置启用收款商户（`wechat_pay_config` / `alipay_config`，凭据落库并由 DML 种子恢复；微信必填 `merchant_serial_no`）。`key_mode=PUBLIC_KEY` 时 Native 下单使用已落库的 `wechat_public_key` 与 `wechat_public_key_id`，不下载平台证书；缺任一字段返回 `60013`。`PLATFORM_CERT` 仍走平台证书。支付宝 BGSSAIShort AppID `2021006196627810`。
 - 公网可达 notify URL；profile 设 `bgssai.payment.sandbox-enabled=false`。
 - 本轮不做 JSAPI / H5 / 自动续费。
 
@@ -127,7 +127,7 @@ curl -sS -X POST 'http://127.0.0.1:8080/bgssai/user/payment/wechat/notify' \
 
 ### POST /bgssai/admin/pay/wechat-configs/save
 
-对齐 VPN。空白凭据列保留原值。`mch_id` 全表唯一；逻辑删除后同号复活。表单含 `merchant_serial_no`（生产必填）。
+对齐 VPN。空白凭据列保留原值。`mch_id` 全表唯一；逻辑删除后同号复活。表单含 `merchant_serial_no`（生产必填）与 `key_mode`（`PUBLIC_KEY` / `PLATFORM_CERT`）。`PUBLIC_KEY` 时 `wechat_public_key_id` 与 `wechat_public_key` 为 Native 验签所必需。
 
 ### GET /bgssai/admin/pay/wechat-configs
 
