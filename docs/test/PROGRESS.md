@@ -78,3 +78,7 @@
 ## 历史套件
 
 [docs/review/test-cases](../review/test-cases/README.md) 中已有成套案例时，执行前的起草记录见 [STATUS.md](../review/test-cases/STATUS.md)。本表不重复计入那些文件。
+
+## 2026-11-08 开发环境功能测试
+
+在开发环境按需求功能点实测，见 [TC-dev-20261108.md](TC-dev-20261108.md)：共 16 条，通过 11，失败 0，阻塞 5。阻塞项都需要真实第三方账号、付款、短信或模型额度；历史结果不改写。
