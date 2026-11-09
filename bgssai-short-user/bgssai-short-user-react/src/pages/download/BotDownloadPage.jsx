@@ -1,3 +1,4 @@
+import BotDownloadSurface from './BotDownloadSurface'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Alert, Button, Card, Space, Table, Typography } from 'antd'
@@ -65,7 +66,7 @@ export default function BotDownloadPage() {
   ]
 
   return (
-    <div style={loggedIn ? undefined : { maxWidth: 880, margin: '0 auto', padding: '32px 20px 60px' }}>
+    <BotDownloadSurface>
       {!loggedIn ? (
         <Space style={{ marginBottom: 20 }}>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/login')}>
@@ -90,6 +91,7 @@ export default function BotDownloadPage() {
       ) : (
         <Card>
           <Table
+            scroll={{ x: 760 }}
             rowKey="file_name"
             loading={loading}
             columns={columns}
@@ -104,6 +106,6 @@ export default function BotDownloadPage() {
           <Link to="/login">登录本应用</Link>
         </Paragraph>
       ) : null}
-    </div>
+    </BotDownloadSurface>
   )
 }
