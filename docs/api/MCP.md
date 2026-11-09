@@ -4,7 +4,7 @@
 
 **Tagline**：Connect your AI tools to bgssai
 
-**MCP Connectors（支持的客户端）**：Claude · Codex · Cursor · Grok Bot · bgssai-bot
+**MCP Connectors（支持的客户端）**：Claude · Codex · Cursor · Grok Bot · Bgssai Bot
 
 ## 端点与鉴权
 
@@ -80,9 +80,9 @@ codex mcp add bgssai-short --url ENDPOINT \
 - Auth：`Authorization: Bearer TOKEN`
 - Transport：Streamable HTTP（POST）
 
-### bgssai-bot
+### Bgssai Bot
 
-- **PAT**：与 Grok Bot 相同，在 bgssai-bot 中配置 MCP URL + Bearer 令牌。
+- **PAT**：与 Grok Bot 相同，在 Bgssai Bot 中配置 MCP URL + Bearer 令牌。
 - **用 Chat 登录**：可由平台下发 MCP（不经过本页手工粘贴令牌）；本页只管理 PAT。
 
 ## 安全边界

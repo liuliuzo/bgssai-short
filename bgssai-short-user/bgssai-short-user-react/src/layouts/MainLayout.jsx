@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { key: '/subscription', label: '套餐与加量', icon: <AccountBookOutlined /> },
   { key: '/account', label: '账号设置', icon: <SettingOutlined /> },
   { key: '/mcp-tokens', label: 'MCP 连接器', icon: <ApiOutlined /> },
-  { key: '/download/bot', label: '下载 BGSSAI BOT', icon: <DownloadOutlined /> },
+  { key: '/download/bot', label: '下载 Bgssai Bot', icon: <DownloadOutlined /> },
   { key: '/login-logs', label: '我的登录日志', icon: <ProfileOutlined /> },
 ]
 

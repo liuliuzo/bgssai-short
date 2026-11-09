@@ -9,6 +9,6 @@
 
 不引入 MCP SDK；协议帧手工 ObjectNode（camelCase，Jackson 2）。业务 JSON 仍走全局 snake_case。
 
-用户端「MCP Connectors」页（路由 `/mcp-tokens`）对齐 blog 范式：tagline「Connect your AI tools to bgssai」，为 Claude / Codex / Cursor / Grok Bot / bgssai-bot 提供配置指引；令牌 API 不变。
+用户端「MCP Connectors」页（路由 `/mcp-tokens`）对齐 blog 范式：tagline「Connect your AI tools to bgssai」，为 Claude / Codex / Cursor / Grok Bot / Bgssai Bot 提供配置指引；令牌 API 不变。
 
 流程见 [`mcp-server.html`](./mcp-server.html)。

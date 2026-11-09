@@ -25,7 +25,7 @@
 
 
 
-**本仓位置**：本仓是第 1 条工具集合中的短剧制作平台。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。成片发布与在线观看在 Tube 系列（`bgssai-tube-pc` / `bgssai-tube-web` / `bgssai-tube-android` / `bgssai-tube-ios`），本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。设计与交互对照 `reference-github/`：waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。
+**本仓位置**：本仓是第 1 条工具集合中的短剧制作平台。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走境外中枢。成片发布与在线观看在 Tube 系列（`bgssai-tube-pc` / `bgssai-tube-web` / `bgssai-tube-android` / `bgssai-tube-ios`），本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 Bgssai Bot 托管操作。设计与交互对照 `reference-github/`：waoowaoo、Jellyfish、ArcReel、LocalMiniDrama、openframe、ZJT。
 
 
 ## 仓库定位

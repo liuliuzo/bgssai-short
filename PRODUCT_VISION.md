@@ -10,7 +10,7 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 2. **bgssai-website** 是公司官网，对外介绍公司的产品和服务；`reference` 目录中的 `reference-website` 是原来的官网。官网无登录，不承载产品操作、在线对话或中心账号。可放 Bot 与 Build 安装包作介绍页下载。
 3. **bgssai-chat** 提供类似 ChatGPT、Gemini、Claude home、Grok 的 Web 在线对话 AI。境内仓为 `bgssai-chat-cn`（用户/IdP `https://www.bgssai-chat.cn`），境外仓为 `bgssai-chat-global`（用户/IdP `https://www.bgssai-chat.com`）。两套系统，账号不互通。
 4. **中心用户账号在 bgssai-chat**：用和 Google、GitHub 一样的**第三方登录**接入各 App，不是单点登录。Chat 也可以授权登录不是 BGSSAI 的应用，并做成可对外卖的开放平台（开发者控制台 + 文档 + OIDC）。各 App 也可以有自己的用户账号体系。**授权只发生在 user 用户端**；各仓 admin 是后端运营账号，不接入 Chat、不做「用 Chat 登录」。境内应用走 `bgssai-chat-cn`，境外应用走 `bgssai-chat-global`。
-5. **bgssai-bot** 对标 Grok Bot；BGSSAI 的全部产品应用可以托管给 Bot 直接操作。所有应用项目都可以下载 bgssai-bot（Bot）的安装包，全平台范围。连接各产品同时支持 MCP 个人令牌（PAT）和「用 Chat 登录」后下发 MCP。不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。
+5. **Bgssai Bot**（仓 `bgssai-bot`）对标 Grok Bot；BGSSAI 的全部产品应用可以托管给 Bot 直接操作。所有应用项目都可以下载 Bgssai Bot 的安装包，全平台范围。连接各产品同时支持 MCP 个人令牌（PAT）和「用 Chat 登录」后下发 MCP。不要从 grok-build 等 grok 项目拷贝源码进产品仓；内核只走 bgssai-build 官方 fork。
 6. **bgssai-tokenhub** 是模型中枢，也是面向外部用户的商业服务（套餐、收费、发票）。对接主流模型原生 API，再提供给旗下产品和 BGSSAI 外部用户。`bgssai-tokenhub-global` 对接国际主流模型，`bgssai-tokenhub-cn` 对接中国大陆模型。两仓都有用户端，对标腾讯云 TokenHub（`reference-prototypes/tokenhub-prototypes`）；用户端走登录规范，也可用 Chat 登录。旗下产品和外部用户调模型都走中枢凭证。
 7. **面向 OPC 的工具集合基本是 B2C**：打开网站自助注册即可用，允许租户 / 子账号 / 公司主体。
 
@@ -22,7 +22,7 @@ BGSSAI 产品线按下面八条划分职责，各仓实现与文档不得与此�
 
 愿景唯一权威：`bgssai-skeleton/docs/PRODUCT-LINE-VISION.md`。本段是各仓副本，变更以该文件为准。
 
-**本仓位置**：本仓是第 1 条工具集合中的 **短剧制作平台**。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`，也不把厂商直连当作产品通道。用户界面只选择模型。成片发布与在线观看在 Tube 系列（`bgssai-tube-pc`、`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios`）；用户在各端创作者中心发布，本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 bgssai-bot 托管操作。
+**本仓位置**：本仓是第 1 条工具集合中的 **短剧制作平台**。本仓是境内应用，调模型走 `bgssai-tokenhub-cn`，不改走 `bgssai-tokenhub-global`，也不把厂商直连当作产品通道。用户界面只选择模型。成片发布与在线观看在 Tube 系列（`bgssai-tube-pc`、`bgssai-tube-web`、`bgssai-tube-android`、`bgssai-tube-ios`）；用户在各端创作者中心发布，本仓不做播放平台。可自有账号，也可接受 bgssai-chat-cn 中心账号授权登录（第三方登录，不是单点登录）；应可被 Bgssai Bot 托管操作。
 
 **对照（只读 `reference-github/`，不照搬品牌与仓库结构）：** **`waoowaoo`**、**`Jellyfish`**、**`ArcReel`**、**`LocalMiniDrama`**、**`openframe`**、**`ZJT`**。对标的是短剧从文字到成片的任务流与交互，不是把其中任一项目当本仓实现：
 - **`waoowaoo`**：右侧 AI 剧作协同抽屉、按模型能力自适应画幅/时长/分辨率、首帧与首尾帧顺接模式、画布非破坏性多版本精修。
