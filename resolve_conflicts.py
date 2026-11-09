@@ -6,14 +6,14 @@ def resolve_md(content):
         head = m.group(1).strip()
         feature = m.group(2).strip()
         # Keep head mostly, as it is newer/more detailed.
-        # But we need to incorporate "所有应用项目都可以下载 bgssai-bot 的安装包" into point 5 if missing.
+        # But we need to incorporate "所有应用项目都可以下载 Bgssai Bot 的安装包" into point 5 if missing.
         # For point 5:
         head_lines = head.split('\n')
         for i, line in enumerate(head_lines):
-            if line.startswith('5. **bgssai-bot**'):
+            if line.startswith('5. **Bgssai Bot**') or line.startswith('5. **bgssai-bot**'):
                 # merge
-                if '所有应用项目都可以下载 bgssai-bot' not in line:
-                    line = line.replace('所有应用均可下载 Bot 安装包', '所有应用项目都可以下载 bgssai-bot（Bot）的安装包')
+                if '所有应用项目都可以下载 Bgssai Bot' not in line and '所有应用项目都可以下载 bgssai-bot' not in line:
+                    line = line.replace('所有应用均可下载 Bot 安装包', '所有应用项目都可以下载 Bgssai Bot 的安装包')
                     head_lines[i] = line
         return '\n'.join(head_lines) + '\n'
 

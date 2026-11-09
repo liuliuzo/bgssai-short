@@ -23,7 +23,7 @@
     <div class="card">
       <h2 class="card-title">连接 AI 工具</h2>
       <p class="subtitle">
-        为 Claude / Codex / Cursor / Grok Bot / bgssai-bot 配置同一 MCP 端点
+        为 Claude / Codex / Cursor / Grok Bot / Bgssai Bot 配置同一 MCP 端点
         <code>POST /api/mcp</code>。先创建令牌，再按工具粘贴配置。支持作品、分集、剧本、分镜、渲染任务（需费用确认）与过审成片发布（需发布确认）及登录日志与健康探针。
       </p>
       <p>查询 API：<code>POST /api/mcp/tokens/list</code>（需请求头 <code>Jwttoken</code>）</p>
@@ -54,7 +54,7 @@
 Auth:     Authorization: Bearer bgs_mcp_你的令牌
 Transport: Streamable HTTP (POST)</pre>
 
-      <h3 style="font-size:15px;margin:16px 0 8px">bgssai-bot</h3>
+      <h3 style="font-size:15px;margin:16px 0 8px">Bgssai Bot</h3>
       <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">MCP URL:  https://&lt;域名&gt;/api/mcp
 Auth:     Authorization: Bearer bgs_mcp_你的令牌
 Transport: Streamable HTTP (POST)
@@ -71,7 +71,7 @@ Transport: Streamable HTTP (POST)
         <tbody>
           <tr><td>Cursor</td><td>bgs_mcp_****abcd</td><td>2026-08-13 10:00</td><td>2026-08-13 09:00</td></tr>
           <tr><td>Claude</td><td>bgs_mcp_****ef01</td><td>-</td><td>2026-08-13 09:10</td></tr>
-          <tr><td>bgssai-bot</td><td>bgs_mcp_****2345</td><td>2026-08-13 11:00</td><td>2026-08-13 09:20</td></tr>
+          <tr><td>Bgssai Bot</td><td>bgs_mcp_****2345</td><td>2026-08-13 11:00</td><td>2026-08-13 09:20</td></tr>
         </tbody>
       </table>
     </div>

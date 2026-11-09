@@ -59,7 +59,7 @@
 | 存活探针（两端同构，公开） | GET | `/bgssai/health/liveness` | `health-check.md` |
 | 就绪探针（两端同构，公开） | GET | `/bgssai/health/readiness` | `health-check.md` |
 | 全量健康报告（两端同构，公开） | GET | `/bgssai/health` | `health-check.md` |
-| MCP 协议（用户端，PAT） | POST | `/api/mcp` | `MCP.md`（Connectors：Claude / Codex / Cursor / Grok Bot / bgssai-bot） |
+| MCP 协议（用户端，PAT） | POST | `/api/mcp` | `MCP.md`（Connectors：Claude / Codex / Cursor / Grok Bot / Bgssai Bot） |
 | MCP 令牌创建 / 列表 / 吊销 | POST | `/api/mcp/tokens/create` · `/list` · `/revoke` | `MCP.md` |
 | 套餐 / 加量 / 支付回调 | GET/POST | `/bgssai/user/subscription/**` · `/credit-packs/**` · `/bgssai/user/payment/*/notify` | `SUBSCRIPTION-CREDIT.md` |
 | 账号设置（绑定解绑 / 注销） | GET/POST | `/bgssai/user/account/login-methods/**` · `/bgssai/user/account/deletion/**` | `account-settings.md` |

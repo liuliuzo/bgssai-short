@@ -2,13 +2,13 @@
 
 ## 一、背景与目标
 
-- 背景：Claude / Codex / Cursor / Grok Bot / bgssai-bot 等 MCP 客户端需要以工具调用查询本站登录日志与健康探针，而不是再走浏览器会话 JWT。
+- 背景：Claude / Codex / Cursor / Grok Bot / Bgssai Bot 等 MCP 客户端需要以工具调用查询本站登录日志与健康探针，而不是再走浏览器会话 JWT。
 - 目标：用户端提供 Streamable HTTP MCP 服务与个人访问令牌；网页「MCP Connectors」页以 tagline「Connect your AI tools to bgssai」引导五类 Agent 接入；工具仅包装既有登录日志与存活/就绪探针。
 - 关联角色：`USER`
 
 ## 二、需求澄清（WHAT）
 
-- 用户故事：作为短剧平台用户，我希望在「MCP Connectors」页创建 PAT，并按 Claude / Codex / Cursor / Grok Bot / bgssai-bot 的指引把本站接到 AI 工具，以便查询本人登录日志与服务健康状态。
+- 用户故事：作为短剧平台用户，我希望在「MCP Connectors」页创建 PAT，并按 Claude / Codex / Cursor / Grok Bot / Bgssai Bot 的指引把本站接到 AI 工具，以便查询本人登录日志与服务健康状态。
 - 业务规则：
   1. 端点 `POST /api/mcp` 不走 JWT / RBAC，由 `Authorization: Bearer bgs_mcp_...` 自校验。
   2. 身份从令牌行 `user_id` 注入 `UserContext`，工具入参禁止 `user_id`。
@@ -38,7 +38,7 @@
 
 ```
 登录用户 → MCP Connectors 页创建 PAT（快照 user_id）
-按 Agent 指引配置 Claude / Codex / Cursor / Grok Bot / bgssai-bot
+按 Agent 指引配置 Claude / Codex / Cursor / Grok Bot / Bgssai Bot
 AI 客户端 Bearer PAT → /api/mcp → 注入 UserContext → tools/call → 既有 Service
 吊销 = del_flag=1，立即 401
 ```

@@ -5,7 +5,7 @@ alwaysApply: true
 
 # 对照 ≠ 拷贝 grok 源码（强制）
 
-愿景里可以写、也必须写清：`bgssai-bot` 对标 Grok Bot，对照 grok-bot、openclaw、hermes-agent、grok-build、mycontext、deepseek-harness。这些名字可以出现在规划里。
+愿景里可以写、也必须写清：Bgssai Bot（仓 `bgssai-bot`）对标 Grok Bot，对照 grok-bot、openclaw、hermes-agent、grok-build、mycontext、deepseek-harness。这些名字可以出现在规划里。
 
 **禁止：** 从 `reference/grok-build`、grok-bot 以及其它 grok 相关项目里拷贝、粘贴或整目录搬源码，写进 `bgssai-bot` 或其它产品仓。
 

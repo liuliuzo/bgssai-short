@@ -57,7 +57,7 @@
 | 官网法律页外链 | 用户端登录 + 页脚指向 `www.bgssai.com` 五页中英路径；管理端仅外链；不编造证照号；需法务审阅 | [`legal-fan-out.md`](./legal-fan-out.md) | 用户端 / 管理端登录与页脚 |
 | 登录日志（示例分页） | 分页查询登录记录，演示 `@NeedAop` + `PageResponse` + PageHelper；管理端全量、用户端仅本人 | `../api/auth-login.md` | `../demo-static/web/admin/login-logs.html`、`../demo-static/web/user/login-logs.html` |
 | 健康检查 | 全产品线统一方案（Standards §13）的落地实现：存活 / 就绪 / 全量三端点 + 组件化探针；供部署脚本与集中巡检平台 `bgssai-healthcheck` 调用 | `../api/health-check.md`（详设 `../architecture/health-check-design.md`） | 无（非功能需求，无用户界面，按 Standards §0 不走原型一步） |
-| MCP 服务 | 用户端 Streamable HTTP MCP + PAT；MCP Connectors（Claude / Codex / Cursor / Grok Bot / bgssai-bot）；tagline「Connect your AI tools to bgssai」；只读包装登录日志与健康探针 | `../api/MCP.md` | `../demo-static/web/user/mcp-tokens.html` |
+| MCP 服务 | 用户端 Streamable HTTP MCP + PAT；MCP Connectors（Claude / Codex / Cursor / Grok Bot / Bgssai Bot）；tagline「Connect your AI tools to bgssai」；只读包装登录日志与健康探针 | `../api/MCP.md` | `../demo-static/web/user/mcp-tokens.html` |
 | 站内在线客服 | 对话气泡留言 / 会话 + 聊内提工单；管理端处理台含工单状态；会话 OPEN/PENDING/CLOSED | [`in-app-support.md`](./in-app-support.md) · [`../api/in-app-support.md`](../api/in-app-support.md) | 用户端 `support-chat` · 管理端 `support-inbox` |
 | 壳内窄栏布局 | Bot / Chat 旁嵌用户端时切触控窄栏；独立桌面不改；管理端跳过 | [`mobile-in-bot-shell.md`](./mobile-in-bot-shell.md) | 用户端 `shell-pane.html` |
 

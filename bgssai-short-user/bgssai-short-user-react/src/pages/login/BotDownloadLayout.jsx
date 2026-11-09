@@ -12,7 +12,7 @@ function DownloadIcon() {
 }
 
 // 登录 / 下载页共用的顶栏：左边品牌标志 + 本产品名，右边下载入口。
-// 以前左边写的是「BGSSAI Bot」，进来的人会以为打开错了产品。
+// 以前左边写的是「Bgssai Bot」，进来的人会以为打开错了产品。
 export default function BotDownloadLayout({ children }) {
   return (
     <div className="bot-download-layout">
@@ -23,7 +23,7 @@ export default function BotDownloadLayout({ children }) {
         </span>
         <Link to="/download/bot">
           <DownloadIcon />
-          下载 BGSSAI Bot
+          下载 Bgssai Bot
         </Link>
       </nav>
       <div className="bot-download-content">{children}</div>

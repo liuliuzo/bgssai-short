@@ -74,7 +74,7 @@ export default function BotDownloadPage() {
         </Space>
       ) : null}
 
-      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 BGSSAI BOT</Title>
+      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 Bgssai Bot</Title>
       <Paragraph type="secondary">
         安装后可将本应用托管给 Bot 直接操作。本页可在未登录时访问；安装包由本站提供。
       </Paragraph>

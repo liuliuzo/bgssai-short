@@ -44,8 +44,8 @@ Transport: Streamable HTTP (POST)`,
   },
   {
     key: 'bgssai-bot',
-    label: 'bgssai-bot',
-    hint: 'bgssai-bot 可用本页 PAT 连接；也支持「用 Chat 登录」后下发 MCP（不在本页）。',
+    label: 'Bgssai Bot',
+    hint: 'Bgssai Bot 可用本页 PAT 连接；也支持「用 Chat 登录」后下发 MCP（不在本页）。',
     snippet: (endpoint) => `MCP URL:  ${endpoint}
 Auth:     Authorization: Bearer bgs_mcp_你的令牌
 Transport: Streamable HTTP (POST)
@@ -148,7 +148,7 @@ export default function McpTokens() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          message="为 Claude、Codex、Cursor、Grok Bot、bgssai-bot 配置同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。当前工具仅登录日志与健康探针。"
+          message="为 Claude、Codex、Cursor、Grok Bot、Bgssai Bot 配置同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。当前工具仅登录日志与健康探针。"
         />
         <Paragraph style={{ marginBottom: 8 }}>
           端点：<Text code copyable>{endpoint}</Text>
@@ -186,7 +186,7 @@ export default function McpTokens() {
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          message="令牌明文只在创建时显示一次。建议按工具命名（Claude / Codex / Cursor / Grok Bot / bgssai-bot）。每人最多 5 枚。"
+          message="令牌明文只在创建时显示一次。建议按工具命名（Claude / Codex / Cursor / Grok Bot / Bgssai Bot）。每人最多 5 枚。"
         />
         <Table rowKey="id" loading={loading} columns={columns} dataSource={rows}
           pagination={false} locale={{ emptyText: <Empty description="还没有 MCP 令牌" /> }} />
@@ -195,7 +195,7 @@ export default function McpTokens() {
       <Modal title="创建 MCP 令牌" open={modalOpen} onOk={create} confirmLoading={creating}
         onCancel={() => setModalOpen(false)} okText="创建" cancelText="取消">
         <Input
-          placeholder="备注名，例如 Cursor / Claude / bgssai-bot"
+          placeholder="备注名，例如 Cursor / Claude / Bgssai Bot"
           value={tokenName}
           maxLength={64}
           onChange={(e) => setTokenName(e.target.value)}
