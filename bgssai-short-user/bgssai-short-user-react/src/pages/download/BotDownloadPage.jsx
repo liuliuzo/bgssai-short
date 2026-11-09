@@ -1,3 +1,4 @@
+import BotDownloadSurface from './BotDownloadSurface'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Alert, Button, Card, Space, Table, Typography } from 'antd'
@@ -65,7 +66,7 @@ export default function BotDownloadPage() {
   ]
 
   return (
-    <div style={loggedIn ? undefined : { maxWidth: 880, margin: '0 auto', padding: '32px 20px 60px' }}>
+    <BotDownloadSurface>
       {!loggedIn ? (
         <Space style={{ marginBottom: 20 }}>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/login')}>
@@ -74,7 +75,7 @@ export default function BotDownloadPage() {
         </Space>
       ) : null}
 
-      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 BGSSAI BOT</Title>
+      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 Bgssai Bot</Title>
       <Paragraph type="secondary">
         安装后可将本应用托管给 Bot 直接操作。本页可在未登录时访问；安装包由本站提供。
       </Paragraph>
@@ -90,6 +91,7 @@ export default function BotDownloadPage() {
       ) : (
         <Card>
           <Table
+            scroll={{ x: 760 }}
             rowKey="file_name"
             loading={loading}
             columns={columns}
@@ -104,6 +106,6 @@ export default function BotDownloadPage() {
           <Link to="/login">登录本应用</Link>
         </Paragraph>
       ) : null}
-    </div>
+    </BotDownloadSurface>
   )
 }
