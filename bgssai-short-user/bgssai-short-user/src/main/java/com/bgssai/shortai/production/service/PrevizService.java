@@ -17,12 +17,15 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortContinuityIssueMapper;
 import com.bgssai.shortai.mapper.ShortPromptVersionMapper;
+import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortShotPrevizMapper;
 import com.bgssai.shortai.model.ShortContinuityIssue;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortPromptVersion;
 import com.bgssai.shortai.model.ShortPromptVersionExample;
+import com.bgssai.shortai.model.ShortSceneCard;
+import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortShotPreviz;
@@ -41,6 +44,8 @@ public class PrevizService {
     private WorkAccessService workAccessService;
     @Autowired
     private ShortShotMapper shortShotMapper;
+    @Autowired
+    private ShortSceneCardMapper shortSceneCardMapper;
     @Autowired
     private ShortShotPrevizMapper shortShotPrevizMapper;
     @Autowired
@@ -84,10 +89,11 @@ public class PrevizService {
     public ApiResponse generateText(PrevizGenerateReq req) {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
         List<ShortShot> shots = filterShots(ep.getEpisodeId(), req.getShotIdList());
+        Map<String, String> sceneNames = sceneNamesByWork(ep.getWorkId());
         List<Map<String, Object>> updated = new ArrayList<>();
         ShortShot prev = null;
         for (ShortShot shot : shots) {
-            String text = PromptComposer.previzText(shot);
+            String text = PromptComposer.previzText(shot, sceneName(sceneNames, shot));
             String prompt = PromptComposer.compose(shot, null);
             upsertPreviz(shot, "TEXT", text, null);
             patchShotLevel(shot, "TEXT", text, prompt);
@@ -112,6 +118,7 @@ public class PrevizService {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
         ShortWork work = workAccessService.requireWork(ep.getWorkId());
         List<ShortShot> shots = filterShots(ep.getEpisodeId(), req.getShotIdList());
+        Map<String, String> sceneNames = sceneNamesByWork(ep.getWorkId());
         boolean skip = Integer.valueOf(1).equals(req.getSkipLevelCheckFlag())
                 || Integer.valueOf(1).equals(work.getSkipLevelCheckFlag());
         List<Map<String, Object>> updated = new ArrayList<>();
@@ -122,7 +129,7 @@ public class PrevizService {
             }
             String text = shot.getPrevizText();
             if (text == null || text.isBlank()) {
-                text = PromptComposer.previzText(shot);
+                text = PromptComposer.previzText(shot, sceneName(sceneNames, shot));
             }
             String draftAssetId = ShortIds.id("a-draft-");
             upsertPreviz(shot, "DRAFT_IMAGE", text, draftAssetId);
@@ -226,6 +233,29 @@ public class PrevizService {
         boolean changed = from == null ? to != null && !to.isEmpty() : !from.equals(to);
         result.put("changed_flag", changed ? 1 : 0);
         return Responses.ok(result);
+    }
+
+    private Map<String, String> sceneNamesByWork(String workId) {
+        Map<String, String> names = new LinkedHashMap<>();
+        if (workId == null || workId.isBlank()) {
+            return names;
+        }
+        ShortSceneCardExample ex = new ShortSceneCardExample();
+        ex.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        for (ShortSceneCard card : shortSceneCardMapper.selectByExample(ex)) {
+            if (card.getSceneCardId() != null) {
+                names.put(card.getSceneCardId(), card.getCardName() == null ? "" : card.getCardName());
+            }
+        }
+        return names;
+    }
+
+    private static String sceneName(Map<String, String> names, ShortShot shot) {
+        if (names == null || shot == null || shot.getSceneCardId() == null) {
+            return "";
+        }
+        String name = names.get(shot.getSceneCardId());
+        return name == null ? "" : name;
     }
 
     private void upsertPreviz(ShortShot shot, String level, String text, String draftAssetId) {

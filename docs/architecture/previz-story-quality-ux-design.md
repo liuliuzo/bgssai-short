@@ -9,6 +9,7 @@
 
 层级：`NONE` → `TEXT` → `DRAFT_IMAGE` → 正式 IMAGE/VIDEO。跳级需 `skip_level_check_flag` 或显式确认。
 镜头列表与预演列表回传 `look_plain`（观众会看到什么）和 `prompt_score`；创作台默认先出图确认构图，不自动接视频。
+`previz_text` 的「在哪」先取镜头描述里的地点短语，没有时才用场景卡名；列表展示时只替换仍写着「未写清场景」的那一槽。
 API：`/previz/**`、prompt check/diff；生成提交校验层级。
 
 ## 2. 剧情图谱

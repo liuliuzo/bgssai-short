@@ -1,5 +1,13 @@
+import { useRef, useState } from 'react'
 import { Button, Image, Typography } from 'antd'
 import { shotHasPlayableVideo } from './shotCardMedia'
+import {
+  enlargePlaybackButtonProps,
+  listPlayerFrameStyle,
+  listPlayerToggleStyle,
+  listPlayerVideoStyle,
+  playbackAction,
+} from './studioListUx'
 
 const { Text } = Typography
 
@@ -17,22 +25,63 @@ export function ClickThumb({ src, alt, width, height }) {
   )
 }
 
-export function ShotMediaColumn({ row, onEnlarge }) {
+export function ListShotVideo({ src, poster, onDuration, label, autoPlay = false }) {
+  const ref = useRef(null)
+  const [paused, setPaused] = useState(true)
+  const action = playbackAction(paused)
+  return (
+    <div style={listPlayerFrameStyle()} data-shot-player="list">
+      <video
+        ref={ref}
+        src={src}
+        poster={poster || undefined}
+        controls
+        playsInline
+        preload="metadata"
+        autoPlay={autoPlay}
+        style={listPlayerVideoStyle()}
+        onLoadedMetadata={(event) => {
+          const duration = event.currentTarget.duration
+          if (onDuration && Number.isFinite(duration) && duration > 0) onDuration(duration)
+        }}
+        onPlay={() => setPaused(false)}
+        onPause={() => setPaused(true)}
+      />
+      <button
+        type="button"
+        aria-label={label || (action === 'play' ? '播放' : '暂停')}
+        data-shot-player-toggle="true"
+        style={listPlayerToggleStyle()}
+        onClick={() => {
+          const video = ref.current
+          if (!video) return
+          if (playbackAction(video.paused) === 'play') video.play().catch(() => {})
+          else video.pause()
+        }}
+      />
+    </div>
+  )
+}
+
+export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
   const playable = shotHasPlayableVideo(row)
+  const enlarge = enlargePlaybackButtonProps()
   return (
     <div style={{ width: playable ? 200 : 96, flexShrink: 0 }}>
       {playable ? (
         <div>
           <Text strong style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>本镜视频</Text>
-          <video
+          <ListShotVideo
             src={row.video_url}
-            poster={row.first_frame_url || undefined}
-            controls
-            playsInline
-            preload="metadata"
-            style={{ width: '100%', maxHeight: 320, borderRadius: 8, background: '#000', display: 'block' }}
+            poster={row.first_frame_url}
+            onDuration={onDuration}
           />
-          <Button type="link" size="small" style={{ padding: 0, height: 'auto' }} onClick={() => onEnlarge && onEnlarge(row)}>
+          <Button
+            {...enlarge}
+            style={{ marginTop: 8 }}
+            aria-label="放大播放"
+            onClick={() => onEnlarge && onEnlarge(row)}
+          >
             放大播放
           </Button>
           {row.first_frame_url ? (

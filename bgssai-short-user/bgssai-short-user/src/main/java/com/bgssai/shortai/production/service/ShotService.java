@@ -202,7 +202,7 @@ public class ShotService {
         merged.setEmotion(shot.getEmotion());
         merged.setLighting(shot.getLighting());
         patch.setImagePrompt(PromptComposer.compose(merged, style));
-        patch.setPrevizText(PromptComposer.previzText(merged));
+        patch.setPrevizText(PromptComposer.previzText(merged, sceneNameOf(shot.getSceneCardId())));
         patch.setUpdatedTime(new Date());
         ShortShotExample up = new ShortShotExample();
         up.createCriteria().andIdEqualTo(shot.getId());
@@ -308,6 +308,28 @@ public class ShotService {
         return Responses.ok("ok");
     }
 
+    private String sceneNameOf(String sceneCardId) {
+        if (sceneCardId == null || sceneCardId.isBlank()) {
+            return "";
+        }
+        ShortSceneCardExample ex = new ShortSceneCardExample();
+        ex.createCriteria().andSceneCardIdEqualTo(sceneCardId).andDeletedFlagEqualTo(0);
+        ShortSceneCard card = shortSceneCardMapper.selectOneByExample(ex);
+        return card == null || card.getCardName() == null ? "" : card.getCardName();
+    }
+
+    private static String cardName(List<ShortSceneCard> cards, String sceneCardId) {
+        if (cards == null || sceneCardId == null || sceneCardId.isBlank()) {
+            return "";
+        }
+        for (ShortSceneCard card : cards) {
+            if (sceneCardId.equals(card.getSceneCardId())) {
+                return card.getCardName() == null ? "" : card.getCardName();
+            }
+        }
+        return "";
+    }
+
     public ShortShot requireShot(String shotId) {
         String userId = workAccessService.requireUser();
         ShortShotExample ex = new ShortShotExample();
@@ -344,7 +366,7 @@ public class ShotService {
                 ShortJson.text(scene.get("scene_location")) + " " + ShortJson.text(scene.get("scene_summary"))));
         shot.setPropRefJson(ShotConsistency.bindPropRefs(sceneCards, haystack + " "
                 + ShortJson.text(scene.get("scene_location")) + " " + ShortJson.text(scene.get("scene_summary"))));
-        shot.setPrevizText(PromptComposer.previzText(shot));
+        shot.setPrevizText(PromptComposer.previzText(shot, cardName(sceneCards, shot.getSceneCardId())));
         shot.setImagePrompt(PromptComposer.compose(shot, style));
         shot.setPrevizLevel("TEXT");
         shot.setShotStatus("PENDING");
