@@ -128,3 +128,11 @@ submit
 - 首批生产模型目录与默认值由 `tokenhub-model-integration-design.md` 绑定；既有直连 Provider 继续保留为备用
 - **不提供 MOCK 兜底 provider**：COMPOSE 由 `FfmpegComposeProvider` 在本机完成；ffmpeg 缺失或镜头视频不全时合成任务直接失败并说明原因，不用假成片掩盖未接通；`films/detail.download_url` 返回可播放签名 URL（勿把 download-url JSON 路径当媒体地址）
 - **目录 orphan provider**：用户端模型列表只暴露可解析的 provider；`HUNYUAN`/`WAND` 等无专用 bean 时，TEXT+`chat_path` 回落 `OPENAI_COMPAT`，TokenHub 域名回落 `TENCENT_TOKENHUB`，其余拒绝
+
+## 9. OBS SDK 运行依赖与异常边界（2026-11-11）
+
+用户模块使用 OBS SDK `3.24.12`；其请求构造调用 OkHttp 4 的 `RequestBody.create(String, MediaType)`。支付宝 SDK 传递的 OkHttp `3.12.13` 原先因 Maven 最近依赖规则胜出，造成模型已返回图片、OBS 上传尚未发出时抛出 `NoSuchMethodError`。用户模块在 `dependencyManagement` 中统一 OkHttp 与 `logging-interceptor` 为 SDK 所需 `4.12.0`，保留 OBS 所需 Okio `3.8.0`；管理端当前不引入 OBS 或这些 HTTP SDK，不增加无关依赖。
+
+`ShortAiTaskWorker.saveBinary` 仅围绕 `ObjectStorage.put` 捕获 `LinkageError` 并转换为 `BizException(STORAGE_UNAVAILABLE)`，由既有任务失败分支立即 CAS 更新 `RUNNING → FAILED`。不插入素材、不调用成功结算、不自动重试；原供应商回执不回滚。该边界不捕获 `VirtualMachineError`。不改变模型超时、候选数量、对象键、环境 profile 或 OBS 凭据。
+
+验证包括真实 SDK 对环回 HTTP 服务的上传及请求字节/MIME、原版本依赖的可复现失败、任务立即失败与不结算，以及致命 VM 错误传播。真实云端写入和模型制作由部署后受控验收另行记录。

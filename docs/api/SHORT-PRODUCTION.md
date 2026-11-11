@@ -205,6 +205,9 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id` `work_id`
 
 任务完成后可返回脱敏的 `result_json`；MUSIC 任务仅含 `bgm_asset_id`，不含供应商临时 URL。
+存储 SDK 依赖不兼容时，任务立即返回 `task_status=FAILED`、`fail_reason_code=STORAGE_UNAVAILABLE`，
+`fail_reason` 为「素材存储服务不可用，任务未完成，请联系管理员」。不自动重新生成，不新增素材或执行产品成功结算；上游生成回执保留真实结果。
+
 `task_status` 为 `SUCCEEDED` / `SUCCESS`，或 `fail_reason_code` 为空时，`fail_reason` 返回 null，
 不把空原因改写成失败文案。任务中心与作品任务表的失败列留空。
 

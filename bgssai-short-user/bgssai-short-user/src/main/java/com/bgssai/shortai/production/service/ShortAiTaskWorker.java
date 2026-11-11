@@ -1206,7 +1206,14 @@ public class ShortAiTaskWorker {
         String ext = extOf(mime);
         String env = activeEnv();
         String objectKey = "short/" + env + "/" + userId + "/" + workId + "/" + asset.getAssetId() + "." + ext;
-        objectStorage.put(objectKey, bytes, mime);
+        try {
+            objectStorage.put(objectKey, bytes, mime);
+        } catch (LinkageError ex) {
+            // A storage SDK binary mismatch must not abandon RUNNING or look like
+            // a slow model. Keep fatal VM errors outside this narrow boundary.
+            log.error("storage dependency failure taskId={} errorType={}", taskId, ex.getClass().getName());
+            throw new BizException("STORAGE_UNAVAILABLE", "素材存储服务不可用，任务未完成，请联系管理员", ex);
+        }
         asset.setStorageKey(objectKey);
         asset.setFileUrl("/bgssai/user/assets/" + asset.getAssetId());
         asset.setFileSizeByte(bytes.length);
