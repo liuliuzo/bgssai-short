@@ -216,7 +216,7 @@
           </div>
           <div class="row" style="padding:10px 14px; gap:8px; flex-wrap:wrap; font-size:12px">
             <span class="chip">暂不可用。文生视频不受影响。</span>
-            <span class="text-muted">上传 PNG 或 JPEG，或选用本镜首帧。提示词 1-2000 字。宽 128-384、高 128-256，32 的倍数；帧数 9/17/25/33。超出不改成默认值。</span>
+            <span class="text-muted">上传 PNG 或 JPEG，或选用本镜首帧。提示词 1-2000 字。宽 128-384、高 128-256，32 的倍数；帧数 9/17/25/33。超出不改成默认值。同类成片大约二十多分钟，页面继续查询，不要再次提交。</span>
           </div>
           <div class="text-muted" style="font-size:12px; padding:0 14px 12px; line-height:1.7">
             查询 <code>GET /bgssai/user/video/image-to-video/capability</code>。
@@ -284,7 +284,7 @@
         顶部画面模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=IMAGE</code>，未点选时默认
         <code>bgssai-image</code>（BGSSAI Image）。VIDEO 模型来自
         <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
-        <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交；存在首帧时由服务端走图生视频，否则走文生视频。
+        <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交，走原来的文生视频。图生视频是本页独立面板，不因存在首帧而改道。
         页面与接口不展示网关编号。
         首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经
         <code>POST /bgssai/user/shots/frame-link-save</code> 与 <code>/frame-link-batch</code> 维护，

@@ -45,10 +45,14 @@ public final class ImageToVideoPolicy {
             return json;
         }
         json.remove("metrics");
+        json.remove("text_cache_hit");
         json.remove("device");
         json.remove("dtype");
         json.remove("offload");
         json.remove("gpu_used");
+        json.remove("model");
+        json.remove("stage");
+        json.remove("error");
         json.remove("status_url");
         json.remove("provider_job_id");
         json.remove("base_url");

@@ -242,9 +242,10 @@ cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 → `{ available, reason, model_code, display_name, ai_generated, max_bytes, max_pixels,
 width_min, width_max, width_step, width_default, height_min, height_max, height_step, height_default,
 frame_list, frames_default, fps_min, fps_max, fps_default, steps_min, steps_max, steps_default,
-prompt_max, stage_timeout_sec, deadline_sec, price_cent, price_unit }`
+prompt_max, stage_timeout_sec, deadline_sec, observed_run_sec, price_cent, price_unit }`
 
 `available=0` 时提交返回 `4014`，文生视频不受影响。未批准可达地址时这里就是 0。
+`observed_run_sec` 是已观测的同类 CPU 成片墙钟 1258，供界面说明大约二十多分钟，不是实时剩余时间。
 
 `POST /bgssai/user/assets/images` 为 multipart，字段 `file`。只接受 PNG / JPEG 魔数，超过 8MiB 返回 `413000`，
 超过 16000000 像素同样 `413000`。返回 `{ asset_id, mime_type, width, height, file_size_byte, file_url, preview_url }`。

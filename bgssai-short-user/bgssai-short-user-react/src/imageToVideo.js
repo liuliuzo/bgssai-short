@@ -70,3 +70,5 @@ export function imageToVideoUnavailable(capability) {
 }
 
 export const NEW_TASK_WARNING = '图生视频没有幂等键。新建任务会再提交一次，不会取消上一笔，也不会改走文生视频。'
+
+export const LONG_RUN_HINT = '同类成片大约要二十多分钟。页面会继续查询。中断后请等待，不要再次提交。'

@@ -28,5 +28,13 @@ class ImageConditionEndpointTest {
         assertEquals("https://i2v.invalid", ImageConditionEndpoint.admit("https://i2v.invalid").orElseThrow().value());
         assertEquals("http://approved.example:8443",
                 ImageConditionEndpoint.admit("http://approved.example:8443/").orElseThrow().value());
+        assertEquals("https://i2v-gateway.example",
+                ImageConditionEndpoint.admit("https://i2v-gateway.example/").orElseThrow().value());
+        assertEquals("http://10.8.0.12:8443",
+                ImageConditionEndpoint.admit("http://10.8.0.12:8443").orElseThrow().value());
+        assertEquals("https://172.31.10.199",
+                ImageConditionEndpoint.admit("https://172.31.10.199").orElseThrow().value());
+        assertEquals("http://124.70.197.39:8443",
+                ImageConditionEndpoint.admit("http://124.70.197.39:8443/").orElseThrow().value());
     }
 }

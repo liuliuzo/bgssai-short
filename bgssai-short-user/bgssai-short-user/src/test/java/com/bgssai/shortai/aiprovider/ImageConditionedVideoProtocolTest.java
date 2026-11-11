@@ -34,6 +34,9 @@ class ImageConditionedVideoProtocolTest {
         assertEquals(SubmitKind.UNAVAILABLE, ImageConditionedVideoProtocol.interpretSubmit(503, "{\"detail\":\"ram\"}").kind());
         assertFalse(ImageConditionedVideoProtocol.interpretSubmit(503, "{\"detail\":\"ram\"}").userMessage().toLowerCase().contains("ram"));
         assertEquals(SubmitKind.REJECTED, ImageConditionedVideoProtocol.interpretSubmit(413, "{\"detail\":\"Image too large\"}").kind());
+        var pixels = ImageConditionedVideoProtocol.interpretSubmit(400, "{\"detail\":\"Invalid image\"}");
+        assertEquals(SubmitKind.REJECTED, pixels.kind());
+        assertFalse(pixels.userMessage().toLowerCase().contains("invalid"));
     }
 
     @Test
@@ -51,8 +54,12 @@ class ImageConditionedVideoProtocolTest {
 
     @Test
     void contentIsFetchedOnlyForTheRelativeCompletedPath() {
-        String ready = "{\"status\":\"completed\",\"content\":\"/v1/videos/" + JOB + "/content\",\"metrics\":{\"device\":\"cpu\"}}";
-        assertEquals(PollKind.COMPLETED, ImageConditionedVideoProtocol.interpretPoll(JOB, 200, ready).kind());
+        String ready = "{\"status\":\"completed\",\"content\":\"/v1/videos/" + JOB
+                + "/content\",\"metrics\":{\"device\":\"cpu\",\"text_cache_hit\":true,\"model\":\"Lightricks/LTX-Video-0.9.5\"}}";
+        var completed = ImageConditionedVideoProtocol.interpretPoll(JOB, 200, ready);
+        assertEquals(PollKind.COMPLETED, completed.kind());
+        assertEquals("", completed.userMessage());
+        assertFalse(completed.userMessage().toLowerCase().contains("lightricks"));
         String absolute = "{\"status\":\"completed\",\"content\":\"https://i2v.invalid/v1/videos/" + JOB + "/content\"}";
         assertEquals(PollKind.RUNNING, ImageConditionedVideoProtocol.interpretPoll(JOB, 200, absolute).kind());
         byte[] mp4 = new byte[] {0, 0, 0, 20, 'f', 't', 'y', 'p', 'i', 's', 'o', 'm'};
@@ -71,5 +78,8 @@ class ImageConditionedVideoProtocolTest {
         assertEquals(5_000L, ImageConditionedVideoProtocol.pollDelayMs(0));
         assertEquals(15_000L, ImageConditionedVideoProtocol.pollDelayMs(9));
         assertEquals(14_400, ImageConditionedVideoProtocol.DEADLINE_SEC);
+        assertEquals(1258, ImageConditionedVideoProtocol.OBSERVED_RUN_SEC);
+        assertTrue(ImageConditionedVideoProtocol.DEADLINE_SEC > ImageConditionedVideoProtocol.OBSERVED_RUN_SEC);
+        assertEquals("v0.2-validated-20261111-1137Z", ImageConditionedVideoProtocol.CONTRACT);
     }
 }

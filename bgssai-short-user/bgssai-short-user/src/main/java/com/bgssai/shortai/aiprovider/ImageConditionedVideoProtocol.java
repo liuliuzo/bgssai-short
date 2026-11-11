@@ -7,20 +7,24 @@ import java.util.regex.Pattern;
 import com.bgssai.shortai.production.support.ShortJson;
 
 /**
- * Interpreter for image-to-video contract v0.1-current-20261111-1053Z.
+ * Interpreter for image-to-video contract v0.2-validated-20261111-1137Z.
  * <p>
- * Assumptions, until a later contract revision:
- * submit answers HTTP 202 with {@code id} and relative {@code status_url};
- * status reads stay HTTP 200 for queued, running, completed and failed;
- * {@code content} is a relative path and is fetched only after {@code status}
- * is exactly {@code completed}; 409 means not completed; 429 and 503 are not
- * success; there is no idempotency key, cancel, or TTL. This is not an
- * OpenAI-compatible video API. Provider error text and metrics are never copied
- * into the user-facing message.
+ * Submit answers HTTP 202 with {@code id} and relative {@code status_url}.
+ * That response is accepted work, not a finished video. Status reads stay
+ * HTTP 200 for queued, running, completed and failed. {@code content} is a
+ * relative path and is fetched only after {@code status} is exactly
+ * {@code completed}; v0.2 refuses content before that with 409. Pixel counts
+ * above 16,000,000 are HTTP 400. 429 and 503 are not success. There is no
+ * idempotency key, cancel, or TTL. A validated CPU run took about 21 minutes,
+ * so polling stays on the 5–15 second backoff through the 4 hour deadline and
+ * never resubmits after an ambiguous timeout. Provider error text and metrics,
+ * including {@code text_cache_hit}, are never copied into the user-facing message.
  */
 public final class ImageConditionedVideoProtocol {
 
-    public static final String CONTRACT = "v0.1-current-20261111-1053Z";
+    public static final String CONTRACT = "v0.2-validated-20261111-1137Z";
+    /** Wall time of the validated 384x256 / 25-frame / 8 fps CPU run. Not a live ETA. */
+    public static final int OBSERVED_RUN_SEC = 1258;
     public static final int STAGE_TIMEOUT_SEC = 7200;
     public static final int DEADLINE_SEC = STAGE_TIMEOUT_SEC * 2;
     public static final int SUBMIT_TIMEOUT_SEC = 60;

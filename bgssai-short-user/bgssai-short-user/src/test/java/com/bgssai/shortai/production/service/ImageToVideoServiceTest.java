@@ -189,6 +189,17 @@ class ImageToVideoServiceTest {
     }
 
     @Test
+    void userImageUrlIsNotFetched() {
+        image.setStorageKey("HTTPS://evil.example/a.png");
+        BizException upper = assertThrows(BizException.class, () -> service.submit(request("a person turns", 384)));
+        assertEquals(CommonErrorCode.RULE_REJECT.code(), upper.getCode());
+        image.setStorageKey("//evil.example/a.png");
+        assertThrows(BizException.class, () -> service.submit(request("a person turns", 384)));
+        verify(storage, never()).get(any());
+        verify(client, never()).submit(any(), any(), any(), any(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
     void busyAndSameRequestStaySingle() {
         active.set(1L);
         BizException busy = assertThrows(BizException.class, () -> service.submit(request("a person turns", 384)));

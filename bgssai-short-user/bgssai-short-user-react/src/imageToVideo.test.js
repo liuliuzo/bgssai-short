@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { publicModelCode, publicModelText, scrubVendorText } from './publicModel.js'
 import {
+  LONG_RUN_HINT,
   NEW_TASK_WARNING,
   buildImageToVideoSubmit,
   imageToVideoUnavailable,
@@ -39,5 +40,8 @@ describe('image to video client', () => {
     assert.deepEqual([0, 1, 2, 3, 4, 8].map(pollDelayMs), [5000, 7000, 10000, 12000, 15000, 15000])
     assert.match(NEW_TASK_WARNING, /没有幂等键/)
     assert.equal(NEW_TASK_WARNING.toLowerCase().includes('ltx'), false)
+    assert.match(LONG_RUN_HINT, /二十多分钟/)
+    assert.equal(LONG_RUN_HINT.includes('剩余'), false)
+    assert.equal(LONG_RUN_HINT.toLowerCase().includes('ltx'), false)
   })
 })

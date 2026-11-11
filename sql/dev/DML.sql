@@ -79,8 +79,9 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 -- 直连 https://chat.bgssai.com/v1 前，管理端须同时清空 ai.tokenhub_cn.api_key 与 ai.tencent_tokenhub.api_key
 -- （本文件会把占位符写回这两行），再填写 ai.openai_compat.api_key。
 
--- 图生视频 DEV 草案（契约 v0.1-current-20261111-1053Z）。
--- 默认关闭、单价 0、没有 base_url。服务只在模型机本机回环，应用不能把该地址写成可调用入口。
+-- 图生视频 DEV 草案（契约 v0.2-validated-20261111-1137Z）。
+-- 默认关闭、单价 0、没有 base_url。供应商已有技术成片，但监听仍是模型机回环。
+-- 应用不写回环，也不写模型机公网或内网地址的 8007 端口。以后由管理端填写专用网关源站。
 -- 不写入生产种子。ON DUPLICATE 只回填空值，不把 enabled_flag / default_flag 改成启用，不覆盖管理端已写的非空配置。
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.image_to_video.api_key', '', '图生视频 Bearer。空值直到批准路由后再由管理端填写。不回退到其它模型密钥。', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = IF(`description` IS NULL OR `description` = '', VALUES(`description`), `description`);
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-bgssai-image-to-video', 'VIDEO', 'IMAGE_CONDITIONED_VIDEO', 'bgssai-video-i2v', 'BGSSAI Video', 'STANDARD', 'PER_CALL', 0, 0, 0, 14400, 0, '{"secret_ref":"ai.image_to_video.api_key","public_alias":"bgssai-video","public_name":"BGSSAI Video"}') ON DUPLICATE KEY UPDATE `model_name` = IF(`model_name` IS NULL OR `model_name` = '', VALUES(`model_name`), `model_name`), `unit_price_cent` = IF(`unit_price_cent` IS NULL, VALUES(`unit_price_cent`), `unit_price_cent`), `timeout_sec` = IF(`timeout_sec` IS NULL OR `timeout_sec` = 0, VALUES(`timeout_sec`), `timeout_sec`), `config_json` = IF(`config_json` IS NULL OR `config_json` = '', VALUES(`config_json`), `config_json`), `enabled_flag` = IF(`enabled_flag` IS NULL, 0, `enabled_flag`), `default_flag` = IF(`default_flag` IS NULL, 0, `default_flag`);

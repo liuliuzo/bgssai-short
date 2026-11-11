@@ -17,8 +17,8 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 /**
  * Checks a local image before it is stored or sent as an image-to-video condition.
  * MIME text is ignored. PNG and JPEG are recognized from magic bytes, then decoded
- * so a truncated file is rejected. Pixel count is capped at 16,000,000 because the
- * current service build does not itself enforce that limit.
+ * so a truncated file is rejected. Pixel count is capped at 16,000,000. Contract
+ * v0.2 also rejects that size with HTTP 400; this check stops the upload earlier.
  */
 public final class ImageBytesValidator {
 

@@ -479,6 +479,7 @@ public class ImageToVideoService {
         result.put("prompt_max", 2000);
         result.put("stage_timeout_sec", ImageConditionedVideoProtocol.STAGE_TIMEOUT_SEC);
         result.put("deadline_sec", ImageConditionedVideoProtocol.DEADLINE_SEC);
+        result.put("observed_run_sec", ImageConditionedVideoProtocol.OBSERVED_RUN_SEC);
         result.put("price_cent", price);
         result.put("price_unit", unit);
         return result;
@@ -523,8 +524,7 @@ public class ImageToVideoService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择图片素材。");
         }
         String key = asset.getStorageKey();
-        if (key == null || key.isBlank() || key.startsWith("http://") || key.startsWith("https://")
-                || key.contains("://") || key.startsWith("<svg")) {
+        if (externalImageKey(key)) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "不能从外部地址读取图片。");
         }
         byte[] bytes = objectStorage.get(key);
@@ -749,6 +749,15 @@ public class ImageToVideoService {
                     "图生视频只接受宽 128-384、高 128-256（32 的倍数），帧数 9/17/25/33，帧率 1-24，步数 10-30。");
         }
         return new Params(prompt, width, height, frames, fps, steps, seed);
+    }
+
+    private static boolean externalImageKey(String key) {
+        if (key == null || key.isBlank()) {
+            return true;
+        }
+        String folded = key.trim().toLowerCase(java.util.Locale.ROOT);
+        return folded.startsWith("http://") || folded.startsWith("https://") || folded.startsWith("//")
+                || folded.contains("://") || folded.startsWith("<svg") || folded.startsWith("data:");
     }
 
     private static boolean aligned(int value, int min, int max) {

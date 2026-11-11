@@ -36,7 +36,10 @@ class ImageToVideoPolicyTest {
     void clientResultDropsProviderFields() {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("video_asset_id", "a-1");
-        json.put("metrics", Map.of("dtype", "bf16"));
+        json.put("metrics", Map.of("dtype", "bf16", "text_cache_hit", true));
+        json.put("text_cache_hit", true);
+        json.put("model", "Lightricks/LTX-Video-0.9.5");
+        json.put("error", "ltx-video exploded");
         json.put("provider_job_id", "i2v_secret");
         json.put("base_url", "http://127.0.0.1:8007");
         json.put("status_url", "/v1/videos/x");
@@ -46,6 +49,9 @@ class ImageToVideoPolicyTest {
         assertFalse(scrubbed.containsKey("provider_job_id"));
         assertFalse(scrubbed.containsKey("base_url"));
         assertFalse(scrubbed.containsKey("status_url"));
+        assertFalse(scrubbed.containsKey("text_cache_hit"));
+        assertFalse(scrubbed.containsKey("model"));
+        assertFalse(scrubbed.containsKey("error"));
     }
 
     private static ShortAiTask task(String status, String request) {

@@ -3,6 +3,7 @@ import { Alert, Button, Card, Input, Select, Space, Tag, Upload, message, Modal 
 import productionApi from '../../api/production'
 import { scrubVendorText } from '../../publicModel'
 import {
+  LONG_RUN_HINT,
   NEW_TASK_WARNING,
   buildImageToVideoSubmit,
   imageToVideoUnavailable,
@@ -107,7 +108,7 @@ export default function ImageToVideoPanel({ workId, episodeId, shots }) {
           rows={2}
           maxLength={2000}
           value={prompt}
-          placeholder="提示词，1 到 2000 字。默认 384×256、25 帧、8 fps，不能改成高清或任意时长。"
+          placeholder="提示词，1 到 2000 字。默认 384×256、25 帧、8 fps。同类成片大约二十多分钟，不能改成高清或任意时长。"
           onChange={(event) => setPrompt(event.target.value)}
         />
         <Space wrap>
@@ -163,6 +164,7 @@ export default function ImageToVideoPanel({ workId, episodeId, shots }) {
             新建任务
           </Button>
         </Space>
+        {busy ? <Alert type="info" showIcon message={LONG_RUN_HINT} /> : null}
         {task ? (
           <Space direction="vertical">
             <span>{task.task_status_name || task.task_status} · AI生成</span>
