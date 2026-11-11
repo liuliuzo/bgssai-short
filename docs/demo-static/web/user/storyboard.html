@@ -211,6 +211,25 @@
 
         <div class="card" style="max-width:780px; margin:14px auto 0">
           <div class="card-hd">
+            <h2>图生视频</h2>
+            <span class="text-muted" style="font-size:12px">AI生成 · BGSSAI Video</span>
+          </div>
+          <div class="row" style="padding:10px 14px; gap:8px; flex-wrap:wrap; font-size:12px">
+            <span class="chip">暂不可用。文生视频不受影响。</span>
+            <span class="text-muted">上传 PNG 或 JPEG，或选用本镜首帧。提示词 1-2000 字。宽 128-384、高 128-256，32 的倍数；帧数 9/17/25/33。超出不改成默认值。</span>
+          </div>
+          <div class="text-muted" style="font-size:12px; padding:0 14px 12px; line-height:1.7">
+            查询 <code>GET /bgssai/user/video/image-to-video/capability</code>。
+            上传 <code>POST /bgssai/user/assets/images</code>。
+            提交 <code>POST /bgssai/user/video/image-to-video</code>。
+            状态 <code>GET /bgssai/user/video/image-to-video/{task_id}</code>。
+            原图仍可预览。完成前不取成片。没有供应商取消、过期或幂等键；结果不确定时不要自动再提交。
+            「构图OK，生成视频」仍是原来的文生视频，不把图片拼进提示词。
+          </div>
+        </div>
+
+        <div class="card" style="max-width:780px; margin:14px auto 0">
+          <div class="card-hd">
             <h2>资产一致性</h2>
             <span class="text-muted" style="font-size:12px">角色 / 场景 / 道具绑到勾选镜头</span>
             <span class="spacer"></span>

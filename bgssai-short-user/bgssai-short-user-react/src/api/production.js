@@ -1,4 +1,5 @@
 import http from '../utils/http'
+import { instance } from '../utils/http/axios'
 
 const listWorks = (params) => http.get('/user/short-works/list', params)
 const createWork = (body) => http.post('/user/short-works/create', body)
@@ -68,6 +69,14 @@ const submitReview = (episodeId) => http.post('/user/reviews/submit', { episode_
 const withdrawReview = (episodeId) => http.post('/user/reviews/withdraw', { episode_id: episodeId })
 const listReviews = (workId) => http.get('/user/reviews/list', { work_id: workId })
 const precheck = (body) => http.post('/user/compliance/precheck', body)
+const imageToVideoCapability = () => http.get('/user/video/image-to-video/capability')
+const submitImageToVideo = (body) => http.post('/user/video/image-to-video', body)
+const imageToVideoStatus = (taskId) => http.get(`/user/video/image-to-video/${taskId}`)
+const uploadImage = (file) => {
+  const body = new FormData()
+  body.append('file', file)
+  return instance.post('/user/assets/images', body)
+}
 
 export default {
   listWorks,
@@ -117,4 +126,8 @@ export default {
   withdrawReview,
   listReviews,
   precheck,
+  imageToVideoCapability,
+  submitImageToVideo,
+  imageToVideoStatus,
+  uploadImage,
 }

@@ -41,6 +41,7 @@ import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.GenerationTaskStatus;
+import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.ShortLabels;
 import com.bgssai.shortai.production.support.TaskPrices;
@@ -394,6 +395,9 @@ public class AiTaskService {
         if (!GenerationTaskStatus.recoverable(task.getTaskStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "only failed/canceled can retry");
         }
+        boolean useFallback = req != null && req.getFallbackModelFlag() != null
+                && req.getFallbackModelFlag() == 1;
+        ImageToVideoPolicy.assertCanRetry(task, useFallback);
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("QUEUED");
         patch.setFailReason(null);
@@ -401,8 +405,6 @@ public class AiTaskService {
         patch.setProgressPercent(0);
         patch.setRetryCount((task.getRetryCount() == null ? 0 : task.getRetryCount()) + 1);
         patch.setUpdatedTime(new Date());
-        boolean useFallback = req != null && req.getFallbackModelFlag() != null
-                && req.getFallbackModelFlag() == 1;
         if (useFallback) {
             AiModelConfig alt = aiModelResolveService.resolveFallback(task.getTaskType(), task.getModelCode());
             if (alt != null && alt.getModelCode() != null && !alt.getModelCode().isBlank()) {
@@ -410,7 +412,9 @@ public class AiTaskService {
             }
         }
         String nextModel = patch.getModelCode() != null ? patch.getModelCode() : task.getModelCode();
-        aiTaskQueue.ensurePipeline(task.getTaskType(), nextModel);
+        if (!ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
+            aiTaskQueue.ensurePipeline(task.getTaskType(), nextModel);
+        }
         ShortAiTaskExample up = new ShortAiTaskExample();
         up.createCriteria().andIdEqualTo(task.getId());
         shortAiTaskMapper.updateByExampleSelective(patch, up);
@@ -429,6 +433,7 @@ public class AiTaskService {
         if (!GenerationTaskStatus.cancellable(task.getTaskStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "only queued/running/paused can cancel");
         }
+        ImageToVideoPolicy.assertCanCancel(task);
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("CANCELED");
         patch.setFinishedTime(new Date());
@@ -579,6 +584,9 @@ public class AiTaskService {
      */
     private static Map<String, Object> clientResult(ShortAiTask row) {
         Map<String, Object> json = ShortJson.map(row.getResultJson());
+        if (ImageToVideoPolicy.TARGET.equals(row.getTargetType())) {
+            json = ImageToVideoPolicy.scrubResult(json);
+        }
         if (json == null || json.isEmpty()) {
             return json;
         }

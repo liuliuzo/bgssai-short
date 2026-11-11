@@ -229,6 +229,44 @@ TEXT / IMAGE / VIDEO / VOICE / COMPOSE 共用
 `{ "task_id" }`。retry / recover 仅 `FAILED` / `CANCELED` 回 `QUEUED`；retry 可带 `fallback_model_flag`。
 cancel 仅 `QUEUED` / `RUNNING` / `PAUSED`。
 
+图生视频（`target_type=IMAGE_TO_VIDEO`）不走上述 submit。它没有供应商幂等键，也没有取消和 TTL。
+已拿到任务号后，retry 与 `fallback_model_flag` 返回 `4006`，不会改走文生视频。仅 `QUEUED` 且尚未拿到任务号时可以取消。
+
+### 图生视频
+
+见 [`../feature/image-to-video.md`](../feature/image-to-video.md)。用户可见名是 `BGSSAI Video` / `bgssai-video`。
+响应不含供应商任务号、指标、错误原文或上游技术名。结果带 `ai_generated=1`。
+
+`GET /bgssai/user/video/image-to-video/capability`
+
+→ `{ available, reason, model_code, display_name, ai_generated, max_bytes, max_pixels,
+width_min, width_max, width_step, width_default, height_min, height_max, height_step, height_default,
+frame_list, frames_default, fps_min, fps_max, fps_default, steps_min, steps_max, steps_default,
+prompt_max, stage_timeout_sec, deadline_sec, price_cent, price_unit }`
+
+`available=0` 时提交返回 `4014`，文生视频不受影响。未批准可达地址时这里就是 0。
+
+`POST /bgssai/user/assets/images` 为 multipart，字段 `file`。只接受 PNG / JPEG 魔数，超过 8MiB 返回 `413000`，
+超过 16000000 像素同样 `413000`。返回 `{ asset_id, mime_type, width, height, file_size_byte, file_url, preview_url }`。
+
+`POST /bgssai/user/video/image-to-video`
+
+`{ asset_id?, shot_id?, work_id?, episode_id?, prompt, width?, height?, num_frames?, fps?, steps?, seed?, client_request_id }`
+
+`client_request_id` 为 8 到 64 位字母数字、下划线或连字符。相同请求号且图片与参数一致时返回原任务；不一致返回 `50000001`。
+宽 128-384、高 128-256，均须为 32 的倍数；帧数只能是 9 / 17 / 25 / 33；帧率 1-24；步数 10-30；提示词 1-2000。
+缺省为 384×256、25 帧、8 fps、20 步、种子 42。超出范围直接拒绝，不改成默认值。
+同一时间只允许一笔 `QUEUED` / `RUNNING`，再提交返回 `429000`。余额按模型行单价，种子为 0。失败不扣费。
+
+`GET /bgssai/user/video/image-to-video/{task_id}`
+
+→ `{ task_id, task_type, task_status, task_status_name, target_type, model_code, display_name, ai_generated,
+progress_percent, fail_reason_code, fail_reason, source_asset_id, video_asset_id, prompt, width, height,
+num_frames, fps, duration_sec, cost_cent, cancellable_flag, retryable_flag, source_preview_url?,
+video_preview_url?, video_download_url? }`
+
+别人的任务返回 4003。`fail_reason` 只在 `FAILED` 时返回固定中文。
+
 ---
 
 ## 配音与字幕

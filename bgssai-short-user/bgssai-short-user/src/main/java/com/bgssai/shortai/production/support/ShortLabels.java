@@ -45,6 +45,7 @@ public final class ShortLabels {
         TARGET_TYPE.put("COMPOSE", "成片合成");
         TARGET_TYPE.put("DUBBING", "配音");
         TARGET_TYPE.put("SUBTITLE_TRANSCRIBE", "字幕识别");
+        TARGET_TYPE.put("IMAGE_TO_VIDEO", "图生视频");
     }
 
     private ShortLabels() {
