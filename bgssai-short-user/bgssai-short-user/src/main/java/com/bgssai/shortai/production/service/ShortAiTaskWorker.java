@@ -445,11 +445,8 @@ public class ShortAiTaskWorker {
             mime = "audio/mpeg";
         }
         int durationSec = result.getDurationSec() == null ? 0 : result.getDurationSec();
-        if (durationSec <= 0 && TencentTokenHubAiProvider.CODE.equals(model.getProviderCode())) {
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "voice provider returned no audio duration");
-        }
         if (durationSec <= 0) {
-            durationSec = Math.max(1, (row.getLineText() == null ? 0 : row.getLineText().length() + 3) / 4);
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "配音文件缺少实际时长，任务未完成");
         }
         AiProviderResult packed = AiProviderResult.binary(bytes, mime);
         packed.setDurationSec(durationSec);
@@ -1016,8 +1013,7 @@ public class ShortAiTaskWorker {
         }
         ShortAsset asset = saveBinary(ep.getUserId(), ep.getWorkId(), ep.getEpisodeId(), ep.getEpisodeId(), "FILM",
                 result, task.getTaskId(), true);
-        asset.setDurationSec(duration);
-        shortAssetMapper.updateByPrimaryKeySelective(asset);
+        int actualDuration = result.getDurationSec();
         ShortFilmExample fx = new ShortFilmExample();
         fx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         ShortFilm film = shortFilmMapper.selectOneByExample(fx);
@@ -1034,7 +1030,7 @@ public class ShortAiTaskWorker {
         }
         ShortFilm patch = new ShortFilm();
         patch.setFilmAssetId(asset.getAssetId());
-        patch.setFilmDurationSec(duration);
+        patch.setFilmDurationSec(actualDuration);
         patch.setComposeStatus("READY");
         patch.setComposeTaskId(task.getTaskId());
         patch.setComposedTime(new Date());
@@ -1052,7 +1048,7 @@ public class ShortAiTaskWorker {
         ShortEpisode epPatch = new ShortEpisode();
         epPatch.setComposeStatus("READY");
         epPatch.setFilmAssetId(asset.getAssetId());
-        epPatch.setFilmDurationSec(duration);
+        epPatch.setFilmDurationSec(actualDuration);
         epPatch.setUpdatedTime(new Date());
         ShortEpisodeExample eup = new ShortEpisodeExample();
         eup.createCriteria().andIdEqualTo(ep.getId());
@@ -1229,13 +1225,9 @@ public class ShortAiTaskWorker {
         asset.setFileSizeByte(bytes.length);
         if (result.getWidth() != null) {
             asset.setWidth(result.getWidth());
-        } else if ("IMAGE".equals(type) || "VIDEO".equals(type) || "FILM".equals(type)) {
-            asset.setWidth(1080);
         }
         if (result.getHeight() != null) {
             asset.setHeight(result.getHeight());
-        } else if ("IMAGE".equals(type) || "VIDEO".equals(type) || "FILM".equals(type)) {
-            asset.setHeight(1920);
         }
         if (result.getDurationSec() != null) {
             asset.setDurationSec(result.getDurationSec());
@@ -1260,6 +1252,11 @@ public class ShortAiTaskWorker {
     private AiProviderResult execute(AiModelConfig model, AiProviderRequest request) {
         AiProvider provider = aiProviderRegistry.resolve(model);
         AiProviderResult result = provider.execute(request);
+        com.bgssai.shortai.production.support.MediaMetadata.verify(result, request.getAbilityType());
+        if (result != null && result.getDurationSec() != null) {
+            if ("PER_SECOND".equals(model.getPriceUnit())) result.setUsageAmount(result.getDurationSec());
+            if ("PER_MINUTE".equals(model.getPriceUnit())) result.setUsageAmount(Math.max(1, (result.getDurationSec() + 59) / 60));
+        }
         int usage = result == null || result.getUsageAmount() == null ? 1 : Math.max(1, result.getUsageAmount());
         executionUsage.set(executionUsage.get() + usage);
         return result;

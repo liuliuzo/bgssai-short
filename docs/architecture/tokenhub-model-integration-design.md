@@ -206,3 +206,15 @@ MUSIC 使用环境 profile 指定的国内 BGSSAI TokenHub，固定提交 `/v1/n
 只读运行链核实：Short 默认 VOICE 的 bgssai-tts 经 TokenHub CN 选到公司 edge-tts 媒体服务。该服务仅转换 OpenAI 六个别名，不转换产品 v-*；未知非空 voice 会原样进入 edge_tts.Communicate。因此按模型精确限定 bgssai-tts/edge-tts，将产品预设转换为同服务免费 list_voices 实际列出的 ID：冷淡女声 → zh-CN-XiaoyiNeural、温暖女声 → zh-CN-XiaoxiaoNeural、低沉男声 → zh-CN-YunjianNeural、明亮男声 → zh-CN-YunxiNeural、旁白 → zh-CN-YunyangNeural。未指定任何声音时使用中文 Xiaoxiao，不意外使用会落到英文的 alloy 默认。
 
 显式原生 voice ID 和其他模型保持原样；不把公司模型套为 MiniMax 声音，不改网关地址、路由或凭据。列举仅证明当前目录中的 ID/性别，不保证年龄或演技风格。已验证请求字段映射与音色目录，真实配音产物仍需在已授权制作中验收。
+
+## 二进制媒体元数据校验（2026-11-11）
+
+ShortAiTaskWorker 的公共模型执行边界在接收结果后、累计产品用量前调用 MediaMetadata。IMAGE 通过 ImageIO 的格式头读取真实宽高；其他可识别图片格式回落 ffprobe。VOICE/MUSIC 必须有 audio 流，VIDEO/COMPOSE 必须有 video 流和真实宽高；时长读取容器或对应流的有效 duration，按现有整数秒字段向上取整。PER_SECOND/PER_MINUTE 的产品用量依实际时长重算；上游已产生的请求回执不改写。
+
+ffprobe 只接收本次临时文件路径，protocol_whitelist 限定 file,pipe；进程最多 15 秒，标准输出最多 64 KiB，错误输出丢弃，不把媒体正文或地址打印到日志。探测失败走既有任务 FAILED，不写资产或按成功结算；不自动重试收费生成。异常和中断均结束本次探测进程并清理自身临时文件，不触碰其他进程。
+
+保存资产移除固定竖屏尺寸兜底；成片记录使用实测 duration，时间线仍表达计划。原始供应商响应尺寸不再作为资产尺寸的证据。公司 SD-Turbo 模型按其原生 512×512 请求，其他模型请求参数不变。内部验证不增加业务 DTO、枚举、数据库列或页面操作，原型/API/DDL 契约保持一致。
+
+回归包含生成的 1.25 秒 MP3、WAV、64×96 MP4，以及真实 PNG/JPEG 字节，验证缺失供应商 JSON 时长、错误默认尺寸、无对应流、非法媒体、子进程超时和输出上限。真实媒体测试需与部署相同的 ffprobe 依赖；缺少工具的开发机明确跳过这些集成项，发布验收必须实际执行通过。
+
+公司视频完成响应可使用网关相对路径 `/v1/videos/generations/{id}/content?model={model}`。Short 只接受该精确路径、受限任务 ID 和与本次模型完全一致的单一 model 参数，并相对已配置的国内网关解析后附该网关 Bearer。拒绝协议相对 URL、路径穿越、额外查询参数及模型不一致；第三方 HTTPS 资源下载不附网关凭据。既有 HTTP 下载客户端跨 origin 重定向清除鉴权，HTTPS 不降级。网关另行负责每次查询/内容请求的任务所有权检查；该客户端支持不代表上游参考图或视频安装已完成。

@@ -154,7 +154,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         body.put("model", model);
         body.put("prompt", ProviderHttp.promptOf(request));
         body.put("n", 1);
-        body.put("size", "1024x1792");
+        body.put("size", ("bgssai-image".equals(model) || "sd-turbo".equals(model)) ? "512x512" : "1024x1792");
         String image = ProviderHttp.imagePayload(request);
         if (!image.isBlank()) {
             body.put("image", image);
@@ -162,7 +162,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
         Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, timeoutSec));
         Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
-        return mediaResult(request, done, "image/png", 0, 1080, 1920, timeoutSec);
+        return mediaResult(request, done, "image/png", 0, 1080, 1920, timeoutSec, base, apiKey);
     }
 
     private AiProviderResult video(String base, String apiKey, Map<String, Object> cfg,
@@ -178,7 +178,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         }
         Map<String, Object> submitted = post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec));
         Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
-        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec);
+        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec, base, apiKey);
         if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
             ready.setDurationSec(duration);
         }
@@ -298,9 +298,24 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private AiProviderResult downloadVideo(AiProviderRequest request, String url, int durationSec,
-            int width, int height, int timeoutSec) throws Exception {
-        requireHttps(url, "video url");
-        byte[] bytes = http.getBytes(url, Math.min(180, timeoutSec));
+            int width, int height, int timeoutSec, String base, String apiKey) throws Exception {
+        byte[] bytes;
+        if (url.startsWith("/")) {
+            // Only the gateway's ownership-checked content route may receive its bearer.
+            if (!url.matches("/v1/videos/generations/[A-Za-z0-9_:-]{1,160}/content\\?model=[A-Za-z0-9._%~-]+")) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model content route invalid");
+            }
+            URI relative = URI.create(url);
+            String model = java.net.URLDecoder.decode(relative.getRawQuery().substring("model=".length()), StandardCharsets.UTF_8);
+            if (!requireModel(request).equals(model)) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model content route mismatch");
+            }
+            requireHttps(base, "model gateway");
+            bytes = http.getBytes(URI.create(base).resolve(relative).toString(), generationHeaders(apiKey), Math.min(180, timeoutSec));
+        } else {
+            requireHttps(url, "video url");
+            bytes = http.getBytes(url, Math.min(180, timeoutSec));
+        }
         AiProviderResult result = AiProviderResult.binary(bytes, "video/mp4");
         result.setDurationSec(durationSec);
         result.setWidth(width);
@@ -659,7 +674,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     private AiProviderResult mediaResult(AiProviderRequest request, Map<String, Object> resp, String mime,
-            int durationSec, int width, int height, int timeoutSec) throws Exception {
+            int durationSec, int width, int height, int timeoutSec, String base, String apiKey) throws Exception {
         String b64 = mediaBase64(resp);
         if (!b64.isBlank()) {
             byte[] bytes;
@@ -685,7 +700,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model media missing");
         }
         if (mime.startsWith("video/")) {
-            return downloadVideo(request, url, durationSec, width, height, timeoutSec);
+            return downloadVideo(request, url, durationSec, width, height, timeoutSec, base, apiKey);
         }
         requireHttps(url, "image url");
         byte[] bytes = http.getBytes(url, Math.min(120, timeoutSec));

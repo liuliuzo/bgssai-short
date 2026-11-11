@@ -26,6 +26,31 @@ import com.bgssai.shortai.quota.service.QuotaConsumeService;
 class ShortAiTaskWorkerTest {
 
     @Test
+    void binaryVoiceGetsRealDurationBeforeDubbingAndUsage() throws Exception {
+        try {
+            Process probe = new ProcessBuilder("ffprobe", "-version")
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD).redirectError(ProcessBuilder.Redirect.DISCARD).start();
+            org.junit.jupiter.api.Assumptions.assumeTrue(probe.waitFor(3, java.util.concurrent.TimeUnit.SECONDS) && probe.exitValue() == 0);
+        } catch (java.io.IOException ex) { org.junit.jupiter.api.Assumptions.assumeTrue(false, "ffprobe is required"); }
+        var worker = new ShortAiTaskWorker();
+        var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var provider = org.mockito.Mockito.mock(com.bgssai.shortai.aiprovider.AiProvider.class);
+        var model = new AiModelConfig(); model.setPriceUnit("PER_SECOND");
+        var request = new com.bgssai.shortai.aiprovider.AiProviderRequest();
+        request.setAbilityType("VOICE"); request.setModel(model);
+        byte[] bytes;
+        try (var input = getClass().getResourceAsStream("/media/probe-tone.mp3")) { bytes = input.readAllBytes(); }
+        var audio = com.bgssai.shortai.aiprovider.AiProviderResult.binary(bytes, "audio/mpeg");
+        when(registry.resolve(model)).thenReturn(provider);
+        when(provider.execute(request)).thenReturn(audio);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        com.bgssai.shortai.aiprovider.AiProviderResult verified = ReflectionTestUtils.invokeMethod(worker, "execute", model, request);
+        Assertions.assertEquals(2, verified.getDurationSec());
+        Assertions.assertEquals(2, verified.getUsageAmount());
+        verify(provider, times(1)).execute(request);
+    }
+
+    @Test
     void storageLinkageFailureImmediatelyFailsWithoutAssetOrSettlement() {
         StorageFailureFixture fixture = storageFailure(new NoSuchMethodError("SDK binary mismatch"));
         fixture.worker().tick();
@@ -92,7 +117,13 @@ class ShortAiTaskWorkerTest {
         when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
         when(characters.selectOneByExample(any())).thenReturn(character);
         when(registry.resolve(any())).thenReturn(provider);
-        when(provider.execute(any())).thenReturn(com.bgssai.shortai.aiprovider.AiProviderResult.binary(new byte[] {1}, "image/png"));
+        byte[] image;
+        try {
+            var data = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(2, 3, java.awt.image.BufferedImage.TYPE_INT_RGB), "png", data);
+            image = data.toByteArray();
+        } catch (java.io.IOException ex) { throw new AssertionError(ex); }
+        when(provider.execute(any())).thenReturn(com.bgssai.shortai.aiprovider.AiProviderResult.binary(image, "image/png"));
         when(storage.put(any(), any(), any())).thenThrow(error);
         return new StorageFailureFixture(worker, tasks, assets, settlement, provider);
     }
