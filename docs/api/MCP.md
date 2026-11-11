@@ -55,6 +55,7 @@
 | `lock_shot` | `episode_id, shot_id, confirm_review:true`；只接受 JSON boolean true，验证本人同集镜头、实际 video_asset_id 非空及 VIDEO_READY/LOCKED 状态，再委托正式 ShotService.lock(req,true)。不接受 asset_id/video_asset_id 等覆盖字段；不自动生成、合成或发布。 |
 | `get_episode_film` | `episode_id`；返回 `film/precheck/dubbing/subtitles`。`film.download_url` 为正式服务解析的可播放链接，过期或未生成时为空，不返回伪造成片。重新查询可刷新临时链接。 |
 | `save_film_settings` | `episode_id`，可选 `bgm_asset_id`（空串取消）、`burn_subtitle`、`aspect_ratio:9:16/16:9/1:1`；从本人分集推导作品，正式服务校验本集 BGM。设置由同作品各集共享，不自动重合成。 |
+| `regenerate_subtitles` | `episode_id, confirm_replace:true`；从已有配音和当前分镜重建本人分集字幕，覆盖已有字幕（含人工编辑），须先保存需保留的编辑。仅接受 boolean true 和这两个字段；返回正式 subtitle_list，不创建模型任务、不收费、不自动重合成。 |
 | `align_dubbing` | `episode_id, shot_id, align_action:PAD_SILENCE/ADJUST_SPEED/EXTEND_SHOT`；正式对齐，无新增收费任务。EXTEND_SHOT 改变镜头时长，仍需核对视频与成片。 |
 
 `submit_render_task` 保留 `episode_id, confirm_cost=true`，类型扩展为 `IMAGE/VIDEO/VOICE/MUSIC/COMPOSE`（默认 COMPOSE）：
@@ -68,7 +69,7 @@
 
 建议顺序：保存 `scene_list` → READY → 列出参考卡 → 生成/查询/选择锁定参考图 → 拆分 → 列出与编辑分镜 → IMAGE → 查询成功 → VIDEO → 查询成功 → VOICE/MUSIC → 查询成功并对齐、选曲、字幕设置 → get_asset_download 验收媒体 → 显式 lock_shot → 合成预检 → COMPOSE → 查询任务与成片 MP4。
 
-`tools/list` 共 26 个工具。`get_asset_download` 不返回存储配置或凭据，只保留正式下载响应。
+`tools/list` 共 27 个工具。`get_asset_download` 不返回存储配置或凭据，只保留正式下载响应。
 `lock_shot` 不接收 `user_id` 或任意资产覆盖，缺省/false/字符串/数字确认均拒绝；外人资源和跨集镜头拒绝。
 重复确认已有 LOCKED 镜头仍走正式服务，不会重生成。锁定不代表已通过 FilmService 的完整合成预检。
 

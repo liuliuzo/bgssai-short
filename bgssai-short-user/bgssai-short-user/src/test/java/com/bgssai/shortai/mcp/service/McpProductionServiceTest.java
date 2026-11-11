@@ -52,6 +52,39 @@ class McpProductionServiceTest {
         return shot;
     }
 
+    @Test void subtitleRegenerationRequiresExplicitReplacementAndStrictArguments() throws Exception {
+        for (String input : List.of("{}", "{\"episode_id\":\"e-1\"}",
+                "{\"episode_id\":\"e-1\",\"confirm_replace\":false}",
+                "{\"episode_id\":\"e-1\",\"confirm_replace\":\"true\"}",
+                "{\"episode_id\":\"e-1\",\"confirm_replace\":1}",
+                "{\"episode_id\":\"e-1\",\"confirm_replace\":null}",
+                "{\"episode_id\":\"e-1\",\"confirm_replace\":true,\"user_id\":\"other\"}")) {
+            assertThrows(IllegalArgumentException.class, () -> service.execute("regenerate_subtitles", args(input)));
+        }
+        verify(access, never()).requireEpisode(any());
+        verifyNoInteractions(dubbing, tasks, films, shots);
+    }
+
+    @Test void subtitleRegenerationRejectsForeignEpisodeBeforeMutation() throws Exception {
+        when(access.requireEpisode("other")).thenThrow(new ForbiddenException("episode not found"));
+        assertThrows(ForbiddenException.class, () -> service.execute("regenerate_subtitles",
+                args("{\"episode_id\":\"other\",\"confirm_replace\":true}")));
+        verifyNoInteractions(dubbing, tasks, films, shots);
+    }
+
+    @Test void subtitleRegenerationDelegatesToFormalServiceWithoutGeneratingMedia() throws Exception {
+        ownEpisode();
+        Map<String, Object> expected = Map.of("episode_id", "e-1", "subtitle_list", List.of(Map.of("start_ms", 0, "end_ms", 2500)));
+        when(dubbing.subtitleRegenerate(any())).thenReturn(Responses.ok(expected));
+        assertEquals(expected, service.execute("regenerate_subtitles",
+                args("{\"episode_id\":\"e-1\",\"confirm_replace\":true}")));
+        ArgumentCaptor<SubtitleRegenReq> request = ArgumentCaptor.forClass(SubtitleRegenReq.class);
+        verify(dubbing).subtitleRegenerate(request.capture());
+        assertEquals("e-1", request.getValue().getEpisodeId());
+        verifyNoMoreInteractions(dubbing);
+        verifyNoInteractions(tasks, films, shots, characters, assets);
+    }
+
     @Test void paidCallsRequireLiteralBooleanConfirmationBeforeAnyProductionAction() throws Exception {
         for (String flag : List.of("false", "\"true\"", "1", "null")) {
             JsonNode a = args("{\"episode_id\":\"e-1\",\"confirm_cost\":" + flag + "}");

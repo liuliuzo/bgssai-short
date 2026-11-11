@@ -118,7 +118,7 @@ class McpToolServiceTest {
     @Test
     void listToolDefinitions_containsAllBusinessAndProbeTools() {
         ArrayNode tools = service.listToolDefinitions();
-        assertEquals(26, tools.size());
+        assertEquals(27, tools.size());
         List<String> names = new ArrayList<>();
         for (JsonNode t : tools) {
             names.add(t.get("name").asText());
@@ -136,12 +136,33 @@ class McpToolServiceTest {
                 "list_shots",
                 "get_asset_download",
                 "lock_shot",
+                "regenerate_subtitles",
                 "submit_render_task",
                 "publish_episode_to_media")));
         assertTrue(service.hasTool("list_my_login_logs"));
         assertTrue(service.hasTool("health_live"));
         assertTrue(service.hasTool("health_ready"));
         assertFalse(service.hasTool("unknown_tool_xyz"));
+    }
+
+    @Test
+    void subtitleRegenerationIsDiscoverableWithRequiredStrictConfirmation() throws Exception {
+        assertTrue(service.hasTool("regenerate_subtitles"));
+        JsonNode definition = null;
+        for (JsonNode tool : service.listToolDefinitions()) {
+            if ("regenerate_subtitles".equals(tool.path("name").asText())) definition = tool;
+        }
+        assertNotNull(definition);
+        JsonNode schema = definition.path("inputSchema");
+        assertFalse(schema.path("additionalProperties").asBoolean(true));
+        assertEquals(2, schema.path("required").size());
+        assertEquals("boolean", schema.path("properties").path("confirm_replace").path("type").asText());
+        assertTrue(schema.path("properties").path("confirm_replace").path("const").asBoolean());
+        JsonNode args = mapper.readTree("{\"episode_id\":\"ep\",\"confirm_replace\":true}");
+        when(production.execute("regenerate_subtitles", args)).thenReturn(Map.of("subtitle_list", List.of()));
+        assertFalse(service.callTool("regenerate_subtitles", args).isError());
+        verify(production).execute("regenerate_subtitles", args);
+        verify(shortAiTaskMapper, never()).insertSelective(any());
     }
 
     @Test
