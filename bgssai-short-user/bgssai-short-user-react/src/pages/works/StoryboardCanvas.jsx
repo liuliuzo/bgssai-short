@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Card, Drawer, Input, Select, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Drawer, Image, Input, Select, Space, Tag, Tooltip, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 import { publicModelText } from '../../publicModel'
+import { shotCanvasStatusKey } from './shotCardMedia'
 
 const { Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -13,16 +14,17 @@ const STATUS_STYLE = {
   PENDING: { background: '#f1f5f9', borderColor: '#94a3b8', label: '未开始' },
   TEXT_READY: { background: '#dbeafe', borderColor: '#2563eb', label: '文字稿' },
   DRAFT_READY: { background: '#ede9fe', borderColor: '#7c3aed', label: '草图' },
+  IMAGE_GENERATING: { background: '#cffafe', borderColor: '#0891b2', label: '出图中' },
   IMAGE_READY: { background: '#cffafe', borderColor: '#0891b2', label: '首帧' },
+  VIDEO_GENERATING: { background: '#dcfce7', borderColor: '#059669', label: '出视频' },
   VIDEO_READY: { background: '#dcfce7', borderColor: '#059669', label: '视频' },
   LOCKED: { background: '#bbf7d0', borderColor: '#047857', label: '已定稿' },
   FAILED: { background: '#fee2e2', borderColor: '#dc2626', label: '失败' },
 }
 
 function styleOf(row) {
-  const base = STATUS_STYLE[row.shot_status] || STATUS_STYLE.PENDING
-  if (row.blocked_flag === 1) return STATUS_STYLE.FAILED
-  return base
+  const key = shotCanvasStatusKey(row)
+  return STATUS_STYLE[key] || STATUS_STYLE.PENDING
 }
 
 export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
@@ -335,8 +337,8 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
               </div>
             ) : editing.first_frame_url ? (
               <div style={{ marginBottom: 12 }}>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>首帧画面：</Text>
-                <img src={editing.first_frame_url} alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} />
+                <Text strong style={{ display: 'block', marginBottom: 4 }}>首帧画面（点击放大）：</Text>
+                <Image src={editing.first_frame_url} alt="首帧" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} preview={{ mask: '查看' }} />
               </div>
             ) : null}
 

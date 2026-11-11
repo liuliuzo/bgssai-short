@@ -392,6 +392,7 @@
         <code>SUPPORTING</code> / <code>ANTAGONIST</code>，下拉展示中文、枚举值收在选项 value）。
         待建卡由剧本定稿自动抽取（含 <code>appearance_prompt</code> 预填与出场场次清单）。
         候选完成回到 <code>DRAFT</code> 待选择，不覆盖已锁定卡；有排队或运行任务时显示 <code>GENERATING</code>。
+        一张卡生成参考图时只占用该卡，其它卡的「开始定妆」仍可点。缩略图点击放大。
         场景和道具可通过 <code>POST /bgssai/user/scene-cards/update</code> 保存
         <code>scene_card_id</code>、<code>card_name</code>、<code>appearance_prompt</code>；
         实际修改描述使卡回到 <code>DRAFT</code>，显式描述优先用于提示词，不自动拼接重复中文模板。

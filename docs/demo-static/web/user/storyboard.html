@@ -115,8 +115,14 @@
             <div class="text-muted" style="font-size:12px;margin-bottom:6px">这一镜会拍成：观众会看到中景，沈知微推门而入，众人回头。镜头从背后推进，冷蓝顶光。字幕：「这份收购案，谁批准的？」</div>
             <textarea rows="2">谁：沈知微。在哪：会议室。做什么：推门而入，众人回头。怎么拍：中景，从背后推进。什么感觉：冷蓝顶光，冷静。台词：这份收购案，谁批准的？</textarea>
           </div>
-          <div class="pic">
-            <div class="phone"><span class="ph-tag">完成</span><div class="ph-body" style="font-size:10px">视频</div></div>
+          <div class="pic" style="width:168px">
+            <div class="phone" style="width:168px;min-height:220px;background:#0f172a;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:8px">
+              <span class="ph-tag">本镜视频</span>
+              <div class="ph-body" style="font-size:12px">可直接播放</div>
+              <button class="btn btn-default btn-sm" type="button">播放</button>
+              <button class="btn btn-default btn-sm" type="button">放大播放</button>
+            </div>
+            <span class="st warn" style="font-size:11px">已有视频，本次重生成失败</span>
             <button class="btn btn-default btn-sm">重生成 1.6</button>
           </div>
         </div>
@@ -127,7 +133,7 @@
             <textarea rows="2">陆时衍起身，手撑桌面前倾逼视。近景，镜头不动。台词：我。持股 51%，需要向你报备吗？</textarea>
           </div>
           <div class="pic">
-            <div class="phone"><span class="ph-tag">首帧</span><div class="ph-body" style="font-size:10px">构图 OK？</div></div>
+            <div class="phone" title="点击放大首帧" style="cursor:zoom-in"><span class="ph-tag">首帧</span><div class="ph-body" style="font-size:10px">点击放大</div></div>
             <div class="text-muted" style="font-size:11px; margin:4px 0">接镜 1 尾帧</div>
             <button class="btn btn-primary btn-sm">生成视频 1.6</button>
           </div>
@@ -255,7 +261,11 @@
         右侧资产一致性面板走 <code>GET /bgssai/user/assets/consistency-panel</code>，
         勾选镜头后 <code>POST /bgssai/user/shots/bind-assets</code> 写入
         <code>character_ref_json</code> / <code>scene_card_id</code> / <code>prop_ref_json</code>。
-        列表另回 <code>latest_task</code>（统一任务状态机）。
+        列表另回 <code>latest_task</code>（统一任务状态机）以及 <code>video_url</code>、
+        <code>first_frame_url</code>、<code>last_frame_url</code>。
+        已有 <code>video_url</code> 的镜头在列表左侧直接播放，并可放大；没有视频时首帧、尾帧点击放大。
+        最新视频任务失败但 <code>video_asset_id</code> 仍在时，标签为「已有视频，本次重生成失败」，
+        不得显示成没有视频。画布不是唯一播放入口。
         行内提示来自连贯性检查、角色定妆状态与合规预检
         （<code>/previz/continuity-check</code>、<code>card_status</code>、
         <code>POST /bgssai/user/compliance/precheck</code> <code>check_scope=SHOT</code>：

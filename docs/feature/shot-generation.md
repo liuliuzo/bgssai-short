@@ -62,6 +62,13 @@
       超过约 20 分钟仍未结束时，提示到任务中心查看，生成继续在服务器上跑。
   13. 首批 `VIDEO` 模型为 MiniMax-Video-H3、PixVerse-Video-v6、Kling-Video-V3。提交时可传
       `model_code`；存在首帧时走图生视频，否则走文生视频。上游临时 URL 必须在任务成功后转存对象存储。
+  14. **已有成片不被失败盖住**：镜头已绑定 `video_asset_id` 时，后续官方视频任务失败、超时或取消
+      不得清空或覆盖该绑定。若状态停在 `VIDEO_GENERATING`，回到 `VIDEO_READY`。
+      还没有视频、但首帧仍在时，从 `VIDEO_GENERATING` 回到 `IMAGE_READY`，不把镜头停在「生成中」。
+      同一镜头仍有排队或执行中的同类任务时，保持生成中。首帧任务失败且首帧仍在时同理：
+      已有视频则回到 `VIDEO_READY`，否则回到 `IMAGE_READY`。
+      创作台列表只要 `video_url` 有值就直接给出可播放控件（并可放大播放）；没有视频时首帧、尾帧可点击放大。
+      最新视频任务失败时，标签写「已有视频，本次重生成失败」，不得显示成没有视频的「视频 已失败」。
 
 ## 三、验收标准
 
@@ -80,6 +87,9 @@
 10. 三类 `fail_reason_code` 在任务中心分别展示「换备用模型重试 / 去改提示词 / 去补首帧」动作。
 11. 勾选 `auto_next_flag` 的首帧批次全部成功后，自动提交对应视频批次并先出费用预估过预算闸门。
 12. 三个视频模型均可完成文生或图生视频，任务结果为对象存储素材，供应商临时 URL 过期不影响播放。
+13. 创作台列表里，已有 `video_url` 的镜头可以直接播放；官方视频任务失败后，旧的 `video_asset_id`
+    仍在，状态回到 `VIDEO_READY`，页面仍能播放，失败标签不把这一镜说成没有视频。
+    首帧图可以点击放大。一张角色、场景或道具卡在出参考图时，其它卡的按钮仍可点。
 
 ## 四、接口契约（snake_case）
 
@@ -141,8 +151,10 @@
 `task_status` 流转：`QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`（自动重试至多 2 次后仍失败）；
 `QUEUED` 可转 `PAUSED`（手工暂停批次或预算触顶），`PAUSED` 恢复后转回 `QUEUED`；
 `QUEUED` / `PAUSED` / `RUNNING` 可 `CANCELED`。镜头状态随任务推进：
-`PENDING` → `IMAGE_GENERATING` → `IMAGE_READY` → `VIDEO_GENERATING` → `VIDEO_READY` → `LOCKED`；
-任一阶段失败落 `FAILED`，重试从失败阶段续跑，不回退已完成阶段。
+`PENDING` → `IMAGE_GENERATING` → `IMAGE_READY` → `VIDEO_GENERATING` → `VIDEO_READY` → `LOCKED`。
+视频任务失败或取消时，若 `video_asset_id` 仍在且状态为 `VIDEO_GENERATING`，回到 `VIDEO_READY`，
+不回退已完成的成片；还没有视频但首帧仍在则回到 `IMAGE_READY`。首帧任务失败且首帧仍在时，
+已有视频回到 `VIDEO_READY`，否则回到 `IMAGE_READY`。不得在失败时解绑素材。
 
 ## 六、数据模型影响
 
