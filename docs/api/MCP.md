@@ -50,6 +50,7 @@
 | `list_reference_cards` | `work_id`；正式一致性面板返回角色/场景/道具卡及 `candidate_list`。 |
 | `generate_reference_image` | `work_id, card_type:CHARACTER/SCENE/PROP, card_id, confirm_cost=true`，可选 `candidate_count:2/4/8`（默认 2）、`model_code`、非空 `appearance_prompt`；先经正式角色或场景/道具编辑保存描述，再提交正式参考图任务。保留作品归属与价格确认校验，不替用户锁定候选。 |
 | `lock_reference_card` | `work_id, card_type, card_id, asset_id`；只能选择该卡真实 `candidate_list` 中的资产，正式锁定和镜头过期规则保持。 |
+| `resume_video_task` | 只接收 `task_id`；恢复本人失败/取消的公司视频，依据唯一持久回执查询已有任务，不再次提交生成或新建回执。无回执/重复/凭据变化/已有后续视频时拒绝；仍按原任务结算。 |
 | `get_render_task` | `task_id`；复用任务中心所有权检查与安全输出，返回状态、进度、公开错误、`result_json`、费用；不暴露 request_json。 |
 | `get_asset_download` | `asset_id`；直接委托正式 AssetService.getDownload，仅本人资产返回 `download_url, expire_at`，支持首帧、视频和配音验收；链接到期后重新查询。 |
 | `lock_shot` | `episode_id, shot_id, confirm_review:true`；只接受 JSON boolean true，验证本人同集镜头、实际 video_asset_id 非空及 VIDEO_READY/LOCKED 状态，再委托正式 ShotService.lock(req,true)。不接受 asset_id/video_asset_id 等覆盖字段；不自动生成、合成或发布。 |
@@ -69,7 +70,7 @@
 
 建议顺序：保存 `scene_list` → READY → 列出参考卡 → 生成/查询/选择锁定参考图 → 拆分 → 列出与编辑分镜 → IMAGE → 查询成功 → VIDEO → 查询成功 → VOICE/MUSIC → 查询成功并对齐、选曲、字幕设置 → get_asset_download 验收媒体 → 显式 lock_shot → 合成预检 → COMPOSE → 查询任务与成片 MP4。
 
-`tools/list` 共 27 个工具。`get_asset_download` 不返回存储配置或凭据，只保留正式下载响应。
+`tools/list` 共 28 个工具。`get_asset_download` 不返回存储配置或凭据，只保留正式下载响应。
 `lock_shot` 不接收 `user_id` 或任意资产覆盖，缺省/false/字符串/数字确认均拒绝；外人资源和跨集镜头拒绝。
 重复确认已有 LOCKED 镜头仍走正式服务，不会重生成。锁定不代表已通过 FilmService 的完整合成预检。
 

@@ -56,6 +56,31 @@ public class UsageReceiptService {
  }
  private UsageScope fallbackScope(){String user=com.bgssai.shortai.common.aop.UserContext.getUserId();
   return user==null?null:new UsageScope(user,null,"interactive");}
+ /** A durable, unambiguous local task receipt is required before resuming remote work. */
+ public UsageReceiptRow requireVideoReceipt(String userId,String workRef,String taskRef,String model){
+  if(userId==null || userId.isBlank() || workRef==null || workRef.isBlank() || taskRef==null || taskRef.isBlank()
+    || !"bgssai-video".equals(model)) throw new IllegalArgumentException("video recovery scope required");
+  UsageReceiptExample ex=new UsageReceiptExample();ex.userId=userId;ex.workRef=workRef;ex.taskRef=taskRef;
+  PageHelper.startPage(1,2,false);
+  List<UsageReceiptRow> rows;
+  try { rows=mapper.selectByExample(ex); } finally { PageHelper.clearPage(); }
+  if(rows==null || rows.size()!=1) throw new IllegalArgumentException("video recovery requires one durable receipt");
+  UsageReceiptRow row=rows.get(0);
+  if(row.id==null || row.delFlag!=0 || !userId.equals(row.userId) || !workRef.equals(row.workRef)
+    || !taskRef.equals(row.taskRef) || !model.equals(row.model) || row.requestId==null
+    || !row.requestId.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))
+   throw new IllegalArgumentException("video recovery receipt does not match task");
+  return row;
+ }
+ public UsageReceiptRow resumeVideo(String requestId,String endpoint,String key,String model){
+  UsageScope scope=UsageScope.current();
+  if(scope==null) throw new IllegalArgumentException("video recovery scope required");
+  UsageReceiptRow row=requireVideoReceipt(scope.userId(),scope.workRef(),scope.taskRef(),model);
+  if(!row.requestId.equals(requestId) || !endpoint.equals(row.endpoint) || key==null || key.isBlank()
+    || !fingerprint(key).equals(row.keyFingerprint))
+   throw new IllegalArgumentException("video recovery credentials or endpoint changed");
+  return row;
+ }
  public static String fingerprint(String key){
   try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8)));}
   catch(Exception e){throw new IllegalStateException(e);}

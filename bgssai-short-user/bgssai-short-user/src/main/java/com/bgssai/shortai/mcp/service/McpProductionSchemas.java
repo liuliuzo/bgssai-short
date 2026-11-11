@@ -24,6 +24,8 @@ final class McpProductionSchemas {
                 integer("shot_duration_sec", "镜头秒数；还须符合所选模型的真实能力", 1, 120), text("extra_prompt", "额外画面约束，正式服务重算 image_prompt"));
         tools.add(tool("save_storyboard", "原子保存同一分集的结构化分镜修改，锁定镜头不可改；不覆盖生成资产或直接写模型提示词。",
                 schema(List.of("episode_id", "shots"), text("episode_id", "分集 ID"), array("shots", "1-100 个镜头", shot, 100))));
+        tools.add(tool("resume_video_task", "恢复本人已提交的公司视频任务；只接受task_id，通过唯一持久回执查询原任务，不再次生成。凭据变化、无回执、已有后续视频时拒绝；原任务仍正常结算。",
+                schema(List.of("task_id"), text("task_id", "本人失败或取消的公司视频任务 ID"))));
         tools.add(tool("get_render_task", "查询本人任务真实状态、进度、公开错误、费用和 result_json；不触发任务或重试。",
                 schema(List.of("task_id"), text("task_id", "任务 ID"))));
         tools.add(tool("get_asset_download", "查询本人资产的真实 download_url 与 expire_at，供首帧、视频、配音验收；到期重新查询，不生成或发布。",

@@ -18,4 +18,6 @@ public interface ShortShotMapper {
     ShortShot selectByPrimaryKey(Long id);
     int updateByExampleSelective(@Param("row") ShortShot row, @Param("example") ShortShotExample example);
     int updateByPrimaryKeySelective(ShortShot row);
+    int attachRecoveredVideoIfUnchanged(@Param("expected") ShortShot expected,
+            @Param("patch") ShortShot patch, @Param("taskId") Long taskId);
 }

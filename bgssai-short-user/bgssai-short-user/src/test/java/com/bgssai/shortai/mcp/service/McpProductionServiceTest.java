@@ -52,6 +52,15 @@ class McpProductionServiceTest {
         return shot;
     }
 
+    @Test void videoResumeAcceptsOnlyOwnedTaskLookupAndNeverAcceptsUpstreamOverrides() throws Exception {
+        when(tasks.resumeVideo(any())).thenReturn(Responses.ok(Map.of("task_id","t-1","resumed_existing_video",true)));
+        service.execute("resume_video_task",args("{\"task_id\":\"t-1\"}"));
+        ArgumentCaptor<AiTaskReq> request=ArgumentCaptor.forClass(AiTaskReq.class);
+        verify(tasks).resumeVideo(request.capture());assertEquals("t-1",request.getValue().getTaskId());
+        assertThrows(IllegalArgumentException.class,()->service.execute("resume_video_task",args("{\"task_id\":\"t-1\",\"request_id\":\"forged\"}")));
+        verify(tasks,never()).submit(any());verifyNoInteractions(films,assets,dubbing);
+    }
+
     @Test void subtitleRegenerationRequiresExplicitReplacementAndStrictArguments() throws Exception {
         for (String input : List.of("{}", "{\"episode_id\":\"e-1\"}",
                 "{\"episode_id\":\"e-1\",\"confirm_replace\":false}",

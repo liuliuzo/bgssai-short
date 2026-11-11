@@ -69,7 +69,7 @@ public class McpProductionService {
         return name != null && Set.of("list_models", "ready_episode_script", "split_storyboard",
                 "save_storyboard", "get_render_task", "get_episode_film", "save_film_settings",
                 "list_reference_cards", "generate_reference_image", "lock_reference_card", "align_dubbing",
-                "list_voices", "set_character_voice", "get_asset_download", "lock_shot", "regenerate_subtitles")
+                "list_voices", "set_character_voice", "get_asset_download", "lock_shot", "regenerate_subtitles", "resume_video_task")
                 .contains(name);
     }
 
@@ -83,6 +83,7 @@ public class McpProductionService {
             case "ready_episode_script" -> ready(args);
             case "split_storyboard" -> split(args);
             case "save_storyboard" -> saveStoryboard(args);
+            case "resume_video_task" -> resumeVideo(args);
             case "get_render_task" -> result(tasks.detail(text(args, "task_id")));
             case "get_asset_download" -> assetDownload(args);
             case "lock_shot" -> lockShot(args);
@@ -103,6 +104,13 @@ public class McpProductionService {
         req.setEpisodeId(text(args, "episode_id"));
         req.setForceReadyFlag(flag(args, "force_ready", false) ? 1 : 0);
         return result(scripts.ready(req));
+    }
+
+    private Object resumeVideo(JsonNode args) {
+        onlyArguments(args, Set.of("task_id"));
+        AiTaskReq req = new AiTaskReq();
+        req.setTaskId(text(args, "task_id"));
+        return result(tasks.resumeVideo(req));
     }
 
     private Object assetDownload(JsonNode args) {
