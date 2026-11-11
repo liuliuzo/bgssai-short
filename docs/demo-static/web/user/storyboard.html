@@ -90,11 +90,11 @@
       <span class="st warn">预检 1 条提示</span>
       <span class="spacer"></span>
       <a class="btn btn-default" href="episode-preview.html">连起来看</a>
-      <select style="width:210px" title="画面模型">
-        <option value="bgssai-image" selected>画面：BGSSAI Image</option>
+      <select style="width:280px" title="BGSSAI Image · 按任务实际对账">
+        <option value="bgssai-image" selected>BGSSAI Image · 按任务实际对账</option>
       </select>
-      <select style="width:230px" title="视频模型">
-        <option value="bgssai-video" selected>视频：BGSSAI Video</option>
+      <select style="width:280px" title="BGSSAI Video · 按任务实际对账">
+        <option value="bgssai-video" selected>BGSSAI Video · 按任务实际对账</option>
       </select>
       <select style="width:170px" title="全部生成的目标级别">
         <option value="DRAFT_IMAGE" selected>目标级别：草图 0.10 / 镜</option>
@@ -110,13 +110,13 @@
       <div class="lane">
 
         <div class="shot-row">
-          <div class="no">1<small>4s</small></div>
+          <div class="no">1<small>成片 6秒 · 计划 4秒</small></div>
           <div class="words">
             <div class="text-muted" style="font-size:12px;margin-bottom:6px">这一镜会拍成：观众会看到中景，沈知微推门而入，众人回头。镜头从背后推进，冷蓝顶光。字幕：「这份收购案，谁批准的？」</div>
             <textarea rows="2">谁：沈知微。在哪：会议室。做什么：推门而入，众人回头。怎么拍：中景，从背后推进。什么感觉：冷蓝顶光，冷静。台词：这份收购案，谁批准的？</textarea>
           </div>
           <div class="pic" style="width:168px">
-            <div class="phone" style="width:168px;min-height:220px;background:#0f172a;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:8px">
+            <div class="phone" title="点击画面播放或暂停" style="width:168px;aspect-ratio:3/2;min-height:0;background:#0f172a;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:8px">
               <span class="ph-tag">本镜视频</span>
               <div class="ph-body" style="font-size:12px">可直接播放</div>
               <button class="btn btn-default btn-sm" type="button">播放</button>
@@ -229,6 +229,7 @@
             <span class="chip">退婚书 PROP</span>
             <span class="text-muted">未锁定引用会拦截生成 · latest_task 显示在每镜标题旁</span>
           </div>
+          <div class="text-muted" style="padding:0 14px 10px;font-size:12px">本剧可绑定：角色 沈知微 · 场景 宴会厅 · 道具 退婚书。下拉框空白表示还没选要绑到勾选镜头上的卡，不是这一镜没有引用。未勾选时费用写「预计 0 额度」。</div>
         </div>
 
         <div class="note" style="max-width:780px; margin:14px auto 0">
@@ -263,7 +264,13 @@
         <code>character_ref_json</code> / <code>scene_card_id</code> / <code>prop_ref_json</code>。
         列表另回 <code>latest_task</code>（统一任务状态机）以及 <code>video_url</code>、
         <code>first_frame_url</code>、<code>last_frame_url</code>。
-        已有 <code>video_url</code> 的镜头在列表左侧直接播放，并可放大；没有视频时首帧、尾帧点击放大。
+        已有 <code>video_url</code> 的镜头在列表左侧直接播放，点击画面即可播放或暂停，播放框尺寸固定；
+        「放大播放」是按钮，放大层盖住工具条。没有视频时首帧、尾帧点击放大。
+        成片时长和 <code>shot_duration_sec</code> 不一致时标题写「成片 N秒 · 计划 M秒」，不把计划秒数说成成片长度，也不回写成片时长。
+        出图、视频模型展示完整名称（含「按任务实际对账」），可悬停读取。未勾选镜头的费用行带「额度」。
+        运镜 / 风格 / 视角 / 衔接写法分行；和上一镜只使用 <code>frame_link_mode</code>，<code>link_hint</code> 仍显示。
+        人话「在哪」：叙事里已有地点就用该地点，否则用已绑定场景卡名；不得在场景已知时仍写「在哪：未写清场景」。
+        顶部绑定下拉打开时为空，旁边列出本剧已有卡，不表示当前镜头没有引用。
         最新视频任务失败但 <code>video_asset_id</code> 仍在时，标签为「已有视频，本次重生成失败」，
         不得显示成没有视频。画布不是唯一播放入口。
         行内提示来自连贯性检查、角色定妆状态与合规预检

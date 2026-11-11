@@ -1,9 +1,8 @@
 import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
 import { publicModelText } from '../../publicModel'
-import { formatToken } from '../../utils/formatToken'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Typography, message } from 'antd'
+import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
@@ -15,15 +14,26 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
-import { shotCardStatusCode, shotLatestTaskBadge } from './shotCardMedia'
-import { ClickThumb, ShotMediaColumn } from './shotListMedia'
+import { shotCardStatusCode, shotHasPlayableVideo, shotLatestTaskBadge } from './shotCardMedia'
+import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
+import {
+  appendPreset,
+  assetBinderPlaceholder,
+  assetLibrarySummary,
+  frameLinkOptions,
+  knownSceneName,
+  modelSelectProps,
+  presetIsActive,
+  reconcileEmptyScene,
+  selectionFeeLine,
+  shotPresetGroups,
+  shotTimingLabel,
+  shotVideoDialogProps,
+  tokenAmountLabel,
+} from './studioListUx'
 import DramaAssistantDrawer from '../../components/DramaAssistantDrawer'
 import {
   SHOT_TYPES,
-  CAMERA_MOVEMENTS,
-  DRAMA_STYLES,
-  QUAD_GRID_ANGLES,
-  CONTINUITY_PRESETS,
   evaluateShotReadiness,
   validateTubePublishPreflight,
 } from '../../utils/CinematographyHelper'
@@ -589,6 +599,7 @@ function StoryboardPane({ work, episodeId }) {
   const [bindProps, setBindProps] = useState([])
   const [videoWatch, setVideoWatch] = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
+  const [clipSeconds, setClipSeconds] = useState({})
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -710,6 +721,11 @@ function StoryboardPane({ work, episodeId }) {
     }
   }
 
+  const imageModelLabel = modelLabel(imageModels.find((item) => item.model_code === imageModelCode) || {})
+  const videoModelLabel = modelLabel(videoModels.find((item) => item.model_code === videoModelCode) || {})
+  const imageSelect = modelSelectProps(imageModelLabel)
+  const videoSelect = modelSelectProps(videoModelLabel)
+
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <Alert
@@ -737,7 +753,7 @@ function StoryboardPane({ work, episodeId }) {
           <Select
             mode="multiple"
             allowClear
-            placeholder="角色"
+            placeholder={assetBinderPlaceholder('角色', (panel.character_list || []).length)}
             style={{ minWidth: 180 }}
             value={bindChars}
             onChange={setBindChars}
@@ -748,7 +764,7 @@ function StoryboardPane({ work, episodeId }) {
           />
           <Select
             allowClear
-            placeholder="场景"
+            placeholder={assetBinderPlaceholder('场景', (panel.scene_list || []).length)}
             style={{ minWidth: 160 }}
             value={bindScene}
             onChange={setBindScene}
@@ -760,7 +776,7 @@ function StoryboardPane({ work, episodeId }) {
           <Select
             mode="multiple"
             allowClear
-            placeholder="道具"
+            placeholder={assetBinderPlaceholder('道具', (panel.prop_list || []).length)}
             style={{ minWidth: 160 }}
             value={bindProps}
             onChange={setBindProps}
@@ -787,6 +803,13 @@ function StoryboardPane({ work, episodeId }) {
             }}
           >绑定到已勾选镜头</Button>
         </Space>
+        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
+          {assetLibrarySummary({
+            characters: (panel.character_list || []).map((item) => item.character_name),
+            scenes: (panel.scene_list || []).map((item) => item.card_name),
+            props: (panel.prop_list || []).map((item) => item.card_name),
+          })}
+        </Paragraph>
       </Card>
       <Card size="small" extra={<Space wrap>
         <Button onClick={() => setCanvasView(true)}>切到画布</Button>
@@ -801,20 +824,42 @@ function StoryboardPane({ work, episodeId }) {
           message.success('已用人话写清每一镜')
           load()
         }}>生成人话分镜（免费）</Button>
-        <Select
-          placeholder="出图模型"
-          value={imageModelCode}
-          onChange={setImageModelCode}
-          style={{ width: 220 }}
-          options={imageModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
-        />
-        <Select
-          placeholder="视频模型"
-          value={videoModelCode}
-          onChange={setVideoModelCode}
-          style={{ width: 220 }}
-          options={videoModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
-        />
+        <Tooltip title={imageSelect.title || '出图模型'}>
+          <span>
+            <Select
+              aria-label="出图模型"
+              placeholder="出图模型"
+              value={imageModelCode}
+              onChange={setImageModelCode}
+              title={imageSelect.title}
+              popupMatchSelectWidth={imageSelect.popupMatchSelectWidth}
+              style={imageSelect.style}
+              dropdownStyle={imageSelect.dropdownStyle}
+              options={imageModels.map((m) => {
+                const label = modelLabel(m)
+                return { value: m.model_code, label, title: label }
+              })}
+            />
+          </span>
+        </Tooltip>
+        <Tooltip title={videoSelect.title || '视频模型'}>
+          <span>
+            <Select
+              aria-label="视频模型"
+              placeholder="视频模型"
+              value={videoModelCode}
+              onChange={setVideoModelCode}
+              title={videoSelect.title}
+              popupMatchSelectWidth={videoSelect.popupMatchSelectWidth}
+              style={videoSelect.style}
+              dropdownStyle={videoSelect.dropdownStyle}
+              options={videoModels.map((m) => {
+                const label = modelLabel(m)
+                return { value: m.model_code, label, title: label }
+              })}
+            />
+          </span>
+        </Tooltip>
         <Button onClick={async () => {
           const { data } = await productionApi.estimateTasks({
             episode_id: episodeId,
@@ -841,25 +886,36 @@ function StoryboardPane({ work, episodeId }) {
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
-            （预计 {formatToken(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {publicModelText(cost.display_name || cost.model_code, cost.task_type) || '-'}）
+            （预计 {tokenAmountLabel(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {publicModelText(cost.display_name || cost.model_code, cost.task_type) || '-'}）
             {(cost.shot_cost_list || []).length > 0
               ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
               : ''}
           </Paragraph>
         ) : (
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            勾选镜头后估费用（当前勾选 {selected.length} 镜 · 预计 {formatToken(estimateShotBatchTokens(selected, 1000).billed_tokens)}）。生成前会再弹窗确认预计费用与余额。
+            {selectionFeeLine(selected.length, estimateShotBatchTokens(selected, 1000).billed_tokens)}
           </Paragraph>
         )}
       </Card>
       {rows.map((row) => {
         const readiness = evaluateShotReadiness(row, panel)
         const taskBadge = shotLatestTaskBadge(row)
+        const sceneCardName = (panel.scene_list || []).find((c) => c.scene_card_id === row.scene_card_id)?.card_name || ''
+        const sceneKnown = knownSceneName({
+          sceneName: sceneCardName,
+          shotDesc: row.shot_desc,
+          lookPlain: row.look_plain,
+        })
+        const spoken = reconcileEmptyScene(drafts[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
         return (
         <Card
           key={row.shot_id}
           size="small"
-          title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${labelOf(SHOT_STATUS_LABEL, shotCardStatusCode(row))}`}
+          title={`镜 ${row.shot_no} · ${shotTimingLabel({
+            plannedSec: row.shot_duration_sec,
+            actualSec: clipSeconds[row.shot_id],
+            hasPlayableVideo: shotHasPlayableVideo(row),
+          })} · ${labelOf(SHOT_STATUS_LABEL, shotCardStatusCode(row))}`}
           extra={<Space>
             {taskBadge ? (
               <Tag color={taskBadge.color}>{taskBadge.text}</Tag>
@@ -870,27 +926,6 @@ function StoryboardPane({ work, episodeId }) {
             {row.stale_flag === 1 ? <Tag color="orange">定妆已变，建议重抽</Tag> : null}
             {row.blocked_flag === 1 ? <Tag color="red">未就绪</Tag> : null}
             <Tag color={(row.prompt_score || 0) >= 70 ? 'green' : 'orange'}>提示词 {row.prompt_score ?? '-'} 分</Tag>
-            <Select
-              size="small"
-              style={{ width: 140 }}
-              value={row.frame_link_mode || 'NONE'}
-              onChange={async (mode) => {
-                await featuresApi.frameLinkSave({
-                  shot_id: row.shot_id,
-                  frame_link_mode: mode,
-                  model_code: videoModelCode,
-                })
-                load()
-              }}
-              options={[
-                { value: 'NONE', label: '不衔接' },
-                { value: 'INHERIT_PREV', label: '接上一镜' },
-                { value: 'BOOKEND', label: '首尾帧' },
-              ]}
-            />
-            {row.link_hint
-              ? <Tag color={row.link_effective_flag === 1 ? 'blue' : 'orange'}>{row.link_hint}</Tag>
-              : null}
             <Button size="small" onClick={() => {
               setSelected((cur) => cur.includes(row.shot_id) ? cur.filter((id) => id !== row.shot_id) : cur.concat(row.shot_id))
             }}>{selected.includes(row.shot_id) ? '取消勾选' : '勾选'}</Button>
@@ -900,7 +935,13 @@ function StoryboardPane({ work, episodeId }) {
           </Space>}
         >
           <Space align="start" size="large" style={{ width: '100%' }}>
-            <ShotMediaColumn row={row} onEnlarge={setVideoPreview} />
+            <ShotMediaColumn
+              row={row}
+              onEnlarge={setVideoPreview}
+              onDuration={(seconds) => setClipSeconds((cur) => (
+                cur[row.shot_id] === seconds ? cur : { ...cur, [row.shot_id]: seconds }
+              ))}
+            />
             <div style={{ flex: 1, minWidth: 0 }}>
               <Paragraph style={{ marginBottom: 8 }}>
                 <Text strong>这一镜会拍成：</Text>
@@ -919,69 +960,51 @@ function StoryboardPane({ work, episodeId }) {
                   return <Tag key={id} color="gold">{card?.card_name || id}</Tag>
                 })}
               </Space>
-              <div style={{ marginTop: 6, marginBottom: 4 }}>
-                <Space wrap size={[4, 4]}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>运镜基调：</Text>
-                  {CAMERA_MOVEMENTS.slice(1, 6).map((cm) => (
-                    <Tag
-                      key={cm.value}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setDrafts((cur) => {
-                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
-                          return { ...cur, [row.shot_id]: old ? `${old}，【运镜：${cm.label}】` : `【运镜：${cm.label}】` }
-                        })
-                      }}
-                    >
-                      {cm.label.split(' ')[0]}
-                    </Tag>
-                  ))}
-                  {DRAMA_STYLES.slice(0, 3).map((st) => (
-                    <Tag
-                      key={st.key}
-                      color="purple"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setDrafts((cur) => {
-                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
-                          return { ...cur, [row.shot_id]: old ? `${old}，【基调：${st.label}】` : `【基调：${st.label}】` }
-                        })
-                      }}
-                    >
-                      {st.label.split(' ')[0]}
-                    </Tag>
-                  ))}
-                  {QUAD_GRID_ANGLES.map((qa) => (
-                    <Tag
-                      key={qa.value}
-                      color="blue"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setDrafts((cur) => {
-                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
-                          return { ...cur, [row.shot_id]: old ? `${old}，【机位：${qa.label.split(' ')[0]}】` : `【机位：${qa.label.split(' ')[0]}】` }
-                        })
-                      }}
-                    >
-                      {qa.label.split(' ')[0]}
-                    </Tag>
-                  ))}
-                  {CONTINUITY_PRESETS.map((cp) => (
-                    <Tag
-                      key={cp.value}
-                      color="green"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setDrafts((cur) => {
-                          const old = cur[row.shot_id] ?? row.previz_text ?? ''
-                          return { ...cur, [row.shot_id]: old ? `${old}，【衔接：${cp.label}】` : `【衔接：${cp.label}】` }
-                        })
-                      }}
-                    >
-                      {cp.label}
-                    </Tag>
-                  ))}
-                </Space>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>和上一镜</Text>
+                <Select
+                  size="small"
+                  style={{ width: 120 }}
+                  value={row.frame_link_mode || 'NONE'}
+                  aria-label="和上一镜怎么接"
+                  onChange={async (mode) => {
+                    await featuresApi.frameLinkSave({
+                      shot_id: row.shot_id,
+                      frame_link_mode: mode,
+                      model_code: videoModelCode,
+                    })
+                    load()
+                  }}
+                  options={frameLinkOptions()}
+                />
+                {row.link_hint
+                  ? <Tag color={row.link_effective_flag === 1 ? 'blue' : 'orange'}>{row.link_hint}</Tag>
+                  : null}
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                {shotPresetGroups().map((group) => (
+                  <div key={group.key} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                    <Text type="secondary" style={{ fontSize: 12, minWidth: 64 }}>{group.label}</Text>
+                    {group.items.map((item) => {
+                      const active = presetIsActive(spoken, item.marker)
+                      return (
+                        <Button
+                          key={item.key}
+                          size="small"
+                          type={active ? 'primary' : 'default'}
+                          onClick={() => {
+                            setDrafts((cur) => {
+                              const old = reconcileEmptyScene(cur[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
+                              return { ...cur, [row.shot_id]: appendPreset(old, item.marker) }
+                            })
+                          }}
+                        >
+                          {item.label}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                ))}
               </div>
               {row.image_prompt ? (
                 <div style={{ marginBottom: 8 }}>
@@ -998,12 +1021,12 @@ function StoryboardPane({ work, episodeId }) {
               <TextArea
                 rows={4}
                 style={{ marginTop: 6 }}
-                value={drafts[row.shot_id] ?? row.previz_text ?? ''}
+                value={spoken}
                 onChange={(e) => setDrafts((cur) => ({ ...cur, [row.shot_id]: e.target.value }))}
               />
               <Space style={{ marginTop: 8 }} wrap>
                 <Button size="small" onClick={async () => {
-                  const text = drafts[row.shot_id] ?? row.previz_text
+                  const text = spoken
                   const { data } = await featuresApi.previzSave({ shot_id: row.shot_id, previz_text: text })
                   const saved = data?.result || {}
                   patchRow(row.shot_id, {
@@ -1079,19 +1102,18 @@ function StoryboardPane({ work, episodeId }) {
       <Modal
         title={videoPreview ? `镜 ${videoPreview.shot_no} 视频` : '视频'}
         open={!!videoPreview}
-        footer={null}
-        width={420}
-        destroyOnClose
         onCancel={() => setVideoPreview(null)}
+        {...shotVideoDialogProps()}
       >
         {videoPreview && videoPreview.video_url ? (
-          <video
+          <ListShotVideo
             src={videoPreview.video_url}
-            poster={videoPreview.first_frame_url || undefined}
-            controls
+            poster={videoPreview.first_frame_url}
+            label="播放或暂停"
             autoPlay
-            playsInline
-            style={{ width: '100%', maxHeight: '70vh', background: '#000', display: 'block' }}
+            onDuration={(seconds) => setClipSeconds((cur) => (
+              cur[videoPreview.shot_id] === seconds ? cur : { ...cur, [videoPreview.shot_id]: seconds }
+            ))}
           />
         ) : null}
       </Modal>
