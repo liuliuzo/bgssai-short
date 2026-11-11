@@ -487,8 +487,12 @@ public class AiTaskService {
         patch.setFinishedTime(new Date());
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();
-        up.createCriteria().andIdEqualTo(task.getId());
-        shortAiTaskMapper.updateByExampleSelective(patch, up);
+        ShortAiTaskExample.Criteria criteria = up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo(task.getTaskStatus());
+        if (task.getRetryCount() == null) criteria.andRetryCountIsNull();
+        else criteria.andRetryCountEqualTo(task.getRetryCount());
+        if (shortAiTaskMapper.updateByExampleSelective(patch, up) != 1) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "任务状态已变化，未取消当前任务");
+        }
         if (shotGenerateOutcome != null) {
             shotGenerateOutcome.restoreBoundMedia(task);
         }
@@ -619,7 +623,7 @@ public class AiTaskService {
         item.put("target_type_name", ShortLabels.targetTypeName(row.getTargetType()));
         item.put("target_id", row.getTargetId());
         item.put("progress_percent", row.getProgressPercent());
-        item.put("fail_reason_code", row.getFailReasonCode());
+        item.put("fail_reason_code", "FAILED".equals(row.getTaskStatus()) ? row.getFailReasonCode() : null);
         item.put("fail_reason", visibleFailReason(
                 row.getTaskStatus(), row.getFailReasonCode(), row.getFailReason()));
         ProductModelAlias.hideStoredModel(item, row.getTaskType(), row.getModelCode());
@@ -649,7 +653,7 @@ public class AiTaskService {
     }
 
     static String visibleFailReason(String taskStatus, String failReasonCode, String failReason) {
-        if (isSuccessStatus(taskStatus) || failReasonCode == null || failReasonCode.isBlank()) {
+        if (!"FAILED".equals(taskStatus) || failReasonCode == null || failReasonCode.isBlank()) {
             return null;
         }
         return TokenHubClientSupport.userFacingMessage(failReason);

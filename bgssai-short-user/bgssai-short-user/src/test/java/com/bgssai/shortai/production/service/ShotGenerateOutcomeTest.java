@@ -30,7 +30,7 @@ class ShotGenerateOutcomeTest {
         outcome.restoreBoundMedia(videoTask());
 
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
-        verify(shots).updateByExampleSelective(patch.capture(), any());
+        verify(shots).restoreBoundMediaAfterTerminalTask(any(), any(), patch.capture());
         assertEquals("VIDEO_READY", patch.getValue().getShotStatus());
         assertNull(patch.getValue().getVideoAssetId());
         assertNull(patch.getValue().getFirstFrameAssetId());
@@ -47,7 +47,7 @@ class ShotGenerateOutcomeTest {
         outcome.restoreBoundMedia(videoTask());
 
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
-        verify(shots).updateByExampleSelective(patch.capture(), any());
+        verify(shots).restoreBoundMediaAfterTerminalTask(any(), any(), patch.capture());
         assertEquals("IMAGE_READY", patch.getValue().getShotStatus());
         assertNull(patch.getValue().getVideoAssetId());
         assertNull(patch.getValue().getFirstFrameAssetId());
@@ -63,7 +63,7 @@ class ShotGenerateOutcomeTest {
 
         outcome.restoreBoundMedia(videoTask());
 
-        verify(shots, never()).updateByExampleSelective(any(), any());
+        verify(shots, never()).restoreBoundMediaAfterTerminalTask(any(), any(), any());
     }
 
     @Test
@@ -76,7 +76,7 @@ class ShotGenerateOutcomeTest {
 
         outcome.restoreBoundMedia(videoTask());
 
-        verify(shots, never()).updateByExampleSelective(any(), any());
+        verify(shots, never()).restoreBoundMediaAfterTerminalTask(any(), any(), any());
     }
 
     @Test
@@ -89,7 +89,7 @@ class ShotGenerateOutcomeTest {
         outcome.restoreBoundMedia(videoTask());
 
         verify(shots, never()).selectOneByExample(any());
-        verify(shots, never()).updateByExampleSelective(any(), any());
+        verify(shots, never()).restoreBoundMediaAfterTerminalTask(any(), any(), any());
     }
 
     @Test
@@ -102,10 +102,11 @@ class ShotGenerateOutcomeTest {
 
         ShortAiTask task = videoTask();
         task.setTaskType("IMAGE");
+        when(tasks.selectByPrimaryKey(any())).thenReturn(task);
         outcome.restoreBoundMedia(task);
 
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
-        verify(shots).updateByExampleSelective(patch.capture(), any());
+        verify(shots).restoreBoundMediaAfterTerminalTask(any(), any(), patch.capture());
         assertEquals("VIDEO_READY", patch.getValue().getShotStatus());
         assertNull(patch.getValue().getVideoAssetId());
     }
@@ -120,10 +121,11 @@ class ShotGenerateOutcomeTest {
 
         ShortAiTask task = videoTask();
         task.setTaskType("IMAGE");
+        when(tasks.selectByPrimaryKey(any())).thenReturn(task);
         outcome.restoreBoundMedia(task);
 
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
-        verify(shots).updateByExampleSelective(patch.capture(), any());
+        verify(shots).restoreBoundMediaAfterTerminalTask(any(), any(), patch.capture());
         assertEquals("IMAGE_READY", patch.getValue().getShotStatus());
         assertNull(patch.getValue().getFirstFrameAssetId());
     }
@@ -136,19 +138,21 @@ class ShotGenerateOutcomeTest {
         task.setTargetType("PORTRAIT");
         outcome.restoreBoundMedia(task);
         outcome.restoreBoundMedia(null);
-        verify(shots, never()).updateByExampleSelective(any(), any());
+        verify(shots, never()).restoreBoundMediaAfterTerminalTask(any(), any(), any());
     }
 
     private static ShotGenerateOutcome outcome(ShortShotMapper shots, ShortAiTaskMapper tasks) {
         ShotGenerateOutcome outcome = new ShotGenerateOutcome();
         ReflectionTestUtils.setField(outcome, "shortShotMapper", shots);
         ReflectionTestUtils.setField(outcome, "shortAiTaskMapper", tasks);
+        when(tasks.selectByPrimaryKey(any())).thenReturn(videoTask());
         return outcome;
     }
 
     private static ShortAiTask videoTask() {
         ShortAiTask task = new ShortAiTask();
         task.setTaskId("t-1");
+        task.setId(9L); task.setUserId("owner"); task.setWorkId("work"); task.setEpisodeId("episode"); task.setRetryCount(1);
         task.setTaskType("VIDEO");
         task.setTargetType("SHOT");
         task.setTargetId("sh-1");

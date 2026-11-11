@@ -353,8 +353,32 @@ class ShortAiTaskWorkerTest {
         stale.setTargetId("sh-1");
         stale.setStartedTime(new java.util.Date(System.currentTimeMillis() - 3600_000L));
         when(mapper.selectByExample(any())).thenReturn(java.util.List.of(stale));
+        when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
         worker.reapStaleTasks();
         verify(outcome).restoreBoundMedia(stale);
+    }
+
+    @Test
+    void staleFailureCasMissDoesNotNotifyOutcomeForResumedTask() {
+        ShortAiTaskMapper mapper = mock(ShortAiTaskMapper.class);
+        AiModelResolveService resolve = mock(AiModelResolveService.class);
+        ShotGenerateOutcome outcome = mock(ShotGenerateOutcome.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+        ReflectionTestUtils.setField(worker, "shotGenerateOutcome", outcome);
+        AiModelConfig model = new AiModelConfig(); model.setTimeoutSec(1);
+        when(resolve.resolve(any(), any())).thenReturn(model);
+        ShortAiTask stale = new ShortAiTask(); stale.setId(9L); stale.setRetryCount(1);
+        stale.setTaskType("VIDEO"); stale.setStartedTime(new java.util.Date(1000));
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(stale));
+        when(mapper.updateByExampleSelective(any(), any())).thenReturn(0);
+        worker.reapStaleTasks();
+        verify(outcome, never()).restoreBoundMedia(any());
+        var query = org.mockito.ArgumentCaptor.forClass(com.bgssai.shortai.model.ShortAiTaskExample.class);
+        verify(mapper).updateByExampleSelective(any(), query.capture());
+        Assertions.assertTrue(query.getValue().getOredCriteria().get(0).getAllCriteria().stream()
+                .anyMatch(c -> "retry_count =".equals(c.getCondition()) && Integer.valueOf(1).equals(c.getValue())));
     }
 
     /** 还没到超时上限的 RUNNING 任务不能被误杀。 */
