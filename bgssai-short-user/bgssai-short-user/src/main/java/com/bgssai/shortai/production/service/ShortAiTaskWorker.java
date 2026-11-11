@@ -976,6 +976,7 @@ public class ShortAiTaskWorker {
         AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
         request.getParams().put("title", ep.getEpisodeTitle());
         request.getParams().put("duration_sec", duration);
+        request.getParams().put(FfmpegComposeProvider.PARAM_ASPECT_RATIO, workAspectRatio(ep.getWorkId()));
         request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
         List<Integer> clipDurations = new ArrayList<>();
         List<String> dubbingMissing = new ArrayList<>();
