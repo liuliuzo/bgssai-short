@@ -2,6 +2,7 @@ package com.bgssai.shortai.production.service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,14 +34,25 @@ public class ShotGenerateOutcome {
         if (!"VIDEO".equals(type) && !"IMAGE".equals(type)) {
             return;
         }
-        if (task.getTargetId() == null || task.getTargetId().isBlank()) {
+        if (task.getId() == null || task.getTargetId() == null || task.getTargetId().isBlank()) {
             return;
         }
+        ShortAiTask terminal = shortAiTaskMapper.selectByPrimaryKey(task.getId());
+        if (terminal == null || !("FAILED".equals(terminal.getTaskStatus()) || "CANCELED".equals(terminal.getTaskStatus()))
+                || !Objects.equals(task.getTaskId(), terminal.getTaskId())
+                || !Objects.equals(task.getRetryCount(), terminal.getRetryCount())
+                || !Objects.equals(task.getUserId(), terminal.getUserId())
+                || !Objects.equals(task.getWorkId(), terminal.getWorkId())
+                || !Objects.equals(task.getEpisodeId(), terminal.getEpisodeId())
+                || !Objects.equals(task.getTargetId(), terminal.getTargetId())
+                || !Objects.equals(task.getTargetType(), terminal.getTargetType())
+                || !Objects.equals(task.getTaskType(), terminal.getTaskType())) return;
         if (activeSibling(task)) {
             return;
         }
         ShortShotExample ex = new ShortShotExample();
-        ex.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
+        ex.createCriteria().andShotIdEqualTo(task.getTargetId()).andUserIdEqualTo(task.getUserId())
+                .andWorkIdEqualTo(task.getWorkId()).andEpisodeIdEqualTo(task.getEpisodeId()).andDeletedFlagEqualTo(0);
         ShortShot shot = shortShotMapper.selectOneByExample(ex);
         if (shot == null) {
             return;
@@ -52,9 +64,7 @@ public class ShotGenerateOutcome {
         ShortShot patch = new ShortShot();
         patch.setShotStatus(next);
         patch.setUpdatedTime(new Date());
-        ShortShotExample up = new ShortShotExample();
-        up.createCriteria().andIdEqualTo(shot.getId()).andShotStatusEqualTo(shot.getShotStatus());
-        shortShotMapper.updateByExampleSelective(patch, up);
+        shortShotMapper.restoreBoundMediaAfterTerminalTask(shot, terminal, patch);
     }
 
     /**
@@ -87,6 +97,7 @@ public class ShotGenerateOutcome {
     private boolean activeSibling(ShortAiTask task) {
         ShortAiTaskExample active = new ShortAiTaskExample();
         ShortAiTaskExample.Criteria criteria = active.createCriteria()
+                .andUserIdEqualTo(task.getUserId()).andWorkIdEqualTo(task.getWorkId()).andEpisodeIdEqualTo(task.getEpisodeId())
                 .andTargetIdEqualTo(task.getTargetId())
                 .andTargetTypeEqualTo("SHOT")
                 .andTaskTypeEqualTo(task.getTaskType())

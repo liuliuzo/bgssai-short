@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
+import com.bgssai.shortai.model.ShortAiTask;
 
 @Mapper
 public interface ShortShotMapper {
@@ -20,4 +21,6 @@ public interface ShortShotMapper {
     int updateByPrimaryKeySelective(ShortShot row);
     int attachRecoveredVideoIfUnchanged(@Param("expected") ShortShot expected,
             @Param("patch") ShortShot patch, @Param("taskId") Long taskId);
+    int restoreBoundMediaAfterTerminalTask(@Param("expected") ShortShot expected,
+            @Param("task") ShortAiTask task, @Param("patch") ShortShot patch);
 }

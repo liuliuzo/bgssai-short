@@ -213,7 +213,7 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 存储 SDK 依赖不兼容时，任务立即返回 `task_status=FAILED`、`fail_reason_code=STORAGE_UNAVAILABLE`，
 `fail_reason` 为「素材存储服务不可用，任务未完成，请联系管理员」。不自动重新生成，不新增素材或执行产品成功结算；上游生成回执保留真实结果。
 
-`task_status` 为 `SUCCEEDED` / `SUCCESS`，或 `fail_reason_code` 为空时，`fail_reason` 返回 null，
+仅 `task_status=FAILED` 返回失败码及安全失败原因；其他状态的 `fail_reason_code` 与 `fail_reason` 均返回 null。FAILED 的 `fail_reason_code` 为空时，`fail_reason` 也返回 null，
 不把空原因改写成失败文案。任务中心与作品任务表的失败列留空。
 
 ### GET /bgssai/user/ai-tasks/batch-progress?batch_id=

@@ -222,9 +222,8 @@ public class ShortAiTaskWorker {
             for (ShortAiTask task : shortAiTaskMapper.selectByExample(ex)) {
                 Date started = task.getStartedTime() == null ? task.getQueuedTime() : task.getStartedTime();
                 if (started == null) {
-                    failIfRunning(task, "ORPHAN_RUNNING",
-                            "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务");
-                    noteTerminalFailure(task);
+                    if (failIfRunning(task, "ORPHAN_RUNNING",
+                            "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务")) noteTerminalFailure(task);
                     continue;
                 }
                 int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
@@ -234,9 +233,8 @@ public class ShortAiTaskWorker {
                 }
                 log.warn("ai task stale taskId={} type={} model={} ageSec={} limitSec={}",
                         task.getTaskId(), task.getTaskType(), task.getModelCode(), ageSec, limit);
-                failIfRunning(task, "MODEL_TIMEOUT",
-                        "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）");
-                noteTerminalFailure(task);
+                if (failIfRunning(task, "MODEL_TIMEOUT",
+                        "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）")) noteTerminalFailure(task);
             }
             onPollSuccess();
         } catch (DataAccessException ex) {
@@ -346,17 +344,14 @@ public class ShortAiTaskWorker {
             complete(task, model);
             boolean settled = settlement.settle(task, model, Math.max(1, executionUsage.get()));
             if (!settled) {
-                failIfRunning(task, "SETTLE_RACE",
-                        "任务结果未能落账（可能已被超时回收），请在任务中心重试");
-                noteTerminalFailure(task);
+                if (failIfRunning(task, "SETTLE_RACE",
+                        "任务结果未能落账（可能已被超时回收），请在任务中心重试")) noteTerminalFailure(task);
             }
         } catch (BizException exBiz) {
-            failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
-            noteTerminalFailure(task);
+            if (failIfRunning(task, exBiz.getCode(), exBiz.getMessage())) noteTerminalFailure(task);
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
-            failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage());
-            noteTerminalFailure(task);
+            if (failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage())) noteTerminalFailure(task);
         } finally {
             executionUsage.remove();
             com.bgssai.shortai.billing.UsageScope.clear();
@@ -1577,7 +1572,7 @@ public class ShortAiTaskWorker {
     }
 
     /** 只有仍在 RUNNING 的任务才置失败，避免覆盖已取消 / 已回收的终态。 */
-    private void failIfRunning(ShortAiTask task, String code, String message) {
+    private boolean failIfRunning(ShortAiTask task, String code, String message) {
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("FAILED");
         patch.setFailReasonCode(code);
@@ -1585,8 +1580,10 @@ public class ShortAiTaskWorker {
         patch.setFinishedTime(new Date());
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();
-        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
-        shortAiTaskMapper.updateByExampleSelective(patch, up);
+        ShortAiTaskExample.Criteria criteria = up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+        if (task.getRetryCount() == null) criteria.andRetryCountIsNull();
+        else criteria.andRetryCountEqualTo(task.getRetryCount());
+        return shortAiTaskMapper.updateByExampleSelective(patch, up) == 1;
     }
 
     private String activeEnv() {
