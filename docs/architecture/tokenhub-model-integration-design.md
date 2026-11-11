@@ -218,3 +218,14 @@ ffprobe 只接收本次临时文件路径，protocol_whitelist 限定 file,pipe�
 回归包含生成的 1.25 秒 MP3、WAV、64×96 MP4，以及真实 PNG/JPEG 字节，验证缺失供应商 JSON 时长、错误默认尺寸、无对应流、非法媒体、子进程超时和输出上限。真实媒体测试需与部署相同的 ffprobe 依赖；缺少工具的开发机明确跳过这些集成项，发布验收必须实际执行通过。
 
 公司视频完成响应可使用网关相对路径 `/v1/videos/generations/{id}/content?model={model}`。Short 只接受该精确路径、受限任务 ID 和与本次模型完全一致的单一 model 参数，并相对已配置的国内网关解析后附该网关 Bearer。拒绝协议相对 URL、路径穿越、额外查询参数及模型不一致；第三方 HTTPS 资源下载不附网关凭据。既有 HTTP 下载客户端跨 origin 重定向清除鉴权，HTTPS 不降级。网关另行负责每次查询/内容请求的任务所有权检查；该客户端支持不代表上游参考图或视频安装已完成。
+
+
+## 公司视频别名与配置一致性（2026-11-11）
+
+`AiModelResolveService` 在通用 `rewriteAlias` 之前识别明确的 `VIDEO/bgssai-video`，不让该请求降为默认选择。共享选择器先筛同区可解析的中枢配置并取精确 `model_code=bgssai-video`；没有精确行时，仅接受历史种子 ID `m-tokenhub-video-cogvideox`、TENCENT_TOKENHUB、VIDEO、`hub=cn`、`public_alias=bgssai-video`、`model_code=cogvideox` 的组合。历史对象复制全部元数据后仅改 modelCode，不修改 Mapper 返回对象、不写库。供应商/区域/别名被管理端调整过的行不纳入此兼容。
+
+目录同样用这一选择器决定 canonical 视频项，不再用第一个默认第三方行的价格代表公司视频。缺少候选时目录省略、明确提交失败；不调用 syntheticHubModel、兼容直连或默认对齐。价格与商业倍率查询使用规范后的 bgssai-video 网关编号，产品单价/单位、timeoutSec、maxRetry、configJson 均沿用所选行。其他自定义别名和显式第三方编号不修改。
+
+`CatalogModelAlign` 对缺失默认的视频公司候选优先 bgssai-video；cogvideox 名称本身不再是公司归属证据，只有目录 owned_by 明确公司归属时才可作为公司候选。已经在目录中的显式第三方配置仍保留。
+
+DML 新装种子采用 bgssai-video，继续保留历史 model_id 以避免重复配置；冲突时只填空字段，不改管理端现有价格、启停、默认、凭据或非空编号。线上旧种子由上述读时兼容承接，本 PR 不执行 SQL。DDL/API 字段无变动。回归覆盖精确行优先、历史种子保价/超时/凭据、目录与解析一致、禁跨区/直连、非匹配历史行拒绝、自定义与第三方保持。离线测试不代表上游可用或已完成真实视频。

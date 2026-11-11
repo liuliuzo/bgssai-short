@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "1b88f3a5bd99b12d8e7403eee307a0a0d308baddd6ee6941891ee820a761e6cb",
-  "code_contract_digest": "7c0a7ea290dcdb78059928eb2e1c0652a136537587dbe90549eaa03b3b67288a",
+  "prototype_bundle_digest": "e67ff4ecb90f9f3b28d6a247987da10677aa2f5a65e35b66b42d8926829cfd76",
+  "code_contract_digest": "af2b76e4d665f72b71b1558c08d78e181dfe06fdd21c875174f1584439c6f172",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -592,7 +592,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/AiModelResolveService.java",
-      "sha256": "243a277bc0d40107ea5aa27bf484171affa7d728b506fc8ed9e524ef5c4e92be"
+      "sha256": "45cc95a489a714fc9063d74c3a4d5477445f3d14fd36020d851c2a3c896b692f"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/ui/ListUserAiModelsController.java",
@@ -1379,7 +1379,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/ai-models.html",
-      "sha256": "01223afcde19ea4bcd8e64f6b0160dc6f473f713e93de5e9617734d661d27968",
+      "sha256": "632642b546597d360c9b764b527279340ac27db86c6472f1b8fa4154fed58b2c",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
@@ -2135,7 +2135,7 @@
     },
     {
       "path": "docs/demo-static/web/user/model-pricing-receipts.html",
-      "sha256": "7ae3387769633649ad4f56d78a88cec19006b732065f38a5440ad1fcb3e3c6d3",
+      "sha256": "2249f58524338c740363c37d4d82a5b4dbce6f4a172db8aa32f082ebc66116bc",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

@@ -66,6 +66,16 @@ class CatalogModelAlignTest {
     }
 
     @Test
+    void videoCompanyFallbackDoesNotMistakeZhipuCogvideoxForCompany() {
+        List<TokenHubModelCatalog.HubModel> both = List.of(
+                video("cogvideox", "zhipu"), video("bgssai-video", "bgssai-company"));
+        assertEquals("bgssai-video", CatalogModelAlign.choose("VIDEO", "missing-default", both));
+        assertEquals("cogvideox", CatalogModelAlign.choose("VIDEO", "cogvideox", both));
+        assertEquals("missing-default", CatalogModelAlign.choose("VIDEO", "missing-default",
+                List.of(video("cogvideox", "zhipu"))));
+    }
+
+    @Test
     void unlistedImageMovesToSdTurboOnlyWhenKlingIsAbsent() {
         assertEquals("sd-turbo", CatalogModelAlign.choose("IMAGE", "kling-v2-1",
                 List.of(image("sd-turbo", "BGSSAI"))));
