@@ -200,3 +200,9 @@ MUSIC 使用环境 profile 指定的国内 BGSSAI TokenHub，固定提交 `/v1/n
 契约依据：[MiniMax 官方音乐 API](https://platform.minimax.cn/docs/api-reference/music-generation)、TokenHub CN 的 `NativeRequestFactory` 与只读 `/v1/native/operations` 目录。供应商文档注明音乐付费 API 的账户资格限制，路由存在和离线测试通过不代表当前供应商账户已获调用资格，实际生成需单独验收。
 
 回归覆盖：dev/prod 国内地址、旧路径配置失效、native envelope 顶层字段限制、模型别名转换、歌词/纯音乐参数、URL/hex 音频结果和供应商错误。用户界面、业务请求 DTO、表结构及任务状态不变。
+
+## 公司语音模型的产品音色映射（2026-11-11）
+
+只读运行链核实：Short 默认 VOICE 的 bgssai-tts 经 TokenHub CN 选到公司 edge-tts 媒体服务。该服务仅转换 OpenAI 六个别名，不转换产品 v-*；未知非空 voice 会原样进入 edge_tts.Communicate。因此按模型精确限定 bgssai-tts/edge-tts，将产品预设转换为同服务免费 list_voices 实际列出的 ID：冷淡女声 → zh-CN-XiaoyiNeural、温暖女声 → zh-CN-XiaoxiaoNeural、低沉男声 → zh-CN-YunjianNeural、明亮男声 → zh-CN-YunxiNeural、旁白 → zh-CN-YunyangNeural。未指定任何声音时使用中文 Xiaoxiao，不意外使用会落到英文的 alloy 默认。
+
+显式原生 voice ID 和其他模型保持原样；不把公司模型套为 MiniMax 声音，不改网关地址、路由或凭据。列举仅证明当前目录中的 ID/性别，不保证年龄或演技风格。已验证请求字段映射与音色目录，真实配音产物仍需在已授权制作中验收。

@@ -177,6 +177,38 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void companySpeechMapsProductPresetsToVerifiedEdgeVoices() {
+        Map<String, String> voices = Map.of(
+                "v-female-cold-01", "zh-CN-XiaoyiNeural",
+                "v-female-warm-01", "zh-CN-XiaoxiaoNeural",
+                "v-male-deep-01", "zh-CN-YunjianNeural",
+                "v-male-bright-01", "zh-CN-YunxiNeural",
+                "v-narrator-01", "zh-CN-YunyangNeural");
+        for (String model : List.of("bgssai-tts", "edge-tts")) {
+            for (var entry : voices.entrySet()) {
+                FakeClient http = new FakeClient(); http.posts.add("{\"audio\":\"0102\"}");
+                AiProviderRequest request = request("VOICE", model, "你好");
+                request.getParams().put("voice_id", entry.getKey());
+                provider(http, "key").execute(request);
+                assertTrue(http.postedBodies.get(0).contains("\"voice\":\"" + entry.getValue() + "\""));
+                assertTrue(http.postedBodies.get(0).contains("\"model\":\"" + model + "\""));
+            }
+        }
+    }
+
+    @Test
+    void companySpeechUsesChineseDefaultAndPreservesNativeVoiceSelection() {
+        FakeClient defaults = new FakeClient(); defaults.posts.add("{\"audio\":\"0102\"}");
+        provider(defaults, "key").execute(request("VOICE", "bgssai-tts", "你好"));
+        assertTrue(defaults.postedBodies.get(0).contains("\"voice\":\"zh-CN-XiaoxiaoNeural\""));
+        FakeClient nativeVoice = new FakeClient(); nativeVoice.posts.add("{\"audio\":\"0102\"}");
+        AiProviderRequest request = request("VOICE", "edge-tts", "你好");
+        request.getParams().put("voice_id", "zh-CN-YunjianNeural");
+        provider(nativeVoice, "key").execute(request);
+        assertTrue(nativeVoice.postedBodies.get(0).contains("\"voice\":\"zh-CN-YunjianNeural\""));
+    }
+
+    @Test
     void asrSubmitsAndReturnsStructuredTranscript() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"id\":\"a-1\"}");

@@ -820,9 +820,9 @@ public class DubbingService {
     }
 
     private ShortCharacter resolveCharacter(ShortShot shot, Map<String, ShortCharacter> chars) {
-        List<Map<String, Object>> refs = ShortJson.list(shot.getCharacterRefJson());
+        List<String> refs = com.bgssai.shortai.production.support.ShotConsistency.characterIds(shot.getCharacterRefJson());
         if (!refs.isEmpty()) {
-            String id = ShortJson.text(refs.get(0).get("character_id"));
+            String id = refs.get(0);
             if (!id.isBlank() && chars.containsKey(id)) {
                 return chars.get(id);
             }

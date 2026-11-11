@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "a1c7ac6d37617221497d43bdfe0e6ce5eafc7aaa83f8b5ba4bccdba09f02c0fa",
-  "code_contract_digest": "94a693f3471baec62f24a45cbc63ae8e7d80f823a5febe34cb2a00a021713b25",
+  "prototype_bundle_digest": "ce0acebbe88d25bff5d4048fb235d8106ee2ef12cd5a05c225a6d2a1b8a83fda",
+  "code_contract_digest": "ad3d2fb2e20660f82f9038f569d890e892e24b1a8bf1ad8447e9c136273b462d",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -507,7 +507,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/mcp/McpTokens.jsx",
-      "sha256": "234215980030b2d844c2a89e0c0a101b0acb6e2bfe06d15ba785754e403b4a98"
+      "sha256": "04f4a3229e1ab934a18235223fe6cf7319710168ef95982ada071664370a2358"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/subscription/NativePayQrModal.jsx",
@@ -710,6 +710,10 @@
       "sha256": "accd8f7744f7a0d041d0a09d03f8454362cb08fe9dba15f82303e9d3fc730f00"
     },
     {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpProductionService.java",
+      "sha256": "b45cf723dc612098a5785bc769ad646d3bc0027dedc8b9dc3cde1624ff014000"
+    },
+    {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpProtocolService.java",
       "sha256": "da6b44b83d1cf53c6f1c7c8ee2279551d32be9e6eb923d8d3bd34e20c8306423"
     },
@@ -719,7 +723,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpToolService.java",
-      "sha256": "e64a70ffa2b46147106bb5c4d70741b69747d469f6530a5de9d0eda7c5c4407c"
+      "sha256": "224c877f38c4be04c07b512e53e386dc38d56b2a7809716fb6ad04891f6b9e21"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/ui/CreateMcpTokenController.java",
@@ -755,7 +759,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AiTaskService.java",
-      "sha256": "805e11162c58b28b4ad2760af651cf528c22b9a0f8d6a21e1689711d484f32d8"
+      "sha256": "21d283ad5109d7dd17b98a99f2ce347f42fecca62c08757dd80dc24c89917851"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AssetService.java",
@@ -775,7 +779,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/DubbingService.java",
-      "sha256": "e13fc676a0a94dc79d1884c07bf3d47b31cc3ddbe9d90699106fdf30ccd66ac2"
+      "sha256": "9bea898222c3862dd94bb5729ccd140ab5f5a8916ca451a3587a9741e20abe35"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/EditProjectService.java",
@@ -823,7 +827,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ShotService.java",
-      "sha256": "52a646fca73996ebef2100fdc25e8abfbf7d9c1917e7472c66cbb1169e96ef61"
+      "sha256": "51f49ed1ac199a19472aedb7cad693f73463dbc12334f207dfceb56ae78f029e"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/SourceService.java",
@@ -2105,7 +2109,7 @@
     },
     {
       "path": "docs/demo-static/web/user/mcp-tokens.html",
-      "sha256": "99c93f101e2beeeddeaa1c5feb83e58e960dfb4335b5a40babcc9fbd085564c2",
+      "sha256": "a7865fcca3c458ea626e5f1a3f38d78132f48162d7d615e9e6cadc1c8a0ff015",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

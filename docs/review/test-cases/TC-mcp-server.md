@@ -13,3 +13,20 @@
 | TC-SHORT-MCP-SERVER-03 | AC-03 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：用户端 MCP Connectors 页可创建 / 列表 / 吊销令牌，并展示五类 Agent 配置指引与 tagline。 | 用户端 MCP Connectors 页可创建 / 列表 / 吊销令牌，并展示五类 Agent 配置指引与 tagline。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
 | TC-SHORT-MCP-SERVER-04 | AC-04 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：GET /api/mcp 返回 405。 | GET /api/mcp 返回 405。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
 | TC-SHORT-MCP-SERVER-05 | AC-05 | P1 | user | 已登录对应用户端或管理端账号（占位账号，无口令写入） | 1. 打开用户端 https://dev.user.bgssai-short.com<br>2. 按验收标准执行：JSON-RPC 批量数组返回 -32600。 | JSON-RPC 批量数组返回 -32600。 | 占位账号 / 样例数据（无口令） | User:https://dev.user.bgssai-short.com / Admin:https://dev.admin.bgssai-short.com | 待测 |  |
+
+## 制作闭环回归（2026-11-11）
+
+1. 工具列表共 24 项；所有 array（含 scene_list/line_list/shots）必须有 items；每项均可被 hasTool 识别。
+2. 缺失/false/字符串 true/数字 confirm_cost 都不得提交；确认后必须委托正式制作服务，MCP TaskMapper insert 次数为零。
+3. IMAGE/VIDEO 保留 episode/shot/model，VOICE 走 DubbingService，MUSIC 保留 prompt/歌词/纯音乐，COMPOSE 保留预检拒绝，不接受错误的镜头或模型。
+4. 外部用户分集、跨分集镜头、跨卡候选图拒绝；分镜批量有一个不合法时不部分更新。
+5. ready 默认不强制低分；split 未确认替换不调用正式拆分；保存镜头时长必须是正整数。
+6. 任务查询拒绝其他用户，输出真实成功/失败状态、公开结果，不包含 request_json；查询不会触发生成。
+7. 过期/未完成成片保持无可播放 URL；字幕/BGM 设置保留当前作品/分集及正式资产校验。
+8. 本地测试不付费调用真实模型、不更改线上作品、不发布 Tube；上线后另记录真实模型任务、媒体流、下载验证与费用。
+
+9. `list_login_logs` 输出正式 DTO 的 `ip_location`，与原始 `ip_address` 同时保留，不另作精确定位推断。
+
+10. list_voices 为正式目录，set_character_voice 拒绝未知声音/越权角色；原始 12 镜的每行说话者必须排第一，配音兼容对象/ID 数组引用并选正确角色声音。
+
+11. 公司 bgssai-tts/edge-tts 的五个产品音色映射至已核实 Edge ID，缺省中文，原生 ID 和其他模型保持不变；测试不发起付费语音生成。

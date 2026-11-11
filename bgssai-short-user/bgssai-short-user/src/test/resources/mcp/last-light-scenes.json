@@ -1,0 +1,134 @@
+[
+  {
+    "scene_no": 1,
+    "scene_location": "雨夜便利店收银台",
+    "scene_time": "NIGHT",
+    "scene_summary": "冷蓝雨夜，暖黄色店灯。25岁短发女店员小夏正要关灯，65岁灰发老人老陈穿深灰旧外套递来一张褪色车票。先拍两双手与旧车票的特写，再切小夏疑惑的表情。画面中的车票不要生成可读文字，信息由对白和字幕交代。",
+    "line_list": [
+      {
+        "line_no": 1,
+        "character_name": "小夏",
+        "line_text": "不可能，这张车票竟然是二十年前的。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      },
+      {
+        "line_no": 2,
+        "character_name": "老陈",
+        "line_text": "没错。那天，她第一次离开家。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      }
+    ]
+  },
+  {
+    "scene_no": 2,
+    "scene_location": "便利店临街窗边",
+    "scene_time": "NIGHT",
+    "scene_summary": "同一家便利店，同一暖色灯光。老陈隔着沾雨的玻璃望向空荡的街道，小夏站在一旁。窗外没有品牌标志和可读广告。用眼神与雨滴制造悬念。",
+    "line_list": [
+      {
+        "line_no": 3,
+        "character_name": "小夏",
+        "line_text": "这么晚了，您到底在等谁？",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      },
+      {
+        "line_no": 4,
+        "character_name": "老陈",
+        "line_text": "她当年最怕，回头找不到我。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      }
+    ]
+  },
+  {
+    "scene_no": 3,
+    "scene_location": "便利店暖灯下",
+    "scene_time": "NIGHT",
+    "scene_summary": "小夏重新打开店内灯，给老陈倒一杯热水。老人捧杯的手与蒸汽特写，随后是小夏温和的侧脸；场景从冷雨反光转向暖黄色。",
+    "line_list": [
+      {
+        "line_no": 5,
+        "character_name": "老陈",
+        "line_text": "她下班总是很晚，今天也一样。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      },
+      {
+        "line_no": 6,
+        "character_name": "小夏",
+        "line_text": "那就再等一会儿。今晚不关灯。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      }
+    ]
+  },
+  {
+    "scene_no": 4,
+    "scene_location": "便利店门口",
+    "scene_time": "NIGHT",
+    "scene_summary": "玻璃门被推开，38岁黑发女医生、老陈的女儿，穿浅蓝工作服外搭米色风衣、手握收起的黑伞走进暖光。老陈立刻抬头，脸上露出笑容。先门口中景再父女反应近景。",
+    "line_list": [
+      {
+        "line_no": 7,
+        "character_name": "女儿",
+        "line_text": "爸，手术刚结束。我不是说别等了吗？",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      },
+      {
+        "line_no": 8,
+        "character_name": "老陈",
+        "line_text": "你没回来，我怎么放心。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      }
+    ]
+  },
+  {
+    "scene_no": 5,
+    "scene_location": "便利店收银台旁",
+    "scene_time": "NIGHT",
+    "scene_summary": "女儿看到父亲手里的旧车票，轻轻接过，眼神湿润。父亲小心抚平票角。保持人物衣服、年龄和发型一致，避免车票上出现可读文字。",
+    "line_list": [
+      {
+        "line_no": 9,
+        "character_name": "女儿",
+        "line_text": "那张旧车票，您还留着？",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      },
+      {
+        "line_no": 10,
+        "character_name": "老陈",
+        "line_text": "留着。你说过，要成为能救人的医生。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      }
+    ]
+  },
+  {
+    "scene_no": 6,
+    "scene_location": "便利店门内与雨夜街口",
+    "scene_time": "NIGHT",
+    "scene_summary": "女儿牵住父亲的手，两人同撑一把黑伞离开。小夏站在店门内微笑，最后回到仍亮着的暖黄色店灯。电影感都市写实，温暖收束；不出现品牌、额外人群、屏幕文字或片尾广告。",
+    "line_list": [
+      {
+        "line_no": 11,
+        "character_name": "老陈",
+        "line_text": "你救别人，爸等你回家。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      },
+      {
+        "line_no": 12,
+        "character_name": "女儿",
+        "line_text": "走吧，这次我牵着您。",
+        "emotion": "NEUTRAL",
+        "estimated_sec": 5
+      }
+    ]
+  }
+]

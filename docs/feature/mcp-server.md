@@ -3,12 +3,12 @@
 ## 一、背景与目标
 
 - 背景：Claude / Codex / Cursor / Grok Bot / Bgssai Bot 等 MCP 客户端需要以工具调用查询本站登录日志与健康探针，而不是再走浏览器会话 JWT。
-- 目标：用户端提供 Streamable HTTP MCP 服务与个人访问令牌；网页「MCP Connectors」页以 tagline「Connect your AI tools to bgssai」引导五类 Agent 接入；工具仅包装既有登录日志与存活/就绪探针。
+- 目标：用户端提供 Streamable HTTP MCP 服务与个人访问令牌；网页「MCP Connectors」页以 tagline「Connect your AI tools to bgssai」引导五类 Agent 接入；工具包装既有登录日志、健康探针及正式短剧制作服务。
 - 关联角色：`USER`
 
 ## 二、需求澄清（WHAT）
 
-- 用户故事：作为短剧平台用户，我希望在「MCP Connectors」页创建 PAT，并按 Claude / Codex / Cursor / Grok Bot / Bgssai Bot 的指引把本站接到 AI 工具，以便查询本人登录日志与服务健康状态。
+- 用户故事：作为短剧平台用户，我希望在「MCP Connectors」页创建 PAT，并按 Claude / Codex / Cursor / Grok Bot / Bgssai Bot 的指引把本站接到 AI 工具，以便查询本人记录、保存原创剧本和分镜，并经正式制作流程获得本人可播放成片。
 - 业务规则：
   1. 端点 `POST /api/mcp` 不走 JWT / RBAC，由 `Authorization: Bearer bgs_mcp_...` 自校验。
   2. 身份从令牌行 `user_id` 注入 `UserContext`，工具入参禁止 `user_id`。
@@ -21,7 +21,7 @@
 
 1. 无效或已吊销令牌 `POST /api/mcp` 返回 HTTP 401 + JSON-RPC error -32001。
 2. `tools/list` 返回登录日志、健康探针及作品/分集/剧本/分镜/渲染任务/Tube 发布等业务工具。
-3. 业务读写工具严格校验 PAT 归属，越权拒绝；渲染任务需 `confirm_cost=true` 且幂等去重；发布需 `confirm_publish=true` 且成片已过审。
+3. 业务读写工具严格校验 PAT 归属，越权拒绝；渲染任务需 `confirm_cost=true` 且沿用正式队列与结算（每次调用创建新任务，不自动重试）；发布需 `confirm_publish=true` 且成片已过审。
 4. 用户端 MCP Connectors 页可创建 / 列表 / 吊销令牌，并展示五类 Agent 配置指引与 tagline。
 5. GET /api/mcp 返回 405；JSON-RPC 批量数组返回 -32600。
 
@@ -60,4 +60,15 @@ AI 客户端 Bearer PAT → /api/mcp → 注入 UserContext → tools/call → �
 - [x] 需求（本文件）
 - [x] 原型
 - [x] 设计与契约（`docs/api/MCP.md`、`docs/security/mcp-server.md`）
-- [x] 代码与数据库（本轮仅前端 UI + 文档；后端保持不变）
+- [x] 代码与数据库（本轮补齐 MCP 制作适配与公开查询；SQL、供应商配置和发布授权不变）
+
+## 制作闭环验收补充（2026-11-11）
+
+- `tools/list` 提供 24 个工具；新增模型与声音目录、角色声音设置、剧本定稿/拆分/结构化保存、参考图生成与定妆、任务查询、成片查询、字幕/BGM 设置及配音对齐。字段详见 MCP 契约。
+- 同一分集保存的所有分镜先逐项验证归属，任一失败不部分写入；不接收伪造用户或直接资产覆盖。
+- IMAGE/VIDEO 必须通过正式分镜检查；VOICE 必须创建正式配音记录；MUSIC 使用正式 BGM 服务；COMPOSE 必须通过正式预检。不能通过 MCP 旁路插入缺少 prompt/配音上下文的任务。
+- 所有收费工具都要求布尔 `confirm_cost=true`；生成过程使用正式队列、工作线程余额检查及结算。参考图锁定只能选择该卡已生成候选。
+- 查询仅本人任务/分集，输出真实错误与结果；成片未成功、已过期或占位 URL 不得冒充可播放 MP4。Tube 对外发布保持单独确认。
+- MCP 页面与原型展示上述真实能力；所有 array schema 提供完整 items。测试通过不等于真实模型/成片商业验收，真实制作由本次授权操作另行记录。
+
+- 多角色场次逐行以 character_name 确认说话者，拆分优先绑定该角色；角色声音必须选自正式目录，配音生成保留各角色声音差异。

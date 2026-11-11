@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import com.bgssai.shortai.mapper.ShortScriptMapper;
 import com.bgssai.shortai.mapper.ShortScriptVersionMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
-import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortEpisodeExample;
 import com.bgssai.shortai.model.ShortScript;
@@ -47,7 +45,6 @@ import com.bgssai.shortai.production.service.FilmPublishToMediaService;
 import com.bgssai.shortai.production.support.RhythmChecker;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
-import com.bgssai.shortai.production.support.TaskPrices;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -57,7 +54,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class McpToolService {
 
     private static final Logger log = LoggerFactory.getLogger(McpToolService.class);
-    private static final Set<String> ALLOWED_RENDER_TASK_TYPES = Set.of("IMAGE", "VIDEO", "VOICE", "COMPOSE");
 
     public static final class ToolResult {
         private final String text;
@@ -94,7 +90,8 @@ public class McpToolService {
     private final ShortScriptMapper shortScriptMapper;
     private final ShortScriptVersionMapper shortScriptVersionMapper;
     private final ShortShotMapper shortShotMapper;
-    private final ShortAiTaskMapper shortAiTaskMapper;
+    @Autowired
+    private McpProductionService production;
     private final FilmPublishToMediaService filmPublishToMediaService;
 
     public McpToolService(ListLoginLogsService listLoginLogsService,
@@ -123,7 +120,6 @@ public class McpToolService {
         this.shortScriptMapper = shortScriptMapper;
         this.shortScriptVersionMapper = shortScriptVersionMapper;
         this.shortShotMapper = shortShotMapper;
-        this.shortAiTaskMapper = shortAiTaskMapper;
         this.filmPublishToMediaService = filmPublishToMediaService;
     }
 
@@ -139,7 +135,7 @@ public class McpToolService {
                     "list_episodes", "save_episode_script",
                     "list_shots", "submit_render_task",
                     "publish_episode_to_media" -> true;
-            default -> false;
+            default -> McpProductionService.hasTool(name);
         };
     }
 
@@ -182,26 +178,22 @@ public class McpToolService {
                         prop("episode_synopsis", "string", "可选本集剧情梗概"),
                         prop("ending_hook", "string", "可选结尾悬念钩子"),
                         prop("script_content", "string", "可选剧本文本内容（未传 scene_list 时自动转为标准场次结构）"),
-                        prop("scene_list", "array", "可选结构化场次列表"))));
+                        McpProductionSchemas.sceneList())));
         tools.add(tool("list_shots", "列出当前用户指定分集下的分镜列表（分页）。仅允许访问本人分集。",
                 schema(List.of("episode_id"),
                         prop("episode_id", "string", "分集 ID（必填）"),
                         prop("page_num", "integer", "页码，从 1 开始，默认 1"),
                         prop("page_size", "integer", "每页条数，默认 50，最大 100"),
                         prop("shot_status", "string", "可选分镜状态过滤（PENDING/IMAGE_READY/VIDEO_READY/LOCKED）"))));
-        tools.add(tool("submit_render_task", "提交分镜渲染或分集成片合成异步任务（入队后立即返回 task_id）。因消耗账户额度，必须显式传入 confirm_cost=true。",
-                schema(List.of("episode_id", "confirm_cost"),
-                        prop("episode_id", "string", "分集 ID（必填）"),
-                        prop("task_type", "string", "任务类型：IMAGE / VIDEO / VOICE / COMPOSE，默认 COMPOSE"),
-                        prop("shot_id", "string", "可选分镜 ID（单镜渲染时指定）"),
-                        prop("model_code", "string", "可选 BGSSAI 模型别名，例如 bgssai-chat、bgssai-image、bgssai-video、bgssai-tts"),
-                        prop("confirm_cost", "boolean", "计费确认开关，必须显式传 true 才允许提交"))));
+        tools.add(tool("submit_render_task", "通过正式制作服务提交 IMAGE/VIDEO/VOICE/MUSIC/COMPOSE 任务，保留权限、素材、余额、队列与预检。需 confirm_cost=true；返回真实 task_id 或 task_id_list。",
+                McpProductionSchemas.renderSchema()));
         tools.add(tool("publish_episode_to_media", "将当前用户已合成且审核通过的分集成片发布到 bgssai-tube。必须显式传入 confirm_publish=true。",
                 schema(List.of("episode_id", "confirm_publish"),
                         prop("episode_id", "string", "分集 ID（必填）"),
                         prop("film_id", "string", "可选成片 ID"),
                         prop("force", "boolean", "可选是否强制重推，默认 false"),
                         prop("confirm_publish", "boolean", "对外发布确认开关，必须显式传 true 才允许发布"))));
+        tools.addAll(McpProductionSchemas.definitions());
         return tools;
     }
 
@@ -220,7 +212,9 @@ public class McpToolService {
                 case "list_shots" -> ToolResult.ok(listShotsJson(args));
                 case "submit_render_task" -> ToolResult.ok(submitRenderTaskJson(args));
                 case "publish_episode_to_media" -> ToolResult.ok(publishEpisodeToMediaJson(args));
-                default -> ToolResult.error("未知工具：" + name);
+                default -> McpProductionService.hasTool(name)
+                        ? ToolResult.ok(toJson(production.execute(name, args)))
+                        : ToolResult.error("未知工具：" + name);
             };
         } catch (IllegalArgumentException | BizException e) {
             log.info("mcp.tool business fail name={} msg={}", name, e.getMessage());
@@ -530,78 +524,7 @@ public class McpToolService {
         if (!boolArg(args, "confirm_cost")) {
             throw new IllegalArgumentException("提交渲染/合成任务会消耗账户额度，必须显式传入 confirm_cost=true 确认计费");
         }
-        String userId = requireCallerUserId();
-        String episodeId = requireTextArg(args, "episode_id");
-        ShortEpisode episode = requireOwnedEpisode(userId, episodeId);
-
-        String taskType = textArgOrDefault(args, "task_type", "COMPOSE").toUpperCase();
-        if (!ALLOWED_RENDER_TASK_TYPES.contains(taskType)) {
-            throw new IllegalArgumentException("task_type 仅支持 IMAGE、VIDEO、VOICE 或 COMPOSE");
-        }
-
-        String shotId = textArg(args, "shot_id");
-        String targetType = "EPISODE";
-        String targetId = episode.getEpisodeId();
-        int durationSec = episode.getFilmDurationSec() == null ? 90 : episode.getFilmDurationSec();
-        if (shotId != null) {
-            ShortShotExample shEx = new ShortShotExample();
-            shEx.createCriteria().andShotIdEqualTo(shotId).andDeletedFlagEqualTo(0);
-            ShortShot shot = shortShotMapper.selectOneByExample(shEx);
-            if (shot == null || !userId.equals(shot.getUserId()) || !episode.getEpisodeId().equals(shot.getEpisodeId())) {
-                throw new ForbiddenException("分镜不存在或无权访问");
-            }
-            targetType = "SHOT";
-            targetId = shot.getShotId();
-            durationSec = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
-        } else if ("COMPOSE".equals(taskType)) {
-            targetType = "COMPOSE";
-        }
-
-        String modelCode = textArgOrDefault(args, "model_code",
-                "COMPOSE".equals(taskType) ? "ffmpeg-compose" : "default-" + taskType.toLowerCase());
-        Map<String, Object> reqPayload = new LinkedHashMap<>();
-        reqPayload.put("episode_id", episode.getEpisodeId());
-        reqPayload.put("work_id", episode.getWorkId());
-        if (shotId != null) {
-            reqPayload.put("shot_id", shotId);
-        }
-        reqPayload.put("duration_sec", durationSec);
-        reqPayload.put("model_code", modelCode);
-
-        Date now = new Date();
-        ShortAiTask task = new ShortAiTask();
-        task.setTaskId(ShortIds.id("t-"));
-        task.setBatchId(ShortIds.id("b-"));
-        task.setUserId(userId);
-        task.setWorkId(episode.getWorkId());
-        task.setEpisodeId(episode.getEpisodeId());
-        task.setTaskType(taskType);
-        task.setTaskStatus("QUEUED");
-        task.setTargetType(targetType);
-        task.setTargetId(targetId);
-        task.setModelCode(modelCode);
-        task.setRequestJson(ShortJson.toJson(reqPayload));
-        task.setProgressPercent(0);
-        task.setRetryCount(0);
-        task.setAutoNextFlag(0);
-        task.setCostCent(TaskPrices.cost(taskType));
-        task.setQueuedTime(now);
-        task.setCreatedTime(now);
-        task.setUpdatedTime(now);
-        shortAiTaskMapper.insertSelective(task);
-
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("task_id", task.getTaskId());
-        out.put("batch_id", task.getBatchId());
-        out.put("work_id", task.getWorkId());
-        out.put("episode_id", task.getEpisodeId());
-        out.put("task_type", task.getTaskType());
-        out.put("target_type", task.getTargetType());
-        out.put("target_id", task.getTargetId());
-        out.put("task_status", task.getTaskStatus());
-        out.put("estimated_cost_cent", task.getCostCent());
-        out.put("confirm_cost", true);
-        return toJson(out);
+        return toJson(production.execute("submit_render_task", args));
     }
 
     private String publishEpisodeToMediaJson(JsonNode args) {
@@ -756,6 +679,7 @@ public class McpToolService {
                     m.put("user_id", item.getUserId());
                     m.put("action", item.getAction());
                     m.put("ip_address", item.getIpAddress());
+                    m.put("ip_location", item.getIpLocation());
                     m.put("user_agent", item.getUserAgent());
                     m.put("create_time", item.getCreateTime());
                     logs.add(m);
