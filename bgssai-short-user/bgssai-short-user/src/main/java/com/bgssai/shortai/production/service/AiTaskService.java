@@ -321,6 +321,14 @@ public class AiTaskService {
         return response;
     }
 
+    /** Same owner check and public projection as the task center. */
+    public ApiResponse detail(String taskId) {
+        if (taskId == null || taskId.isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "task_id required");
+        }
+        return Responses.ok(view(requireTask(taskId.trim())));
+    }
+
     public ApiResponse batchProgress(String batchId) {
         String userId = workAccessService.requireUser();
         if (batchId == null || batchId.isBlank()) {

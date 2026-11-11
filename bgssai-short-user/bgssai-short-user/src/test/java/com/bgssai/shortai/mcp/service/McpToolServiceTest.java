@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -86,6 +88,9 @@ class McpToolServiceTest {
     @Mock
     private McpAccessTokenMapper mcpAccessTokenMapper;
 
+    @Mock
+    private McpProductionService production;
+
     private McpToolService service;
 
     @BeforeEach
@@ -102,6 +107,7 @@ class McpToolServiceTest {
                 shortShotMapper,
                 shortAiTaskMapper,
                 filmPublishToMediaService);
+        ReflectionTestUtils.setField(service, "production", production);
     }
 
     @AfterEach
@@ -112,7 +118,7 @@ class McpToolServiceTest {
     @Test
     void listToolDefinitions_containsAllBusinessAndProbeTools() {
         ArrayNode tools = service.listToolDefinitions();
-        assertEquals(11, tools.size());
+        assertEquals(24, tools.size());
         List<String> names = new ArrayList<>();
         for (JsonNode t : tools) {
             names.add(t.get("name").asText());
@@ -300,20 +306,31 @@ class McpToolServiceTest {
         assertTrue(falseConfirm.isError());
         verify(shortAiTaskMapper, never()).insertSelective(any(ShortAiTask.class));
 
-        // confirm_cost=true -> enqueues QUEUED task
-        when(shortEpisodeMapper.selectOneByExample(any(ShortEpisodeExample.class))).thenReturn(ep);
+        // Explicit confirmation delegates to the formal production path; MCP never inserts task rows.
+        when(production.execute(eq("submit_render_task"), any())).thenReturn(
+                Map.of("task_id", "t-formal", "confirm_cost", true));
         McpToolService.ToolResult okRes = service.callTool("submit_render_task",
                 mapper.readTree("{\"episode_id\":\"e-101\",\"task_type\":\"COMPOSE\",\"confirm_cost\":true}"));
         assertFalse(okRes.isError());
-        JsonNode okJson = mapper.readTree(okRes.text());
-        assertEquals("QUEUED", okJson.get("task_status").asText());
-        assertEquals("COMPOSE", okJson.get("task_type").asText());
-        assertTrue(okJson.get("confirm_cost").asBoolean());
+        assertEquals("t-formal", mapper.readTree(okRes.text()).get("task_id").asText());
+        verify(production).execute(eq("submit_render_task"), any());
+        verify(shortAiTaskMapper, never()).insertSelective(any(ShortAiTask.class));
+    }
 
-        ArgumentCaptor<ShortAiTask> captor = ArgumentCaptor.forClass(ShortAiTask.class);
-        verify(shortAiTaskMapper, times(1)).insertSelective(captor.capture());
-        assertEquals(CALLER_USER, captor.getValue().getUserId());
-        assertEquals("QUEUED", captor.getValue().getTaskStatus());
+    @Test
+    void schemasDescribeAllNestedArrayItemsAndProductionToolsDispatch() throws Exception {
+        for (JsonNode tool : service.listToolDefinitions()) {
+            checkArraySchemas(tool.path("inputSchema"));
+            assertTrue(service.hasTool(tool.path("name").asText()));
+        }
+        when(production.execute(eq("get_render_task"), any())).thenReturn(Map.of("task_status", "RUNNING"));
+        assertEquals("RUNNING", mapper.readTree(service.callTool("get_render_task",
+                mapper.readTree("{\"task_id\":\"t-1\"}")).text()).path("task_status").asText());
+    }
+
+    private void checkArraySchemas(JsonNode node) {
+        if ("array".equals(node.path("type").asText())) assertTrue(node.has("items"), node.toString());
+        if (node.isContainerNode()) for (JsonNode child : node) checkArraySchemas(child);
     }
 
     @Test
@@ -384,4 +401,16 @@ class McpToolServiceTest {
         assertNotNull(caller);
         assertEquals(CALLER_USER, caller.getUserId());
     }
+    @Test
+    void loginLogToolIncludesTheOfficialApproximateLocationField() throws Exception {
+        var row = new com.bgssai.shortai.loginlog.dto.LoginLogItem();
+        row.setIpAddress("192.0.2.1"); row.setIpLocation("测试地区（参考）");
+        var page = new com.bgssai.shortai.common.PageResponse();
+        page.setPageNum(1); page.setPageSize(20); page.setTotalSize(1L); page.setResult(List.of(row));
+        when(listLoginLogsService.list(1, 20)).thenReturn(page);
+        JsonNode out = mapper.readTree(service.callTool("list_login_logs", mapper.createObjectNode()).text());
+        assertEquals("测试地区（参考）", out.path("logs").get(0).path("ip_location").asText());
+        assertEquals("192.0.2.1", out.path("logs").get(0).path("ip_address").asText());
+    }
+
 }

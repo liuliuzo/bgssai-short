@@ -19,11 +19,22 @@ public final class ShotConsistency {
     }
 
     public static String bindCharacterRefs(List<ShortCharacter> characters, String haystack) {
+        return bindCharacterRefs(characters, haystack, null);
+    }
+
+    /** The speaking role must lead the visual references used by dubbing. */
+    public static String bindCharacterRefs(List<ShortCharacter> characters, String haystack, String speakerName) {
         if (characters == null || characters.isEmpty() || haystack == null || haystack.isBlank()) {
             return null;
         }
+        List<ShortCharacter> ordered = new ArrayList<>(characters);
+        if (speakerName != null && !speakerName.isBlank()) {
+            String speaker = speakerName.trim();
+            ordered.sort(java.util.Comparator.comparing(c -> c == null || c.getCharacterName() == null
+                    || !speaker.equals(c.getCharacterName().trim())));
+        }
         List<Map<String, Object>> refs = new ArrayList<>();
-        for (ShortCharacter c : characters) {
+        for (ShortCharacter c : ordered) {
             if (c == null || c.getCharacterName() == null || c.getCharacterName().isBlank()) {
                 continue;
             }

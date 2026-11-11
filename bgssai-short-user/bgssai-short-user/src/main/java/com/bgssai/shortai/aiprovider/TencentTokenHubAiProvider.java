@@ -189,7 +189,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
             AiProviderRequest request, int timeoutSec) throws Exception {
         String model = requireModel(request);
         String voice = ProviderHttp.firstNonBlank(ShortJson.text(request.param("voice_id")),
-                ShortJson.text(request.param("voice")), ShortJson.text(cfg.get("default_voice_id")), "alloy");
+                ShortJson.text(request.param("voice")), ShortJson.text(cfg.get("default_voice_id")),
+                isCompanyEdgeSpeech(model) ? "zh-CN-XiaoxiaoNeural" : "alloy");
+        voice = normalizeVoice(model, voice);
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model);
         body.put("input", ProviderHttp.promptOf(request));
@@ -567,13 +569,19 @@ public class TencentTokenHubAiProvider implements AiProvider {
         return "1".equals(text) || "true".equalsIgnoreCase(text);
     }
 
-    private static String normalizeVoice(String voiceId) {
+    private static boolean isCompanyEdgeSpeech(String model) {
+        return "bgssai-tts".equalsIgnoreCase(model) || "edge-tts".equalsIgnoreCase(model);
+    }
+
+    /** Product presets are translated only for the verified company Edge TTS route. */
+    private static String normalizeVoice(String model, String voiceId) {
+        if (!isCompanyEdgeSpeech(model)) return voiceId;
         return switch (voiceId) {
-            case "v-female-cold-01" -> "female-yujie";
-            case "v-female-warm-01" -> "female-shaonv";
-            case "v-male-deep-01" -> "male-qn-qingse";
-            case "v-male-bright-01" -> "male-qn-jingying";
-            case "v-narrator-01" -> "audiobook_male_1";
+            case "v-female-cold-01" -> "zh-CN-XiaoyiNeural";
+            case "v-female-warm-01" -> "zh-CN-XiaoxiaoNeural";
+            case "v-male-deep-01" -> "zh-CN-YunjianNeural";
+            case "v-male-bright-01" -> "zh-CN-YunxiNeural";
+            case "v-narrator-01" -> "zh-CN-YunyangNeural";
             default -> voiceId;
         };
     }

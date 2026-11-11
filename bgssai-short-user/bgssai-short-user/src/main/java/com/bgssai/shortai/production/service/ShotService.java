@@ -339,7 +339,7 @@ public class ShotService {
         shot.setShotDesc(desc);
         shot.setDialogueText(dialogue);
         shot.setEmotion(ShortJson.text(line.get("emotion")));
-        shot.setCharacterRefJson(ShotConsistency.bindCharacterRefs(characters, haystack));
+        shot.setCharacterRefJson(ShotConsistency.bindCharacterRefs(characters, haystack, characterName));
         shot.setSceneCardId(ShotConsistency.bindSceneCardId(sceneCards,
                 ShortJson.text(scene.get("scene_location")) + " " + ShortJson.text(scene.get("scene_summary"))));
         shot.setPropRefJson(ShotConsistency.bindPropRefs(sceneCards, haystack + " "

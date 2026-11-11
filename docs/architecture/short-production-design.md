@@ -119,3 +119,7 @@ PENDING 可以没有 `play_url`，不得记成失败或成功。契约见
 `short_film` 记录 `media_id` / `media_play_url` / `media_publish_status` /
 `media_published_at` / `media_last_error` / `media_publish_log`。
 PENDING 不是商业成功；stub / 未配置不得写成 READY。
+
+## 多角色逐镜配音修正（2026-11-11）
+
+拆分依据每行 character_name，将该说话者排在 character_ref_json 第一位，其他同场人物保持后续引用以服务视觉一致性；不能按角色建档顺序代替说话者。配音服务通过 ShotConsistency.characterIds 同时解析旧对象引用和 ID 数组，再选角色已配置 voice_id。MCP 暴露正式声音目录及设置服务，保留身份与目录校验，不新增 SQL 或任意供应商声音。

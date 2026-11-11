@@ -148,7 +148,7 @@ export default function McpTokens() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          message="为 Claude、Codex、Cursor、Grok Bot、Bgssai Bot 配置同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。当前工具仅登录日志与健康探针。"
+          message="为 Claude、Codex、Cursor、Grok Bot、Bgssai Bot 配置同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
         />
         <Paragraph style={{ marginBottom: 8 }}>
           端点：<Text code copyable>{endpoint}</Text>
