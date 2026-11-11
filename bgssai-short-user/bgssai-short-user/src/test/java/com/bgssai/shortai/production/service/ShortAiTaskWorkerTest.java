@@ -24,6 +24,52 @@ import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 
 class ShortAiTaskWorkerTest {
+    @Test
+    void composePassesSavedWorkAspectAndShotDurationsToProvider() {
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        var episodes = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortEpisodeMapper.class);
+        var shots = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class);
+        var works = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortWorkMapper.class);
+        var assets = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        var dubbings = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortDubbingMapper.class);
+        var storage = org.mockito.Mockito.mock(com.bgssai.shortai.storage.ObjectStorage.class);
+        var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var provider = org.mockito.Mockito.mock(com.bgssai.shortai.aiprovider.AiProvider.class);
+        ReflectionTestUtils.setField(worker, "shortEpisodeMapper", episodes);
+        ReflectionTestUtils.setField(worker, "shortShotMapper", shots);
+        ReflectionTestUtils.setField(worker, "shortWorkMapper", works);
+        ReflectionTestUtils.setField(worker, "shortAssetMapper", assets);
+        ReflectionTestUtils.setField(worker, "shortDubbingMapper", dubbings);
+        ReflectionTestUtils.setField(worker, "objectStorage", storage);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        var episode = new com.bgssai.shortai.model.ShortEpisode();
+        episode.setEpisodeId("episode-test"); episode.setWorkId("work-test");
+        var shot = new com.bgssai.shortai.model.ShortShot();
+        shot.setShotId("shot-test"); shot.setShotDurationSec(5); shot.setVideoAssetId("video-test");
+        var work = new com.bgssai.shortai.model.ShortWork();
+        work.setAspectRatio("16:9"); work.setComposeSettingJson("{\"aspect_ratio\":\"16:9\",\"burn_subtitle_flag\":0}");
+        var asset = new com.bgssai.shortai.model.ShortAsset(); asset.setStorageKey("test-fixture.mp4");
+        when(episodes.selectOneByExample(any())).thenReturn(episode);
+        when(shots.selectByExample(any())).thenReturn(java.util.List.of(shot));
+        when(works.selectOneByExample(any())).thenReturn(work);
+        when(assets.selectOneByExample(any())).thenReturn(asset);
+        when(dubbings.selectByExample(any())).thenReturn(java.util.List.of());
+        when(storage.get("test-fixture.mp4")).thenReturn(new byte[]{1});
+        var model = new AiModelConfig();
+        when(registry.resolve(model)).thenReturn(provider);
+        var captured = new java.util.concurrent.atomic.AtomicReference<com.bgssai.shortai.aiprovider.AiProviderRequest>();
+        when(provider.execute(any())).thenAnswer(call -> {
+            captured.set(call.getArgument(0));
+            throw new IllegalStateException("test-stop-before-media-generation");
+        });
+        var task = new ShortAiTask(); task.setEpisodeId("episode-test");
+        Assertions.assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(worker, "finishCompose", task, model));
+        Assertions.assertNotNull(captured.get());
+        Assertions.assertEquals("16:9", captured.get().param("aspect_ratio"));
+        Assertions.assertEquals(java.util.List.of(5), captured.get().param("clip_duration_sec_list"));
+        verify(provider, times(1)).execute(any());
+    }
 
     @Test
     void binaryVoiceGetsRealDurationBeforeDubbingAndUsage() throws Exception {

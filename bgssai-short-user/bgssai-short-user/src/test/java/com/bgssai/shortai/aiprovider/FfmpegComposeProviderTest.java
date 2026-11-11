@@ -40,6 +40,7 @@ class FfmpegComposeProviderTest {
         req.getParams().put(FfmpegComposeProvider.PARAM_SUBTITLE_SRT,
                 "1\n00:00:00,000 --> 00:00:01,500\nhello\n\n");
         req.getParams().put("duration_sec", 2);
+        req.getParams().put(FfmpegComposeProvider.PARAM_CLIP_DURATION_SEC_LIST, List.of(1, 1));
 
         AiProviderResult result = provider.execute(req);
         assertEquals("video/mp4", result.getMimeType());
