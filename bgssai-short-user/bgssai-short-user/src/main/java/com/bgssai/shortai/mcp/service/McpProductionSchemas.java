@@ -37,7 +37,7 @@ final class McpProductionSchemas {
                 schema(List.of("work_id", "card_type", "card_id", "confirm_cost"), text("work_id", "作品 ID"),
                         choice("card_type", "卡类型", "CHARACTER", "SCENE", "PROP"), text("card_id", "角色或场景卡 ID"),
                         text("model_code", "list_models 的 IMAGE 编码；省略使用正式默认模型"),
-                        text("appearance_prompt", "仅 CHARACTER：先通过正式角色编辑保存年龄、服饰等外观，再生成参考图；影响已绑定镜头"),
+                        text("appearance_prompt", "CHARACTER/SCENE/PROP：先通过正式编辑保存非空外观或布景描述，再生成参考图；影响已绑定镜头"),
                         integer("candidate_count", "仅 2/4/8，默认 2", 2, 8), prop("confirm_cost", "boolean", "必须为 true"))));
         tools.add(tool("lock_reference_card", "将该卡已生成的真实候选图设为定妆参考，沿用正式锁定和镜头过期规则。",
                 schema(List.of("work_id", "card_type", "card_id", "asset_id"), text("work_id", "作品 ID"),

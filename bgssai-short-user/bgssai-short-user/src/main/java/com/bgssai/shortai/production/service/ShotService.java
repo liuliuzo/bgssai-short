@@ -361,32 +361,7 @@ public class ShotService {
 
     private boolean hasUnlockedRefs(ShortShot shot, List<ShortCharacter> characters,
             List<ShortSceneCard> sceneCards) {
-        for (String id : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
-            for (ShortCharacter c : characters) {
-                if (id.equals(c.getCharacterId()) && !"LOCKED".equals(c.getCardStatus())) {
-                    return true;
-                }
-            }
-        }
-        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank() && sceneCards != null) {
-            for (ShortSceneCard sc : sceneCards) {
-                if (shot.getSceneCardId().equals(sc.getSceneCardId())
-                        && !"LOCKED".equals(sc.getCardStatus())) {
-                    return true;
-                }
-            }
-        }
-        for (String id : ShotConsistency.propIds(shot.getPropRefJson())) {
-            if (sceneCards == null) {
-                break;
-            }
-            for (ShortSceneCard sc : sceneCards) {
-                if (id.equals(sc.getSceneCardId()) && !"LOCKED".equals(sc.getCardStatus())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return ShotConsistency.hasUnlockedRefs(shot, characters, sceneCards);
     }
 
     private int maxLockedNo(String episodeId) {

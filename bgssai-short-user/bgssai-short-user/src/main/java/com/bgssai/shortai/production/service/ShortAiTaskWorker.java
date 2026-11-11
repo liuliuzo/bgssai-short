@@ -723,9 +723,7 @@ public class ShortAiTaskWorker {
         }
         int count = ShortJson.integer(req.get("candidate_count"), 4);
         String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
-        String prompt = row.getCharacterName()
-                + (appearance.isBlank() ? "" : "，" + appearance)
-                + "，竖屏 9:16 电影感角色定妆照，真人写实，短剧人物卡";
+        String prompt = appearance.isBlank() ? row.getCharacterName() : appearance;
         for (int i = 0; i < count; i++) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "PORTRAIT");
             request.getParams().put("title", row.getCharacterName());
@@ -738,10 +736,10 @@ public class ShortAiTaskWorker {
                     task.getTaskId(), i == 0);
         }
         ShortCharacter patch = new ShortCharacter();
-        patch.setCardStatus("GENERATING");
+        patch.setCardStatus(referenceCompletionStatus(task));
         patch.setUpdatedTime(new Date());
         ShortCharacterExample up = new ShortCharacterExample();
-        up.createCriteria().andIdEqualTo(row.getId());
+        up.createCriteria().andIdEqualTo(row.getId()).andCardStatusNotEqualTo("LOCKED");
         shortCharacterMapper.updateByExampleSelective(patch, up);
     }
 
@@ -754,9 +752,7 @@ public class ShortAiTaskWorker {
         }
         int count = ShortJson.integer(req.get("candidate_count"), 4);
         String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
-        String prompt = row.getCardName()
-                + (appearance.isBlank() ? "" : "，" + appearance)
-                + "，竖屏 9:16 电影感场景空镜，短剧场景卡";
+        String prompt = appearance.isBlank() ? row.getCardName() : appearance;
         for (int i = 0; i < count; i++) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "SCENE_PORTRAIT");
             request.getParams().put("title", row.getCardName());
@@ -768,6 +764,20 @@ public class ShortAiTaskWorker {
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getSceneCardId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
         }
+        ShortSceneCard patch = new ShortSceneCard();
+        patch.setCardStatus(referenceCompletionStatus(task));
+        patch.setUpdatedTime(new Date());
+        ShortSceneCardExample up = new ShortSceneCardExample();
+        up.createCriteria().andIdEqualTo(row.getId()).andCardStatusNotEqualTo("LOCKED");
+        shortSceneCardMapper.updateByExampleSelective(patch, up);
+    }
+
+    private String referenceCompletionStatus(ShortAiTask task) {
+        ShortAiTaskExample other = new ShortAiTaskExample();
+        other.createCriteria().andTargetIdEqualTo(task.getTargetId()).andTaskTypeEqualTo("IMAGE")
+                .andTargetTypeIn(List.of("PORTRAIT", "SCENE_PORTRAIT"))
+                .andTaskStatusIn(List.of("QUEUED", "RUNNING")).andTaskIdNotEqualTo(task.getTaskId());
+        return shortAiTaskMapper.countByExample(other) > 0 ? "GENERATING" : "DRAFT";
     }
 
     private void finishShot(ShortAiTask task, AiModelConfig model) {

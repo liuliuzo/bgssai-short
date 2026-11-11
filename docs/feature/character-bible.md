@@ -103,7 +103,14 @@
 [`flow-character-consistency.html`](./flow-character-consistency.html)。
 
 `card_status` 流转：`CANDIDATE`（剧本抽取待建卡，外观描述与场次清单已预填）→ `DRAFT`（已确认描述未定妆）→
-`GENERATING`（候选生成中）→ `LOCKED`（已定妆，可被引用）；`LOCKED` 后改描述回落 `DRAFT`。
+`GENERATING`（存在排队或运行中的候选任务）→ `DRAFT`（候选已完成，待选择）→ `LOCKED`（选定真实候选，可被引用）。
+候选任务结束不得覆盖用户已完成的锁定；同卡仍有其他活跃候选任务时仍显示 `GENERATING`。
+历史遗留的 `GENERATING` 在没有活跃任务时按 `DRAFT` 展示，不把图像任务成功等同于定妆锁定。
+`LOCKED` 后实际修改名称或外观描述回落 `DRAFT`；保留历史候选供重新选择，旧参考图不再通过锁定校验。
+相同描述重复保存不使镜头过期。场景与道具通过 `POST /bgssai/user/scene-cards/update`、
+`scene_card_id`、可选 `card_name` / `appearance_prompt` 编辑已有卡，不能变更作品、归属或卡类型。
+角色、场景和道具的显式外观描述直接作为参考图提示词，只有未填写描述时才回退卡名；
+不自动附加中文名称、重复模板或自动翻译。模型文本编码器仍可能截断长描述，应优先填写关键视觉信息。
 
 ## 六、数据模型影响
 

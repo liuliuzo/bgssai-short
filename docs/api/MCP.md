@@ -48,7 +48,7 @@
 | `split_storyboard` | `episode_id, confirm_replace=true`；READY 剧本每行拆一个镜头，替换未锁定镜头。须先保存未完成工作并明确确认。 |
 | `save_storyboard` | `episode_id, shots:[{shot_id, shot_desc?, dialogue_text?, shot_size?, camera_move?, shot_duration_sec?, extra_prompt?}]`；1-100 镜，已存在且属于该分集，锁定镜头拒绝。整个调用为事务，正式 ShotService 重算提示词。 |
 | `list_reference_cards` | `work_id`；正式一致性面板返回角色/场景/道具卡及 `candidate_list`。 |
-| `generate_reference_image` | `work_id, card_type:CHARACTER/SCENE/PROP, card_id, confirm_cost=true`，可选 `candidate_count:2/4/8`（默认 2）、`model_code`；仅角色可传 `appearance_prompt`，先经正式角色编辑保存年龄/服饰等外观，再提交正式参考图任务。 |
+| `generate_reference_image` | `work_id, card_type:CHARACTER/SCENE/PROP, card_id, confirm_cost=true`，可选 `candidate_count:2/4/8`（默认 2）、`model_code`、非空 `appearance_prompt`；先经正式角色或场景/道具编辑保存描述，再提交正式参考图任务。保留作品归属与价格确认校验，不替用户锁定候选。 |
 | `lock_reference_card` | `work_id, card_type, card_id, asset_id`；只能选择该卡真实 `candidate_list` 中的资产，正式锁定和镜头过期规则保持。 |
 | `get_render_task` | `task_id`；复用任务中心所有权检查与安全输出，返回状态、进度、公开错误、`result_json`、费用；不暴露 request_json。 |
 | `get_episode_film` | `episode_id`；返回 `film/precheck/dubbing/subtitles`。`film.download_url` 为正式服务解析的可播放链接，过期或未生成时为空，不返回伪造成片。重新查询可刷新临时链接。 |

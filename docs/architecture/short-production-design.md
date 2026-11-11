@@ -123,3 +123,12 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 ## 多角色逐镜配音修正（2026-11-11）
 
 拆分依据每行 character_name，将该说话者排在 character_ref_json 第一位，其他同场人物保持后续引用以服务视觉一致性；不能按角色建档顺序代替说话者。配音服务通过 ShotConsistency.characterIds 同时解析旧对象引用和 ID 数组，再选角色已配置 voice_id。MCP 暴露正式声音目录及设置服务，保留身份与目录校验，不新增 SQL 或任意供应商声音。
+
+
+### 参考卡候选状态与场景编辑修复（2026-11-11）
+
+- CharacterService.updateScene 复用 CharacterReq 与 requireScene 用户归属检查，提供 POST /bgssai/user/scene-cards/update；只允许修改 card_name / appearance_prompt，MCP 的 SCENE / PROP 描述保存委托该正式服务。实际修改才回落 DRAFT 并将非 LOCKED 镜头标记 stale；保留历史候选、参考资产与所有绑定，未再次 LOCKED 前旧参考资产不能通过生成校验。
+- 参考图完成仅在卡尚未 LOCKED 时更新；存在其他 QUEUED / RUNNING 同卡任务则仍为 GENERATING，否则 DRAFT。查询视图以当前活跃任务修正生成中状态；历史 GENERATING 无活跃任务按 DRAFT 展示。候选成功不自动锁卡。
+- ShotConsistency 共用引用可用性判断：缺失、类型错误、非 LOCKED、空 ref_image_asset_id 均阻塞。consistencyPanel 的 unlocked_ref_count 逐镜计算；改卡重算 blocked_flag，不能直接清零，也不改变镜头引用或定稿镜头。
+- 参考图 prompt 优先采用完整显式 appearance_prompt，只有空描述才使用卡名，不自动翻译或附加中文模板；不承诺模型编码器完整保留超长描述。
+- 不新增字段、枚举或 SQL 迁移，不修改媒体解析与供应商调用。测试覆盖越权、同值保存、并发锁定、其他活跃任务、真实引用统计及 MCP 正式委托。

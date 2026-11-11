@@ -218,4 +218,29 @@ class McpProductionServiceTest {
         assertEquals("v-female-warm-01", capture.getValue().getVoiceId());
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"SCENE", "PROP"})
+    void sceneAndPropAppearanceUsesOwnedFormalUpdateBeforeGeneration(String type) throws Exception {
+        String collection = "SCENE".equals(type) ? "scene_list" : "prop_list";
+        when(characters.consistencyPanel("w-1")).thenReturn(Responses.ok(Map.of(collection,
+                List.of(Map.of("scene_card_id", "sc-1")))));
+        when(characters.updateScene(any())).thenReturn(Responses.ok("ok"));
+        when(characters.portraitScene(any())).thenReturn(Responses.ok(Map.of("task_id", "scene-1")));
+        JsonNode request = json.valueToTree(Map.of("work_id", "w-1", "card_type", type,
+                "card_id", "sc-1", "appearance_prompt", "rainy convenience store at night", "confirm_cost", true));
+        service.execute("generate_reference_image", request);
+        ArgumentCaptor<CharacterReq> req = ArgumentCaptor.forClass(CharacterReq.class);
+        var ordered = inOrder(characters);
+        ordered.verify(characters).consistencyPanel("w-1");
+        ordered.verify(characters).updateScene(req.capture());
+        ordered.verify(characters).portraitScene(any());
+        assertEquals("sc-1", req.getValue().getSceneCardId());
+        assertEquals("rainy convenience store at night", req.getValue().getAppearancePrompt());
+        verify(characters, never()).updateCharacter(any());
+        assertThrows(ForbiddenException.class, () -> service.execute("generate_reference_image",
+                json.valueToTree(Map.of("work_id", "w-1", "card_type", type,
+                "card_id", "foreign", "appearance_prompt", "other", "confirm_cost", true))));
+        verify(characters, times(1)).updateScene(any());
+    }
+
 }

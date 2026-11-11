@@ -23,7 +23,9 @@
   2. 镜头引用：`character_ref_json`、`scene_card_id`、`prop_ref_json`（字符串 id 数组或
      `{character_id}` / `{scene_card_id}` 对象数组均可）。
   3. 绑定接口覆盖写传入字段；未传的字段保持原值；空数组 / 空字符串表示解除该类引用。
-  4. 引用未 `LOCKED` 卡时 `blocked_flag=1`，提交 IMAGE / VIDEO 返回 `4006`。
+  4. 引用卡缺失、未 `LOCKED` 或没有 `ref_image_asset_id` 时 `blocked_flag=1`，提交 IMAGE / VIDEO 返回 `4006`。
+     `unlocked_ref_count` 按当前实际引用逐镜核验，每个存在不可用引用的镜头计 1，不读取可能过期的 blocked 缓存。
+     改卡仅将非定稿镜头标记过期并重算阻塞，不清空角色、场景、道具绑定；定稿镜头保持不变。
   5. 拆镜仍按名字自动挂卡（含道具名），之后以面板手工绑定为准。
   6. 改卡锁定或换绑未定稿镜头置 `stale_flag=1`。已 `LOCKED` 镜头不回溯。
   7. 播放成片不在本仓；面板只展示参考缩略图。
@@ -61,7 +63,7 @@
 ## 五、流程 / 状态机（须配图）
 
 见 [`flow-asset-consistency-panel.html`](./flow-asset-consistency-panel.html)。
-`card_status` 仍走 `character-bible.md`：`CANDIDATE` → `DRAFT` → `GENERATING` → `LOCKED`。
+`card_status` 仍走 `character-bible.md`：`CANDIDATE` → `DRAFT` → `GENERATING` → `DRAFT`（候选完成待选择）→ `LOCKED`（用户选定）。
 
 ## 六、数据模型影响
 
