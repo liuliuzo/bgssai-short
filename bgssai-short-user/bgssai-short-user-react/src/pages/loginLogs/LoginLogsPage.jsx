@@ -22,7 +22,8 @@ const formatAction = (value) => {
 const COLUMNS = [
   { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '动作', dataIndex: 'action', width: 180, render: formatAction },
-  { title: 'IP', dataIndex: 'ip_address', width: 160 },
+  { title: '登录IP', dataIndex: 'ip_address', width: 180 },
+  { title: 'IP归属地（参考）', dataIndex: 'ip_location', width: 260, render: (value) => value || '未知' },
   { title: '时间', dataIndex: 'create_time', width: 200, render: formatTime },
 ]
 
@@ -64,7 +65,7 @@ export default function LoginLogsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>我的登录日志</Title>
-      <Paragraph type="secondary">最近登录与安全相关操作记录，仅展示本人账号。</Paragraph>
+      <Paragraph type="secondary">最近登录与安全相关操作记录，仅展示本人账号。IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置；未覆盖时显示未知。</Paragraph>
       <Card>
         <Table
           rowKey="id"
@@ -72,6 +73,7 @@ export default function LoginLogsPage() {
           loading={loading}
           columns={COLUMNS}
           dataSource={rows}
+          scroll={{ x: 900 }}
           locale={{ emptyText: '还没有登录记录。' }}
           pagination={{
             current: pageNum,

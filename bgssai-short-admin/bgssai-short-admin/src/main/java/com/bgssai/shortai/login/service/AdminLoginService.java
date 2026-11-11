@@ -14,6 +14,7 @@ import com.bgssai.shortai.common.session.SingleSessionGuard;
 import com.bgssai.shortai.login.dto.req.ReqAdminLogin;
 import com.bgssai.shortai.login.dto.resp.RespAdminLogin;
 import com.bgssai.shortai.mapper.LoginLogMapper;
+import com.bgssai.shortai.loginlog.location.LoginClientIp;
 import com.bgssai.shortai.mapper.SysUserMapper;
 import com.bgssai.shortai.model.LoginLog;
 import com.bgssai.shortai.model.SysUser;
@@ -142,14 +143,6 @@ public class AdminLoginService {
     }
 
     private static String resolveIp(HttpServletRequest req) {
-        if (req == null) return null;
-        String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) {
-            int comma = xff.indexOf(',');
-            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
-        }
-        String real = req.getHeader("X-Real-IP");
-        if (real != null && !real.isEmpty()) return real.trim();
-        return req.getRemoteAddr();
+        return LoginClientIp.resolve(req);
     }
 }

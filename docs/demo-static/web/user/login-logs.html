@@ -27,16 +27,17 @@
         响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
         最近登录与安全相关操作记录，仅展示本人账号
       -->
-      <table>
+      <p>IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。未覆盖时显示未知。</p>
+      <div style="overflow-x:auto"><table style="min-width:900px">
         <thead>
-          <tr><th>id</th><th>user_id</th><th>action</th><th>ip_address</th><th>create_time</th></tr>
+          <tr><th>id</th><th>user_id</th><th>action</th><th>登录IP (ip_address)</th><th>IP归属地（参考）(ip_location)</th><th>create_time</th></tr>
         </thead>
         <tbody>
-          <tr><td>207</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.41</td><td>2026-07-19 09:31:22</td></tr>
-          <tr><td>206</td><td>u-demo-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.41</td><td>2026-07-19 09:30:58</td></tr>
-          <tr><td>205</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.9</td><td>2026-07-18 20:14:37</td></tr>
+          <tr><td>207</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.41</td><td>非公网地址</td><td>2026-07-19 09:31:22</td></tr>
+          <tr><td>206</td><td>u-demo-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.41</td><td>非公网地址</td><td>2026-07-19 09:30:58</td></tr>
+          <tr><td>205</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.9</td><td>非公网地址</td><td>2026-07-18 20:14:37</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <div class="pager">
         <button class="btn">上一页</button>
