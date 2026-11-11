@@ -118,7 +118,7 @@ class McpToolServiceTest {
     @Test
     void listToolDefinitions_containsAllBusinessAndProbeTools() {
         ArrayNode tools = service.listToolDefinitions();
-        assertEquals(24, tools.size());
+        assertEquals(26, tools.size());
         List<String> names = new ArrayList<>();
         for (JsonNode t : tools) {
             names.add(t.get("name").asText());
@@ -134,12 +134,42 @@ class McpToolServiceTest {
                 "list_episodes",
                 "save_episode_script",
                 "list_shots",
+                "get_asset_download",
+                "lock_shot",
                 "submit_render_task",
                 "publish_episode_to_media")));
         assertTrue(service.hasTool("list_my_login_logs"));
         assertTrue(service.hasTool("health_live"));
         assertTrue(service.hasTool("health_ready"));
         assertFalse(service.hasTool("unknown_tool_xyz"));
+    }
+
+    @Test
+    void assetReviewToolsAdvertiseStrictSchemasAndDispatchToProductionAdapter() throws Exception {
+        for (String name : List.of("get_asset_download", "lock_shot")) {
+            assertTrue(service.hasTool(name));
+            JsonNode definition = null;
+            for (JsonNode tool : service.listToolDefinitions()) {
+                if (name.equals(tool.path("name").asText())) definition = tool;
+            }
+            assertNotNull(definition);
+            JsonNode schema = definition.path("inputSchema");
+            assertFalse(schema.path("additionalProperties").asBoolean(true));
+            if (name.equals("lock_shot")) {
+                assertEquals("boolean", schema.path("properties").path("confirm_review").path("type").asText());
+                assertTrue(schema.path("properties").path("confirm_review").path("const").asBoolean());
+                assertFalse(schema.path("properties").has("asset_id"));
+                assertEquals(3, schema.path("required").size());
+            }
+            JsonNode args = mapper.readTree(name.equals("lock_shot")
+                    ? "{\"episode_id\":\"ep\",\"shot_id\":\"shot\",\"confirm_review\":true}"
+                    : "{\"asset_id\":\"asset\"}");
+            when(production.execute(name, args)).thenReturn(Map.of("accepted", true));
+            assertFalse(service.callTool(name, args).isError());
+            verify(production).execute(name, args);
+        }
+        verify(shortAiTaskMapper, never()).insertSelective(any());
+        verify(shortShotMapper, never()).updateByExampleSelective(any(), any());
     }
 
     @Test

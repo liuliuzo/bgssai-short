@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "b85b4ea3a4cd7744c6b1b45f5a41111c1f775e705209237885c8fee90507d08c",
-  "code_contract_digest": "c102f04dbd2ea020f91bbe012e2a593d0944245f97da47f40667974a064199ef",
+  "prototype_bundle_digest": "1b88f3a5bd99b12d8e7403eee307a0a0d308baddd6ee6941891ee820a761e6cb",
+  "code_contract_digest": "7c0a7ea290dcdb78059928eb2e1c0652a136537587dbe90549eaa03b3b67288a",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -712,7 +712,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpProductionService.java",
-      "sha256": "62e343f0cb07f6f72e915a17a0050e7b51ce7184a9699a186c968c151ed7a019"
+      "sha256": "67c4caeb77ff5b463115fc559955ada27e7d687ee8e091bcdb60c3cd2e70d8ab"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpProtocolService.java",
@@ -2114,7 +2114,7 @@
     },
     {
       "path": "docs/demo-static/web/user/mcp-tokens.html",
-      "sha256": "18cdcc8fb70959586ebbad3b814bb41027f1ebc317df77f27fbcb97d33bcd358",
+      "sha256": "56dee9b148f7ef64775e4e50fc35363c5d643ef8475b8e2c9ce4849b6bbf81b0",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
