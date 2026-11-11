@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +20,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.aiprovider.AiProvider;
@@ -136,6 +139,8 @@ public class ShortAiTaskWorker {
     private ShortTaskSettlementService settlement;
     @Autowired
     private QuotaConsumeService quotaConsumeService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private final ThreadLocal<Integer> executionUsage = ThreadLocal.withInitial(() -> 0);
 
@@ -790,6 +795,13 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         String ability = "VIDEO".equals(task.getTaskType()) ? "VIDEO" : "IMAGE";
+        boolean recoveringVideo = "VIDEO".equals(ability)
+                && !ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id")).isBlank();
+        if (recoveringVideo && (!Objects.equals(task.getUserId(), shot.getUserId())
+                || !Objects.equals(task.getWorkId(), shot.getWorkId())
+                || !Objects.equals(task.getEpisodeId(), shot.getEpisodeId()))) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "恢复目标镜头归属已变化，停止恢复");
+        }
         AiProviderRequest request = baseRequest(model, ability, "SHOT");
         request.getParams().put("title", "镜 " + shot.getShotNo());
         request.getParams().put("subtitle", shot.getShotDesc());
@@ -802,7 +814,9 @@ public class ShortAiTaskWorker {
         String prompt = ShotConsistency.withConsistency(shotPrompt(shot, ability), consistency.fragment());
         request.setPrompt(prompt);
         if ("VIDEO".equals(ability)) {
-            attachFrames(shot, request, model);
+            String resumeId = ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id"));
+            if (!resumeId.isBlank()) request.getParams().put("resume_request_id", resumeId);
+            else attachFrames(shot, request, model);
         } else {
             attachConsistencyRefs(consistency, request);
         }
@@ -813,6 +827,10 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
                     ("VIDEO".equals(ability) ? "video" : "image")
                             + " provider returned empty content");
+        }
+        if (recoveringVideo) {
+            finishRecoveredVideo(task, shot, result);
+            return;
         }
         boolean confirmedVideo = "VIDEO".equals(task.getTaskType())
                 && ShotVersionGuard.keepConfirmedAsset(shot.getShotStatus(), shot.getVideoAssetId());
@@ -829,10 +847,6 @@ public class ShortAiTaskWorker {
         if ("VIDEO".equals(task.getTaskType())) {
             patch.setVideoAssetId(asset.getAssetId());
             patch.setShotStatus("VIDEO_READY");
-            if (shot.getShotDurationSec() != null) {
-                asset.setDurationSec(shot.getShotDurationSec());
-                shortAssetMapper.updateByPrimaryKeySelective(asset);
-            }
             String lastFrameAssetId = extractLastFrame(shot, result, task);
             if (lastFrameAssetId != null) {
                 patch.setLastFrameAssetId(lastFrameAssetId);
@@ -867,6 +881,59 @@ public class ShortAiTaskWorker {
                 frameLinkService.markNextStale(shot);
             }
         }
+    }
+
+    private void finishRecoveredVideo(ShortAiTask task, ShortShot original, AiProviderResult result) {
+        ShortAsset asset = saveBinary(original.getUserId(), original.getWorkId(), original.getEpisodeId(),
+                original.getShotId(), "VIDEO", result, task.getTaskId(), false);
+        String lastFrame = extractLastFrame(original, result, task);
+        ShortShotExample read = new ShortShotExample();
+        read.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
+        ShortShot current = shortShotMapper.selectOneByExample(read);
+        if (current == null || !Objects.equals(original.getId(), current.getId())
+                || !Objects.equals(task.getUserId(), current.getUserId())
+                || !Objects.equals(task.getWorkId(), current.getWorkId())
+                || !Objects.equals(task.getEpisodeId(), current.getEpisodeId())
+                || "LOCKED".equals(current.getShotStatus())
+                || (current.getVideoAssetId() != null && !current.getVideoAssetId().isBlank())
+                || !Objects.equals(original.getUpdatedTime(), current.getUpdatedTime())
+                || !Objects.equals(original.getShotVersion(), current.getShotVersion())
+                || !Objects.equals(original.getPromptVersion(), current.getPromptVersion())
+                || !Objects.equals(original.getShotStatus(), current.getShotStatus())) {
+            throw recoveryConflict();
+        }
+        ShortAiTaskExample siblings = new ShortAiTaskExample();
+        siblings.createCriteria().andUserIdEqualTo(task.getUserId()).andWorkIdEqualTo(task.getWorkId())
+                .andEpisodeIdEqualTo(task.getEpisodeId()).andTargetIdEqualTo(task.getTargetId())
+                .andTargetTypeEqualTo("SHOT").andTaskTypeEqualTo("VIDEO");
+        for (ShortAiTask other : shortAiTaskMapper.selectByExample(siblings)) {
+            if (!task.getId().equals(other.getId()) && (other.getId() > task.getId()
+                    || List.of("QUEUED", "RUNNING", "PAUSED").contains(other.getTaskStatus()))) {
+                throw recoveryConflict();
+            }
+        }
+        ShortShot patch = new ShortShot();
+        patch.setVideoAssetId(asset.getAssetId());
+        patch.setShotStatus("VIDEO_READY");
+        patch.setLastFrameAssetId(lastFrame);
+        patch.setUpdatedTime(new Date());
+        ShortAsset selected = new ShortAsset();
+        selected.setSelectedFlag(1);
+        ShortAssetExample selection = new ShortAssetExample();
+        selection.createCriteria().andAssetIdEqualTo(asset.getAssetId()).andUserIdEqualTo(task.getUserId())
+                .andSourceTaskIdEqualTo(task.getTaskId()).andSelectedFlagEqualTo(0).andDeletedFlagEqualTo(0);
+        // Keep model polling and object storage outside the short database transaction.
+        // A selection-write failure rolls the shot CAS back and leaves the candidate unselected.
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            if (shortShotMapper.attachRecoveredVideoIfUnchanged(current, patch, task.getId()) != 1) throw recoveryConflict();
+            if (shortAssetMapper.updateByExampleSelective(selected, selection) != 1) throw recoveryConflict();
+        });
+        if (finishedFilmLifecycle != null) finishedFilmLifecycle.expireAfterUpstreamChange(current.getEpisodeId());
+        if (lastFrame != null) frameLinkService.markNextStale(current);
+    }
+
+    private static BizException recoveryConflict() {
+        return new BizException(CommonErrorCode.RULE_REJECT, "镜头或视频任务已变化，恢复视频仅保留为未选候选，未覆盖当前镜头");
     }
 
     private ConsistencyBundle loadConsistency(ShortShot shot) {
@@ -1275,10 +1342,8 @@ public class ShortAiTaskWorker {
         String camera = shot.getCameraMove() == null ? "" : shot.getCameraMove().trim();
         if ("VIDEO".equals(ability)) {
             StringBuilder sb = new StringBuilder();
-            String motion = extra.isBlank() ? desc : extra;
-            if (motion.isBlank()) {
-                motion = imagePrompt;
-            }
+            String motion = desc.isBlank() ? imagePrompt : desc;
+            if (!extra.isBlank()) motion = motion.isBlank() ? extra : motion + "，" + extra;
             if (!motion.isBlank()) {
                 sb.append(motion);
             }

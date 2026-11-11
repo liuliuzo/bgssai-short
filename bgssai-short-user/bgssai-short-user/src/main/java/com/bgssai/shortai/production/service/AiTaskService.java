@@ -77,6 +77,9 @@ public class AiTaskService {
     @Autowired(required = false)
     private ShotGenerateOutcome shotGenerateOutcome;
 
+    @Autowired
+    private com.bgssai.shortai.billing.UsageReceiptService usageReceiptService;
+
     public ApiResponse estimate(AiTaskReq req) {
         if (req == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "body required");
@@ -387,7 +390,55 @@ public class AiTaskService {
 
     @Transactional
     public ApiResponse recover(AiTaskReq req) {
+        ShortAiTask task = requireTask(req == null ? null : req.getTaskId());
+        if ("VIDEO".equals(task.getTaskType()) && "bgssai-video".equals(task.getModelCode())) return resumeVideo(req);
         return retry(req);
+    }
+
+    @Transactional
+    public ApiResponse resumeVideo(AiTaskReq req) {
+        ShortAiTask task = requireTask(req == null ? null : req.getTaskId());
+        if (!GenerationTaskStatus.recoverable(task.getTaskStatus()) || !"VIDEO".equals(task.getTaskType())
+                || !"SHOT".equals(task.getTargetType()) || !"bgssai-video".equals(task.getModelCode())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "仅可恢复失败或取消的公司视频任务");
+        }
+        AiModelConfig model = aiModelResolveService.resolve("VIDEO", task.getModelCode());
+        if (!"TENCENT_TOKENHUB".equals(model.getProviderCode()) || !"bgssai-video".equals(model.getModelCode())
+                || TokenHubClientSupport.wouldSelectGlobal(ShortJson.map(model.getConfigJson()), model.getModelCode())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "恢复必须使用原国内公司视频模型");
+        }
+        ShortShotExample sx = new ShortShotExample();
+        sx.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
+        ShortShot shot = shortShotMapper.selectOneByExample(sx);
+        if (shot == null || !task.getUserId().equals(shot.getUserId()) || !task.getWorkId().equals(shot.getWorkId())
+                || !task.getEpisodeId().equals(shot.getEpisodeId()) || "LOCKED".equals(shot.getShotStatus())
+                || (shot.getVideoAssetId() != null && !shot.getVideoAssetId().isBlank())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "目标镜头已改变或已有视频，不能恢复旧任务");
+        }
+        ShortAiTaskExample siblings = new ShortAiTaskExample();
+        siblings.createCriteria().andTargetIdEqualTo(task.getTargetId()).andTaskTypeEqualTo("VIDEO");
+        for (ShortAiTask other : shortAiTaskMapper.selectByExample(siblings)) {
+            if (!task.getId().equals(other.getId()) && (other.getId() > task.getId()
+                    || List.of("QUEUED", "RUNNING", "PAUSED").contains(other.getTaskStatus()))) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "镜头已有后续或活动视频任务");
+            }
+        }
+        com.bgssai.shortai.billing.UsageReceiptRow receipt;
+        try { receipt = usageReceiptService.requireVideoReceipt(task.getUserId(), task.getWorkId(), task.getTaskId(), model.getModelCode()); }
+        catch (IllegalArgumentException ex) { throw new BizException(CommonErrorCode.RULE_REJECT, "找不到原任务的唯一提交回执，停止恢复"); }
+        Map<String, Object> input = new LinkedHashMap<>(ShortJson.map(task.getRequestJson()));
+        input.put("resume_request_id", receipt.requestId);
+        aiTaskQueue.ensurePipeline("VIDEO", model.getModelCode());
+        ShortAiTask patch = new ShortAiTask();
+        patch.setTaskStatus("QUEUED"); patch.setProgressPercent(0);
+        patch.setRetryCount((task.getRetryCount() == null ? 0 : task.getRetryCount()) + 1);
+        patch.setRequestJson(ShortJson.toJson(input)); patch.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo(task.getTaskStatus());
+        if (shortAiTaskMapper.updateByExampleSelective(patch, up) != 1) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "任务状态已变化，请重新查询");
+        }
+        return Responses.ok(Map.of("task_id", task.getTaskId(), "task_status", "QUEUED", "resumed_existing_video", true));
     }
 
     @Transactional

@@ -28,7 +28,8 @@
       </p>
       <p>角色、场景和道具参考图均可先保存外观或布景描述；候选完成后待用户选择，未锁定的引用不会被视为可生成。</p>
       <p>制作顺序：保存场次 → 剧本定稿 → 参考图定妆与角色声音设置 → 拆分与保存分镜（逐镜说话者优先绑定） → 图像/视频/配音/音乐 → 下载验收并明确锁定镜头 → 合成预检 → 成片 MP4。分镜替换须明确确认；每次生成均可能计费，不自动重试。</p>
-      <p>27 个工具中，<code>get_asset_download</code> 输入 <code>{asset_id}</code>，仅返回本人资产的 <code>download_url</code> 与 <code>expire_at</code>，可检查首帧、视频和配音；到期重新查询。</p>
+      <p>28 个工具中，<code>get_asset_download</code> 输入 <code>{asset_id}</code>，仅返回本人资产的 <code>download_url</code> 与 <code>expire_at</code>，可检查首帧、视频和配音；到期重新查询。</p>
+      <p><code>resume_video_task</code> 仅输入 <code>{task_id}</code>，恢复已提交的本人公司视频任务。依据唯一持久回执查询已有视频，不再次生成；缺失、重复、凭据变化或已有后续视频时拒绝。原任务仍按正式流程结算。</p>
       <p><code>regenerate_subtitles</code> 输入 <code>{episode_id, confirm_replace: true}</code>，从已有配音与分镜重建本人分集字幕，会替换现有字幕（包括人工编辑）。只接受 boolean true；无模型任务或生成费用，不自动重新合成。</p>
       <p>检查镜头视频后，调用 <code>lock_shot</code>，输入 <code>{episode_id, shot_id, confirm_review: true}</code>。只接受 boolean true；镜头须属于本人同一分集，已有视频且状态为 VIDEO_READY 或 LOCKED。不接收资产覆盖、不自动生成或发布；锁定后仍须完整合成预检。</p>
       <p>查询工具 <code>get_render_task</code> 返回本人任务状态与错误；<code>get_episode_film</code> 返回真实下载地址、过期状态、字幕及配音预检。未完成成片不会显示占位下载。</p>

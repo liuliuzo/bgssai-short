@@ -367,4 +367,50 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
+  <!-- Recovery must not replace a concurrent selection, lock, edit or newer task. -->
+  <update id="attachRecoveredVideoIfUnchanged">
+    update short_shot
+    set video_asset_id = #{patch.videoAssetId,jdbcType=VARCHAR},
+        shot_status = 'VIDEO_READY', updated_time = #{patch.updatedTime,jdbcType=TIMESTAMP}
+        <if test="patch.lastFrameAssetId != null">, last_frame_asset_id = #{patch.lastFrameAssetId,jdbcType=VARCHAR}</if>
+    where id = #{expected.id,jdbcType=BIGINT}
+      and shot_id = #{expected.shotId,jdbcType=VARCHAR}
+      and user_id = #{expected.userId,jdbcType=VARCHAR}
+      and work_id = #{expected.workId,jdbcType=VARCHAR}
+      and episode_id = #{expected.episodeId,jdbcType=VARCHAR}
+      and deleted_flag = 0
+      and (shot_status is null or shot_status != 'LOCKED')
+      and (video_asset_id is null or trim(video_asset_id) = '')
+      <choose>
+        <when test="expected.updatedTime != null">and updated_time = #{expected.updatedTime,jdbcType=TIMESTAMP}</when>
+        <otherwise>and updated_time is null</otherwise>
+      </choose>
+      <choose>
+        <when test="expected.shotStatus != null">and shot_status = #{expected.shotStatus,jdbcType=VARCHAR}</when>
+        <otherwise>and shot_status is null</otherwise>
+      </choose>
+      <choose>
+        <when test="expected.shotVersion != null">and shot_version = #{expected.shotVersion,jdbcType=INTEGER}</when>
+        <otherwise>and shot_version is null</otherwise>
+      </choose>
+      <choose>
+        <when test="expected.promptVersion != null">and prompt_version = #{expected.promptVersion,jdbcType=INTEGER}</when>
+        <otherwise>and prompt_version is null</otherwise>
+      </choose>
+      <choose>
+        <when test="expected.videoAssetId != null">and video_asset_id is not null and trim(video_asset_id) = #{expected.videoAssetId,jdbcType=VARCHAR}</when>
+        <otherwise>and video_asset_id is null</otherwise>
+      </choose>
+      and exists (select 1 from short_ai_task current_task
+        where current_task.id = #{taskId,jdbcType=BIGINT} and current_task.task_status = 'RUNNING'
+          and current_task.user_id = short_shot.user_id and current_task.work_id = short_shot.work_id
+          and current_task.episode_id = short_shot.episode_id and current_task.target_id = short_shot.shot_id
+          and current_task.target_type = 'SHOT' and current_task.task_type = 'VIDEO')
+      and not exists (select 1 from short_ai_task other_task
+        where other_task.id != #{taskId,jdbcType=BIGINT}
+          and other_task.user_id = short_shot.user_id and other_task.work_id = short_shot.work_id
+          and other_task.episode_id = short_shot.episode_id and other_task.target_id = short_shot.shot_id
+          and other_task.target_type = 'SHOT' and other_task.task_type = 'VIDEO'
+          and (other_task.id &gt; #{taskId,jdbcType=BIGINT} or other_task.task_status in ('QUEUED', 'RUNNING', 'PAUSED')))
+  </update>
 </mapper>

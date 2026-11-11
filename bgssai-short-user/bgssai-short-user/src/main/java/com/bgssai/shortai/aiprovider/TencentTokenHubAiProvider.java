@@ -101,7 +101,15 @@ public class TencentTokenHubAiProvider implements AiProvider {
                     TokenHubClientSupport.userFacingMessage("model credential unavailable"));
         }
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
-        var receipt=receipts==null?null:receipts.begin(base,apiKey,request.getModel().getModelCode());
+        String resumeId = ShortJson.text(request.param("resume_request_id"));
+        if (!resumeId.isBlank() && (!"VIDEO".equals(ability) || !"bgssai-video".equals(request.getModel().getModelCode()) || receipts == null)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "已有视频恢复需要可信回执与原公司模型");
+        }
+        var receipt = resumeId.isBlank() && receipts != null ? receipts.begin(base,apiKey,request.getModel().getModelCode()) : null;
+        if (!resumeId.isBlank()) {
+            try { receipt = receipts.resumeVideo(resumeId,base,apiKey,request.getModel().getModelCode()); }
+            catch (IllegalArgumentException ex) { throw new BizException(CommonErrorCode.RULE_REJECT, "原视频回执或凭据不匹配，已停止恢复"); }
+        }
         activeReceipt.set(receipt);
         try {
             return switch (ability) {
@@ -176,7 +184,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
         if (!image.isBlank()) {
             body.put("image", image);
         }
-        Map<String, Object> submitted = post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec));
+        String resumeId = ShortJson.text(request.param("resume_request_id"));
+        Map<String, Object> submitted = resumeId.isBlank()
+                ? post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec))
+                : get(base + VIDEO_PATH + "/by-request/" + encodeQuery(resumeId) + "?model=" + encodeQuery(model), apiKey, 60);
         Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
         AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec, base, apiKey);
         if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
