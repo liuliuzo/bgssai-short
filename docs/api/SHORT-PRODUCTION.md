@@ -168,7 +168,12 @@ create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
 `GET /bgssai/user/shots/list` 每镜另回 `look_plain`（这一镜观众会看到什么）、`prompt_score`、`previz_level`。
 
 `GET /bgssai/user/shots/list` 另回 `prop_ref_json`、`latest_task`
-（`task_id` / `task_type` / `task_status` / `task_status_name` / `progress_percent`）。
+（`task_id` / `task_type` / `task_status` / `task_status_name` / `progress_percent`），
+以及 `video_url` / `first_frame_url` / `last_frame_url`。
+列表在 `video_url` 有值时直接播放；`video_asset_id` 仍在而最新视频任务失败时，不得把镜头展示成没有视频。
+视频或首帧任务失败、超时或取消时，不改写已绑定的 `video_asset_id` / `first_frame_asset_id`：
+停在 `VIDEO_GENERATING` 且已有视频则回到 `VIDEO_READY`；没有视频但首帧仍在则回到 `IMAGE_READY`。
+停在 `IMAGE_GENERATING` 且首帧仍在时，已有视频回到 `VIDEO_READY`，否则回到 `IMAGE_READY`。
 
 ### POST /bgssai/user/shots/bind-assets
 

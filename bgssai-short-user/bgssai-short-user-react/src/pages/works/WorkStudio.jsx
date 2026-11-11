@@ -15,6 +15,8 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
+import { shotCardStatusCode, shotLatestTaskBadge } from './shotCardMedia'
+import { ClickThumb, ShotMediaColumn } from './shotListMedia'
 import DramaAssistantDrawer from '../../components/DramaAssistantDrawer'
 import {
   SHOT_TYPES,
@@ -383,7 +385,8 @@ function CharacterPane({ work }) {
   const [propForm] = Form.useForm()
   const [portrait, setPortrait] = useState(null)
   const [portraitCount, setPortraitCount] = useState(4)
-  const [portraitBusy, setPortraitBusy] = useState(false)
+  const [busyIds, setBusyIds] = useState(() => new Set())
+  const busyRef = useRef(new Set())
   const selectedModel = imageModels.find((item) => item.model_code === imageModelCode)
   const unitCent = Number(selectedModel?.unit_price_cent ?? selectedModel?.image_fen_per_unit ?? 0)
   const portraitPrice = Number.isFinite(unitCent) && unitCent > 0
@@ -411,6 +414,39 @@ function CharacterPane({ work }) {
     return () => { cancelled = true }
   }, [])
 
+  const markBusy = (id, on) => {
+    if (on) busyRef.current.add(id)
+    else busyRef.current.delete(id)
+    setBusyIds(new Set(busyRef.current))
+  }
+
+  const startPortrait = () => {
+    if (!portrait || busyRef.current.has(portrait.id)) return
+    const target = portrait
+    const count = portraitCount
+    const model = imageModelCode
+    setPortrait(null)
+    markBusy(target.id, true)
+    ;(async () => {
+      try {
+        const call = target.kind === 'character'
+          ? productionApi.portraitCharacter(target.id, model, count)
+          : productionApi.portraitScene(target.id, model, count)
+        const { data } = await call
+        if (!data?.success || !data.result?.task_id) return
+        const done = await waitTask(work.work_id, data.result.task_id)
+        if (done && done.task_status !== 'SUCCEEDED') {
+          message.error(`生成失败：${friendlyFailReason(done.fail_reason) || done.fail_reason_code || '未知原因'}`)
+        }
+        load()
+      } catch {
+        message.error('生成没有提交成功')
+      } finally {
+        markBusy(target.id, false)
+      }
+    })()
+  }
+
   const modelSelect = (
     <Select
       placeholder="出图模型"
@@ -436,13 +472,13 @@ function CharacterPane({ work }) {
         </Form>
         {chars.map((row) => (
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={<Space>
-            <Button size="small" onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
+            <Button size="small" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
           </Space>}>
             <Space wrap>
-              {row.ref_image_url ? <img alt="已锁定参考" src={row.ref_image_url} width={72} height={128} style={{ objectFit: 'cover', background: '#111' }} /> : null}
+              {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
-                  <img alt="" src={c.file_url} width={72} height={128} style={{ objectFit: 'cover', background: '#111' }} />
+                  <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />
                   <div>
                     <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
                       await productionApi.lockCharacter(row.character_id, c.asset_id)
@@ -466,13 +502,13 @@ function CharacterPane({ work }) {
         </Form>
         {scenes.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
-            <Button size="small" onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
+            <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
           }>
             <Space wrap>
-              {row.ref_image_url ? <img alt="已锁定参考" src={row.ref_image_url} width={96} height={64} style={{ objectFit: 'cover' }} /> : null}
+              {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={96} height={64} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
-                  {c.file_url ? <img alt="" src={c.file_url} width={96} height={64} style={{ objectFit: 'cover' }} /> : null}
+                  <ClickThumb alt="场景参考" src={c.file_url} width={96} height={64} />
                   <Button size="small" onClick={async () => {
                     await productionApi.lockScene(row.scene_card_id, c.asset_id)
                     load()
@@ -495,13 +531,13 @@ function CharacterPane({ work }) {
         </Form>
         {props.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
-            <Button size="small" onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
+            <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
           }>
             <Space wrap>
-              {row.ref_image_url ? <img alt="已锁定参考" src={row.ref_image_url} width={72} height={72} style={{ objectFit: 'cover' }} /> : null}
+              {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={72} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
-                  {c.file_url ? <img alt="" src={c.file_url} width={72} height={72} style={{ objectFit: 'cover' }} /> : null}
+                  <ClickThumb alt="道具参考" src={c.file_url} width={72} height={72} />
                   <Button size="small" onClick={async () => {
                     await productionApi.lockScene(row.scene_card_id, c.asset_id)
                     load()
@@ -515,29 +551,11 @@ function CharacterPane({ work }) {
       <Modal
         title={portrait ? `确认生成「${portrait.title || ''}」` : '确认生成'}
         open={!!portrait}
-        confirmLoading={portraitBusy}
         okText="确认生成"
         cancelText="取消"
+        okButtonProps={{ disabled: portrait ? busyIds.has(portrait.id) : false }}
         onCancel={() => setPortrait(null)}
-        onOk={async () => {
-          if (!portrait) return
-          setPortraitBusy(true)
-          try {
-            const call = portrait.kind === 'character'
-              ? productionApi.portraitCharacter(portrait.id, imageModelCode, portraitCount)
-              : productionApi.portraitScene(portrait.id, imageModelCode, portraitCount)
-            const { data } = await call
-            setPortrait(null)
-            if (!data?.success || !data.result?.task_id) return
-            const done = await waitTask(work.work_id, data.result.task_id)
-            if (done && done.task_status !== 'SUCCEEDED') {
-              message.error(`生成失败：${friendlyFailReason(done.fail_reason) || done.fail_reason_code || '未知原因'}`)
-            }
-            load()
-          } finally {
-            setPortraitBusy(false)
-          }
-        }}
+        onOk={startPortrait}
       >
         <Space direction="vertical">
           <Select
@@ -570,6 +588,7 @@ function StoryboardPane({ work, episodeId }) {
   const [bindScene, setBindScene] = useState()
   const [bindProps, setBindProps] = useState([])
   const [videoWatch, setVideoWatch] = useState(null)
+  const [videoPreview, setVideoPreview] = useState(null)
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -697,7 +716,7 @@ function StoryboardPane({ work, episodeId }) {
         type="info"
         showIcon
         message="先定妆、再写镜、再出图、再出视频"
-        description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。成片播放在 Tube，这里只做出片。"
+        description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。已有成片的镜头在卡片左侧直接播放，不必切到画布。成片发布后的观看在 Tube。"
       />
       {videoWatch ? (
         <Alert
@@ -835,16 +854,15 @@ function StoryboardPane({ work, episodeId }) {
       </Card>
       {rows.map((row) => {
         const readiness = evaluateShotReadiness(row, panel)
+        const taskBadge = shotLatestTaskBadge(row)
         return (
         <Card
           key={row.shot_id}
           size="small"
-          title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${labelOf(SHOT_STATUS_LABEL, row.shot_status || 'PENDING')}`}
+          title={`镜 ${row.shot_no} · ${row.shot_duration_sec || 3}秒 · ${labelOf(SHOT_STATUS_LABEL, shotCardStatusCode(row))}`}
           extra={<Space>
-            {row.latest_task ? (
-              <Tag color={row.latest_task.task_status === 'FAILED' ? 'red' : row.latest_task.task_status === 'SUCCEEDED' ? 'green' : 'blue'}>
-                {row.latest_task.task_type_name || row.latest_task.task_type} {row.latest_task.task_status_name || row.latest_task.task_status}
-              </Tag>
+            {taskBadge ? (
+              <Tag color={taskBadge.color}>{taskBadge.text}</Tag>
             ) : null}
             <Tag color={readiness.ready ? 'cyan' : 'default'}>
               {readiness.ready ? '锚点就绪' : '待定妆绑定'}
@@ -882,17 +900,7 @@ function StoryboardPane({ work, episodeId }) {
           </Space>}
         >
           <Space align="start" size="large" style={{ width: '100%' }}>
-            <div style={{ width: 90, flexShrink: 0 }}>
-              {row.first_frame_url
-                ? <img alt="" src={row.first_frame_url} width={90} style={{ borderRadius: 8, display: 'block' }} />
-                : <div style={{ width: 90, height: 160, background: '#f1f5f9', borderRadius: 8, padding: 8, fontSize: 12, color: '#64748b' }}>还没出图</div>}
-              {row.last_frame_url ? (
-                <div style={{ marginTop: 6 }}>
-                  <img alt="尾帧" src={row.last_frame_url} width={90} style={{ borderRadius: 8, display: 'block' }} />
-                  <Text type="secondary" style={{ fontSize: 11 }}>尾帧</Text>
-                </div>
-              ) : null}
-            </div>
+            <ShotMediaColumn row={row} onEnlarge={setVideoPreview} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <Paragraph style={{ marginBottom: 8 }}>
                 <Text strong>这一镜会拍成：</Text>
@@ -1068,6 +1076,25 @@ function StoryboardPane({ work, episodeId }) {
         </Card>
         )
       })}
+      <Modal
+        title={videoPreview ? `镜 ${videoPreview.shot_no} 视频` : '视频'}
+        open={!!videoPreview}
+        footer={null}
+        width={420}
+        destroyOnClose
+        onCancel={() => setVideoPreview(null)}
+      >
+        {videoPreview && videoPreview.video_url ? (
+          <video
+            src={videoPreview.video_url}
+            poster={videoPreview.first_frame_url || undefined}
+            controls
+            autoPlay
+            playsInline
+            style={{ width: '100%', maxHeight: '70vh', background: '#000', display: 'block' }}
+          />
+        ) : null}
+      </Modal>
     </Space>
   )
 }

@@ -74,6 +74,8 @@ public class AiTaskService {
     private PaidOrderGrantService paidOrderGrantService;
     @Autowired
     private AiModelResolveService aiModelResolveService;
+    @Autowired(required = false)
+    private ShotGenerateOutcome shotGenerateOutcome;
 
     public ApiResponse estimate(AiTaskReq req) {
         if (req == null) {
@@ -436,6 +438,9 @@ public class AiTaskService {
         ShortAiTaskExample up = new ShortAiTaskExample();
         up.createCriteria().andIdEqualTo(task.getId());
         shortAiTaskMapper.updateByExampleSelective(patch, up);
+        if (shotGenerateOutcome != null) {
+            shotGenerateOutcome.restoreBoundMedia(task);
+        }
         return Responses.ok("ok");
     }
 

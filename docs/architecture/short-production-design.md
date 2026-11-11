@@ -52,7 +52,9 @@
 
 分镜：`NONE` → `SPLITTING` → `DRAFT` → 全部镜头 `LOCKED` 则 `READY`。
 
-镜头：`PENDING` → `IMAGE_GENERATING` → `IMAGE_READY` → `VIDEO_GENERATING` → `VIDEO_READY` → `LOCKED`；失败 `FAILED`。
+镜头：`PENDING` → `IMAGE_GENERATING` → `IMAGE_READY` → `VIDEO_GENERATING` → `VIDEO_READY` → `LOCKED`。
+视频任务失败或取消且 `video_asset_id` 仍在时，从 `VIDEO_GENERATING` 回到 `VIDEO_READY`，失败路径不改写素材 id；
+没有视频但首帧仍在则回到 `IMAGE_READY`。首帧任务失败且首帧仍在时，已有视频回到 `VIDEO_READY`，否则回到 `IMAGE_READY`。
 
 任务：`QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`；`QUEUED` / `RUNNING` 可 `CANCELED`；
 `FAILED` / `CANCELED` 经 `retry` / `recover` 回 `QUEUED`。`PAUSED` 本切片不实现暂停入口。

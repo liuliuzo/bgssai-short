@@ -116,6 +116,8 @@ public class ShortAiTaskWorker {
     private FrameLinkService frameLinkService;
     @Autowired
     private FinishedFilmLifecycle finishedFilmLifecycle;
+    @Autowired(required = false)
+    private ShotGenerateOutcome shotGenerateOutcome;
     @Autowired
     private AiTaskQueue aiTaskQueue;
     @Autowired
@@ -217,6 +219,7 @@ public class ShortAiTaskWorker {
                 if (started == null) {
                     failIfRunning(task, "ORPHAN_RUNNING",
                             "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务");
+                    noteTerminalFailure(task);
                     continue;
                 }
                 int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
@@ -228,6 +231,7 @@ public class ShortAiTaskWorker {
                         task.getTaskId(), task.getTaskType(), task.getModelCode(), ageSec, limit);
                 failIfRunning(task, "MODEL_TIMEOUT",
                         "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）");
+                noteTerminalFailure(task);
             }
             onPollSuccess();
         } catch (DataAccessException ex) {
@@ -339,14 +343,15 @@ public class ShortAiTaskWorker {
             if (!settled) {
                 failIfRunning(task, "SETTLE_RACE",
                         "任务结果未能落账（可能已被超时回收），请在任务中心重试");
+                noteTerminalFailure(task);
             }
         } catch (BizException exBiz) {
             failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
-            noteComposeFailed(task);
+            noteTerminalFailure(task);
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
             failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage());
-            noteComposeFailed(task);
+            noteTerminalFailure(task);
         } finally {
             executionUsage.remove();
             com.bgssai.shortai.billing.UsageScope.clear();
@@ -1469,6 +1474,18 @@ public class ShortAiTaskWorker {
         ShortEpisodeExample ex = new ShortEpisodeExample();
         ex.createCriteria().andEpisodeIdEqualTo(episodeId).andDeletedFlagEqualTo(0);
         return shortEpisodeMapper.selectOneByExample(ex);
+    }
+
+    private void noteTerminalFailure(ShortAiTask task) {
+        noteComposeFailed(task);
+        if (shotGenerateOutcome == null || task == null) {
+            return;
+        }
+        try {
+            shotGenerateOutcome.restoreBoundMedia(task);
+        } catch (RuntimeException ex) {
+            log.warn("shot media restore skipped taskId={}", task.getTaskId(), ex);
+        }
     }
 
     private void noteComposeFailed(ShortAiTask task) {
