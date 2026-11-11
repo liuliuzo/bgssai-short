@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "e67ff4ecb90f9f3b28d6a247987da10677aa2f5a65e35b66b42d8926829cfd76",
-  "code_contract_digest": "af2b76e4d665f72b71b1558c08d78e181dfe06fdd21c875174f1584439c6f172",
+  "prototype_bundle_digest": "6e08ac83a35a4736d2ef835c5735bbe9691a1cbc03101a4fb3cd6d6c4ae77ce1",
+  "code_contract_digest": "e59e51ec0669e679c8a9b8bc77f518fd837b1acbd82f325a350f66262c3a2896",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -780,7 +780,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/DubbingService.java",
-      "sha256": "9bea898222c3862dd94bb5729ccd140ab5f5a8916ca451a3587a9741e20abe35"
+      "sha256": "3be18201c489f2a9c62ec18d5a0f9902e2dd2e067f3fa4e8f693cc79fa342b5f"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/EditProjectService.java",
@@ -2471,7 +2471,7 @@
     },
     {
       "path": "docs/demo-static/web/user/voice-studio.html",
-      "sha256": "de500893dc74dabc2d46ee1bd02310b1f7d29986131a246edd3cd1cdeedd7ed2",
+      "sha256": "3763f7876b82f7cd3a3b728aadc61a4a8751dc53d6a5575580420cf2bab09c06",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
