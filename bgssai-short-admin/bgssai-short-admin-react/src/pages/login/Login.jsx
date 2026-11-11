@@ -86,6 +86,7 @@ export default function Login() {
   return (
     <div className="admin-login-page">
       <div className="admin-login-card">
+        <img src="/brand/illustrations/admin-welcome.svg" alt="" aria-hidden="true" width="600" height="400" decoding="async" style={{ display: 'block', width: '100%', maxWidth: 220, height: 108, objectFit: 'contain', margin: '0 auto 16px', pointerEvents: 'none' }} />
         <div className="admin-login-head">
           <img className="admin-login-mark" src="/brand/bgss-mark-tile.png" alt="" width={52} height={52} />
           <h1 className="admin-login-title">BGSSAI 短剧 · 运营管理后台</h1>

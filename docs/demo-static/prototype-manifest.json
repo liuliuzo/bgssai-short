@@ -6,7 +6,7 @@
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
   "prototype_bundle_digest": "b85b4ea3a4cd7744c6b1b45f5a41111c1f775e705209237885c8fee90507d08c",
-  "code_contract_digest": "aa3798cee3d61bbebfc034d568ab4cf1cb5fd7229f0ff88aadf3349c9993871b",
+  "code_contract_digest": "c102f04dbd2ea020f91bbe012e2a593d0944245f97da47f40667974a064199ef",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -192,7 +192,7 @@
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin-react/src/pages/login/Login.jsx",
-      "sha256": "bc424e520b4a42c5485c4ae94f632ec4a58440a0bb36f7de07ff7fc2e06931c1"
+      "sha256": "7ca87e3e6ab8da98726e8ee40ff658dc6ed750598e41d88a1224791a9ab68d20"
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin-react/src/pages/loginLogs/LoginLogsPage.jsx",
