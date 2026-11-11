@@ -25,16 +25,17 @@
         响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
         鉴权：请求头 Jwttoken（@NeedAop）
       -->
-      <table>
+      <p>IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。未覆盖时显示未知。</p>
+      <div style="overflow-x:auto"><table style="min-width:900px">
         <thead>
-          <tr><th>id</th><th>user_id</th><th>action</th><th>ip_address</th><th>create_time</th></tr>
+          <tr><th>id</th><th>user_id</th><th>action</th><th>登录IP (ip_address)</th><th>IP归属地（参考）(ip_location)</th><th>create_time</th></tr>
         </thead>
         <tbody>
-          <tr><td>103</td><td>u-admin-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.7</td><td>2026-07-19 10:12:03</td></tr>
-          <tr><td>102</td><td>u-admin-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.7</td><td>2026-07-19 10:11:40</td></tr>
-          <tr><td>101</td><td>u-admin-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.22</td><td>2026-07-18 21:05:11</td></tr>
+          <tr><td>103</td><td>u-admin-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.7</td><td>非公网地址</td><td>2026-07-19 10:12:03</td></tr>
+          <tr><td>102</td><td>u-admin-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.7</td><td>非公网地址</td><td>2026-07-19 10:11:40</td></tr>
+          <tr><td>101</td><td>u-admin-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.22</td><td>非公网地址</td><td>2026-07-18 21:05:11</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <div class="pager">
         <button class="btn">上一页</button>

@@ -121,6 +121,7 @@
       "user_id": "u-admin-0001",
       "action": "LOGIN_SUCCESS",
       "ip_address": "203.0.113.7",
+      "ip_location": "非公网地址",
       "user_agent": "Mozilla/5.0 ...",
       "create_time": "2026-07-19 10:00:00"
     }
@@ -132,6 +133,8 @@
 ```
 
 ### 未授权 / 无权限响应
+
+登录日志行新增只读 `ip_location`（string）：离线解析已有 `ip_address` 得到可识别的国家/地区/城市，供参考，不是精确位置。值可为“本地”“内网”“非公网地址”“未知”或“未知（IPv6 暂未覆盖）”。示例 IP 是文档保留地址，不映射为真实城市。原始 IP、用户范围、分页、排序均不变；不新增请求参数、不改数据库。历史归属地按当前离线库查询，不代表登录当时快照。详见 [归属地设计](../architecture/login-ip-location.md)。
 
 token 缺失或失效时切面直接返回（HTTP 200）：
 

@@ -55,7 +55,7 @@
 | 登录鉴权 | 账号密码 + 短信/邮箱验证码登录即注册签发 JWT；短信发码回显 `product`/`seq`（默认双参模板）。管理端密码框可点击显示或隐藏，默认掩码，不改登录接口 | `../api/auth-login.md` · [`admin-login-password-reveal.md`](./admin-login-password-reveal.md) | `../demo-static/web/admin/login.html`、`../demo-static/web/user/login.html` |
 | 中文 /en 入口 | `/en` 与 `/en/*` 转到已有中文 `/login`（地址离开 `/en`），不另做英文站；未知路径仍为「页面不存在」 | [`chinese-only-en-alias.md`](./chinese-only-en-alias.md) | 两端 `PAGE-FLOW.html` |
 | 官网法律页外链 | 用户端登录 + 页脚指向 `www.bgssai.com` 五页中英路径；管理端仅外链；不编造证照号；需法务审阅 | [`legal-fan-out.md`](./legal-fan-out.md) | 用户端 / 管理端登录与页脚 |
-| 登录日志（示例分页） | 分页查询登录记录，演示 `@NeedAop` + `PageResponse` + PageHelper；管理端全量、用户端仅本人 | `../api/auth-login.md` | `../demo-static/web/admin/login-logs.html`、`../demo-static/web/user/login-logs.html` |
+| 登录日志 | 分页查询登录记录与参考IP归属地；管理端全量、用户端仅本人，详见 [归属地需求](login-ip-location.md) | `../api/auth-login.md` | `../demo-static/web/admin/login-logs.html`、`../demo-static/web/user/login-logs.html` |
 | 健康检查 | 全产品线统一方案（Standards §13）的落地实现：存活 / 就绪 / 全量三端点 + 组件化探针；供部署脚本与集中巡检平台 `bgssai-healthcheck` 调用 | `../api/health-check.md`（详设 `../architecture/health-check-design.md`） | 无（非功能需求，无用户界面，按 Standards §0 不走原型一步） |
 | MCP 服务 | 用户端 Streamable HTTP MCP + PAT；MCP Connectors（Claude / Codex / Cursor / Grok Bot / Bgssai Bot）；tagline「Connect your AI tools to bgssai」；只读包装登录日志与健康探针 | `../api/MCP.md` | `../demo-static/web/user/mcp-tokens.html` |
 | 站内在线客服 | 对话气泡留言 / 会话 + 聊内提工单；管理端处理台含工单状态；会话 OPEN/PENDING/CLOSED | [`in-app-support.md`](./in-app-support.md) · [`../api/in-app-support.md`](../api/in-app-support.md) | 用户端 `support-chat` · 管理端 `support-inbox` |

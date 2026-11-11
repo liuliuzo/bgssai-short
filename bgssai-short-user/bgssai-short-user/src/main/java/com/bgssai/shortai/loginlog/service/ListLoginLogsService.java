@@ -11,6 +11,7 @@ import com.bgssai.shortai.common.ShanghaiClock;
 import com.bgssai.shortai.common.aop.UserContext;
 import com.bgssai.shortai.common.exception.UnauthorizedException;
 import com.bgssai.shortai.loginlog.dto.LoginLogItem;
+import com.bgssai.shortai.loginlog.location.LoginIpLocationResolver;
 import com.bgssai.shortai.mapper.LoginLogMapper;
 import com.bgssai.shortai.model.LoginLog;
 import com.bgssai.shortai.model.LoginLogExample;
@@ -30,6 +31,9 @@ public class ListLoginLogsService {
 
     @Autowired
     private LoginLogMapper loginLogMapper;
+
+    @Autowired
+    private LoginIpLocationResolver ipLocationResolver;
 
     public PageResponse list(int pageNum, int pageSize) {
         String currentUserId = UserContext.getUserId();
@@ -56,6 +60,7 @@ public class ListLoginLogsService {
             item.setUserId(row.getUserId());
             item.setAction(row.getAction());
             item.setIpAddress(row.getIpAddress());
+            item.setIpLocation(ipLocationResolver.resolve(row.getIpAddress()));
             item.setUserAgent(row.getUserAgent());
             item.setCreateTime(ShanghaiClock.format(row.getCreateTime()));
             items.add(item);

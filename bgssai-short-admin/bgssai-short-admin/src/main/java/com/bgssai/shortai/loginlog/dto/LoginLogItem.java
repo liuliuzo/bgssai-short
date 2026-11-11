@@ -15,6 +15,8 @@ public class LoginLogItem {
 
     private String ipAddress;
 
+    private String ipLocation;
+
     private String userAgent;
 
     private String createTime;
@@ -53,6 +55,14 @@ public class LoginLogItem {
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    public String getIpLocation() {
+        return ipLocation;
+    }
+
+    public void setIpLocation(String ipLocation) {
+        this.ipLocation = ipLocation;
     }
 
     public void setUserAgent(String userAgent) {

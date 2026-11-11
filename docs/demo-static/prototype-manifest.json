@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "2a4f33744e9f52065975b79983b416f4c3fa0ed7d4c3b939118beb3084f936f1",
-  "code_contract_digest": "9522c2fee9fcd8ea77be623d6e4cf868080d10d88a129088732d4e4288964e8a",
+  "prototype_bundle_digest": "a1c7ac6d37617221497d43bdfe0e6ce5eafc7aaa83f8b5ba4bccdba09f02c0fa",
+  "code_contract_digest": "94a693f3471baec62f24a45cbc63ae8e7d80f823a5febe34cb2a00a021713b25",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -195,7 +195,7 @@
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin-react/src/pages/loginLogs/LoginLogsPage.jsx",
-      "sha256": "db0c398f5c1ab03b6cc67a327850746b14177ff3e7e7aa45d97250d7dc73af1e"
+      "sha256": "74b6e825d2d0b73186de2f5f57a299bc9c837af4228b368a260967d75b8f1981"
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin-react/src/pages/payMerchants/PayMerchantsPage.jsx",
@@ -291,7 +291,7 @@
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/login/service/AdminLoginService.java",
-      "sha256": "05b9129e88fb11f5f3b65fb3d2e820d89c213b50e653155971999d50889688f4"
+      "sha256": "ad9367472ef51499d9ede36d9bc311cc01075c77105d323a3571d80958cfef3c"
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/login/service/PasswordService.java",
@@ -303,7 +303,7 @@
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/loginlog/service/ListLoginLogsService.java",
-      "sha256": "b9652c4156fe9b46a78e45efb03db363321fd9071c326b18c0561fbe36d1fb90"
+      "sha256": "9076c9c3be8ef83f68a3b0c0bc6061aec6425b4dc79c0a26fe4e1ffbbf9154ba"
     },
     {
       "path": "bgssai-short-admin/bgssai-short-admin/src/main/java/com/bgssai/shortai/loginlog/ui/ListLoginLogsController.java",
@@ -503,7 +503,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/loginLogs/LoginLogsPage.jsx",
-      "sha256": "5457a3c0bf83d58f974376e7781c29f16f4ba7d8620f688a4e6f12e83ba54591"
+      "sha256": "99a87b26174ef296bb08319e9b1c5856dc6235f137dca143a1f58bb4cc74acb4"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/mcp/McpTokens.jsx",
@@ -647,7 +647,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/service/LoginAuditService.java",
-      "sha256": "de89bd944f06b4b18a4f5871c16d2e5d6ef616189da0fd81ca3976d33a70a557"
+      "sha256": "bf0a4eee55f7bdd9c2ed1323f8a3f9788b611cf1d3a64cd97a152cd44de5e9fc"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/login/service/OAuthAuthorizeUrlService.java",
@@ -703,7 +703,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/loginlog/service/ListLoginLogsService.java",
-      "sha256": "ebe6211625244fe102b7da145ff80b4e5ddac7bc0921ffe453fb5cad38a4a135"
+      "sha256": "f5fd605faf5452f893cc08f9f385354be64730adc2a693424ddfc1f7856af168"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/loginlog/ui/ListLoginLogsController.java",
@@ -1538,7 +1538,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/login-logs.html",
-      "sha256": "c3135231d02f09d18dbbe2eb09f69b7bfee1944501aa4390d86b0a8645b21e21",
+      "sha256": "9c47fe973b3048aac2a91fbd874bb61dab9dcdac49f97802e371c7227827a044",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
@@ -2063,7 +2063,7 @@
     },
     {
       "path": "docs/demo-static/web/user/login-logs.html",
-      "sha256": "6d679bc1f85cefc12930d32cdf0184ad3892f5221eee4ea1ee8813163f3d3d4d",
+      "sha256": "601c7c9a296549765731deb5d66fca0a46480edd5d05096ac1d922c57c6944d6",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

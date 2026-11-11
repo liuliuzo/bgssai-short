@@ -10,6 +10,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.bgssai.shortai.mapper.LoginLogMapper;
+import com.bgssai.shortai.loginlog.location.LoginClientIp;
 import com.bgssai.shortai.model.LoginLog;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,14 +62,6 @@ public class LoginAuditService {
     }
 
     private static String resolveIp(HttpServletRequest req) {
-        if (req == null) {
-            return null;
-        }
-        String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) {
-            int comma = xff.indexOf(',');
-            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
-        }
-        return req.getRemoteAddr();
+        return LoginClientIp.resolve(req);
     }
 }
