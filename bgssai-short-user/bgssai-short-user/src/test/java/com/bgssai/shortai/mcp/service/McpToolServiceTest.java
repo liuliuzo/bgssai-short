@@ -118,7 +118,7 @@ class McpToolServiceTest {
     @Test
     void listToolDefinitions_containsAllBusinessAndProbeTools() {
         ArrayNode tools = service.listToolDefinitions();
-        assertEquals(27, tools.size());
+        assertEquals(28, tools.size());
         List<String> names = new ArrayList<>();
         for (JsonNode t : tools) {
             names.add(t.get("name").asText());

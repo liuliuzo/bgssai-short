@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "f3ebe12b932ff13333a7e0185f9f75b201c4ee481e97d9afb0e02a080e0f542d",
-  "code_contract_digest": "9c76b628bd2c8933860626a9e1c8f8e943610897c618050fa6a09bf9d9cd08e9",
+  "prototype_bundle_digest": "5b64f466ce8aed4823e28f657fe8c83adb5ace30d0d9361df72d99da466979a1",
+  "code_contract_digest": "fc9c650559f72bbf519428ab53506662cd3bd031eb86e874d2ac3a21b9267570",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -604,7 +604,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/billing/UsageReceiptService.java",
-      "sha256": "0f5c3c75694e2baa5ca15141338897c589051a412e0777ea688f5d50eb3442bb"
+      "sha256": "3a97cbfbbbfad2d668f1bccede2aafab34c1de7af10b1761e29c55e4ee96c8c4"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/centralledger/service/CentralLedgerService.java",
@@ -712,7 +712,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpProductionService.java",
-      "sha256": "72ffff8445daada50f8c3969ca2e50fd5a89d3c33b48e5a0af6c89f49424efd7"
+      "sha256": "9f1bee7444e8d236827da87956d4fabe0a5a6dbd797a0c9a4812200ba9d819d2"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/mcp/service/McpProtocolService.java",
@@ -760,7 +760,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AiTaskService.java",
-      "sha256": "21d283ad5109d7dd17b98a99f2ce347f42fecca62c08757dd80dc24c89917851"
+      "sha256": "2c2d741db5750b86da1c077a45ec3c34d07a7f08c409243fa4b389d41edeef3f"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AssetService.java",
@@ -2114,7 +2114,7 @@
     },
     {
       "path": "docs/demo-static/web/user/mcp-tokens.html",
-      "sha256": "57898fbb63744db5b517b0b94dc86ed549bd35cdd4ff873720d0b099644dd14e",
+      "sha256": "827ee664b8a0984dbaac110773dcd524962e15fa02eecc1d1531332c9f715867",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2408,7 +2408,7 @@
     },
     {
       "path": "docs/demo-static/web/user/task-center.html",
-      "sha256": "dbd98e0478e69ef67859557e15da19d23fb43b92d8f53bfeaacf5ff50c27040d",
+      "sha256": "4e219160a57beb44a2daabe5adb12bb5619699be3088f775fb62d564a45a21e9",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

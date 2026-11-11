@@ -23,6 +23,37 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class TencentTokenHubAiProviderTest {
 
     @Test
+    void videoRecoveryOnlyQueriesExistingRequestAndReusesReceipt() {
+        FakeClient http = new FakeClient();
+        http.gets.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"succeeded\",\"data\":[{\"url\":\"/v1/videos/generations/video_0123456789abcdef01234567/content?model=bgssai-video\"}]}");
+        http.bytes = new byte[] {1};
+        var p = provider(http,"key");
+        var receipts = org.mockito.Mockito.mock(com.bgssai.shortai.billing.UsageReceiptService.class);
+        var receipt = new com.bgssai.shortai.billing.UsageReceiptRow();
+        String id="981ab970-447e-4a04-a2f0-a085ebbf435b";
+        org.mockito.Mockito.when(receipts.resumeVideo(id,"https://www.bgssai-tokenhub.cn","key","bgssai-video")).thenReturn(receipt);
+        org.springframework.test.util.ReflectionTestUtils.setField(p,"receipts",receipts);
+        var req=request("VIDEO","bgssai-video","original");req.getParams().put("resume_request_id",id);
+        assertArrayEquals(new byte[]{1},p.execute(req).getBinaryContent());
+        assertTrue(http.postedUrls.isEmpty());
+        assertEquals("https://www.bgssai-tokenhub.cn/v1/videos/generations/by-request/"+id+"?model=bgssai-video",http.polledUrls.get(0));
+        assertEquals(2,http.polledUrls.size());
+        org.mockito.Mockito.verify(receipts,org.mockito.Mockito.never()).begin(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString());
+        org.mockito.Mockito.verify(receipts).refresh(receipt,"key");
+    }
+
+    @Test
+    void unavailableRecoveryQueryNeverSubmitsReplacementGeneration() {
+        FakeClient http=new FakeClient();var p=provider(http,"key");
+        var receipts=org.mockito.Mockito.mock(com.bgssai.shortai.billing.UsageReceiptService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(p,"receipts",receipts);
+        var req=request("VIDEO","bgssai-video","test");req.getParams().put("resume_request_id","request");
+        assertThrows(BizException.class,()->p.execute(req));
+        assertTrue(http.postedUrls.isEmpty());assertEquals(1,http.polledUrls.size());
+    }
+
+    @Test
     void legacyCompanySelectionSendsCanonicalGatewayModelAndKeepsTimeout() {
         var mapper = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.AiModelConfigMapper.class);
         var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
