@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,8 @@ import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
+import com.bgssai.shortai.mapper.ShortAiTaskMapper;
+import com.bgssai.shortai.model.ShortAiTaskExample;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortContinuityIssueMapper;
 import com.bgssai.shortai.mapper.ShortSceneCardMapper;
@@ -43,6 +46,8 @@ public class CharacterService {
     private WorkAccessService workAccessService;
     @Autowired
     private AiTaskQueue aiTaskQueue;
+    @Autowired
+    private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired
     private ShortCharacterMapper shortCharacterMapper;
     @Autowired
@@ -96,21 +101,24 @@ public class CharacterService {
         ShortCharacter row = requireCharacter(req == null ? null : req.getCharacterId());
         ShortCharacter patch = new ShortCharacter();
         boolean settingChanged = false;
-        if (req.getCharacterName() != null) {
+        if (req.getCharacterName() != null && !Objects.equals(req.getCharacterName(), row.getCharacterName())) {
             patch.setCharacterName(req.getCharacterName());
             row.setCharacterName(req.getCharacterName());
             settingChanged = true;
         }
-        if (req.getAppearancePrompt() != null) {
+        if (req.getAppearancePrompt() != null && !Objects.equals(req.getAppearancePrompt(), row.getAppearancePrompt())) {
             patch.setAppearancePrompt(req.getAppearancePrompt());
             row.setAppearancePrompt(req.getAppearancePrompt());
             settingChanged = true;
         }
-        if (req.getCharacterRole() != null) {
+        if (req.getCharacterRole() != null && !Objects.equals(req.getCharacterRole(), row.getCharacterRole())) {
             patch.setCharacterRole(req.getCharacterRole());
             row.setCharacterRole(req.getCharacterRole());
             settingChanged = true;
         }
+        if (!settingChanged) return Responses.ok("ok");
+        patch.setCardStatus("DRAFT");
+        row.setCardStatus("DRAFT");
         patch.setUpdatedTime(new Date());
         ShortCharacterExample up = new ShortCharacterExample();
         up.createCriteria().andIdEqualTo(row.getId());
@@ -201,15 +209,17 @@ public class CharacterService {
         ShortCharacterExample cx = new ShortCharacterExample();
         cx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
         cx.setOrderByClause("id asc");
+        List<ShortCharacter> characterRows = shortCharacterMapper.selectByExample(cx);
         List<Map<String, Object>> characters = new ArrayList<>();
-        for (ShortCharacter row : shortCharacterMapper.selectByExample(cx)) {
+        for (ShortCharacter row : characterRows) {
             characters.add(characterView(row, shots));
         }
         ShortSceneCardExample sx = new ShortSceneCardExample();
         sx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortSceneCard> sceneRows = shortSceneCardMapper.selectByExample(sx);
         List<Map<String, Object>> scenes = new ArrayList<>();
         List<Map<String, Object>> props = new ArrayList<>();
-        for (ShortSceneCard row : shortSceneCardMapper.selectByExample(sx)) {
+        for (ShortSceneCard row : sceneRows) {
             Map<String, Object> item = sceneView(row, shots);
             if (ShotConsistency.isType(row, "PROP")) {
                 props.add(item);
@@ -226,7 +236,7 @@ public class CharacterService {
             if (!hasRef) {
                 unbound++;
             }
-            if (Integer.valueOf(1).equals(shot.getBlockedFlag())) {
+            if (ShotConsistency.hasUnlockedRefs(shot, characterRows, sceneRows)) {
                 unlocked++;
             }
         }
@@ -258,9 +268,41 @@ public class CharacterService {
         return Responses.ok(result);
     }
 
+    @Transactional
+    public ApiResponse updateScene(CharacterReq req) {
+        ShortSceneCard row = requireScene(req == null ? null : req.getSceneCardId());
+        ShortSceneCard patch = new ShortSceneCard();
+        boolean changed = false;
+        if (req.getCardName() != null && !Objects.equals(req.getCardName(), row.getCardName())) {
+            if (req.getCardName().isBlank()) throw new BizException(CommonErrorCode.INVALID_PARAM, "card_name required");
+            patch.setCardName(req.getCardName());
+            row.setCardName(req.getCardName());
+            changed = true;
+        }
+        if (req.getAppearancePrompt() != null && !Objects.equals(req.getAppearancePrompt(), row.getAppearancePrompt())) {
+            patch.setAppearancePrompt(req.getAppearancePrompt());
+            row.setAppearancePrompt(req.getAppearancePrompt());
+            changed = true;
+        }
+        if (!changed) return Responses.ok("ok");
+        patch.setCardStatus("DRAFT");
+        row.setCardStatus("DRAFT");
+        patch.setUpdatedTime(new Date());
+        ShortSceneCardExample up = new ShortSceneCardExample();
+        up.createCriteria().andIdEqualTo(row.getId());
+        shortSceneCardMapper.updateByExampleSelective(patch, up);
+        row.setCardStatus(patch.getCardStatus());
+        if (patch.getRefImageAssetId() != null) row.setRefImageAssetId(patch.getRefImageAssetId());
+        markShotsStaleForScene(row);
+        return Responses.ok("ok");
+    }
+
     public ApiResponse portraitScene(CharacterReq req) {
         ShortSceneCard row = requireScene(req == null ? null : req.getSceneCardId());
         int count = req.getCandidateCount() == null ? 4 : req.getCandidateCount();
+        if (count != 2 && count != 4 && count != 8) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "candidate_count must be 2/4/8");
+        }
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("scene_card_id", row.getSceneCardId());
         request.put("candidate_count", count);
@@ -281,6 +323,8 @@ public class CharacterService {
         ShortSceneCardExample up = new ShortSceneCardExample();
         up.createCriteria().andIdEqualTo(row.getId());
         shortSceneCardMapper.updateByExampleSelective(patch, up);
+        row.setCardStatus(patch.getCardStatus());
+        if (patch.getRefImageAssetId() != null) row.setRefImageAssetId(patch.getRefImageAssetId());
         markShotsStaleForScene(row);
         return Responses.ok("ok");
     }
@@ -288,6 +332,8 @@ public class CharacterService {
     private void markShotsStaleForCharacter(ShortCharacter character) {
         ShortShotExample ex = new ShortShotExample();
         ex.createCriteria().andWorkIdEqualTo(character.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> characters = workCharacters(character.getWorkId());
+        List<ShortSceneCard> scenes = workScenes(character.getWorkId());
         Date now = new Date();
         String label = character.getCharacterName() == null || character.getCharacterName().isBlank()
                 ? character.getCharacterId()
@@ -301,7 +347,8 @@ public class CharacterService {
             }
             com.bgssai.shortai.model.ShortShot patch = new com.bgssai.shortai.model.ShortShot();
             patch.setStaleFlag(1);
-            patch.setBlockedFlag(0);
+            patch.setBlockedFlag(ShotConsistency.hasUnlockedRefs(shot, characters, scenes)
+                    || ShotConsistency.shotNeedsPrompt(shot) ? 1 : 0);
             patch.setUpdatedTime(now);
             ShortShotExample up = new ShortShotExample();
             up.createCriteria().andIdEqualTo(shot.getId());
@@ -328,6 +375,8 @@ public class CharacterService {
     private void markShotsStaleForScene(ShortSceneCard scene) {
         ShortShotExample ex = new ShortShotExample();
         ex.createCriteria().andWorkIdEqualTo(scene.getWorkId()).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> characters = workCharacters(scene.getWorkId());
+        List<ShortSceneCard> scenes = workScenes(scene.getWorkId());
         Date now = new Date();
         for (com.bgssai.shortai.model.ShortShot shot : shortShotMapper.selectByExample(ex)) {
             if ("LOCKED".equals(shot.getShotStatus())) {
@@ -342,12 +391,35 @@ public class CharacterService {
             }
             com.bgssai.shortai.model.ShortShot patch = new com.bgssai.shortai.model.ShortShot();
             patch.setStaleFlag(1);
-            patch.setBlockedFlag(0);
+            patch.setBlockedFlag(ShotConsistency.hasUnlockedRefs(shot, characters, scenes)
+                    || ShotConsistency.shotNeedsPrompt(shot) ? 1 : 0);
             patch.setUpdatedTime(now);
             ShortShotExample up = new ShortShotExample();
             up.createCriteria().andIdEqualTo(shot.getId());
             shortShotMapper.updateByExampleSelective(patch, up);
         }
+    }
+
+    private List<ShortCharacter> workCharacters(String workId) {
+        ShortCharacterExample ex = new ShortCharacterExample();
+        ex.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        return shortCharacterMapper.selectByExample(ex);
+    }
+
+    private List<ShortSceneCard> workScenes(String workId) {
+        ShortSceneCardExample ex = new ShortSceneCardExample();
+        ex.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        return shortSceneCardMapper.selectByExample(ex);
+    }
+
+    private String cardStatus(String persisted, String targetId) {
+        if ("LOCKED".equals(persisted)) return persisted;
+        ShortAiTaskExample tasks = new ShortAiTaskExample();
+        tasks.createCriteria().andTargetIdEqualTo(targetId).andTaskTypeEqualTo("IMAGE")
+                .andTargetTypeIn(List.of("PORTRAIT", "SCENE_PORTRAIT"))
+                .andTaskStatusIn(List.of("QUEUED", "RUNNING"));
+        if (shortAiTaskMapper.countByExample(tasks) > 0) return "GENERATING";
+        return "GENERATING".equals(persisted) ? "DRAFT" : persisted;
     }
 
     private List<com.bgssai.shortai.model.ShortShot> workShots(String workId) {
@@ -366,7 +438,7 @@ public class CharacterService {
         item.put("work_id", row.getWorkId());
         item.put("character_name", row.getCharacterName());
         item.put("character_role", row.getCharacterRole());
-        item.put("card_status", row.getCardStatus());
+        item.put("card_status", cardStatus(row.getCardStatus(), row.getCharacterId()));
         item.put("appearance_prompt", row.getAppearancePrompt());
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));
@@ -384,7 +456,7 @@ public class CharacterService {
         item.put("scene_card_id", row.getSceneCardId());
         item.put("card_name", row.getCardName());
         item.put("card_type", row.getCardType() == null ? "SCENE" : row.getCardType());
-        item.put("card_status", row.getCardStatus());
+        item.put("card_status", cardStatus(row.getCardStatus(), row.getSceneCardId()));
         item.put("appearance_prompt", row.getAppearancePrompt());
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));

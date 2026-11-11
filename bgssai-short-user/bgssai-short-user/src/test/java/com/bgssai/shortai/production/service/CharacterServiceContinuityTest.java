@@ -72,6 +72,7 @@ class CharacterServiceContinuityTest {
         inject(characterService, "workAccessService", workAccessService);
         inject(characterService, "shortCharacterMapper", characterMapper);
         inject(characterService, "shortShotMapper", shotMapper);
+        inject(characterService, "shortSceneCardMapper", mock(com.bgssai.shortai.mapper.ShortSceneCardMapper.class));
         inject(characterService, "shortContinuityIssueMapper", issueMapper);
 
         CharacterReq req = new CharacterReq();

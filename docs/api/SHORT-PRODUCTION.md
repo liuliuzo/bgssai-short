@@ -151,7 +151,7 @@ lock：`{ "character_id", "asset_id" }`
 
 `card_type` 可选 `SCENE` / `PROP`；缺省两类都回。
 
-### POST /bgssai/user/scene-cards/create|lock|portrait-generate
+### POST /bgssai/user/scene-cards/create|update|lock|portrait-generate
 
 create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
 
@@ -641,3 +641,10 @@ query：`page_num` `page_size` `keyword` `enabled_flag`（1 正常 / 0 冻结）
 ### POST /bgssai/admin/creators/toggle-enabled
 
 `{ "user_id", "enabled_flag": 0 }`
+
+
+### 参考卡编辑与候选状态（2026-11-11）
+
+`POST /bgssai/user/scene-cards/update` 的 JSON Body 为 `scene_card_id` 与可选 `card_name`、`appearance_prompt`，适用于本人 SCENE / PROP 卡。名称修改不可为空，不接受转移作品、用户或改变类型；实际修改后状态为 DRAFT，相同内容重复保存不失效。非定稿引用镜头保留所有绑定，标记 stale 并按实际卡状态重算 blocked。
+
+`card_status` 的 GENERATING 只表示当前存在 QUEUED / RUNNING 候选任务；成功候选待选择时为 DRAFT。后台完成不覆盖 LOCKED，候选完成不替用户锁定。`unlocked_ref_count` 是存在不可用实际引用的镜头数，每镜最多计 1；不包含仅缺少画面描述导致的阻塞。缺失卡、非 LOCKED、空参考资产均视为不可用。

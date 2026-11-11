@@ -250,11 +250,11 @@ public class McpProductionService {
             if (count != 2 && count != 4 && count != 8) throw new IllegalArgumentException("candidate_count 必须为 2/4/8");
             String appearance = optionalText(args, "appearance_prompt");
             if (appearance != null) {
-                if (!"CHARACTER".equals(type) || appearance.isBlank()) {
-                    throw new IllegalArgumentException("appearance_prompt 仅支持角色，且不能为空");
+                if (appearance.isBlank()) {
+                    throw new IllegalArgumentException("appearance_prompt 不能为空");
                 }
                 req.setAppearancePrompt(appearance);
-                result(characters.updateCharacter(req));
+                result("CHARACTER".equals(type) ? characters.updateCharacter(req) : characters.updateScene(req));
             }
             req.setCandidateCount(count);
             req.setModelCode(optionalText(args, "model_code"));

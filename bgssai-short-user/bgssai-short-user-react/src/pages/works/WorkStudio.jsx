@@ -370,7 +370,7 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
 }
 
 function cardStatusName(status) {
-  return { DRAFT: '草稿', LOCKED: '已锁定', READY: '已就绪' }[status] || status || '-'
+  return { CANDIDATE: '待建卡', DRAFT: '待定妆', GENERATING: '生成中', LOCKED: '已锁定' }[status] || status || '-'
 }
 
 function CharacterPane({ work }) {

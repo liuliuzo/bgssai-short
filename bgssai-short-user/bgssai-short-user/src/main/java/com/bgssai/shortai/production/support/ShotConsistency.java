@@ -117,6 +117,31 @@ public final class ShotConsistency {
         return false;
     }
 
+    public static boolean hasUnlockedRefs(ShortShot shot, List<ShortCharacter> characters,
+            List<ShortSceneCard> scenes) {
+        for (String id : characterIds(shot.getCharacterRefJson())) {
+            ShortCharacter card = characters == null ? null : characters.stream()
+                    .filter(c -> id.equals(c.getCharacterId())).findFirst().orElse(null);
+            if (card == null || !usableReference(card.getCardStatus(), card.getRefImageAssetId())) return true;
+        }
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()
+                && !usableScene(scenes, shot.getSceneCardId(), "SCENE")) return true;
+        for (String id : propIds(shot.getPropRefJson())) {
+            if (!usableScene(scenes, id, "PROP")) return true;
+        }
+        return false;
+    }
+
+    private static boolean usableScene(List<ShortSceneCard> scenes, String id, String type) {
+        ShortSceneCard card = scenes == null ? null : scenes.stream()
+                .filter(c -> id.equals(c.getSceneCardId()) && isType(c, type)).findFirst().orElse(null);
+        return card != null && usableReference(card.getCardStatus(), card.getRefImageAssetId());
+    }
+
+    private static boolean usableReference(String status, String assetId) {
+        return "LOCKED".equals(status) && assetId != null && !assetId.isBlank();
+    }
+
     public static boolean isType(ShortSceneCard card, String expected) {
         if (card == null) {
             return false;
