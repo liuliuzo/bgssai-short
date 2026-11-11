@@ -23,7 +23,7 @@ import com.bgssai.shortai.secret.SysSecretReader;
 /**
  * provider_code=TENCENT_TOKENHUB. The user picks a model id. This client sends
  * that id to BGSSAI TokenHub's capability API. Vendor hosts and wand paths are
- * not used for image, video, speech, or text.
+ * not used for image, video, speech, music, or text.
  */
 @Component
 public class TencentTokenHubAiProvider implements AiProvider {
@@ -38,7 +38,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private static final String SPEECH_PATH = "/v1/audio/speech";
     private static final String ASR_SUBMIT = "/v1/wand/asrproxy/async_create";
     private static final String ASR_TASK = "/v1/wand/asrproxy/tasks/{task_id}";
-    private static final String MUSIC_PATH = "/v1/wand/minimax-music/generation";
+    private static final String NATIVE_PATH = "/v1/native";
 
     private static final Logger log = LoggerFactory.getLogger(TencentTokenHubAiProvider.class);
 
@@ -110,7 +110,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 case "VIDEO" -> video(base, apiKey, cfg, request, timeoutSec);
                 case "VOICE" -> speech(base, apiKey, cfg, request, timeoutSec);
                 case "ASR" -> asr(base, apiKey, cfg, request, timeoutSec);
-                case "MUSIC" -> music(base, apiKey, cfg, request, timeoutSec);
+                case "MUSIC" -> music(base, apiKey, request, timeoutSec);
                 default -> throw new BizException(CommonErrorCode.RULE_REJECT,
                         "unsupported ability for model gateway: " + ability);
             };
@@ -240,10 +240,16 @@ public class TencentTokenHubAiProvider implements AiProvider {
         return result;
     }
 
-    private AiProviderResult music(String base, String apiKey, Map<String, Object> cfg,
+    private AiProviderResult music(String base, String apiKey,
             AiProviderRequest request, int timeoutSec) throws Exception {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("model", request.getModel().getModelCode());
+        // TokenHub forwards native payloads verbatim; translate stored Tencent model aliases.
+        String model = request.getModel().getModelCode();
+        body.put("model", switch (model) {
+            case "minimax-music-v2.6" -> "music-2.6";
+            case "minimax-music-v3.0" -> "music-3.0";
+            default -> model;
+        });
         body.put("prompt", ProviderHttp.promptOf(request));
         String lyrics = ShortJson.text(request.param("lyrics"));
         if (!lyrics.isBlank()) {
@@ -252,7 +258,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
         body.put("is_instrumental", bool(request.param("is_instrumental"), true));
         body.put("audio_setting", audioSetting());
         body.put("output_format", "url");
-        Map<String, Object> resp = post(base + path(cfg, "music_path", MUSIC_PATH), apiKey, body,
+        // minimax/music has no model path parameter, so envelope.model must be absent.
+        Map<String, Object> envelope = Map.of("provider", "minimax", "operation", "music", "payload", body);
+        Map<String, Object> resp = post(base + NATIVE_PATH, apiKey, envelope,
                 Math.min(180, timeoutSec));
         assertBaseOk(resp, "music");
         Map<String, Object> data = child(resp, "data");

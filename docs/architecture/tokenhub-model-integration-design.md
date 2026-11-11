@@ -55,7 +55,7 @@ Short 只使用 CN profile。模型行不保存主机。
 | VIDEO | `kling-video-v3` | 文生 `/v1/wand/kling/text-to-video`；图生 `/v1/wand/kling/image-to-video` | `GET /v1/wand/kling/tasks/{task_id}` | `data[].outputs[].url` |
 | VOICE | `minimax-speech-2.8-hd` | `POST /v1/wand/minimax-tts/sync_tts` | 同步 | `data.audio` |
 | ASR | `hy-asr-3.0-preview` | `POST /v1/wand/asrproxy/async_create` | `GET /v1/wand/asrproxy/tasks/{task_id}` | `output.text` / `sentences` |
-| MUSIC | `minimax-music-v2.6` | `POST /v1/wand/minimax-music/generation` | 同步 | `data.audio` |
+| MUSIC | `minimax-music-v2.6` | `POST /v1/native`（`minimax/music`） | 同步 | `data.audio` |
 
 ### 3.1 标准请求映射
 
@@ -190,3 +190,13 @@ TokenHub `config_json` 共同字段：
 并在没有本地订阅时发放 FREE。创建作品先做额度预检，不足返回 `4007`，不入队。Worker 在请求模型前再查一次。
 运维依赖：中枢公司密钥已配置，且网关目录提供 `bgssai-chat`。个人 Chat 授权不是大纲前置条件。
 账号若已经绑定 Chat，中央账本余额不足仍会在入队前被拒绝。
+
+### 音乐原生网关契约（2026-11-11）
+
+MUSIC 使用环境 profile 指定的国内 BGSSAI TokenHub，固定提交 `/v1/native`，请求 envelope 为 `provider=minimax`、`operation=music`、`payload`。该操作的 `model_required=false`，不得传 envelope 顶层 `model`；模型只放入 `payload.model`。历史模型行中的 `music_path` 不再控制请求地址，种子也不再写入旧腾讯专用路径，无须修改已有任务记录。
+
+模型目录保留创作者已选择的 ID；发送原生请求时，将腾讯别名 `minimax-music-v2.6` / `minimax-music-v3.0` 分别转为供应商 ID `music-2.6` / `music-3.0`。已是原生 ID 时保留。`prompt`、可选 `lyrics`、`is_instrumental`、`audio_setting` 与 `output_format=url` 放入 payload。继续使用中枢凭证与用量回执，供应商凭证由中枢管理。响应仍按 `base_resp` 检查错误，再解析 `data.audio` 和 `extra_info` 音频时长。
+
+契约依据：[MiniMax 官方音乐 API](https://platform.minimax.cn/docs/api-reference/music-generation)、TokenHub CN 的 `NativeRequestFactory` 与只读 `/v1/native/operations` 目录。供应商文档注明音乐付费 API 的账户资格限制，路由存在和离线测试通过不代表当前供应商账户已获调用资格，实际生成需单独验收。
+
+回归覆盖：dev/prod 国内地址、旧路径配置失效、native envelope 顶层字段限制、模型别名转换、歌词/纯音乐参数、URL/hex 音频结果和供应商错误。用户界面、业务请求 DTO、表结构及任务状态不变。

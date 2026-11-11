@@ -197,7 +197,55 @@ class TencentTokenHubAiProviderTest {
         AiProviderResult result = provider(http, "key").execute(request("MUSIC", "minimax-music-v2.6", "悬疑纯音乐"));
         assertArrayEquals(http.bytes, result.getBinaryContent());
         assertEquals(30, result.getDurationSec());
-        assertTrue(http.postedUrls.get(0).endsWith("/v1/wand/minimax-music/generation"));
+        assertEquals("https://www.bgssai-tokenhub.cn/v1/native", http.postedUrls.get(0));
+        Map<String, Object> envelope = ShortJson.map(http.postedBodies.get(0));
+        assertEquals(java.util.Set.of("provider", "operation", "payload"), envelope.keySet());
+        assertEquals("minimax", envelope.get("provider"));
+        assertEquals("music", envelope.get("operation"));
+        Map<?, ?> payload = (Map<?, ?>) envelope.get("payload");
+        assertEquals("music-2.6", payload.get("model"));
+        assertEquals("悬疑纯音乐", payload.get("prompt"));
+        assertEquals(true, payload.get("is_instrumental"));
+        assertEquals("url", payload.get("output_format"));
+        assertEquals("mp3", ((Map<?, ?>) payload.get("audio_setting")).get("format"));
+        assertEquals("Bearer key", http.postedHeaders.get(0).get("Authorization"));
+    }
+
+    @Test
+    void musicUsesDevNativeRouteDespiteLegacyStoredPathAndKeepsLyrics() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"base_resp\":{\"status_code\":0},\"data\":{\"audio\":\"0708\"},\"extra_info\":{\"audio_length\":2100}}");
+        TencentTokenHubAiProvider provider = new TencentTokenHubAiProvider(
+                new SysSecretReader(secretRef -> "key"), http, ms -> {},
+                "https://dev.user.bgssai-tokenhub.cn/");
+        AiProviderRequest request = request("MUSIC", "minimax-music-v3.0", "测试歌曲");
+        request.getModel().setConfigJson("{\"hub\":\"cn\",\"base_url\":\"https://www.bgssai-tokenhub.cn\","
+                + "\"music_path\":\"/v1/wand/minimax-music/generation\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        request.getParams().put("lyrics", "[Verse] 测试歌词");
+        request.getParams().put("is_instrumental", false);
+        AiProviderResult result = provider.execute(request);
+        assertEquals("https://dev.user.bgssai-tokenhub.cn/v1/native", http.postedUrls.get(0));
+        Map<String, Object> envelope = ShortJson.map(http.postedBodies.get(0));
+        assertTrue(!envelope.containsKey("model"));
+        Map<?, ?> payload = (Map<?, ?>) envelope.get("payload");
+        assertEquals("music-3.0", payload.get("model"));
+        assertEquals("[Verse] 测试歌词", payload.get("lyrics"));
+        assertEquals(false, payload.get("is_instrumental"));
+        assertArrayEquals(new byte[] { 7, 8 }, result.getBinaryContent());
+        assertEquals(3, result.getDurationSec());
+        assertEquals(0, http.downloads);
+    }
+
+    @Test
+    void musicPreservesNativeModelAndRejectsVendorFailureWithoutDownloading() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"base_resp\":{\"status_code\":1008,\"status_msg\":\"insufficient balance\"}}");
+        BizException ex = assertThrows(BizException.class,
+                () -> provider(http, "key").execute(request("MUSIC", "music-2.6", "测试音乐")));
+        assertEquals(CommonErrorCode.UPSTREAM_ERROR.code(), ex.getCode());
+        Map<?, ?> payload = (Map<?, ?>) ShortJson.map(http.postedBodies.get(0)).get("payload");
+        assertEquals("music-2.6", payload.get("model"));
+        assertEquals(0, http.downloads);
     }
 
     @Test
