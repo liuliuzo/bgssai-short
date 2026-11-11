@@ -167,7 +167,7 @@ public final class CatalogModelAlign {
         return switch (ability) {
             case "TEXT" -> List.of("bgssai-chat", "qwen", "qwen2.5", "qwen2");
             case "IMAGE" -> List.of("bgssai-image", "sd-turbo");
-            case "VIDEO" -> List.of("cogvideox", "cogvideox-5b", "bgssai-video");
+            case "VIDEO" -> List.of("bgssai-video");
             case "VOICE" -> List.of("bgssai-tts", "piper", "edge-tts");
             default -> List.of();
         };
@@ -178,7 +178,7 @@ public final class CatalogModelAlign {
         return switch (ability) {
             case "TEXT" -> "qwen".equals(value) || value.startsWith("qwen2") || "bgssai-chat".equals(value);
             case "IMAGE" -> "sd-turbo".equals(value) || "bgssai-image".equals(value);
-            case "VIDEO" -> value.startsWith("cogvideox") || "bgssai-video".equals(value);
+            case "VIDEO" -> "bgssai-video".equals(value);
             case "VOICE" -> "piper".equals(value) || "bgssai-tts".equals(value) || "edge-tts".equals(value);
             default -> false;
         };

@@ -23,6 +23,38 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class TencentTokenHubAiProviderTest {
 
     @Test
+    void legacyCompanySelectionSendsCanonicalGatewayModelAndKeepsTimeout() {
+        var mapper = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.AiModelConfigMapper.class);
+        var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var resolver = new com.bgssai.shortai.aimodel.AiModelResolveService();
+        org.springframework.test.util.ReflectionTestUtils.setField(resolver, "aiModelConfigMapper", mapper);
+        org.springframework.test.util.ReflectionTestUtils.setField(resolver, "aiProviderRegistry", registry);
+        AiProviderRequest req = request("VIDEO", "cogvideox", "test");
+        AiModelConfig legacy = req.getModel();
+        legacy.setModelId("m-tokenhub-video-cogvideox");
+        legacy.setAbilityType("VIDEO");
+        legacy.setEnabledFlag(1);
+        legacy.setDeletedFlag(0);
+        legacy.setTimeoutSec(900);
+        legacy.setUnitPriceCent(20);
+        legacy.setConfigJson("{\"hub\":\"cn\",\"public_alias\":\"bgssai-video\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        org.mockito.Mockito.when(mapper.selectByExample(org.mockito.ArgumentMatchers.any())).thenReturn(List.of(legacy));
+        org.mockito.Mockito.when(registry.resolvable(org.mockito.ArgumentMatchers.any())).thenReturn(true);
+        req.setModel(resolver.resolve("VIDEO", "bgssai-video"));
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"data\":[{\"url\":\"https://cdn.example/movie.mp4\"}]}");
+        http.bytes = new byte[] {1};
+        provider(http, "test-key").execute(req);
+        assertEquals("bgssai-video", ShortJson.map(http.postedBodies.get(0)).get("model"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.cn/"));
+        assertEquals(60, http.postedTimeouts.get(0)); // Existing submission cap; polling retains model budget.
+        assertEquals(900, req.getModel().getTimeoutSec());
+        assertEquals(900_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(req.getModel().getTimeoutSec()));
+        assertEquals("cogvideox", legacy.getModelCode());
+        assertEquals(20, req.getModel().getUnitPriceCent());
+    }
+
+    @Test
     void gatewayContentUsesConfiguredOriginAndBearerOnlyForExactModelRoute() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"data\":[{\"url\":\"/v1/videos/generations/cg1:video_0123456789abcdef01234567/content?model=bgssai-video\"}]}");
@@ -426,6 +458,7 @@ class TencentTokenHubAiProviderTest {
         private final Queue<String> gets = new ArrayDeque<>();
         private final List<String> postedUrls = new ArrayList<>();
         private final List<String> postedBodies = new ArrayList<>();
+        private final List<Integer> postedTimeouts = new ArrayList<>();
         private final List<Map<String, String>> postedHeaders = new ArrayList<>();
         private final List<String> polledUrls = new ArrayList<>();
         private final List<String> downloadedUrls = new ArrayList<>();
@@ -437,6 +470,7 @@ class TencentTokenHubAiProviderTest {
         public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
             postedUrls.add(url);
             postedBodies.add(body);
+            postedTimeouts.add(timeoutSec);
             postedHeaders.add(headers);
             return posts.remove();
         }
