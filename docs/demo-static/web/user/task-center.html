@@ -370,8 +370,9 @@
         <code>http 503</code>；网关 <code>code</code> 只留在服务日志。成功 <code>SUCCEEDED</code> 或
         <code>fail_reason_code</code> 为空时失败列留空，不展示「模型暂时不可用，请稍后重试或更换模型」）·
         <code>fail_reason_code</code>（<code>MODEL_TIMEOUT</code> /
-        <code>CONTENT_BLOCKED</code> / <code>ASSET_MISSING</code>）· <code>cost_cent</code> ·
+        <code>CONTENT_BLOCKED</code> / <code>ASSET_MISSING</code> / <code>STORAGE_UNAVAILABLE</code>）· <code>cost_cent</code> ·
         <code>queued_time</code> / <code>started_time</code> / <code>finished_time</code>。
+        素材存储依赖不可用时立即失败，提示「素材存储服务不可用，任务未完成，请联系管理员」，不冒充生成超时；不自动重新生成。
         提交与重试接口加 <code>@RateLimit</code>（USER 维度）；余额不足 <code>4007</code>、
         超预算未确认 <code>4008</code>、在途超限 <code>4011</code>。
       </div>

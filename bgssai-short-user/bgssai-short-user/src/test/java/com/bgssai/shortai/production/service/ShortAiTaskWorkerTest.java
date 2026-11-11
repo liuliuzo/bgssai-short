@@ -26,6 +26,82 @@ import com.bgssai.shortai.quota.service.QuotaConsumeService;
 class ShortAiTaskWorkerTest {
 
     @Test
+    void storageLinkageFailureImmediatelyFailsWithoutAssetOrSettlement() {
+        StorageFailureFixture fixture = storageFailure(new NoSuchMethodError("SDK binary mismatch"));
+        fixture.worker().tick();
+        org.mockito.ArgumentCaptor<ShortAiTask> patches = org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
+        verify(fixture.tasks(), org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
+        ShortAiTask failed = patches.getValue();
+        Assertions.assertEquals("FAILED", failed.getTaskStatus());
+        Assertions.assertEquals("STORAGE_UNAVAILABLE", failed.getFailReasonCode());
+        Assertions.assertEquals("素材存储服务不可用，任务未完成，请联系管理员", failed.getFailReason());
+        Assertions.assertNotNull(failed.getFinishedTime());
+        verify(fixture.assets(), never()).insertSelective(any());
+        verify(fixture.settlement(), never()).settle(any(), any(), anyInt());
+        verify(fixture.provider(), times(1)).execute(any());
+    }
+
+    @Test
+    void fatalVmErrorIsNotConvertedToARecoverableStorageFailure() {
+        StorageFailureFixture fixture = storageFailure(new OutOfMemoryError("test fatal error"));
+        Assertions.assertThrows(OutOfMemoryError.class, () -> fixture.worker().tick());
+        org.mockito.ArgumentCaptor<ShortAiTask> patches = org.mockito.ArgumentCaptor.forClass(ShortAiTask.class);
+        verify(fixture.tasks(), org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
+        Assertions.assertTrue(patches.getAllValues().stream().noneMatch(p -> "FAILED".equals(p.getTaskStatus())));
+        verify(fixture.assets(), never()).insertSelective(any());
+        verify(fixture.settlement(), never()).settle(any(), any(), anyInt());
+    }
+
+    private StorageFailureFixture storageFailure(Error error) {
+        ShortAiTaskMapper tasks = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
+        ShortTaskSettlementService settlement = org.mockito.Mockito.mock(ShortTaskSettlementService.class);
+        AiModelResolveService resolve = org.mockito.Mockito.mock(AiModelResolveService.class);
+        AiProviderRegistry registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var provider = org.mockito.Mockito.mock(com.bgssai.shortai.aiprovider.AiProvider.class);
+        var assets = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        var characters = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortCharacterMapper.class);
+        var storage = org.mockito.Mockito.mock(com.bgssai.shortai.storage.ObjectStorage.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", tasks);
+        ReflectionTestUtils.setField(worker, "settlement", settlement);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        ReflectionTestUtils.setField(worker, "shortAssetMapper", assets);
+        ReflectionTestUtils.setField(worker, "shortCharacterMapper", characters);
+        ReflectionTestUtils.setField(worker, "objectStorage", storage);
+        ReflectionTestUtils.setField(worker, "environment", new org.springframework.mock.env.MockEnvironment());
+        ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
+        ShortAiTask task = new ShortAiTask();
+        task.setId(9L);
+        task.setTaskId("t-storage-failure");
+        task.setUserId("u-test");
+        task.setWorkId("w-test");
+        task.setTaskStatus("QUEUED");
+        task.setTaskType("IMAGE");
+        task.setTargetType("PORTRAIT");
+        task.setTargetId("c-test");
+        task.setModelCode("bgssai-image");
+        task.setRequestJson("{\"candidate_count\":2}");
+        var character = new com.bgssai.shortai.model.ShortCharacter();
+        character.setCharacterId("c-test");
+        character.setCharacterName("Test character");
+        character.setUserId("u-test");
+        character.setWorkId("w-test");
+        when(tasks.selectOneByExample(any())).thenReturn(task);
+        when(tasks.updateByExampleSelective(any(), any())).thenReturn(1);
+        when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
+        when(characters.selectOneByExample(any())).thenReturn(character);
+        when(registry.resolve(any())).thenReturn(provider);
+        when(provider.execute(any())).thenReturn(com.bgssai.shortai.aiprovider.AiProviderResult.binary(new byte[] {1}, "image/png"));
+        when(storage.put(any(), any(), any())).thenThrow(error);
+        return new StorageFailureFixture(worker, tasks, assets, settlement, provider);
+    }
+
+    private record StorageFailureFixture(ShortAiTaskWorker worker, ShortAiTaskMapper tasks,
+            com.bgssai.shortai.mapper.ShortAssetMapper assets, ShortTaskSettlementService settlement,
+            com.bgssai.shortai.aiprovider.AiProvider provider) { }
+
+    @Test
     void casMissDoesNotSettle() {
         ShortAiTaskMapper mapper = org.mockito.Mockito.mock(ShortAiTaskMapper.class);
         ShortTaskSettlementService settlement = org.mockito.Mockito.mock(ShortTaskSettlementService.class);
