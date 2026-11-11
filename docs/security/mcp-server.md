@@ -13,3 +13,5 @@
   8. 批量分镜验证同分集归属并使用事务；参考图只能锁定该卡真实候选；BGM 沿用正式作品/分集资产检查。
   9. 任务 detail 复用正式所有权及公开 view，不返回 request_json；模型/声音目录不返回密钥或原始供应商配置；角色声音须来自正式产品目录。
   10. 成片真实 URL 与过期/占位保护由 FilmService 保留；MCP 不把未完成或失败任务伪装为可下载成品。
+  11. get_asset_download 直接使用 AssetService.getDownload 的 UserContext 归属检查与预签名；不使用缺少归属校验的 resolveUrl，不暴露存储 key 或配置。
+  12. lock_shot 仅 boolean confirm_review=true 放行；先验证本人同集、实际视频非空和 VIDEO_READY/LOCKED，再委托正式锁定。服务端拒绝未知字段和资产/身份覆盖；不绕过后续 FilmService 预检，不自动生成或发布。

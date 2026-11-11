@@ -26,6 +26,11 @@ final class McpProductionSchemas {
                 schema(List.of("episode_id", "shots"), text("episode_id", "分集 ID"), array("shots", "1-100 个镜头", shot, 100))));
         tools.add(tool("get_render_task", "查询本人任务真实状态、进度、公开错误、费用和 result_json；不触发任务或重试。",
                 schema(List.of("task_id"), text("task_id", "任务 ID"))));
+        tools.add(tool("get_asset_download", "查询本人资产的真实 download_url 与 expire_at，供首帧、视频、配音验收；到期重新查询，不生成或发布。",
+                schema(List.of("asset_id"), text("asset_id", "本人资产 ID"))));
+        tools.add(tool("lock_shot", "检查视频后明确确认本人同集镜头；要求已有 video_asset_id 且状态 VIDEO_READY/LOCKED。沿用正式锁定，仍须完整合成预检，不自动生成或发布。",
+                schema(List.of("episode_id", "shot_id", "confirm_review"), text("episode_id", "分集 ID"),
+                        text("shot_id", "本集镜头 ID"), prop("confirm_review", "boolean", "仅接受 true；表示已检查镜头视频").put("const", true))));
         tools.add(tool("get_episode_film", "读取本人分集成片、真实可播放 download_url、过期状态、合成预检、配音和字幕；未完成时不提供占位成片。",
                 schema(List.of("episode_id"), text("episode_id", "分集 ID"))));
         tools.add(tool("save_film_settings", "保存作品共享的合成设置，校验本集背景音乐资产。影响同作品后续合成，不自动生成或重合成。",

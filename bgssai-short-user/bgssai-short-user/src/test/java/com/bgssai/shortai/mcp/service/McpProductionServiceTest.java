@@ -33,11 +33,12 @@ class McpProductionServiceTest {
     @Mock FilmService films;
     @Mock CharacterService characters;
     @Mock AiModelResolveService models;
+    @Mock AssetService assets;
     McpProductionService service;
     final ObjectMapper json = new ObjectMapper();
 
     @BeforeEach void setup() {
-        service = new McpProductionService(access, scripts, shots, tasks, dubbing, films, characters, models);
+        service = new McpProductionService(access, scripts, shots, tasks, dubbing, films, characters, models, assets);
     }
     JsonNode args(String value) throws Exception { return json.readTree(value); }
     ShortEpisode ownEpisode() {
