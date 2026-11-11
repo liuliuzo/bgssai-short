@@ -42,3 +42,7 @@ Schema 声明 additionalProperties=false；服务端同样检查这两个新工�
 并确认明确确认和就绪状态之前没有更新或生产调用。测试不访问真实资产、不锁实际作品。
 
 `list_voices`/`set_character_voice` 包装正式 DubbingService；配置前验证产品声音目录，正式方法继续校验角色归属。ShotConsistency 新增 speakerName 排序，ShotService.split 从行 character_name 传入；DubbingService 用公共 characterIds 解析器兼容对象和 ID 两种引用格式。声音映射由正式供应商适配器负责，不让客户端填写任意供应商参数。
+
+## 正式字幕重建适配
+
+`regenerate_subtitles` 仅接收 episode_id 与 confirm_replace。先拒绝未知字段与非 boolean true 确认，再通过 WorkAccessService.requireEpisode 验证本人分集；构造 SubtitleRegenReq 委托 DubbingService.subtitleRegenerate 并原样返回 result。正式服务保留自身归属校验、事务、字幕替换及分集状态刷新；适配器不写 Mapper、不调用生成或合成。字幕重建会覆盖人工编辑，所以 MCP 要求明确替换确认；查询本身不执行重建。

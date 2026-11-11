@@ -47,6 +47,9 @@ final class McpProductionSchemas {
         tools.add(tool("lock_reference_card", "将该卡已生成的真实候选图设为定妆参考，沿用正式锁定和镜头过期规则。",
                 schema(List.of("work_id", "card_type", "card_id", "asset_id"), text("work_id", "作品 ID"),
                         choice("card_type", "卡类型", "CHARACTER", "SCENE", "PROP"), text("card_id", "角色或场景卡 ID"), text("asset_id", "该卡 candidate_list 中的资产 ID"))));
+        tools.add(tool("regenerate_subtitles", "从已有配音与分镜重建本人分集字幕，会替换现有字幕（含人工编辑）。须 confirm_replace=true；无模型任务或生成费用，不自动重新合成。",
+                schema(List.of("episode_id", "confirm_replace"), text("episode_id", "本人分集 ID"),
+                        prop("confirm_replace", "boolean", "仅接受 true；确认替换已有字幕").put("const", true))));
         tools.add(tool("align_dubbing", "按正式配音服务处理时长差异，不生成收费任务。EXTEND_SHOT 会改变镜头时长，需重新检查视频及成片时长。",
                 schema(List.of("episode_id", "shot_id", "align_action"), text("episode_id", "分集 ID"), text("shot_id", "分镜 ID"),
                         choice("align_action", "对齐动作", "PAD_SILENCE", "ADJUST_SPEED", "EXTEND_SHOT"))));

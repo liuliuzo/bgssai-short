@@ -24,6 +24,7 @@ import com.bgssai.shortai.production.dto.FeatureDtos.ApplyVoiceReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.BgmGenerateReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.DubbingAlignReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.DubbingSubmitReq;
+import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmSettingsSaveReq;
 import com.bgssai.shortai.production.service.AiTaskService;
 import com.bgssai.shortai.production.service.AssetService;
@@ -68,7 +69,7 @@ public class McpProductionService {
         return name != null && Set.of("list_models", "ready_episode_script", "split_storyboard",
                 "save_storyboard", "get_render_task", "get_episode_film", "save_film_settings",
                 "list_reference_cards", "generate_reference_image", "lock_reference_card", "align_dubbing",
-                "list_voices", "set_character_voice", "get_asset_download", "lock_shot")
+                "list_voices", "set_character_voice", "get_asset_download", "lock_shot", "regenerate_subtitles")
                 .contains(name);
     }
 
@@ -91,6 +92,7 @@ public class McpProductionService {
             case "generate_reference_image" -> reference(args, true);
             case "lock_reference_card" -> reference(args, false);
             case "align_dubbing" -> align(args);
+            case "regenerate_subtitles" -> regenerateSubtitles(args);
             case "submit_render_task" -> submit(args);
             default -> throw new IllegalArgumentException("未知制作工具: " + name);
         };
@@ -315,6 +317,17 @@ public class McpProductionService {
         req.setVoiceId(voice);
         result(dubbing.applyVoiceToCharacter(req));
         return Map.of("character_id", req.getCharacterId(), "voice_id", voice);
+    }
+
+    private Object regenerateSubtitles(JsonNode args) {
+        onlyArguments(args, Set.of("episode_id", "confirm_replace"));
+        if (!flag(args, "confirm_replace", false)) {
+            throw new IllegalArgumentException("重建会替换已有字幕（含人工编辑），需 confirm_replace=true");
+        }
+        ShortEpisode episode = access.requireEpisode(text(args, "episode_id"));
+        SubtitleRegenReq req = new SubtitleRegenReq();
+        req.setEpisodeId(episode.getEpisodeId());
+        return result(dubbing.subtitleRegenerate(req));
     }
 
     private Object align(JsonNode args) {
