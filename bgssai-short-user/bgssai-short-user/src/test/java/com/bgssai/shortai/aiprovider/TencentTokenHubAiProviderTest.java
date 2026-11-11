@@ -23,6 +23,40 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class TencentTokenHubAiProviderTest {
 
     @Test
+    void gatewayContentUsesConfiguredOriginAndBearerOnlyForExactModelRoute() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"data\":[{\"url\":\"/v1/videos/generations/cg1:video_0123456789abcdef01234567/content?model=bgssai-video\"}]}");
+        http.bytes = new byte[] {1};
+        var p = new TencentTokenHubAiProvider(new SysSecretReader(ref -> "key"), http, ms -> { }, "https://dev.user.bgssai-tokenhub.cn");
+        p.execute(request("VIDEO", "bgssai-video", "test"));
+        assertEquals("https://dev.user.bgssai-tokenhub.cn/v1/videos/generations/cg1:video_0123456789abcdef01234567/content?model=bgssai-video", http.downloadedUrls.get(0));
+        assertEquals("Bearer key", http.downloadedHeaders.get(0).get("Authorization"));
+        for (String url : List.of("//external.test/content", "/v1/videos/generations/job-1/content?model=other",
+                "/v1/videos/generations/job-1/content?model=bgssai-video&extra=1", "/v1/videos/generations/../content?model=bgssai-video")) {
+            FakeClient blocked = new FakeClient();
+            blocked.posts.add(ShortJson.toJson(Map.of("data", List.of(Map.of("url", url)))));
+            assertThrows(BizException.class, () -> provider(blocked, "key").execute(request("VIDEO", "bgssai-video", "test")));
+            assertEquals(0, blocked.downloads);
+        }
+        FakeClient external = new FakeClient();
+        external.posts.add("{\"data\":[{\"url\":\"https://cdn.example/movie.mp4\"}]}");
+        external.bytes = new byte[] {1};
+        provider(external, "key").execute(request("VIDEO", "bgssai-video", "test"));
+        assertTrue(external.downloadedHeaders.get(0).isEmpty());
+    }
+
+    @Test
+    void companyImageUsesItsNativeResolutionWithoutChangingOtherModels() {
+        for (String model : List.of("bgssai-image", "sd-turbo", "kling-v3")) {
+            FakeClient http = new FakeClient();
+            http.posts.add("{\"data\":[{\"b64_json\":\"AQIDBA==\"}]}");
+            provider(http, "key").execute(request("IMAGE", model, "one person"));
+            assertEquals("kling-v3".equals(model) ? "1024x1792" : "512x512",
+                    ShortJson.map(http.postedBodies.get(0)).get("size"));
+        }
+    }
+
+    @Test
     void legacyGlobalAliasRejectedForShortExecutionButCatalogRecognizesHost() throws Exception {
         String alias = "https://www.bgssai-tokenhub-global.com";
         FakeClient http = new FakeClient();
@@ -394,6 +428,8 @@ class TencentTokenHubAiProviderTest {
         private final List<String> postedBodies = new ArrayList<>();
         private final List<Map<String, String>> postedHeaders = new ArrayList<>();
         private final List<String> polledUrls = new ArrayList<>();
+        private final List<String> downloadedUrls = new ArrayList<>();
+        private final List<Map<String, String>> downloadedHeaders = new ArrayList<>();
         private byte[] bytes = new byte[0];
         private int downloads;
 
@@ -413,6 +449,13 @@ class TencentTokenHubAiProviderTest {
 
         @Override
         public byte[] getBytes(String url, int timeoutSec) {
+            return getBytes(url, Map.of(), timeoutSec);
+        }
+
+        @Override
+        public byte[] getBytes(String url, Map<String, String> headers, int timeoutSec) {
+            downloadedUrls.add(url);
+            downloadedHeaders.add(headers);
             downloads++;
             return bytes;
         }

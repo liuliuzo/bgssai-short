@@ -143,3 +143,7 @@ dev/prod 分别使用不同的 AK/SK，但同一产品两把密钥的 IAM 权限
 `deploy/obs/application-dev.properties` 与 `deploy/obs/application-prod.properties` 是无凭据的运维 profile，由中央仓 `bgssai-workflows/deploy/obs/verify.py` 读取，指定校验的产品、环境、桶、区域和业务接入状态。它们不由 Spring Boot 自动加载，不替代上表应用配置，也不承载 AK/SK。应用 profile 负责业务客户端绑定，运维 profile 负责统一验证目标。
 
 通过 Jenkins 在对应环境使用专用凭据校验临时对象写入、读回与清理，并记录桶名、环境及成功/失败，不记录凭据。应用上线后再验证已有上传/读取入口；运维校验成功不能替代业务验收。没有本次实际执行的环境应记录为“未验证”，不能因为两个配置文件已提交而记为上线完成。
+
+### 媒体文件检测依赖
+
+用户端制作服务的 PATH 须同时具备 ffmpeg 和 ffprobe。后者负责真实音视频流、像素尺寸和时长检测；只安装 ffmpeg 而缺少 ffprobe 时，音视频任务会明确失败，不用请求值或字数伪造元数据。通过 Jenkins 在 dev/prod 用户端预检 `ffprobe -version`，随后以真实配音/视频任务验收。发布源仍为 develop，两环境仅切换既有 application-dev.properties / application-prod.properties。
