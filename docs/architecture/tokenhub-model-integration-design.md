@@ -228,4 +228,12 @@ ffprobe 只接收本次临时文件路径，protocol_whitelist 限定 file,pipe�
 
 `CatalogModelAlign` 对缺失默认的视频公司候选优先 bgssai-video；cogvideox 名称本身不再是公司归属证据，只有目录 owned_by 明确公司归属时才可作为公司候选。已经在目录中的显式第三方配置仍保留。
 
-DML 新装种子采用 bgssai-video，继续保留历史 model_id 以避免重复配置；冲突时只填空字段，不改管理端现有价格、启停、默认、凭据或非空编号。线上旧种子由上述读时兼容承接，本 PR 不执行 SQL。DDL/API 字段无变动。回归覆盖精确行优先、历史种子保价/超时/凭据、目录与解析一致、禁跨区/直连、非匹配历史行拒绝、自定义与第三方保持。离线测试不代表上游可用或已完成真实视频。
+DML 新装种子采用 bgssai-video，继续保留历史 model_id 以避免重复配置；冲突时只填空字段，不改管理端现有价格、启停、默认、凭据或非空编号。线上旧种子由上述读时兼容承接。DDL/API 字段无变动。回归覆盖精确行优先、历史种子保价/超时/凭据、目录与解析一致、禁跨区/直连、非匹配历史行拒绝、自定义与第三方保持。离线测试不代表上游可用或已完成真实视频。
+
+## 开发库 VIDEO 默认（2026-11-12）
+
+共享 `sql/DML.sql` 增加启用的一等行 `m-tokenhub-video-bgssai`：`model_code=bgssai-video`，`provider_code=TENCENT_TOKENHUB`，`config_json` 为 `hub=cn` 与 `secret_ref=ai.tokenhub_cn.api_key`，`timeout_sec=900`，`default_flag=0`。重复执行不改 `default_flag`，也不把历史行 `m-tokenhub-video-cogvideox` 的非空 `model_code` 从 `cogvideox` 改掉。历史行仍由 `companyVideo()` 在客户端已经提交 `bgssai-video` 时做内存改写。
+
+只有 `sql/dev/DML.sql` 把该公司行设为唯一 VIDEO 默认，并把 `m-tokenhub-video-minimax` 与 `model_code=cogvideox` 的 VIDEO 行 `default_flag` 置 0。`sql/prod/DML.sql` 不包含这段，生产默认仍是 MiniMax。已有开发库只执行该段，不整库重建，不改集数与成片。
+
+未传模型且目录快照为空时，解析保持库内默认行。配置编号已经是 `bgssai-video` 时，目录里只有其它视频编号（含公司归属的 `cogvideox`）也不替换。第三方默认编号在目录缺失时的既有对齐规则不变。

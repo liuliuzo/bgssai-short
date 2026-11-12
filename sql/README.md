@@ -9,8 +9,8 @@
 | --- | --- |
 | `DDL.sql` | 建库 + 建表（登录 / OAuth / MCP / 订阅支付 / 短剧制作闭环）。自顶向下执行一次即建出完整 schema。 |
 | `DML.sql` | 种子数据：示例账号、套餐目录、OAuth 密钥、用户端铺底、短剧业务样例。 |
-| `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401156379`、QA 登录账号等。 |
-| `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401191076` 等。 |
+| `dev/DML.sql` | 开发环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401156379`、QA 登录账号，以及 VIDEO 默认 `bgssai-video`。 |
+| `prod/DML.sql` | 生产环境专属种子（在共享 DML 之后执行）：支付回调 URL、短信 SdkAppId `1401191076` 等。不改 VIDEO 默认。 |
 
 > **`DDL.sql` 只能建新库。** 它含 `DROP TABLE IF EXISTS`，对已有数据的库执行等于删库重来。
 > **禁止增量脚本**：不得新增或保留 `UPGRADE-*.sql`、`PRECHECK-*.sql`、`patch_*.sql`、
@@ -28,6 +28,8 @@ mysql -h <host> -u <user> -p bgssai_short < sql/dev/DML.sql
 ```
 
 生产清库后把最后一步换成 `sql/prod/DML.sql`。
+
+公司视频 `model_code=bgssai-video`（`TENCENT_TOKENHUB`，`hub=cn`，`secret_ref=ai.tokenhub_cn.api_key`，`timeout_sec=900`）写在共享种子里，`default_flag=0`。只有 `sql/dev/DML.sql` 把它设为 VIDEO 默认，并清掉 `m-tokenhub-video-minimax` 与 `cogvideox` 的默认。生产种子不执行这段。已有开发库不要整库 init；只对开发库执行该段，不改集数和成片素材，也不写入密钥。
 
 ## 腾讯云短信（共享控制台）
 

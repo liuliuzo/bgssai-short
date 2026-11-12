@@ -2721,7 +2721,8 @@ INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `mod
 
 -- Company LLM defaults for video production platforms (2026-10-31 t185u).
 -- Script / stills / TTS via TokenHub-CN → chat.bgssai.com (bgssai-chat / bgssai-image / bgssai-tts).
--- True diffusion VIDEO stays third-party. ASR stays Hy-ASR until OpenAI transcriptions path exists.
+-- Shared and production VIDEO default stays the third-party TokenHub row.
+-- DEV promotes bgssai-video in sql/dev/DML.sql only. ASR stays Hy-ASR until OpenAI transcriptions path exists.
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-text-bgssai-chat', 'TEXT', 'TENCENT_TOKENHUB', 'bgssai-chat', 'BGSSAI Chat', 'STANDARD', 'PER_KILO_TOKEN', 1, 1, 1, 120, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","chat_path":"/v1/chat/completions"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
 UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'TEXT' AND `model_id` <> 'm-tokenhub-text-bgssai-chat' AND `deleted_flag` = 0;
 
@@ -2733,7 +2734,8 @@ INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `mod
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-voice-edge-tts', 'VOICE', 'TENCENT_TOKENHUB', 'edge-tts', 'Edge TTS', 'FAST', 'PER_CALL', 2, 0, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","default_voice_id":"alloy"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
 UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'VOICE' AND `model_id` <> 'm-tokenhub-voice-bgssai-tts' AND `deleted_flag` = 0;
 
--- 公司自托管画面 / 视频 / 配音（2026-11-04）。default_flag 保持 0，不抢现有默认。
+-- 公司自托管画面 / 视频 / 配音（2026-11-04）。共享种子里视频 default_flag 保持 0，不抢 MiniMax 默认。
+-- 开发库在 sql/dev/DML.sql 把 bgssai-video 设为唯一 VIDEO 默认；生产种子不改默认。
 -- 中枢密钥非空时仍走中枢；密钥为空且 ai.openai_compat.api_key 已填时，才直连 https://chat.bgssai.com/v1。
 -- 不写入真实密钥。管理端把音色 default_voice_id、画面 size 改成网关实际值。
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-video-cogvideox', 'VIDEO', 'TENCENT_TOKENHUB', 'bgssai-video', 'BGSSAI Video', 'STANDARD', 'PER_SECOND', 20, 0, 1, 900, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}') ON DUPLICATE KEY UPDATE `model_code` = COALESCE(NULLIF(`model_code`, ''), VALUES(`model_code`)), `model_name` = COALESCE(NULLIF(`model_name`, ''), VALUES(`model_name`)), `timeout_sec` = COALESCE(`timeout_sec`, VALUES(`timeout_sec`)), `config_json` = COALESCE(NULLIF(`config_json`, ''), VALUES(`config_json`));
@@ -2781,3 +2783,10 @@ WHERE `model_id` = 'm-minimax-minimax-music-v2.6-music'
   AND JSON_VALID(COALESCE(NULLIF(`config_json`, ''), '{}'))
   AND (JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IS NULL
     OR JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(`config_json`, ''), '{}'), '$.public_alias')) IN ('null', ''));
+
+-- 公司视频一等配置（2026-11-12）。default_flag 固定为 0：共享种子与生产不改 VIDEO 默认。
+-- 开发库由 sql/dev/DML.sql 把该行设为唯一 VIDEO 默认，并清掉 MiniMax 与 cogvideox 的默认。
+-- 线上 m-tokenhub-video-cogvideox 若仍保存 model_code=cogvideox，本行使用另一个 model_id，不改写那一行。
+-- 新装库里历史 id 已经是 bgssai-video 时，唯一键落到那一行：只补空配置并保证启用与超时，不改 default_flag。
+-- 不写入密钥。显式提交 bgssai-video 时，companyVideo() 仍是没有精确行时的内存兼容。
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-video-bgssai', 'VIDEO', 'TENCENT_TOKENHUB', 'bgssai-video', 'BGSSAI Video', 'STANDARD', 'PER_SECOND', 20, 0, 1, 900, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}') ON DUPLICATE KEY UPDATE `enabled_flag` = 1, `deleted_flag` = 0, `timeout_sec` = GREATEST(COALESCE(`timeout_sec`, 0), 900), `model_name` = COALESCE(NULLIF(`model_name`, ''), VALUES(`model_name`)), `config_json` = COALESCE(NULLIF(`config_json`, ''), VALUES(`config_json`));

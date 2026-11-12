@@ -66,6 +66,16 @@ class CatalogModelAlignTest {
     }
 
     @Test
+    void configuredCompanyVideoStaysWhenSnapshotOnlyListsCogvideox() {
+        List<TokenHubModelCatalog.HubModel> companyCog = List.of(video("cogvideox", "BGSSAI"));
+        assertEquals("bgssai-video", CatalogModelAlign.choose("VIDEO", "bgssai-video", companyCog));
+        assertEquals("bgssai-video", CatalogModelAlign.choose("VIDEO", "bgssai-video", List.of()));
+        assertEquals("bgssai-video", CatalogModelAlign.choose("VIDEO", "bgssai-video",
+                List.of(video("minimax-video-h3", "MiniMax"), video("cogvideox", "zhipu"))));
+        assertEquals("cogvideox", CatalogModelAlign.choose("VIDEO", "minimax-video-h3", companyCog));
+    }
+
+    @Test
     void videoCompanyFallbackDoesNotMistakeZhipuCogvideoxForCompany() {
         List<TokenHubModelCatalog.HubModel> both = List.of(
                 video("cogvideox", "zhipu"), video("bgssai-video", "bgssai-company"));
