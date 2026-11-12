@@ -104,6 +104,15 @@
 
   --lg-easing: cubic-bezier(0.22, 1, 0.36, 1);
   --lg-duration: 0.18s;
+
+  /* 侧栏实底。这些名字原先没有赋值，背景和边线会失效。 */
+  --pa-sidebar-bg: #ffffff;
+  --pa-sidebar-text: #0f172a;
+  --pa-sidebar-muted: #4b5568;
+  --pa-sidebar-label: #6b7588;
+  --pa-sidebar-active: #e9effd;
+  --pa-sidebar-hover: #f2f5fb;
+  --pa-sidebar-border: #e4e7ed;
 }
 
 /* ============ 2. 旧玻璃工具类：保留类名，改成实底 ============ */

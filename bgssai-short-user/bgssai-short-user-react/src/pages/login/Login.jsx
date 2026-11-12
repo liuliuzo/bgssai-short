@@ -271,6 +271,7 @@ export default function Login() {
             ))}
           </div>
 
+          <div key={loginMethod} className="login-method-pane">
           {loginMethod === 'sms' && (
             <>
               <div className="field">
@@ -371,6 +372,7 @@ export default function Login() {
           </div>
             </>
           )}
+          </div>
 
           <button className="btn btn-primary btn-block btn-lg" disabled={busy} onClick={submit}>
             {busy ? '处理中...' : loginMethod === 'password' ? '登录' : '登录 / 注册'}
