@@ -216,13 +216,18 @@
             </div>
           </div>
           <div class="card-body">
+            <p class="text-muted" style="font-size:12px; margin-top:0">先选定一张参考图，再生成定妆。可以上传照片，也可以从定妆知识库里选，不用离开这个作品。</p>
             <div class="row" style="margin-bottom:10px; align-items:flex-end">
-              <div><div class="text-muted">正脸</div><button class="btn btn-default btn-sm">上传</button></div>
+              <div><div class="text-muted">正脸 · 当前定妆</div><button class="btn btn-default btn-sm">更换</button></div>
               <div><div class="text-muted">前面</div><button class="btn btn-default btn-sm">上传</button></div>
               <div><div class="text-muted">背面</div><button class="btn btn-default btn-sm">上传</button></div>
               <div><div class="text-muted">侧面</div><button class="btn btn-default btn-sm">上传</button></div>
-              <span class="text-muted" style="font-size:12px">点某一面上传。正脸一传就锁定。</span>
             </div>
+            <div class="row" style="margin-bottom:10px; align-items:center">
+              <button class="btn btn-default btn-sm">从知识库选</button>
+              <a href="look-library.html?return=%2Fworks%2Fw-demo%2Fcharacters">管理知识库</a>
+            </div>
+            <div class="note" style="margin-bottom:10px">生成时会用「我的定妆」里的「红礼服 · 正脸」。</div>
             <div class="row" style="margin-bottom:10px">
               <span class="text-muted" style="font-size:12px">每次出几张</span>
               <span class="chip">2 张 · 1.60 元</span>
@@ -261,9 +266,9 @@
               <button class="btn btn-default btn-sm">微调描述后重出</button>
             </div>
             <div class="note" style="margin-top:12px">
-              候选张数可选 2 / 4 / 8，价格当场显示，不用去账单里猜。选定一张后角色变为「已定妆」，
-              定妆照固化，此后全剧所有镜头都以它为准；都不满意就「换一批」（同价重出）
-              或微调描述后重出。
+              这些是已经生成或上传的图。要换成某一张，点选定。候选张数可选 2 / 4 / 8，价格当场显示。
+              确认生成前会再写明这次用哪张参考图；没有参考图时写明只按外观描述生成。也可以勾选这次不用参考图。
+              选定一张后角色变为「已定妆」，全剧按这张脸走。
             </div>
           </div>
         </div>
@@ -381,7 +386,8 @@
         <div class="spec-t">字段口径</div>
         接口：<code>GET /bgssai/user/characters/list?work_id</code> ·
         <code>POST /bgssai/user/characters/create</code> · <code>/portrait-generate</code>
-        （<code>candidate_count</code> 取 2 / 4 / 8，默认 4；「换一批」「微调描述后重出」为再次调用）·
+        （<code>candidate_count</code> 取 2 / 4 / 8，默认 4；可带 <code>skip_look_reference=1</code> 表示这次不用参考图；「换一批」「微调描述后重出」为再次调用）·
+        <code>/portrait-upload</code> · <code>/apply-look</code>（<code>material_id</code>，从知识库选用造型）·
         <code>/portrait-generate-batch</code>（全部待建卡一键出候选，返回总价
         <code>estimated_cost_cent</code>）· <code>/lock</code> · <code>/update</code> ·
         <code>/delete</code> · <code>/bind-voice</code>；
@@ -393,7 +399,8 @@
         角色字段：<code>character_id</code> · <code>character_name</code> · <code>character_role</code> ·
         <code>card_status</code>（<code>CANDIDATE</code> / <code>DRAFT</code> / <code>GENERATING</code> /
         <code>LOCKED</code>）· <code>appearance_prompt</code> · <code>consistency_seed</code> ·
-        <code>ref_image_asset_id</code> · <code>default_outfit_code</code> · <code>outfit_list</code> ·
+        <code>ref_image_asset_id</code> · <code>look_reference</code>（<code>source</code> 为 <code>CARD</code> / <code>NAME</code> / <code>NONE</code>，生成前展示将用的库和造型）·
+        <code>default_outfit_code</code> · <code>outfit_list</code> ·
         <code>voice_id</code> / <code>voice_speed</code> · <code>used_shot_count</code>；
         <code>character_role</code>（<code>FEMALE_LEAD</code> / <code>MALE_LEAD</code> /
         <code>SUPPORTING</code> / <code>ANTAGONIST</code>，下拉展示中文、枚举值收在选项 value）。

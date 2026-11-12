@@ -140,20 +140,29 @@ lock：`{ "character_id", "asset_id" }`
 
 ### POST /bgssai/user/characters/portrait-generate
 
-`{ "character_id", "candidate_count" }`（2/4/8，默认 4）→ `{ "task_id" }`
+`{ "character_id", "candidate_count", "model_code", "skip_look_reference" }`（张数 2/4/8，默认 4）→ `{ "task_id" }`。
+`skip_look_reference=1` 时这一次不附带参考图。
+
+### POST /bgssai/user/characters/apply-look
+
+`{ "character_id", "material_id" }`。把知识库里这个造型用到该角色卡上并锁定主图。只接受角色造型。
 
 ### GET /bgssai/user/assets/consistency-panel?work_id=
 
 返回 `{ "character_list", "scene_list", "prop_list", "unbound_shot_count", "unlocked_ref_count" }`。
-每条资产含 `card_status`、`used_shot_count`、`ref_image_url`。道具来自 `short_scene_card.card_type=PROP`。
+每条资产含 `card_status`、`used_shot_count`、`ref_image_url`、`look_reference`。
+`look_reference.source` 为 `CARD`（这张卡已选定的造型）、`NAME`（按名称对上的兜底）或 `NONE`（没有参考图）。
+道具来自 `short_scene_card.card_type=PROP`。
 
 ### GET /bgssai/user/scene-cards/list?work_id=&card_type=
 
 `card_type` 可选 `SCENE` / `PROP`；缺省两类都回。
 
-### POST /bgssai/user/scene-cards/create|update|lock|portrait-generate
+### POST /bgssai/user/scene-cards/create|update|lock|portrait-generate|apply-look
 
 create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
+`apply-look`：`{ "scene_card_id", "material_id" }`，素材类型须与卡片一致。
+`portrait-generate` 同样可带 `skip_look_reference=1`。
 
 ---
 
@@ -224,8 +233,9 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 ### POST /bgssai/user/characters/portrait-generate | /bgssai/user/scene-cards/portrait-generate
 
-`{ "character_id" | "scene_card_id", "candidate_count", "model_code" }`。
+`{ "character_id" | "scene_card_id", "candidate_count", "model_code", "skip_look_reference" }`。
 `model_code` 可选，缺省用该能力的默认模型；取值来自 `GET /bgssai/user/ai-models/list?ability_type=IMAGE`。
+`skip_look_reference=1` 时这一次不附带知识库或角色卡上的参考图。
 
 list 每条另回 `task_status_name`、`task_type_name`、`recoverable_flag`、`cancellable_flag`。
 TEXT / IMAGE / VIDEO / VOICE / COMPOSE 共用

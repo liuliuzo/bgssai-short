@@ -32,8 +32,10 @@ import com.bgssai.shortai.model.ShortContinuityIssue;
 import com.bgssai.shortai.model.ShortSceneCard;
 import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShotExample;
+import com.bgssai.shortai.model.ShortLookMaterial;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.CharacterReq;
+import com.bgssai.shortai.production.support.CardAssetSelection;
 import com.bgssai.shortai.production.support.LookImage;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShotConsistency;
@@ -164,6 +166,9 @@ public class CharacterService {
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("character_id", row.getCharacterId());
         request.put("candidate_count", count);
+        if (req.getSkipLookReference() != null && req.getSkipLookReference() == 1) {
+            request.put("skip_look_reference", 1);
+        }
         ShortAiTask task = aiTaskQueue.enqueue(row.getUserId(), row.getWorkId(), null, "IMAGE", "PORTRAIT",
                 row.getCharacterId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
@@ -189,6 +194,8 @@ public class CharacterService {
             lock.setCharacterId(row.getCharacterId());
             lock.setAssetId(asset.getAssetId());
             lockCharacter(lock);
+        } else if (row.getRefImageAssetId() == null || row.getRefImageAssetId().isBlank()) {
+            CardAssetSelection.selectOnly(shortAssetMapper, row.getUserId(), row.getCharacterId(), asset.getAssetId());
         }
         Map<String, Object> result = uploaded(asset);
         result.put("view_angle", angle);
@@ -212,7 +219,14 @@ public class CharacterService {
         row.setRefImageAssetId(req.getAssetId());
         row.setCardStatus("LOCKED");
         markShotsStaleForCharacter(row);
+        CardAssetSelection.selectOnly(shortAssetMapper, row.getUserId(), row.getCharacterId(), req.getAssetId());
         return Responses.ok("ok");
+    }
+
+    @Transactional
+    public ApiResponse applyCharacterLook(CharacterReq req) {
+        ShortCharacter row = requireCharacter(req == null ? null : req.getCharacterId());
+        return applyLook(row.getUserId(), row.getWorkId(), row.getCharacterId(), "CHARACTER", req == null ? null : req.getMaterialId(), true);
     }
 
     public ApiResponse listScenes(String workId) {
@@ -340,6 +354,9 @@ public class CharacterService {
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("scene_card_id", row.getSceneCardId());
         request.put("candidate_count", count);
+        if (req.getSkipLookReference() != null && req.getSkipLookReference() == 1) {
+            request.put("skip_look_reference", 1);
+        }
         ShortAiTask task = aiTaskQueue.enqueue(row.getUserId(), row.getWorkId(), null, "IMAGE", "SCENE_PORTRAIT",
                 row.getSceneCardId(), request, null, 0, req.getModelCode());
         Map<String, Object> result = new LinkedHashMap<>();
@@ -358,7 +375,18 @@ public class CharacterService {
             caption = joinCaption(row.getCardName(), row.getAppearancePrompt());
         }
         lookKnowledgeService.fileImage(row.getUserId(), kind, row.getCardName(), caption, image, null, row.getSceneCardId(), asset.getAssetId());
+        CharacterReq lock = new CharacterReq();
+        lock.setSceneCardId(row.getSceneCardId());
+        lock.setAssetId(asset.getAssetId());
+        lockScene(lock);
         return Responses.ok(uploaded(asset));
+    }
+
+    @Transactional
+    public ApiResponse applySceneLook(CharacterReq req) {
+        ShortSceneCard row = requireScene(req == null ? null : req.getSceneCardId());
+        String kind = row.getCardType() == null || row.getCardType().isBlank() ? "SCENE" : row.getCardType();
+        return applyLook(row.getUserId(), row.getWorkId(), row.getSceneCardId(), kind, req == null ? null : req.getMaterialId(), false);
     }
 
     @Transactional
@@ -378,7 +406,39 @@ public class CharacterService {
         row.setCardStatus(patch.getCardStatus());
         if (patch.getRefImageAssetId() != null) row.setRefImageAssetId(patch.getRefImageAssetId());
         markShotsStaleForScene(row);
+        CardAssetSelection.selectOnly(shortAssetMapper, row.getUserId(), row.getSceneCardId(), req.getAssetId());
         return Responses.ok("ok");
+    }
+
+    private ApiResponse applyLook(String userId, String workId, String cardId, String kind, String materialId, boolean character) {
+        ShortLookMaterial source = lookKnowledgeService.requireMaterial(userId, materialId);
+        if (!kind.equals(source.getMaterialKind())) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, character ? "请选择角色造型" : "请选择和这张卡同一类的参考图");
+        }
+        List<ShortLookMaterial> group = lookKnowledgeService.lookGroup(source);
+        if (group.isEmpty()) {
+            group = List.of(source);
+        }
+        ShortLookMaterial primary = LookKnowledgeService.pickCardReference(group);
+        if (primary == null) {
+            primary = source;
+        }
+        LookImage.Decoded image = lookKnowledgeService.imageOf(primary);
+        ShortAsset asset = saveCardImage(userId, workId, cardId, image);
+        lookKnowledgeService.bindLook(userId, cardId, primary.getMaterialId(), asset.getAssetId(), group);
+        CharacterReq lock = new CharacterReq();
+        lock.setAssetId(asset.getAssetId());
+        if (character) {
+            lock.setCharacterId(cardId);
+            lockCharacter(lock);
+        } else {
+            lock.setSceneCardId(cardId);
+            lockScene(lock);
+        }
+        Map<String, Object> result = uploaded(asset);
+        result.put("material_id", primary.getMaterialId());
+        result.put("library_id", primary.getLibraryId());
+        return Responses.ok(result);
     }
 
     private void markShotsStaleForCharacter(ShortCharacter character) {
@@ -494,8 +554,10 @@ public class CharacterService {
         item.put("appearance_prompt", row.getAppearancePrompt());
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));
-        item.put("candidate_list", candidates(row.getCharacterId()));
+        item.put("candidate_list", candidates(row.getCharacterId(), row.getRefImageAssetId()));
         item.put("look_view_list", lookKnowledgeService == null ? List.of() : lookKnowledgeService.views(row.getUserId(), row.getCharacterId()));
+        item.put("look_reference", lookReference(row.getUserId(), "CHARACTER", row.getCharacterId(),
+                promptOf(row.getAppearancePrompt(), row.getCharacterName())));
         item.put("used_shot_count", countCharacterShots(shots, row.getCharacterId()));
         return item;
     }
@@ -513,7 +575,10 @@ public class CharacterService {
         item.put("appearance_prompt", row.getAppearancePrompt());
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));
-        item.put("candidate_list", candidates(row.getSceneCardId()));
+        item.put("candidate_list", candidates(row.getSceneCardId(), row.getRefImageAssetId()));
+        String kind = row.getCardType() == null || row.getCardType().isBlank() ? "SCENE" : row.getCardType();
+        item.put("look_reference", lookReference(row.getUserId(), kind, row.getSceneCardId(),
+                promptOf(row.getAppearancePrompt(), row.getCardName())));
         item.put("used_shot_count", countSceneShots(shots, row));
         return item;
     }
@@ -541,7 +606,7 @@ public class CharacterService {
         return count;
     }
 
-    private List<Map<String, Object>> candidates(String targetId) {
+    private List<Map<String, Object>> candidates(String targetId, String refAssetId) {
         ShortAssetExample ex = new ShortAssetExample();
         ex.createCriteria().andShotIdEqualTo(targetId).andDeletedFlagEqualTo(0);
         List<Map<String, Object>> list = new ArrayList<>();
@@ -549,11 +614,28 @@ public class CharacterService {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("asset_id", asset.getAssetId());
             item.put("file_url", assetService.resolveUrl(asset.getAssetId()));
-            item.put("selected_flag", asset.getSelectedFlag());
+            item.put("selected_flag", CardAssetSelection.shownFlag(asset.getAssetId(), refAssetId, asset.getSelectedFlag()));
             item.put("image_origin", imageOrigin(asset));
             list.add(item);
         }
         return list;
+    }
+
+    private Map<String, Object> lookReference(String userId, String kind, String cardId, String prompt) {
+        if (lookKnowledgeService == null) {
+            Map<String, Object> none = new LinkedHashMap<>();
+            none.put("used", 0);
+            none.put("source", "NONE");
+            return none;
+        }
+        return lookKnowledgeService.preview(userId, kind, cardId, prompt);
+    }
+
+    private static String promptOf(String appearance, String name) {
+        if (appearance != null && !appearance.isBlank()) {
+            return appearance.trim();
+        }
+        return name == null ? "" : name.trim();
     }
 
     private String assetUrl(String assetId) {

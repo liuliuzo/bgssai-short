@@ -51,7 +51,11 @@ public class LookKnowledgeService {
     @Autowired(required = false)
     private LookRagIndex lookRagIndex;
 
-    public record LookHit(String materialId, String storageKey, String mimeType, String caption) {
+    public record LookHit(String materialId, String storageKey, String mimeType, String caption,
+            String libraryId, String libraryName, String materialName, String viewAngle) {
+        public LookHit(String materialId, String storageKey, String mimeType, String caption) {
+            this(materialId, storageKey, mimeType, caption, null, null, null, null);
+        }
     }
 
     public ApiResponse list() {
@@ -176,22 +180,122 @@ public class LookKnowledgeService {
         if (lookRagIndex != null) {
             lookRagIndex.remove(row.getMaterialId());
         }
+        retireSameKey(userId, row.getStorageKey(), row.getId());
         return Responses.ok("ok");
     }
 
-    /** Card upload files the same photo into the creator's mounted look library. */
+    /** Card upload files the same photo into 「我的定妆」, creating that library when it is missing. */
     @Transactional
     public void fileImage(String userId, String kind, String name, String caption, LookImage.Decoded image,
             String viewAngle, String cardId, String assetId) {
-        ShortLookLibrary library = defaultLibrary(userId);
-        if (!"ACTIVE".equals(library.getStatus()) || library.getMountPortrait() == null || library.getMountPortrait() == 0) {
-            return;
-        }
+        ShortLookLibrary library = personalLibrary(userId);
         String normalizedKind = normalizeKind(kind);
         String angle = "CHARACTER".equals(normalizedKind) ? normalizeView(viewAngle, true) : null;
-        replaceCardAngle(userId, cardId, angle);
+        if (angle == null) {
+            replaceCardAll(userId, cardId);
+        } else {
+            replaceCardAngle(userId, cardId, angle);
+        }
         store(library, userId, normalizedKind, name == null || name.isBlank() ? "未命名定妆" : name.trim(),
                 blankToNull(caption), image, null, angle, cardId, assetId);
+    }
+
+    public ShortLookMaterial requireMaterial(String userId, String materialId) {
+        if (materialId == null || materialId.isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择一个造型");
+        }
+        ShortLookMaterial row = findMaterial(userId, materialId);
+        if (row == null) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "造型不存在");
+        }
+        return row;
+    }
+
+    public List<ShortLookMaterial> lookGroup(ShortLookMaterial source) {
+        if (source == null || materialMapper == null) {
+            return List.of();
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(source.getUserId()).andLibraryIdEqualTo(source.getLibraryId())
+                .andMaterialKindEqualTo(source.getMaterialKind()).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("id desc");
+        List<ShortLookMaterial> rows = materialMapper.selectByExample(ex);
+        if (rows == null) {
+            return List.of();
+        }
+        String name = source.getMaterialName() == null ? "" : source.getMaterialName();
+        List<ShortLookMaterial> group = new ArrayList<>();
+        for (ShortLookMaterial row : rows) {
+            String rowName = row.getMaterialName() == null ? "" : row.getMaterialName();
+            if (name.equals(rowName)) {
+                group.add(row);
+            }
+        }
+        return group;
+    }
+
+    public LookImage.Decoded imageOf(ShortLookMaterial row) {
+        if (row == null || row.getStorageKey() == null || row.getStorageKey().isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "这张参考图读不出来，请换一张");
+        }
+        String key = row.getStorageKey();
+        String mime = row.getMimeType() == null ? "image/jpeg" : row.getMimeType();
+        int width = row.getWidth() == null ? 0 : row.getWidth();
+        int height = row.getHeight() == null ? 0 : row.getHeight();
+        if (mime.startsWith("video/")) {
+            key = posterKey(key);
+            mime = "image/jpeg";
+            width = 0;
+            height = 0;
+        }
+        byte[] bytes;
+        try {
+            bytes = objectStorage.get(key);
+        } catch (RuntimeException ex) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "这张参考图读不出来，请换一张");
+        }
+        if (bytes == null || bytes.length == 0) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "这张参考图读不出来，请换一张");
+        }
+        return new LookImage.Decoded(bytes, mime, width, height);
+    }
+
+    /** Point this card at an existing look. Copies no bytes; the photos stay in the library. */
+    @Transactional
+    public void bindLook(String userId, String cardId, String primaryMaterialId, String primaryAssetId,
+            List<ShortLookMaterial> group) {
+        replaceCardAll(userId, cardId);
+        Map<String, ShortLookMaterial> newest = new LinkedHashMap<>();
+        if (group != null) {
+            for (ShortLookMaterial row : group) {
+                String angle = row.getViewAngle() == null ? "" : row.getViewAngle();
+                newest.putIfAbsent(angle, row);
+            }
+        }
+        for (ShortLookMaterial row : newest.values()) {
+            String assetId = row.getMaterialId() != null && row.getMaterialId().equals(primaryMaterialId)
+                    ? primaryAssetId : null;
+            insertPointer(row, cardId, assetId);
+        }
+    }
+
+    public Map<String, Object> preview(String userId, String kind, String cardId, String prompt) {
+        ShortLookMaterial onCard = cardMaterial(userId, cardId);
+        if (onCard != null) {
+            return previewMap(userId, onCard, "CARD");
+        }
+        LookHit named = bestMatch(userId, kind, prompt);
+        if (named != null) {
+            ShortLookMaterial row = findMaterial(userId, named.materialId());
+            if (row != null) {
+                return previewMap(userId, row, "NAME");
+            }
+            return previewMap(named, "NAME");
+        }
+        Map<String, Object> none = new LinkedHashMap<>();
+        none.put("used", 0);
+        none.put("source", "NONE");
+        return none;
     }
 
     public List<Map<String, Object>> views(String userId, String cardId) {
@@ -256,17 +360,17 @@ public class LookKnowledgeService {
 
     /** Photos already filed on this card. Front face wins, then front, back, side. */
     public LookHit referenceForCard(String userId, String cardId) {
+        return toHit(userId, cardMaterial(userId, cardId));
+    }
+
+    private ShortLookMaterial cardMaterial(String userId, String cardId) {
         if (userId == null || userId.isBlank() || cardId == null || cardId.isBlank() || materialMapper == null) {
             return null;
         }
         ShortLookMaterialExample ex = new ShortLookMaterialExample();
         ex.createCriteria().andUserIdEqualTo(userId).andCardIdEqualTo(cardId).andDeletedFlagEqualTo(0);
         ex.setOrderByClause("id desc");
-        ShortLookMaterial chosen = pickCardReference(materialMapper.selectByExample(ex));
-        if (chosen == null) {
-            return null;
-        }
-        return new LookHit(chosen.getMaterialId(), chosen.getStorageKey(), chosen.getMimeType(), chosen.getCaption());
+        return pickCardReference(materialMapper.selectByExample(ex));
     }
 
     static ShortLookMaterial pickCardReference(List<ShortLookMaterial> rows) {
@@ -309,7 +413,11 @@ public class LookKnowledgeService {
         if (lookRagIndex != null) {
             LookHit retrieved = lookRagIndex.search(userId, mounted, wanted, prompt);
             if (retrieved != null) {
-                return retrieved;
+                ShortLookMaterial row = findMaterial(userId, retrieved.materialId());
+                LookHit full = toHit(userId, row);
+                if (full != null) {
+                    return full;
+                }
             }
         }
         ShortLookMaterial best = null;
@@ -327,7 +435,7 @@ public class LookKnowledgeService {
         if (best == null || bestScore < 3 || best.getStorageKey() == null || best.getStorageKey().isBlank()) {
             return null;
         }
-        return new LookHit(best.getMaterialId(), best.getStorageKey(), best.getMimeType(), best.getCaption());
+        return toHit(userId, best);
     }
 
     static int matchScore(String prompt, String name, String caption) {
@@ -380,7 +488,41 @@ public class LookKnowledgeService {
         }
         ShortLookMaterialExample ex = new ShortLookMaterialExample();
         ex.createCriteria().andUserIdEqualTo(userId).andCardIdEqualTo(cardId).andViewAngleEqualTo(angle).andDeletedFlagEqualTo(0);
+        retire(materialMapper.selectByExample(ex));
+    }
+
+    private void replaceCardAll(String userId, String cardId) {
+        if (cardId == null || cardId.isBlank() || materialMapper == null) {
+            return;
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andCardIdEqualTo(cardId).andDeletedFlagEqualTo(0);
+        retire(materialMapper.selectByExample(ex));
+    }
+
+    private void retireSameKey(String userId, String storageKey, Long exceptId) {
+        if (storageKey == null || storageKey.isBlank() || materialMapper == null) {
+            return;
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andDeletedFlagEqualTo(0);
         List<ShortLookMaterial> rows = materialMapper.selectByExample(ex);
+        if (rows == null) {
+            return;
+        }
+        List<ShortLookMaterial> extra = new ArrayList<>();
+        for (ShortLookMaterial row : rows) {
+            if (exceptId != null && exceptId.equals(row.getId())) {
+                continue;
+            }
+            if (storageKey.equals(row.getStorageKey())) {
+                extra.add(row);
+            }
+        }
+        retire(extra);
+    }
+
+    private void retire(List<ShortLookMaterial> rows) {
         if (rows == null) {
             return;
         }
@@ -395,6 +537,88 @@ public class LookKnowledgeService {
                 lookRagIndex.remove(row.getMaterialId());
             }
         }
+    }
+
+    private void insertPointer(ShortLookMaterial source, String cardId, String assetId) {
+        ShortLookMaterial row = new ShortLookMaterial();
+        row.setMaterialId(ShortIds.id("lm-"));
+        row.setLibraryId(source.getLibraryId());
+        row.setUserId(source.getUserId());
+        row.setMaterialName(source.getMaterialName());
+        row.setCaption(source.getCaption());
+        row.setMaterialKind(source.getMaterialKind());
+        row.setViewAngle(source.getViewAngle());
+        row.setCardId(cardId);
+        row.setAssetId(assetId);
+        row.setMimeType(source.getMimeType());
+        row.setStorageKey(source.getStorageKey());
+        row.setWidth(source.getWidth());
+        row.setHeight(source.getHeight());
+        row.setFileSizeByte(source.getFileSizeByte() == null ? 0 : source.getFileSizeByte());
+        row.setDeletedFlag(0);
+        row.setCreatedTime(new Date());
+        materialMapper.insertSelective(row);
+        if (lookRagIndex != null) {
+            lookRagIndex.upsert(row);
+        }
+    }
+
+    private LookHit toHit(String userId, ShortLookMaterial row) {
+        if (row == null || row.getStorageKey() == null || row.getStorageKey().isBlank()) {
+            return null;
+        }
+        return new LookHit(row.getMaterialId(), row.getStorageKey(), row.getMimeType(), row.getCaption(),
+                row.getLibraryId(), libraryName(userId, row.getLibraryId()), row.getMaterialName(), row.getViewAngle());
+    }
+
+    private Map<String, Object> previewMap(String userId, ShortLookMaterial row, String source) {
+        LookHit hit = toHit(userId, row);
+        if (hit == null) {
+            Map<String, Object> none = new LinkedHashMap<>();
+            none.put("used", 0);
+            none.put("source", "NONE");
+            return none;
+        }
+        Map<String, Object> item = previewMap(hit, source);
+        item.put("asset_id", row.getAssetId());
+        return item;
+    }
+
+    private Map<String, Object> previewMap(LookHit hit, String source) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("used", 1);
+        item.put("source", source);
+        item.put("library_id", hit.libraryId());
+        item.put("library_name", hit.libraryName());
+        item.put("material_id", hit.materialId());
+        item.put("material_name", hit.materialName());
+        item.put("view_angle", hit.viewAngle());
+        item.put("view_name", hit.viewAngle() == null || hit.viewAngle().isBlank() ? null : viewName(hit.viewAngle()));
+        item.put("mime_type", hit.mimeType());
+        item.put("file_url", presign(hit.storageKey()));
+        if (hit.mimeType() != null && hit.mimeType().startsWith("video/")) {
+            item.put("poster_url", presign(posterKey(hit.storageKey())));
+        }
+        return item;
+    }
+
+    private ShortLookMaterial findMaterial(String userId, String materialId) {
+        if (userId == null || materialId == null || materialId.isBlank() || materialMapper == null) {
+            return null;
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andMaterialIdEqualTo(materialId).andUserIdEqualTo(userId).andDeletedFlagEqualTo(0);
+        return materialMapper.selectOneByExample(ex);
+    }
+
+    private String libraryName(String userId, String libraryId) {
+        if (userId == null || libraryId == null || libraryId.isBlank() || libraryMapper == null) {
+            return null;
+        }
+        ShortLookLibraryExample ex = new ShortLookLibraryExample();
+        ex.createCriteria().andLibraryIdEqualTo(libraryId).andUserIdEqualTo(userId).andDeletedFlagEqualTo(0);
+        ShortLookLibrary row = libraryMapper.selectOneByExample(ex);
+        return row == null ? null : row.getLibraryName();
     }
 
     static String posterKey(String storageKey) {
@@ -469,8 +693,12 @@ public class LookKnowledgeService {
     }
 
     private ShortLookLibrary defaultLibrary(String userId) {
+        return personalLibrary(userId);
+    }
+
+    private ShortLookLibrary personalLibrary(String userId) {
         for (ShortLookLibrary library : librariesOf(userId)) {
-            if ("ACTIVE".equals(library.getStatus()) && library.getMountPortrait() != null && library.getMountPortrait() == 1) {
+            if (DEFAULT_NAME.equals(library.getLibraryName())) {
                 return library;
             }
         }
@@ -478,7 +706,7 @@ public class LookKnowledgeService {
         row.setLibraryId(ShortIds.id("lk-"));
         row.setUserId(userId);
         row.setLibraryName(DEFAULT_NAME);
-        row.setDescription("定妆时优先参考这里的图片");
+        row.setDescription("角色卡上上传的照片会放在这里，生成定妆时也可以直接选用。");
         row.setStatus("ACTIVE");
         row.setMountPortrait(1);
         row.setItemCount(0);
@@ -532,7 +760,14 @@ public class LookKnowledgeService {
         item.put("mount_portrait", library.getMountPortrait() == null ? 0 : library.getMountPortrait());
         item.put("item_count", library.getItemCount() == null ? 0 : library.getItemCount());
         List<Map<String, Object>> files = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
         for (ShortLookMaterial material : materials) {
+            String marker = (material.getMaterialName() == null ? "" : material.getMaterialName())
+                    + "\n" + (material.getViewAngle() == null ? "" : material.getViewAngle())
+                    + "\n" + (material.getStorageKey() == null ? "" : material.getStorageKey());
+            if (!seen.add(marker)) {
+                continue;
+            }
             Map<String, Object> file = new LinkedHashMap<>();
             file.put("material_id", material.getMaterialId());
             file.put("material_name", material.getMaterialName());
