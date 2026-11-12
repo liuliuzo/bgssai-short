@@ -74,7 +74,7 @@
               <td><a href="home.html">首页</a></td>
               <td><code>/home</code></td>
               <td>登录成功；顶部品牌 logo；任意页面面包屑首项</td>
-              <td>新建短剧 · 继续已有作品 · 任务中心 · 质量报告 · 用量与账单 · 登录日志 · MCP 连接器</td>
+              <td>新建短剧 · 继续已有作品 · 任务中心 · 质量 · 用量与账单 · 登录日志 · MCP 连接器</td>
               <td>品牌 logo</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -107,31 +107,31 @@
               <td><a href="script-studio.html">总剧本</a></td>
               <td><code>/works/:work_id/script</code></td>
               <td>侧栏「当前工作 - 总剧本」；作品工作台剧集看板；TEXT 模型选择器</td>
-              <td>创作台（定稿后）· 质量报告 · 作品工作台 · 历史版本抽屉（展开集内：
+              <td>分镜（定稿后）· 质量 · 作品工作台 · 历史版本抽屉（展开集内：
                 <code>/scripts/versions</code> 版本列表 + <code>/scripts/rollback</code> 回滚）</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
-              <td><a href="story-map.html">剧情图谱</a></td>
+              <td><a href="story-map.html">剧情</a></td>
               <td><code>/works/:work_id/story-map</code></td>
-              <td>侧栏「更多 - 剧情图谱」；总剧本；作品工作台</td>
-              <td>总剧本 · 创作台（按偏离点与越轴定位）· 作品工作台</td>
+              <td>侧栏「更多 - 剧情」；总剧本；作品工作台</td>
+              <td>总剧本 · 分镜（按偏离点与越轴定位）· 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
               <td><a href="character-bible.html">角色与场景卡（资产一致性面板）</a></td>
               <td><code>/works/:work_id/characters</code></td>
-              <td>侧栏「更多 - 角色与场景卡」；创作台「去定妆 / 绑定资产」；配音页「改绑」</td>
-              <td>创作台（bind-assets） · 作品工作台</td>
+              <td>侧栏「更多 - 角色与场景卡」；分镜「去定妆 / 绑定资产」；配音页「改绑」</td>
+              <td>分镜（bind-assets） · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
-              <td><a href="storyboard.html">创作台（分镜 + 文字预演合并）</a></td>
+              <td><a href="storyboard.html">分镜（文字预演合并）</a></td>
               <td><code>/works/:work_id/storyboard</code></td>
-              <td>侧栏「当前工作 - 创作台」；剧本定稿后；质量报告与连贯性中心的返工链接；首页待处理问题</td>
+              <td>侧栏「当前工作 - 分镜」；剧本定稿后；质量与连贯性中心的返工链接；首页待处理问题</td>
               <td>看样片 · 任务中心 · 角色与场景卡 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -139,8 +139,8 @@
             <tr>
               <td><a href="task-center.html">任务中心</a></td>
               <td><code>/works/:work_id/tasks</code></td>
-              <td>侧栏常驻「任务中心」；创作台提交生成后；首页统计卡</td>
-              <td>创作台 · 配音与字幕 · 合成与导出 · 作品工作台</td>
+              <td>侧栏常驻「任务中心」；分镜提交生成后；首页统计卡</td>
+              <td>分镜 · 配音与字幕 · 合成与导出 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -156,15 +156,15 @@
               <td><a href="compose-export.html">合成与导出</a></td>
               <td><code>/works/:work_id/compose</code></td>
               <td>侧栏「更多 - 合成与导出」；配音完成后；作品工作台剧集看板；MUSIC 生成 BGM 候选</td>
-              <td>创作台（时间轴点镜头）· 配音与字幕 · 作品工作台</td>
+              <td>分镜（时间轴点镜头）· 配音与字幕 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
               <td><a href="storyboard-canvas.html">分镜画布</a></td>
               <td><code>/works/:work_id/storyboard?view=canvas</code></td>
-              <td>创作台顶部「列表 / 画布」切换</td>
-              <td>创作台列表视图 · 任务中心 · 作品工作台</td>
+              <td>分镜顶部「列表 / 画布」切换</td>
+              <td>分镜列表视图 · 任务中心 · 作品工作台</td>
               <td>作品内子导航（同页视图切换）</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -180,7 +180,7 @@
               <td><a href="edit-export.html">剪辑工程导出</a></td>
               <td><code>/works/:work_id/edit-export</code></td>
               <td>合成与导出页「导出剪辑工程」；无须成片已合成、无须过审即可进入</td>
-              <td>合成与导出 · 任务中心（补生成缺片镜头）· 创作台</td>
+              <td>合成与导出 · 任务中心（补生成缺片镜头）· 分镜</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -188,7 +188,7 @@
               <td><a href="episode-preview.html">看样片</a></td>
               <td><code>/works/:work_id/preview</code></td>
               <td>作品工作台三问卡；侧边「三个问题」分区；连贯性中心「回看样片」</td>
-              <td>创作台（点镜改）· 连贯性中心 · 剧情图谱 · 作品工作台</td>
+              <td>分镜（点镜改）· 连贯性中心 · 剧情 · 作品工作台</td>
               <td>三个问题</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -196,15 +196,15 @@
               <td><a href="continuity-center.html">连贯性中心</a></td>
               <td><code>/works/:work_id/continuity</code></td>
               <td>作品工作台三问卡；侧边「三个问题」分区；看样片「连贯提示」</td>
-              <td>总剧本 / 创作台 / 剧情图谱（按 fix_action 定位）· 看样片 · 作品工作台</td>
+              <td>总剧本 / 分镜 / 剧情（按 fix_action 定位）· 看样片 · 作品工作台</td>
               <td>三个问题</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
-              <td><a href="quality-report.html">质量报告</a></td>
+              <td><a href="quality-report.html">质量</a></td>
               <td><code>/works/:work_id/quality</code></td>
-              <td>侧栏「更多 - 质量报告」；四个工作台的门禁提示条；首页「待处理问题」</td>
-              <td>总剧本 · 创作台 · 配音与字幕 · 合成与导出（按 <code>fix_action</code> 直达）</td>
+              <td>侧栏「更多 - 质量」；四个工作台的门禁提示条；首页「待处理问题」</td>
+              <td>总剧本 · 分镜 · 配音与字幕 · 合成与导出（按 <code>fix_action</code> 直达）</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -212,7 +212,7 @@
               <td><a href="usage-billing.html">用量与账单</a></td>
               <td><code>/usage</code></td>
               <td>侧栏「更多 - 用量账单」；首页余额卡</td>
-              <td>作品工作台 · 创作台 · 首页（流水下钻）</td>
+              <td>作品工作台 · 分镜 · 首页（流水下钻）</td>
               <td>用量与账单</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
@@ -289,10 +289,10 @@
         <div class="arrow">→<small>过剧本门后定稿</small></div>
         <div class="node"><div class="n-title">角色与场景卡</div><div>/characters</div></div>
         <div class="arrow">→<small>定妆锁定形象</small></div>
-        <div class="node"><div class="n-title">创作台</div><div>/storyboard</div></div>
+        <div class="node"><div class="n-title">分镜</div><div>/storyboard</div></div>
       </div>
       <div class="flow">
-        <div class="node"><div class="n-title">创作台</div><div>/storyboard</div></div>
+        <div class="node"><div class="n-title">分镜</div><div>/storyboard</div></div>
         
         
         <div class="arrow">→<small>构想改顺后批量生成</small></div>
@@ -309,7 +309,7 @@
       <div class="flow">
         <div class="node"><div class="n-title">新建作品</div><div>/works/create</div></div>
         <div class="arrow">→<small>选「我有原著」</small></div>
-        <div class="node"><div class="n-title">原著导入</div><div>/source</div></div>
+        <div class="node"><div class="n-title">原著</div><div>/source</div></div>
         <div class="arrow">→<small>自动分章并纠正</small></div>
         <div class="node"><div class="n-title">选章节与集数</div><div>费用先算后花</div></div>
         <div class="arrow">→<small>改编出带出处的大纲</small></div>
@@ -331,15 +331,15 @@
       <div class="flow">
         <div class="node"><div class="n-title">任一工作台</div><div>门禁提示条</div></div>
         <div class="arrow">→<small>门禁未达标</small></div>
-        <div class="node"><div class="n-title">质量报告</div><div>/quality</div></div>
+        <div class="node"><div class="n-title">质量</div><div>/quality</div></div>
         <div class="arrow">→<small>点 issue 的 fix_action</small></div>
         <div class="node"><div class="n-title">对应工作台</div><div>预填参数</div></div>
         <div class="arrow">→<small>改完重跑该门</small></div>
-        <div class="node"><div class="n-title">质量报告</div><div>/quality</div></div>
+        <div class="node"><div class="n-title">质量</div><div>/quality</div></div>
       </div>
       <div class="text-muted" style="font-size:12px">
         <code>fix_action</code> 到页面的映射：<code>REWRITE_SCENE</code> → 总剧本；
-        <code>ADJUST_SHOT</code> / <code>REGENERATE_SHOT</code> → 创作台；
+        <code>ADJUST_SHOT</code> / <code>REGENERATE_SHOT</code> → 分镜；
         <code>REDUB_LINE</code> → 配音与字幕；<code>RECOMPOSE</code> → 合成与导出。
       </div>
 
@@ -360,7 +360,7 @@
 
       <p class="subtitle" style="margin:16px 0 4px"><strong>旅程四：成本失控前的拦截</strong></p>
       <div class="flow">
-        <div class="node"><div class="n-title">创作台</div><div>批量生成</div></div>
+        <div class="node"><div class="n-title">分镜</div><div>批量生成</div></div>
         <div class="arrow">→<small>预估费用弹窗</small></div>
         <div class="node"><div class="n-title">确认 / 拒绝</div><div>4007 / 4008</div></div>
         <div class="arrow">→<small>确认后</small></div>
@@ -386,12 +386,12 @@
         <li><strong>无死胡同</strong>：每个页面都可经品牌 logo 或面包屑首项回到 <code>/home</code>。</li>
         <li><strong>无孤岛</strong>：除登录页外，每个页面在路由矩阵「主要入口」列都有至少一个站内父级入口。</li>
         <li><strong>全局导航外壳常驻</strong>：独立桌面左侧导航统一为同一套结构——
-          「首页 / 三个问题（看样片、连贯性中心、剧集看板）/ 当前工作（我的作品、总剧本、创作台）/
-          任务中心 / 更多（折叠：角色与场景卡、配音与字幕、合成与导出、质量报告、剧情图谱、
-          用量账单、账户）+ 当前身份与余额」，首页、我的作品、作品工作台、总剧本、创作台五个主页面
+          「首页 / 三个问题（看样片、连贯性中心、剧集看板）/ 当前工作（我的作品、总剧本、分镜）/
+          任务中心 / 更多（折叠：角色与场景卡、配音与字幕、合成与导出、质量、剧情、
+          用量账单、账户）+ 当前身份与余额」，首页、我的作品、作品工作台、总剧本、分镜五个主页面
           逐字一致；顶部面包屑在所有页面常驻；作品内子页面另有一条
-          作品级阶段导航（剧集看板 / 剧本 / 角色定妆 / 创作台 / 画面生成 / 配音字幕 / 合成导出 /
-          质量报告），保证作品内可横向直达、无需回退。
+          作品级阶段导航（剧集看板 / 剧本 / 角色定妆 / 分镜 / 画面生成 / 配音 / 合成导出 /
+          质量），保证作品内可横向直达、无需回退。
           <strong>Bot 壳例外</strong>：仅当 URL 带 <code>bgssai_shell=1</code> 或 <code>chat_pane=1</code>
           时隐藏侧栏、改用底栏（首页 / 作品 / 任务 / 套餐 / 更多）。窗口宽度不得单独触发该例外。</li>
         <li><strong>权限态分支</strong>：本端仅 <code>role_code=USER</code>；入口按身份渲染，权限不足不渲染入口而非渲染后报 403。
