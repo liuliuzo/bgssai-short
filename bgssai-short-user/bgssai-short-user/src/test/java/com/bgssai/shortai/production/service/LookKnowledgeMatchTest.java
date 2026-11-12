@@ -70,6 +70,20 @@ class LookKnowledgeMatchTest {
     }
 
     @Test
+    void mp4BytesAreAcceptedAndKeepAPosterKey() {
+        byte[] header = new byte[] {
+                0, 0, 0, 24, 'f', 't', 'y', 'p', 'i', 's', 'o', 'm', 0, 0, 0, 0,
+                'i', 's', 'o', 'm', 'm', 'p', '4', '1'
+        };
+        String raw = java.util.Base64.getEncoder().encodeToString(header);
+        LookImage.Decoded video = LookImage.decode(raw);
+        assertEquals("video/mp4", video.mimeType());
+        assertEquals("mp4", LookImage.extension(video.mimeType()));
+        assertEquals("short/dev/u/look/lm-1.poster.jpg",
+                LookKnowledgeService.posterKey("short/dev/u/look/lm-1.mp4"));
+    }
+
+    @Test
     void pngBytesAreAccepted() {
         LookImage.Decoded image = LookImage.decode(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");

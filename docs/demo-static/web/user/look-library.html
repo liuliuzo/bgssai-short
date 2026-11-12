@@ -21,13 +21,13 @@
   <main class="app-main">
     <div class="container">
       <h1 class="title">定妆知识库</h1>
-      <p class="subtitle">把自己的角色、场景、道具图片放在这里。挂到定妆后，生成候选时按名称和说明把最接近的一张交给模型。</p>
+      <p class="subtitle">把自己的角色、场景、道具图片或参考视频放在这里。挂到定妆后，生成候选时按名称和说明把最接近的一张交给模型。视频用其中一帧。</p>
       <div class="card">
         <div class="card-hd"><h2>我的定妆</h2><span class="badge">定妆参考</span></div>
         <div class="card-body">
           <div class="row" style="margin-bottom:12px">
-            <button class="btn btn-primary btn-sm">上传图片</button>
-            <span class="text-muted">JPG、PNG、WebP，不超过 6MB</span>
+            <button class="btn btn-primary btn-sm">上传素材</button>
+            <span class="text-muted">JPG、PNG、WebP、MP4，不超过 6MB</span>
           </div>
           <div class="assets">
             <div class="asset">
@@ -52,7 +52,7 @@
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
         <code>POST /bgssai/user/look-materials/delete</code>。
-        角色定妆照分正脸、前面、背面、侧面。点定妆生成时，先用这张卡的图，优先正脸；没有再按说明从知识库检索一张。
+        角色定妆照分正脸、前面、背面、侧面，也可以放一段 MP4。点定妆生成时，先用这张卡的图，优先正脸；没有再按说明从知识库检索。视频用其中一帧交给模型。
       </div>
     </div>
   </main>
