@@ -662,7 +662,7 @@ function CharacterPane({ work }) {
             style={{ width: 160 }}
             options={[{ value: 2, label: '2 张' }, { value: 4, label: '4 张' }, { value: 8, label: '8 张' }]}
           />
-          <span>{portraitPrice}。只有生成成功才会计入用量。</span>
+          <span>{portraitPrice}。这张卡或知识库里已有定妆照时，会拿它当参考再生成。只有生成成功才会计入用量。</span>
         </Space>
       </Modal>
     </Space>
