@@ -38,16 +38,44 @@
         <code>POST /api/mcp/tokens/revoke</code> body <code>{id}</code></p>
       <p>MCP 端点鉴权：<code>Authorization: Bearer bgs_mcp_...</code></p>
 
-      <h3 style="font-size:15px;margin:16px 0 8px">Claude</h3>
-      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">claude mcp add --transport http bgssai-short https://&lt;域名&gt;/api/mcp \
-  --header "Authorization: Bearer bgs_mcp_你的令牌"</pre>
-
-      <h3 style="font-size:15px;margin:16px 0 8px">Codex</h3>
-      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">codex mcp add bgssai-short --url https://&lt;域名&gt;/api/mcp \
-  --header "Authorization: Bearer bgs_mcp_你的令牌"</pre>
-
-      <h3 style="font-size:15px;margin:16px 0 8px">Cursor</h3>
-      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">{
+      <label for="mcp-agent" style="display:block;margin:16px 0 8px">选择工具</label>
+      <select id="mcp-agent" style="min-width:280px;height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px">
+        <optgroup label="国外">
+          <option>Claude</option>
+          <option>Codex</option>
+          <option selected>Cursor</option>
+          <option>Grok Bot</option>
+          <option>ChatGPT</option>
+          <option>VS Code</option>
+          <option>Windsurf</option>
+          <option>Gemini</option>
+          <option>Cline</option>
+          <option>Continue</option>
+          <option>Zed</option>
+          <option>Warp</option>
+          <option>OpenCode</option>
+          <option>Goose</option>
+        </optgroup>
+        <optgroup label="国内">
+          <option>WorkBuddy</option>
+          <option>豆包 PC</option>
+          <option>Kimi Work</option>
+          <option>QoderWork</option>
+          <option>TRAE</option>
+          <option>通义灵码</option>
+          <option>CodeBuddy</option>
+          <option>智谱 AutoClaw</option>
+          <option>DeepSeek</option>
+          <option>腾讯元宝</option>
+          <option>文心</option>
+          <option>阶跃桌面伙伴</option>
+          <option>LobsterAI</option>
+        </optgroup>
+        <optgroup label="Bgssai Bot">
+          <option>Bgssai Bot</option>
+        </optgroup>
+      </select>
+      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;margin-top:12px">{
   "mcpServers": {
     "bgssai-short": {
       "url": "https://&lt;域名&gt;/api/mcp",
@@ -55,17 +83,7 @@
     }
   }
 }</pre>
-
-      <h3 style="font-size:15px;margin:16px 0 8px">Grok Bot</h3>
-      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">MCP URL:  https://&lt;域名&gt;/api/mcp
-Auth:     Authorization: Bearer bgs_mcp_你的令牌
-Transport: Streamable HTTP (POST)</pre>
-
-      <h3 style="font-size:15px;margin:16px 0 8px">Bgssai Bot</h3>
-      <pre style="font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto">MCP URL:  https://&lt;域名&gt;/api/mcp
-Auth:     Authorization: Bearer bgs_mcp_你的令牌
-Transport: Streamable HTTP (POST)
-# 或：用 Chat 登录后由平台下发 MCP</pre>
+      <p class="subtitle">下拉按国外、国内、Bgssai Bot 分组。选中工具后只展示这一份配置，默认是 Cursor。</p>
     </div>
 
     <div class="card">

@@ -15,7 +15,7 @@
   3. 每人最多 5 枚令牌；吊销立即失效；明文仅创建时回显一次。
   4. 工具覆盖诊断探针与短剧业务读写：`list_login_logs` / `get_liveness` / `get_readiness` / `list_works` / `get_work` / `create_work` / `list_episodes` / `save_episode_script` / `list_shots` / `submit_render_task`（需 `confirm_cost=true`） / `publish_episode_to_media`（需 `confirm_publish=true`）。
   5. 每用户 60 次/分钟（initialize/ping 不计）。
-  6. 连接器页须展示 tagline「Connect your AI tools to bgssai」，并为上述五类 Agent 提供可复制配置片段（后端契约不变）。
+  6. 连接器页须展示 tagline「Connect your AI tools to bgssai」。工具按国外、国内、Bgssai Bot 分组，用一个下拉列表选择，再展示该工具的可复制配置片段（后端契约不变）。
 
 ## 三、验收标准
 
