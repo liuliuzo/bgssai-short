@@ -36,6 +36,21 @@
     .fixline .spacer { margin-left: auto; }
     .mini-pick { display: flex; gap: 6px; margin-top: 8px; }
     .mini-pick .phone { width: 46px; border-radius: 5px; cursor: pointer; }
+    .frame-thumb { width: 72px; }
+    .frame-caption {
+      display: block;
+      width: 72px;
+      margin-top: 2px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.4;
+      text-align: left;
+      white-space: nowrap;
+      cursor: zoom-in;
+    }
   </style>
 </head>
 <body>
@@ -122,7 +137,10 @@
               <button class="btn btn-default btn-sm" type="button">播放</button>
               <button class="btn btn-default btn-sm" type="button">放大播放</button>
             </div>
-            <span class="st warn" style="font-size:11px">已有视频，本次重生成失败</span>
+            <div class="frame-thumb">
+              <div class="phone" title="点击查看首帧" style="width:72px;height:72px;cursor:zoom-in"><span class="ph-tag">首帧</span></div>
+              <button type="button" class="frame-caption">查看首帧</button>
+            </div>
             <button class="btn btn-default btn-sm">重生成 1.6</button>
           </div>
         </div>
@@ -273,11 +291,13 @@
         画布、抽屉和配音表使用同一套场景、台词和成片/计划时长。
         绑定下拉只显示人名、场景名和卡状态，选项文字不含角色编号或场景编号。
         每一镜的操作和人话框随该卡片滚走，不粘在页面顶部。
-        页脚和在线客服不挡住首帧、人话或抽屉按钮；首帧「点击查看」打开同一张图。
+        页脚和在线客服不挡住首帧、人话或抽屉按钮。已有成片时首帧缩略图保持 72 宽，下方文案为「查看首帧」，单行排下，点击仍打开同一张图。
         剧集芯片在非成片页与选择器同为剧本状态/审核状态，不因合成尚未开始而显示「未开始」。
         顶部绑定下拉打开时为空，旁边列出本剧已有卡，不表示当前镜头没有引用。
-        最新视频任务失败但 <code>video_asset_id</code> 仍在时，标签为「已有视频，本次重生成失败」，
-        不得显示成没有视频。画布不是唯一播放入口。
+        镜头已是 <code>VIDEO_READY</code> 或 <code>LOCKED</code>，且 <code>video_asset_id</code> / <code>video_url</code> 仍在时，
+        不再把历史失败或取消的视频任务当成这一镜的常驻标签，不得显示「已有视频，本次重生成失败」，也不得显示成没有视频。
+        进行中的视频任务仍显示进度。状态尚未回到 <code>VIDEO_READY</code> 时，已有成片的刚失败尝试仍可提示。
+        任务中心仍保留失败记录，不删除、不解绑成片。画布不是唯一播放入口。
         行内提示来自连贯性检查、角色定妆状态与合规预检
         （<code>/previz/continuity-check</code>、<code>card_status</code>、
         <code>POST /bgssai/user/compliance/precheck</code> <code>check_scope=SHOT</code>：

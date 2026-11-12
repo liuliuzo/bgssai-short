@@ -8,7 +8,7 @@ import {
   shotCanvasStatusKey,
 } from './shotCardMedia.js'
 
-test('a ready clip with a failed video job stays a video', () => {
+test('a ready clip with a failed video job stays a video without a standing failure chip', () => {
   const row = {
     shot_status: 'VIDEO_READY',
     video_asset_id: 'vid-1',
@@ -23,11 +23,74 @@ test('a ready clip with a failed video job stays a video', () => {
   }
   assert.equal(shotHasPlayableVideo(row), true)
   assert.equal(shotCardStatusCode(row), 'VIDEO_READY')
+  assert.equal(shotLatestTaskBadge(row), null)
+  assert.equal(shotCanvasStatusKey(row), 'VIDEO_READY')
+})
+
+test('a locked clip does not keep a stale regen failure chip', () => {
+  const row = {
+    shot_status: 'LOCKED',
+    video_asset_id: 'vid-1',
+    video_url: 'https://cdn.example/shot.mp4',
+    latest_task: {
+      task_type: 'VIDEO',
+      task_type_name: '视频',
+      task_status: 'FAILED',
+      task_status_name: '已失败',
+    },
+  }
+  assert.equal(shotCardStatusCode(row), 'LOCKED')
+  assert.equal(shotLatestTaskBadge(row), null)
+  assert.equal(shotCanvasStatusKey(row), 'LOCKED')
+})
+
+test('an in-flight failed regen can still say the existing clip remains', () => {
+  const row = {
+    shot_status: 'VIDEO_GENERATING',
+    video_asset_id: 'vid-1',
+    video_url: 'https://cdn.example/shot.mp4',
+    latest_task: {
+      task_type: 'VIDEO',
+      task_type_name: '视频',
+      task_status: 'FAILED',
+      task_status_name: '已失败',
+    },
+  }
   const badge = shotLatestTaskBadge(row)
   assert.equal(badge.color, 'gold')
   assert.equal(badge.text, '已有视频，本次重生成失败')
   assert.equal(badge.text.includes('已失败'), false)
-  assert.equal(shotCanvasStatusKey(row), 'VIDEO_READY')
+})
+
+test('a settled ready clip still shows a video job that is actually running', () => {
+  const row = {
+    shot_status: 'VIDEO_READY',
+    video_asset_id: 'vid-1',
+    video_url: 'https://cdn.example/shot.mp4',
+    latest_task: {
+      task_type: 'VIDEO',
+      task_type_name: '视频',
+      task_status: 'RUNNING',
+      task_status_name: '执行中',
+    },
+  }
+  assert.equal(shotLatestTaskBadge(row).color, 'blue')
+  assert.match(shotLatestTaskBadge(row).text, /执行中/)
+})
+
+test('a settled ready clip does not keep a canceled regen chip', () => {
+  const row = {
+    shot_status: 'VIDEO_READY',
+    video_asset_id: 'vid-1',
+    video_url: 'https://cdn.example/shot.mp4',
+    latest_task: {
+      task_type: 'VIDEO',
+      task_status: 'CANCELED',
+      task_status_name: '已取消',
+      task_type_name: '视频',
+    },
+  }
+  assert.equal(shotLatestTaskBadge(row), null)
 })
 
 test('generating status does not hide a bound clip', () => {
