@@ -122,14 +122,15 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         body.put("prompt", ProviderHttp.promptOf(request));
         body.put("n", 1);
         body.put("size", ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("size")), "512x768"));
+        int budget = Math.max(600, timeoutSec);
         String raw = http.postJson(join(baseUrl, path), headers(apiKey, cfg), ShortJson.toJson(body),
-                Math.min(180, timeoutSec));
+                Math.min(180, budget));
         Map<String, Object> submitted = ShortJson.map(raw);
         if (!hasMedia(submitted)) {
             String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("id")),
                     ShortJson.text(submitted.get("task_id")));
             if (!taskId.isBlank()) {
-                submitted = awaitMedia(baseUrl, apiKey, request.getModel().getModelCode(), submitted, cfg, timeoutSec);
+                submitted = awaitMedia(baseUrl, apiKey, request.getModel().getModelCode(), submitted, cfg, budget);
             }
         }
         return mediaBytes(submitted, apiKey, timeoutSec, "image/png");
@@ -153,9 +154,10 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         if (!last.isBlank()) {
             body.put("last_image", last);
         }
+        int budget = Math.max(900, timeoutSec);
         Map<String, Object> submitted = ShortJson.map(http.postJson(join(baseUrl, path), headers(apiKey, cfg),
                 ShortJson.toJson(body), Math.min(60, timeoutSec)));
-        Map<String, Object> done = awaitMedia(baseUrl, apiKey, request.getModel().getModelCode(), submitted, cfg, timeoutSec);
+        Map<String, Object> done = awaitMedia(baseUrl, apiKey, request.getModel().getModelCode(), submitted, cfg, budget);
         AiProviderResult result = mediaBytes(done, apiKey, timeoutSec, "video/mp4");
         if (result.getDurationSec() == null || result.getDurationSec() <= 0) {
             int duration = ShortJson.integer(request.param("duration_sec"), 0);
@@ -213,18 +215,27 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         long deadline = System.currentTimeMillis() + Math.max(MEDIA_POLL_FLOOR_MS, timeoutSec * 1000L);
         Map<String, String> headers = headers(apiKey, cfg);
         while (true) {
-            Map<String, Object> resp = ShortJson.map(http.getJson(url, headers, 60));
-            String status = statusOf(resp);
-            if (failed(status)) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                        TokenHubClientSupport.userFacingMessage("model task failed"));
-            }
-            if (hasMedia(resp) && (status.isBlank() || success(status))) {
-                return resp;
-            }
-            if (success(status)) {
-                throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                        TokenHubClientSupport.userFacingMessage("model media missing"));
+            try {
+                Map<String, Object> resp = ShortJson.map(http.getJson(url, headers, 60));
+                String status = statusOf(resp);
+                if (failed(status)) {
+                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                            TokenHubClientSupport.userFacingMessage("model task failed"));
+                }
+                if (hasMedia(resp) && (status.isBlank() || success(status))) {
+                    return resp;
+                }
+                if (success(status)) {
+                    throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                            TokenHubClientSupport.userFacingMessage("model media missing"));
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw ex;
+            } catch (Exception ex) {
+                if (!TokenHubClientSupport.transientUpstream(ex) || System.currentTimeMillis() >= deadline) {
+                    throw ex;
+                }
             }
             if (System.currentTimeMillis() >= deadline) {
                 throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,

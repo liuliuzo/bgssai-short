@@ -458,6 +458,20 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void slowStatusQueryDoesNotFailAVideoThatIsStillRunning() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        http.getFailures.add(new java.net.http.HttpTimeoutException("request timed out"));
+        http.gets.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"succeeded\",\"data\":[{\"url\":\"https://cdn.example/movie.mp4\"}]}");
+        http.bytes = new byte[] {9};
+        AiProviderRequest req = request("VIDEO", "bgssai-video", "rain");
+        req.getModel().setTimeoutSec(60);
+        assertArrayEquals(new byte[] {9}, provider(http, "key").execute(req).getBinaryContent());
+        assertEquals(3, http.polledUrls.size());
+    }
+
+    @Test
     void mediaPollBudgetHonorsModelTimeout() {
         assertEquals(180_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(60));
         assertEquals(900_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(900));
@@ -487,6 +501,7 @@ class TencentTokenHubAiProviderTest {
     private static final class FakeClient implements ProviderHttp.Client {
         private final Queue<String> posts = new ArrayDeque<>();
         private final Queue<String> gets = new ArrayDeque<>();
+        private final Queue<Exception> getFailures = new ArrayDeque<>();
         private final List<String> postedUrls = new ArrayList<>();
         private final List<String> postedBodies = new ArrayList<>();
         private final List<Integer> postedTimeouts = new ArrayList<>();
@@ -507,8 +522,11 @@ class TencentTokenHubAiProviderTest {
         }
 
         @Override
-        public String getJson(String url, Map<String, String> headers, int timeoutSec) {
+        public String getJson(String url, Map<String, String> headers, int timeoutSec) throws Exception {
             polledUrls.add(url);
+            if (!getFailures.isEmpty()) {
+                throw getFailures.remove();
+            }
             return gets.remove();
         }
 

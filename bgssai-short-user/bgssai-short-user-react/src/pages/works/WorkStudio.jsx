@@ -90,12 +90,13 @@ async function waitTask(workId, taskId) {
   return rows[0] || null
 }
 
-/** Poll until terminal, covering model timeout_sec (120) + worker grace (120). */
+/** Poll until the task ends. Video and multi-image looks can run about 15 minutes. */
 async function waitTasks(workId, taskIds) {
   const ids = [...new Set((taskIds || []).filter(Boolean))]
   if (!ids.length) return []
+  const deadline = Date.now() + 16 * 60 * 1000
   let lastMatched = []
-  for (let i = 0; i < 160; i += 1) {
+  while (Date.now() < deadline) {
     const { data } = await productionApi.listTasks({ work_id: workId, page_num: 1, page_size: 100 })
     const rows = data?.result || []
     const matched = ids.map((id) => rows.find((item) => item.task_id === id)).filter(Boolean)
@@ -105,7 +106,7 @@ async function waitTasks(workId, taskIds) {
         || row.task_status === 'FAILED'
         || row.task_status === 'CANCELED')
     if (done) return matched
-    await sleep(1500)
+    await sleep(2000)
   }
   return lastMatched
 }
@@ -155,7 +156,8 @@ function reportTaskOutcome(task, successText) {
 
 async function waitBatch(workId, batchId, taskIds) {
   if (batchId) {
-    for (let i = 0; i < 80; i += 1) {
+    const deadline = Date.now() + 16 * 60 * 1000
+    while (Date.now() < deadline) {
       const { data } = await productionApi.batchProgress(batchId)
       const result = data?.result
       if (result && (result.queued + result.running) === 0) {
