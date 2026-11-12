@@ -28,6 +28,9 @@ const SHELL_PRIMARY = [
 ]
 
 const SHELL_MORE = NAV_ITEMS.filter((item) => !SHELL_PRIMARY.some((primary) => primary.key === item.key))
+const MAKE_KEYS = ['/home', '/works', '/tasks']
+const MAKE_NAV = NAV_ITEMS.filter((item) => MAKE_KEYS.includes(item.key))
+const ACCOUNT_NAV = NAV_ITEMS.filter((item) => !MAKE_KEYS.includes(item.key))
 
 // 手机浏览器（不在 Bot 旁栏里）也用旁栏那套底部标签栏 +「更多」：以前手机上 220px 侧栏常驻，
 // 内容区只剩一窄条，标题被挤成一字一行。
@@ -118,22 +121,24 @@ export default function MainLayout() {
           </div>
 
           <nav className="pa-nav">
-            <div className="pa-nav-section">
-              <div className="pa-nav-section-label">功能菜单</div>
-              {NAV_ITEMS.map((item) => (
-                <div
-                  key={item.key}
-                  className={`pa-nav-item${isNavActive(location.pathname, item.key) ? ' active' : ''}`}
-                  onClick={() => navigate(item.key)}
-                  role="menuitem"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && navigate(item.key)}
-                >
-                  <span className="pa-nav-item-icon">{item.icon}</span>
-                  {item.label}
-                </div>
-              ))}
-            </div>
+            {[{ label: '制作', items: MAKE_NAV }, { label: '账户', items: ACCOUNT_NAV }].map((section) => (
+              <div className="pa-nav-section" key={section.label}>
+                <div className="pa-nav-section-label">{section.label}</div>
+                {section.items.map((item) => (
+                  <div
+                    key={item.key}
+                    className={`pa-nav-item${isNavActive(location.pathname, item.key) ? ' active' : ''}`}
+                    onClick={() => navigate(item.key)}
+                    role="menuitem"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && navigate(item.key)}
+                  >
+                    <span className="pa-nav-item-icon">{item.icon}</span>
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            ))}
           </nav>
 
           <div className="pa-sidebar-footer">
@@ -170,7 +175,9 @@ export default function MainLayout() {
         </header>
 
         <main className="pa-content">
-          <Outlet />
+          <div key={location.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </main>
 
         {compact && (

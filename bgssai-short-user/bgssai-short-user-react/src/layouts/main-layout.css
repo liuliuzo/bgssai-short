@@ -98,6 +98,7 @@
   background: var(--pa-sidebar-active);
   color: var(--lg-accent);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--gold, #f8b800);
 }
 
 .pa-nav-item-icon {

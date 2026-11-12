@@ -1,32 +1,33 @@
-import { Card, Descriptions, Typography, Button, Space } from 'antd'
+import { Button } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { useUserStore } from '../../store/user'
+import './home.css'
 
-const { Title, Paragraph } = Typography
+const STEPS = ['写一句梗概', '生成大纲', '定妆和分镜', '合成成片']
 
 export default function Home() {
-  const userInfo = useUserStore((s) => s.userInfo)
   const navigate = useNavigate()
 
   return (
-    <div>
-      <Title level={4} style={{ marginTop: 0 }}>首页</Title>
-      <Paragraph type="secondary">
-        从建剧、写剧本、定妆、拆镜到成片和提审，按步骤完成一部短剧。
-        想先看完整流程，可以打开示例作品体验制作链路。
-      </Paragraph>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={() => navigate('/works')}>我的作品</Button>
-        <Button onClick={() => navigate('/tasks')}>任务中心</Button>
-        <Button onClick={() => navigate('/subscription')}>套餐与加量</Button>
-      </Space>
-      <Card title="当前登录身份" style={{ maxWidth: 640 }}>
-        <Descriptions column={1} size="small">
-          <Descriptions.Item label="用户名">{userInfo?.user_name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="姓名">{userInfo?.real_name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="角色">{userInfo?.role_name || '-'}</Descriptions.Item>
-        </Descriptions>
-      </Card>
-    </div>
+    <section className="home-start">
+      <p className="home-kicker">短剧制作</p>
+      <h1>从一句话开始一部短剧</h1>
+      <p className="home-lead">只要剧名和一句梗概。题材、集数和时长都有默认值，想改再展开。</p>
+      <div className="home-actions">
+        <Button type="primary" size="large" onClick={() => navigate('/works?create=1')}>
+          新建短剧
+        </Button>
+        <Button size="large" onClick={() => navigate('/works')}>
+          继续已有作品
+        </Button>
+      </div>
+      <ol className="home-steps">
+        {STEPS.map((label, index) => (
+          <li key={label} style={{ animationDelay: `${index * 70}ms` }}>
+            <span>{index + 1}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+    </section>
   )
 }

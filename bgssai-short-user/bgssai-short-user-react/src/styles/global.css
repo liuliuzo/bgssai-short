@@ -11,10 +11,12 @@
 
 /* ============ 1. 设计令牌 ============ */
 :root {
-  /* 品牌色（官网同款品牌蓝） */
-  --brand: #0d6efd;
-  --brand-2: #0b5ed7;
-  --brand-3: #3d8bfd;
+  /* 品牌色取自 bgssai-resources 标志：蓝 #3060c8，金 #f8b800 */
+  --brand: #3060c8;
+  --brand-2: #254ea8;
+  --brand-3: #5a86dc;
+  --gold: #f8b800;
+  --gold-ink: #8a6500;
   --text: #0f172a;
   --sub: #4b5568;
   --muted: #6b7588;
@@ -23,33 +25,33 @@
   --border: #e4e7ed;
   --surface-2: #f2f4f7;
   /* AI 标记跟品牌蓝走，不再多一种紫色；提醒用深琥珀，危险用官网的红 */
-  --ai: #0d6efd;
+  --ai: #3060c8;
   --ok: #1a7f4b;
   --warn: #b54708;
   --danger: #b42318;
   --hot: #b42318;
-  --info-soft: #e9effd;
+  --info-soft: #e8eefb;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC",
     Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --lg-accent: #0d6efd;
-  --lg-accent-2: #0b5ed7;
-  --lg-accent-hover: #0b5ed7;
-  --lg-accent-soft: #e9effd;
-  --lg-accent-soft-2: #d6e1fa;
-  --lg-accent-ink: #0d2a6b;
+  --lg-accent: #3060c8;
+  --lg-accent-2: #254ea8;
+  --lg-accent-hover: #254ea8;
+  --lg-accent-soft: #e8eefb;
+  --lg-accent-soft-2: #d5e2f8;
+  --lg-accent-ink: #1a3f86;
   /* 以前是渐变；主按钮一律纯色，旧名字留给老样式 */
-  --lg-accent-grad: #0d6efd;
-  --lg-accent-grad-r: #0b5ed7;
-  --lg-accent-glow: rgba(13, 110, 253, 0.16);
+  --lg-accent-grad: #3060c8;
+  --lg-accent-grad-r: #254ea8;
+  --lg-accent-glow: rgba(48, 96, 200, 0.18);
 
   --lg-text: #0f172a;
   --lg-text-muted: #4b5568;
   --lg-text-faint: #6b7588;
   --lg-text-on-accent: #ffffff;
 
-  --lg-ai: #0d6efd;
+  --lg-ai: #3060c8;
   --lg-ok: #1a7f4b;
   --lg-warn: #b54708;
   --lg-danger: #b42318;
@@ -60,7 +62,14 @@
   --lg-border: #e4e7ed;
   --lg-border-strong: #cbd2dd;
   --lg-border-subtle: #eceef3;
-  --lg-hover-bg: #f2f5fb;
+  --lg-hover-bg: #f4f7fd;
+  --pa-sidebar-bg: #ffffff;
+  --pa-sidebar-border: #e4e7ed;
+  --pa-sidebar-text: #1a1a1a;
+  --pa-sidebar-muted: #4b5568;
+  --pa-sidebar-label: #8a6500;
+  --pa-sidebar-hover: #f7f4ea;
+  --pa-sidebar-active: #e8eefb;
 
   /* 旧玻璃令牌：全部改实底 */
   --lg-glass-bg: #ffffff;
@@ -333,4 +342,25 @@ h6 {
 .ant-descriptions,
 .ant-pagination {
   font-variant-numeric: tabular-nums;
+}
+
+.page-enter {
+  animation: page-enter 0.42s var(--lg-easing);
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
 }
