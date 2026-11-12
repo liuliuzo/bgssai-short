@@ -511,10 +511,12 @@ function CharacterPane({ work }) {
     markBusy(target.id, true)
     try {
       const call = target.kind === 'character'
-        ? productionApi.uploadCharacterPortrait(target.id, imageBase64)
+        ? productionApi.uploadCharacterPortrait(target.id, imageBase64, target.angle)
         : productionApi.uploadScenePortrait(target.id, imageBase64)
       await call
-      message.success('已放入定妆候选和知识库，锁定后全剧按这张图走')
+      message.success(target.angle === 'FRONT_FACE' || !target.angle
+        ? '正脸已锁定为定妆照，全剧按这张脸走'
+        : '已保存这一面的定妆照')
       load()
     } catch {
       message.error('图片没有上传成功')
@@ -552,10 +554,18 @@ function CharacterPane({ work }) {
         {cardsReady ? chars.map((row) => (
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={<Space>
             <Button size="small" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
-            <Button size="small" disabled={busyIds.has(row.character_id)} onClick={() => { ownImageTarget.current = { kind: 'character', id: row.character_id }; ownImageRef.current?.click() }}>用我的图片</Button>
+            {[['FRONT_FACE', '正脸'], ['FRONT', '前面'], ['BACK', '背面'], ['SIDE', '侧面']].map(([angle, label]) => (
+              <Button key={angle} size="small" disabled={busyIds.has(row.character_id)} onClick={() => { ownImageTarget.current = { kind: 'character', id: row.character_id, angle }; ownImageRef.current?.click() }}>{label}</Button>
+            ))}
           </Space>}>
             <Space wrap>
-              {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} /> : null}
+              {(row.look_view_list || []).filter((view) => view.file_url).map((view) => (
+                <div key={view.view_angle} style={{ textAlign: 'center' }}>
+                  <ClickThumb alt={view.view_name} src={view.file_url} width={72} height={128} />
+                  <div>{view.view_name}</div>
+                </div>
+              ))}
+              {!(row.look_view_list || []).some((view) => view.file_url) && row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />

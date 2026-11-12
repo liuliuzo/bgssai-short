@@ -133,7 +133,8 @@ public class LookKnowledgeService {
         if (caption != null && caption.length() > 500) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "说明最多 500 个字");
         }
-        ShortLookMaterial saved = store(library, userId, kind, name, caption, image);
+        String angle = "CHARACTER".equals(kind) ? normalizeView(req.getViewAngle(), true) : null;
+        ShortLookMaterial saved = store(library, userId, kind, name, caption, image, angle, null, null);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("material_id", saved.getMaterialId());
         result.put("library_id", library.getLibraryId());
@@ -174,13 +175,77 @@ public class LookKnowledgeService {
 
     /** Card upload files the same photo into the creator's mounted look library. */
     @Transactional
-    public void fileImage(String userId, String kind, String name, String caption, LookImage.Decoded image) {
+    public void fileImage(String userId, String kind, String name, String caption, LookImage.Decoded image,
+            String viewAngle, String cardId, String assetId) {
         ShortLookLibrary library = defaultLibrary(userId);
         if (!"ACTIVE".equals(library.getStatus()) || library.getMountPortrait() == null || library.getMountPortrait() == 0) {
             return;
         }
-        store(library, userId, normalizeKind(kind), name == null || name.isBlank() ? "未命名定妆" : name.trim(),
-                blankToNull(caption), image);
+        String normalizedKind = normalizeKind(kind);
+        String angle = "CHARACTER".equals(normalizedKind) ? normalizeView(viewAngle, true) : null;
+        replaceCardAngle(userId, cardId, angle);
+        store(library, userId, normalizedKind, name == null || name.isBlank() ? "未命名定妆" : name.trim(),
+                blankToNull(caption), image, angle, cardId, assetId);
+    }
+
+    public List<Map<String, Object>> views(String userId, String cardId) {
+        if (userId == null || cardId == null || cardId.isBlank() || materialMapper == null) {
+            return List.of();
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andCardIdEqualTo(cardId).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("id desc");
+        List<ShortLookMaterial> rows = materialMapper.selectByExample(ex);
+        if (rows == null) {
+            return List.of();
+        }
+        Map<String, ShortLookMaterial> latest = new LinkedHashMap<>();
+        for (String angle : List.of("FRONT_FACE", "FRONT", "BACK", "SIDE")) {
+            latest.put(angle, null);
+        }
+        for (ShortLookMaterial row : rows) {
+            if (row.getViewAngle() != null && latest.containsKey(row.getViewAngle()) && latest.get(row.getViewAngle()) == null) {
+                latest.put(row.getViewAngle(), row);
+            }
+        }
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Map.Entry<String, ShortLookMaterial> entry : latest.entrySet()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("view_angle", entry.getKey());
+            item.put("view_name", viewName(entry.getKey()));
+            ShortLookMaterial row = entry.getValue();
+            item.put("asset_id", row == null ? null : row.getAssetId());
+            item.put("file_url", row == null ? null : presign(row.getStorageKey()));
+            list.add(item);
+        }
+        return list;
+    }
+
+    public static String normalizeView(String raw, boolean required) {
+        if (raw == null || raw.isBlank()) {
+            return required ? "FRONT_FACE" : null;
+        }
+        String value = raw.trim().toUpperCase();
+        if (!List.of("FRONT_FACE", "FRONT", "BACK", "SIDE").contains(value)) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "定妆角度只能是正脸、前面、背面、侧面");
+        }
+        return value;
+    }
+
+    public static String viewName(String angle) {
+        return switch (angle) {
+            case "FRONT" -> "前面";
+            case "BACK" -> "背面";
+            case "SIDE" -> "侧面";
+            default -> "正脸";
+        };
+    }
+
+    static int rankScore(int score, String viewAngle) {
+        if (score < 3) {
+            return score;
+        }
+        return "FRONT_FACE".equals(viewAngle) ? score + 15 : score;
     }
 
     public LookHit bestMatch(String userId, String kind, String prompt) {
@@ -203,7 +268,7 @@ public class LookKnowledgeService {
             if (!mounted.contains(row.getLibraryId()) || !wanted.equals(row.getMaterialKind())) {
                 continue;
             }
-            int score = matchScore(prompt, row.getMaterialName(), row.getCaption());
+            int score = rankScore(matchScore(prompt, row.getMaterialName(), row.getCaption()), row.getViewAngle());
             if (score > bestScore) {
                 bestScore = score;
                 best = row;
@@ -259,8 +324,28 @@ public class LookKnowledgeService {
         }
     }
 
+    private void replaceCardAngle(String userId, String cardId, String angle) {
+        if (cardId == null || cardId.isBlank() || angle == null) {
+            return;
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andCardIdEqualTo(cardId).andViewAngleEqualTo(angle).andDeletedFlagEqualTo(0);
+        List<ShortLookMaterial> rows = materialMapper.selectByExample(ex);
+        if (rows == null) {
+            return;
+        }
+        for (ShortLookMaterial row : rows) {
+            ShortLookMaterial patch = new ShortLookMaterial();
+            patch.setDeletedFlag(1);
+            patch.setUpdatedTime(new Date());
+            ShortLookMaterialExample up = new ShortLookMaterialExample();
+            up.createCriteria().andIdEqualTo(row.getId());
+            materialMapper.updateByExampleSelective(patch, up);
+        }
+    }
+
     private ShortLookMaterial store(ShortLookLibrary library, String userId, String kind, String name, String caption,
-            LookImage.Decoded image) {
+            LookImage.Decoded image, String viewAngle, String cardId, String assetId) {
         ShortLookMaterial row = new ShortLookMaterial();
         row.setMaterialId(ShortIds.id("lm-"));
         row.setLibraryId(library.getLibraryId());
@@ -268,6 +353,9 @@ public class LookKnowledgeService {
         row.setMaterialName(name);
         row.setCaption(caption);
         row.setMaterialKind(kind);
+        row.setViewAngle(viewAngle);
+        row.setCardId(cardId);
+        row.setAssetId(assetId);
         row.setMimeType(image.mimeType());
         String key = "short/" + activeEnv() + "/" + userId + "/look/" + row.getMaterialId() + "."
                 + LookImage.extension(image.mimeType());
@@ -365,6 +453,8 @@ public class LookKnowledgeService {
             file.put("material_name", material.getMaterialName());
             file.put("caption", material.getCaption());
             file.put("material_kind", material.getMaterialKind());
+            file.put("view_angle", material.getViewAngle());
+            file.put("view_name", material.getViewAngle() == null ? null : viewName(material.getViewAngle()));
             file.put("file_url", presign(material.getStorageKey()));
             file.put("width", material.getWidth());
             file.put("height", material.getHeight());

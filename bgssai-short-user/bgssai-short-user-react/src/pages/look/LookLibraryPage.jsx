@@ -30,6 +30,7 @@ export default function LookLibraryPage() {
   const [libraryId, setLibraryId] = useState()
   const [loading, setLoading] = useState(false)
   const fileRef = useRef(null)
+  const [viewAngle, setViewAngle] = useState('FRONT_FACE')
   const [form] = Form.useForm()
 
   const load = useCallback(async () => {
@@ -77,6 +78,17 @@ export default function LookLibraryPage() {
             onChange={setLibraryId}
             options={libraries.map((item) => ({ value: item.library_id, label: item.library_name }))}
           />
+          <Select
+            style={{ width: 120 }}
+            value={viewAngle}
+            onChange={setViewAngle}
+            options={[
+              { value: 'FRONT_FACE', label: '正脸' },
+              { value: 'FRONT', label: '前面' },
+              { value: 'BACK', label: '背面' },
+              { value: 'SIDE', label: '侧面' },
+            ]}
+          />
           <Button disabled={!libraryId} onClick={() => fileRef.current?.click()}>上传图片</Button>
         </Space>
       }>
@@ -92,6 +104,7 @@ export default function LookLibraryPage() {
               material_name: name,
               caption: name,
               material_kind: 'CHARACTER',
+              view_angle: viewAngle,
               image_base64: imageBase64,
             })
             message.success('已放入知识库')

@@ -16,6 +16,13 @@ class LookKnowledgeMatchTest {
     }
 
     @Test
+    void frontFaceOutranksAnotherAngleWithTheSameWords() {
+        int face = LookKnowledgeService.rankScore(8, "FRONT_FACE");
+        int side = LookKnowledgeService.rankScore(8, "SIDE");
+        assertTrue(face > side);
+    }
+
+    @Test
     void twoSharedCharactersAreNotEnough() {
         assertTrue(LookKnowledgeService.matchScore("女性角色", "办公室", "落地窗") < 3);
     }

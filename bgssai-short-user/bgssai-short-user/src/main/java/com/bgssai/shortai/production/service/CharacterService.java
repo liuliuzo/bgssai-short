@@ -180,8 +180,19 @@ public class CharacterService {
         if (caption == null || caption.isBlank()) {
             caption = joinCaption(row.getCharacterName(), row.getAppearancePrompt());
         }
-        lookKnowledgeService.fileImage(row.getUserId(), "CHARACTER", row.getCharacterName(), caption, image);
-        return Responses.ok(uploaded(asset));
+        String angle = LookKnowledgeService.normalizeView(req.getViewAngle(), true);
+        caption = joinCaption(caption, LookKnowledgeService.viewName(angle));
+        lookKnowledgeService.fileImage(row.getUserId(), "CHARACTER", row.getCharacterName(), caption, image,
+                angle, row.getCharacterId(), asset.getAssetId());
+        if ("FRONT_FACE".equals(angle)) {
+            CharacterReq lock = new CharacterReq();
+            lock.setCharacterId(row.getCharacterId());
+            lock.setAssetId(asset.getAssetId());
+            lockCharacter(lock);
+        }
+        Map<String, Object> result = uploaded(asset);
+        result.put("view_angle", angle);
+        return Responses.ok(result);
     }
 
     @Transactional
@@ -346,7 +357,7 @@ public class CharacterService {
         if (caption == null || caption.isBlank()) {
             caption = joinCaption(row.getCardName(), row.getAppearancePrompt());
         }
-        lookKnowledgeService.fileImage(row.getUserId(), kind, row.getCardName(), caption, image);
+        lookKnowledgeService.fileImage(row.getUserId(), kind, row.getCardName(), caption, image, null, row.getSceneCardId(), asset.getAssetId());
         return Responses.ok(uploaded(asset));
     }
 
@@ -484,6 +495,7 @@ public class CharacterService {
         item.put("ref_image_asset_id", row.getRefImageAssetId());
         item.put("ref_image_url", assetUrl(row.getRefImageAssetId()));
         item.put("candidate_list", candidates(row.getCharacterId()));
+        item.put("look_view_list", lookKnowledgeService == null ? List.of() : lookKnowledgeService.views(row.getUserId(), row.getCharacterId()));
         item.put("used_shot_count", countCharacterShots(shots, row.getCharacterId()));
         return item;
     }
