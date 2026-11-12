@@ -41,10 +41,10 @@ import {
   evaluateShotReadiness,
   validateTubePublishPreflight,
 } from '../../utils/CinematographyHelper'
-import { publishStatusAlertType, tubeTokenMissingMessage } from '../../utils/baselineCards'
+import { composePublishHints, publishStatusAlertType, tubeTokenMissingMessage } from '../../utils/baselineCards'
 import {
   labelOf, SCRIPT_STATUS_LABEL, SHOT_STATUS_LABEL, TARGET_TYPE_LABEL,
-  localizePromptShotSize, friendlyFailReason, visibleFailReason, sanitizeTubeWarning,
+  localizePromptShotSize, friendlyFailReason, visibleFailReason,
 } from '../../lib/displayLabels'
 import {
   composeSurfaceFromEntry,
@@ -1430,6 +1430,7 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
   })
 
   const tokenMissing = tubeTokenMissingMessage(mediaPreflight)
+  const publishHints = statusSettled ? composePublishHints(mediaPreflight, film) : []
   const canPublish = statusSettled
     && !!film?.film_id
     && clientPreflight.ready
@@ -1516,35 +1517,6 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           style={{ marginBottom: 12 }}
           message="合成前置未满足"
           description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
-        />
-      ) : null}
-      {tokenMissing ? (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 12 }}
-          message="未配置 Tube 令牌"
-          description={(mediaPreflight?.warnings || []).filter(Boolean).map(sanitizeTubeWarning).filter(Boolean).join('；')
-            || '发布已停用。请在环境配置或管理端写入 Tube 摄入令牌后再发布。此处不填写、也不编造令牌。'}
-        />
-      ) : null}
-      {statusSettled && mediaPreflight && mediaPreflight.config_ready === false && !tokenMissing ? (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 12 }}
-          message="Tube 发布预检：配置未就绪"
-          description={(mediaPreflight.warnings || []).map(sanitizeTubeWarning).filter(Boolean).join('；')
-            || 'Tube 主机未配置，请联系管理员完成接入后再发布'}
-        />
-      ) : null}
-      {statusSettled && mediaPreflight && mediaPreflight.config_ready && mediaPreflight.publishable === false && mediaPreflight.gate_reason ? (
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginBottom: 12 }}
-          message="当前成片暂不可发布到 Tube"
-          description={mediaPreflight.gate_reason}
         />
       ) : null}
       {composeCost ? (
@@ -1634,7 +1606,9 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           disabled={!canPublish || batchPublishing}
           onClick={runPublish}
         >发布到 Tube</Button>
-        {tokenMissing ? <Text type="warning">未配置 Tube 令牌</Text> : null}
+        {publishHints.map((hint) => (
+          <Text key={hint} type="secondary">{hint}</Text>
+        ))}
         <Button
           loading={batchPublishing}
           disabled={!statusSettled || batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false

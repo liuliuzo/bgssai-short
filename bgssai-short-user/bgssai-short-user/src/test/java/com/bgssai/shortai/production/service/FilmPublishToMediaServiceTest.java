@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.exception.BizException;
@@ -26,9 +27,12 @@ import com.bgssai.shortai.model.ShortFilm;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishBatchToMediaReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.FilmPublishToMediaReq;
+import com.bgssai.shortai.configuration.BgssaiTubeProperties;
 import com.bgssai.shortai.production.media.MediaIngestClient;
 import com.bgssai.shortai.production.media.MediaIngestContract;
 import com.bgssai.shortai.production.media.MediaPublishException;
+import com.bgssai.shortai.production.media.RestMediaIngestClient;
+import com.bgssai.shortai.secret.SysSecretReader;
 
 class FilmPublishToMediaServiceTest {
 
@@ -617,5 +621,96 @@ class FilmPublishToMediaServiceTest {
         assertEquals("UNKNOWN", items.get(0).get("status"));
         assertEquals(false, items.get(0).get("ok"));
         verify(mediaIngestClient, org.mockito.Mockito.times(1)).ingest(any());
+    }
+
+    @Test
+    void preflightOfUncomposedEpisodeDoesNotWarnFilmNotFound() {
+        when(filmMapper.selectOneByExample(any())).thenReturn(null);
+        ShortEpisode episode = approvedEpisode();
+        episode.setComposeStatus("NONE");
+        episode.setFilmAssetId(null);
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(episode);
+
+        ApiResponse response = service().preflight("ep-1", null, null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals(Boolean.FALSE, result.get("film_present"));
+        assertEquals(Boolean.FALSE, result.get("film_record_missing"));
+        assertEquals(Boolean.FALSE, result.get("publishable"));
+        assertEquals("本集尚未合成，合成完成后再发布", result.get("gate_reason"));
+        assertEquals("NONE", result.get("compose_status"));
+        @SuppressWarnings("unchecked")
+        List<String> warnings = (List<String>) result.get("warnings");
+        assertTrue(warnings.isEmpty());
+        assertFalse(String.valueOf(result).contains("film not found"));
+    }
+
+    @Test
+    void preflightReportsMissingFilmRowOnlyAfterComposeClaimedAnAsset() {
+        when(filmMapper.selectOneByExample(any())).thenReturn(null);
+        ShortEpisode episode = approvedEpisode();
+        episode.setComposeStatus("READY");
+        episode.setFilmAssetId("as-film");
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(episode);
+
+        ApiResponse response = service().preflight("ep-1", null, null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals(Boolean.TRUE, result.get("film_record_missing"));
+        assertEquals("成片记录缺失，请重新合成后再发布", result.get("gate_reason"));
+        @SuppressWarnings("unchecked")
+        List<String> warnings = (List<String>) result.get("warnings");
+        assertTrue(warnings.isEmpty());
+    }
+
+    @Test
+    void preflightKeepsTokenWarningSeparateFromAbsentFilm() {
+        FilmPublishToMediaService service = service();
+        BgssaiTubeProperties properties = new BgssaiTubeProperties();
+        properties.setBaseUrl("https://dev.user.bgssai-tube.com");
+        properties.setIngestToken("");
+        RestMediaIngestClient client = new RestMediaIngestClient(
+                mock(RestTemplate.class), properties, new SysSecretReader(key -> ""));
+        ReflectionTestUtils.setField(service, "mediaIngestClient", client);
+        when(filmMapper.selectOneByExample(any())).thenReturn(null);
+        ShortEpisode episode = approvedEpisode();
+        episode.setComposeStatus("NONE");
+        when(workAccessService.requireEpisode("ep-1")).thenReturn(episode);
+
+        ApiResponse response = service.preflight("ep-1", null, null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) response.getResult();
+        assertEquals(Boolean.FALSE, result.get("token_configured"));
+        assertEquals(Boolean.TRUE, result.get("base_url_configured"));
+        assertEquals("本集尚未合成，合成完成后再发布", result.get("gate_reason"));
+        @SuppressWarnings("unchecked")
+        List<String> warnings = (List<String>) result.get("warnings");
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.get(0).contains("未配置 Tube 令牌"));
+        assertFalse(String.join(" ", warnings).contains("film not found"));
+        assertFalse(String.join(" ", warnings).contains("尚未合成"));
+    }
+
+    @Test
+    void publishWithoutFilmRowUsesChineseGate() {
+        when(filmMapper.selectOneByExample(any())).thenReturn(null);
+        FilmPublishToMediaReq req = new FilmPublishToMediaReq();
+        req.setEpisodeId("ep-1");
+        BizException ex = assertThrows(BizException.class, () -> service().publish(req));
+        assertEquals("本集尚未合成，没有可发布的成片", ex.getMessage());
+        assertFalse(ex.getMessage().contains("film not found"));
+        verify(mediaIngestClient, never()).ingest(any());
+    }
+
+    @Test
+    void expectsPersistedFilmOnlyAfterAFinishedAsset() {
+        ShortEpisode composing = approvedEpisode();
+        composing.setComposeStatus("NONE");
+        assertFalse(FilmPublishToMediaService.expectsPersistedFilm(composing));
+        composing.setComposeStatus("READY");
+        assertTrue(FilmPublishToMediaService.expectsPersistedFilm(composing));
+        composing.setComposeStatus("NONE");
+        composing.setFilmAssetId("as-film");
+        assertTrue(FilmPublishToMediaService.expectsPersistedFilm(composing));
     }
 }
