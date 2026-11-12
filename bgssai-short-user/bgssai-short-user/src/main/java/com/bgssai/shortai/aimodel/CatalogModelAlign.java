@@ -12,6 +12,7 @@ import java.util.Locale;
  * An unlisted MiniMax voice id may move to a MiniMax model that is speech-capable.
  * Models from other vendors are never substituted for each other.
  * When the configured id is still absent, a listed company model of the same ability may be used.
+ * A configured {@code bgssai-video} is kept even when the snapshot only lists another video id.
  */
 public final class CatalogModelAlign {
 
@@ -39,6 +40,9 @@ public final class CatalogModelAlign {
             if (registered != null) {
                 return registered;
             }
+        }
+        if ("VIDEO".equals(abilityName) && "bgssai-video".equalsIgnoreCase(wanted)) {
+            return wanted;
         }
         String company = companyChoice(abilityName, capability, catalog);
         if (company != null) {

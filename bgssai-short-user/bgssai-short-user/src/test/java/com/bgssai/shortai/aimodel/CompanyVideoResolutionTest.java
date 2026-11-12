@@ -55,6 +55,37 @@ class CompanyVideoResolutionTest {
     }
 
     @Test
+    void blankVideoUsesEnabledCompanyDefaultWhenCatalogIsEmptyOrOnlyListsCogvideox() {
+        AiModelConfig company = row("m-tokenhub-video-bgssai", "bgssai-video", 1, 20, 900);
+        company.setConfigJson("{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\",\"poll_interval_ms\":3000}");
+        AiModelConfig minimax = row("m-tokenhub-video-minimax", "minimax-video-h3", 0, 50, 900);
+        seed(minimax, legacy(), company);
+
+        when(catalog.snapshot()).thenReturn(List.of());
+        assertSame(company, service.resolve("VIDEO", null));
+        assertSame(company, service.resolve("VIDEO", " "));
+        assertEquals("bgssai-video", service.resolve("VIDEO", null).getModelCode());
+
+        when(catalog.snapshot()).thenReturn(List.of(
+                new TokenHubModelCatalog.HubModel("cogvideox", List.of("video_generation"), Map.of(), "BGSSAI"),
+                new TokenHubModelCatalog.HubModel("minimax-video-h3", List.of("video_generation"), Map.of(), "MiniMax")));
+        AiModelConfig chosen = service.resolve("VIDEO", null);
+        assertSame(company, chosen);
+        assertEquals("bgssai-video", chosen.getModelCode());
+        assertEquals(900, chosen.getTimeoutSec());
+    }
+
+    @Test
+    void blankVideoKeepsThirdPartyDefaultWhenCompanyRowIsNotDefault() {
+        AiModelConfig minimax = row("m-tokenhub-video-minimax", "minimax-video-h3", 1, 50, 900);
+        seed(minimax, legacy());
+        when(catalog.snapshot()).thenReturn(List.of());
+        AiModelConfig chosen = service.resolve("VIDEO", null);
+        assertSame(minimax, chosen);
+        assertEquals("minimax-video-h3", chosen.getModelCode());
+    }
+
+    @Test
     void exactCompanyConfigWinsEvenWhenLegacyAndThirdPartyAreDefaults() {
         AiModelConfig legacy = legacy();
         legacy.setDefaultFlag(1);
