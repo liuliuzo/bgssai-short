@@ -37,6 +37,7 @@
   height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+  animation: pa-logo-in 0.5s var(--lg-easing) both;
 }
 
 .pa-sidebar-brand-name {
@@ -71,6 +72,7 @@
 }
 
 .pa-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -81,21 +83,47 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--pa-sidebar-muted);
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.2s var(--lg-easing), color 0.2s var(--lg-easing), transform 0.2s var(--lg-easing);
   text-decoration: none;
   margin-bottom: 2px;
   user-select: none;
+  /* backwards：延迟期间用起始帧；播完放开 transform，悬停位移才生效 */
+  animation: pa-nav-in 0.4s var(--lg-easing) backwards;
 }
+
+.pa-nav-section .pa-nav-item:nth-child(2) { animation-delay: 0.03s; }
+.pa-nav-section .pa-nav-item:nth-child(3) { animation-delay: 0.06s; }
+.pa-nav-section .pa-nav-item:nth-child(4) { animation-delay: 0.09s; }
+.pa-nav-section .pa-nav-item:nth-child(5) { animation-delay: 0.12s; }
+.pa-nav-section .pa-nav-item:nth-child(6) { animation-delay: 0.15s; }
+.pa-nav-section .pa-nav-item:nth-child(7) { animation-delay: 0.18s; }
+.pa-nav-section .pa-nav-item:nth-child(8) { animation-delay: 0.21s; }
+.pa-nav-section .pa-nav-item:nth-child(9) { animation-delay: 0.24s; }
+.pa-nav-section .pa-nav-item:nth-child(10) { animation-delay: 0.27s; }
 
 .pa-nav-item:hover {
   background: var(--pa-sidebar-hover);
   color: var(--pa-sidebar-text);
+  transform: translateX(3px);
 }
 
 .pa-nav-item.active {
   background: var(--pa-sidebar-active);
   color: var(--lg-accent);
   font-weight: 600;
+}
+
+.pa-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--lg-accent);
+  transform-origin: center;
+  animation: pa-rail-in 0.32s var(--lg-easing) both;
 }
 
 .pa-nav-item-icon {
@@ -107,6 +135,11 @@
   justify-content: center;
   font-size: 16px;
   color: var(--pa-sidebar-label);
+  transition: transform 0.2s var(--lg-easing);
+}
+
+.pa-nav-item:hover .pa-nav-item-icon {
+  transform: translateY(-1px);
 }
 
 .pa-nav-item:hover .pa-nav-item-icon,
@@ -131,6 +164,7 @@
 
 /* ---- Topbar ---- */
 .pa-topbar {
+  position: relative;
   height: 60px;
   flex-shrink: 0;
   display: flex;
@@ -140,6 +174,7 @@
   background: var(--lg-glass-bg);
   border-bottom: 1px solid var(--lg-border);
   z-index: 10;
+  overflow: hidden;
 }
 
 .pa-topbar-left {
@@ -156,6 +191,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  animation: pa-title-in 0.4s var(--lg-easing) both;
+}
+
+.pa-topbar-glide {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 28%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--lg-accent), rgba(13, 110, 253, 0));
+  pointer-events: none;
+  animation: pa-glide 0.72s var(--lg-easing) both;
 }
 
 .pa-topbar-badge {
@@ -231,6 +279,10 @@
   background: transparent;
 }
 
+.pa-content-stage {
+  animation: pa-page-in 0.42s var(--lg-easing) both;
+}
+
 /* ---- Emergency stop banner ---- */
 .pa-emergency-banner {
   background: var(--lg-danger);
@@ -280,6 +332,7 @@
 }
 
 .pa-layout--compact .pa-shell-tab {
+  position: relative;
   flex: 1;
   min-height: 44px;
   min-width: 44px;
@@ -294,11 +347,30 @@
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
+  transition: color 0.2s var(--lg-easing);
 }
 
 .pa-layout--compact .pa-shell-tab.active {
   color: var(--lg-accent);
   font-weight: 700;
+}
+
+.pa-layout--compact .pa-shell-tab.active::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 0;
+  right: 0;
+  width: 16px;
+  height: 3px;
+  margin-inline: auto;
+  border-radius: 999px;
+  background: var(--lg-accent);
+  animation: pa-rail-in 0.32s var(--lg-easing) both;
+}
+
+.pa-layout--compact .pa-shell-tab.active .pa-shell-tab-icon {
+  animation: pa-tab-pop 0.34s var(--lg-easing) both;
 }
 
 .pa-layout--compact .pa-shell-tab-icon {
@@ -332,4 +404,59 @@
   background: var(--pa-sidebar-active);
   color: var(--lg-accent);
   font-weight: 600;
+}
+
+/* 入场只播一次，结束停在终态。不循环，也不挡住点击。 */
+@keyframes pa-page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pa-title-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pa-glide {
+  0% { transform: translateX(-40%); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(260%); opacity: 0; }
+}
+
+@keyframes pa-logo-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pa-nav-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pa-rail-in {
+  from { opacity: 0; transform: scaleY(0.35); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pa-tab-pop {
+  from { opacity: 0.35; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pa-content-stage,
+  .pa-topbar-title,
+  .pa-topbar-glide,
+  .pa-sidebar-brand-logo,
+  .pa-nav-item,
+  .pa-nav-item.active::before,
+  .pa-layout--compact .pa-shell-tab.active::before,
+  .pa-layout--compact .pa-shell-tab.active .pa-shell-tab-icon {
+    animation: none;
+  }
+
+  .pa-nav-item:hover,
+  .pa-nav-item:hover .pa-nav-item-icon {
+    transform: none;
+  }
 }

@@ -56,6 +56,13 @@ function isNavActive(pathname, key) {
   return pathname === key || pathname.startsWith(`${key}/`)
 }
 
+// 作品工作台里切换剧本 / 分镜等页签时不重播整页入场，避免编辑中的内容被卸掉再装上。
+function stageKey(pathname) {
+  const parts = pathname.split('/').filter(Boolean)
+  if (parts[0] === 'works' && parts[1]) return `works/${parts[1]}`
+  return pathname
+}
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -154,7 +161,8 @@ export default function MainLayout() {
       <div className="pa-main">
         <header className="pa-topbar">
           <div className="pa-topbar-left">
-            <span className="pa-topbar-title">{pageTitle}</span>
+            <span key={pageTitle} className="pa-topbar-title">{pageTitle}</span>
+            <span key={`glide-${pageTitle}`} className="pa-topbar-glide" aria-hidden="true" />
           </div>
           <div className="pa-topbar-right">
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
@@ -170,7 +178,9 @@ export default function MainLayout() {
         </header>
 
         <main className="pa-content">
-          <Outlet />
+          <div key={stageKey(location.pathname)} className="pa-content-stage">
+            <Outlet />
+          </div>
         </main>
 
         {compact && (

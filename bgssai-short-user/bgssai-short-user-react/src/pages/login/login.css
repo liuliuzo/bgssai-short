@@ -48,6 +48,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  animation: loginCardIn 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .login-panel-brand {
   display: flex;
@@ -67,6 +68,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  animation: loginBadgeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
 }
 .login-panel .product-motion {
   height: 84px;
@@ -368,6 +370,31 @@ div.login-alert[role='alert'] {
   color: var(--text);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  animation: loginSegIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.login-method-pane {
+  animation: loginFieldsIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes loginCardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes loginBadgeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes loginSegIn {
+  from { transform: scale(0.96); }
+  to { transform: none; }
+}
+
+@keyframes loginFieldsIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* 验证码行：输入框自适应，按钮宽度固定，倒计时文案变化时不把输入框挤窄 */
@@ -522,6 +549,12 @@ div.login-alert[role='alert'] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .login-panel,
+  .login-panel-brand .s,
+  .login-seg-btn.active,
+  .login-method-pane {
+    animation: none;
+  }
   .login-panel .btn-primary:hover:not(:disabled),
   .login-submit:hover:not(:disabled),
   .oauth-btn:hover:not(:disabled) {

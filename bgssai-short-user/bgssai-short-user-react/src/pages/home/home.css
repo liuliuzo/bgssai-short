@@ -1,0 +1,147 @@
+/* 首页：实底卡片上的一次入场。光扫和步骤条播完即停，不循环。 */
+
+.short-home {
+  max-width: 960px;
+}
+
+.short-home-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px);
+  gap: 8px 20px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 28px 28px 24px;
+  border: 1px solid var(--lg-border);
+  border-radius: 18px;
+  background:
+    radial-gradient(520px 200px at 100% -20%, rgba(13, 110, 253, 0.12), transparent 68%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: var(--lg-shadow-sm);
+}
+
+.short-home-hero::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  animation: short-sheen 0.95s var(--lg-easing) 0.18s both;
+}
+
+.short-home-title.ant-typography {
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.short-home-lead.ant-typography {
+  max-width: 46em;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+.short-home-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.short-home-flow li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--lg-accent-soft);
+  color: var(--lg-accent-ink);
+  font-size: 13px;
+  font-weight: 650;
+  animation: short-rise 0.42s var(--lg-easing) both;
+}
+
+.short-home-flow li:nth-child(1) { animation-delay: 0.05s; }
+.short-home-flow li:nth-child(2) { animation-delay: 0.1s; }
+.short-home-flow li:nth-child(3) { animation-delay: 0.15s; }
+.short-home-flow li:nth-child(4) { animation-delay: 0.2s; }
+.short-home-flow li:nth-child(5) { animation-delay: 0.25s; }
+.short-home-flow li:nth-child(6) { animation-delay: 0.3s; }
+
+.short-home-flow li:not(:last-child)::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.45;
+}
+
+.short-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.short-home-actions .ant-btn {
+  min-height: 40px;
+  animation: short-rise 0.42s var(--lg-easing) both;
+}
+
+.short-home-actions .ant-btn:nth-child(1) { animation-delay: 0.16s; }
+.short-home-actions .ant-btn:nth-child(2) { animation-delay: 0.22s; }
+.short-home-actions .ant-btn:nth-child(3) { animation-delay: 0.28s; }
+
+.short-home-visual .product-motion {
+  width: 100%;
+  margin: 0;
+}
+
+.short-home-identity.ant-card {
+  border-radius: 16px;
+  animation: short-rise 0.48s var(--lg-easing) 0.18s both;
+}
+
+@keyframes short-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes short-sheen {
+  0% { transform: translateX(-130%); opacity: 0; }
+  28% { opacity: 1; }
+  100% { transform: translateX(280%); opacity: 0; }
+}
+
+@media (max-width: 720px) {
+  .short-home-hero {
+    grid-template-columns: 1fr;
+    padding: 18px 16px 16px;
+  }
+
+  .short-home-visual {
+    order: -1;
+  }
+
+  .short-home-title.ant-typography {
+    font-size: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .short-home-hero::after,
+  .short-home-flow li,
+  .short-home-actions .ant-btn,
+  .short-home-identity.ant-card {
+    animation: none;
+  }
+}
