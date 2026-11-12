@@ -84,7 +84,7 @@
 | `login.html` | `/en` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `login.html` | `/en/*` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `support-chat.html`（悬浮组件） | 登录页 + 主壳全局 | `POST /bgssai/user/support/sessions/create` · `/mine` · `/detail` · `POST /bgssai/user/support/messages/send` · `POST /bgssai/user/support/tickets/create` | 公开（IP 限流；可选 `Jwttoken` 绑定 user_id；访客凭 `guest_token`） | [`in-app-support.md`](./in-app-support.md) |
-| `home.html` | `/home` | -（消费登录响应缓存的身份字段 + 各模块概览接口） | 需 `Jwttoken` | - |
+| `home.html` | `/home` | `GET /bgssai/user/short-works/list` · `GET /bgssai/user/short-works/detail` · `GET /bgssai/user/ai-tasks/list`（`task_status=FAILED`，可带 `work_id`）。点「看示例流程」且最近作品里没有样例时，再用 `list?keyword=悬疑法医手记` 找本账号的 `w-dm-005`；找不到就留在首页。不新增字段；无 `cover_url` 时首页不显示封面 | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
 | `mcp-tokens.html`（MCP Connectors） | `/mcp-tokens` | `POST /api/mcp/tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT；页内引导 Claude / Codex / Cursor / Grok Bot / Bgssai Bot | [`MCP.md`](./MCP.md) |
 | `works.html` | `/works` | `GET /bgssai/user/short-works/list?page_num&page_size&work_status&genre&keyword` | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |

@@ -74,14 +74,14 @@
               <td><a href="home.html">首页</a></td>
               <td><code>/home</code></td>
               <td>登录成功；顶部品牌 logo；任意页面面包屑首项</td>
-              <td>新建短剧 · 继续已有作品 · 任务中心 · 质量 · 用量与账单 · 登录日志 · MCP 连接器</td>
+              <td>继续创作 · 无作品时新建作品 · 生成失败进任务 · 待审核进成片 · 看示例流程（本账号有样例作品时）</td>
               <td>品牌 logo</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
               <td><a href="works.html">我的作品</a></td>
               <td><code>/works</code></td>
-              <td>侧栏「当前工作 - 我的作品」；首页统计卡</td>
+              <td>侧栏「当前工作 - 我的作品」；首页「继续创作」</td>
               <td>新建作品 · 作品工作台 · 首页</td>
               <td>我的作品</td>
               <td>需 <code>Jwttoken</code></td>
@@ -89,7 +89,7 @@
             <tr>
               <td><a href="work-create.html">新建作品</a></td>
               <td><code>/works/create</code></td>
-              <td>我的作品「新建作品」；首页「新建作品」</td>
+              <td>我的作品「新建作品」；首页没有作品时的「新建作品」</td>
               <td>作品工作台（创建成功）· 我的作品（取消）</td>
               <td>我的作品</td>
               <td>需 <code>Jwttoken</code></td>
@@ -131,7 +131,7 @@
             <tr>
               <td><a href="storyboard.html">分镜（文字预演合并）</a></td>
               <td><code>/works/:work_id/storyboard</code></td>
-              <td>侧栏「当前工作 - 分镜」；剧本定稿后；质量与连贯性中心的返工链接；首页待处理问题</td>
+              <td>侧栏「当前工作 - 分镜」；剧本定稿后；质量与连贯性中心的返工链接；首页待处理卡片（分镜失败时）</td>
               <td>看样片 · 任务中心 · 角色与场景卡 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -139,7 +139,7 @@
             <tr>
               <td><a href="task-center.html">任务中心</a></td>
               <td><code>/works/:work_id/tasks</code></td>
-              <td>侧栏常驻「任务中心」；分镜提交生成后；首页统计卡</td>
+              <td>侧栏常驻「任务中心」；分镜提交生成后；首页「生成失败」卡片</td>
               <td>分镜 · 配音与字幕 · 合成与导出 · 作品工作台</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -203,7 +203,7 @@
             <tr>
               <td><a href="quality-report.html">质量</a></td>
               <td><code>/works/:work_id/quality</code></td>
-              <td>侧栏「更多 - 质量」；四个工作台的门禁提示条；首页「待处理问题」</td>
+              <td>侧栏「更多 - 质量」；四个工作台的门禁提示条</td>
               <td>总剧本 · 分镜 · 配音与字幕 · 合成与导出（按 <code>fix_action</code> 直达）</td>
               <td>作品内子导航</td>
               <td>需 <code>Jwttoken</code></td>
@@ -211,7 +211,7 @@
             <tr>
               <td><a href="usage-billing.html">用量与账单</a></td>
               <td><code>/usage</code></td>
-              <td>侧栏「更多 - 用量账单」；首页余额卡</td>
+              <td>侧栏「更多 - 用量账单」</td>
               <td>作品工作台 · 分镜 · 首页（流水下钻）</td>
               <td>用量与账单</td>
               <td>需 <code>Jwttoken</code></td>
@@ -243,7 +243,7 @@
             <tr>
               <td><a href="mcp-tokens.html">MCP 连接器</a></td>
               <td><code>/mcp-tokens</code></td>
-              <td>侧栏「MCP 连接器」；首页「全部入口」；tagline Connect your AI tools to bgssai</td>
+              <td>侧栏「MCP 连接器」；tagline Connect your AI tools to bgssai</td>
               <td>首页</td>
               <td>更多 - 账户</td>
               <td>需 <code>Jwttoken</code></td>
@@ -275,7 +275,7 @@
         <div class="node"><div class="n-title">对应工作台</div><div>预填定位</div></div>
       </div>
       <div class="text-muted" style="font-size:12px">
-        三击直达原则（体验红线）：首页「接着做」→ 作品卡点条 / 问题卡 → 修复位置，不超过 3 次点击。
+        三击直达原则（体验红线）：首页继续创作或待处理卡片 → 作品卡点条 / 问题卡 → 修复位置，不超过 3 次点击。
         三问页面均为只读聚合视图，修改只在工作台发生。
       </div>
 

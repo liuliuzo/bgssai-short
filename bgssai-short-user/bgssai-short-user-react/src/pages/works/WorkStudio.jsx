@@ -1762,13 +1762,27 @@ export default function WorkStudio() {
     })
   }, [])
   const outlineTaskId = location.state?.outlineTaskId
+  const requestedEpisodeId = new URLSearchParams(location.search).get('episode_id')
+  const appliedEpisodeQuery = useRef(null)
 
   const load = useCallback(async () => {
     const { data } = await productionApi.getWork(workId)
     const detail = data?.result
     setWork(detail)
-    setEpisodeId((prev) => prev || detail?.episode_list?.[0]?.episode_id)
-  }, [workId])
+    setEpisodeId((prev) => {
+      const list = detail?.episode_list || []
+      if (
+        requestedEpisodeId
+        && appliedEpisodeQuery.current !== requestedEpisodeId
+        && list.some((ep) => ep.episode_id === requestedEpisodeId)
+      ) {
+        appliedEpisodeQuery.current = requestedEpisodeId
+        return requestedEpisodeId
+      }
+      if (prev && list.some((ep) => ep.episode_id === prev)) return prev
+      return list[0]?.episode_id
+    })
+  }, [workId, requestedEpisodeId])
 
   useEffect(() => { load() }, [load])
 

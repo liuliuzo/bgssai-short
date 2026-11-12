@@ -1,96 +1,69 @@
-.home-start {
-  max-width: 720px;
-  margin: 28px auto 0;
-  padding: 8px 8px 32px;
-}
-
-.home-kicker {
-  margin: 0 0 8px;
-  color: var(--gold-ink, #8a6500);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.home-start h1 {
-  margin: 0;
-  font-size: 32px;
-  line-height: 1.25;
-  color: var(--text, #0f172a);
-}
-
-.home-lead {
-  margin: 12px 0 0;
-  max-width: 36em;
-  color: var(--sub, #4b5568);
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-.home-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.home-steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 32px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.home-steps li {
+.home-workbench {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 92px;
-  padding: 14px;
-  background: #fff;
-  border: 1px solid var(--border, #e4e7ed);
-  border-radius: 14px;
-  color: var(--text, #0f172a);
-  font-weight: 600;
-  animation: home-step 0.45s var(--lg-easing, ease) both;
+  gap: 16px;
 }
 
-.home-steps span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--gold, #f8b800);
-  color: #1a1a1a;
+.home-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.home-section-label {
+  margin: 0 0 8px;
+  color: rgba(0, 0, 0, 0.45);
   font-size: 13px;
 }
 
-@keyframes home-step {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.home-work-grid,
+.home-attention-grid {
+  display: grid;
+  gap: 12px;
 }
 
-@media (max-width: 720px) {
-  .home-start h1 {
-    font-size: 26px;
-  }
-  .home-steps {
-    grid-template-columns: 1fr 1fr;
-  }
+.home-work-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .home-steps li {
-    animation: none;
+.home-attention-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.home-work-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.home-cover {
+  width: 72px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: none;
+  background: #f5f5f5;
+}
+
+.home-work-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-work-meta {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .home-work-grid,
+  .home-attention-grid {
+    grid-template-columns: 1fr;
   }
 }
