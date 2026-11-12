@@ -46,6 +46,30 @@ class LookKnowledgeMatchTest {
     }
 
     @Test
+    void retrievalKeepsTheFrontFaceWhenBothCaptionsMatch() {
+        java.util.Map<String, Object> side = new java.util.LinkedHashMap<>();
+        side.put("material_id", "side");
+        side.put("material_name", "白纱花瓣");
+        side.put("caption", "白色纱裙 侧面");
+        side.put("view_angle", "SIDE");
+        side.put("storage_key", "side-key");
+        side.put("mime_type", "image/jpeg");
+        java.util.Map<String, Object> face = new java.util.LinkedHashMap<>();
+        face.put("material_id", "face");
+        face.put("material_name", "白纱花瓣");
+        face.put("caption", "白色纱裙 正脸");
+        face.put("view_angle", "FRONT_FACE");
+        face.put("storage_key", "face-key");
+        face.put("mime_type", "image/jpeg");
+        co.elastic.clients.elasticsearch.core.search.Hit<java.util.Map> sideHit =
+                co.elastic.clients.elasticsearch.core.search.Hit.of(hit -> hit.index("short-test-look").id("side").source(side));
+        co.elastic.clients.elasticsearch.core.search.Hit<java.util.Map> faceHit =
+                co.elastic.clients.elasticsearch.core.search.Hit.of(hit -> hit.index("short-test-look").id("face").source(face));
+        LookKnowledgeService.LookHit chosen = LookRagIndex.choose("白纱花瓣 白色纱裙", java.util.List.of(sideHit, faceHit));
+        assertEquals("face-key", chosen.storageKey());
+    }
+
+    @Test
     void pngBytesAreAccepted() {
         LookImage.Decoded image = LookImage.decode(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");

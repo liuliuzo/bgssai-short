@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "885a3d7f3dc8336154a3d05fcbf0a19145c73033d15e9e802279f5d2e7e16bb0",
-  "code_contract_digest": "ca4460e1c52c01d68ba3422104fafe018a6f68c6b128c91775ff3567287cf4c0",
+  "prototype_bundle_digest": "5246d6a110ea0fb84f875f33df5417b84b00c794d7f1fa9f0fc804cd2621960a",
+  "code_contract_digest": "ffbdbe6c9310b6fbddcde6fbabcaf9bdf99a87d5259662c19e0ed003a4a62f26",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -856,7 +856,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/LookKnowledgeService.java",
-      "sha256": "906ff76e892649e55c94a3563b66d44210ca22ac4db5381dd842a7c24de5ece1"
+      "sha256": "a3460f5c8fad4ba8bf0fa4300b2f8fb2ce7b2d9ce155713a229e42aa8798d23c"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/PreviewService.java",
@@ -2227,7 +2227,7 @@
     },
     {
       "path": "docs/demo-static/web/user/look-library.html",
-      "sha256": "bdbcdc5c27cb2b8f022873e510fbcb319e52c7d345233a6711bd6db046640b30",
+      "sha256": "834dc7f8274328e7aaec8fdbf140be0c0f60f02e70d06cbeb221bc1708cf30ec",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
