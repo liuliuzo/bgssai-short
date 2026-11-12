@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Card, Input, Modal, Space, Switch, Typography, message } from 'antd'
+import { Button, Card, Image, Input, Modal, Space, Switch, Typography, message } from 'antd'
 import { Link, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import { safeReturnPath } from '../../lib/safeReturn'
-import LookSlot from './LookSlot'
-import { LOOK_ANGLES, groupLooks } from './lookGroups'
+import { LOOK_ANGLES, arrangeAngle, groupLooks } from './lookGroups'
+import { laplacianScore, posterTimes } from './lookPoster'
 
 const { Text } = Typography
 
@@ -29,6 +29,52 @@ function readFile(file) {
   })
 }
 
+const PREVIEW_Z = 2000
+
+function seekTo(video, time) {
+  return new Promise((resolve, reject) => {
+    if (Math.abs((video.currentTime || 0) - time) < 0.03) {
+      resolve()
+      return
+    }
+    const timer = setTimeout(() => {
+      video.removeEventListener('seeked', onSeek)
+      reject(new Error('seek'))
+    }, 1200)
+    const onSeek = () => {
+      clearTimeout(timer)
+      resolve()
+    }
+    video.addEventListener('seeked', onSeek, { once: true })
+    try {
+      video.currentTime = time
+    } catch (err) {
+      clearTimeout(timer)
+      video.removeEventListener('seeked', onSeek)
+      reject(err)
+    }
+  })
+}
+
+function captureFrame(video) {
+  const sourceWidth = video.videoWidth || 720
+  const sourceHeight = video.videoHeight || 1280
+  const scale = Math.min(1, 720 / sourceWidth)
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(sourceWidth * scale))
+  canvas.height = Math.max(1, Math.round(sourceHeight * scale))
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  const sampleW = 48
+  const sampleH = Math.max(3, Math.round(canvas.height * (sampleW / canvas.width)))
+  const sample = document.createElement('canvas')
+  sample.width = sampleW
+  sample.height = sampleH
+  sample.getContext('2d').drawImage(canvas, 0, 0, sampleW, sampleH)
+  const score = laplacianScore(sample.getContext('2d').getImageData(0, 0, sampleW, sampleH))
+  return { score, url: canvas.toDataURL('image/jpeg', 0.85) }
+}
+
 function posterOf(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
@@ -37,39 +83,103 @@ function posterOf(file) {
     video.muted = true
     video.playsInline = true
     video.src = url
-    const finish = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth || 720
-      canvas.height = video.videoHeight || 1280
-      canvas.getContext('2d').drawImage(video, 0, 0)
-      URL.revokeObjectURL(url)
-      const data = canvas.toDataURL('image/jpeg', 0.85)
-      const comma = data.indexOf(',')
-      resolve(comma >= 0 ? data.slice(comma + 1) : data)
-    }
-    video.onloadeddata = () => {
-      const target = Number.isFinite(video.duration) ? Math.min(0.4, video.duration / 2) : 0
-      if (target > 0) video.currentTime = target
-      else finish()
-    }
-    video.onseeked = finish
-    video.onerror = () => {
+    const fail = () => {
       URL.revokeObjectURL(url)
       reject(new Error('poster'))
+    }
+    video.onerror = fail
+    video.onloadeddata = async () => {
+      let bestScore = -1
+      let bestUrl = ''
+      for (const time of posterTimes(video.duration)) {
+        try {
+          await seekTo(video, time)
+          const frame = captureFrame(video)
+          if (frame.score > bestScore) {
+            bestScore = frame.score
+            bestUrl = frame.url
+          }
+        } catch {
+          // try the next moment
+        }
+      }
+      URL.revokeObjectURL(url)
+      if (!bestUrl) {
+        reject(new Error('poster'))
+        return
+      }
+      const comma = bestUrl.indexOf(',')
+      resolve(comma >= 0 ? bestUrl.slice(comma + 1) : bestUrl)
     }
   })
 }
 
-function MaterialView({ item, onRemove }) {
-  const video = item.mime_type && item.mime_type.startsWith('video/')
+function PhotoThumb({ item, width, height, alt }) {
+  const [broken, setBroken] = useState(false)
+  if (!item.file_url || broken) {
+    return (
+      <div style={{ width, height, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#8c8c8c', fontSize: 12, lineHeight: 1.45, background: '#f6f7f9' }}>
+        <div style={{ whiteSpace: 'nowrap' }}>这张照片</div>
+        <div style={{ whiteSpace: 'nowrap' }}>没有加载出来</div>
+      </div>
+    )
+  }
   return (
-    <div style={{ marginBottom: 6 }}>
-      {video && item.file_url
-        ? <video src={item.file_url} poster={item.poster_url || undefined} style={{ width: 104, height: 140, objectFit: 'cover', borderRadius: 8, display: 'block' }} muted />
-        : (item.file_url ? <img alt={item.material_name} src={item.file_url} style={{ width: 104, height: 140, objectFit: 'cover', borderRadius: 8, display: 'block' }} /> : null)}
-      <Button type="link" size="small" style={{ padding: 0 }} onClick={onRemove}>移除</Button>
-    </div>
+    <Image
+      src={item.file_url}
+      alt={alt || item.material_name || '定妆照片'}
+      width={width}
+      height={height}
+      style={{ objectFit: 'contain', background: '#f6f7f9', cursor: 'zoom-in', display: 'block' }}
+      preview={{ mask: '查看', zIndex: PREVIEW_Z }}
+      onError={() => setBroken(true)}
+    />
   )
+}
+
+function uploadButtonStyle(disabled) {
+  return {
+    width: '100%',
+    height: 32,
+    border: '1px dashed #d9d9d9',
+    borderRadius: 8,
+    background: '#fafafa',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    color: '#595959',
+  }
+}
+
+function sideMedia(look) {
+  const extras = []
+  const videos = []
+  const broken = []
+  let duplicated = false
+  const pools = [
+    ...LOOK_ANGLES.map(([angle, label]) => ({ label, items: (look.slots && look.slots[angle]) || [] })),
+    { label: '未分面', items: look.extra || [] },
+  ]
+  const noteDup = (item) => {
+    if (item && item.same_material_ids && item.same_material_ids.length > 1) duplicated = true
+  }
+  for (const pool of pools) {
+    const view = arrangeAngle(pool.items)
+    noteDup(view.primary)
+    for (const item of view.extras) {
+      noteDup(item)
+      extras.push({ ...item, angleLabel: pool.label })
+    }
+    for (const item of view.videos) {
+      noteDup(item)
+      videos.push({ ...item, angleLabel: pool.label })
+    }
+    if (pool.label === '未分面' && view.primary) {
+      noteDup(view.primary)
+      extras.push({ ...view.primary, angleLabel: pool.label })
+    }
+    const rest = (pool.label === '未分面' || view.primary) ? view.missing : view.missing.slice(1)
+    for (const item of rest) broken.push({ ...item, angleLabel: pool.label })
+  }
+  return { extras, videos, broken, duplicated }
 }
 
 export default function LookLibraryPage() {
@@ -83,6 +193,7 @@ export default function LookLibraryPage() {
   const [lookName, setLookName] = useState('')
   const [drafts, setDrafts] = useState([])
   const [busy, setBusy] = useState(false)
+  const [playing, setPlaying] = useState(null)
   const fileRef = useRef(null)
   const uploadTarget = useRef(null)
 
@@ -209,9 +320,28 @@ export default function LookLibraryPage() {
     }
   }
 
-  async function removeMaterial(item) {
-    await productionApi.deleteLookMaterial(item.material_id)
+  async function removeIds(ids) {
+    for (const id of ids) {
+      await productionApi.deleteLookMaterial(id)
+    }
     await load()
+  }
+
+  function removeMaterial(item) {
+    const ids = (item && item.same_material_ids && item.same_material_ids.length)
+      ? item.same_material_ids
+      : [item.material_id]
+    if (ids.length > 1) {
+      Modal.confirm({
+        title: '移除这张照片',
+        content: '库里这张照片有重复的一份，会一起拿掉。其他不同的照片还留着。',
+        okText: '移除',
+        cancelText: '取消',
+        onOk: () => removeIds(ids),
+      })
+      return
+    }
+    removeIds(ids)
   }
 
   function removeLook(look) {
@@ -235,6 +365,7 @@ export default function LookLibraryPage() {
   }
 
   function renderLook(look, draft) {
+    const side = sideMedia(look)
     return (
       <Card
         key={look.name}
@@ -247,35 +378,119 @@ export default function LookLibraryPage() {
           <Button type="link" size="small" onClick={() => removeLook(look)}>删除造型</Button>
         )}
       >
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
-          {LOOK_ANGLES.map(([angle, label]) => {
-            const items = look.slots[angle]
-            return (
-              <LookSlot
-                key={angle}
-                label={label}
-                note={angle === 'FRONT_FACE' ? '生成优先用' : ''}
-                action={items.length ? '再传一张' : '上传'}
-                disabled={busy}
-                onAction={() => openUpload(look.name, angle)}
-              >
-                {items.length ? items.map((item) => (
-                  <MaterialView key={item.material_id} item={item} onRemove={() => removeMaterial(item)} />
-                )) : null}
-              </LookSlot>
-            )
-          })}
-        </div>
-        {look.extra.length ? (
-          <div style={{ marginTop: 8 }}>
-            <Text type="secondary">参考图</Text>
-            <Space wrap>
-              {look.extra.map((item) => (
-                <MaterialView key={item.material_id} item={item} onRemove={() => removeMaterial(item)} />
-              ))}
-            </Space>
+        <Image.PreviewGroup preview={{ zIndex: PREVIEW_Z }}>
+          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', alignItems: 'flex-start' }}>
+            {LOOK_ANGLES.map(([angle, label]) => {
+              const view = arrangeAngle(look.slots[angle])
+              const shown = view.primary || view.missing[0] || null
+              return (
+                <div key={angle} data-angle={angle} style={{ width: 112, flex: '0 0 112px' }}>
+                  <div style={{ minHeight: 34, marginBottom: 6, fontSize: 12, lineHeight: '17px', color: '#595959' }}>
+                    <div>{label}</div>
+                    <div style={{ minHeight: 17, color: '#d48806' }}>{angle === 'FRONT_FACE' ? '生成时优先用' : ''}</div>
+                  </div>
+                  <div style={{
+                    width: 112,
+                    height: 148,
+                    boxSizing: 'border-box',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    border: shown ? '1px solid #f0f0f0' : '1px dashed #d9d9d9',
+                    background: '#f6f7f9',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  >
+                    {view.primary ? <PhotoThumb item={view.primary} width="100%" height="100%" alt={`${look.name} ${label}`} /> : (
+                      <div data-empty={shown ? undefined : 'true'} style={{ fontSize: 12, color: '#8c8c8c', textAlign: 'center', padding: '0 8px', lineHeight: 1.5 }}>
+                        {shown ? (
+                          <>
+                            <div>这张照片</div>
+                            <div>没有加载出来</div>
+                          </>
+                        ) : view.videos.length ? (
+                          <>
+                            <div>还没有照片</div>
+                            <div>参考视频在下面</div>
+                          </>
+                        ) : (
+                          <>
+                            <div>这一面</div>
+                            <div>还没有照片</div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ minHeight: 24 }}>
+                    {shown ? <Button type="link" size="small" style={{ padding: 0, height: 24 }} onClick={() => removeMaterial(shown)}>移除</Button> : null}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => openUpload(look.name, angle)}
+                    style={uploadButtonStyle(busy)}
+                  >
+                    {shown ? '再传一张' : '上传这一面'}
+                  </button>
+                </div>
+              )
+            })}
           </div>
-        ) : null}
+          {side.duplicated ? <div style={{ marginTop: 8 }}><Text type="secondary">有的照片在多个角色卡上是同一张，这里只显示一次。</Text></div> : null}
+          {side.extras.length || side.broken.length ? (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>其他照片</div>
+              <Text type="secondary">上面是这一面最新的一张。更早的放在这里，点开可以看大图，不需要就移除。</Text>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
+                {side.extras.map((item) => (
+                  <div key={item.material_id} style={{ width: 84 }}>
+                    <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
+                    <PhotoThumb item={item} width={84} height={112} alt={`${look.name} ${item.angleLabel}`} />
+                    <Button type="link" size="small" style={{ padding: 0 }} onClick={() => removeMaterial(item)}>移除</Button>
+                  </div>
+                ))}
+                {side.broken.map((item) => (
+                  <div key={item.material_id} style={{ width: 84 }}>
+                    <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
+                    <div style={{ width: 84, height: 112, borderRadius: 8, background: '#f6f7f9', color: '#8c8c8c', fontSize: 12, lineHeight: 1.45, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', boxSizing: 'border-box' }}>
+                      <div style={{ whiteSpace: 'nowrap' }}>这张照片</div>
+                      <div style={{ whiteSpace: 'nowrap' }}>没有加载出来</div>
+                    </div>
+                    <Button type="link" size="small" style={{ padding: 0 }} onClick={() => removeMaterial(item)}>移除</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {side.videos.length ? (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>参考视频</div>
+              <Text type="secondary">这是视频，不拿来当定妆照。封面只是其中一帧，人如果在动，这一帧会发糊或者切得很近。点开可以播放。</Text>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
+                {side.videos.map((item) => (
+                  <div key={item.material_id} data-video="true" style={{ width: 84 }}>
+                    <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
+                    <button
+                      type="button"
+                      onClick={() => setPlaying(item)}
+                      style={{ width: 84, height: 112, padding: 0, border: '1px solid #f0f0f0', borderRadius: 8, background: '#f6f7f9', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                    >
+                      {item.poster_url ? (
+                        <img alt={`${look.name} ${item.angleLabel} 参考视频`} src={item.poster_url} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                      ) : (
+                        <span style={{ fontSize: 12, color: '#8c8c8c' }}>点此播放</span>
+                      )}
+                      <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, fontSize: 12, lineHeight: '22px', background: 'rgba(0,0,0,0.55)', color: '#fff' }}>播放</span>
+                    </button>
+                    <Button type="link" size="small" style={{ padding: 0 }} onClick={() => removeMaterial(item)}>移除</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </Image.PreviewGroup>
       </Card>
     )
   }
@@ -290,7 +505,7 @@ export default function LookLibraryPage() {
         </Space>
       )}
     >
-      <Text type="secondary">这里管理可以反复使用的造型。给角色定妆时，在角色卡上就能直接选，不用先跑来这里。</Text>
+      <Text type="secondary">这里管理可以反复使用的造型。给角色定妆时，在角色卡上就能直接选。每个造型按正脸、前面、背面、侧面排好，点照片可以看大图。</Text>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 16 }}>
         <div style={{ width: 200, flexShrink: 0 }}>
           {libraries.map((item) => (
@@ -351,6 +566,29 @@ export default function LookLibraryPage() {
         </div>
       </div>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4" hidden onChange={onFile} />
+      <Modal
+        title={playing ? `参考视频 · ${playing.angleLabel || ''}` : '参考视频'}
+        open={!!playing}
+        footer={null}
+        zIndex={PREVIEW_Z}
+        destroyOnHidden
+        onCancel={() => setPlaying(null)}
+        width={420}
+      >
+        {playing ? (
+          <div>
+            <video
+              src={playing.file_url}
+              poster={playing.poster_url || undefined}
+              controls
+              autoPlay
+              playsInline
+              style={{ width: '100%', maxHeight: 520, background: '#111', borderRadius: 8 }}
+            />
+            <div style={{ marginTop: 8 }}><Text type="secondary">封面只是视频里的一帧。发糊或切得很近时，不会和定妆照摆在一起。</Text></div>
+          </div>
+        ) : null}
+      </Modal>
       <Modal
         title="新建知识库"
         open={creating}
