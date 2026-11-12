@@ -17,9 +17,10 @@ const NAV_ITEMS = [
   { key: '/subscription', label: '套餐与加量', icon: <AccountBookOutlined /> },
   { key: '/account', label: '账号设置', icon: <SettingOutlined /> },
   { key: '/mcp-tokens', label: 'MCP 连接器', icon: <ApiOutlined /> },
-  { key: '/download/bot', label: '下载 Bgssai Bot', icon: <DownloadOutlined /> },
   { key: '/login-logs', label: '我的登录日志', icon: <ProfileOutlined /> },
 ]
+
+const BOT_DOWNLOAD = { key: '/download/bot', label: '下载 Bgssai Bot', icon: <DownloadOutlined /> }
 
 const SHELL_PRIMARY = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
@@ -101,8 +102,9 @@ export default function MainLayout() {
   }
 
   const moreActive = SHELL_MORE.some((item) => isNavActive(location.pathname, item.key))
+    || isNavActive(location.pathname, BOT_DOWNLOAD.key)
   // 顶栏写当前页面名（以前固定写「AI 短剧制作平台」加一个「用户」标签，是给开发看的端名）。
-  const currentNav = NAV_ITEMS.find((item) => isNavActive(location.pathname, item.key))
+  const currentNav = [...NAV_ITEMS, BOT_DOWNLOAD].find((item) => isNavActive(location.pathname, item.key))
   const pageTitle = currentNav ? currentNav.label : 'AI 短剧制作平台'
 
   return (
@@ -143,6 +145,16 @@ export default function MainLayout() {
           </nav>
 
           <div className="pa-sidebar-footer">
+            <div
+              className={`pa-nav-item${isNavActive(location.pathname, BOT_DOWNLOAD.key) ? ' active' : ''}`}
+              onClick={() => navigate(BOT_DOWNLOAD.key)}
+              role="menuitem"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && navigate(BOT_DOWNLOAD.key)}
+            >
+              <span className="pa-nav-item-icon">{BOT_DOWNLOAD.icon}</span>
+              {BOT_DOWNLOAD.label}
+            </div>
             <div
               className="pa-nav-item"
               onClick={handleLogout}
@@ -228,6 +240,14 @@ export default function MainLayout() {
               {item.label}
             </button>
           ))}
+          <button
+            type="button"
+            className={`pa-shell-more-item${isNavActive(location.pathname, BOT_DOWNLOAD.key) ? ' active' : ''}`}
+            onClick={() => go(BOT_DOWNLOAD.key)}
+          >
+            <span className="pa-nav-item-icon">{BOT_DOWNLOAD.icon}</span>
+            {BOT_DOWNLOAD.label}
+          </button>
           <button type="button" className="pa-shell-more-item" onClick={handleLogout}>
             <span className="pa-nav-item-icon"><LogoutOutlined /></span>
             退出登录

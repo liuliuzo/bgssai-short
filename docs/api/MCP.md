@@ -84,7 +84,9 @@
 
 端点记为 `ENDPOINT=https://<域名>/api/mcp`，令牌记为 `TOKEN=bgs_mcp_你的令牌`。
 
-### Claude
+### Claude Code
+
+这是 Claude Code 的命令，不是 Claude 网页或 Claude 桌面。
 
 ```bash
 claude mcp add --transport http bgssai-short ENDPOINT \
@@ -93,9 +95,10 @@ claude mcp add --transport http bgssai-short ENDPOINT \
 
 ### Codex
 
+Codex 没有 `--header`。令牌放进环境变量：
+
 ```bash
-codex mcp add bgssai-short --url ENDPOINT \
-  --header "Authorization: Bearer TOKEN"
+codex mcp add bgssai-short --url ENDPOINT --bearer-token-env-var BGSSAI_SHORT_MCP_TOKEN
 ```
 
 ### Cursor
