@@ -17,6 +17,8 @@ import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
 import { shotCardStatusCode, shotHasPlayableVideo, shotLatestTaskBadge } from './shotCardMedia'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
+import LookSlot from '../look/LookSlot'
+import { LOOK_ANGLES } from '../look/lookGroups'
 import {
   appendPreset,
   assetBinderPlaceholder,
@@ -549,37 +551,61 @@ function CharacterPane({ work }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
-        <div style={{ marginBottom: 12 }}><Link to="/look-library">管理定妆知识库</Link></div>
+        <div style={{ marginBottom: 12 }}>
+          <Text type="secondary">点某一面上传自己的照片。正脸一传就锁定，全剧按这张脸走。</Text>
+          {' '}
+          <Link to="/look-library">去知识库看已有造型</Link>
+        </div>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady ? chars.map((row) => (
-          <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={<Space>
-            <Button size="small" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
-            {[['FRONT_FACE', '正脸'], ['FRONT', '前面'], ['BACK', '背面'], ['SIDE', '侧面']].map(([angle, label]) => (
-              <Button key={angle} size="small" disabled={busyIds.has(row.character_id)} onClick={() => { ownImageTarget.current = { kind: 'character', id: row.character_id, angle }; ownImageRef.current?.click() }}>{label}</Button>
-            ))}
-          </Space>}>
-            <Space wrap>
-              {(row.look_view_list || []).filter((view) => view.file_url).map((view) => (
-                <div key={view.view_angle} style={{ textAlign: 'center' }}>
-                  <ClickThumb alt={view.view_name} src={view.file_url} width={72} height={128} />
-                  <div>{view.view_name}</div>
-                </div>
-              ))}
-              {!(row.look_view_list || []).some((view) => view.file_url) && row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} /> : null}
-              {(row.candidate_list || []).map((c) => (
-                <div key={c.asset_id} style={{ textAlign: 'center' }}>
-                  <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />
-                  <div>
-                    <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
-                      await productionApi.lockCharacter(row.character_id, c.asset_id)
-                      load()
-                    }}>锁定</Button>
-                  </div>
-                </div>
-              ))}
-            </Space>
+        {cardsReady ? chars.map((row) => {
+          const views = row.look_view_list || []
+          const viewOf = (angle) => views.find((view) => view.view_angle === angle && view.file_url)
+          return (
+          <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
+            <Button size="small" type="primary" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>生成定妆</Button>
+          }>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
+              {LOOK_ANGLES.map(([angle, label]) => {
+                const view = viewOf(angle)
+                return (
+                  <LookSlot
+                    key={angle}
+                    label={label}
+                    note={angle === 'FRONT_FACE' && view ? '已锁定' : ''}
+                    action={view ? '更换' : '上传'}
+                    disabled={busyIds.has(row.character_id)}
+                    onAction={() => { ownImageTarget.current = { kind: 'character', id: row.character_id, angle }; ownImageRef.current?.click() }}
+                  >
+                    {view ? <ClickThumb alt={label} src={view.file_url} width={104} height={140} /> : null}
+                  </LookSlot>
+                )
+              })}
+            </div>
+            {!(views.some((view) => view.file_url)) && row.ref_image_url ? (
+              <div style={{ marginTop: 12 }}>
+                <Text type="secondary">当前锁定</Text>
+                <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} />
+              </div>
+            ) : null}
+            {(row.candidate_list || []).length ? (
+              <div style={{ marginTop: 12 }}>
+                <Text type="secondary">候选，选定一张作为正脸</Text>
+                <Space wrap style={{ marginTop: 8 }}>
+                  {(row.candidate_list || []).map((c) => (
+                    <div key={c.asset_id} style={{ textAlign: 'center' }}>
+                      <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />
+                      <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
+                        await productionApi.lockCharacter(row.character_id, c.asset_id)
+                        load()
+                      }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
+                    </div>
+                  ))}
+                </Space>
+              </div>
+            ) : null}
           </Card>
-        )) : null}
+          )
+        }) : null}
       </Card>
       <Card title="场景卡">
         <Form layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
@@ -595,7 +621,7 @@ function CharacterPane({ work }) {
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
-            <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>用我的图片</Button>
+            <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
             <Space wrap>
@@ -628,7 +654,7 @@ function CharacterPane({ work }) {
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
-            <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>用我的图片</Button>
+            <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
             <Space wrap>
@@ -662,7 +688,7 @@ function CharacterPane({ work }) {
             style={{ width: 160 }}
             options={[{ value: 2, label: '2 张' }, { value: 4, label: '4 张' }, { value: 8, label: '8 张' }]}
           />
-          <span>{portraitPrice}。这张卡或知识库里已有定妆照时，会拿它当参考再生成。只有生成成功才会计入用量。</span>
+          <span>{portraitPrice}。已有正脸或知识库里对得上的造型时，会拿那张当参考。只有生成成功才会计入用量。</span>
         </Space>
       </Modal>
     </Space>

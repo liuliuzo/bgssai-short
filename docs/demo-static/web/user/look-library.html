@@ -21,40 +21,31 @@
   <main class="app-main">
     <div class="container">
       <h1 class="title">定妆知识库</h1>
-      <p class="subtitle">把自己的角色、场景、道具图片或参考视频放在这里。挂到定妆后，生成候选时按名称和说明把最接近的一张交给模型。视频用其中一帧。</p>
+      <p class="subtitle">一个造型放一起。点正脸、前面、背面或侧面的空位上传。生成定妆时优先用正脸。视频用其中一帧。</p>
       <div class="card">
-        <div class="card-hd"><h2>知识库列表</h2><span class="badge">点选，不用下拉</span></div>
+        <div class="card-hd"><h2>知识库</h2><button class="btn btn-primary btn-sm">新建知识库</button></div>
         <div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
           <div style="width:180px;flex-shrink:0">
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆</div>
-            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">礼服装</div>
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">白纱花瓣<div class="text-muted">1 个造型 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">礼服装<div class="text-muted">1 个造型 · 生成时参考</div></div>
             <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">运动装</div>
           </div>
           <div style="flex:1">
-        <div class="card-hd" style="padding:0 0 12px"><h2>礼服装</h2><span class="badge">定妆参考</span></div>
-        <div class="card-body">
-          <div class="row" style="margin-bottom:12px">
-            <button class="btn btn-primary btn-sm">上传素材</button>
-            <span class="text-muted">JPG、PNG、WebP、MP4，不超过 6MB</span>
-          </div>
-          <div class="assets">
-            <div class="asset">
-              <div class="phone"><span class="ph-tag">正脸</span><div class="ph-body">沈知微<br />正脸</div></div>
+            <div class="row" style="margin-bottom:12px">
+              <span>生成定妆时参考这个库</span>
+              <input type="checkbox" checked disabled />
+              <input placeholder="造型名称，例如白纱花瓣" />
+              <button class="btn btn-default btn-sm">添加造型</button>
             </div>
-            <div class="asset">
-              <div class="phone"><span class="ph-tag">前面</span><div class="ph-body">沈知微<br />前面</div></div>
+            <div class="card-hd" style="padding:0 0 12px"><h2>红礼服</h2><button class="btn btn-default btn-sm">删除造型</button></div>
+            <div style="display:flex;gap:12px">
+              <div><div class="text-muted">正脸 · 生成优先用</div><div class="phone"><span class="ph-tag">正脸</span><div class="ph-body">红礼服</div></div></div>
+              <div><div class="text-muted">前面</div><div class="phone"><span class="ph-tag">前面</span><div class="ph-body">红礼服</div></div></div>
+              <div><div class="text-muted">背面</div><div class="phone"><span class="ph-tag">背面</span><div class="ph-body">红礼服</div></div></div>
+              <div><div class="text-muted">侧面</div><button class="btn btn-default btn-sm">上传</button></div>
             </div>
-            <div class="asset">
-              <div class="phone"><span class="ph-tag">背面</span><div class="ph-body">沈知微<br />背面</div></div>
-            </div>
-            <div class="asset">
-              <div class="phone"><span class="ph-tag">侧面</span><div class="ph-body">沈知微<br />侧面</div></div>
-              <div class="as-b"><span class="as-n">沈知微</span><button class="btn btn-default btn-sm">移除</button></div>
-            </div>
-          </div>
           </div>
         </div>
-      </div>
       </div>
       <div class="spec">
         <div class="spec-t">字段口径</div>
@@ -62,7 +53,7 @@
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
         <code>POST /bgssai/user/look-materials/delete</code>。
-        多个知识库在左侧列表里点选，不用下拉框。角色定妆照分正脸、前面、背面、侧面，也可以放一段 MP4。点定妆生成时，先用这张卡的图，优先正脸；没有再按说明从已挂载的知识库检索。视频用其中一帧交给模型。
+        多个知识库在左侧列表里点选，不用下拉框。一个造型的正脸、前面、背面、侧面放在一起，点空位上传，也可以放一段 MP4。角色卡同样点某一面上传。点生成定妆时，先用这张卡的图，优先正脸；没有再按说明从已挂载的知识库检索。视频用其中一帧交给模型。
       </div>
     </div>
   </main>

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Card, Form, Input, Space, Switch, Typography, message } from 'antd'
+import { Button, Card, Input, Modal, Space, Switch, Typography, message } from 'antd'
 import productionApi from '../../api/production'
+import LookSlot from './LookSlot'
+import { LOOK_ANGLES, groupLooks } from './lookGroups'
 
 const { Text } = Typography
 
@@ -45,11 +47,8 @@ function posterOf(file) {
     }
     video.onloadeddata = () => {
       const target = Number.isFinite(video.duration) ? Math.min(0.4, video.duration / 2) : 0
-      if (target > 0) {
-        video.currentTime = target
-      } else {
-        finish()
-      }
+      if (target > 0) video.currentTime = target
+      else finish()
     }
     video.onseeked = finish
     video.onerror = () => {
@@ -59,52 +58,201 @@ function posterOf(file) {
   })
 }
 
+function MaterialView({ item, onRemove }) {
+  const video = item.mime_type && item.mime_type.startsWith('video/')
+  return (
+    <div style={{ marginBottom: 6 }}>
+      {video && item.file_url
+        ? <video src={item.file_url} poster={item.poster_url || undefined} style={{ width: 104, height: 140, objectFit: 'cover', borderRadius: 8, display: 'block' }} muted />
+        : (item.file_url ? <img alt={item.material_name} src={item.file_url} style={{ width: 104, height: 140, objectFit: 'cover', borderRadius: 8, display: 'block' }} /> : null)}
+      <Button type="link" size="small" style={{ padding: 0 }} onClick={onRemove}>移除</Button>
+    </div>
+  )
+}
+
 export default function LookLibraryPage() {
   const [libraries, setLibraries] = useState([])
   const [libraryId, setLibraryId] = useState()
-  const [loading, setLoading] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [libraryName, setLibraryName] = useState('')
+  const [lookName, setLookName] = useState('')
+  const [drafts, setDrafts] = useState([])
+  const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
-  const [viewAngle, setViewAngle] = useState('FRONT_FACE')
-  const [form] = Form.useForm()
+  const uploadTarget = useRef(null)
 
   const load = useCallback(async () => {
     const { data } = await productionApi.listLookLibraries()
     const list = data?.result?.library_list || []
     setLibraries(list)
     setLibraryId((current) => current || (list[0] && list[0].library_id))
+    return list
   }, [])
 
   useEffect(() => { load() }, [load])
 
   const current = libraries.find((item) => item.library_id === libraryId)
+  const looks = groupLooks(current?.material_list)
+  const named = new Set(looks.map((look) => look.name))
+  const visibleDrafts = drafts.filter((name) => !named.has(name))
+
+  async function createLibrary() {
+    const name = libraryName.trim()
+    if (!name) {
+      message.error('先写知识库名称')
+      return
+    }
+    setBusy(true)
+    try {
+      const { data } = await productionApi.saveLookLibrary({
+        library_name: name,
+        description: '',
+        mount_portrait: 1,
+        status: 'ACTIVE',
+      })
+      const id = data?.result?.library_id
+      setCreating(false)
+      setLibraryName('')
+      if (id) setLibraryId(id)
+      await load()
+    } catch {
+      message.error('知识库没有建成')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function toggleMount(checked) {
+    if (!current) return
+    setBusy(true)
+    try {
+      await productionApi.saveLookLibrary({
+        library_id: current.library_id,
+        library_name: current.library_name,
+        description: current.description || '',
+        mount_portrait: checked ? 1 : 0,
+        status: current.status || 'ACTIVE',
+      })
+      await load()
+    } catch {
+      message.error('没有改成功')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function addLook() {
+    const name = lookName.trim()
+    if (!name) {
+      message.error('先写造型名称')
+      return
+    }
+    if (!named.has(name) && !drafts.includes(name)) setDrafts((rows) => [name, ...rows])
+    setLookName('')
+  }
+
+  function openUpload(name, angle) {
+    uploadTarget.current = { name, angle }
+    fileRef.current?.click()
+  }
+
+  async function onFile(event) {
+    const file = event.target.files && event.target.files[0]
+    event.target.value = ''
+    const target = uploadTarget.current
+    if (!file || !target || !libraryId) return
+    setBusy(true)
+    try {
+      const imageBase64 = await readFile(file)
+      const video = (file.type || '').startsWith('video/') || /\.mp4$/i.test(file.name)
+      const posterBase64 = video ? await posterOf(file) : undefined
+      const angleName = LOOK_ANGLES.find(([value]) => value === target.angle)?.[1] || '参考'
+      await productionApi.uploadLookMaterial({
+        library_id: libraryId,
+        material_name: target.name,
+        caption: `${target.name} ${angleName}`,
+        material_kind: 'CHARACTER',
+        view_angle: target.angle,
+        image_base64: imageBase64,
+        poster_base64: posterBase64,
+      })
+      message.success(`已放入「${target.name}」的${angleName}`)
+      await load()
+    } catch (err) {
+      message.error(err && err.message === 'size' ? '文件不能超过 6MB' : '上传没有成功')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function removeMaterial(item) {
+    await productionApi.deleteLookMaterial(item.material_id)
+    await load()
+  }
+
+  function removeLook(look) {
+    const items = [
+      ...LOOK_ANGLES.flatMap(([angle]) => look.slots[angle]),
+      ...look.extra,
+    ]
+    Modal.confirm({
+      title: `删除「${look.name}」`,
+      content: '这个造型里的照片都会从库里拿掉。',
+      okText: '删除',
+      cancelText: '取消',
+      onOk: async () => {
+        for (const item of items) {
+          await productionApi.deleteLookMaterial(item.material_id)
+        }
+        setDrafts((rows) => rows.filter((name) => name !== look.name))
+        await load()
+      },
+    })
+  }
+
+  function renderLook(look, draft) {
+    return (
+      <Card
+        key={look.name}
+        size="small"
+        style={{ marginBottom: 12 }}
+        title={look.name}
+        extra={draft ? (
+          <Button type="link" size="small" onClick={() => setDrafts((rows) => rows.filter((name) => name !== look.name))}>取消</Button>
+        ) : (
+          <Button type="link" size="small" onClick={() => removeLook(look)}>删除造型</Button>
+        )}
+      >
+        <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
+          {LOOK_ANGLES.map(([angle, label]) => {
+            const items = look.slots[angle]
+            return (
+              <LookSlot
+                key={angle}
+                label={label}
+                note={angle === 'FRONT_FACE' ? '生成优先用' : ''}
+                action={items.length ? '再传一张' : '上传'}
+                disabled={busy}
+                onAction={() => openUpload(look.name, angle)}
+              >
+                {items.length ? items.map((item) => (
+                  <MaterialView key={item.material_id} item={item} onRemove={() => removeMaterial(item)} />
+                )) : null}
+              </LookSlot>
+            )
+          })}
+        </div>
+      </Card>
+    )
+  }
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <Card title="定妆知识库">
-        <Text type="secondary">把角色、场景、道具的参考图或一段视频放在这里。挂到定妆后，生成候选时会按名称和说明把最接近的画面交给模型。</Text>
-        <Form form={form} layout="inline" style={{ marginTop: 12 }} onFinish={async (values) => {
-          setLoading(true)
-          try {
-            await productionApi.saveLookLibrary({
-              library_name: values.library_name,
-              description: values.description,
-              mount_portrait: values.mount_portrait === false ? 0 : 1,
-              status: 'ACTIVE',
-            })
-            form.resetFields()
-            await load()
-          } finally {
-            setLoading(false)
-          }
-        }}>
-          <Form.Item name="library_name" rules={[{ required: true, message: '填写名称' }]}><Input placeholder="知识库名称" /></Form.Item>
-          <Form.Item name="description"><Input placeholder="用途说明" style={{ width: 240 }} /></Form.Item>
-          <Form.Item name="mount_portrait" valuePropName="checked" initialValue={true}><Switch checkedChildren="定妆参考" unCheckedChildren="仅存放" /></Form.Item>
-          <Form.Item><Button htmlType="submit" type="primary" loading={loading}>新建</Button></Form.Item>
-        </Form>
-      </Card>
-      <Card title="素材">
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+    <Card
+      title="定妆知识库"
+      extra={<Button type="primary" onClick={() => setCreating(true)}>新建知识库</Button>}
+    >
+      <Text type="secondary">一个造型放一起。点正脸、前面、背面或侧面的空位，把那一面的照片放进去。生成定妆时，优先用正脸。</Text>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 16 }}>
         <div style={{ width: 200, flexShrink: 0 }}>
           {libraries.map((item) => (
             <button
@@ -124,63 +272,56 @@ export default function LookLibraryPage() {
               }}
             >
               <div>{item.library_name}</div>
-              <Text type="secondary">{(item.material_list || []).length} 个素材</Text>
+              <Text type="secondary">
+                {groupLooks(item.material_list).length} 个造型
+                {item.mount_portrait === 1 ? ' · 生成时参考' : ' · 先放着'}
+              </Text>
             </button>
           ))}
-          {!libraries.length ? <Text type="secondary">还没有知识库。</Text> : null}
+          {!libraries.length ? <Text type="secondary">还没有知识库。先新建一个。</Text> : null}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-        <Space style={{ marginBottom: 12 }} wrap>
-          {[
-            ['FRONT_FACE', '正脸'],
-            ['FRONT', '前面'],
-            ['BACK', '背面'],
-            ['SIDE', '侧面'],
-          ].map(([value, label]) => (
-            <Button key={value} type={viewAngle === value ? 'primary' : 'default'} onClick={() => setViewAngle(value)}>{label}</Button>
-          ))}
-          <Button disabled={!libraryId} onClick={() => fileRef.current?.click()}>上传素材</Button>
-        </Space>
-        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4" hidden onChange={async (event) => {
-          const file = event.target.files && event.target.files[0]
-          event.target.value = ''
-          if (!file || !libraryId) return
-          try {
-            const imageBase64 = await readFile(file)
-            const video = (file.type || '').startsWith('video/') || /\.mp4$/i.test(file.name)
-            const posterBase64 = video ? await posterOf(file) : undefined
-            const name = file.name.replace(/\.[^.]+$/, '') || '未命名定妆'
-            await productionApi.uploadLookMaterial({
-              library_id: libraryId,
-              material_name: name,
-              caption: name,
-              material_kind: 'CHARACTER',
-              view_angle: viewAngle,
-              image_base64: imageBase64,
-              poster_base64: posterBase64,
-            })
-            message.success('已放入知识库')
-            await load()
-          } catch (err) {
-            message.error(err && err.message === 'size' ? '文件不能超过 6MB' : '上传没有成功')
-          }
-        }} />
-        {(current?.material_list || []).map((item) => (
-          <Card key={item.material_id} size="small" style={{ marginBottom: 8 }} title={item.material_name} extra={
-            <Button size="small" onClick={async () => { await productionApi.deleteLookMaterial(item.material_id); await load() }}>移除</Button>
-          }>
-            <Space>
-              {item.mime_type && item.mime_type.startsWith('video/') && item.file_url
-                ? <video src={item.file_url} poster={item.poster_url || undefined} style={{ width: 72, height: 96, objectFit: 'cover' }} muted />
-                : (item.file_url ? <img alt={item.material_name} src={item.file_url} style={{ width: 72, height: 96, objectFit: 'cover' }} /> : null)}
-              <Text type="secondary">{item.caption || item.material_kind}</Text>
+          {current ? (
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Space wrap>
+                <Text>生成定妆时参考这个库</Text>
+                <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
+              </Space>
+              <Space wrap>
+                <Input
+                  value={lookName}
+                  placeholder="造型名称，例如白纱花瓣"
+                  style={{ width: 240 }}
+                  onChange={(event) => setLookName(event.target.value)}
+                  onPressEnter={addLook}
+                />
+                <Button onClick={addLook}>添加造型</Button>
+              </Space>
+              {visibleDrafts.map((name) => renderLook({ name, slots: { FRONT_FACE: [], FRONT: [], BACK: [], SIDE: [] }, extra: [] }, true))}
+              {looks.map((look) => renderLook(look, false))}
+              {!looks.length && !visibleDrafts.length ? <Text type="secondary">这个库还没有造型。写一个名称，再往四面里放照片。</Text> : null}
             </Space>
-          </Card>
-        ))}
-        {current && !(current.material_list || []).length ? <Text type="secondary">这个知识库还没有素材。</Text> : null}
+          ) : <Text type="secondary">先在左边选一个知识库。</Text>}
         </div>
-        </div>
-      </Card>
-    </Space>
+      </div>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4" hidden onChange={onFile} />
+      <Modal
+        title="新建知识库"
+        open={creating}
+        okText="创建"
+        cancelText="取消"
+        confirmLoading={busy}
+        onCancel={() => setCreating(false)}
+        onOk={createLibrary}
+      >
+        <Input
+          value={libraryName}
+          placeholder="例如礼服装"
+          onChange={(event) => setLibraryName(event.target.value)}
+          onPressEnter={createLibrary}
+        />
+        <div style={{ marginTop: 8 }}><Text type="secondary">建好后就可以往里面加造型。生成定妆时会用到这个库。</Text></div>
+      </Modal>
+    </Card>
   )
 }
