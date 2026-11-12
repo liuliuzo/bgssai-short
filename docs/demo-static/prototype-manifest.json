@@ -5,7 +5,7 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "a0cf184a8652c1a2fa0245008ce8900a0984a7773683195c980c75eaa86da7bb",
+  "prototype_bundle_digest": "797454778cfc1fb405e680140c3fbe2fbbba7cc74732dc5b1cf65691b68de33b",
   "code_contract_digest": "671f490864241f8e044b8ddefce019d216d083087e6f4a009494ce7364204c35",
   "api_endpoints": [
     "/api/cs/support/callback",
@@ -2080,7 +2080,7 @@
     },
     {
       "path": "docs/demo-static/web/user/home.html",
-      "sha256": "9b3a900b8b9b56a6dcad00a96f11f7fd4934252899432132e908b59488fe95b7",
+      "sha256": "6a6e52d0d2511d7e75f9723d3547a6b8c156f8dc3bb828d53787c4f409a908a7",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
