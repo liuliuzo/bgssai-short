@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "84d51807d8a21c5b973e60ede16438655775de10caadb45ca173417e3f135f1c",
-  "code_contract_digest": "a7f227df41ef2898f4a64f7999647a39e020a202e0478c2b9c6071b2e83155e5",
+  "prototype_bundle_digest": "cc5b9f8b8bc6ce69b96296a20f82adfec7307f880df33099c83498a7f1a37ac9",
+  "code_contract_digest": "069c169d8105d410531623d195c6a4e339d11a30fc3a060e07cabaf50a26722c",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -528,7 +528,19 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/LookLibraryPage.jsx",
-      "sha256": "1cf4d3cfe83919b7a502c52cb7afb91792ffd8e2cf2378c205a309c66e288690"
+      "sha256": "bd1210684e57c18630e309fce7a3cfabb487fc245f5c03cf7bc4631a92d01627"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/LookSlot.jsx",
+      "sha256": "6f77b6dd1ccc47c69acaeb30bec3961a8c66c32680b80e50852d565ed70b3691"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookGroups.js",
+      "sha256": "e66df502f82ce5782ab9c961fac5523c754fa88ada993db5a0b53b4eb716b0e1"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookGroups.test.js",
+      "sha256": "3fda362727cffa7b3f12ad96762e59c397da535dfbd3d062e6eedd3cc75372d7"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/mcp/McpTokens.jsx",
@@ -596,7 +608,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "371d7c8f398988561e2ef1f0248d28504811af0297f71ed3f1791f124c63e640"
+      "sha256": "f35ae6f9c7b21c1497f7ad9d9d8fd84c825c5685acfc19a175a08af99bed7328"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -1954,7 +1966,7 @@
     },
     {
       "path": "docs/demo-static/web/user/character-bible.html",
-      "sha256": "14158b394372344119a36ef8021cd1e7bb37522105f519b698d2d72ff0058237",
+      "sha256": "4d1f3c5dc57e943fb32f83421d2c8192a35500b02600b499eb4463a7e6800ddf",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2227,7 +2239,7 @@
     },
     {
       "path": "docs/demo-static/web/user/look-library.html",
-      "sha256": "15a9144f230cf2740bed36a8bbd7fe6d3ab3b92e256b32e34a55acfaedcb159d",
+      "sha256": "2a5f6ade605048af00b0ac5f234888c89fd6f2518eecdb3b71f5893256695a49",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
