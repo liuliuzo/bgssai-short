@@ -143,6 +143,8 @@ public class ProductionDtos {
         private String assetId;
         private Integer candidateCount;
         private String modelCode;
+        private String imageBase64;
+        private String caption;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
         public String getCharacterId() { return characterId; }
@@ -165,6 +167,10 @@ public class ProductionDtos {
         public void setCandidateCount(Integer candidateCount) { this.candidateCount = candidateCount; }
         public String getModelCode() { return modelCode; }
         public void setModelCode(String modelCode) { this.modelCode = modelCode; }
+        public String getImageBase64() { return imageBase64; }
+        public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
+        public String getCaption() { return caption; }
+        public void setCaption(String caption) { this.caption = caption; }
     }
 
     public static class ShotReq {

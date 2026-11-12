@@ -18,6 +18,8 @@ class ProductModelAliasTest {
         assertEquals("BGSSAI Image", ProductModelAlias.forStored("IMAGE", "kling-v3").name());
         assertEquals("BGSSAI Image", ProductModelAlias.forStored("IMAGE", "sd-turbo").name());
         assertEquals("BGSSAI Video", ProductModelAlias.forStored("VIDEO", "cogvideox").name());
+        assertEquals("bgssai-video", ProductModelAlias.forStored("VIDEO", "bgssai-video-i2v").code());
+        assertEquals("BGSSAI Video", ProductModelAlias.forStored("VIDEO", "bgssai-video-i2v").name());
         assertEquals("BGSSAI TTS", ProductModelAlias.forStored("VOICE", "piper").name());
         assertEquals("BGSSAI ASR", ProductModelAlias.forStored("ASR", "hy-asr-3.0-preview").name());
         assertEquals("BGSSAI Music", ProductModelAlias.forStored("MUSIC", "minimax-music-v2.6").name());
@@ -52,6 +54,12 @@ class ProductModelAliasTest {
         assertEquals("bgssai-tts", item.get("model_code"));
         assertEquals("BGSSAI TTS", item.get("display_name"));
         assertTrue(ProductModelAlias.leaks("可灵 kling-v3"));
+        assertTrue(ProductModelAlias.leaks("ltx-video-2b-0.9.5"));
+        assertTrue(ProductModelAlias.leaks("lightricks"));
+        String hidden = ProductModelAlias.scrub("失败 ltx-video 127.0.0.1:8007");
+        assertFalse(hidden.toLowerCase().contains("ltx"));
+        assertFalse(hidden.contains("127.0.0.1"));
+        assertFalse(hidden.contains("8007"));
         assertFalse(ProductModelAlias.leaks("BGSSAI Image"));
     }
 }

@@ -11,6 +11,7 @@ import './main-layout.css'
 const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
   { key: '/works', label: '我的作品', icon: <VideoCameraOutlined /> },
+  { key: '/look-library', label: '定妆知识库', icon: <AppstoreOutlined /> },
   { key: '/tasks', label: '任务中心', icon: <ThunderboltOutlined /> },
   { key: '/usage', label: '用量与账单', icon: <WalletOutlined /> },
   { key: '/subscription', label: '套餐与加量', icon: <AccountBookOutlined /> },
@@ -28,7 +29,7 @@ const SHELL_PRIMARY = [
 ]
 
 const SHELL_MORE = NAV_ITEMS.filter((item) => !SHELL_PRIMARY.some((primary) => primary.key === item.key))
-const MAKE_KEYS = ['/home', '/works', '/tasks']
+const MAKE_KEYS = ['/home', '/works', '/look-library', '/tasks']
 const MAKE_NAV = NAV_ITEMS.filter((item) => MAKE_KEYS.includes(item.key))
 const ACCOUNT_NAV = NAV_ITEMS.filter((item) => !MAKE_KEYS.includes(item.key))
 

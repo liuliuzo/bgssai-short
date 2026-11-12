@@ -3,6 +3,7 @@ import { publicModelText } from '../../publicModel'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
+import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
@@ -420,6 +421,8 @@ function CharacterPane({ work }) {
   const [portraitCount, setPortraitCount] = useState(4)
   const [busyIds, setBusyIds] = useState(() => new Set())
   const busyRef = useRef(new Set())
+  const ownImageRef = useRef(null)
+  const ownImageTarget = useRef(null)
   const selectedModel = imageModels.find((item) => item.model_code === imageModelCode)
   const unitCent = Number(selectedModel?.unit_price_cent ?? selectedModel?.image_fen_per_unit ?? 0)
   const portraitPrice = Number.isFinite(unitCent) && unitCent > 0
@@ -484,6 +487,42 @@ function CharacterPane({ work }) {
     })()
   }
 
+  async function onOwnImage(event) {
+    const file = event.target.files && event.target.files[0]
+    event.target.value = ''
+    const target = ownImageTarget.current
+    if (!file || !target) return
+    if (file.size > 6 * 1024 * 1024) {
+      message.error('图片不能超过 6MB')
+      return
+    }
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result || ''))
+      reader.onerror = () => reject(new Error('read'))
+      reader.readAsDataURL(file)
+    }).catch(() => '')
+    const comma = dataUrl.indexOf(',')
+    const imageBase64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl
+    if (!imageBase64) {
+      message.error('图片读取失败')
+      return
+    }
+    markBusy(target.id, true)
+    try {
+      const call = target.kind === 'character'
+        ? productionApi.uploadCharacterPortrait(target.id, imageBase64)
+        : productionApi.uploadScenePortrait(target.id, imageBase64)
+      await call
+      message.success('已放入定妆候选和知识库，锁定后全剧按这张图走')
+      load()
+    } catch {
+      message.error('图片没有上传成功')
+    } finally {
+      markBusy(target.id, false)
+    }
+  }
+
   const modelSelect = (
     <Select
       placeholder="出图模型"
@@ -507,10 +546,13 @@ function CharacterPane({ work }) {
           <Form.Item name="appearance_prompt"><Input placeholder="外观描述" style={{ width: 220 }} /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
+        <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
+        <div style={{ marginBottom: 12 }}><Link to="/look-library">管理定妆知识库</Link></div>
         {!cardsReady ? <LibrarySkeleton /> : null}
         {cardsReady ? chars.map((row) => (
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={<Space>
             <Button size="small" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
+            <Button size="small" disabled={busyIds.has(row.character_id)} onClick={() => { ownImageTarget.current = { kind: 'character', id: row.character_id }; ownImageRef.current?.click() }}>用我的图片</Button>
           </Space>}>
             <Space wrap>
               {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} /> : null}
@@ -541,7 +583,10 @@ function CharacterPane({ work }) {
         {!cardsReady ? <LibrarySkeleton /> : null}
         {cardsReady ? scenes.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
+            <Space>
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
+            <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>用我的图片</Button>
+            </Space>
           }>
             <Space wrap>
               {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={96} height={64} /> : null}
@@ -571,7 +616,10 @@ function CharacterPane({ work }) {
         {!cardsReady ? <LibrarySkeleton /> : null}
         {cardsReady ? props.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
+            <Space>
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
+            <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>用我的图片</Button>
+            </Space>
           }>
             <Space wrap>
               {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={72} /> : null}
@@ -945,6 +993,7 @@ function StoryboardPane({ work, episodeId }) {
           </Paragraph>
         )}
       </Card>
+      <ImageToVideoPanel workId={work?.work_id} episodeId={episodeId} shots={rows} />
       {rows.map((row) => {
         const readiness = evaluateShotReadiness(row, panel)
         const taskBadge = shotLatestTaskBadge(row)

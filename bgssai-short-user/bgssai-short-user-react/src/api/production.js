@@ -1,4 +1,5 @@
 import http from '../utils/http'
+import { instance } from '../utils/http/axios'
 
 const listWorks = (params) => http.get('/user/short-works/list', params)
 const createWork = (body) => http.post('/user/short-works/create', body)
@@ -27,6 +28,12 @@ const portraitCharacter = (characterId, modelCode, candidateCount) =>
   })
 const lockCharacter = (characterId, assetId) =>
   http.post('/user/characters/lock', { character_id: characterId, asset_id: assetId })
+const uploadCharacterPortrait = (characterId, imageBase64, caption) =>
+  http.post('/user/characters/portrait-upload', {
+    character_id: characterId,
+    image_base64: imageBase64,
+    caption,
+  })
 const consistencyPanel = (workId) => http.get('/user/assets/consistency-panel', { work_id: workId })
 const bindShotAssets = (body) => http.post('/user/shots/bind-assets', body)
 const listScenes = (workId, cardType) => http.get('/user/scene-cards/list', { work_id: workId, card_type: cardType })
@@ -39,6 +46,16 @@ const portraitScene = (sceneCardId, modelCode, candidateCount) =>
   })
 const lockScene = (sceneCardId, assetId) =>
   http.post('/user/scene-cards/lock', { scene_card_id: sceneCardId, asset_id: assetId })
+const uploadScenePortrait = (sceneCardId, imageBase64, caption) =>
+  http.post('/user/scene-cards/portrait-upload', {
+    scene_card_id: sceneCardId,
+    image_base64: imageBase64,
+    caption,
+  })
+const listLookLibraries = () => http.get('/user/look-libraries/list')
+const saveLookLibrary = (body) => http.post('/user/look-libraries/save', body)
+const uploadLookMaterial = (body) => http.post('/user/look-materials/upload', body)
+const deleteLookMaterial = (materialId) => http.post('/user/look-materials/delete', { material_id: materialId })
 
 const splitShots = (episodeId) => http.post('/user/shots/split-from-script', { episode_id: episodeId })
 const listShots = (params) => http.get('/user/shots/list', params)
@@ -68,6 +85,14 @@ const submitReview = (episodeId) => http.post('/user/reviews/submit', { episode_
 const withdrawReview = (episodeId) => http.post('/user/reviews/withdraw', { episode_id: episodeId })
 const listReviews = (workId) => http.get('/user/reviews/list', { work_id: workId })
 const precheck = (body) => http.post('/user/compliance/precheck', body)
+const imageToVideoCapability = () => http.get('/user/video/image-to-video/capability')
+const submitImageToVideo = (body) => http.post('/user/video/image-to-video', body)
+const imageToVideoStatus = (taskId) => http.get(`/user/video/image-to-video/${taskId}`)
+const uploadImage = (file) => {
+  const body = new FormData()
+  body.append('file', file)
+  return instance.post('/user/assets/images', body)
+}
 const dramaAssistAdvise = (body) => http.post('/user/drama-assist/advise', body)
 const dramaAssistApply = (body) => http.post('/user/drama-assist/apply', body)
 
@@ -89,11 +114,17 @@ export default {
   listCharacters,
   createCharacter,
   portraitCharacter,
+  uploadCharacterPortrait,
   lockCharacter,
   listScenes,
   createScene,
   portraitScene,
+  uploadScenePortrait,
   lockScene,
+  listLookLibraries,
+  saveLookLibrary,
+  uploadLookMaterial,
+  deleteLookMaterial,
   splitShots,
   listShots,
   lockShot,
@@ -119,6 +150,10 @@ export default {
   withdrawReview,
   listReviews,
   precheck,
+  imageToVideoCapability,
+  submitImageToVideo,
+  imageToVideoStatus,
+  uploadImage,
   dramaAssistAdvise,
   dramaAssistApply,
 }
