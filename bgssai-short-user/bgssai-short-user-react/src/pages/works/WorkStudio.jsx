@@ -1785,7 +1785,6 @@ export default function WorkStudio() {
         <Space wrap>
           <Button
             type="primary"
-            style={{ background: 'linear-gradient(135deg, #722ed1, #1677ff)', borderColor: 'transparent' }}
             onClick={() => setAssistantOpen(true)}
           >
             AI 协同专家
@@ -1850,6 +1849,9 @@ export default function WorkStudio() {
       <DramaAssistantDrawer
         visible={assistantOpen}
         onClose={() => setAssistantOpen(false)}
+        workId={work.work_id}
+        episodeId={episodeId}
+        onApplied={load}
       />
       <style>{`
         .work-studio-tabs .ant-tabs-nav { margin-bottom: 12px; }

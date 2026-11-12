@@ -68,6 +68,8 @@ const submitReview = (episodeId) => http.post('/user/reviews/submit', { episode_
 const withdrawReview = (episodeId) => http.post('/user/reviews/withdraw', { episode_id: episodeId })
 const listReviews = (workId) => http.get('/user/reviews/list', { work_id: workId })
 const precheck = (body) => http.post('/user/compliance/precheck', body)
+const dramaAssistAdvise = (body) => http.post('/user/drama-assist/advise', body)
+const dramaAssistApply = (body) => http.post('/user/drama-assist/apply', body)
 
 export default {
   listWorks,
@@ -117,4 +119,6 @@ export default {
   withdrawReview,
   listReviews,
   precheck,
+  dramaAssistAdvise,
+  dramaAssistApply,
 }

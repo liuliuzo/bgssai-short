@@ -38,6 +38,7 @@
 | `works.html` | `/works` | - | 与该页一致 | - |
 | `works.html` | `/works/:workId` | - | 与该页一致 | - |
 | `works.html` | `/works/:workId/:tab` | - | 与该页一致 | - |
+| `drama-assistant.html` | `/works/:workId/:tab`（抽屉） | `POST /bgssai/user/drama-assist/advise` · `POST /bgssai/user/drama-assist/apply` | 登录用户 | [`drama-assistant.md`](./drama-assistant.md) |
 <!-- page-contract-end -->
 
 # 页面 → 后端 API 映射主表
