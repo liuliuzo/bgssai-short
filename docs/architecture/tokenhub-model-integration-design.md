@@ -81,7 +81,7 @@ TEXT 的 `usage.total_tokens`、PixVerse 的 `tokenhub_usage.total_tokens` 等�
 | Hy ASR | `queued` / `in_progress` | `completed` | `failed` |
 
 轮询间隔取 `config_json.poll_interval_ms`，默认视频 3000ms、ASR 2000ms。画面和视频的现行客户端
-走 OpenAI 兼容媒体接口（见 3.3），轮询总时限是 `max(180 秒, timeout_sec)`，避免长视频在 180 秒被提前判失败。
+走 OpenAI 兼容媒体接口（见 3.3）。画面至少等 10 分钟，视频至少等 15 分钟；模型自己的 `timeout_sec` 更长时以模型为准。查询状态时单次超时或网关短暂 502/503/504 会继续查，不把还在生成的任务判失败。
 超时对用户展示「生成超时，任务可能仍在处理，请到任务中心查看或稍后重试」。审核失败与其它上游失败仍按
 既有失败码回写。Worker 只重试平台允许的超时和 5xx，不重试审核失败或参数错误。
 
@@ -218,3 +218,22 @@ ffprobe 只接收本次临时文件路径，protocol_whitelist 限定 file,pipe�
 回归包含生成的 1.25 秒 MP3、WAV、64×96 MP4，以及真实 PNG/JPEG 字节，验证缺失供应商 JSON 时长、错误默认尺寸、无对应流、非法媒体、子进程超时和输出上限。真实媒体测试需与部署相同的 ffprobe 依赖；缺少工具的开发机明确跳过这些集成项，发布验收必须实际执行通过。
 
 公司视频完成响应可使用网关相对路径 `/v1/videos/generations/{id}/content?model={model}`。Short 只接受该精确路径、受限任务 ID 和与本次模型完全一致的单一 model 参数，并相对已配置的国内网关解析后附该网关 Bearer。拒绝协议相对 URL、路径穿越、额外查询参数及模型不一致；第三方 HTTPS 资源下载不附网关凭据。既有 HTTP 下载客户端跨 origin 重定向清除鉴权，HTTPS 不降级。网关另行负责每次查询/内容请求的任务所有权检查；该客户端支持不代表上游参考图或视频安装已完成。
+
+
+## 公司视频别名与配置一致性（2026-11-11）
+
+`AiModelResolveService` 在通用 `rewriteAlias` 之前识别明确的 `VIDEO/bgssai-video`，不让该请求降为默认选择。共享选择器先筛同区可解析的中枢配置并取精确 `model_code=bgssai-video`；没有精确行时，仅接受历史种子 ID `m-tokenhub-video-cogvideox`、TENCENT_TOKENHUB、VIDEO、`hub=cn`、`public_alias=bgssai-video`、`model_code=cogvideox` 的组合。历史对象复制全部元数据后仅改 modelCode，不修改 Mapper 返回对象、不写库。供应商/区域/别名被管理端调整过的行不纳入此兼容。
+
+目录同样用这一选择器决定 canonical 视频项，不再用第一个默认第三方行的价格代表公司视频。缺少候选时目录省略、明确提交失败；不调用 syntheticHubModel、兼容直连或默认对齐。价格与商业倍率查询使用规范后的 bgssai-video 网关编号，产品单价/单位、timeoutSec、maxRetry、configJson 均沿用所选行。其他自定义别名和显式第三方编号不修改。
+
+`CatalogModelAlign` 对缺失默认的视频公司候选优先 bgssai-video；cogvideox 名称本身不再是公司归属证据，只有目录 owned_by 明确公司归属时才可作为公司候选。已经在目录中的显式第三方配置仍保留。
+
+DML 新装种子采用 bgssai-video，继续保留历史 model_id 以避免重复配置；冲突时只填空字段，不改管理端现有价格、启停、默认、凭据或非空编号。线上旧种子由上述读时兼容承接。DDL/API 字段无变动。回归覆盖精确行优先、历史种子保价/超时/凭据、目录与解析一致、禁跨区/直连、非匹配历史行拒绝、自定义与第三方保持。离线测试不代表上游可用或已完成真实视频。
+
+## 开发库 VIDEO 默认（2026-11-12）
+
+共享 `sql/DML.sql` 增加启用的一等行 `m-tokenhub-video-bgssai`：`model_code=bgssai-video`，`provider_code=TENCENT_TOKENHUB`，`config_json` 为 `hub=cn` 与 `secret_ref=ai.tokenhub_cn.api_key`，`timeout_sec=900`，`default_flag=0`。重复执行不改 `default_flag`，也不把历史行 `m-tokenhub-video-cogvideox` 的非空 `model_code` 从 `cogvideox` 改掉。历史行仍由 `companyVideo()` 在客户端已经提交 `bgssai-video` 时做内存改写。
+
+只有 `sql/dev/DML.sql` 把该公司行设为唯一 VIDEO 默认，并把 `m-tokenhub-video-minimax` 与 `model_code=cogvideox` 的 VIDEO 行 `default_flag` 置 0。`sql/prod/DML.sql` 不包含这段，生产默认仍是 MiniMax。已有开发库只执行该段，不整库重建，不改集数与成片。
+
+未传模型且目录快照为空时，解析保持库内默认行。配置编号已经是 `bgssai-video` 时，目录里只有其它视频编号（含公司归属的 `cogvideox`）也不替换。第三方默认编号在目录缺失时的既有对齐规则不变。

@@ -77,3 +77,4 @@
 
 - [2026-10-30 功能测试补遗](functional-test-supplement-20261030.md)
 - [2026-11 用户端视觉整理](user-visual-polish-2026-11.md)：颜色和控件对齐官网与境内 Chat，手机上改用底部标签栏；不改接口、字段、跳转与原型。
+- [AI 戏剧多专家协同](drama-assistant-experts.md)：作品页专家抽屉走 CN TEXT、作品上下文、结构化建议与确认写回。

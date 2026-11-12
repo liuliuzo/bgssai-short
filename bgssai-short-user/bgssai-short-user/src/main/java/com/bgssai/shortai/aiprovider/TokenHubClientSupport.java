@@ -122,6 +122,24 @@ public final class TokenHubClientSupport {
         return ProductModelAlias.scrub(raw);
     }
 
+    /** A single status query can time out while the upstream job is still running. */
+    public static boolean transientUpstream(Throwable ex) {
+        Throwable cur = ex;
+        while (cur != null) {
+            if (cur instanceof java.net.http.HttpTimeoutException || cur instanceof java.io.IOException) {
+                return true;
+            }
+            String msg = cur.getMessage() == null ? "" : cur.getMessage().toLowerCase(Locale.ROOT);
+            if (msg.contains("timeout") || msg.contains("timed out")
+                    || msg.contains("connection reset") || msg.contains("temporarily unavailable")
+                    || msg.contains("http 502") || msg.contains("http 503") || msg.contains("http 504")) {
+                return true;
+            }
+            cur = cur.getCause();
+        }
+        return false;
+    }
+
     /** Scrub infra and upstream names from messages that may reach the user SPA or fail_reason. */
     public static String userFacingMessage(String raw) {
         String scrubbed = ProductModelAlias.scrub(composeUserFacingMessage(raw));

@@ -32,7 +32,7 @@
 <dl class="meta">
   <dt>作用域</dt><dd>short_shot.shot_status 与 short_ai_task.task_status</dd>
   <dt>关联</dt><dd>storyboard-workbench.md · shot-generation.md</dd>
-  <dt>更新</dt><dd>2026-08-13</dd>
+  <dt>更新</dt><dd>2026-11-11</dd>
 </dl>
 
 <h2>一、镜头状态机（两段式生成：先首帧图，再图生视频）</h2>
@@ -129,6 +129,10 @@
   两段式生成是本产品默认的省钱主路径：首帧图单价远低于视频，先用图确认构图与人物长相，
   再由图生视频，可显著降低「直接生视频反复抽卡」的浪费。作品设置里允许切换为直接生视频，
   但界面必须展示成本差异。
+  视频任务失败、超时或取消时，若镜头仍绑定 video_asset_id，且状态为 VIDEO_GENERATING，回到 VIDEO_READY，
+  不得清空或覆盖该素材。还没有视频但首帧仍在时，回到 IMAGE_READY，不把镜头停在生成中。
+  创作台列表直接播放 video_url。状态尚未回到 VIDEO_READY 时，已有视频的失败标签可写「已有视频，本次重生成失败」。
+  已是 VIDEO_READY 或 LOCKED 且成片仍在时，不再把这次失败留作常驻标签。首帧文案「查看首帧」单行排在缩略图下。
 </p>
 
 </body>

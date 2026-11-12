@@ -101,7 +101,15 @@ public class TencentTokenHubAiProvider implements AiProvider {
                     TokenHubClientSupport.userFacingMessage("model credential unavailable"));
         }
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
-        var receipt=receipts==null?null:receipts.begin(base,apiKey,request.getModel().getModelCode());
+        String resumeId = ShortJson.text(request.param("resume_request_id"));
+        if (!resumeId.isBlank() && (!"VIDEO".equals(ability) || !"bgssai-video".equals(request.getModel().getModelCode()) || receipts == null)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "已有视频恢复需要可信回执与原公司模型");
+        }
+        var receipt = resumeId.isBlank() && receipts != null ? receipts.begin(base,apiKey,request.getModel().getModelCode()) : null;
+        if (!resumeId.isBlank()) {
+            try { receipt = receipts.resumeVideo(resumeId,base,apiKey,request.getModel().getModelCode()); }
+            catch (IllegalArgumentException ex) { throw new BizException(CommonErrorCode.RULE_REJECT, "原视频回执或凭据不匹配，已停止恢复"); }
+        }
         activeReceipt.set(receipt);
         try {
             return switch (ability) {
@@ -160,8 +168,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
             body.put("image", image);
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, timeoutSec));
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
+        int budget = mediaBudgetSec(timeoutSec, 600);
+        Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, budget));
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, budget);
         return mediaResult(request, done, "image/png", 0, 1080, 1920, timeoutSec, base, apiKey);
     }
 
@@ -176,9 +185,13 @@ public class TencentTokenHubAiProvider implements AiProvider {
         if (!image.isBlank()) {
             body.put("image", image);
         }
-        Map<String, Object> submitted = post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec));
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
-        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec, base, apiKey);
+        String resumeId = ShortJson.text(request.param("resume_request_id"));
+        int budget = mediaBudgetSec(timeoutSec, 900);
+        Map<String, Object> submitted = resumeId.isBlank()
+                ? post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec))
+                : get(base + VIDEO_PATH + "/by-request/" + encodeQuery(resumeId) + "?model=" + encodeQuery(model), apiKey, 60);
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, budget);
+        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, budget, base, apiKey);
         if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
             ready.setDurationSec(duration);
         }
@@ -311,10 +324,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model content route mismatch");
             }
             requireHttps(base, "model gateway");
-            bytes = http.getBytes(URI.create(base).resolve(relative).toString(), generationHeaders(apiKey), Math.min(180, timeoutSec));
+            bytes = http.getBytes(URI.create(base).resolve(relative).toString(), generationHeaders(apiKey), timeoutSec);
         } else {
             requireHttps(url, "video url");
-            bytes = http.getBytes(url, Math.min(180, timeoutSec));
+            bytes = http.getBytes(url, timeoutSec);
         }
         AiProviderResult result = AiProviderResult.binary(bytes, "video/mp4");
         result.setDurationSec(durationSec);
@@ -335,6 +348,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
         return pollMedia(base, apiKey, model, taskId, cfg, timeoutSec);
     }
 
+    static int mediaBudgetSec(int timeoutSec, int floorSec) {
+        return Math.max(floorSec, Math.max(1, timeoutSec));
+    }
+
     static long mediaPollBudgetMs(int timeoutSec) {
         long configured = Math.max(1, timeoutSec) * 1000L;
         return Math.max(MEDIA_POLL_BUDGET_MS, configured);
@@ -350,13 +367,23 @@ public class TencentTokenHubAiProvider implements AiProvider {
         long intervalMs = Math.max(MEDIA_POLL_INTERVAL_MS, ProviderHttp.pollIntervalMs(cfg));
         long deadline = System.currentTimeMillis() + mediaPollBudgetMs(timeoutSec);
         while (System.currentTimeMillis() < deadline) {
-            Map<String, Object> resp = get(query, apiKey, 60);
-            PollState state = pollState(resp, PollKind.MEDIA);
-            if (state == PollState.SUCCEEDED) {
-                return resp;
-            }
-            if (state == PollState.FAILED) {
-                throw upstream("model task failed", resp);
+            try {
+                Map<String, Object> resp = get(query, apiKey, 60);
+                PollState state = pollState(resp, PollKind.MEDIA);
+                if (state == PollState.SUCCEEDED) {
+                    return resp;
+                }
+                if (state == PollState.FAILED) {
+                    throw upstream("model task failed", resp);
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw ex;
+            } catch (Exception ex) {
+                if (!TokenHubClientSupport.transientUpstream(ex) || System.currentTimeMillis() >= deadline) {
+                    throw ex;
+                }
+                log.warn("media status query will retry taskId={}", taskId);
             }
             sleeper.sleep(intervalMs);
         }

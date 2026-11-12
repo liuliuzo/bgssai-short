@@ -25,4 +25,24 @@
 
 无新增 HTTP 路由、数据表、字段或 SQL；全部通过既有 `/api/mcp`。新增工具非幂等，客户端持有返回 task_id 后应查询，不应重复提交。外发 Tube 必须单独明确授权。
 
+## 资产验收与镜头确认适配
+
+`McpProductionService` 注入正式 `AssetService`。`get_asset_download` 只接收 asset_id，
+委托 `getDownload` 并原样提取其 result；UserContext 的资产归属、预签名和 expire_at 由正式服务处理。
+不使用缺少归属检查的 resolveUrl，不自己签名或返回配置。
+
+`lock_shot` 先拒绝未知字段及非 boolean true 确认，再由 WorkAccessService.requireEpisode、
+ShotService.requireShot 验证本人分集/镜头，额外要求 episode_id 匹配、video_asset_id 非空、
+shot_status 为 VIDEO_READY 或 LOCKED。构造仅 episode_id/shot_id 的 ShotReq，调用
+`shots.lock(req,true)`；不直接写 Mapper，不接收媒体覆盖。事务范围与既有制作适配一致。
+此工具不调用生成、结算、合成或公开发布。FilmService 的正式 precheck/compose 保持原样。
+
+Schema 声明 additionalProperties=false；服务端同样检查这两个新工具的字段白名单，避免客户端绕过 schema。
+资产授权测试使用真实 AssetService 与模拟 Mapper/存储；镜头授权测试使用真实访问与镜头服务的归属检查，
+并确认明确确认和就绪状态之前没有更新或生产调用。测试不访问真实资产、不锁实际作品。
+
 `list_voices`/`set_character_voice` 包装正式 DubbingService；配置前验证产品声音目录，正式方法继续校验角色归属。ShotConsistency 新增 speakerName 排序，ShotService.split 从行 character_name 传入；DubbingService 用公共 characterIds 解析器兼容对象和 ID 两种引用格式。声音映射由正式供应商适配器负责，不让客户端填写任意供应商参数。
+
+## 正式字幕重建适配
+
+`regenerate_subtitles` 仅接收 episode_id 与 confirm_replace。先拒绝未知字段与非 boolean true 确认，再通过 WorkAccessService.requireEpisode 验证本人分集；构造 SubtitleRegenReq 委托 DubbingService.subtitleRegenerate 并原样返回 result。正式服务保留自身归属校验、事务、字幕替换及分集状态刷新；适配器不写 Mapper、不调用生成或合成。字幕重建会覆盖人工编辑，所以 MCP 要求明确替换确认；查询本身不执行重建。

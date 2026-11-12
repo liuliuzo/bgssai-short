@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,7 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
 
 /**
- * provider_code=FFMPEG —— 用本机 FFmpeg 把各镜头的视频片段拼成一条 9:16 成片。
+ * provider_code=FFMPEG —— 按分镜时间轴及保存画幅规范化真实视频，再合成成片。
  * <p>
  * 合成是唯一一个不该调外部大模型的能力：素材已经在本地，缺的只是拼接。这里不做任何
  * 「合不成就返回一张图」的兜底——ffmpeg 不在或素材不全就直接失败，让创作者看到真实原因。
@@ -48,6 +50,8 @@ public class FfmpegComposeProvider implements AiProvider {
 
     /** 与 clip_list 等长的每镜时长（秒），用于静音占位与配音对齐。 */
     public static final String PARAM_CLIP_DURATION_SEC_LIST = "clip_duration_sec_list";
+    public static final String PARAM_ASPECT_RATIO = "aspect_ratio";
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private static final Logger log = LoggerFactory.getLogger(FfmpegComposeProvider.class);
 
@@ -72,6 +76,8 @@ public class FfmpegComposeProvider implements AiProvider {
                     "没有可合成的镜头视频：请先把每个镜头生成视频再合成");
         }
         requireFfmpeg();
+        List<Integer> durations = durationListOf(request, clips.size());
+        Canvas canvas = canvasOf(request);
 
         int timeoutSec = request.getModel() == null || request.getModel().getTimeoutSec() == null
                 ? DEFAULT_RUN_TIMEOUT_SEC
@@ -80,9 +86,19 @@ public class FfmpegComposeProvider implements AiProvider {
         try {
             dir = Files.createTempDirectory("bgssai-compose-");
             List<String> names = new ArrayList<>();
+            List<byte[]> originalAudio = new ArrayList<>();
             for (int i = 0; i < clips.size(); i++) {
+                String source = String.format("source-%03d.mp4", i);
                 String name = String.format("clip-%03d.mp4", i);
-                Files.write(dir.resolve(name), clips.get(i));
+                Files.write(dir.resolve(source), clips.get(i));
+                ClipInfo info = inspectClip(dir, source, i);
+                int duration = durations.get(i);
+                if (info.duration() + 0.001 < duration) {
+                    throw new BizException(CommonErrorCode.RULE_REJECT,
+                            "第" + (i + 1) + "镜视频短于计划时长" + duration + "秒，请重新生成或调整分镜时长");
+                }
+                normalizeClip(dir, timeoutSec, source, name, duration, canvas);
+                originalAudio.add(info.audio() ? clips.get(i) : new byte[0]);
                 names.add(name);
             }
             StringBuilder listFile = new StringBuilder();
@@ -94,12 +110,16 @@ public class FfmpegComposeProvider implements AiProvider {
             byte[] bgm = binaryParam(request, PARAM_BGM);
             String srt = textParam(request, PARAM_SUBTITLE_SRT);
             List<byte[]> dubbings = dubbingListOf(request);
-            List<Integer> durations = durationListOf(request, clips.size());
+            if (!dubbings.isEmpty() && dubbings.size() != clips.size()) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "配音与镜头数量不一致，无法对齐合成");
+            }
             boolean hasDubbing = hasAnyAudio(dubbings);
-            boolean needsPost = bgm != null || (srt != null && !srt.isBlank()) || hasDubbing;
+            List<byte[]> audioTrack = hasDubbing ? dubbings : originalAudio;
+            boolean hasAudio = hasAnyAudio(audioTrack);
+            boolean needsPost = bgm != null || (srt != null && !srt.isBlank()) || hasAudio;
             Path out = dir.resolve("film.mp4");
             Path concatOut = needsPost ? dir.resolve("video.mp4") : out;
-            // 先试无损拼接；片段编码参数不一致时 concat 会失败，再退到统一重编码。
+            // 只拼逐镜规范化后的视频；音轨稍后一次编码，避免每镜 AAC priming 累加。
             if (!run(dir, timeoutSec, "ffmpeg", "-y", "-f", "concat", "-safe", "0",
                     "-i", "concat.txt", "-c", "copy", concatOut.getFileName().toString())) {
                 log.info("ffmpeg stream copy concat failed, re-encoding {} clips", clips.size());
@@ -111,11 +131,11 @@ public class FfmpegComposeProvider implements AiProvider {
                 }
             }
             Path current = concatOut;
-            if (hasDubbing) {
+            if (hasAudio) {
                 Path dubbed = (srt != null && !srt.isBlank()) || bgm != null
                         ? dir.resolve("video-dub.mp4")
                         : out;
-                mixDubbingTrack(dir, timeoutSec, current, dubbed, dubbings, durations);
+                mixDubbingTrack(dir, timeoutSec, current, dubbed, audioTrack, durations);
                 current = dubbed;
             }
             if (srt != null && !srt.isBlank()) {
@@ -134,7 +154,7 @@ public class FfmpegComposeProvider implements AiProvider {
             }
             if (bgm != null) {
                 Files.write(dir.resolve("bgm-audio"), bgm);
-                if (hasDubbing || hasAudioStream(dir, timeoutSec, current)) {
+                if (hasAudio) {
                     // Mix BGM under existing VO / clip audio instead of replacing it.
                     if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", current.getFileName().toString(),
                             "-stream_loop", "-1", "-i", "bgm-audio",
@@ -157,12 +177,9 @@ public class FfmpegComposeProvider implements AiProvider {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 输出为空");
             }
             AiProviderResult result = AiProviderResult.binary(mp4, "video/mp4");
-            result.setWidth(1080);
-            result.setHeight(1920);
-            Integer duration = ShortJson.integer(request.param("duration_sec"), 0);
-            if (duration != null && duration > 0) {
-                result.setDurationSec(duration);
-            }
+            result.setWidth(canvas.width());
+            result.setHeight(canvas.height());
+            result.setDurationSec(durations.stream().mapToInt(Integer::intValue).sum());
             return result;
         } catch (BizException ex) {
             throw ex;
@@ -170,6 +187,64 @@ public class FfmpegComposeProvider implements AiProvider {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 合成异常：" + ex.getMessage());
         } finally {
             deleteQuietly(dir);
+        }
+    }
+
+    private record Canvas(int width, int height) { }
+    private record ClipInfo(double duration, boolean audio) { }
+
+    private static Canvas canvasOf(AiProviderRequest request) {
+        String ratio = ShortJson.text(request.param(PARAM_ASPECT_RATIO)).trim();
+        return switch (ratio.isEmpty() ? "9:16" : ratio) {
+            case "9:16" -> new Canvas(1080, 1920);
+            case "16:9" -> new Canvas(1920, 1080);
+            case "1:1" -> new Canvas(1080, 1080);
+            case "3:4" -> new Canvas(1080, 1440);
+            default -> throw new BizException(CommonErrorCode.RULE_REJECT, "不支持的成片画幅");
+        };
+    }
+
+    private static ClipInfo inspectClip(Path dir, String source, int index) throws Exception {
+        Path output = dir.resolve("probe.json");
+        Process process = new ProcessBuilder("ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe",
+                "-show_entries", "stream=codec_type,duration", "-of", "json", source)
+                .directory(dir.toFile()).redirectOutput(output.toFile()).redirectError(ProcessBuilder.Redirect.DISCARD).start();
+        try {
+            if (!process.waitFor(PROBE_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "镜头视频时长解析超时");
+            }
+            if (process.exitValue() != 0 || Files.size(output) > 65_536) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "无法解析第" + (index + 1) + "镜视频");
+            }
+            JsonNode streams = JSON.readTree(Files.readAllBytes(output)).path("streams");
+            double duration = Double.NaN;
+            boolean audio = false;
+            for (JsonNode stream : streams) {
+                if ("video".equals(stream.path("codec_type").asText()) && !Double.isFinite(duration)) {
+                    duration = stream.path("duration").asDouble(Double.NaN);
+                }
+                audio |= "audio".equals(stream.path("codec_type").asText());
+            }
+            if (!Double.isFinite(duration) || duration <= 0) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "无法确认第" + (index + 1) + "镜视频的精确时长");
+            }
+            return new ClipInfo(duration, audio);
+        } finally {
+            if (process.isAlive()) process.destroyForcibly();
+        }
+    }
+
+    private static void normalizeClip(Path dir, int timeoutSec, String source, String target,
+                                      int duration, Canvas canvas) throws Exception {
+        String filter = "setpts=PTS-STARTPTS,trim=duration=" + duration
+                + ",scale=trunc(iw*sar/2)*2:ih,setsar=1,scale=" + canvas.width() + ":" + canvas.height()
+                + ":force_original_aspect_ratio=decrease:force_divisible_by=2,pad=" + canvas.width() + ":" + canvas.height()
+                + ":(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=30,format=yuv420p";
+        if (!run(dir, timeoutSec, "ffmpeg", "-y", "-protocol_whitelist", "file,pipe", "-i", source,
+                "-map", "0:v:0", "-an", "-vf", filter, "-filter_threads", "1", "-t", String.valueOf(duration),
+                "-fps_mode", "cfr", "-c:v", "libx264", "-preset", "veryfast", "-threads", "2",
+                "-video_track_timescale", "90000", target)) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 镜头时间轴或画幅规范化失败");
         }
     }
 
@@ -188,7 +263,8 @@ public class FfmpegComposeProvider implements AiProvider {
                 String raw = String.format("vo-raw-%03d", i);
                 Files.write(dir.resolve(raw), audio);
                 if (!run(dir, timeoutSec, "ffmpeg", "-y", "-i", raw, "-t", String.valueOf(dur),
-                        "-af", "apad=whole_dur=" + dur, "-ar", "44100", "-ac", "2", segment)) {
+                        "-af", "asetpts=PTS-STARTPTS,apad=whole_dur=" + dur + ",atrim=duration=" + dur,
+                        "-ar", "44100", "-ac", "2", segment)) {
                     // Corrupt / unsupported audio → silence for this shot, keep composing.
                     log.warn("dubbing decode failed index={}, using silence", i);
                     if (!run(dir, timeoutSec, "ffmpeg", "-y", "-f", "lavfi",
@@ -240,6 +316,8 @@ public class FfmpegComposeProvider implements AiProvider {
         for (Object item : (List<Object>) raw) {
             if (item instanceof byte[] bytes && bytes.length > 0) {
                 clips.add(bytes);
+            } else {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "镜头视频素材为空，无法合成");
             }
         }
         return clips;
@@ -266,17 +344,16 @@ public class FfmpegComposeProvider implements AiProvider {
     private static List<Integer> durationListOf(AiProviderRequest request, int clipCount) {
         Object raw = request.param(PARAM_CLIP_DURATION_SEC_LIST);
         List<Integer> list = new ArrayList<>();
-        if (raw instanceof List<?> rows) {
+        if (raw instanceof List<?> rows && rows.size() == clipCount) {
             for (Object item : rows) {
-                if (item instanceof Number n) {
-                    list.add(Math.max(1, n.intValue()));
+                if (item instanceof Number n && n.intValue() > 0 && n.doubleValue() == n.intValue()) {
+                    list.add(n.intValue());
                 } else {
-                    list.add(3);
+                    throw new BizException(CommonErrorCode.RULE_REJECT, "分镜计划时长必须为正整数秒");
                 }
             }
-        }
-        while (list.size() < clipCount) {
-            list.add(3);
+        } else {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "镜头与计划时长数量不一致，无法对齐合成");
         }
         return list;
     }
@@ -288,23 +365,6 @@ public class FfmpegComposeProvider implements AiProvider {
             }
         }
         return false;
-    }
-
-    private static boolean hasAudioStream(Path dir, int timeoutSec, Path media) throws Exception {
-        Process process = new ProcessBuilder("ffprobe", "-v", "error", "-select_streams", "a",
-                "-show_entries", "stream=codec_type", "-of", "csv=p=0", media.getFileName().toString())
-                .directory(dir.toFile())
-                .redirectErrorStream(true)
-                .start();
-        String output;
-        try (java.io.InputStream in = process.getInputStream()) {
-            output = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
-        }
-        if (!process.waitFor(timeoutSec, TimeUnit.SECONDS)) {
-            process.destroyForcibly();
-            return false;
-        }
-        return process.exitValue() == 0 && !output.isBlank();
     }
 
     private static byte[] binaryParam(AiProviderRequest request, String name) {
@@ -345,24 +405,30 @@ public class FfmpegComposeProvider implements AiProvider {
     }
 
     private static boolean run(Path dir, int timeoutSec, String... command) throws Exception {
+        Path logFile = dir.resolve("ffmpeg-command.log");
         Process process = new ProcessBuilder(command)
                 .directory(dir.toFile())
                 .redirectErrorStream(true)
+                .redirectOutput(logFile.toFile())
                 .start();
-        String output;
-        try (java.io.InputStream in = process.getInputStream()) {
-            output = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        try {
+            if (!process.waitFor(timeoutSec, TimeUnit.SECONDS)) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 超过 " + timeoutSec + " 秒未完成");
+            }
+            if (process.exitValue() != 0) {
+                try (var channel = Files.newByteChannel(logFile)) {
+                    channel.position(Math.max(0, channel.size() - 2000));
+                    var tail = java.nio.ByteBuffer.allocate(2000);
+                    channel.read(tail);
+                    log.warn("ffmpeg exit={} output={}", process.exitValue(),
+                            new String(tail.array(), 0, tail.position(), StandardCharsets.UTF_8));
+                }
+                return false;
+            }
+            return true;
+        } finally {
+            if (process.isAlive()) process.destroyForcibly();
         }
-        if (!process.waitFor(timeoutSec, TimeUnit.SECONDS)) {
-            process.destroyForcibly();
-            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "ffmpeg 超过 " + timeoutSec + " 秒未完成");
-        }
-        if (process.exitValue() != 0) {
-            log.warn("ffmpeg exit={} output={}", process.exitValue(),
-                    output.length() > 2000 ? output.substring(output.length() - 2000) : output);
-            return false;
-        }
-        return true;
     }
 
     private static void deleteQuietly(Path dir) {

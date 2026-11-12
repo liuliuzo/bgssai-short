@@ -33,7 +33,10 @@
   3. **逐句重配**：支持对单个镜头或单条台词重新配音，可临时覆盖 `voice_speed`、`emotion`、
      `voice_id`（临时覆盖不写回角色卡，除非显式点「更新到角色卡」）。
   4. **字幕**：按台词与对齐后的时间轴自动生成字幕轨（`SUBTITLE` 素材，SRT 结构化存储），
-     单条字幕最长 15 字，超长自动断句为两条；字幕样式（字号 / 颜色 / 描边 / 位置）为作品级设置，
+     单条字幕最长 15 个 Unicode 字符，超长自动拆成多条，不丢失正文或标点；同一镜头的全部
+     拆分条目按顺序均分该镜头区间，使用累计毫秒边界，最后一条精确结束于镜头末尾。
+     每条须满足镜头起点 ≤ `start_ms` < `end_ms` ≤ 镜头终点，不能因拆句进入下一镜。
+     空镜仍占用完整时间，字幕样式（字号 / 颜色 / 描边 / 位置）为作品级设置，
      合成时烧录（见 `film-compose-export.md`）。
   5. **试听**：镜头级与整集连续试听（按镜头顺序拼接播放），无需等待合成。
   6. 配音走统一任务体系（`task_type=VOICE`），费用、重试、批量、断点续跑口径与 `shot-generation.md` 一致。
@@ -60,6 +63,10 @@
    单独列出并显示各镜预估费用，等用户确认。
 9. 选择 MiniMax-Speech 配音后得到可播放音频与真实时长；选择 Hy-ASR 执行校准后，字幕文本和时间戳
    与识别结果一致，未确认时不覆盖人工字幕。
+10. 一镜含多条或超过 15 字的台词时，所有拆分字幕完整留在该镜区间；镜尾没有累计舍入缺口，
+    相邻镜头不重叠。ASR 句级窗口的拆分同样不得越出窗口或生成零/负时长。
+11. 显式调用已有 `POST /bgssai/user/subtitles/regenerate` 可按现有配音文字免费重建字幕，
+    保留配音素材、原对白和镜头时长，不创建 VOICE / ASR 任务。仅调整配音对齐状态不等于重建已有字幕。
 
 ## 四、接口契约（snake_case）
 
@@ -73,6 +80,7 @@
             "voice_id": "v-female-cold-01", "voice_speed": 1.0, "emotion": "COLD",
             "line_text": "退婚书我签，但有个条件。",
             "audio_asset_id": "a-51001", "audio_duration_sec": 3.2 } ],
+        "dialogue_text": "退婚书我签，但有个条件。",
         "shot_duration_sec": 4.0, "audio_duration_sec": 3.2,
         "align_status": "ALIGNED", "align_status_name": "已对齐",
         "align_gap_sec": -0.8, "suggest_action": "PAD_SILENCE", "auto_fixed_flag": 1 } ],
@@ -99,6 +107,8 @@
 
 `dubbing_status`（剧集级）：`NONE` → `GENERATING` → `DRAFT`（已出音频，存在未对齐项）→
 `READY`（全部镜头 `ALIGNED` 且字幕已生成）。
+尚无配音行时 `align_status` 仍可为 `PENDING`，但 `align_status_name` 写「未配音」，不得写成「生成中」。已有配音行且状态为 `PENDING` 时写「待对齐」；`GENERATING` 才写「生成中」。`dialogue_text` 随配音列表返回，`line_list` 为空时表格仍显示这句台词。镜头秒与列表相同：成片时长和 `shot_duration_sec` 不一致时写成「成片 N秒 · 计划 M秒」。配音表在数据返回前保持加载，不先画出空白台词。
+
 `align_status`（镜头级）：`PENDING` → `ALIGNED` / `MISALIGNED`；免费解法（`PAD_SILENCE` /
 可解的 `ADJUST_SPEED`）由系统自动执行后直接落 `ALIGNED` 并记 `auto_fixed_flag=1`，
 仍为 `MISALIGNED` 的均为待付费确认项。

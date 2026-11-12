@@ -22,7 +22,9 @@ export const SHOT_STATUS_LABEL = {
   DRAFT: '草稿',
   TEXT_READY: '文字稿',
   DRAFT_READY: '草图',
+  IMAGE_GENERATING: '出图中',
   IMAGE_READY: '首帧',
+  VIDEO_GENERATING: '出视频',
   VIDEO_READY: '视频',
   PROMPT_READY: '提示词就绪',
   LOCKED: '已锁定',
@@ -271,6 +273,7 @@ export function sanitizeTubeWarning(text) {
   if (/bgssai\.tube\.base-url|base-url/i.test(s)) {
     return 'Tube 主机未配置：发布会失败。请联系管理员完成接入后再发布'
   }
+  if (/film not found/i.test(s)) return ''
   return s
 }
 

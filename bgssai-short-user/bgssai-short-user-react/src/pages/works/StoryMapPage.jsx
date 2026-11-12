@@ -36,7 +36,7 @@ export default function StoryMapPage({ work, episodeId }) {
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <Card
         loading={loading}
-        title="剧情图谱"
+        title="剧情"
         extra={<Button type="primary" onClick={async () => {
           const { data } = await featuresApi.storyMapGenerate({
             work_id: work.work_id,

@@ -255,9 +255,10 @@ public class DubbingService {
                         d.getAudioDurationSec() == null ? 0 : d.getAudioDurationSec(), alignStatus);
             }
             item.put("line_list", lineList);
+            item.put("dialogue_text", shot.getDialogueText() == null ? "" : shot.getDialogueText());
             item.put("audio_duration_sec", audioSum);
             item.put("align_status", alignStatus);
-            item.put("align_status_name", alignName(alignStatus));
+            item.put("align_status_name", alignName(alignStatus, !lines.isEmpty()));
             item.put("align_gap_sec", gap);
             item.put("suggest_action", suggest);
             item.put("auto_fixed_flag", autoFixed);
@@ -536,8 +537,6 @@ public class DubbingService {
         ShortSubtitle deleted = new ShortSubtitle();
         deleted.setDeletedFlag(1);
         deleted.setUpdatedTime(new Date());
-        shortSubtitleMapper.updateByExampleSelective(deleted, delete);
-
         List<Map<String, Object>> sentences = maps(output == null ? null : output.get("sentences"));
         if (sentences.isEmpty()) {
             String text = ShortJson.text(output == null ? null : output.get("text"));
@@ -549,6 +548,7 @@ public class DubbingService {
         int sequence = 1;
         int shotDurationMs = (shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec()) * 1000;
         int dubbingOffsetMs = precedingDubbingDurationMs(dubbing);
+        List<ShortSubtitle> replacements = new ArrayList<>();
         for (Map<String, Object> sentence : sentences) {
             String text = ShortJson.text(sentence.get("text")).trim();
             if (text.isBlank()) {
@@ -563,7 +563,6 @@ public class DubbingService {
             int end = Math.max(begin + 100, dubbingOffsetMs + relativeEnd);
             end = Math.min(Math.max(begin + 100, end), shotDurationMs);
             List<String> chunks = splitSubtitle(text, 15);
-            int part = Math.max(100, (end - begin) / Math.max(1, chunks.size()));
             for (int i = 0; i < chunks.size(); i++) {
                 ShortSubtitle sub = new ShortSubtitle();
                 sub.setSubtitleId(subtitlePrefix + sequence);
@@ -573,16 +572,18 @@ public class DubbingService {
                 int shotNo = shot.getShotNo() == null ? 0 : shot.getShotNo();
                 int lineNo = dubbing.getLineNo() == null ? shotNo * 100 : dubbing.getLineNo();
                 sub.setSubtitleNo(lineNo * 100 + sequence++);
-                sub.setStartMs(episodeOffsetMs + begin + i * part);
-                sub.setEndMs(episodeOffsetMs + Math.min(end, begin + (i + 1) * part));
+                sub.setStartMs(episodeOffsetMs + subtitleBoundary(begin, end, i, chunks.size()));
+                sub.setEndMs(episodeOffsetMs + subtitleBoundary(begin, end, i + 1, chunks.size()));
                 sub.setSubtitleText(chunks.get(i));
                 sub.setShotId(shot.getShotId());
                 sub.setDeletedFlag(0);
                 sub.setCreatedTime(new Date());
                 sub.setUpdatedTime(new Date());
-                upsertTranscribedSubtitle(sub);
+                replacements.add(sub);
             }
         }
+        shortSubtitleMapper.updateByExampleSelective(deleted, delete);
+        replacements.forEach(this::upsertTranscribedSubtitle);
     }
 
     private int precedingDubbingDurationMs(ShortDubbing current) {
@@ -615,47 +616,45 @@ public class DubbingService {
     }
 
     public void regenerateSubtitles(ShortEpisode ep) {
-        softDeleteSubtitles(ep.getEpisodeId());
         ShortDubbingExample dex = new ShortDubbingExample();
         dex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         dex.setOrderByClause("line_no asc");
         List<ShortDubbing> dubbings = shortDubbingMapper.selectByExample(dex);
-        Map<String, ShortShot> shots = new LinkedHashMap<>();
-        for (ShortShot s : listShots(ep.getEpisodeId())) {
-            shots.put(s.getShotId(), s);
-        }
+        List<ShortShot> shots = listShots(ep.getEpisodeId());
+        List<ShortSubtitle> replacements = new ArrayList<>();
         int cursorMs = 0;
         int no = 1;
-        for (ShortShot shot : listShots(ep.getEpisodeId())) {
-            int shotDurMs = (shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec()) * 1000;
+        for (ShortShot shot : shots) {
+            long shotDurMs = (shot.getShotDurationSec() == null ? 3L : shot.getShotDurationSec().longValue()) * 1000;
+            if (shotDurMs <= 0 || shotDurMs + cursorMs > Integer.MAX_VALUE) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "invalid shot duration for subtitles");
+            }
+            int shotEndMs = cursorMs + (int) shotDurMs;
             List<ShortDubbing> lines = dubbings.stream().filter(d -> shot.getShotId().equals(d.getShotId())).toList();
-            if (lines.isEmpty()) {
-                cursorMs += shotDurMs;
-                continue;
+            List<String> chunks = new ArrayList<>();
+            for (ShortDubbing line : lines) {
+                chunks.addAll(splitSubtitle(line.getLineText(), 15));
             }
-            int per = Math.max(500, shotDurMs / Math.max(1, lines.size()));
-            int local = 0;
-            for (ShortDubbing d : lines) {
-                for (String chunk : splitSubtitle(d.getLineText(), 15)) {
-                    ShortSubtitle sub = new ShortSubtitle();
-                    sub.setSubtitleId(ShortIds.id("sb-"));
-                    sub.setEpisodeId(ep.getEpisodeId());
-                    sub.setWorkId(ep.getWorkId());
-                    sub.setUserId(ep.getUserId());
-                    sub.setSubtitleNo(no++);
-                    sub.setStartMs(cursorMs + local);
-                    sub.setEndMs(cursorMs + local + per);
-                    sub.setSubtitleText(chunk);
-                    sub.setShotId(shot.getShotId());
-                    sub.setDeletedFlag(0);
-                    sub.setCreatedTime(new Date());
-                    sub.setUpdatedTime(new Date());
-                    shortSubtitleMapper.insertSelective(sub);
-                    local += per;
-                }
+            for (int i = 0; i < chunks.size(); i++) {
+                ShortSubtitle sub = new ShortSubtitle();
+                sub.setSubtitleId(ShortIds.id("sb-"));
+                sub.setEpisodeId(ep.getEpisodeId());
+                sub.setWorkId(ep.getWorkId());
+                sub.setUserId(ep.getUserId());
+                sub.setSubtitleNo(no++);
+                sub.setStartMs(subtitleBoundary(cursorMs, shotEndMs, i, chunks.size()));
+                sub.setEndMs(subtitleBoundary(cursorMs, shotEndMs, i + 1, chunks.size()));
+                sub.setSubtitleText(chunks.get(i));
+                sub.setShotId(shot.getShotId());
+                sub.setDeletedFlag(0);
+                sub.setCreatedTime(new Date());
+                sub.setUpdatedTime(new Date());
+                replacements.add(sub);
             }
-            cursorMs += shotDurMs;
+            cursorMs = shotEndMs;
         }
+        softDeleteSubtitles(ep.getEpisodeId());
+        replacements.forEach(shortSubtitleMapper::insertSelective);
     }
 
     private Map<String, Object> applyAlign(ShortShot shot, ShortDubbing row, String action, boolean freeOnly) {
@@ -836,14 +835,23 @@ public class DubbingService {
             return out;
         }
         String t = text.trim();
-        while (t.length() > max) {
-            out.add(t.substring(0, max));
-            t = t.substring(max);
+        while (t.codePointCount(0, t.length()) > max) {
+            int end = t.offsetByCodePoints(0, max);
+            out.add(t.substring(0, end));
+            t = t.substring(end);
         }
         if (!t.isEmpty()) {
             out.add(t);
         }
         return out;
+    }
+
+    private static int subtitleBoundary(int beginMs, int endMs, int index, int count) {
+        long span = (long) endMs - beginMs;
+        if (beginMs < 0 || count < 1 || span < count) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "subtitle segments do not fit their time window");
+        }
+        return beginMs + (int) (span * index / count);
     }
 
     private static String suggestAction(int shotDur, int audioDur, String alignStatus) {
@@ -860,14 +868,23 @@ public class DubbingService {
         return "EXTEND_SHOT";
     }
 
-    private static String alignName(String status) {
+    static String alignName(String status, boolean hasLines) {
         if ("ALIGNED".equals(status)) {
             return "已对齐";
         }
         if ("MISALIGNED".equals(status)) {
             return "未对齐";
         }
-        return "生成中";
+        if (!hasLines) {
+            return "未配音";
+        }
+        if ("GENERATING".equals(status)) {
+            return "生成中";
+        }
+        if ("PENDING".equals(status) || status == null || status.isBlank()) {
+            return "待对齐";
+        }
+        return "未配音";
     }
 
     private static double parseGap(String gap) {

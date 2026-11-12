@@ -284,4 +284,40 @@ public class ProductionDtos {
         public String getEpisodeId() { return episodeId; }
         public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
     }
+
+    public static class DramaAssistReq {
+        private String workId;
+        private String episodeId;
+        private String shotId;
+        private String role;
+        private String question;
+        private String modelCode;
+        public String getWorkId() { return workId; }
+        public void setWorkId(String workId) { this.workId = workId; }
+        public String getEpisodeId() { return episodeId; }
+        public void setEpisodeId(String episodeId) { this.episodeId = episodeId; }
+        public String getShotId() { return shotId; }
+        public void setShotId(String shotId) { this.shotId = shotId; }
+        public String getRole() { return role; }
+        public void setRole(String role) { this.role = role; }
+        public String getQuestion() { return question; }
+        public void setQuestion(String question) { this.question = question; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
+    }
+
+    public static class DramaAssistApplyReq {
+        private String workId;
+        private String shotId;
+        private String applyTarget;
+        private String applyText;
+        public String getWorkId() { return workId; }
+        public void setWorkId(String workId) { this.workId = workId; }
+        public String getShotId() { return shotId; }
+        public void setShotId(String shotId) { this.shotId = shotId; }
+        public String getApplyTarget() { return applyTarget; }
+        public void setApplyTarget(String applyTarget) { this.applyTarget = applyTarget; }
+        public String getApplyText() { return applyText; }
+        public void setApplyText(String applyText) { this.applyText = applyText; }
+    }
 }

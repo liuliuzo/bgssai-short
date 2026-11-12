@@ -27,11 +27,20 @@
 
 选择器、估价、任务、用量、失败原因和错误文案都使用上表。网关未开通时对用户写「模型服务暂未开通，请稍后重试」；模型未登记时写「该模型暂未开放：BGSSAI Chat」（按能力换成对应展示名）。文案不出现上游品牌或网关编号。
 
+### 2.1.1 公司视频明确选型（2026-11-11）
+
+- 显式选择 `VIDEO / bgssai-video` 表示国内中枢的公司视频模型，不表示任意默认视频模型。优先选择已启用的同区中枢精确配置；不因第三方默认行或相似模型名改走其他供应商。
+- 对已部署的历史种子 `m-tokenhub-video-cogvideox`，仅当能力为 VIDEO、供应商为 TENCENT_TOKENHUB、配置为国内中枢且 `public_alias=bgssai-video`、原编号为 `cogvideox` 时兼容为公司网关编号 `bgssai-video`。只在内存中规范编号，保留该行价格、超时、重试及凭据引用，不写在线数据库。
+- 用户目录与提交解析使用同一配置选择规则。目录价格、估价、实际执行的配置必须一致；缺少可用公司配置时不展示该选项，显式提交按未开放失败，不生成零价临时配置或绕过中枢直连。
+- 自定义别名与显式第三方编号保持原语义；不能仅凭 `cogvideox` 名称认定它是公司路由。配置存在不代表上游生成成功，真实生成另行验收。
+- 未传 VIDEO 模型时用该能力的默认行。共享种子与生产库的 VIDEO 默认仍是 `m-tokenhub-video-minimax` / `minimax-video-h3`。开发库种子把启用的 `bgssai-video` 设为唯一 VIDEO 默认（`provider_code=TENCENT_TOKENHUB`，`hub=cn`，`secret_ref=ai.tokenhub_cn.api_key`，`timeout_sec=900`），并清掉 MiniMax 与 `cogvideox` 的默认。目录快照里没有 `bgssai-video` 时也不改写成 `cogvideox`。显式提交 `bgssai-video` 时，没有精确行仍走历史行的内存改写。
+
 ### 2.2 服务端模型目录（不对用户展示）
 
 | 能力类型 | 管理端名称 | 网关 `model_code` | 默认 | 服务端落点 |
 | --- | --- | --- | --- | --- |
-| `VIDEO` | MiniMax-Video-H3 | `minimax-video-h3` | 是 | 创作台镜头视频生成 |
+| `VIDEO` | BGSSAI Video | `bgssai-video` | 仅开发库 | 创作台镜头视频生成。共享种子启用但不默认；生产默认不改 |
+| `VIDEO` | MiniMax-Video-H3 | `minimax-video-h3` | 共享种子与生产 | 创作台镜头视频生成。开发库 `default_flag=0` |
 | `VIDEO` | PixVerse-Video-v6 | `pixverse-video-v6.0` | 否 | 创作台镜头视频生成 |
 | `VIDEO` | Kling-Video-V3 | `kling-video-v3` | 否 | 创作台镜头视频生成 |
 | `TEXT` | Hy4 preview | `hy4-preview` | 是 | 大纲、剧本、局部重写 |
@@ -103,7 +112,8 @@
     DEV 要直连该公司网关：管理端清空 `ai.tokenhub_cn.api_key`（开发库 init 会把占位符写回）后再填写兼容密钥。
     走中枢则把真实中枢密钥写入 `ai.tokenhub_cn.api_key`，DEV 主机已是 `bgssai.llm.tokenhub-cn-base-url`。
     配音音色 `default_voice_id` 与画面 `size` 由管理端改成网关实际值，种子只给占位 `zh` 与 `512x768`。
-16. 画面和视频在中枢上的轮询时限是 `max(180 秒, timeout_sec)`。超时对用户写
+16. 画面在中枢上至少轮询 10 分钟，视频至少 15 分钟；`timeout_sec` 更长时以模型为准。
+    单次状态查询超时不会结束任务。整段时限用尽后才对用户写
     「生成超时，任务可能仍在处理，请到任务中心查看或稍后重试」，文案不出现中枢品牌或密钥名。
     视频任务入队前按目录核对 `video_generation`，不 POST 视频探测。
 
@@ -180,6 +190,10 @@
 - [x] 原型
 - [x] 设计与契约
 - [x] 代码与数据库
+
+### 开发库官方生成视频默认（2026-11-12）
+
+页内「生成视频」在未传模型，或中枢目录快照为空时，开发库使用已启用的公司模型 `bgssai-video`，不再落到 `minimax-video-h3` 或 `cogvideox`。共享种子写入该行但 `default_flag=0`。只有开发种子把它设为 VIDEO 默认。生产默认保持 MiniMax。客户端已经提交 `bgssai-video` 时，历史 `cogvideox` 行的内存改写仍然保留。不新增供应商密钥，不改已有成片。
 
 ### 音乐网关修复验收（2026-11-11）
 

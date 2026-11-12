@@ -48,6 +48,13 @@ public final class PromptComposer {
      * 五要素人话分镜：谁 / 在哪 / 做什么 / 怎么拍 / 什么感觉。不含提示词术语。
      */
     public static String previzText(ShortShot shot) {
+        return previzText(shot, null);
+    }
+
+    /**
+     * 五要素人话分镜。叙事里已经点出的地点优先；叙事没写地点时才用已绑定的场景卡名。
+     */
+    public static String previzText(ShortShot shot, String sceneName) {
         if (shot == null) {
             return "";
         }
@@ -56,6 +63,9 @@ public final class PromptComposer {
             who = "对白角色";
         }
         String where = placeOf(shot.getShotDesc());
+        if (where.isBlank()) {
+            where = usableSceneName(sceneName);
+        }
         String action = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
         String how = join("，", sizeName(shot.getShotSize()), cameraName(shot.getCameraMove()));
         String feel = join("，", lightName(shot.getLighting()), emotionName(shot.getEmotion()));
@@ -316,16 +326,67 @@ public final class PromptComposer {
         return trimTo(t, 16);
     }
 
-    private static String placeOf(String desc) {
-        if (desc == null) {
+    private static final String[] PLACE_SUFFIXES = {
+            "宴会厅", "办公室", "会议室", "客厅", "卧室", "走廊", "别墅", "门口",
+            "餐厅", "酒店", "医院", "学校", "书房", "厨房", "阳台", "花园",
+            "公寓", "房间", "大厅", "天台", "小区", "豪宅", "街道", "街上",
+            "车里", "车上", "家里", "公司"
+    };
+
+    private static final String PLACE_STOP = "，。、；：！？,.;到在从去进来回往向把被让的了";
+
+    private static String usableSceneName(String sceneName) {
+        if (sceneName == null) {
             return "";
         }
-        for (String k : new String[] { "会议室", "走廊", "办公室", "家里", "卧室", "客厅", "街上", "车里", "天台", "门口" }) {
-            if (desc.contains(k)) {
-                return k;
+        String card = sceneName.trim();
+        if (card.isEmpty() || "未写清场景".equals(card)) {
+            return "";
+        }
+        if (card.regionMatches(true, 0, "sc-", 0, 3) || card.regionMatches(true, 0, "sc_", 0, 3)) {
+            return "";
+        }
+        return card;
+    }
+
+    private static boolean isCjk(char ch) {
+        return ch >= '\u4e00' && ch <= '\u9fa5';
+    }
+
+    /**
+     * 从叙事里取出地点短语。停在到/在/从这类介词，所以「回到豪门别墅」记成「豪门别墅」。
+     */
+    private static String placeOf(String desc) {
+        if (desc == null || desc.isEmpty()) {
+            return "";
+        }
+        String best = "";
+        for (String suffix : PLACE_SUFFIXES) {
+            int from = 0;
+            while (from < desc.length()) {
+                int idx = desc.indexOf(suffix, from);
+                if (idx < 0) {
+                    break;
+                }
+                int start = idx;
+                while (start > 0) {
+                    char ch = desc.charAt(start - 1);
+                    if (!isCjk(ch) || PLACE_STOP.indexOf(ch) >= 0) {
+                        break;
+                    }
+                    if (idx + suffix.length() - (start - 1) > 8) {
+                        break;
+                    }
+                    start -= 1;
+                }
+                String phrase = desc.substring(start, idx + suffix.length());
+                if (phrase.length() > best.length()) {
+                    best = phrase;
+                }
+                from = idx + suffix.length();
             }
         }
-        return "";
+        return best;
     }
 
     private static int indexOfAny(String t, String... keys) {

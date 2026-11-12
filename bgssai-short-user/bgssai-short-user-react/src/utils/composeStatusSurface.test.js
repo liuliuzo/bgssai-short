@@ -72,7 +72,23 @@ test('another episode or a tab outside compose keeps the stored script and revie
   const label = episodeSelectLabel(episode, { onCompose: false })
   const tag = episodeComposeTag(episode, { onCompose: false })
   assert.equal(label, '第1集 归来（已就绪/已通过）')
-  assert.equal(tag, '已就绪')
+  assert.equal(tag, '已就绪/已通过')
+})
+
+test('off the compose tab a producing episode does not wear the compose not-started chip', () => {
+  const producing = {
+    episode_no: 1,
+    episode_title: '重生初遇',
+    script_status_name: '已就绪',
+    review_status_name: '未提审',
+    compose_status: 'NONE',
+    compose_status_name: '未开始',
+  }
+  const label = episodeSelectLabel(producing, { onCompose: false })
+  const tag = episodeComposeTag(producing, { onCompose: false })
+  assert.equal(label, '第1集 重生初遇（已就绪/未提审）')
+  assert.equal(tag, '已就绪/未提审')
+  assert.equal(tag.includes('未开始'), false)
 })
 
 test('a missing episode entry stays unsettled for both chip and pane', () => {

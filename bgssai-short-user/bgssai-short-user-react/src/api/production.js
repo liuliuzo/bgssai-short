@@ -77,6 +77,8 @@ const uploadImage = (file) => {
   body.append('file', file)
   return instance.post('/user/assets/images', body)
 }
+const dramaAssistAdvise = (body) => http.post('/user/drama-assist/advise', body)
+const dramaAssistApply = (body) => http.post('/user/drama-assist/apply', body)
 
 export default {
   listWorks,
@@ -130,4 +132,6 @@ export default {
   submitImageToVideo,
   imageToVideoStatus,
   uploadImage,
+  dramaAssistAdvise,
+  dramaAssistApply,
 }

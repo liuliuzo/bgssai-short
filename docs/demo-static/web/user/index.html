@@ -56,7 +56,7 @@
               <td>script-studio</td>
             </tr>
             <tr>
-              <td><a href="story-map.html">剧情图谱</a></td>
+              <td><a href="story-map.html">剧情</a></td>
               <td><code>/works/:work_id/story-map</code></td>
               <td><code>GET /bgssai/user/story-map/tension</code> · <code>/relations</code> · <code>/blocking</code></td>
               <td>张力曲线、人物关系图、走位示意、场次时间带、出场热力；零成本看出节奏与空间问题</td>
@@ -70,11 +70,18 @@
               <td>character-bible · asset-consistency-panel</td>
             </tr>
             <tr>
-              <td><a href="storyboard.html">创作台</a></td>
+              <td><a href="storyboard.html">分镜</a></td>
               <td><code>/works/:work_id/storyboard</code></td>
               <td><code>GET /bgssai/user/shots/list</code> · <code>POST /bgssai/user/previz/update</code> · <code>/draft-generate</code> · <code>/promote</code> · <code>POST /bgssai/user/ai-tasks/submit</code></td>
               <td>核心页（分镜 + 文字预演合并）：每镜左文字右画面一一对应，改文字免费，一个按钮逐级生成（草图 → 首帧 → 视频）</td>
               <td>storyboard-workbench · previz-text-storyboard</td>
+            </tr>
+            <tr>
+              <td><a href="drama-assistant.html">AI 协同专家抽屉</a></td>
+              <td><code>/works/:work_id/:tab</code>（抽屉）</td>
+              <td><code>POST /bgssai/user/drama-assist/advise</code> · <code>POST /bgssai/user/drama-assist/apply</code></td>
+              <td>作品页右侧多专家建议；走 CN TEXT；确认后写回镜头字段</td>
+              <td>drama-assistant-experts</td>
             </tr>
             <tr>
               <td><a href="task-center.html">任务中心</a></td>
@@ -133,7 +140,7 @@
               <td>ux-three-questions</td>
             </tr>
             <tr>
-              <td><a href="quality-report.html">质量报告</a></td>
+              <td><a href="quality-report.html">质量</a></td>
               <td><code>/works/:work_id/quality</code></td>
               <td><code>POST /bgssai/user/quality/gate-run</code> · <code>GET /bgssai/user/quality/gate-result</code></td>
               <td>四道门 + 三视角评审团 + 定点返工清单 + 多方案择优 + 质量档案</td>
@@ -167,8 +174,8 @@
             <tr>
               <td><a href="home.html">首页</a></td>
               <td><code>/home</code></td>
-              <td>-（消费登录响应缓存的身份字段）</td>
-              <td>继续制作、待处理问题、全部入口</td>
+              <td><code>GET /bgssai/user/short-works/list</code> · <code>/detail</code> · <code>GET /bgssai/user/ai-tasks/list</code></td>
+              <td>下一步、最近作品继续创作、待处理深链；无作品时只有新建作品</td>
             </tr>
             <tr>
               <td><a href="usage-billing.html">用量与账单</a></td>

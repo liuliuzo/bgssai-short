@@ -23,6 +23,69 @@ import com.bgssai.shortai.secret.SysSecretReader;
 class TencentTokenHubAiProviderTest {
 
     @Test
+    void videoRecoveryOnlyQueriesExistingRequestAndReusesReceipt() {
+        FakeClient http = new FakeClient();
+        http.gets.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"succeeded\",\"data\":[{\"url\":\"/v1/videos/generations/video_0123456789abcdef01234567/content?model=bgssai-video\"}]}");
+        http.bytes = new byte[] {1};
+        var p = provider(http,"key");
+        var receipts = org.mockito.Mockito.mock(com.bgssai.shortai.billing.UsageReceiptService.class);
+        var receipt = new com.bgssai.shortai.billing.UsageReceiptRow();
+        String id="981ab970-447e-4a04-a2f0-a085ebbf435b";
+        org.mockito.Mockito.when(receipts.resumeVideo(id,"https://www.bgssai-tokenhub.cn","key","bgssai-video")).thenReturn(receipt);
+        org.springframework.test.util.ReflectionTestUtils.setField(p,"receipts",receipts);
+        var req=request("VIDEO","bgssai-video","original");req.getParams().put("resume_request_id",id);
+        assertArrayEquals(new byte[]{1},p.execute(req).getBinaryContent());
+        assertTrue(http.postedUrls.isEmpty());
+        assertEquals("https://www.bgssai-tokenhub.cn/v1/videos/generations/by-request/"+id+"?model=bgssai-video",http.polledUrls.get(0));
+        assertEquals(2,http.polledUrls.size());
+        org.mockito.Mockito.verify(receipts,org.mockito.Mockito.never()).begin(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString());
+        org.mockito.Mockito.verify(receipts).refresh(receipt,"key");
+    }
+
+    @Test
+    void unavailableRecoveryQueryNeverSubmitsReplacementGeneration() {
+        FakeClient http=new FakeClient();var p=provider(http,"key");
+        var receipts=org.mockito.Mockito.mock(com.bgssai.shortai.billing.UsageReceiptService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(p,"receipts",receipts);
+        var req=request("VIDEO","bgssai-video","test");req.getParams().put("resume_request_id","request");
+        assertThrows(BizException.class,()->p.execute(req));
+        assertTrue(http.postedUrls.isEmpty());assertEquals(1,http.polledUrls.size());
+    }
+
+    @Test
+    void legacyCompanySelectionSendsCanonicalGatewayModelAndKeepsTimeout() {
+        var mapper = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.AiModelConfigMapper.class);
+        var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var resolver = new com.bgssai.shortai.aimodel.AiModelResolveService();
+        org.springframework.test.util.ReflectionTestUtils.setField(resolver, "aiModelConfigMapper", mapper);
+        org.springframework.test.util.ReflectionTestUtils.setField(resolver, "aiProviderRegistry", registry);
+        AiProviderRequest req = request("VIDEO", "cogvideox", "test");
+        AiModelConfig legacy = req.getModel();
+        legacy.setModelId("m-tokenhub-video-cogvideox");
+        legacy.setAbilityType("VIDEO");
+        legacy.setEnabledFlag(1);
+        legacy.setDeletedFlag(0);
+        legacy.setTimeoutSec(900);
+        legacy.setUnitPriceCent(20);
+        legacy.setConfigJson("{\"hub\":\"cn\",\"public_alias\":\"bgssai-video\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
+        org.mockito.Mockito.when(mapper.selectByExample(org.mockito.ArgumentMatchers.any())).thenReturn(List.of(legacy));
+        org.mockito.Mockito.when(registry.resolvable(org.mockito.ArgumentMatchers.any())).thenReturn(true);
+        req.setModel(resolver.resolve("VIDEO", "bgssai-video"));
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"data\":[{\"url\":\"https://cdn.example/movie.mp4\"}]}");
+        http.bytes = new byte[] {1};
+        provider(http, "test-key").execute(req);
+        assertEquals("bgssai-video", ShortJson.map(http.postedBodies.get(0)).get("model"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://www.bgssai-tokenhub.cn/"));
+        assertEquals(60, http.postedTimeouts.get(0)); // Existing submission cap; polling retains model budget.
+        assertEquals(900, req.getModel().getTimeoutSec());
+        assertEquals(900_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(req.getModel().getTimeoutSec()));
+        assertEquals("cogvideox", legacy.getModelCode());
+        assertEquals(20, req.getModel().getUnitPriceCent());
+    }
+
+    @Test
     void gatewayContentUsesConfiguredOriginAndBearerOnlyForExactModelRoute() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"data\":[{\"url\":\"/v1/videos/generations/cg1:video_0123456789abcdef01234567/content?model=bgssai-video\"}]}");
@@ -395,6 +458,20 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void slowStatusQueryDoesNotFailAVideoThatIsStillRunning() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        http.getFailures.add(new java.net.http.HttpTimeoutException("request timed out"));
+        http.gets.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        http.gets.add("{\"status\":\"succeeded\",\"data\":[{\"url\":\"https://cdn.example/movie.mp4\"}]}");
+        http.bytes = new byte[] {9};
+        AiProviderRequest req = request("VIDEO", "bgssai-video", "rain");
+        req.getModel().setTimeoutSec(60);
+        assertArrayEquals(new byte[] {9}, provider(http, "key").execute(req).getBinaryContent());
+        assertEquals(3, http.polledUrls.size());
+    }
+
+    @Test
     void mediaPollBudgetHonorsModelTimeout() {
         assertEquals(180_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(60));
         assertEquals(900_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(900));
@@ -424,8 +501,10 @@ class TencentTokenHubAiProviderTest {
     private static final class FakeClient implements ProviderHttp.Client {
         private final Queue<String> posts = new ArrayDeque<>();
         private final Queue<String> gets = new ArrayDeque<>();
+        private final Queue<Exception> getFailures = new ArrayDeque<>();
         private final List<String> postedUrls = new ArrayList<>();
         private final List<String> postedBodies = new ArrayList<>();
+        private final List<Integer> postedTimeouts = new ArrayList<>();
         private final List<Map<String, String>> postedHeaders = new ArrayList<>();
         private final List<String> polledUrls = new ArrayList<>();
         private final List<String> downloadedUrls = new ArrayList<>();
@@ -437,13 +516,17 @@ class TencentTokenHubAiProviderTest {
         public String postJson(String url, Map<String, String> headers, String body, int timeoutSec) {
             postedUrls.add(url);
             postedBodies.add(body);
+            postedTimeouts.add(timeoutSec);
             postedHeaders.add(headers);
             return posts.remove();
         }
 
         @Override
-        public String getJson(String url, Map<String, String> headers, int timeoutSec) {
+        public String getJson(String url, Map<String, String> headers, int timeoutSec) throws Exception {
             polledUrls.add(url);
+            if (!getFailures.isEmpty()) {
+                throw getFailures.remove();
+            }
             return gets.remove();
         }
 

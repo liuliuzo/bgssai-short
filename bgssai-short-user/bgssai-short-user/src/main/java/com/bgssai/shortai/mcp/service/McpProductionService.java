@@ -24,8 +24,10 @@ import com.bgssai.shortai.production.dto.FeatureDtos.ApplyVoiceReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.BgmGenerateReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.DubbingAlignReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.DubbingSubmitReq;
+import com.bgssai.shortai.production.dto.FeatureDtos.SubtitleRegenReq;
 import com.bgssai.shortai.production.dto.FeatureDtos.FilmSettingsSaveReq;
 import com.bgssai.shortai.production.service.AiTaskService;
+import com.bgssai.shortai.production.service.AssetService;
 import com.bgssai.shortai.production.service.CharacterService;
 import com.bgssai.shortai.production.service.DubbingService;
 import com.bgssai.shortai.production.service.FilmService;
@@ -46,11 +48,12 @@ public class McpProductionService {
     private final FilmService films;
     private final CharacterService characters;
     private final AiModelResolveService models;
+    private final AssetService assets;
     private final ObjectMapper json = new ObjectMapper();
 
     public McpProductionService(WorkAccessService access, ScriptService scripts, ShotService shots,
             AiTaskService tasks, DubbingService dubbing, FilmService films,
-            CharacterService characters, AiModelResolveService models) {
+            CharacterService characters, AiModelResolveService models, AssetService assets) {
         this.access = access;
         this.scripts = scripts;
         this.shots = shots;
@@ -59,13 +62,14 @@ public class McpProductionService {
         this.films = films;
         this.characters = characters;
         this.models = models;
+        this.assets = assets;
     }
 
     public static boolean hasTool(String name) {
         return name != null && Set.of("list_models", "ready_episode_script", "split_storyboard",
                 "save_storyboard", "get_render_task", "get_episode_film", "save_film_settings",
                 "list_reference_cards", "generate_reference_image", "lock_reference_card", "align_dubbing",
-                "list_voices", "set_character_voice")
+                "list_voices", "set_character_voice", "get_asset_download", "lock_shot", "regenerate_subtitles", "resume_video_task")
                 .contains(name);
     }
 
@@ -79,13 +83,17 @@ public class McpProductionService {
             case "ready_episode_script" -> ready(args);
             case "split_storyboard" -> split(args);
             case "save_storyboard" -> saveStoryboard(args);
+            case "resume_video_task" -> resumeVideo(args);
             case "get_render_task" -> result(tasks.detail(text(args, "task_id")));
+            case "get_asset_download" -> assetDownload(args);
+            case "lock_shot" -> lockShot(args);
             case "get_episode_film" -> film(args);
             case "save_film_settings" -> settings(args);
             case "list_reference_cards" -> result(characters.consistencyPanel(text(args, "work_id")));
             case "generate_reference_image" -> reference(args, true);
             case "lock_reference_card" -> reference(args, false);
             case "align_dubbing" -> align(args);
+            case "regenerate_subtitles" -> regenerateSubtitles(args);
             case "submit_render_task" -> submit(args);
             default -> throw new IllegalArgumentException("未知制作工具: " + name);
         };
@@ -96,6 +104,42 @@ public class McpProductionService {
         req.setEpisodeId(text(args, "episode_id"));
         req.setForceReadyFlag(flag(args, "force_ready", false) ? 1 : 0);
         return result(scripts.ready(req));
+    }
+
+    private Object resumeVideo(JsonNode args) {
+        onlyArguments(args, Set.of("task_id"));
+        AiTaskReq req = new AiTaskReq();
+        req.setTaskId(text(args, "task_id"));
+        return result(tasks.resumeVideo(req));
+    }
+
+    private Object assetDownload(JsonNode args) {
+        onlyArguments(args, Set.of("asset_id"));
+        return result(assets.getDownload(text(args, "asset_id")));
+    }
+
+    private Object lockShot(JsonNode args) {
+        onlyArguments(args, Set.of("episode_id", "shot_id", "confirm_review"));
+        if (!flag(args, "confirm_review", false)) {
+            throw new IllegalArgumentException("请先检查镜头视频，再显式传入 confirm_review=true");
+        }
+        ShortEpisode episode = access.requireEpisode(text(args, "episode_id"));
+        ShortShot shot = requireEpisodeShot(episode, text(args, "shot_id"));
+        if (shot.getVideoAssetId() == null || shot.getVideoAssetId().isBlank()
+                || !("VIDEO_READY".equals(shot.getShotStatus()) || "LOCKED".equals(shot.getShotStatus()))) {
+            throw new IllegalArgumentException("镜头须已有视频且状态为 VIDEO_READY 或 LOCKED 才能确认锁定");
+        }
+        ShotReq req = new ShotReq();
+        req.setEpisodeId(episode.getEpisodeId());
+        req.setShotId(shot.getShotId());
+        return result(shots.lock(req, true));
+    }
+
+    private static void onlyArguments(JsonNode args, Set<String> allowed) {
+        if (args == null || !args.isObject()) throw new IllegalArgumentException("工具参数必须为 object");
+        args.fieldNames().forEachRemaining(key -> {
+            if (!allowed.contains(key)) throw new IllegalArgumentException("不支持的参数: " + key);
+        });
     }
 
     private Object split(JsonNode args) {
@@ -283,6 +327,17 @@ public class McpProductionService {
         return Map.of("character_id", req.getCharacterId(), "voice_id", voice);
     }
 
+    private Object regenerateSubtitles(JsonNode args) {
+        onlyArguments(args, Set.of("episode_id", "confirm_replace"));
+        if (!flag(args, "confirm_replace", false)) {
+            throw new IllegalArgumentException("重建会替换已有字幕（含人工编辑），需 confirm_replace=true");
+        }
+        ShortEpisode episode = access.requireEpisode(text(args, "episode_id"));
+        SubtitleRegenReq req = new SubtitleRegenReq();
+        req.setEpisodeId(episode.getEpisodeId());
+        return result(dubbing.subtitleRegenerate(req));
+    }
+
     private Object align(JsonNode args) {
         ShortEpisode ep = access.requireEpisode(text(args, "episode_id"));
         String shot = text(args, "shot_id");
@@ -297,9 +352,10 @@ public class McpProductionService {
         return result(dubbing.align(req));
     }
 
-    private void requireEpisodeShot(ShortEpisode ep, String id) {
+    private ShortShot requireEpisodeShot(ShortEpisode ep, String id) {
         ShortShot shot = shots.requireShot(id);
         if (!ep.getEpisodeId().equals(shot.getEpisodeId())) throw new ForbiddenException("shot not in episode");
+        return shot;
     }
 
     private static Object result(ApiResponse response) {

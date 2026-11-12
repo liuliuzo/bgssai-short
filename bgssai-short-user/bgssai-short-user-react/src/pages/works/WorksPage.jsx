@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Collapse, Form, Input, InputNumber, Modal, Radio, Select, Space, Table, Typography, message } from 'antd'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 
 const { Title, Paragraph } = Typography
@@ -34,6 +34,7 @@ const DEFAULTS = {
 
 export default function WorksPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [pageNum, setPageNum] = useState(1)
@@ -58,6 +59,14 @@ export default function WorksPage() {
   useEffect(() => {
     load(1, 20)
   }, [load])
+
+  useEffect(() => {
+    if (searchParams.get('create') !== '1') return
+    setOpen(true)
+    const next = new URLSearchParams(searchParams)
+    next.delete('create')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const create = async () => {
     const values = await form.validateFields()

@@ -12,6 +12,7 @@ import java.util.Locale;
  * An unlisted MiniMax voice id may move to a MiniMax model that is speech-capable.
  * Models from other vendors are never substituted for each other.
  * When the configured id is still absent, a listed company model of the same ability may be used.
+ * A configured {@code bgssai-video} is kept even when the snapshot only lists another video id.
  */
 public final class CatalogModelAlign {
 
@@ -39,6 +40,9 @@ public final class CatalogModelAlign {
             if (registered != null) {
                 return registered;
             }
+        }
+        if ("VIDEO".equals(abilityName) && "bgssai-video".equalsIgnoreCase(wanted)) {
+            return wanted;
         }
         String company = companyChoice(abilityName, capability, catalog);
         if (company != null) {
@@ -167,7 +171,7 @@ public final class CatalogModelAlign {
         return switch (ability) {
             case "TEXT" -> List.of("bgssai-chat", "qwen", "qwen2.5", "qwen2");
             case "IMAGE" -> List.of("bgssai-image", "sd-turbo");
-            case "VIDEO" -> List.of("cogvideox", "cogvideox-5b", "bgssai-video");
+            case "VIDEO" -> List.of("bgssai-video");
             case "VOICE" -> List.of("bgssai-tts", "piper", "edge-tts");
             default -> List.of();
         };
@@ -178,7 +182,7 @@ public final class CatalogModelAlign {
         return switch (ability) {
             case "TEXT" -> "qwen".equals(value) || value.startsWith("qwen2") || "bgssai-chat".equals(value);
             case "IMAGE" -> "sd-turbo".equals(value) || "bgssai-image".equals(value);
-            case "VIDEO" -> value.startsWith("cogvideox") || "bgssai-video".equals(value);
+            case "VIDEO" -> "bgssai-video".equals(value);
             case "VOICE" -> "piper".equals(value) || "bgssai-tts".equals(value) || "edge-tts".equals(value);
             default -> false;
         };

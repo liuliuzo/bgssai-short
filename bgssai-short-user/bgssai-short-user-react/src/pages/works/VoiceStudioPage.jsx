@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
 import productionApi from '../../api/production'
+import { voiceRowView } from './studioListUx'
 
 const { Paragraph } = Typography
 
@@ -19,19 +20,33 @@ export default function VoiceStudioPage({ work, episodeId }) {
   const [voiceModelCode, setVoiceModelCode] = useState()
   const [asrModels, setAsrModels] = useState([])
   const [asrModelCode, setAsrModelCode] = useState()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [clipSeconds, setClipSeconds] = useState({})
   const [styleForm] = Form.useForm()
 
   const load = useCallback(async () => {
     if (!episodeId) return
     setLoading(true)
     try {
-      const [dRes, sRes, vRes] = await Promise.all([
+      const [dRes, sRes, vRes, shotRes] = await Promise.all([
         featuresApi.listDubbings(episodeId),
         featuresApi.subtitleDetail(episodeId),
         featuresApi.listVoices(),
+        productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 200 }),
       ])
-      setDubbings(dRes.data?.result?.dubbing_list || [])
+      const shots = Array.isArray(shotRes.data?.result) ? shotRes.data.result : []
+      const byId = new Map(shots.map((shot) => [shot.shot_id, shot]))
+      const list = (dRes.data?.result?.dubbing_list || []).map((row) => {
+        const shot = byId.get(row.shot_id) || {}
+        return {
+          ...row,
+          dialogue_text: row.dialogue_text || shot.dialogue_text || '',
+          previz_text: row.previz_text || shot.previz_text || '',
+          video_url: row.video_url || shot.video_url || '',
+          shot_duration_sec: row.shot_duration_sec ?? shot.shot_duration_sec,
+        }
+      })
+      setDubbings(list)
       setMisaligned(dRes.data?.result?.misaligned_count || 0)
       setSubtitles(sRes.data?.result?.subtitle_list || [])
       const style = sRes.data?.result?.subtitle_style || {}
@@ -43,6 +58,29 @@ export default function VoiceStudioPage({ work, episodeId }) {
   }, [episodeId, styleForm])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    const nodes = []
+    dubbings.forEach((row) => {
+      if (!row.video_url) return
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      const onMeta = () => {
+        const duration = video.duration
+        if (!Number.isFinite(duration) || duration <= 0) return
+        setClipSeconds((cur) => (cur[row.shot_id] === duration ? cur : { ...cur, [row.shot_id]: duration }))
+      }
+      video.addEventListener('loadedmetadata', onMeta)
+      video.src = row.video_url
+      nodes.push(video)
+    })
+    return () => {
+      nodes.forEach((video) => {
+        video.removeAttribute('src')
+        video.load()
+      })
+    }
+  }, [dubbings])
 
   useEffect(() => {
     let cancelled = false
@@ -120,11 +158,19 @@ export default function VoiceStudioPage({ work, episodeId }) {
             { title: '镜号', dataIndex: 'shot_no', width: 70 },
             {
               title: '台词',
-              render: (_, row) => (row.line_list || []).map((l) => l.line_text).join(' / '),
+              render: (_, row) => voiceRowView(row, clipSeconds[row.shot_id]).dialogue || '（无对白）',
             },
-            { title: '镜头秒', dataIndex: 'shot_duration_sec', width: 80 },
+            {
+              title: '镜头秒',
+              width: 168,
+              render: (_, row) => voiceRowView(row, clipSeconds[row.shot_id]).timing,
+            },
             { title: '音频秒', dataIndex: 'audio_duration_sec', width: 80 },
-            { title: '对齐', dataIndex: 'align_status_name', width: 90 },
+            {
+              title: '对齐',
+              width: 90,
+              render: (_, row) => voiceRowView(row, clipSeconds[row.shot_id]).align,
+            },
             { title: '建议', dataIndex: 'suggest_action', width: 120 },
             {
               title: '操作',

@@ -17,6 +17,8 @@
   以便知道下一步该干什么、哪一集拖了后腿。
 - 用户故事三：作为 `USER`，我希望作品级的设定（画风、画幅、角色、场景）被所有剧集继承，
   以便不必逐集重复设置、也不会各集画风打架。
+- 用户故事四：作为 `USER`，我希望登录后的首页直接告诉我下一步做什么，并能从最近作品接着创作，
+  生成失败或待审核时能点进该处理的地方。身份只留在顶栏头像，不在页面中央再放一张登录身份卡。
 
 - 业务规则：
   1. 三级结构固定为 `short_work`（作品）→ `short_episode`（剧集）→ `short_shot`（镜头）；
@@ -52,6 +54,11 @@
    （`page_num` / `page_size` / `total_size`）。
 4. 已合成成片的剧集执行删除时返回业务错误码 `4006` 并给出可读原因，数据未被删除。
 5. 任意用户携带他人 `work_id` 调用详情 / 更新 / 删除接口，一律返回 `4003`，且不泄漏该作品是否存在。
+6. 用户端首页是工作台：顶行回答下一步，旁边只有一个小字链接「看示例流程」（本账号拥有样例作品 `w-dm-005` 时打开它；没有则留在首页并说明当前账号没有示例作品，避免越权打开他人作品触发 `4003` 退出登录）；
+   最近作品带集进度和「继续创作」；没有作品时只有一个「新建作品」；生成失败、待审核、审核驳回
+   以小卡片深链到该剧任务或成片，没有这类事项时不显示这一段。页面不重复「首页」标题，
+   不放与侧栏重复的「我的作品 / 任务中心 / 套餐与加量」按钮，不在页面中央展示登录身份。
+   封面只使用接口已经返回的 `cover_url`（或同义图片地址）；列表和详情没给时不编造封面。
 
 ## 四、接口契约（snake_case）
 
@@ -139,7 +146,8 @@
 ## 七、原型
 
 - 涉及端：web 用户端（web 管理端不建作品，只在审核页只读查看）。
-- 页面：[`../demo-static/web/user/works.html`](../demo-static/web/user/works.html)（作品列表）、
+- 页面：[`../demo-static/web/user/home.html`](../demo-static/web/user/home.html)（首页工作台）、
+  [`../demo-static/web/user/works.html`](../demo-static/web/user/works.html)（作品列表）、
   [`../demo-static/web/user/work-create.html`](../demo-static/web/user/work-create.html)（新建向导）、
   [`../demo-static/web/user/work-detail.html`](../demo-static/web/user/work-detail.html)（作品工作台 / 剧集看板）。
 - 跳转关系：登记在 [`../demo-static/web/user/PAGE-FLOW.html`](../demo-static/web/user/PAGE-FLOW.html)。
@@ -197,6 +205,8 @@
 | `asset_type` 素材类型 | `IMAGE` 图片 / `VIDEO` 视频 / `AUDIO` 音频 / `SUBTITLE` 字幕 / `FILM` 成片 |
 | `quality_level` 模型质量档 | `FAST` 快速 / `STANDARD` 标准 / `HIGH` 高质 |
 | `price_unit` 计费单位 | `PER_CALL` 按次 / `PER_SECOND` 按视频秒 / `PER_KILO_TOKEN` 按千 token / `PER_MINUTE` 按音频分钟 |
+
+镜头已绑定 `video_asset_id` 时，视频任务失败或取消不得清空该绑定。状态若停在 `VIDEO_GENERATING`，回到 `VIDEO_READY`；还没有视频但首帧仍在，则回到 `IMAGE_READY`。创作台列表用 `video_url` 直接播放。镜头已是 `VIDEO_READY` 或 `LOCKED` 且成片仍绑定后，不再把更早一次失败的视频任务显示成常驻失败标签。进行中的任务仍显示进度。已有成片时首帧文案为「查看首帧」，单行排在现有缩略图宽度内。
 
 ## 九、四层同步检查清单
 

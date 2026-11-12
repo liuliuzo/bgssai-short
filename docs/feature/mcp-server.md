@@ -64,7 +64,7 @@ AI 客户端 Bearer PAT → /api/mcp → 注入 UserContext → tools/call → �
 
 ## 制作闭环验收补充（2026-11-11）
 
-- `tools/list` 提供 24 个工具；新增模型与声音目录、角色声音设置、剧本定稿/拆分/结构化保存、参考图生成与定妆、任务查询、成片查询、字幕/BGM 设置及配音对齐。字段详见 MCP 契约。
+- `tools/list` 提供 28 个工具；包括模型与声音目录、角色声音设置、剧本定稿/拆分/结构化保存、参考图生成与定妆、任务查询、资产下载验收、镜头确认锁定、成片查询、字幕/BGM 设置及配音对齐。字段详见 MCP 契约。
 - 同一分集保存的所有分镜先逐项验证归属，任一失败不部分写入；不接收伪造用户或直接资产覆盖。
 - IMAGE/VIDEO 必须通过正式分镜检查；VOICE 必须创建正式配音记录；MUSIC 使用正式 BGM 服务；COMPOSE 必须通过正式预检。不能通过 MCP 旁路插入缺少 prompt/配音上下文的任务。
 - 所有收费工具都要求布尔 `confirm_cost=true`；生成过程使用正式队列、工作线程余额检查及结算。参考图锁定只能选择该卡已生成候选。
@@ -72,3 +72,22 @@ AI 客户端 Bearer PAT → /api/mcp → 注入 UserContext → tools/call → �
 - MCP 页面与原型展示上述真实能力；所有 array schema 提供完整 items。测试通过不等于真实模型/成片商业验收，真实制作由本次授权操作另行记录。
 
 - 多角色场次逐行以 character_name 确认说话者，拆分优先绑定该角色；角色声音必须选自正式目录，配音生成保留各角色声音差异。
+
+## 资产验收与镜头确认（2026-11-11）
+
+- `get_asset_download(asset_id)` 仅查询本人资产，直接复用正式 AssetService.getDownload；返回真实
+  `download_url` 与 `expire_at`，用于查看首帧、视频和配音。到期后重新查询，不伪造链接、延长原签名或公开资产。
+- `lock_shot(episode_id, shot_id, confirm_review=true)` 要求确认参数为 JSON boolean true。
+  调用者应先取得并检查该镜视频；缺少确认、false、字符串或数字均拒绝，不自动验收或批量锁定。
+- 分集与镜头必须属于当前 PAT 用户且为同一集；镜头实际 video_asset_id 非空，状态只能为
+  VIDEO_READY 或 LOCKED。锁定只委托正式 ShotService.lock(req,true)，不接收资产覆盖或直接写数据库。
+- 锁定不是成片合成通过；FilmService 的完整预检、费用确认、发布确认保持原样。查询和锁定不触发生成、结算或公开发布。
+- 新增验证须覆盖真实资产归属、他人/跨集镜头拒绝、严格确认、未就绪视频拒绝及正式服务委托。
+  无数据库结构或新 HTTP 路由；仍通过现有 MCP tools/call。
+
+## 字幕重建（2026-11-11）
+
+- `regenerate_subtitles(episode_id, confirm_replace=true)` 根据已有配音和当前分镜重建本人分集字幕，替换已有字幕（包括人工编辑）。调用前应保存需要保留的编辑，并显式确认替换。
+- 只接受 JSON boolean true，拒绝其他字段和非本人分集；委托正式 DubbingService.subtitleRegenerate，不直接写入字幕或修改配音、分镜时长。
+- 返回正式 subtitle_list；不创建模型任务、不产生生成费用，也不自动重新合成已有成片。重建后通过 get_episode_film 检查字幕，再按正式合成流程制作。
+- SQL、HTTP 路由和模型配置无变更。

@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Card, Drawer, Input, Select, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Drawer, Image, Input, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 import { publicModelText } from '../../publicModel'
+import { shotCanvasStatusKey } from './shotCardMedia'
+import {
+  SHOT_VIDEO_DIALOG_Z_INDEX,
+  dialogueCaption,
+  shotDrawerProps,
+  shotSpokenText,
+  shotTimingLabel,
+  showSettledEmpty,
+  thumbPlaceholderStyle,
+} from './studioListUx'
 
 const { Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -13,20 +23,23 @@ const STATUS_STYLE = {
   PENDING: { background: '#f1f5f9', borderColor: '#94a3b8', label: '未开始' },
   TEXT_READY: { background: '#dbeafe', borderColor: '#2563eb', label: '文字稿' },
   DRAFT_READY: { background: '#ede9fe', borderColor: '#7c3aed', label: '草图' },
+  IMAGE_GENERATING: { background: '#cffafe', borderColor: '#0891b2', label: '出图中' },
   IMAGE_READY: { background: '#cffafe', borderColor: '#0891b2', label: '首帧' },
+  VIDEO_GENERATING: { background: '#dcfce7', borderColor: '#059669', label: '出视频' },
   VIDEO_READY: { background: '#dcfce7', borderColor: '#059669', label: '视频' },
   LOCKED: { background: '#bbf7d0', borderColor: '#047857', label: '已定稿' },
   FAILED: { background: '#fee2e2', borderColor: '#dc2626', label: '失败' },
 }
 
 function styleOf(row) {
-  const base = STATUS_STYLE[row.shot_status] || STATUS_STYLE.PENDING
-  if (row.blocked_flag === 1) return STATUS_STYLE.FAILED
-  return base
+  const key = shotCanvasStatusKey(row)
+  return STATUS_STYLE[key] || STATUS_STYLE.PENDING
 }
 
-export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
-  const [rows, setRows] = useState([])
+export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRows = [], sceneCards = [] }) {
+  const [rows, setRows] = useState(initialRows)
+  const [shotsReady, setShotsReady] = useState(initialRows.length > 0)
+  const [clipSeconds, setClipSeconds] = useState({})
   const [selected, setSelected] = useState([])
   const [cost, setCost] = useState(null)
   const [dragging, setDragging] = useState(null)
@@ -36,9 +49,16 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
   const [submittingSingle, setSubmittingSingle] = useState(false)
 
   const load = useCallback(async () => {
-    if (!episodeId) return
-    const { data } = await productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 200 })
-    setRows(Array.isArray(data?.result) ? data.result : [])
+    if (!episodeId) {
+      setShotsReady(true)
+      return
+    }
+    try {
+      const { data } = await productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 200 })
+      setRows(Array.isArray(data?.result) ? data.result : [])
+    } finally {
+      setShotsReady(true)
+    }
   }, [episodeId])
 
   useEffect(() => { load() }, [load])
@@ -163,17 +183,36 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
     }
   }
 
+  const sceneNameOf = (row) => (
+    (sceneCards || []).find((card) => card.scene_card_id === row?.scene_card_id)?.card_name || ''
+  )
+
   const openEditor = (row) => {
     setEditing(row)
     setDraft(row.previz_text || '')
   }
 
+  const rememberClip = (shotId, duration) => {
+    if (!shotId || !Number.isFinite(duration) || duration <= 0) return
+    setClipSeconds((cur) => (cur[shotId] === duration ? cur : { ...cur, [shotId]: duration }))
+  }
+
+  const timingOf = (row) => shotTimingLabel({
+    plannedSec: row?.shot_duration_sec,
+    actualSec: clipSeconds[row?.shot_id],
+    hasPlayableVideo: Boolean(row?.video_url),
+  })
+
   const saveEditor = async () => {
-    await featuresApi.previzSave({ shot_id: editing.shot_id, previz_text: draft })
+    const sceneName = (sceneCards || []).find((card) => card.scene_card_id === editing?.scene_card_id)?.card_name || ''
+    const text = shotSpokenText(editing, sceneName, draft)
+    await featuresApi.previzSave({ shot_id: editing.shot_id, previz_text: text })
     message.success('已保存人话分镜提示词')
     setEditing(null)
     load()
   }
+
+  const editorSpoken = editing ? shotSpokenText(editing, sceneNameOf(editing), draft) : ''
 
   return (
     <div>
@@ -253,7 +292,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
                     onClick={() => toggle(row.shot_id)}
                     onDoubleClick={() => openEditor(row)}
                     style={{
-                      width: 96, flexShrink: 0, padding: 6, borderRadius: 6, fontSize: 11,
+                      width: 132, flexShrink: 0, padding: 6, borderRadius: 6, fontSize: 11,
                       background: style.background,
                       border: `${row.stale_flag === 1 ? 2 : 1}px solid ${row.stale_flag === 1 ? '#d97706' : style.borderColor}`,
                       boxShadow: selected.includes(row.shot_id) ? 'inset 0 0 0 2px #2563eb' : 'none',
@@ -264,11 +303,18 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
                   >
                     <div style={{
                       height: 60, borderRadius: 4, marginBottom: 4, overflow: 'hidden',
-                      background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: thumbPlaceholderStyle().background, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       color: '#94a3b8', fontSize: 10, position: 'relative',
                     }}>
                       {row.video_url ? (
-                        <video src={row.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <video
+                          src={row.video_url}
+                          preload="metadata"
+                          muted
+                          playsInline
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', background: 'transparent' }}
+                          onLoadedMetadata={(event) => rememberClip(row.shot_id, event.currentTarget.duration)}
+                        />
                       ) : row.first_frame_url ? (
                         <img alt="" src={row.first_frame_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
@@ -284,9 +330,9 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
                       <span style={{ fontWeight: 700 }}>镜 {row.shot_no}</span>
                       {locked ? <span>已锁</span> : null}
                     </div>
-                    <div style={{ color: '#64748b', fontSize: 10, display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{row.shot_duration_sec || 3}s</span>
-                      <span>{style.label}</span>
+                    <div style={{ color: '#64748b', fontSize: 10, lineHeight: 1.35 }}>
+                      <div>{timingOf(row)}</div>
+                      <div>{style.label}</div>
                     </div>
                   </div>
                 </Tooltip>
@@ -294,7 +340,8 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             })}
           </div>
         ))}
-        {!lanes.length ? <Text type="secondary">本集还没有镜头，先去列表视图从剧本拆镜。</Text> : null}
+        {!shotsReady ? <Skeleton active title={false} paragraph={{ rows: 3 }} /> : null}
+        {showSettledEmpty(shotsReady, lanes.length) ? <Text type="secondary">本集还没有镜头，先去列表视图从剧本拆镜。</Text> : null}
         <Space wrap style={{ marginTop: 8, fontSize: 11 }}>
           {Object.entries(STATUS_STYLE).map(([key, value]) => (
             <Tag key={key} style={{ background: value.background, borderColor: value.borderColor }}>
@@ -311,6 +358,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
       </Paragraph>
 
       <Drawer
+        {...shotDrawerProps()}
         open={!!editing}
         width={560}
         onClose={() => setEditing(null)}
@@ -331,12 +379,19 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             {editing.video_url ? (
               <div style={{ marginBottom: 12 }}>
                 <Text strong style={{ display: 'block', marginBottom: 4 }}>视频成片预览：</Text>
-                <video src={editing.video_url} controls style={{ width: '100%', maxHeight: 200, borderRadius: 6, background: '#000' }} />
+                <video
+                  src={editing.video_url}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  style={{ width: '100%', maxHeight: 200, borderRadius: 6, background: '#000' }}
+                  onLoadedMetadata={(event) => rememberClip(editing.shot_id, event.currentTarget.duration)}
+                />
               </div>
             ) : editing.first_frame_url ? (
               <div style={{ marginBottom: 12 }}>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>首帧画面：</Text>
-                <img src={editing.first_frame_url} alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} />
+                <Text strong style={{ display: 'block', marginBottom: 4 }}>首帧画面（点击放大）：</Text>
+                <Image src={editing.first_frame_url} alt="首帧" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6, background: thumbPlaceholderStyle().background }} preview={{ mask: '查看', zIndex: SHOT_VIDEO_DIALOG_Z_INDEX }} />
               </div>
             ) : null}
 
@@ -350,10 +405,10 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: 10, marginBottom: 12 }}>
               <div style={{ marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>对白台词：</Text>
-                <Text type="secondary" style={{ fontSize: 11 }}>时长 {editing.shot_duration_sec || 3} 秒</Text>
+                <Text type="secondary" style={{ fontSize: 11 }}>时长 {timingOf(editing)}</Text>
               </div>
               <div style={{ fontSize: 13, fontWeight: 500 }}>
-                {editing.dialogue || '（纯动作环境音，无对白）'}
+                {dialogueCaption(editing)}
               </div>
             </div>
 
@@ -362,7 +417,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList }) {
             </Text>
             <TextArea
               rows={4}
-              value={draft}
+              value={editorSpoken}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="描述镜头构图、机位视角与角色动作..."
               style={{ marginBottom: 12 }}

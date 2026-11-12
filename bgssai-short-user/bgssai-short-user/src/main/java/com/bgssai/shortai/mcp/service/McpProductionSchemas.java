@@ -24,8 +24,15 @@ final class McpProductionSchemas {
                 integer("shot_duration_sec", "镜头秒数；还须符合所选模型的真实能力", 1, 120), text("extra_prompt", "额外画面约束，正式服务重算 image_prompt"));
         tools.add(tool("save_storyboard", "原子保存同一分集的结构化分镜修改，锁定镜头不可改；不覆盖生成资产或直接写模型提示词。",
                 schema(List.of("episode_id", "shots"), text("episode_id", "分集 ID"), array("shots", "1-100 个镜头", shot, 100))));
+        tools.add(tool("resume_video_task", "恢复本人已提交的公司视频任务；只接受task_id，通过唯一持久回执查询原任务，不再次生成。凭据变化、无回执、已有后续视频时拒绝；原任务仍正常结算。",
+                schema(List.of("task_id"), text("task_id", "本人失败或取消的公司视频任务 ID"))));
         tools.add(tool("get_render_task", "查询本人任务真实状态、进度、公开错误、费用和 result_json；不触发任务或重试。",
                 schema(List.of("task_id"), text("task_id", "任务 ID"))));
+        tools.add(tool("get_asset_download", "查询本人资产的真实 download_url 与 expire_at，供首帧、视频、配音验收；到期重新查询，不生成或发布。",
+                schema(List.of("asset_id"), text("asset_id", "本人资产 ID"))));
+        tools.add(tool("lock_shot", "检查视频后明确确认本人同集镜头；要求已有 video_asset_id 且状态 VIDEO_READY/LOCKED。沿用正式锁定，仍须完整合成预检，不自动生成或发布。",
+                schema(List.of("episode_id", "shot_id", "confirm_review"), text("episode_id", "分集 ID"),
+                        text("shot_id", "本集镜头 ID"), prop("confirm_review", "boolean", "仅接受 true；表示已检查镜头视频").put("const", true))));
         tools.add(tool("get_episode_film", "读取本人分集成片、真实可播放 download_url、过期状态、合成预检、配音和字幕；未完成时不提供占位成片。",
                 schema(List.of("episode_id"), text("episode_id", "分集 ID"))));
         tools.add(tool("save_film_settings", "保存作品共享的合成设置，校验本集背景音乐资产。影响同作品后续合成，不自动生成或重合成。",
@@ -42,6 +49,9 @@ final class McpProductionSchemas {
         tools.add(tool("lock_reference_card", "将该卡已生成的真实候选图设为定妆参考，沿用正式锁定和镜头过期规则。",
                 schema(List.of("work_id", "card_type", "card_id", "asset_id"), text("work_id", "作品 ID"),
                         choice("card_type", "卡类型", "CHARACTER", "SCENE", "PROP"), text("card_id", "角色或场景卡 ID"), text("asset_id", "该卡 candidate_list 中的资产 ID"))));
+        tools.add(tool("regenerate_subtitles", "从已有配音与分镜重建本人分集字幕，会替换现有字幕（含人工编辑）。须 confirm_replace=true；无模型任务或生成费用，不自动重新合成。",
+                schema(List.of("episode_id", "confirm_replace"), text("episode_id", "本人分集 ID"),
+                        prop("confirm_replace", "boolean", "仅接受 true；确认替换已有字幕").put("const", true))));
         tools.add(tool("align_dubbing", "按正式配音服务处理时长差异，不生成收费任务。EXTEND_SHOT 会改变镜头时长，需重新检查视频及成片时长。",
                 schema(List.of("episode_id", "shot_id", "align_action"), text("episode_id", "分集 ID"), text("shot_id", "分镜 ID"),
                         choice("align_action", "对齐动作", "PAD_SILENCE", "ADJUST_SPEED", "EXTEND_SHOT"))));

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +20,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.aiprovider.AiProvider;
@@ -120,6 +123,8 @@ public class ShortAiTaskWorker {
     private FrameLinkService frameLinkService;
     @Autowired
     private FinishedFilmLifecycle finishedFilmLifecycle;
+    @Autowired(required = false)
+    private ShotGenerateOutcome shotGenerateOutcome;
     @Autowired
     private AiTaskQueue aiTaskQueue;
     @Autowired
@@ -138,6 +143,8 @@ public class ShortAiTaskWorker {
     private ShortTaskSettlementService settlement;
     @Autowired
     private QuotaConsumeService quotaConsumeService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private final ThreadLocal<Integer> executionUsage = ThreadLocal.withInitial(() -> 0);
 
@@ -219,8 +226,8 @@ public class ShortAiTaskWorker {
             for (ShortAiTask task : shortAiTaskMapper.selectByExample(ex)) {
                 Date started = task.getStartedTime() == null ? task.getQueuedTime() : task.getStartedTime();
                 if (started == null) {
-                    failIfRunning(task, "ORPHAN_RUNNING",
-                            "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务");
+                    if (failIfRunning(task, "ORPHAN_RUNNING",
+                            "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务")) noteTerminalFailure(task);
                     continue;
                 }
                 long ageSec = (System.currentTimeMillis() - started.getTime()) / 1000L;
@@ -243,8 +250,8 @@ public class ShortAiTaskWorker {
                 }
                 log.warn("ai task stale taskId={} type={} model={} ageSec={} limitSec={}",
                         task.getTaskId(), task.getTaskType(), task.getModelCode(), ageSec, limit);
-                failIfRunning(task, "MODEL_TIMEOUT",
-                        "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）");
+                if (failIfRunning(task, "MODEL_TIMEOUT",
+                        "任务超过 " + limit + " 秒仍未返回，已判定超时（上游未响应或对象存储不可达）")) noteTerminalFailure(task);
             }
             onPollSuccess();
         } catch (DataAccessException ex) {
@@ -335,14 +342,28 @@ public class ShortAiTaskWorker {
         if (ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
             return ImageConditionedVideoProtocol.DEADLINE_SEC;
         }
+        int base;
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             Integer t = model.getTimeoutSec();
-            return t == null || t <= 0 ? DEFAULT_TIMEOUT_SEC : t;
+            base = t == null || t <= 0 ? DEFAULT_TIMEOUT_SEC : t;
         } catch (RuntimeException ex) {
             // 模型行被停用 / 删除时仍要能回收，走兜底上限。
-            return DEFAULT_TIMEOUT_SEC;
+            base = DEFAULT_TIMEOUT_SEC;
         }
+        if ("VIDEO".equals(task.getTaskType())) {
+            return Math.max(base, 900) * 2 + 120;
+        }
+        if ("IMAGE".equals(task.getTaskType())) {
+            int perCall = Math.max(base, 600);
+            int count = 1;
+            if ("PORTRAIT".equals(task.getTargetType()) || "SCENE_PORTRAIT".equals(task.getTargetType())) {
+                count = Math.max(1, Math.min(8, com.bgssai.shortai.production.support.ShortJson.integer(
+                        com.bgssai.shortai.production.support.ShortJson.map(task.getRequestJson()).get("candidate_count"), 1)));
+            }
+            return perCall * count;
+        }
+        return base;
     }
 
     private void run(ShortAiTask task) {
@@ -361,16 +382,14 @@ public class ShortAiTaskWorker {
             complete(task, model);
             boolean settled = settlement.settle(task, model, Math.max(1, executionUsage.get()));
             if (!settled) {
-                failIfRunning(task, "SETTLE_RACE",
-                        "任务结果未能落账（可能已被超时回收），请在任务中心重试");
+                if (failIfRunning(task, "SETTLE_RACE",
+                        "任务结果未能落账（可能已被超时回收），请在任务中心重试")) noteTerminalFailure(task);
             }
         } catch (BizException exBiz) {
-            failIfRunning(task, exBiz.getCode(), exBiz.getMessage());
-            noteComposeFailed(task);
+            if (failIfRunning(task, exBiz.getCode(), exBiz.getMessage())) noteTerminalFailure(task);
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
-            failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage());
-            noteComposeFailed(task);
+            if (failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage())) noteTerminalFailure(task);
         } finally {
             executionUsage.remove();
             com.bgssai.shortai.billing.UsageScope.clear();
@@ -823,6 +842,13 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         String ability = "VIDEO".equals(task.getTaskType()) ? "VIDEO" : "IMAGE";
+        boolean recoveringVideo = "VIDEO".equals(ability)
+                && !ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id")).isBlank();
+        if (recoveringVideo && (!Objects.equals(task.getUserId(), shot.getUserId())
+                || !Objects.equals(task.getWorkId(), shot.getWorkId())
+                || !Objects.equals(task.getEpisodeId(), shot.getEpisodeId()))) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "恢复目标镜头归属已变化，停止恢复");
+        }
         AiProviderRequest request = baseRequest(model, ability, "SHOT");
         request.getParams().put("title", "镜 " + shot.getShotNo());
         request.getParams().put("subtitle", shot.getShotDesc());
@@ -835,7 +861,9 @@ public class ShortAiTaskWorker {
         String prompt = ShotConsistency.withConsistency(shotPrompt(shot, ability), consistency.fragment());
         request.setPrompt(prompt);
         if ("VIDEO".equals(ability)) {
-            attachFrames(shot, request, model);
+            String resumeId = ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id"));
+            if (!resumeId.isBlank()) request.getParams().put("resume_request_id", resumeId);
+            else attachFrames(shot, request, model);
         } else {
             attachConsistencyRefs(consistency, request);
         }
@@ -846,6 +874,10 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
                     ("VIDEO".equals(ability) ? "video" : "image")
                             + " provider returned empty content");
+        }
+        if (recoveringVideo) {
+            finishRecoveredVideo(task, shot, result);
+            return;
         }
         boolean confirmedVideo = "VIDEO".equals(task.getTaskType())
                 && ShotVersionGuard.keepConfirmedAsset(shot.getShotStatus(), shot.getVideoAssetId());
@@ -862,10 +894,6 @@ public class ShortAiTaskWorker {
         if ("VIDEO".equals(task.getTaskType())) {
             patch.setVideoAssetId(asset.getAssetId());
             patch.setShotStatus("VIDEO_READY");
-            if (shot.getShotDurationSec() != null) {
-                asset.setDurationSec(shot.getShotDurationSec());
-                shortAssetMapper.updateByPrimaryKeySelective(asset);
-            }
             String lastFrameAssetId = extractLastFrame(shot, result, task);
             if (lastFrameAssetId != null) {
                 patch.setLastFrameAssetId(lastFrameAssetId);
@@ -900,6 +928,59 @@ public class ShortAiTaskWorker {
                 frameLinkService.markNextStale(shot);
             }
         }
+    }
+
+    private void finishRecoveredVideo(ShortAiTask task, ShortShot original, AiProviderResult result) {
+        ShortAsset asset = saveBinary(original.getUserId(), original.getWorkId(), original.getEpisodeId(),
+                original.getShotId(), "VIDEO", result, task.getTaskId(), false);
+        String lastFrame = extractLastFrame(original, result, task);
+        ShortShotExample read = new ShortShotExample();
+        read.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
+        ShortShot current = shortShotMapper.selectOneByExample(read);
+        if (current == null || !Objects.equals(original.getId(), current.getId())
+                || !Objects.equals(task.getUserId(), current.getUserId())
+                || !Objects.equals(task.getWorkId(), current.getWorkId())
+                || !Objects.equals(task.getEpisodeId(), current.getEpisodeId())
+                || "LOCKED".equals(current.getShotStatus())
+                || (current.getVideoAssetId() != null && !current.getVideoAssetId().isBlank())
+                || !Objects.equals(original.getUpdatedTime(), current.getUpdatedTime())
+                || !Objects.equals(original.getShotVersion(), current.getShotVersion())
+                || !Objects.equals(original.getPromptVersion(), current.getPromptVersion())
+                || !Objects.equals(original.getShotStatus(), current.getShotStatus())) {
+            throw recoveryConflict();
+        }
+        ShortAiTaskExample siblings = new ShortAiTaskExample();
+        siblings.createCriteria().andUserIdEqualTo(task.getUserId()).andWorkIdEqualTo(task.getWorkId())
+                .andEpisodeIdEqualTo(task.getEpisodeId()).andTargetIdEqualTo(task.getTargetId())
+                .andTargetTypeEqualTo("SHOT").andTaskTypeEqualTo("VIDEO");
+        for (ShortAiTask other : shortAiTaskMapper.selectByExample(siblings)) {
+            if (!task.getId().equals(other.getId()) && (other.getId() > task.getId()
+                    || List.of("QUEUED", "RUNNING", "PAUSED").contains(other.getTaskStatus()))) {
+                throw recoveryConflict();
+            }
+        }
+        ShortShot patch = new ShortShot();
+        patch.setVideoAssetId(asset.getAssetId());
+        patch.setShotStatus("VIDEO_READY");
+        patch.setLastFrameAssetId(lastFrame);
+        patch.setUpdatedTime(new Date());
+        ShortAsset selected = new ShortAsset();
+        selected.setSelectedFlag(1);
+        ShortAssetExample selection = new ShortAssetExample();
+        selection.createCriteria().andAssetIdEqualTo(asset.getAssetId()).andUserIdEqualTo(task.getUserId())
+                .andSourceTaskIdEqualTo(task.getTaskId()).andSelectedFlagEqualTo(0).andDeletedFlagEqualTo(0);
+        // Keep model polling and object storage outside the short database transaction.
+        // A selection-write failure rolls the shot CAS back and leaves the candidate unselected.
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            if (shortShotMapper.attachRecoveredVideoIfUnchanged(current, patch, task.getId()) != 1) throw recoveryConflict();
+            if (shortAssetMapper.updateByExampleSelective(selected, selection) != 1) throw recoveryConflict();
+        });
+        if (finishedFilmLifecycle != null) finishedFilmLifecycle.expireAfterUpstreamChange(current.getEpisodeId());
+        if (lastFrame != null) frameLinkService.markNextStale(current);
+    }
+
+    private static BizException recoveryConflict() {
+        return new BizException(CommonErrorCode.RULE_REJECT, "镜头或视频任务已变化，恢复视频仅保留为未选候选，未覆盖当前镜头");
     }
 
     private ConsistencyBundle loadConsistency(ShortShot shot) {
@@ -1014,6 +1095,7 @@ public class ShortAiTaskWorker {
         AiProviderRequest request = baseRequest(model, "COMPOSE", "COMPOSE");
         request.getParams().put("title", ep.getEpisodeTitle());
         request.getParams().put("duration_sec", duration);
+        request.getParams().put(FfmpegComposeProvider.PARAM_ASPECT_RATIO, workAspectRatio(ep.getWorkId()));
         request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
         List<Integer> clipDurations = new ArrayList<>();
         List<String> dubbingMissing = new ArrayList<>();
@@ -1307,10 +1389,8 @@ public class ShortAiTaskWorker {
         String camera = shot.getCameraMove() == null ? "" : shot.getCameraMove().trim();
         if ("VIDEO".equals(ability)) {
             StringBuilder sb = new StringBuilder();
-            String motion = extra.isBlank() ? desc : extra;
-            if (motion.isBlank()) {
-                motion = imagePrompt;
-            }
+            String motion = desc.isBlank() ? imagePrompt : desc;
+            if (!extra.isBlank()) motion = motion.isBlank() ? extra : motion + "，" + extra;
             if (!motion.isBlank()) {
                 sb.append(motion);
             }
@@ -1508,6 +1588,18 @@ public class ShortAiTaskWorker {
         return shortEpisodeMapper.selectOneByExample(ex);
     }
 
+    private void noteTerminalFailure(ShortAiTask task) {
+        noteComposeFailed(task);
+        if (shotGenerateOutcome == null || task == null) {
+            return;
+        }
+        try {
+            shotGenerateOutcome.restoreBoundMedia(task);
+        } catch (RuntimeException ex) {
+            log.warn("shot media restore skipped taskId={}", task.getTaskId(), ex);
+        }
+    }
+
     private void noteComposeFailed(ShortAiTask task) {
         if (finishedFilmLifecycle == null || task == null || !"COMPOSE".equals(task.getTargetType())) {
             return;
@@ -1532,7 +1624,7 @@ public class ShortAiTaskWorker {
     }
 
     /** 只有仍在 RUNNING 的任务才置失败，避免覆盖已取消 / 已回收的终态。 */
-    private void failIfRunning(ShortAiTask task, String code, String message) {
+    private boolean failIfRunning(ShortAiTask task, String code, String message) {
         ShortAiTask patch = new ShortAiTask();
         patch.setTaskStatus("FAILED");
         patch.setFailReasonCode(code);
@@ -1540,8 +1632,10 @@ public class ShortAiTaskWorker {
         patch.setFinishedTime(new Date());
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();
-        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
-        shortAiTaskMapper.updateByExampleSelective(patch, up);
+        ShortAiTaskExample.Criteria criteria = up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+        if (task.getRetryCount() == null) criteria.andRetryCountIsNull();
+        else criteria.andRetryCountEqualTo(task.getRetryCount());
+        return shortAiTaskMapper.updateByExampleSelective(patch, up) == 1;
     }
 
     private String activeEnv() {

@@ -168,7 +168,14 @@ create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
 `GET /bgssai/user/shots/list` 每镜另回 `look_plain`（这一镜观众会看到什么）、`prompt_score`、`previz_level`。
 
 `GET /bgssai/user/shots/list` 另回 `prop_ref_json`、`latest_task`
-（`task_id` / `task_type` / `task_status` / `task_status_name` / `progress_percent`）。
+（`task_id` / `task_type` / `task_status` / `task_status_name` / `progress_percent`），
+以及 `video_url` / `first_frame_url` / `last_frame_url`。
+列表在 `video_url` 有值时直接播放；`video_asset_id` 仍在而最新视频任务失败时，不得把镜头展示成没有视频。
+已回到 `VIDEO_READY` 或 `LOCKED` 的镜头不把该次失败或取消当作列表常驻标签。进行中的任务仍显示进度。任务记录保留，成片绑定不改。
+已有成片时首帧文案为「查看首帧」，单行排在缩略图宽度内，点击仍放大 `first_frame_url`。
+视频或首帧任务失败、超时或取消时，不改写已绑定的 `video_asset_id` / `first_frame_asset_id`：
+停在 `VIDEO_GENERATING` 且已有视频则回到 `VIDEO_READY`；没有视频但首帧仍在则回到 `IMAGE_READY`。
+停在 `IMAGE_GENERATING` 且首帧仍在时，已有视频回到 `VIDEO_READY`，否则回到 `IMAGE_READY`。
 
 ### POST /bgssai/user/shots/bind-assets
 
@@ -208,7 +215,7 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 存储 SDK 依赖不兼容时，任务立即返回 `task_status=FAILED`、`fail_reason_code=STORAGE_UNAVAILABLE`，
 `fail_reason` 为「素材存储服务不可用，任务未完成，请联系管理员」。不自动重新生成，不新增素材或执行产品成功结算；上游生成回执保留真实结果。
 
-`task_status` 为 `SUCCEEDED` / `SUCCESS`，或 `fail_reason_code` 为空时，`fail_reason` 返回 null，
+仅 `task_status=FAILED` 返回失败码及安全失败原因；其他状态的 `fail_reason_code` 与 `fail_reason` 均返回 null。FAILED 的 `fail_reason_code` 为空时，`fail_reason` 也返回 null，
 不把空原因改写成失败文案。任务中心与作品任务表的失败列留空。
 
 ### GET /bgssai/user/ai-tasks/batch-progress?batch_id=

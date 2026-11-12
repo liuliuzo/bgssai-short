@@ -3,6 +3,7 @@ package com.bgssai.shortai.production.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -24,6 +25,52 @@ import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 
 class ShortAiTaskWorkerTest {
+    @Test
+    void composePassesSavedWorkAspectAndShotDurationsToProvider() {
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        var episodes = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortEpisodeMapper.class);
+        var shots = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class);
+        var works = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortWorkMapper.class);
+        var assets = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        var dubbings = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortDubbingMapper.class);
+        var storage = org.mockito.Mockito.mock(com.bgssai.shortai.storage.ObjectStorage.class);
+        var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var provider = org.mockito.Mockito.mock(com.bgssai.shortai.aiprovider.AiProvider.class);
+        ReflectionTestUtils.setField(worker, "shortEpisodeMapper", episodes);
+        ReflectionTestUtils.setField(worker, "shortShotMapper", shots);
+        ReflectionTestUtils.setField(worker, "shortWorkMapper", works);
+        ReflectionTestUtils.setField(worker, "shortAssetMapper", assets);
+        ReflectionTestUtils.setField(worker, "shortDubbingMapper", dubbings);
+        ReflectionTestUtils.setField(worker, "objectStorage", storage);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        var episode = new com.bgssai.shortai.model.ShortEpisode();
+        episode.setEpisodeId("episode-test"); episode.setWorkId("work-test");
+        var shot = new com.bgssai.shortai.model.ShortShot();
+        shot.setShotId("shot-test"); shot.setShotDurationSec(5); shot.setVideoAssetId("video-test");
+        var work = new com.bgssai.shortai.model.ShortWork();
+        work.setAspectRatio("16:9"); work.setComposeSettingJson("{\"aspect_ratio\":\"16:9\",\"burn_subtitle_flag\":0}");
+        var asset = new com.bgssai.shortai.model.ShortAsset(); asset.setStorageKey("test-fixture.mp4");
+        when(episodes.selectOneByExample(any())).thenReturn(episode);
+        when(shots.selectByExample(any())).thenReturn(java.util.List.of(shot));
+        when(works.selectOneByExample(any())).thenReturn(work);
+        when(assets.selectOneByExample(any())).thenReturn(asset);
+        when(dubbings.selectByExample(any())).thenReturn(java.util.List.of());
+        when(storage.get("test-fixture.mp4")).thenReturn(new byte[]{1});
+        var model = new AiModelConfig();
+        when(registry.resolve(model)).thenReturn(provider);
+        var captured = new java.util.concurrent.atomic.AtomicReference<com.bgssai.shortai.aiprovider.AiProviderRequest>();
+        when(provider.execute(any())).thenAnswer(call -> {
+            captured.set(call.getArgument(0));
+            throw new IllegalStateException("test-stop-before-media-generation");
+        });
+        var task = new ShortAiTask(); task.setEpisodeId("episode-test");
+        Assertions.assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(worker, "finishCompose", task, model));
+        Assertions.assertNotNull(captured.get());
+        Assertions.assertEquals("16:9", captured.get().param("aspect_ratio"));
+        Assertions.assertEquals(java.util.List.of(5), captured.get().param("clip_duration_sec_list"));
+        verify(provider, times(1)).execute(any());
+    }
 
     @Test
     void binaryVoiceGetsRealDurationBeforeDubbingAndUsage() throws Exception {
@@ -251,6 +298,87 @@ class ShortAiTaskWorkerTest {
         verify(mapper).updateByExampleSelective(patch.capture(), any());
         org.junit.jupiter.api.Assertions.assertEquals("FAILED", patch.getValue().getTaskStatus());
         org.junit.jupiter.api.Assertions.assertEquals("MODEL_TIMEOUT", patch.getValue().getFailReasonCode());
+    }
+
+    @Test
+    void failedShotVideoAsksToKeepTheBoundClip() {
+        ShortAiTaskMapper mapper = mock(ShortAiTaskMapper.class);
+        ShortTaskSettlementService settlement = mock(ShortTaskSettlementService.class);
+        AiModelResolveService resolve = mock(AiModelResolveService.class);
+        AiProviderRegistry registry = mock(AiProviderRegistry.class);
+        ShotGenerateOutcome outcome = mock(ShotGenerateOutcome.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "settlement", settlement);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
+        ReflectionTestUtils.setField(worker, "shortShotMapper", mock(com.bgssai.shortai.mapper.ShortShotMapper.class));
+        ReflectionTestUtils.setField(worker, "shotGenerateOutcome", outcome);
+        ShortAiTask task = new ShortAiTask();
+        task.setId(9L);
+        task.setTaskId("t-video");
+        task.setUserId("u-1");
+        task.setTaskStatus("QUEUED");
+        task.setTaskType("VIDEO");
+        task.setTargetType("SHOT");
+        task.setTargetId("sh-1");
+        task.setModelCode("bgssai-video");
+        when(mapper.selectOneByExample(any())).thenReturn(task);
+        when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
+        when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
+        worker.tick();
+        verify(outcome).restoreBoundMedia(task);
+        verify(settlement, never()).settle(any(), any(), anyInt());
+    }
+
+    @Test
+    void staleVideoTimeoutAsksToKeepTheBoundClip() {
+        ShortAiTaskMapper mapper = mock(ShortAiTaskMapper.class);
+        AiModelResolveService resolve = mock(AiModelResolveService.class);
+        ShotGenerateOutcome outcome = mock(ShotGenerateOutcome.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+        ReflectionTestUtils.setField(worker, "shotGenerateOutcome", outcome);
+        AiModelConfig model = new AiModelConfig();
+        model.setTimeoutSec(120);
+        when(resolve.resolve(any(), any())).thenReturn(model);
+        ShortAiTask stale = new ShortAiTask();
+        stale.setId(3L);
+        stale.setTaskId("t-stale-video");
+        stale.setTaskStatus("RUNNING");
+        stale.setTaskType("VIDEO");
+        stale.setTargetType("SHOT");
+        stale.setTargetId("sh-1");
+        stale.setStartedTime(new java.util.Date(System.currentTimeMillis() - 3600_000L));
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(stale));
+        when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
+        worker.reapStaleTasks();
+        verify(outcome).restoreBoundMedia(stale);
+    }
+
+    @Test
+    void staleFailureCasMissDoesNotNotifyOutcomeForResumedTask() {
+        ShortAiTaskMapper mapper = mock(ShortAiTaskMapper.class);
+        AiModelResolveService resolve = mock(AiModelResolveService.class);
+        ShotGenerateOutcome outcome = mock(ShotGenerateOutcome.class);
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
+        ReflectionTestUtils.setField(worker, "aiModelResolveService", resolve);
+        ReflectionTestUtils.setField(worker, "shotGenerateOutcome", outcome);
+        AiModelConfig model = new AiModelConfig(); model.setTimeoutSec(1);
+        when(resolve.resolve(any(), any())).thenReturn(model);
+        ShortAiTask stale = new ShortAiTask(); stale.setId(9L); stale.setRetryCount(1);
+        stale.setTaskType("VIDEO"); stale.setStartedTime(new java.util.Date(1000));
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(stale));
+        when(mapper.updateByExampleSelective(any(), any())).thenReturn(0);
+        worker.reapStaleTasks();
+        verify(outcome, never()).restoreBoundMedia(any());
+        var query = org.mockito.ArgumentCaptor.forClass(com.bgssai.shortai.model.ShortAiTaskExample.class);
+        verify(mapper).updateByExampleSelective(any(), query.capture());
+        Assertions.assertTrue(query.getValue().getOredCriteria().get(0).getAllCriteria().stream()
+                .anyMatch(c -> "retry_count =".equals(c.getCondition()) && Integer.valueOf(1).equals(c.getValue())));
     }
 
     /** 还没到超时上限的 RUNNING 任务不能被误杀。 */

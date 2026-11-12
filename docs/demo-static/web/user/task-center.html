@@ -23,14 +23,14 @@
     <div class="side-sec">制作</div>
     <a class="side-link" href="work-detail.html">剧集看板</a>
     <a class="side-link" href="script-studio.html">总剧本</a>
-    <a class="side-link" href="story-map.html">剧情图谱<span class="ln hot">3</span></a>
+    <a class="side-link" href="story-map.html">剧情<span class="ln hot">3</span></a>
     <a class="side-link" href="character-bible.html">角色与场景卡<span class="ln hot">1</span></a>
-    <a class="side-link" href="storyboard.html">创作台</a>
+    <a class="side-link" href="storyboard.html">分镜</a>
     <a class="side-link" href="voice-studio.html">配音与字幕</a>
     <a class="side-link" href="compose-export.html">合成与导出</a>
 
     <div class="side-sec">监控</div>
-    <a class="side-link" href="quality-report.html">质量报告<span class="ln hot">G2</span></a>
+    <a class="side-link" href="quality-report.html">质量<span class="ln hot">G2</span></a>
     <a class="side-link active" href="task-center.html">任务中心<span class="ln hot">6</span></a>
 
     <div class="side-sec">账户</div>
@@ -367,8 +367,8 @@
         <code>model_code</code> 为 BGSSAI 别名（例如 <code>bgssai-chat</code>），不展示网关编号 ·
         <code>progress_percent</code> · <code>retry_count</code> ·
         <code>fail_reason</code>（网关未开通时为「模型服务暂未开通，请稍后重试」，不展示
-        <code>http 503</code>；网关 <code>code</code> 只留在服务日志。成功 <code>SUCCEEDED</code> 或
-        <code>fail_reason_code</code> 为空时失败列留空，不展示「模型暂时不可用，请稍后重试或更换模型」）·
+        <code>http 503</code>；网关 <code>code</code> 只留在服务日志。仅 <code>FAILED</code> 返回失败码和原因；
+        其他状态的 <code>fail_reason_code</code> / <code>fail_reason</code> 均为空，不展示历史失败提示。旧失败回调不得覆盖恢复中或后续任务的镜头状态）·
         <code>fail_reason_code</code>（<code>MODEL_TIMEOUT</code> /
         <code>CONTENT_BLOCKED</code> / <code>ASSET_MISSING</code> / <code>STORAGE_UNAVAILABLE</code>）· <code>cost_cent</code> ·
         <code>queued_time</code> / <code>started_time</code> / <code>finished_time</code>。
@@ -390,5 +390,6 @@
     </div>
   </main>
 </div>
+<p>公司视频任务的“恢复”只查询由唯一持久回执关联的已有任务，不再次提交生成。无可信关联或已有后续视频时拒绝；其他任务的恢复规则保持原样。</p>
 </body>
 </html>

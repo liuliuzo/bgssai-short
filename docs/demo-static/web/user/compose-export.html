@@ -22,7 +22,7 @@
 
     <a class="side-link" href="works.html" style="margin-top:8px">我的作品</a>
     <a class="side-link" href="script-studio.html">总剧本</a>
-    <a class="side-link" href="storyboard.html">创作台</a>
+    <a class="side-link" href="storyboard.html">分镜</a>
     <a class="side-link active" href="compose-export.html">出片</a>
 
     <div class="side-sec">其它</div>
@@ -52,11 +52,11 @@
     <div class="stepline">
       <a href="work-detail.html"><span class="dot done"></span>剧集看板</a>
       <a href="script-studio.html"><span class="dot done"></span>剧本</a>
-      <a href="story-map.html"><span class="dot fail"></span>剧情图谱</a>
+      <a href="story-map.html"><span class="dot fail"></span>剧情</a>
       <a href="character-bible.html"><span class="dot done"></span>角色定妆</a>
       <a href="storyboard.html"><span class="dot done"></span>分镜</a>
       <a href="task-center.html"><span class="dot done"></span>画面生成</a>
-      <a href="voice-studio.html"><span class="dot done"></span>配音字幕</a>
+      <a href="voice-studio.html"><span class="dot done"></span>配音</a>
       <a href="compose-export.html" class="active"><span class="dot done"></span>合成导出</a>
     </div>
 
@@ -198,8 +198,10 @@
                   <code>POST /bgssai/user/films/publish-to-media/batch</code>（按集顺序，带进度）。
                   按钮有 loading；成功弹窗展示作品号与播放链接（可打开 / 复制），不出现媒体产品名；失败区分 Tube 不可达、业务码 6xxxx、成片未 READY。
                   进入页先调 <code>GET /bgssai/user/films/publish-to-media/preflight</code>：
-                  缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时黄条提示；
-                  缺令牌时「发布到 Tube」停用，并写明「未配置 Tube 令牌」，不编造令牌。
+                  缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时，只在「发布到 Tube」按钮旁短提示
+                  （「Tube 主机未配置」或「未配置 Tube 令牌」），不在成片页顶部出黄条，也不停用合成和提审，不编造令牌。
+                  本集尚未合成时没有成片行，预检不把 film not found 写进配置警告。
+                  剧集已合成或已有成片素材但缺少成片记录时，按钮旁另写「成片记录缺失，请重新合成」。
                   进入本页、切换剧集或刷新后，在 <code>films/precheck</code> 与 <code>films/detail</code>
                   返回前，当前剧集芯片与「合成状态 / 预检 / 风险」都显示「核对中 / 加载中」：
                   不把还没返回的预检画成「未就绪」，也不把剧集列表上的「已就绪 / 已通过」当作已核对。

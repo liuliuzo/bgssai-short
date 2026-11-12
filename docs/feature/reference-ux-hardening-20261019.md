@@ -8,7 +8,7 @@
 
 | 参考项目 | 核心借鉴能力 | 本仓硬化落点 |
 | --- | --- | --- |
-| `waoowaoo` | 右侧 AI 剧作协同抽屉、按模型能力自适应参数、首尾帧连续性模式 | `DramaAssistantDrawer.jsx`、`CinematographyHelper.js` 首尾帧衔接与镜头参数预检 |
+| `waoowaoo` | 右侧 AI 剧作协同抽屉、按模型能力自适应参数、首尾帧连续性模式 | `DramaAssistantDrawer.jsx`（经 CN TEXT 的多专家建议与确认写回，见 `drama-assistant-experts.md`）、`CinematographyHelper.js` 首尾帧衔接与镜头参数预检 |
 | `Jellyfish` | 结构化五步工作流、生成前统一镜头就绪度预检、角色/场景/道具一致性锚定 | `ShotConsistency.java` 锚点就绪度核查、`WorkStudio.jsx` 镜头就绪度诊断提示 |
 | `ArcReel` | 可审计可恢复管线、代价先于执行预估、剪映/FCPXML/EDL 工程导出与成片交接 | `modelPricing.js` 倍率漂移检测与批量 Token 估算、`FilmPublishToMediaService.java` 交付门禁 |
 | `LocalMiniDrama` | 列表与故事板画布双视图、破坏性操作前确认、阶段化失败提示与重试 | `WorkStudio.jsx` 费用确认弹窗、任务失败原因透出与单镜恢复 |

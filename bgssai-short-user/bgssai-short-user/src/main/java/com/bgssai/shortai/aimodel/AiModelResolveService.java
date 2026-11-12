@@ -1,11 +1,13 @@
 package com.bgssai.shortai.aimodel;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
@@ -42,6 +44,13 @@ public class AiModelResolveService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "ability_type required");
         }
         String ability = abilityType.trim();
+        if ("VIDEO".equals(ability) && ProductModelAlias.isCanonical(ability, modelCode)) {
+            AiModelConfig company = companyVideo(enabledForAbility(ability));
+            if (company == null) {
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, closed(ability, modelCode));
+            }
+            return company;
+        }
         modelCode = rewriteAlias(ability, modelCode);
         if (modelCode != null && ImageConditionedVideoProvider.MODEL_CODE.equalsIgnoreCase(modelCode.trim())) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, ImageConditionedVideoProtocol.UNAVAILABLE);
@@ -218,6 +227,50 @@ public class AiModelResolveService {
         }
         String base = ShortJson.text(ShortJson.map(row.getConfigJson()).get("base_url")).toLowerCase(java.util.Locale.ROOT);
         return com.bgssai.shortai.aiprovider.TokenHubClientSupport.isOfficialHub(base);
+    }
+
+    private List<AiModelConfig> enabledForAbility(String ability) {
+        AiModelConfigExample ex = new AiModelConfigExample();
+        ex.createCriteria().andAbilityTypeEqualTo(ability).andEnabledFlagEqualTo(1).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("default_flag desc, id asc");
+        return aiModelConfigMapper.selectByExample(ex);
+    }
+
+    /** Shared by the public catalog and explicit selection; never invent price or credentials. */
+    private AiModelConfig companyVideo(List<AiModelConfig> rows) {
+        AiModelConfig legacy = null;
+        if (rows == null) {
+            return null;
+        }
+        List<AiModelConfig> ordered = rows.stream().filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparingInt((AiModelConfig row) -> Integer.valueOf(1).equals(row.getDefaultFlag()) ? 0 : 1)
+                        .thenComparing(AiModelConfig::getId, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(AiModelConfig::getModelId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        for (AiModelConfig row : ordered) {
+            if (!"VIDEO".equals(row.getAbilityType()) || !Integer.valueOf(1).equals(row.getEnabledFlag())
+                    || !Integer.valueOf(0).equals(row.getDeletedFlag()) || !isHubConfig(row)
+                    || !domestic(row) || !aiProviderRegistry.resolvable(row)) {
+                continue;
+            }
+            if ("bgssai-video".equals(row.getModelCode())) {
+                return row;
+            }
+            if (legacy == null && "m-tokenhub-video-cogvideox".equals(row.getModelId())
+                    && "TENCENT_TOKENHUB".equals(row.getProviderCode())
+                    && "cogvideox".equals(row.getModelCode())
+                    && "cn".equals(ShortJson.text(ShortJson.map(row.getConfigJson()).get("hub")))
+                    && "bgssai-video".equals(ProductModelAlias.explicitAlias(row.getConfigJson()))) {
+                legacy = row;
+            }
+        }
+        if (legacy == null) {
+            return null;
+        }
+        AiModelConfig normalized = new AiModelConfig();
+        BeanUtils.copyProperties(legacy, normalized);
+        normalized.setModelCode("bgssai-video");
+        return normalized;
     }
 
     private AiModelConfig syntheticHubModel(String ability, String modelCode) {
@@ -413,8 +466,13 @@ public class AiModelResolveService {
         }
         ex.setOrderByClause("ability_type asc, default_flag desc, quality_level asc, id asc");
         List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+        AiModelConfig companyVideo = companyVideo(rows);
         java.util.Map<String, AiModelConfig> chosen = new java.util.LinkedHashMap<>();
         java.util.Map<String, ProductModelAlias.Face> faces = new java.util.LinkedHashMap<>();
+        if (companyVideo != null) {
+            chosen.put("bgssai-video", companyVideo);
+            faces.put("bgssai-video", ProductModelAlias.canonical("VIDEO"));
+        }
         if (rows != null) {
             for (AiModelConfig row : rows) {
                 if (!domestic(row) || imageConditioned(row) || !aiProviderRegistry.resolvable(row)) {
@@ -422,6 +480,14 @@ public class AiModelResolveService {
                 }
                 ProductModelAlias.Face face = ProductModelAlias.faceOf(
                         row.getAbilityType(), row.getModelCode(), row.getConfigJson());
+                if ("VIDEO".equals(row.getAbilityType()) && face != null
+                        && ProductModelAlias.isCanonical("VIDEO", face.code())) {
+                    if (companyVideo == null) {
+                        continue;
+                    }
+                    row = companyVideo;
+                    face = ProductModelAlias.canonical("VIDEO");
+                }
                 if (face == null || face.code() == null || face.code().isBlank() || chosen.containsKey(face.code())) {
                     continue;
                 }

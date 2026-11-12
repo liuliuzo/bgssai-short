@@ -75,9 +75,21 @@ INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e1e72ce67088450f822c', 'qa_short_a', 'qa_short_a', 'PM3nrTt9PIaRT3p8L07g', 'qa+short+a@bgssai-test.local', 'PLATFORM_ADMIN', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e47544decfbd4c74bfd2', 'qa_short_u', 'qa_short_u', 'Ckeh8Pqt3eSjN5BWaOh9', 'qa+short+u@bgssai-test.local', 'USER', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
 
--- 公司自托管模型行在共享 DML，default_flag=0，本文件不改默认、不写 ai.openai_compat.api_key。
+-- 公司自托管的文本、画面、配音默认不在本文件改写，也不写 ai.openai_compat.api_key。
+-- VIDEO 例外只在下面 2026-11-12 段：开发库把 bgssai-video 设为默认。生产种子没有这段。
 -- 直连 https://chat.bgssai.com/v1 前，管理端须同时清空 ai.tokenhub_cn.api_key 与 ai.tencent_tokenhub.api_key
 -- （本文件会把占位符写回这两行），再填写 ai.openai_compat.api_key。
+
+-- DEV only（2026-11-12）：页内「生成视频」未传模型，或中枢目录快照为空时，走公司模型 bgssai-video。
+-- 只改 ai_model_config 的 VIDEO 默认。不写密钥，不改集、分镜或成片素材。
+-- sql/prod/DML.sql 不包含本段。生产 VIDEO 默认仍是 m-tokenhub-video-minimax / minimax-video-h3。
+-- 历史行 m-tokenhub-video-cogvideox 若 model_code 仍是 cogvideox，下面的新 model_id 与它不冲突。
+-- 新装库里该编号已经落在历史 id 上时，唯一键更新那一行，不另插第二条 bgssai-video。
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-video-bgssai', 'VIDEO', 'TENCENT_TOKENHUB', 'bgssai-video', 'BGSSAI Video', 'STANDARD', 'PER_SECOND', 20, 1, 1, 900, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}') ON DUPLICATE KEY UPDATE `model_code` = 'bgssai-video', `provider_code` = 'TENCENT_TOKENHUB', `model_name` = 'BGSSAI Video', `enabled_flag` = 1, `deleted_flag` = 0, `timeout_sec` = 900, `default_flag` = 1, `config_json` = '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}';
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `model_id` = 'm-tokenhub-video-minimax';
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'VIDEO' AND `deleted_flag` = 0 AND `model_code` = 'cogvideox';
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'VIDEO' AND `deleted_flag` = 0 AND NOT (`provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video');
+UPDATE `ai_model_config` SET `provider_code` = 'TENCENT_TOKENHUB', `model_name` = 'BGSSAI Video', `enabled_flag` = 1, `deleted_flag` = 0, `timeout_sec` = 900, `default_flag` = 1, `config_json` = '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}' WHERE `ability_type` = 'VIDEO' AND `provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video' AND `deleted_flag` = 0;
 
 -- 图生视频 DEV 草案（契约 v0.2-validated-20261111-1137Z）。
 -- 默认关闭、单价 0、没有 base_url。供应商已有技术成片，但监听仍是模型机回环。
