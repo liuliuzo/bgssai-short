@@ -126,6 +126,7 @@ public class LookKnowledgeService {
             throw new BizException(CommonErrorCode.RULE_REJECT, "已归档的知识库不能再放素材");
         }
         LookImage.Decoded image = LookImage.decode(req.getImageBase64());
+        LookImage.Decoded poster = posterOf(req.getPosterBase64(), image.mimeType());
         String kind = normalizeKind(req.getMaterialKind());
         String name = req.getMaterialName() == null || req.getMaterialName().isBlank() ? "未命名定妆" : req.getMaterialName().trim();
         if (name.length() > 120) {
@@ -136,7 +137,7 @@ public class LookKnowledgeService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "说明最多 500 个字");
         }
         String angle = "CHARACTER".equals(kind) ? normalizeView(req.getViewAngle(), true) : null;
-        ShortLookMaterial saved = store(library, userId, kind, name, caption, image, angle, null, null);
+        ShortLookMaterial saved = store(library, userId, kind, name, caption, image, poster, angle, null, null);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("material_id", saved.getMaterialId());
         result.put("library_id", library.getLibraryId());
@@ -190,7 +191,7 @@ public class LookKnowledgeService {
         String angle = "CHARACTER".equals(normalizedKind) ? normalizeView(viewAngle, true) : null;
         replaceCardAngle(userId, cardId, angle);
         store(library, userId, normalizedKind, name == null || name.isBlank() ? "未命名定妆" : name.trim(),
-                blankToNull(caption), image, angle, cardId, assetId);
+                blankToNull(caption), image, null, angle, cardId, assetId);
     }
 
     public List<Map<String, Object>> views(String userId, String cardId) {
@@ -396,8 +397,31 @@ public class LookKnowledgeService {
         }
     }
 
+    static String posterKey(String storageKey) {
+        if (storageKey == null || storageKey.isBlank()) {
+            return null;
+        }
+        int slash = Math.max(storageKey.lastIndexOf('/'), storageKey.lastIndexOf('\\'));
+        int dot = storageKey.lastIndexOf('.');
+        if (dot > slash) {
+            return storageKey.substring(0, dot) + ".poster.jpg";
+        }
+        return storageKey + ".poster.jpg";
+    }
+
+    private static LookImage.Decoded posterOf(String raw, String mime) {
+        if (mime == null || !mime.startsWith("video/") || raw == null || raw.isBlank()) {
+            return null;
+        }
+        LookImage.Decoded poster = LookImage.decode(raw);
+        if (poster.mimeType().startsWith("video/")) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "视频封面需要是图片");
+        }
+        return poster;
+    }
+
     private ShortLookMaterial store(ShortLookLibrary library, String userId, String kind, String name, String caption,
-            LookImage.Decoded image, String viewAngle, String cardId, String assetId) {
+            LookImage.Decoded image, LookImage.Decoded poster, String viewAngle, String cardId, String assetId) {
         ShortLookMaterial row = new ShortLookMaterial();
         row.setMaterialId(ShortIds.id("lm-"));
         row.setLibraryId(library.getLibraryId());
@@ -413,11 +437,15 @@ public class LookKnowledgeService {
                 + LookImage.extension(image.mimeType());
         objectStorage.put(key, image.bytes(), image.mimeType());
         row.setStorageKey(key);
-        if (image.width() > 0) {
-            row.setWidth(image.width());
+        LookImage.Decoded measured = poster != null ? poster : image;
+        if (poster != null) {
+            objectStorage.put(posterKey(key), poster.bytes(), poster.mimeType());
         }
-        if (image.height() > 0) {
-            row.setHeight(image.height());
+        if (measured.width() > 0) {
+            row.setWidth(measured.width());
+        }
+        if (measured.height() > 0) {
+            row.setHeight(measured.height());
         }
         row.setFileSizeByte(image.bytes().length);
         row.setDeletedFlag(0);
@@ -425,7 +453,9 @@ public class LookKnowledgeService {
         materialMapper.insertSelective(row);
         ShortLookLibrary patch = new ShortLookLibrary();
         patch.setItemCount((library.getItemCount() == null ? 0 : library.getItemCount()) + 1);
-        patch.setUsageBytes((library.getUsageBytes() == null ? 0L : library.getUsageBytes()) + image.bytes().length);
+        int posterBytes = poster == null ? 0 : poster.bytes().length;
+        patch.setUsageBytes((library.getUsageBytes() == null ? 0L : library.getUsageBytes())
+                + image.bytes().length + posterBytes);
         patch.setUpdatedTime(new Date());
         ShortLookLibraryExample up = new ShortLookLibraryExample();
         up.createCriteria().andIdEqualTo(library.getId());
@@ -510,7 +540,11 @@ public class LookKnowledgeService {
             file.put("material_kind", material.getMaterialKind());
             file.put("view_angle", material.getViewAngle());
             file.put("view_name", material.getViewAngle() == null ? null : viewName(material.getViewAngle()));
+            file.put("mime_type", material.getMimeType());
             file.put("file_url", presign(material.getStorageKey()));
+            if (material.getMimeType() != null && material.getMimeType().startsWith("video/")) {
+                file.put("poster_url", presign(posterKey(material.getStorageKey())));
+            }
             file.put("width", material.getWidth());
             file.put("height", material.getHeight());
             files.add(file);

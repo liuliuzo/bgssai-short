@@ -1038,12 +1038,18 @@ public class ShortAiTaskWorker {
         if (hit == null) {
             return;
         }
-        byte[] bytes = objectStorage.get(hit.storageKey());
+        String storageKey = hit.storageKey();
+        String mime = hit.mimeType();
+        if (mime != null && mime.startsWith("video/")) {
+            storageKey = LookKnowledgeService.posterKey(storageKey);
+            mime = "image/jpeg";
+        }
+        byte[] bytes = objectStorage.get(storageKey);
         if (bytes == null || bytes.length == 0) {
             return;
         }
         request.getParams().put("image_base64", Base64.getEncoder().encodeToString(bytes));
-        request.getParams().put("image_mime", hit.mimeType());
+        request.getParams().put("image_mime", mime);
         request.getParams().put("image_reference", "subject");
         request.getParams().put("image_fidelity", 0.82);
         request.getParams().put("human_fidelity", 0.7);

@@ -31,6 +31,7 @@ public final class LookDtos {
         private String materialKind;
         private String viewAngle;
         private String imageBase64;
+        private String posterBase64;
 
         public String getLibraryId() { return libraryId; }
         public void setLibraryId(String libraryId) { this.libraryId = libraryId; }
@@ -46,5 +47,7 @@ public final class LookDtos {
         public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
         public String getImageBase64() { return imageBase64; }
         public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
+        public String getPosterBase64() { return posterBase64; }
+        public void setPosterBase64(String posterBase64) { this.posterBase64 = posterBase64; }
     }
 }
