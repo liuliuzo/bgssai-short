@@ -15,7 +15,7 @@ import {
 } from './homeWorkbench'
 import './home.css'
 
-const { Text, Link } = Typography
+const { Link } = Typography
 
 async function detailsFor(works) {
   const pairs = await Promise.all(works.map(async (work) => {
@@ -119,6 +119,12 @@ export default function Home() {
         <Link onClick={openSample}>{SAMPLE_FLOW_LABEL}</Link>
       </p>
 
+      {!loading && !loadError ? (
+        <div className="home-start">
+          <Button type="primary" onClick={() => navigate('/works?create=1')}>新建作品</Button>
+        </div>
+      ) : null}
+
       {loading ? <Skeleton active paragraph={{ rows: 4 }} /> : null}
 
       {!loading && loadError ? (
@@ -128,12 +134,6 @@ export default function Home() {
           message="作品列表暂时读不到"
           action={<Button size="small" onClick={load}>重试</Button>}
         />
-      ) : null}
-
-      {!loading && !loadError && works.length === 0 ? (
-        <div>
-          <Button type="primary" onClick={() => navigate('/works?create=1')}>新建作品</Button>
-        </div>
       ) : null}
 
       {!loading && !loadError && works.length > 0 ? (
@@ -148,22 +148,21 @@ export default function Home() {
                 <div className="home-work-body">
                   {cover ? <img className="home-cover" alt="" src={cover} /> : null}
                   <div className="home-work-main">
-                    <Text strong ellipsis={{ tooltip: work.work_title }}>{work.work_title || '未命名作品'}</Text>
-                    <div className="home-work-meta">
-                      <Text type="secondary">
-                        {[work.work_status_name, progress.label].filter(Boolean).join(' · ')}
-                      </Text>
-                    </div>
+                    <div className="home-work-title">{work.work_title || '未命名作品'}</div>
+                    {work.work_status_name ? <div className="home-work-status">{work.work_status_name}</div> : null}
+                    {progress.label ? <div className="home-work-progress-label">{progress.label}</div> : null}
                     {progress.percent == null ? null : (
                       <Progress percent={progress.percent} size="small" showInfo={false} />
                     )}
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={() => navigate(continuePath(work, episodes))}
-                    >
-                      继续创作
-                    </Button>
+                    <div className="home-work-actions">
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => navigate(continuePath(work, episodes))}
+                      >
+                        继续创作
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -178,9 +177,10 @@ export default function Home() {
           <div className="home-attention-grid">
             {attention.map((item) => (
               <Card key={item.key} size="small">
-                <Text>{item.title}</Text>
+                <div className="home-attention-name">{item.workTitle || item.title}</div>
+                {item.statusText ? <div className="home-attention-status">{item.statusText}</div> : null}
                 {item.detail ? (
-                  <div className="home-work-meta"><Text type="secondary">{item.detail}</Text></div>
+                  <div className="home-attention-detail">{item.detail}</div>
                 ) : null}
                 <div>
                   <Button type="link" size="small" style={{ paddingInline: 0 }} onClick={() => navigate(item.to)}>

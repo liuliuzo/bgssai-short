@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  classifyVideoDuration,
+  shotCardHeading,
   shotHasBoundVideo,
   shotHasPlayableVideo,
   shotCardStatusCode,
@@ -147,4 +149,30 @@ test('image failure without a video does not borrow the video chip', () => {
   assert.equal(shotCardStatusCode(row), 'IMAGE_READY')
   assert.equal(shotLatestTaskBadge(row).color, 'red')
   assert.equal(shotLatestTaskBadge(row).text, '图片 已失败')
+})
+
+test('a seed svg is not a playable video and is not labeled as a finished clip', () => {
+  const row = {
+    shot_no: 1,
+    shot_status: 'VIDEO_READY',
+    shot_duration_sec: 3,
+    video_url: "data:image/svg+xml;base64,PHN2ZyBmaWxsPScjN2MzYWVkJz48L3N2Zz4=",
+    video_asset_id: 'as-seed',
+    latest_task: { task_type: 'VIDEO', task_type_name: '视频', task_status: 'SUCCEEDED', task_status_name: '已成功' },
+  }
+  assert.equal(shotHasPlayableVideo(row), false)
+  assert.equal(shotHasBoundVideo(row), false)
+  assert.equal(shotLatestTaskBadge(row).text, '这是占位图，不能播放')
+  assert.match(shotCardHeading(row), /占位图，不能播放/)
+  assert.doesNotMatch(shotCardHeading(row), /成片/)
+})
+
+test('a frame with no duration is a broken clip, not a success', () => {
+  assert.equal(classifyVideoDuration(0, { hasFrame: true }), 'broken')
+  assert.equal(classifyVideoDuration(Number.NaN, { hasFrame: true }), 'broken')
+  assert.equal(classifyVideoDuration(6, { hasFrame: true }), 'ready')
+  assert.equal(classifyVideoDuration(Number.NaN, { hasFrame: false }), 'pending')
+  const row = { shot_no: 2, shot_status: 'VIDEO_READY', shot_duration_sec: 3, video_url: 'https://cdn.example/shot.mp4' }
+  assert.match(shotCardHeading(row, { playback: 'broken' }), /这段视频打不开/)
+  assert.match(shotCardHeading(row, { actualSec: 6 }), /成片 6秒 · 计划 3秒/)
 })

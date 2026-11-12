@@ -5,7 +5,7 @@ const listWorks = (params) => http.get('/user/short-works/list', params)
 const createWork = (body) => http.post('/user/short-works/create', body)
 const getWork = (workId) => http.get('/user/short-works/detail', { work_id: workId })
 const updateWork = (body) => http.post('/user/short-works/update', body)
-const archiveWork = (workId) => http.post('/user/short-works/archive', { work_id: workId, archived_flag: 1 })
+const archiveWork = (workId, archivedFlag = 1) => http.post('/user/short-works/archive', { work_id: workId, archived_flag: archivedFlag })
 
 const getOutline = (workId) => http.get('/user/scripts/outline', { work_id: workId })
 const generateOutline = (workId, modelCode) =>

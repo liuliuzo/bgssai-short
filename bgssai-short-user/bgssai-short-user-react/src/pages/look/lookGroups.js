@@ -1,3 +1,5 @@
+import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl.js'
+
 export const LOOK_ANGLES = [
   ['FRONT_FACE', '正脸'],
   ['FRONT', '前面'],
@@ -106,6 +108,35 @@ export function referenceLine(ref, textOnly) {
     return `「${library}」里的「${look}${angle}」和外观描述比较接近，生成时会用这张。可以换一张，或改成只按文字生成。`
   }
   return `生成时会用「${library}」里的「${look}${angle}」。`
+}
+
+function realCandidatePhotos(candidates) {
+  return (Array.isArray(candidates) ? candidates : []).filter((item) => isRealPhotoUrl(item && item.file_url))
+}
+
+/**
+ * Portrait generation follows the library hit. A selected card photo is not that hit.
+ * Seed SVG tiles are not photos, so they must not make the "no reference" line look false.
+ */
+export function cardGenerationCopy({ reference, refImageUrl, candidates, selectedAssetId, textOnly } = {}) {
+  if (textOnly) return referenceLine(reference, true)
+  const ref = reference || {}
+  if ((ref.used === 1 || ref.used === true) && ref.source && ref.source !== 'NONE') {
+    return referenceLine(ref)
+  }
+  const photos = realCandidatePhotos(candidates)
+  const selectedReal = photos.some((item) => item.asset_id && item.asset_id === selectedAssetId)
+    || isRealPhotoUrl(refImageUrl)
+  if (selectedReal) {
+    return '这张卡上已经选定了一张照片，但这次生成不会用它，只按外观描述。'
+  }
+  if (photos.length) {
+    return '这次没有参考图，只按外观描述生成。下面的照片还没选定，这次生成也不会用它们。'
+  }
+  if (isPlaceholderMediaUrl(refImageUrl)) {
+    return '这次没有参考图，只按外观描述生成。'
+  }
+  return referenceLine(ref)
 }
 
 export function groupLooks(materials) {

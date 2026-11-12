@@ -26,12 +26,16 @@
   gap: 12px;
 }
 
+.home-start {
+  display: flex;
+}
+
 .home-work-grid {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 }
 
 .home-attention-grid {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 .home-work-body {
@@ -53,6 +57,35 @@
 .home-work-main {
   flex: 1;
   min-width: 0;
+}
+
+.home-work-title,
+.home-attention-name {
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.home-work-status,
+.home-work-progress-label,
+.home-attention-status {
+  margin-top: 4px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.home-work-actions {
+  margin-top: 10px;
+}
+
+.home-attention-detail {
+  margin-top: 6px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .home-work-meta {

@@ -60,6 +60,7 @@
         接着做《退婚三年后她成了首富》。
         <a href="work-detail.html">看示例流程</a>
       </p>
+      <p><a class="btn btn-primary" href="work-create.html">新建作品</a></p>
 
       <style>
         .home-next { margin: 0 0 16px; font-size: 14px; line-height: 1.7; }
@@ -104,8 +105,9 @@
           <div style="margin-top:8px"><a href="compose-export.html">去查看</a></div>
         </div>
         <div class="card">
-          <div>退婚三年后她成了首富 · 生成失败</div>
-          <div class="wb-meta">生成超时</div>
+          <div>退婚三年后她成了首富</div>
+          <div class="wb-meta">生成失败</div>
+          <div class="wb-meta">刚才同时有别的操作在记账，请稍后重试</div>
           <div><a href="task-center.html">去处理</a></div>
         </div>
       </div>
@@ -115,8 +117,9 @@
         本页用已有接口，不新增字段：<code>GET /bgssai/user/short-works/list</code>、
         <code>GET /bgssai/user/short-works/detail</code>（集进度取 <code>episode_list</code>）、
         <code>GET /bgssai/user/ai-tasks/list?task_status=FAILED&amp;work_id=</code>。
-        没有 <code>cover_url</code> 时不画封面。没有作品时只放一个「新建作品」，链到
+        没有 <code>cover_url</code> 时不画封面。有作品时也放「新建作品」，链到
         <a href="work-create.html">work-create.html</a>（应用内为 <code>/works?create=1</code>）。
+        剧名、状态、进度分行，不把进度截成「成片 2/」。需要处理的卡片把作品名和状态分开，失败原因用中文。
         没有待处理项时不显示「需要处理」。身份只在顶栏，不在本页再放登录身份。
         「看示例流程」：本账号作品里有样例《悬疑法医手记》（<code>w-dm-005</code>）时打开该作品；
         没有时留在首页并提示当前账号没有示例作品。越权打开他人作品会返回 <code>4003</code> 并退出登录，

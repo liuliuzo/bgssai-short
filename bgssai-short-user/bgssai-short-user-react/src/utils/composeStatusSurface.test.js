@@ -98,3 +98,16 @@ test('a missing episode entry stays unsettled for both chip and pane', () => {
   assert.equal(surface.paneText.includes('未就绪'), false)
   assert.equal(claimsReadyPass(label), false)
 })
+
+test('an expired film is not offered as ready to compose', () => {
+  const surface = composeSurface({
+    settled: true,
+    film: { compose_status: 'NONE', expired_flag: 1 },
+    precheck: { ready: true, risk_level: 'PASS' },
+  })
+  assert.equal(surface.chipText, '成片已过期')
+  assert.match(surface.headline, /已过期/)
+  assert.match(surface.nextStep, /重新合成/)
+  assert.match(surface.paneText, /成片已过期/)
+  assert.equal(surface.allowReadyPassChip, false)
+})

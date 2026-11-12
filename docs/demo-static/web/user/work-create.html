@@ -63,13 +63,13 @@
 
             <div class="field">
               <label>剧名</label>
-              <input value="退婚三年后她成了首富" />
+              <input placeholder="例如：女帝归来" />
             </div>
 
             <div class="field">
               <label>一句话梗概（必填，提交即出全剧大纲）</label>
-              <textarea rows="3">被退婚的落魄千金三年后带着资本回归，收购前未婚夫的公司</textarea>
-              <div class="hint">这一句话是整部剧的种子。写清「谁、遇到什么、要做什么」，AI 出的大纲会准得多。</div>
+              <textarea rows="3" placeholder="例如：落魄千金三年后带着资本回来"></textarea>
+              <div class="hint">灰字只是例子，不是已经填好的内容。空着不能创建。写清「谁、遇到什么、要做什么」，大纲会准得多。</div>
             </div>
 
             <div class="note">
@@ -77,9 +77,13 @@
               不需要一上来就为整部剧做任何决定。
             </div>
 
+            <div class="note">
+              当前会按「复仇逆袭 · 3 集 × 60 秒 · 都市写实」创建。这是先试做的短设置。想做完整的 24 集 × 90 秒，打开高级设置再改。
+            </div>
+
             <details style="margin-top:14px">
               <summary style="cursor:pointer; font-size:13px; font-weight:600">
-                高级设置（默认折叠，不展开也能创建：复仇逆袭 · 24 集 × 90 秒 · 都市写实 · 爆款模板）
+                高级设置（不打开也会按上面这句话创建）
               </summary>
 
               <div class="grid grid-2" style="margin-top:12px">
@@ -107,14 +111,14 @@
 
               <div class="grid grid-2">
                 <div class="field">
-                  <label>集数（默认 24）</label>
-                  <input value="24" />
+                  <label>集数（先试做 3；接口省略时才是 24）</label>
+                  <input value="3" />
                   <div class="hint">创建后自动生成等量剧集占位，后续可增删</div>
                 </div>
                 <div class="field">
-                  <label>单集时长（默认 90 秒）</label>
+                  <label>单集时长（先试做 60 秒；接口省略时才是 90 秒）</label>
                   <div class="seg-ctl">
-                    <button>60 秒</button><button class="on">90 秒</button><button>120 秒</button>
+                    <button class="on">60 秒</button><button>90 秒</button><button>120 秒</button>
                   </div>
                   <div class="hint">时长决定节奏：剧本体检按此校验台词时长合计（正负 15%）</div>
                 </div>
@@ -241,8 +245,12 @@
             <div class="card-hd"><h2>请求体</h2></div>
             <div class="prompt mono" style="line-height:1.8">
               {<br />
-              &nbsp;&nbsp;"work_title": "退婚三年后她成了首富",<br />
-              &nbsp;&nbsp;"one_line_pitch": "被退婚的落魄千金三年后带资本回归"<br />
+              &nbsp;&nbsp;"work_title": "女帝归来",<br />
+              &nbsp;&nbsp;"one_line_pitch": "落魄千金三年后带着资本回来",<br />
+              &nbsp;&nbsp;"genre": "REVENGE",<br />
+              &nbsp;&nbsp;"episode_count": 3,<br />
+              &nbsp;&nbsp;"episode_duration_sec": 60,<br />
+              &nbsp;&nbsp;"visual_style": "MODERN_URBAN"<br />
               }
             </div>
             <div class="text-muted" style="font-size:11px; margin-top:8px">

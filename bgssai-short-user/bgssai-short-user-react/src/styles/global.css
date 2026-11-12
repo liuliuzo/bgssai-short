@@ -189,7 +189,14 @@ body,
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  --app-footer-clearance: 128px;
+  /* Footer is in the document flow under the routes, so content must not reserve a fake overlay. */
+  --app-footer-clearance: 0px;
+  --app-fab-clearance: 72px;
+}
+
+.app-shell .pa-layout.lg-bg {
+  min-height: 0;
+  height: 100%;
 }
 
 .app-routes {
