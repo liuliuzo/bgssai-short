@@ -72,6 +72,9 @@ public class AiProviderRegistry {
         if (direct != null && TencentTokenHubAiProvider.CODE.equals(direct.providerCode())) {
             return direct;
         }
+        if (direct != null && ImageConditionedVideoProvider.CODE.equals(direct.providerCode())) {
+            return direct;
+        }
 
         String baseUrl = ShortJson.text(cfg.get("base_url")).toLowerCase(Locale.ROOT);
         if (direct != null && OpenAiCompatibleAiProvider.CODE.equals(code)

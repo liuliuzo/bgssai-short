@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -119,6 +120,22 @@ class AiProviderRegistryTest {
         model.setConfigJson("{\"base_url\":\"https://api.hunyuan.cloud.tencent.com\"}");
         assertFalse(registry.resolvable(model));
         assertThrows(BizException.class, () -> registry.resolve(model));
+    }
+
+    @Test
+    void imageConditionedProviderIsNotReroutedToTheHub() {
+        ImageConditionedVideoProvider image = new ImageConditionedVideoProvider(new SysSecretReader(key -> ""),
+                call -> {
+                    throw new IOException("not called");
+                }, ms -> {
+                });
+        AiProviderRegistry registry = new AiProviderRegistry(List.of(image, hub()));
+        AiModelConfig model = new AiModelConfig();
+        model.setProviderCode(ImageConditionedVideoProvider.CODE);
+        model.setAbilityType("VIDEO");
+        model.setConfigJson("{\"base_url\":\"https://tokenhub.tencentmaas.com\"}");
+        assertEquals(ImageConditionedVideoProvider.CODE, registry.resolve(model).providerCode());
+        assertTrue(registry.resolvable(model));
     }
 
     private static TencentTokenHubAiProvider hub() {

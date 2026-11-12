@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
 import com.bgssai.shortai.aiprovider.CompanyCompatGateway;
+import com.bgssai.shortai.aiprovider.ImageConditionedVideoProtocol;
+import com.bgssai.shortai.aiprovider.ImageConditionedVideoProvider;
 import com.bgssai.shortai.aiprovider.OpenAiCompatibleAiProvider;
 import com.bgssai.shortai.aiprovider.TokenHubClientSupport;
 import com.bgssai.shortai.common.ApiResponse;
@@ -50,6 +52,9 @@ public class AiModelResolveService {
             return company;
         }
         modelCode = rewriteAlias(ability, modelCode);
+        if (modelCode != null && ImageConditionedVideoProvider.MODEL_CODE.equalsIgnoreCase(modelCode.trim())) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, ImageConditionedVideoProtocol.UNAVAILABLE);
+        }
         if (modelCode != null && !modelCode.isBlank()) {
             AiModelConfigExample ex = new AiModelConfigExample();
             ex.createCriteria()
@@ -125,7 +130,7 @@ public class AiModelResolveService {
         String exclude = excludeModelCode == null ? "" : excludeModelCode.trim();
         AiModelConfig alternate = null;
         for (AiModelConfig row : rows) {
-            if (!aiProviderRegistry.resolvable(row) || !domestic(row)) {
+            if (!aiProviderRegistry.resolvable(row) || !domestic(row) || imageConditioned(row)) {
                 continue;
             }
             if (!exclude.isBlank() && exclude.equals(row.getModelCode())) {
@@ -198,6 +203,11 @@ public class AiModelResolveService {
             }
         }
         return null;
+    }
+
+    private static boolean imageConditioned(AiModelConfig row) {
+        return row != null && ImageConditionedVideoProvider.CODE.equalsIgnoreCase(
+                row.getProviderCode() == null ? "" : row.getProviderCode().trim());
     }
 
     private static boolean domestic(AiModelConfig row) {
@@ -357,7 +367,7 @@ public class AiModelResolveService {
             return null;
         }
         for (AiModelConfig row : rows) {
-            if (domestic(row) && aiProviderRegistry.supports(row.getProviderCode())) {
+            if (domestic(row) && !imageConditioned(row) && aiProviderRegistry.supports(row.getProviderCode())) {
                 return row;
             }
         }
@@ -465,7 +475,7 @@ public class AiModelResolveService {
         }
         if (rows != null) {
             for (AiModelConfig row : rows) {
-                if (!domestic(row) || !aiProviderRegistry.resolvable(row)) {
+                if (!domestic(row) || imageConditioned(row) || !aiProviderRegistry.resolvable(row)) {
                     continue;
                 }
                 ProductModelAlias.Face face = ProductModelAlias.faceOf(

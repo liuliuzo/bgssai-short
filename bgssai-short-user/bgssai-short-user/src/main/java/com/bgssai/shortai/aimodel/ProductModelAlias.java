@@ -34,6 +34,7 @@ public final class ProductModelAlias {
             "bgssai-chat", BY_ABILITY.get("TEXT"),
             "bgssai-image", BY_ABILITY.get("IMAGE"),
             "bgssai-video", BY_ABILITY.get("VIDEO"),
+            "bgssai-video-i2v", BY_ABILITY.get("VIDEO"),
             "bgssai-tts", BY_ABILITY.get("VOICE"),
             "bgssai-asr", BY_ABILITY.get("ASR"),
             "bgssai-music", BY_ABILITY.get("MUSIC"));
@@ -60,6 +61,7 @@ public final class ProductModelAlias {
             + "|hailuo|wanx[a-z0-9._-]*|kolors|通义|文心"
             + "|hy-asr[a-z0-9._-]*|hy-vision[a-z0-9._-]*|hy-image[a-z0-9._-]*|hy-video[a-z0-9._-]*|hy-mt[a-z0-9._-]*"
             + "|hy[0-9][a-z0-9._-]*"
+            + "|lightricks|ltx-video[a-z0-9._-]*"
             + "|speech-[0-9][a-z0-9._-]*|image-01"
             + ")(?![a-z0-9])");
 
@@ -155,6 +157,8 @@ public final class ProductModelAlias {
             return text == null ? "" : text;
         }
         String out = VENDOR.matcher(text).replaceAll("");
+        out = out.replace("124.70.197.39", "").replace("172.31.10.199", "")
+                .replace("127.0.0.1", "").replace(":8007", "");
         out = out.replaceAll("：\\s*，", "，");
         out = out.replaceAll("：\\s*。", "。");
         out = out.replaceAll("（\\s*）", "");

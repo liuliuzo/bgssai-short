@@ -235,6 +235,25 @@
 
         <div class="card" style="max-width:780px; margin:14px auto 0">
           <div class="card-hd">
+            <h2>图生视频</h2>
+            <span class="text-muted" style="font-size:12px">AI生成 · BGSSAI Video</span>
+          </div>
+          <div class="row" style="padding:10px 14px; gap:8px; flex-wrap:wrap; font-size:12px">
+            <span class="chip">暂不可用。文生视频不受影响。</span>
+            <span class="text-muted">上传 PNG 或 JPEG，或选用本镜首帧。提示词 1-2000 字。宽 128-384、高 128-256，32 的倍数；帧数 9/17/25/33。超出不改成默认值。同类成片大约二十多分钟，页面继续查询，不要再次提交。</span>
+          </div>
+          <div class="text-muted" style="font-size:12px; padding:0 14px 12px; line-height:1.7">
+            查询 <code>GET /bgssai/user/video/image-to-video/capability</code>。
+            上传 <code>POST /bgssai/user/assets/images</code>。
+            提交 <code>POST /bgssai/user/video/image-to-video</code>。
+            状态 <code>GET /bgssai/user/video/image-to-video/{task_id}</code>。
+            原图仍可预览。完成前不取成片。没有供应商取消、过期或幂等键；结果不确定时不要自动再提交。
+            「构图OK，生成视频」仍是原来的文生视频，不把图片拼进提示词。
+          </div>
+        </div>
+
+        <div class="card" style="max-width:780px; margin:14px auto 0">
+          <div class="card-hd">
             <h2>资产一致性</h2>
             <span class="text-muted" style="font-size:12px">角色 / 场景 / 道具绑到勾选镜头</span>
             <span class="spacer"></span>
@@ -307,7 +326,7 @@
         顶部画面模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=IMAGE</code>，未点选时默认
         <code>bgssai-image</code>（BGSSAI Image）。VIDEO 模型来自
         <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
-        <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交；存在首帧时由服务端走图生视频，否则走文生视频。
+        <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交，走原来的文生视频。图生视频是本页独立面板，不因存在首帧而改道。
         未传 <code>model_code</code> 时，开发库解析到已启用的 <code>bgssai-video</code>（国内中枢，超时 900 秒），不落到 MiniMax 或 <code>cogvideox</code>。生产默认模型不因该种子改动。
         页面与接口不展示网关编号。
         首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经

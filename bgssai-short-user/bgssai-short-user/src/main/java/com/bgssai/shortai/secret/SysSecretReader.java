@@ -28,6 +28,9 @@ public class SysSecretReader {
 
     public static final String AI_VEO_API_KEY = "ai.veo.api_key";
 
+    /** Empty until an approved image-to-video route exists. Not a fallback for other keys. */
+    public static final String AI_IMAGE_TO_VIDEO_API_KEY = "ai.image_to_video.api_key";
+
     private final Function<String, String> lookup;
 
     @Autowired

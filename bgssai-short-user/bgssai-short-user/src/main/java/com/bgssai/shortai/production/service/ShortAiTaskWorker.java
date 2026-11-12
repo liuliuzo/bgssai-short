@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.aiprovider.AiProvider;
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
+import com.bgssai.shortai.aiprovider.ImageConditionedVideoProtocol;
 import com.bgssai.shortai.aiprovider.AiProviderRequest;
 import com.bgssai.shortai.aiprovider.AiProviderResult;
 import com.bgssai.shortai.aiprovider.FfmpegComposeProvider;
@@ -72,6 +73,7 @@ import com.bgssai.shortai.model.ShortSubtitleExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.EditBaselineCards;
+import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -87,6 +89,8 @@ public class ShortAiTaskWorker {
 
     @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
+    @Autowired(required = false)
+    private ImageToVideoService imageToVideoService;
     @Autowired
     private ShortWorkMapper shortWorkMapper;
     @Autowired
@@ -226,8 +230,21 @@ public class ShortAiTaskWorker {
                             "任务处于 RUNNING 但没有开始/入队时间，已判定为进程重启遗留孤儿任务")) noteTerminalFailure(task);
                     continue;
                 }
-                int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
                 long ageSec = (System.currentTimeMillis() - started.getTime()) / 1000L;
+                if (ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
+                    if (!ImageToVideoPolicy.hasProviderJob(task)) {
+                        if (ageSec >= 180) {
+                            failIfRunning(task, "I2V_AMBIGUOUS", ImageConditionedVideoProtocol.AMBIGUOUS);
+                        }
+                        continue;
+                    }
+                    int imageLimit = ImageConditionedVideoProtocol.DEADLINE_SEC + STALE_GRACE_SEC;
+                    if (ageSec >= imageLimit) {
+                        failIfRunning(task, "I2V_TIMEOUT", ImageConditionedVideoProtocol.TIMEOUT);
+                    }
+                    continue;
+                }
+                int limit = timeoutSecOf(task) + STALE_GRACE_SEC;
                 if (ageSec < limit) {
                     continue;
                 }
@@ -322,6 +339,9 @@ public class ShortAiTaskWorker {
     }
 
     private int timeoutSecOf(ShortAiTask task) {
+        if (ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
+            return ImageConditionedVideoProtocol.DEADLINE_SEC;
+        }
         int base;
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
@@ -350,6 +370,10 @@ public class ShortAiTaskWorker {
         executionUsage.set(0);
         com.bgssai.shortai.billing.UsageScope.set(task.getUserId(),task.getWorkId(),task.getTaskId());
         try {
+            if (ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
+                runImageToVideo(task);
+                return;
+            }
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             if (quotaConsumeService != null) {
                 int cost = task.getCostCent() == null ? 0 : task.getCostCent();
@@ -369,6 +393,20 @@ public class ShortAiTaskWorker {
         } finally {
             executionUsage.remove();
             com.bgssai.shortai.billing.UsageScope.clear();
+        }
+    }
+
+    private void runImageToVideo(ShortAiTask task) {
+        try {
+            if (imageToVideoService == null) {
+                failIfRunning(task, "I2V_UNAVAILABLE", ImageConditionedVideoProtocol.UNAVAILABLE);
+                return;
+            }
+            imageToVideoService.kickoff(task);
+        } catch (RuntimeException ex) {
+            log.warn("image-to-video kickoff failed taskId={} type={}",
+                    task.getTaskId(), ex.getClass().getSimpleName());
+            failIfRunning(task, "I2V_AMBIGUOUS", ImageConditionedVideoProtocol.AMBIGUOUS);
         }
     }
 

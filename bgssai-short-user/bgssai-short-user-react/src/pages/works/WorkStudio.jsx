@@ -3,6 +3,7 @@ import { publicModelText } from '../../publicModel'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
+import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
@@ -945,6 +946,7 @@ function StoryboardPane({ work, episodeId }) {
           </Paragraph>
         )}
       </Card>
+      <ImageToVideoPanel workId={work?.work_id} episodeId={episodeId} shots={rows} />
       {rows.map((row) => {
         const readiness = evaluateShotReadiness(row, panel)
         const taskBadge = shotLatestTaskBadge(row)
