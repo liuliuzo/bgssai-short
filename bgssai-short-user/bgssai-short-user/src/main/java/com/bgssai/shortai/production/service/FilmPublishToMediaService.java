@@ -163,33 +163,49 @@ public class FilmPublishToMediaService {
         boolean filmReady = false;
         boolean reviewApproved = false;
         boolean publishable = false;
+        boolean filmPresent = false;
+        boolean filmRecordMissing = false;
         String gateReason = "";
         Map<String, Object> publishLog = null;
 
         if ((episodeId != null && !episodeId.isBlank()) || (filmId != null && !filmId.isBlank())) {
             try {
-                ShortFilm film = resolveFilm(episodeId, filmId);
-                ShortEpisode episode = workAccessService.requireEpisode(film.getEpisodeId());
-                filmReady = "READY".equals(film.getComposeStatus())
-                        && (film.getExpiredFlag() == null || film.getExpiredFlag() == 0)
-                        && film.getFilmAssetId() != null && !film.getFilmAssetId().isBlank();
-                reviewApproved = "APPROVED".equals(episode.getReviewStatus());
-                try {
-                    assertPublishable(film, episode);
-                    publishable = true;
-                } catch (BizException gate) {
-                    gateReason = gate.getMessage();
-                    publishable = false;
+                ShortFilm film = findFilm(episodeId, filmId);
+                if (film == null) {
+                    AbsentFilm absent = describeAbsentFilm(episodeId, filmId);
+                    gateReason = absent.reason();
+                    filmRecordMissing = absent.recordMissing();
+                    if (absent.episode() != null) {
+                        reviewApproved = "APPROVED".equals(absent.episode().getReviewStatus());
+                        result.put("episode_id", absent.episode().getEpisodeId());
+                        result.put("work_id", absent.episode().getWorkId());
+                        result.put("compose_status", absent.episode().getComposeStatus());
+                        result.put("review_status", absent.episode().getReviewStatus());
+                    }
+                } else {
+                    filmPresent = true;
+                    ShortEpisode episode = workAccessService.requireEpisode(film.getEpisodeId());
+                    filmReady = "READY".equals(film.getComposeStatus())
+                            && (film.getExpiredFlag() == null || film.getExpiredFlag() == 0)
+                            && film.getFilmAssetId() != null && !film.getFilmAssetId().isBlank();
+                    reviewApproved = "APPROVED".equals(episode.getReviewStatus());
+                    try {
+                        assertPublishable(film, episode);
+                        publishable = true;
+                    } catch (BizException gate) {
+                        gateReason = gate.getMessage();
+                        publishable = false;
+                    }
+                    publishLog = buildPublishLog(film);
+                    result.put("film_id", film.getFilmId());
+                    result.put("episode_id", film.getEpisodeId());
+                    result.put("work_id", film.getWorkId());
+                    result.put("compose_status", film.getComposeStatus());
+                    result.put("review_status", episode.getReviewStatus());
                 }
-                publishLog = buildPublishLog(film);
-                result.put("film_id", film.getFilmId());
-                result.put("episode_id", film.getEpisodeId());
-                result.put("work_id", film.getWorkId());
-                result.put("compose_status", film.getComposeStatus());
-                result.put("review_status", episode.getReviewStatus());
             } catch (BizException ex) {
                 gateReason = ex.getMessage();
-                warnings.add(ex.getMessage());
+                publishable = false;
             }
         }
 
@@ -210,6 +226,8 @@ public class FilmPublishToMediaService {
             result.put("batch_candidate_list", preview);
         }
 
+        result.put("film_present", filmPresent);
+        result.put("film_record_missing", filmRecordMissing);
         result.put("film_ready", filmReady);
         result.put("review_approved", reviewApproved);
         result.put("publishable", publishable && config.ready());
@@ -480,6 +498,18 @@ public class FilmPublishToMediaService {
     }
 
     private ShortFilm resolveFilm(String episodeId, String filmId) {
+        ShortFilm film = findFilm(episodeId, filmId);
+        if (film == null) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, absentFilmPublishMessage(episodeId, filmId));
+        }
+        return film;
+    }
+
+    /**
+     * Lookup only. A missing row is null; preflight turns that into a publish gate
+     * and does not append it to config warnings.
+     */
+    private ShortFilm findFilm(String episodeId, String filmId) {
         if ((episodeId == null || episodeId.isBlank()) && (filmId == null || filmId.isBlank())) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "episode_id or film_id required");
         }
@@ -488,7 +518,7 @@ public class FilmPublishToMediaService {
             ex.createCriteria().andFilmIdEqualTo(filmId.trim()).andDeletedFlagEqualTo(0);
             ShortFilm film = shortFilmMapper.selectOneByExample(ex);
             if (film == null) {
-                throw new BizException(CommonErrorCode.RULE_REJECT, "film not found");
+                return null;
             }
             if (episodeId != null && !episodeId.isBlank() && !episodeId.trim().equals(film.getEpisodeId())) {
                 throw new BizException(CommonErrorCode.INVALID_PARAM, "episode_id does not match film");
@@ -498,11 +528,51 @@ public class FilmPublishToMediaService {
         ShortFilmExample ex = new ShortFilmExample();
         ex.createCriteria().andEpisodeIdEqualTo(episodeId.trim()).andDeletedFlagEqualTo(0);
         ex.setOrderByClause("id desc");
-        ShortFilm film = shortFilmMapper.selectOneByExample(ex);
-        if (film == null) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "film not found for episode");
+        return shortFilmMapper.selectOneByExample(ex);
+    }
+
+    /**
+     * A composable episode has no film row until compose succeeds. That is not a
+     * missing-record bug and must not be reported as "film not found".
+     * A row is missing only when the episode already claims a finished asset.
+     */
+    private AbsentFilm describeAbsentFilm(String episodeId, String filmId) {
+        boolean byFilmId = filmId != null && !filmId.isBlank();
+        if (byFilmId && (episodeId == null || episodeId.isBlank())) {
+            return new AbsentFilm("未找到该成片", true, null);
         }
-        return film;
+        if (episodeId == null || episodeId.isBlank()) {
+            return new AbsentFilm("未找到该成片", true, null);
+        }
+        ShortEpisode episode = workAccessService.requireEpisode(episodeId.trim());
+        if (expectsPersistedFilm(episode)) {
+            return new AbsentFilm("成片记录缺失，请重新合成后再发布", true, episode);
+        }
+        return new AbsentFilm("本集尚未合成，合成完成后再发布", false, episode);
+    }
+
+    static boolean expectsPersistedFilm(ShortEpisode episode) {
+        if (episode == null) {
+            return false;
+        }
+        if (episode.getFilmAssetId() != null && !episode.getFilmAssetId().isBlank()) {
+            return true;
+        }
+        return "READY".equals(episode.getComposeStatus());
+    }
+
+    private static String absentFilmPublishMessage(String episodeId, String filmId) {
+        boolean byFilmId = filmId != null && !filmId.isBlank();
+        if (byFilmId) {
+            return "未找到该成片";
+        }
+        if (episodeId == null || episodeId.isBlank()) {
+            return "未找到该成片";
+        }
+        return "本集尚未合成，没有可发布的成片";
+    }
+
+    private record AbsentFilm(String reason, boolean recordMissing, ShortEpisode episode) {
     }
 
     static boolean mediaIdConflicts(ShortFilm film, MediaIngestClient.IngestResult looked) {

@@ -24,6 +24,8 @@
      **主机**：发布目标是 bgssai-tube-pc 的 `POST /bgssai/user/tube/ingest/short`。本仓不分配、不编造主机 IP。dev/prod 的 base-url 是约定域名；地址为空时发布返回 `4006`，文案写明未配置，不返回作品号。域名不可达时返回 `502000` / `504000`，同样不写成成功。
   6. **失败**：tube 不可达 / 非 2xx / 响应业务码（含 6xxxx）/ 响应缺字段 → `BizException`（`502000`、`504000` 或 `4006`），文案可读，并写入 `media_last_error` + `media_publish_log`。
   7. **预检**：`GET .../preflight` 检查配置与闸门；传 `work_id` 时附带批量候选数；不调用 tube。
+     `warnings` 只写主机或令牌未配置。本集尚未合成时没有成片行，写入 `gate_reason`，不写 `film not found`，也不放进 `warnings`。
+     剧集已是 `READY` 或已有 `film_asset_id` 但没有成片行时，`film_record_missing=true`，请重新合成，不插入空成片。
   8. **UX**：发布 loading；成功展示作品号与播放链接（打开/复制），文案不写媒体产品名；成片区展示最近一次 publish_log。响应字段仍为 `media_id` / `play_url`。
   9. **可靠性**：瞬时 HTTP 5xx 在同一请求里可再试 1 次，幂等键不变。超时不再自动重 POST；结果记 UNKNOWN，下次发布先查状态。连接被明确拒绝仍是失败。
   10. **批量**：`POST .../batch` 按剧集顺序发布本作品全部 READY+APPROVED 成片，返回进度字段。
@@ -47,7 +49,7 @@
 2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 tube；文案可读。
 3. 重复点击发布不炸：已 READY 回放既有 `media_id`，不新建目录；落库最近一次结果与 `media_publish_log`。
 4. 用户端成片区有「发布到 Tube」与「批量发布 READY 集」；成功可打开/复制播放链接。
-5. 缺 base-url / ingest-token 时 preflight 警告。缺 ingest-token 时发布按钮停用，界面写明「未配置 Tube 令牌」，不编造令牌。
+5. 缺 base-url / ingest-token 时 preflight 的 `warnings` 只写配置。缺 ingest-token 时「发布到 Tube」停用，按钮旁写明「未配置 Tube 令牌」，不编造令牌，也不在成片页顶部出黄条。尚未合成不写入 `warnings`。
 6. 批量返回 `total` / `succeeded` / `failed` / `progress_percent` / `item_list`。
 7. 单测覆盖 payload、闸门、重试；本地 media 404 不影响单测。
 8. 文档明确 unpublish 为 skip。
@@ -131,9 +133,13 @@
 
 查询参数：`episode_id` / `film_id` / `work_id`（均可选）。不调用 tube。
 
-字段：`config_ready` `base_url_configured` `token_configured` `film_ready` `review_approved`
-`publishable` `gate_reason` `warnings[]`，可选 `publish_log`；带 `work_id` 时另有
+字段：`config_ready` `base_url_configured` `token_configured` `film_present` `film_record_missing`
+`film_ready` `review_approved` `publishable` `gate_reason` `warnings[]`，可选 `publish_log`；带 `work_id` 时另有
 `batch_ready_count` `batch_candidate_list`。
+
+`warnings` 只放主机或令牌未配置。本集尚未合成时 `film_present=false`、`film_record_missing=false`，
+`gate_reason` 为「本集尚未合成，合成完成后再发布」，不出现 `film not found`。剧集已是 `READY` 或已有
+`film_asset_id` 但没有成片行时，`film_record_missing=true`，`gate_reason` 为「成片记录缺失，请重新合成后再发布」。
 
 ### short → media（共享 ingest 契约，MUST 逐字段一致）
 
@@ -209,7 +215,7 @@ media 侧暂无 `unpublish` / `retract` 共享契约 → **本仓不实现**。�
 
 ## 八、联调与验证步骤（smoke）
 
-1. 配置 `bgssai.tube.base-url` / `ingest-token`（或 Admin 写 `sys_secret`）；缺配置时 preflight 黄条。
+1. 配置 `bgssai.tube.base-url` / `ingest-token`（或 Admin 写 `sys_secret`）；缺令牌时「发布到 Tube」停用，按钮旁短提示「未配置 Tube 令牌」，成片页顶部无黄条，合成与提审仍可用。
 2. READY+APPROVED 单集发布：成功可打开/复制 `play_url`。
 3. 未 READY / 未过审：拒绝且不调 tube。
 4. Tube 宕机：可读 `502000`，库表有 `media_last_error` / `media_publish_log`。

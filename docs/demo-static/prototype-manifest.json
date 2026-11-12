@@ -5,7 +5,7 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "f4c0994bc3746ee7b393dca6c6fe4c3fc2dc0678349bb5eeab0217708b13553b",
+  "prototype_bundle_digest": "735a28fb1463dee9ceec9151bb7260567e2e712fe9df7f93eba0b2bf6c2dca01",
   "code_contract_digest": "4a740cd22733b9fe5605fe2fa9ce2425e77b2ce5d53f32626c174a85fe5f78cb",
   "api_endpoints": [
     "/api/cs/support/callback",
@@ -568,7 +568,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "6cbcdca8b01539d5ad10252c012131ec454b76754b1204aded5205b466b82265"
+      "sha256": "154b4cf39b415863e8bf89ab67517b8ef62c5368a732e84d20aeb240dc12bf47"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -808,7 +808,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/FilmPublishToMediaService.java",
-      "sha256": "e3d3262707a603ad2b6ad82482decd9cf26be4c2ded96b82c4f5006606dfe940"
+      "sha256": "58eaaa6e2e5a9949694ae4633e2c1056b9e0b1e922c29248e90d5640dbbc89b0"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/FilmService.java",
@@ -1903,7 +1903,7 @@
     },
     {
       "path": "docs/demo-static/web/user/compose-export.html",
-      "sha256": "f6dfce3f4689f41c716d10947e2fa81a5a17a2b3054f8a41d6a310842466ee7f",
+      "sha256": "5509514daf58d1dd24ef0e05342420ce75ed99f74b510f30c6767d4592553b07",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

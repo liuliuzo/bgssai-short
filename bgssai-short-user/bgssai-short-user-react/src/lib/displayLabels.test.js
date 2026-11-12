@@ -121,6 +121,16 @@ test('sanitizeTubeWarning hides ingest-token key', () => {
   assert.match(out, /Tube 令牌/)
 })
 
+test('sanitizeTubeWarning drops film-not-found so it cannot be joined into the token hint', () => {
+  assert.equal(sanitizeTubeWarning('film not found for episode'), '')
+  const joined = ['未配置 Tube 令牌：请在环境配置或管理端写入令牌后再发布', 'film not found for episode']
+    .map(sanitizeTubeWarning)
+    .filter(Boolean)
+    .join('；')
+  assert.equal(joined.includes('film not found'), false)
+  assert.match(joined, /Tube 令牌/)
+})
+
 test('subscription and account enums', () => {
   assert.equal(labelOf(PLAN_CODE_LABEL, 'FREE'), '免费')
   assert.equal(labelOf(PLAN_CODE_LABEL, 'PRO'), '专业')

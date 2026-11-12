@@ -273,6 +273,7 @@ export function sanitizeTubeWarning(text) {
   if (/bgssai\.tube\.base-url|base-url/i.test(s)) {
     return 'Tube 主机未配置：发布会失败。请联系管理员完成接入后再发布'
   }
+  if (/film not found/i.test(s)) return ''
   return s
 }
 
