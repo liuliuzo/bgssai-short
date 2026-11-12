@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Card, Image, Input, Modal, Space, Switch, Typography, message } from 'antd'
+import { Button, Card, Image, Input, Modal, Skeleton, Space, Switch, Typography, message } from 'antd'
 import { Link, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import { safeReturnPath } from '../../lib/safeReturn'
 import { LOOK_ANGLES, arrangeAngle, groupLooks } from './lookGroups'
 import { laplacianScore, posterTimes } from './lookPoster'
 
-const { Text } = Typography
+const { Paragraph, Text } = Typography
 
 function readFile(file) {
   return new Promise((resolve, reject) => {
@@ -187,6 +187,7 @@ export default function LookLibraryPage() {
   const back = safeReturnPath(params.get('return'))
   const backLabel = back && back.includes('/characters') ? '返回角色定妆' : '返回'
   const [libraries, setLibraries] = useState([])
+  const [librariesReady, setLibrariesReady] = useState(false)
   const [libraryId, setLibraryId] = useState()
   const [creating, setCreating] = useState(false)
   const [libraryName, setLibraryName] = useState('')
@@ -198,11 +199,15 @@ export default function LookLibraryPage() {
   const uploadTarget = useRef(null)
 
   const load = useCallback(async () => {
-    const { data } = await productionApi.listLookLibraries()
-    const list = data?.result?.library_list || []
-    setLibraries(list)
-    setLibraryId((current) => current || (list[0] && list[0].library_id))
-    return list
+    try {
+      const { data } = await productionApi.listLookLibraries()
+      const list = data?.result?.library_list || []
+      setLibraries(list)
+      setLibraryId((current) => current || (list[0] && list[0].library_id))
+      return list
+    } finally {
+      setLibrariesReady(true)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -505,9 +510,15 @@ export default function LookLibraryPage() {
         </Space>
       )}
     >
-      <Text type="secondary">这里管理可以反复使用的造型。给角色定妆时，在角色卡上就能直接选。每个造型按正脸、前面、背面、侧面排好，点照片可以看大图。</Text>
+      <Paragraph style={{ marginBottom: 8, color: '#334155', lineHeight: 1.7 }}>
+        这里放可以反复使用的造型。给角色定妆时，在角色卡上就能直接选。
+      </Paragraph>
+      <Paragraph style={{ marginBottom: 0, color: '#334155', lineHeight: 1.7 }}>
+        每个造型按正脸、前面、背面、侧面排好。点照片可以看大图。
+      </Paragraph>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 16 }}>
-        <div style={{ width: 200, flexShrink: 0 }}>
+        <div style={{ width: 220, flexShrink: 0 }}>
+          {!librariesReady ? <Skeleton active title={false} paragraph={{ rows: 4 }} /> : null}
           {libraries.map((item) => (
             <button
               key={item.library_id}
@@ -532,7 +543,7 @@ export default function LookLibraryPage() {
               </Text>
             </button>
           ))}
-          {!libraries.length ? <Text type="secondary">还没有知识库也没关系。在角色卡上上传照片，会自动放进「我的定妆」。</Text> : null}
+          {librariesReady && !libraries.length ? <Text>还没有知识库也没关系。在角色卡上上传照片，会自动放进「我的定妆」。</Text> : null}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           {current ? (
@@ -562,7 +573,9 @@ export default function LookLibraryPage() {
               {looks.map((look) => renderLook(look, false))}
               {!looks.length && !visibleDrafts.length ? <Text type="secondary">这个库还没有造型。写一个名称，再往四面里放照片。</Text> : null}
             </Space>
-          ) : <Text type="secondary">先在左边选一个知识库。</Text>}
+          ) : librariesReady ? (
+            <Text>还没有打开知识库。左边列出库之后会自动打开第一个；也可以点「新建知识库」。</Text>
+          ) : <Skeleton active paragraph={{ rows: 6 }} />}
         </div>
       </div>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4" hidden onChange={onFile} />

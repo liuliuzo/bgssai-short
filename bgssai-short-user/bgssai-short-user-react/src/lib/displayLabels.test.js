@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { creatorToolLabel } from '../publicModel.js'
 import {
   labelOf,
   ROLE_LABEL,
@@ -112,6 +113,16 @@ test('friendly fail reason scrubs TLS English', () => {
   assert.doesNotMatch(friendlyFailReason('tokenhub gateway down'), /tokenhub/i)
   assert.doesNotMatch(friendlyFailReason('模型服务暂未开通：deepseek，请稍后重试'), /deepseek/i)
   assert.match(friendlyFailReason('模型服务暂未开通：deepseek，请稍后重试'), /模型服务暂未开通/)
+  assert.equal(
+    friendlyFailReason('quota concurrent update, retry'),
+    '刚才同时有别的操作在记账，请稍后重试',
+  )
+  assert.doesNotMatch(friendlyFailReason('quota concurrent update, retry'), /quota/i)
+})
+
+test('compose confirm names the local stitch in creator language', () => {
+  assert.equal(creatorToolLabel('ffmpeg-concat', 'COMPOSE'), '把各镜拼成一条成片')
+  assert.equal(creatorToolLabel('bgssai-chat', 'TEXT'), 'BGSSAI Chat')
 })
 
 test('sanitizeTubeWarning hides ingest-token key', () => {

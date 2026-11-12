@@ -29,6 +29,15 @@ export function publicModelCode(value, ability) {
   return raw
 }
 
+/** Confirm dialogs name the job in creator language. Local concat is not a model. */
+export function creatorToolLabel(value, taskType) {
+  const raw = String(value || '').trim()
+  const type = String(taskType || '').trim().toUpperCase()
+  const lower = raw.toLowerCase()
+  if (type === 'COMPOSE' || lower.includes('ffmpeg')) return '把各镜拼成一条成片'
+  return publicModelText(raw, taskType)
+}
+
 export function publicModelText(value, ability) {
   const raw = String(value || '').trim()
   if (!raw) return ''

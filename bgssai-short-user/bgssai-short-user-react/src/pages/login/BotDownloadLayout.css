@@ -1,5 +1,5 @@
 /* 登录 / 注册 / 下载页顶栏：白底一条，左边品牌标志 + 产品名，右边说明或下载入口（官网、境内 Chat 同款）。 */
-.bot-download-layout { min-height: calc(100svh - var(--icp-footer-height, 0px)); background: var(--lg-bg-page, #f6f7f9); }
+.bot-download-layout { min-height: 0; background: var(--lg-bg-page, #f6f7f9); }
 .bot-download-nav { position: relative; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-sizing: border-box; width: 100%; min-height: 64px; padding: 10px clamp(16px, 4vw, 48px); border-bottom: 1px solid var(--lg-border, #e4e7ed); background: #fff; color: var(--lg-text, #0f172a); }
 .bot-download-brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .bot-download-brand img { display: block; width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; animation: bot-mark-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -11,5 +11,5 @@
 .bot-download-nav a:hover { color: var(--lg-accent, #0d6efd); border-color: currentColor; }
 .bot-download-nav a:focus-visible { outline: 2px solid var(--lg-accent, #0d6efd); outline-offset: 3px; }
 .bot-download-nav a svg { width: 16px; height: 16px; flex-shrink: 0; }
-.bot-download-content > :is(.login-page, .login-shell, .auth-page, .auth-screen, .lg-page, .lg-auth, .th-auth, .shell-login) { min-height: calc(100svh - 65px - var(--icp-footer-height, 0px)); }
-@media (max-width: 480px) { .bot-download-nav { gap: 8px; min-height: 56px; padding: 8px 16px; } .bot-download-nav a { padding-inline: 12px; } .bot-download-content > :is(.login-page, .login-shell, .auth-page, .auth-screen, .lg-page, .lg-auth, .th-auth, .shell-login) { min-height: calc(100svh - 57px - var(--icp-footer-height, 0px)); } }
+.bot-download-content > :is(.login-page, .login-shell, .auth-page, .auth-screen, .lg-page, .lg-auth, .th-auth, .shell-login) { min-height: 0; }
+@media (max-width: 480px) { .bot-download-nav { gap: 8px; min-height: 56px; padding: 8px 16px; } .bot-download-nav a { padding-inline: 12px; } .bot-download-content > :is(.login-page, .login-shell, .auth-page, .auth-screen, .lg-page, .lg-auth, .th-auth, .shell-login) { min-height: 0; } }

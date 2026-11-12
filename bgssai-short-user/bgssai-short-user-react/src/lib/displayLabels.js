@@ -260,6 +260,9 @@ export function friendlyFailReason(raw) {
   if (/token\s*-?\s*hub/i.test(msg)) {
     return '模型暂时不可用，请稍后重试或更换模型'
   }
+  if (/quota concurrent update/i.test(msg)) {
+    return '刚才同时有别的操作在记账，请稍后重试'
+  }
   return scrubVendorText(msg.replace(/media_id/gi, '作品号'))
 }
 

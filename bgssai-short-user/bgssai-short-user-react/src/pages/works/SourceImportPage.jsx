@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Card, Checkbox, Input, InputNumber, Select, Space, Table, Tag, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
 
@@ -24,6 +24,8 @@ export default function SourceImportPage({ work }) {
   const [targetCount, setTargetCount] = useState(6)
   const [estimate, setEstimate] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [fileLabel, setFileLabel] = useState('还没有选择文件')
+  const fileRef = useRef(null)
 
   const workId = work?.work_id
 
@@ -87,7 +89,11 @@ export default function SourceImportPage({ work }) {
   // 浏览器端读文件转文本再提交，后端不必为一段文字多维护一条 multipart 通道
   const pickFile = (event) => {
     const file = event.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      setFileLabel('还没有选择文件')
+      return
+    }
+    setFileLabel(file.name)
     const reader = new FileReader()
     reader.onload = () => {
       setSourceContent(String(reader.result || ''))
@@ -176,7 +182,9 @@ export default function SourceImportPage({ work }) {
             value={sourceTitle}
             onChange={(e) => setSourceTitle(e.target.value)}
           />
-          <input type="file" accept=".txt,.md" onChange={pickFile} />
+          <Button onClick={() => fileRef.current?.click()}>选择 txt 或 md 文件</Button>
+          <Text>{fileLabel}</Text>
+          <input ref={fileRef} type="file" accept=".txt,.md" hidden onChange={pickFile} />
         </Space>
         <TextArea
           rows={8}

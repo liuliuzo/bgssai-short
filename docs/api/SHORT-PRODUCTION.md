@@ -50,8 +50,9 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
   "one_line_pitch": "被退婚的落魄千金三年后带着资本回归" }
 ```
 
-可选：`genre` `episode_count` `episode_duration_sec` `visual_style`。默认 `REVENGE` / 24 / 90 /
-`MODERN_URBAN`，画幅固定 `VERTICAL_9_16`。创建后插入等量剧集占位，并入队 `TEXT` 大纲任务。
+可选：`genre` `episode_count` `episode_duration_sec` `visual_style`。请求省略时默认 `REVENGE` / 24 / 90 /
+`MODERN_URBAN`，画幅固定 `VERTICAL_9_16`。用户端新建页会显式提交先试做的 3 集 × 60 秒，不依赖这组省略默认。
+创建后插入等量剧集占位，并入队 `TEXT` 大纲任务。
 
 文本、图片或配音模型在当前网关不可用时，整次创建回滚，返回 `4014`。`message` 点明不能开始的步骤，
 例如「以下步骤现在不能开始：大纲、剧本、分镜（模型服务暂未开通）；配音（该模型暂未开放：BGSSAI TTS）。请稍后重试」。

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { arrangeAngle, groupLooks, groupLooksOfKind, lookCover, referenceLine } from './lookGroups.js'
+import { arrangeAngle, cardGenerationCopy, groupLooks, groupLooksOfKind, lookCover, referenceLine } from './lookGroups.js'
 import { laplacianScore, posterTimes } from './lookPoster.js'
 
 test('同一造型的四面归到一张卡上', () => {
@@ -34,6 +34,27 @@ test('生成前的说明写清用哪张，或写清不用图', () => {
   assert.match(referenceLine({ used: 1, source: 'NAME', library_name: '礼服装', material_name: '红礼服' }), /比较接近/)
   assert.equal(referenceLine({ used: 1, source: 'CARD', library_name: '我的定妆', material_name: '沈知微' }, true),
     '这次不使用参考图，只按外观描述生成。')
+  assert.equal(cardGenerationCopy({
+    reference: { used: 1, source: 'CARD', library_name: '我的定妆', material_name: '沈知微', view_name: '正脸' },
+  }), '生成时会用「我的定妆」里的「沈知微 · 正脸」。')
+  assert.equal(cardGenerationCopy({
+    reference: { used: 0, source: 'NONE' },
+    refImageUrl: "data:image/svg+xml;base64,PHN2Zw==",
+  }), '这次没有参考图，只按外观描述生成。')
+  assert.match(cardGenerationCopy({
+    reference: { used: 0, source: 'NONE' },
+    candidates: [{ asset_id: 'a', file_url: 'https://cdn.example/hall.jpg' }],
+  }), /还没选定/)
+  assert.match(cardGenerationCopy({
+    reference: { used: 0, source: 'NONE' },
+    refImageUrl: 'https://cdn.example/hall.jpg',
+    selectedAssetId: 'a',
+    candidates: [{ asset_id: 'a', file_url: 'https://cdn.example/hall.jpg' }],
+  }), /已经选定了一张照片/)
+  assert.doesNotMatch(cardGenerationCopy({
+    reference: { used: 0, source: 'NONE' },
+    refImageUrl: 'https://cdn.example/hall.jpg',
+  }), /^这次没有参考图/)
 })
 
 test('没有角度的素材单独放着', () => {

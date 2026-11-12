@@ -1,5 +1,6 @@
-import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
-import { publicModelText } from '../../publicModel'
+import { modelPricingCompactLabel, modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
+import { creatorToolLabel, publicModelText } from '../../publicModel'
+import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Button, Card, Checkbox, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
@@ -15,11 +16,11 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
-import { shotCardStatusCode, shotHasPlayableVideo, shotLatestTaskBadge } from './shotCardMedia'
+import { shotCardHeading, shotLatestTaskBadge } from './shotCardMedia'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
 import LookSlot from '../look/LookSlot'
 import LibraryLookPicker, { ReferenceNotice } from '../look/LibraryLookPicker'
-import { LOOK_ANGLES, referenceLine } from '../look/lookGroups'
+import { LOOK_ANGLES, cardGenerationCopy } from '../look/lookGroups'
 import {
   appendPreset,
   assetBinderPlaceholder,
@@ -35,7 +36,6 @@ import {
   selectionFeeLine,
   shotCardContainment,
   shotPresetGroups,
-  shotTimingLabel,
   shotVideoDialogProps,
   tokenAmountLabel,
 } from './studioListUx'
@@ -47,7 +47,7 @@ import {
 } from '../../utils/CinematographyHelper'
 import { composePublishHints, publishStatusAlertType, tubeTokenMissingMessage } from '../../utils/baselineCards'
 import {
-  labelOf, SCRIPT_STATUS_LABEL, SHOT_STATUS_LABEL, TARGET_TYPE_LABEL,
+  labelOf, SCRIPT_STATUS_LABEL, TARGET_TYPE_LABEL,
   localizePromptShotSize, friendlyFailReason, visibleFailReason,
 } from '../../lib/displayLabels'
 import {
@@ -76,7 +76,7 @@ function confirmEstimate(est, title) {
         <div>
           <p>预计费用 {formatYuan(est.estimated_cost_cent)} 元</p>
           <p>余额可用 {formatYuan(est.available_cent)} 元</p>
-          <p>共 {est.task_count || 0} 项（{publicModelText(est.display_name || est.model_code, est.task_type) || '-'}）</p>
+          <p>共 {est.task_count || 0} 项（{creatorToolLabel(est.display_name || est.model_code, est.task_type) || '-'}）</p>
           {breakdown ? <p>{breakdown}{(est.shot_cost_list || []).length > 8 ? '…' : ''}</p> : null}
         </div>
       ),
@@ -180,6 +180,7 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
   const [textModelCode, setTextModelCode] = useState()
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [openScenes, setOpenScenes] = useState([])
 
   const load = useCallback(async () => {
     if (!work?.work_id) return
@@ -298,16 +299,45 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
   const scenes = script?.scene_list || []
   const rhythm = script?.rhythm_check || {}
 
+  const seenEpisode = useRef(episodeId)
+  const scriptAtSwitch = useRef(null)
+  useEffect(() => {
+    const list = script?.scene_list || []
+    if (seenEpisode.current !== episodeId) {
+      seenEpisode.current = episodeId
+      scriptAtSwitch.current = script
+      setOpenScenes([])
+      return
+    }
+    if (script && script === scriptAtSwitch.current) return
+    if (!list.length) return
+    const first = String(list[0].scene_no ?? 0)
+    setOpenScenes((current) => (current.length ? current : [first]))
+  }, [episodeId, script])
+
+  const revealScene = (scene) => {
+    const key = String(scene.scene_no)
+    setOpenScenes((current) => (current.includes(key) ? current : current.concat(key)))
+    window.setTimeout(() => {
+      document.getElementById(`script-scene-${key}`)?.scrollIntoView({ block: 'start' })
+    }, 60)
+  }
+
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <div>
+        <Title level={5} style={{ margin: 0 }}>总剧本</Title>
+        <Paragraph style={{ marginBottom: 0, color: '#334155' }}>上面是全集大纲，下面是当前这一集的剧本。点场次可以滚到那一场。</Paragraph>
+      </div>
       <Card loading={loading || generating} title="全集大纲" extra={<Space>
         <Select
           placeholder="文本模型"
           value={textModelCode}
           onChange={setTextModelCode}
-          style={{ width: 220 }}
+          style={{ width: 240 }}
+          popupMatchSelectWidth={false}
           disabled={generating}
-          options={textModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+          options={textModels.map((m) => ({ value: m.model_code, label: modelPricingCompactLabel(m), title: modelPricingLabel(m) }))}
         />
         <Button onClick={runOutline} loading={generating}>生成大纲</Button>
         <Button type="primary" onClick={saveOutline} disabled={generating}>保存大纲</Button>
@@ -316,12 +346,14 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
           rowKey="episode_no"
           size="small"
           pagination={false}
+          tableLayout="fixed"
           dataSource={outline}
           columns={[
-            { title: '集', dataIndex: 'episode_no', width: 60 },
+            { title: '集', dataIndex: 'episode_no', width: 64 },
             {
               title: '标题',
               dataIndex: 'episode_title',
+              width: 180,
               render: (v, row, i) => <Input value={v} onChange={(e) => {
                 const next = outline.slice()
                 next[i] = { ...row, episode_title: e.target.value }
@@ -366,8 +398,9 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
           placeholder="文本模型"
           value={textModelCode}
           onChange={setTextModelCode}
-          style={{ width: 220 }}
-          options={textModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+          style={{ width: 240 }}
+          popupMatchSelectWidth={false}
+          options={textModels.map((m) => ({ value: m.model_code, label: modelPricingCompactLabel(m), title: modelPricingLabel(m) }))}
         />
         <Button onClick={runScript}>生成剧本</Button>
         <Button onClick={saveScript}>保存</Button>
@@ -377,25 +410,44 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
         <Paragraph type="secondary">
           状态 {labelOf(SCRIPT_STATUS_LABEL, script?.script_status, script?.script_status || '-')} / 版本 {script?.script_version || 0} / 节奏总分 {rhythm.total_score ?? script?.total_score ?? '-'}
         </Paragraph>
+        {scenes.length ? (
+          <Space wrap style={{ marginBottom: 8 }}>
+            {scenes.map((scene) => (
+              <Button key={scene.scene_no} size="small" onClick={() => revealScene(scene)}>
+                场 {scene.scene_no}
+              </Button>
+            ))}
+          </Space>
+        ) : <Text type="secondary">这一集还没有场次。</Text>}
         <Collapse
+          activeKey={openScenes}
+          onChange={(keys) => setOpenScenes(Array.isArray(keys) ? keys : [keys])}
           items={scenes.map((scene, si) => ({
             key: String(scene.scene_no || si),
             label: `场 ${scene.scene_no} ${scene.scene_location || ''} ${scene.scene_summary || ''}`,
-            children: (scene.line_list || []).map((line, li) => (
-              <Input.TextArea
-                key={`${si}-${li}`}
-                style={{ marginBottom: 8 }}
-                value={line.line_text}
-                onChange={(e) => {
-                  const next = scenes.map((s, i) => {
-                    if (i !== si) return s
-                    const lineList = (s.line_list || []).map((ln, j) => (j === li ? { ...ln, line_text: e.target.value } : ln))
-                    return { ...s, line_list: lineList }
-                  })
-                  setScript({ ...script, scene_list: next })
-                }}
-              />
-            )),
+            children: (
+              <div id={`script-scene-${scene.scene_no || si}`}>
+                {scene.scene_location ? <Paragraph style={{ marginBottom: 4 }}>地点：{scene.scene_location}</Paragraph> : null}
+                {scene.scene_summary ? <Paragraph style={{ marginBottom: 8 }}>这一场：{scene.scene_summary}</Paragraph> : null}
+                {(scene.line_list || []).length ? (scene.line_list || []).map((line, li) => (
+                  <div key={`${si}-${li}`} style={{ marginBottom: 8 }}>
+                    <Text strong>{line.character_name || line.speaker_name || '旁白'}</Text>
+                    <Input.TextArea
+                      style={{ marginTop: 4 }}
+                      value={line.line_text}
+                      onChange={(e) => {
+                        const next = scenes.map((s, i) => {
+                          if (i !== si) return s
+                          const lineList = (s.line_list || []).map((ln, j) => (j === li ? { ...ln, line_text: e.target.value } : ln))
+                          return { ...s, line_list: lineList }
+                        })
+                        setScript({ ...script, scene_list: next })
+                      }}
+                    />
+                  </div>
+                )) : <Text type="secondary">这一场还没有对白。</Text>}
+              </div>
+            ),
           }))}
         />
       </Card>
@@ -411,7 +463,7 @@ function LibrarySkeleton() {
   return <Skeleton active title={false} paragraph={{ rows: 3 }} />
 }
 
-function CardReference({ reference, busy, onUse }) {
+function CardReference({ reference, refImageUrl, candidates, selectedAssetId, busy, onUse }) {
   const ref = reference || { used: 0, source: 'NONE' }
   if (ref.source === 'NAME' && (ref.used === 1 || ref.used === true)) {
     return (
@@ -423,7 +475,11 @@ function CardReference({ reference, busy, onUse }) {
       </div>
     )
   }
-  return <div style={{ marginTop: 12 }}><Text type="secondary">{referenceLine(ref)}</Text></div>
+  return (
+    <div style={{ marginTop: 12 }}>
+      <Text>{cardGenerationCopy({ reference: ref, refImageUrl, candidates, selectedAssetId })}</Text>
+    </div>
+  )
 }
 
 function CharacterPane({ work }) {
@@ -613,8 +669,8 @@ function CharacterPane({ work }) {
         {cardsReady && !chars.length ? <Text type="secondary">还没有角色。先在上面写下角色名，再来定妆。</Text> : null}
         {cardsReady ? chars.map((row) => {
           const views = row.look_view_list || []
-          const viewOf = (angle) => views.find((view) => view.view_angle === angle && view.file_url)
-          const hasAnglePhoto = views.some((view) => view.file_url)
+          const viewOf = (angle) => views.find((view) => view.view_angle === angle && isRealPhotoUrl(view.file_url))
+          const hasAnglePhoto = views.some((view) => isRealPhotoUrl(view.file_url))
           const candidates = [...(row.candidate_list || [])].sort((a, b) => {
             if (a.asset_id === row.ref_image_asset_id) return -1
             if (b.asset_id === row.ref_image_asset_id) return 1
@@ -648,7 +704,7 @@ function CharacterPane({ work }) {
               busy={busyIds.has(row.character_id)}
               onUse={(materialId) => useLook('character', row.character_id, materialId)}
             />
-            {row.ref_image_url && !hasAnglePhoto ? (
+            {isRealPhotoUrl(row.ref_image_url) && !hasAnglePhoto ? (
               <div style={{ marginTop: 12 }}>
                 <Text type="secondary">当前定妆照</Text>
                 <div><ClickThumb alt="当前定妆照" src={row.ref_image_url} width={72} height={128} /></div>
@@ -656,14 +712,17 @@ function CharacterPane({ work }) {
             ) : null}
             <CardReference
               reference={row.look_reference}
+              refImageUrl={row.ref_image_url}
+              candidates={candidates}
+              selectedAssetId={row.ref_image_asset_id}
               busy={busyIds.has(row.character_id)}
               onUse={(materialId) => useLook('character', row.character_id, materialId)}
             />
-            {candidates.length ? (
+            {candidates.some((item) => isRealPhotoUrl(item.file_url)) ? (
               <div style={{ marginTop: 12 }}>
                 <Text type="secondary">这些是已经生成或上传的图。要换成某一张，点选定。</Text>
                 <Space wrap style={{ marginTop: 8 }}>
-                  {candidates.map((c) => (
+                  {candidates.filter((item) => isRealPhotoUrl(item.file_url)).map((c) => (
                     <div key={c.asset_id} style={{ textAlign: 'center' }}>
                       <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />
                       <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
@@ -706,8 +765,8 @@ function CharacterPane({ work }) {
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
             <Space wrap style={{ marginTop: 8 }}>
-              {row.ref_image_url ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={96} height={64} /> : null}
-              {(row.candidate_list || []).map((c) => (
+              {isRealPhotoUrl(row.ref_image_url) ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={96} height={64} /> : null}
+              {(row.candidate_list || []).filter((item) => isRealPhotoUrl(item.file_url)).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="场景参考" src={c.file_url} width={96} height={64} />
                   <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
@@ -720,6 +779,9 @@ function CharacterPane({ work }) {
             </Space>
             <CardReference
               reference={row.look_reference}
+              refImageUrl={row.ref_image_url}
+              candidates={row.candidate_list}
+              selectedAssetId={row.ref_image_asset_id}
               busy={busyIds.has(row.scene_card_id)}
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
@@ -753,8 +815,8 @@ function CharacterPane({ work }) {
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
             <Space wrap style={{ marginTop: 8 }}>
-              {row.ref_image_url ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={72} height={72} /> : null}
-              {(row.candidate_list || []).map((c) => (
+              {isRealPhotoUrl(row.ref_image_url) ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={72} height={72} /> : null}
+              {(row.candidate_list || []).filter((item) => isRealPhotoUrl(item.file_url)).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="道具参考" src={c.file_url} width={72} height={72} />
                   <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
@@ -767,6 +829,9 @@ function CharacterPane({ work }) {
             </Space>
             <CardReference
               reference={row.look_reference}
+              refImageUrl={row.ref_image_url}
+              candidates={row.candidate_list}
+              selectedAssetId={row.ref_image_asset_id}
               busy={busyIds.has(row.scene_card_id)}
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
@@ -820,6 +885,7 @@ function StoryboardPane({ work, episodeId }) {
   const [videoWatch, setVideoWatch] = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [clipSeconds, setClipSeconds] = useState({})
+  const [playbackKind, setPlaybackKind] = useState({})
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -964,8 +1030,8 @@ function StoryboardPane({ work, episodeId }) {
       <Alert
         type="info"
         showIcon
-        message="先定妆、再写镜、再出图、再出视频"
-        description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。已有成片的镜头在卡片左侧直接播放，不必切到画布。成片发布后的观看在 Tube。"
+        message="先看下面每一镜"
+        description="改人话分镜不花钱。出图和生成视频会花钱，收在「出图和生成视频」里，避免一进页面就点到。有视频的镜头在卡片左边播放；放不了的会直接写明。"
       />
       {videoWatch ? (
         <Alert
@@ -981,7 +1047,27 @@ function StoryboardPane({ work, episodeId }) {
           )}
         />
       ) : null}
-      <Card size="small" title="资产一致性" extra={<Text type="secondary">勾选镜头后绑定，减少跨镜换脸</Text>}>
+      <Space wrap>
+        <Button onClick={() => setCanvasView(true)}>切到画布</Button>
+        <Button onClick={async () => {
+          await productionApi.splitShots(episodeId)
+          await featuresApi.previzGenerateText({ episode_id: episodeId })
+          message.success('已拆镜，并写好人话分镜')
+          load()
+        }}>从剧本拆镜</Button>
+        <Button onClick={async () => {
+          await featuresApi.previzGenerateText({ episode_id: episodeId, shot_id_list: selectedIds })
+          message.success('已用人话写清每一镜')
+          load()
+        }}>生成人话分镜（免费）</Button>
+      </Space>
+      <Collapse
+        items={[{
+          key: 'paid-tools',
+          label: '出图和生成视频（会花钱，先看下面的分镜）',
+          children: (
+      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <Card size="small" title="这一集用到的角色和场景" extra={<Text type="secondary">勾选镜头后再绑定</Text>}>
         <Space wrap>
           <Select
             mode="multiple"
@@ -1049,18 +1135,6 @@ function StoryboardPane({ work, episodeId }) {
         </Paragraph>
       </Card>
       <Card size="small" extra={<Space wrap>
-        <Button onClick={() => setCanvasView(true)}>切到画布</Button>
-        <Button onClick={async () => {
-          await productionApi.splitShots(episodeId)
-          await featuresApi.previzGenerateText({ episode_id: episodeId })
-          message.success('已拆镜，并写好人话分镜')
-          load()
-        }}>从剧本拆镜</Button>
-        <Button onClick={async () => {
-          await featuresApi.previzGenerateText({ episode_id: episodeId, shot_id_list: selectedIds })
-          message.success('已用人话写清每一镜')
-          load()
-        }}>生成人话分镜（免费）</Button>
         <Tooltip title={imageSelect.title || '出图模型'}>
           <span>
             <Select
@@ -1072,10 +1146,11 @@ function StoryboardPane({ work, episodeId }) {
               popupMatchSelectWidth={imageSelect.popupMatchSelectWidth}
               style={imageSelect.style}
               dropdownStyle={imageSelect.dropdownStyle}
-              options={imageModels.map((m) => {
-                const label = modelLabel(m)
-                return { value: m.model_code, label, title: label }
-              })}
+              options={imageModels.map((m) => ({
+                value: m.model_code,
+                label: modelPricingCompactLabel(m),
+                title: modelPricingLabel(m),
+              }))}
             />
           </span>
         </Tooltip>
@@ -1090,10 +1165,11 @@ function StoryboardPane({ work, episodeId }) {
               popupMatchSelectWidth={videoSelect.popupMatchSelectWidth}
               style={videoSelect.style}
               dropdownStyle={videoSelect.dropdownStyle}
-              options={videoModels.map((m) => {
-                const label = modelLabel(m)
-                return { value: m.model_code, label, title: label }
-              })}
+              options={videoModels.map((m) => ({
+                value: m.model_code,
+                label: modelPricingCompactLabel(m),
+                title: modelPricingLabel(m),
+              }))}
             />
           </span>
         </Tooltip>
@@ -1135,9 +1211,15 @@ function StoryboardPane({ work, episodeId }) {
         )}
       </Card>
       <ImageToVideoPanel workId={work?.work_id} episodeId={episodeId} shots={rows} />
+      </Space>
+          ),
+        }]}
+      />
       {rows.map((row) => {
         const readiness = evaluateShotReadiness(row, panel)
         const taskBadge = shotLatestTaskBadge(row)
+        const playback = playbackKind[row.shot_id]
+        const showTaskBadge = taskBadge && playback !== 'broken'
         const sceneCardName = (panel.scene_list || []).find((c) => c.scene_card_id === row.scene_card_id)?.card_name || ''
         const sceneKnown = knownSceneName({
           sceneName: sceneCardName,
@@ -1151,13 +1233,9 @@ function StoryboardPane({ work, episodeId }) {
           className="shot-card"
           style={shotCardContainment()}
           size="small"
-          title={`镜 ${row.shot_no} · ${shotTimingLabel({
-            plannedSec: row.shot_duration_sec,
-            actualSec: clipSeconds[row.shot_id],
-            hasPlayableVideo: shotHasPlayableVideo(row),
-          })} · ${labelOf(SHOT_STATUS_LABEL, shotCardStatusCode(row))}`}
+          title={shotCardHeading(row, { actualSec: clipSeconds[row.shot_id], playback })}
           extra={<Space>
-            {taskBadge ? (
+            {showTaskBadge ? (
               <Tag color={taskBadge.color}>{taskBadge.text}</Tag>
             ) : null}
             <Tag color={readiness.ready ? 'cyan' : 'default'}>
@@ -1180,6 +1258,9 @@ function StoryboardPane({ work, episodeId }) {
               onEnlarge={setVideoPreview}
               onDuration={(seconds) => setClipSeconds((cur) => (
                 cur[row.shot_id] === seconds ? cur : { ...cur, [row.shot_id]: seconds }
+              ))}
+              onPlayback={(kind) => setPlaybackKind((cur) => (
+                cur[row.shot_id] === kind ? cur : { ...cur, [row.shot_id]: kind }
               ))}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1349,16 +1430,24 @@ function StoryboardPane({ work, episodeId }) {
         onCancel={() => setVideoPreview(null)}
         {...shotVideoDialogProps()}
       >
-        {videoPreview && videoPreview.video_url ? (
+        {videoPreview && isPlaceholderMediaUrl(videoPreview.video_url) ? (
+          <div>
+            <img alt="" src={videoPreview.video_url} style={{ maxWidth: '100%', maxHeight: 360 }} />
+            <Paragraph>这是占位图，不是能播放的视频。</Paragraph>
+          </div>
+        ) : videoPreview && videoPreview.video_url ? (
           <ListShotVideo
             src={videoPreview.video_url}
             label="播放或暂停"
             autoPlay
+            onPlayback={(kind) => setPlaybackKind((cur) => (
+              cur[videoPreview.shot_id] === kind ? cur : { ...cur, [videoPreview.shot_id]: kind }
+            ))}
             onDuration={(seconds) => setClipSeconds((cur) => (
               cur[videoPreview.shot_id] === seconds ? cur : { ...cur, [videoPreview.shot_id]: seconds }
             ))}
           />
-        ) : null}
+        ) : videoPreview ? <Paragraph>这一镜还没有视频。</Paragraph> : null}
       </Modal>
     </Space>
   )
@@ -1692,7 +1781,16 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
 
   return (
     <Card title="成片与提审">
-      <Paragraph>{surface.paneText}</Paragraph>
+      <Paragraph style={{ marginBottom: 4 }}>
+        <Text strong>{surface.headline}</Text>
+      </Paragraph>
+      <Paragraph style={{ color: '#334155' }}>{surface.nextStep}</Paragraph>
+      {work?.work_status_name ? (
+        <Paragraph type="secondary">
+          作品阶段是「{work.work_status_name}」。上面说的是当前这一集，两处可以不一样。
+        </Paragraph>
+      ) : null}
+      <Paragraph type="secondary" style={{ fontSize: 13 }}>{surface.paneText}</Paragraph>
       {statusSettled && film?.expired_flag === 1 ? (
         <Alert
           type="warning"
@@ -1798,9 +1896,6 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           disabled={!canPublish || batchPublishing}
           onClick={runPublish}
         >发布到 Tube</Button>
-        {publishHints.map((hint) => (
-          <Text key={hint} type="secondary">{hint}</Text>
-        ))}
         <Button
           loading={batchPublishing}
           disabled={!statusSettled || batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false
@@ -1815,6 +1910,13 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
           message.success('已刷新发布状态')
         }}>刷新发布状态</Button>
       </Space>
+      {publishHints.length ? (
+        <div style={{ marginTop: 12 }}>
+          {publishHints.map((hint) => (
+            <Paragraph key={hint} style={{ marginBottom: 4 }}>{hint}</Paragraph>
+          ))}
+        </div>
+      ) : null}
       {batchProgress ? (
         <Alert
           type="info"
@@ -1827,6 +1929,11 @@ function ComposePane({ work, episodeId, onReload, composeEntry, onComposeEntry, 
             </div>
           ))}
         />
+      ) : null}
+      {statusSettled && !film?.download_url ? (
+        <Paragraph style={{ marginTop: 12 }}>
+          这一集现在没有可以预览或下载的成片。
+        </Paragraph>
       ) : null}
       {film?.download_url ? (
         <div style={{ marginTop: 12 }}>
@@ -2047,7 +2154,8 @@ export default function WorkStudio() {
       />
       <style>{`
         .work-studio-tabs .ant-tabs-nav { margin-bottom: 12px; }
-        .work-studio-tabs .ant-tabs-tab { white-space: nowrap; padding: 8px 0; }
+        .work-studio-tabs .ant-tabs-nav-list { flex-wrap: wrap; }
+        .work-studio-tabs .ant-tabs-tab { white-space: normal; padding: 8px 0; }
         .work-studio-tabs .ant-tabs-ink-bar { height: 2px; }
       `}</style>
     </div>

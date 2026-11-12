@@ -156,6 +156,20 @@ export function estimateShotBatchTokens(shotCount, modelRow = {}, baseTokensPerS
   }
 }
 
+/** Closed select shows the name and multiplier. The full price string stays on the title. */
+export function modelPricingCompactLabel(row = {}) {
+  const ability = row.ability_type || row.ability
+  const name = publicModelText(
+    row.label || row.display_name || row.model_name || row.model_code || row.model || '',
+    ability,
+  )
+  const multiplier = row.billing_multiplier
+  const value = multiplier == null ? null : Number(multiplier)
+  const parts = [name]
+  if (isValidBillingMultiplier(value)) parts.push(`${value}×`)
+  return parts.filter(Boolean).join(' · ')
+}
+
 export function modelPricingLabel(row = {}) {
   const ability = row.ability_type || row.ability
   const name = publicModelText(

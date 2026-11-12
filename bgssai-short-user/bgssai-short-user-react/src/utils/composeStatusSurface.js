@@ -29,6 +29,8 @@ export function composeSurface({ settled = false, error = false, film = null, pr
       phase: 'loading',
       paneText: '合成状态 加载中 / 预检 核对中 / 风险 -',
       chipText: '核对中',
+      headline: '正在核对这一集能不能合成',
+      nextStep: '核对完成前先不要点合成。',
       allowReadyPassChip: false,
     }
   }
@@ -37,6 +39,8 @@ export function composeSurface({ settled = false, error = false, film = null, pr
       phase: 'error',
       paneText: '合成状态 未能核对 / 预检 未能核对 / 风险 -',
       chipText: '未能核对',
+      headline: '这一集的合成状态暂时读不到',
+      nextStep: '点「刷新」再看。读不到时不要当成可以合成。',
       allowReadyPassChip: false,
     }
   }
@@ -44,20 +48,37 @@ export function composeSurface({ settled = false, error = false, film = null, pr
   const preflightReady = Boolean(precheck?.ready)
   const riskCode = precheck?.risk_level
   const risk = riskLabel(precheck)
-  const expired = film?.expired_flag === 1 ? ' / 成片已过期' : ''
+  const expiredFlag = film?.expired_flag === 1
+  const expired = expiredFlag ? ' / 成片已过期' : ''
   const riskOk = riskCode == null || riskCode === '' || riskCode === 'PASS'
-  const affirmative = preflightReady && compose === 'READY' && riskOk
+  const affirmative = preflightReady && compose === 'READY' && riskOk && !expiredFlag
   let chipText = '未就绪'
-  if (affirmative) chipText = '已就绪'
-  else if (preflightReady) chipText = '可合成'
+  let headline = '这一集还不能合成'
+  let nextStep = '先处理下面列出的缺口，再点「合成」。'
+  if (expiredFlag) {
+    chipText = '成片已过期'
+    headline = '这一集的成片已过期'
+    nextStep = '旧成片不能下载，也不能再当正式成片。下一步：重新合成，通过审核后再发布。'
+  } else if (affirmative) {
+    chipText = '已就绪'
+    headline = '这一集已有可用成片'
+    nextStep = '可以在下面预览和下载。要给别人看，再去发布。'
+  } else if (preflightReady) {
+    chipText = '可合成'
+    headline = '这一集可以合成'
+    nextStep = '还没有新的成片。下一步：点「合成」。完成后可以在这里预览和下载。'
+  }
   return {
     phase: 'settled',
     paneText: `合成状态 ${composeLabel(compose)} / 预检 ${preflightReady ? '可合成' : '未就绪'} / 风险 ${risk}${expired}`,
     chipText,
+    headline,
+    nextStep,
     allowReadyPassChip: affirmative,
     preflightReady,
     compose,
     risk,
+    expired: expiredFlag,
   }
 }
 

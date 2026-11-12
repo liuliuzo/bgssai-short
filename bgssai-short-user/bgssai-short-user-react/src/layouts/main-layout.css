@@ -280,7 +280,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   overflow-anchor: none;
-  padding: 28px 32px calc(28px + var(--app-footer-clearance, 96px));
+  padding: 28px 32px calc(28px + var(--app-fab-clearance, 72px));
   background: transparent;
 }
 

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Button, Image, Typography } from 'antd'
-import { shotHasPlayableVideo } from './shotCardMedia'
+import { classifyVideoDuration, shotHasPlayableVideo } from './shotCardMedia'
+import { isPlaceholderMediaUrl } from '../../lib/mediaUrl'
 import {
   FIRST_FRAME_CAPTION,
   LAST_FRAME_CAPTION,
@@ -56,10 +57,24 @@ export function ClickThumb({ src, alt, width, height, caption }) {
   )
 }
 
-export function ListShotVideo({ src, poster, onDuration, label, autoPlay = false }) {
+export function ListShotVideo({ src, poster, onDuration, onPlayback, label, autoPlay = false }) {
   const ref = useRef(null)
-  const [paused, setPaused] = useState(true)
+  const [paused, setPaused] = useState(!autoPlay)
+  const [verdict, setVerdict] = useState('pending')
   const action = playbackAction(paused)
+  const report = (duration, extra) => {
+    const next = classifyVideoDuration(duration, extra)
+    setVerdict(next)
+    if (onPlayback) onPlayback(next)
+    if (next === 'ready' && onDuration) onDuration(duration)
+  }
+  if (verdict === 'broken') {
+    return (
+      <div style={listPlayerFrameStyle()} data-shot-player="broken">
+        <Text>这段视频打不开（没有可播放的时长）。请重新生成这一镜。</Text>
+      </div>
+    )
+  }
   return (
     <div style={listPlayerFrameStyle()} data-shot-player="list">
       <video
@@ -71,10 +86,9 @@ export function ListShotVideo({ src, poster, onDuration, label, autoPlay = false
         preload="metadata"
         autoPlay={autoPlay}
         style={listPlayerVideoStyle()}
-        onLoadedMetadata={(event) => {
-          const duration = event.currentTarget.duration
-          if (onDuration && Number.isFinite(duration) && duration > 0) onDuration(duration)
-        }}
+        onLoadedMetadata={(event) => report(event.currentTarget.duration, { hasFrame: false })}
+        onLoadedData={(event) => report(event.currentTarget.duration, { hasFrame: true })}
+        onError={() => report(Number.NaN, { errored: true })}
         onPlay={() => setPaused(false)}
         onPause={() => setPaused(true)}
       />
@@ -90,13 +104,24 @@ export function ListShotVideo({ src, poster, onDuration, label, autoPlay = false
           else video.pause()
         }}
       />
+      {verdict === 'pending' ? <Text type="secondary">正在读取视频时长</Text> : <Text type="secondary">这段视频可以播放。</Text>}
     </div>
   )
 }
 
-export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
+export function ShotMediaColumn({ row, onEnlarge, onDuration, onPlayback }) {
+  const placeholder = isPlaceholderMediaUrl(row && row.video_url)
   const playable = shotHasPlayableVideo(row)
   const enlarge = enlargePlaybackButtonProps()
+  if (placeholder) {
+    return (
+      <div style={{ width: 160, flexShrink: 0 }}>
+        <Text strong style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>占位图</Text>
+        <ClickThumb alt="占位图" src={row.video_url} width={96} height={160} />
+        <Text type="secondary" style={{ fontSize: 12 }}>这是占位图，不是能播放的视频。</Text>
+      </div>
+    )
+  }
   return (
     <div style={{ width: playable ? 200 : 96, flexShrink: 0 }}>
       {playable ? (
@@ -105,6 +130,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
           <ListShotVideo
             src={row.video_url}
             onDuration={onDuration}
+            onPlayback={onPlayback}
           />
           <Button
             {...enlarge}
