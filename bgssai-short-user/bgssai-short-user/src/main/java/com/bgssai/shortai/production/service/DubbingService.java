@@ -255,9 +255,10 @@ public class DubbingService {
                         d.getAudioDurationSec() == null ? 0 : d.getAudioDurationSec(), alignStatus);
             }
             item.put("line_list", lineList);
+            item.put("dialogue_text", shot.getDialogueText() == null ? "" : shot.getDialogueText());
             item.put("audio_duration_sec", audioSum);
             item.put("align_status", alignStatus);
-            item.put("align_status_name", alignName(alignStatus));
+            item.put("align_status_name", alignName(alignStatus, !lines.isEmpty()));
             item.put("align_gap_sec", gap);
             item.put("suggest_action", suggest);
             item.put("auto_fixed_flag", autoFixed);
@@ -867,14 +868,23 @@ public class DubbingService {
         return "EXTEND_SHOT";
     }
 
-    private static String alignName(String status) {
+    static String alignName(String status, boolean hasLines) {
         if ("ALIGNED".equals(status)) {
             return "已对齐";
         }
         if ("MISALIGNED".equals(status)) {
             return "未对齐";
         }
-        return "生成中";
+        if (!hasLines) {
+            return "未配音";
+        }
+        if ("GENERATING".equals(status)) {
+            return "生成中";
+        }
+        if ("PENDING".equals(status) || status == null || status.isBlank()) {
+            return "待对齐";
+        }
+        return "未配音";
     }
 
     private static double parseGap(String gap) {

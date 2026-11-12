@@ -80,12 +80,14 @@
       <div class="note" style="margin-bottom:12px">
         画布是<strong>第二视图</strong>，不是替代：改一镜的文字还是列表顺手，看整集到哪了、
         把一整场一起重跑，画布顺手。两个视图读写同一份数据、同一组接口——各存一份状态就是必然漂移。
+        镜头还在读取时只显示加载占位，不显示「本集还没有镜头」。成片和计划秒数不一致时，节点写成「成片 6秒 · 计划 3秒」。
+        双击抽屉的「在哪」、台词和时长与列表相同：场景已知就不写「未写清场景」，有台词就不写无对白。
       </div>
 
       <div class="canvas">
         <div class="lane-row">
           <div class="lane-name">场次 1<br /><span class="text-muted">会议室 · 日</span></div>
-          <div class="node n-video"><div class="n-thumb">视频</div><div class="n-no">镜 1</div><div class="n-meta">4s</div></div>
+          <div class="node n-video" style="width:132px"><div class="n-thumb">视频</div><div class="n-no">镜 1</div><div class="n-meta">成片 6秒 · 计划 3秒</div></div>
           <div class="node n-video"><div class="n-thumb">视频</div><div class="n-no">镜 2</div><div class="n-meta">3s</div></div>
           <div class="node n-video"><div class="n-thumb">视频</div><div class="n-no">镜 3</div><div class="n-meta">3s</div></div>
           <div class="node n-image"><div class="n-thumb">首帧</div><div class="n-no">镜 4</div><div class="n-meta">4s</div></div>

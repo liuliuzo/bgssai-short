@@ -75,7 +75,8 @@ function NotFoundPage() {
 
 export default function App() {
   return (
-    <>
+    <div className="app-shell">
+    <div className="app-routes">
     <Routes>
       <Route
         path="/login"
@@ -115,7 +116,8 @@ export default function App() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </div>
     <LegalFooter />
-    </>
+    </div>
   )
 }

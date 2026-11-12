@@ -2,7 +2,9 @@
 
 .pa-layout {
   display: flex;
-  height: 100vh;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   overflow: hidden;
   background: var(--lg-bg-page);
 }
@@ -225,9 +227,11 @@
 /* ---- Content area ---- */
 .pa-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 28px 32px 40px;
+  overflow-anchor: none;
+  padding: 28px 32px calc(28px + var(--app-footer-clearance, 96px));
   background: transparent;
 }
 
@@ -246,7 +250,8 @@
 /* ---- 窄栏：Bot / Chat 旁栏，以及手机浏览器（宽度 ≤767px）共用一套底部标签栏 +「更多」 ---- */
 .pa-layout--compact {
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
+  max-height: 100%;
   max-width: 100%;
 }
 

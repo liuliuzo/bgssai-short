@@ -9,6 +9,12 @@ import {
 /** Above the in-page support button (support-widget.css z-index 1200). */
 export const SHOT_VIDEO_DIALOG_Z_INDEX = 2000
 
+/** Drawer and image preview must sit above the support button. */
+export const SHOT_SURFACE_Z_INDEX = 1400
+
+const AMBIENT_DIALOGUE = '（纯动作环境音，无对白）'
+const RAW_CARD_ID = /^(?:ch|sc|pr|prop)[-_][a-z0-9-]+$/i
+
 /** Native controls sit in this bottom band; picture clicks above it toggle playback. */
 export const LIST_PLAYER_CONTROL_BAND = 48
 
@@ -72,6 +78,109 @@ export function pictureClickTogglesPlayback(offsetY, height, band = LIST_PLAYER_
 
 export function playbackAction(paused) {
   return paused ? 'play' : 'pause'
+}
+
+export function shotDrawerProps() {
+  return { zIndex: SHOT_SURFACE_Z_INDEX }
+}
+
+/** A shot card must scroll away as a whole; descendants cannot pin to the page scroller. */
+export function shotCardContainment() {
+  return {
+    position: 'relative',
+    overflow: 'clip',
+    overflowAnchor: 'none',
+  }
+}
+
+export function thumbPlaceholderStyle() {
+  return {
+    background: '#e8edf3',
+    borderRadius: 8,
+  }
+}
+
+export function outlineLongTextProps() {
+  return { autoSize: { minRows: 2, maxRows: 8 } }
+}
+
+export function bindSelectProps() {
+  return {
+    virtual: false,
+    optionFilterProp: 'label',
+    popupMatchSelectWidth: false,
+  }
+}
+
+export function bindOptionLabel(name, statusName) {
+  const raw = String(name || '').trim()
+  const clean = RAW_CARD_ID.test(raw) ? '' : raw
+  const status = String(statusName || '').trim()
+  const base = clean || '未命名'
+  return status ? `${base} ${status}` : base
+}
+
+export function optionTextLeaksRawId(text) {
+  return /(?:^|\s)(?:ch|sc|pr|prop)[-_][a-z0-9-]+/i.test(String(text || ''))
+}
+
+export function shotSpokenText(row, sceneName, draft) {
+  const known = knownSceneName({
+    sceneName,
+    shotDesc: row?.shot_desc,
+    lookPlain: row?.look_plain,
+  })
+  return reconcileEmptyScene(draft ?? row?.previz_text ?? '', known)
+}
+
+export function shotDialogueLine(row) {
+  const direct = String(row?.dialogue_text || row?.dialogue || '').trim()
+  if (direct) return direct
+  const lines = Array.isArray(row?.line_list)
+    ? row.line_list.map((line) => String(line?.line_text || '').trim()).filter(Boolean)
+    : []
+  if (lines.length) return lines.join(' / ')
+  const previz = String(row?.previz_text || '')
+  const mark = '台词：'
+  const at = previz.indexOf(mark)
+  if (at >= 0) {
+    const sentence = previz.slice(at + mark.length).trim().split(/[。\n]/)[0].trim()
+    if (sentence && !/^无(对白)?$/.test(sentence)) return sentence
+  }
+  return ''
+}
+
+export function dialogueCaption(row) {
+  return shotDialogueLine(row) || AMBIENT_DIALOGUE
+}
+
+export function dubbingAlignLabel(row) {
+  const status = String(row?.align_status || '')
+  const lines = Array.isArray(row?.line_list) ? row.line_list.length : 0
+  if (status === 'ALIGNED') return '已对齐'
+  if (status === 'MISALIGNED') return '未对齐'
+  if (lines === 0) return '未配音'
+  if (status === 'GENERATING') return '生成中'
+  return '待对齐'
+}
+
+export function voiceRowView(row, actualSec) {
+  const dialogue = shotDialogueLine(row)
+  const hasVideo = Boolean(row?.video_url) || positiveSeconds(actualSec) != null
+  return {
+    dialogue,
+    dialogueCaption: dialogue || AMBIENT_DIALOGUE,
+    timing: shotTimingLabel({
+      plannedSec: row?.shot_duration_sec,
+      actualSec,
+      hasPlayableVideo: hasVideo,
+    }),
+    align: dubbingAlignLabel(row),
+  }
+}
+
+export function showSettledEmpty(ready, count) {
+  return ready === true && !(Number(count) > 0)
 }
 
 export function shotVideoDialogProps() {
@@ -253,13 +362,15 @@ export function reconcileEmptyScene(previzText, scene) {
   return raw.split(`在哪：${EMPTY_SCENE}`).join(`在哪：${known}`)
 }
 
-export function assetBinderPlaceholder(kind, count) {
+export function assetBinderPlaceholder(kind, count, ready = true) {
+  if (!ready) return `正在读取${kind}`
   const n = Math.max(0, Math.trunc(Number(count) || 0))
   if (!n) return `还没有${kind}`
   return `绑定${kind}（${n}）`
 }
 
-export function assetLibrarySummary({ characters, scenes, props } = {}) {
+export function assetLibrarySummary({ characters, scenes, props, ready = true } = {}) {
+  if (!ready) return '正在读取可绑定的角色、场景和道具。'
   const parts = []
   const characterNames = namesOf(characters)
   const sceneNames = namesOf(scenes)

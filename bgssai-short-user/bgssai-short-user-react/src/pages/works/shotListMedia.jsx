@@ -1,27 +1,65 @@
-import { useRef, useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button, Image, Typography } from 'antd'
 import { shotHasPlayableVideo } from './shotCardMedia'
 import {
+  SHOT_VIDEO_DIALOG_Z_INDEX,
   enlargePlaybackButtonProps,
   listPlayerFrameStyle,
   listPlayerToggleStyle,
   listPlayerVideoStyle,
   playbackAction,
+  thumbPlaceholderStyle,
 } from './studioListUx'
 
 const { Text } = Typography
 
-export function ClickThumb({ src, alt, width, height }) {
+export function ClickThumb({ src, alt, width, height, caption }) {
+  const [open, setOpen] = useState(false)
   if (!src) return null
+  const placeholder = thumbPlaceholderStyle()
   return (
-    <Image
-      src={src}
-      alt={alt || ''}
-      width={width}
-      height={height}
-      style={{ objectFit: 'cover', borderRadius: 8, cursor: 'zoom-in', background: '#111', display: 'block' }}
-      preview={{ mask: '查看' }}
-    />
+    <div style={{ width }}>
+      <Image
+        src={src}
+        alt={alt || ''}
+        width={width}
+        height={height}
+        style={{
+          objectFit: 'cover',
+          borderRadius: placeholder.borderRadius,
+          cursor: 'zoom-in',
+          background: placeholder.background,
+          display: 'block',
+        }}
+        placeholder={<div style={{ ...placeholder, width: width || '100%', height: height || width || 72 }} />}
+        preview={{
+          visible: open,
+          onVisibleChange: setOpen,
+          mask: '查看',
+          zIndex: SHOT_VIDEO_DIALOG_Z_INDEX,
+        }}
+      />
+      {caption ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            display: 'block',
+            marginTop: 2,
+            padding: 0,
+            border: 0,
+            background: 'transparent',
+            color: '#64748b',
+            fontSize: 11,
+            lineHeight: 1.4,
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          {caption}
+        </button>
+      ) : null}
+    </div>
   )
 }
 
@@ -73,7 +111,6 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
           <Text strong style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>本镜视频</Text>
           <ListShotVideo
             src={row.video_url}
-            poster={row.first_frame_url}
             onDuration={onDuration}
           />
           <Button
@@ -86,8 +123,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
           </Button>
           {row.first_frame_url ? (
             <div style={{ marginTop: 6 }}>
-              <ClickThumb alt="首帧" src={row.first_frame_url} width={72} />
-              <Text type="secondary" style={{ fontSize: 11 }}>首帧，点击查看</Text>
+              <ClickThumb alt="首帧" src={row.first_frame_url} width={72} caption="首帧，点击查看" />
             </div>
           ) : null}
         </div>
@@ -105,8 +141,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
       )}
       {row.last_frame_url ? (
         <div style={{ marginTop: 6 }}>
-          <ClickThumb alt="尾帧" src={row.last_frame_url} width={90} />
-          <Text type="secondary" style={{ fontSize: 11 }}>尾帧，点击查看</Text>
+          <ClickThumb alt="尾帧" src={row.last_frame_url} width={90} caption="尾帧，点击查看" />
         </div>
       ) : null}
     </div>

@@ -7,10 +7,16 @@ import {
   appendPreset,
   assetBinderPlaceholder,
   assetLibrarySummary,
+  bindOptionLabel,
+  bindSelectProps,
+  dialogueCaption,
+  dubbingAlignLabel,
   enlargePlaybackButtonProps,
   frameLinkOptions,
   knownSceneName,
   listPlayerFrameStyle,
+  optionTextLeaksRawId,
+  outlineLongTextProps,
   listPlayerToggleStyle,
   modelSelectProps,
   pictureClickTogglesPlayback,
@@ -19,9 +25,16 @@ import {
   presetIsActive,
   reconcileEmptyScene,
   selectionFeeLine,
+  shotCardContainment,
+  shotDialogueLine,
+  shotDrawerProps,
   shotPresetGroups,
+  shotSpokenText,
   shotTimingLabel,
   shotVideoDialogProps,
+  showSettledEmpty,
+  thumbPlaceholderStyle,
+  voiceRowView,
   tokenAmountLabel,
 } from './studioListUx.js'
 
@@ -125,4 +138,60 @@ test('asset binder shows that cards exist when nothing is selected yet', () => {
   assert.match(line, /沈知微/)
   assert.match(line, /宴会厅/)
   assert.match(line, /下拉框/)
+  assert.equal(assetBinderPlaceholder('角色', 0, false), '正在读取角色')
+  assert.match(assetLibrarySummary({ ready: false }), /正在读取/)
+  assert.equal(assetLibrarySummary({ ready: false }).includes('还没有'), false)
+})
+
+test('canvas drawer and voice use the same scene, dialogue, and clip length as the list', () => {
+  const shot = {
+    dialogue_text: '退婚书我签，但有个条件。',
+    previz_text: STORED + '台词：退婚书我签，但有个条件。',
+    shot_desc: '重生回到豪门别墅，她决定先摸清所有人的底牌',
+    look_plain: '观众会看到中景：重生回到豪门别墅。',
+    shot_duration_sec: 3,
+    video_url: 'https://example.test/shot.mp4',
+    line_list: [],
+    align_status: 'PENDING',
+    align_status_name: '生成中',
+  }
+  const spoken = shotSpokenText(shot, '宴会厅')
+  assert.match(spoken, /在哪：豪门别墅/)
+  assert.equal(spoken.includes('未写清场景'), false)
+  assert.equal(shotDialogueLine(shot), '退婚书我签，但有个条件。')
+  assert.equal(dialogueCaption({ previz_text: '谁：她。在哪：宴会厅。做什么：推门。' }), '（纯动作环境音，无对白）')
+  const office = shotSpokenText({
+    previz_text: '谁：女主。在哪：未写清场景。做什么：推门。',
+    shot_desc: '女主带着资源回归',
+  }, '总裁办公室')
+  assert.match(office, /在哪：总裁办公室/)
+  const voice = voiceRowView(shot, 6)
+  assert.equal(voice.dialogue, '退婚书我签，但有个条件。')
+  assert.equal(voice.timing, '成片 6秒 · 计划 3秒')
+  assert.equal(voice.align, '未配音')
+  assert.equal(dubbingAlignLabel({ align_status: 'GENERATING', line_list: [{ line_text: '退婚书我签' }] }), '生成中')
+  assert.equal(dubbingAlignLabel({ align_status: 'ALIGNED', line_list: [{ line_text: '有声' }] }), '已对齐')
+})
+
+test('bind options stay human and empty states wait until the request settles', () => {
+  const label = bindOptionLabel('沈知微', '已锁定')
+  assert.equal(label, '沈知微 已锁定')
+  assert.equal(optionTextLeaksRawId(label), false)
+  assert.equal(optionTextLeaksRawId(bindOptionLabel('ch-dm-002-01', '已锁定')), false)
+  assert.equal(bindOptionLabel('sc-dm-002-02', '已锁定').includes('sc-dm-002-02'), false)
+  const select = bindSelectProps()
+  assert.equal(select.virtual, false)
+  assert.equal(showSettledEmpty(false, 0), false)
+  assert.equal(showSettledEmpty(true, 0), true)
+  assert.equal(showSettledEmpty(true, 6), false)
+})
+
+test('shot cards, thumbs, outline fields, and the drawer stay clear of the page chrome', () => {
+  const card = shotCardContainment()
+  assert.equal(card.overflow, 'clip')
+  assert.equal(card.overflowAnchor, 'none')
+  assert.notEqual(thumbPlaceholderStyle().background, '#111')
+  assert.equal(thumbPlaceholderStyle().background, '#e8edf3')
+  assert.ok(outlineLongTextProps().autoSize.minRows >= 2)
+  assert.ok(shotDrawerProps().zIndex > 1200)
 })
