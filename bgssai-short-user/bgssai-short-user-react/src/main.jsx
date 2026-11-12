@@ -13,13 +13,12 @@ syncBgssaiShell(window.location, window.sessionStorage, document)
 
 dayjs.locale('zh-cn')
 
-// 主题令牌（Ant Design）：2026-11 起与官网、境内 Chat 用户端同一套颜色
-// （品牌蓝 #0d6efd、深色字、浅灰底、白色实底卡片；英文数字用系统界面字体，中文用苹方 / 微软雅黑）；管理端暂不跟着改。
+// 主题令牌（Ant Design）：主色取自标志蓝 #3060c8，点缀用标志金。浅灰底、白色实底卡片。
 const theme = {
   token: {
-    colorPrimary: '#0d6efd',
-    colorInfo: '#0d6efd',
-    colorLink: '#0d6efd',
+    colorPrimary: '#3060c8',
+    colorInfo: '#3060c8',
+    colorLink: '#3060c8',
     colorText: '#0f172a',
     colorTextSecondary: '#5b6577',
     colorTextTertiary: '#8a93a6',
@@ -38,7 +37,7 @@ const theme = {
       '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", Roboto, "Helvetica Neue", Arial, sans-serif',
   },
   components: {
-    Button: { fontWeight: 600, primaryShadow: '0 6px 16px -8px rgba(13, 110, 253, 0.7)' },
+    Button: { fontWeight: 600, primaryShadow: '0 6px 16px -8px rgba(48, 96, 200, 0.7)' },
     Card: { headerFontSize: 15 },
     Modal: { borderRadiusLG: 16 },
     Table: { headerBg: '#f8f9fb', headerColor: '#5b6577', rowHoverBg: '#f5f8ff' },
