@@ -5,7 +5,7 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "1ee066f52972125d8d8a327eb897b14a1230851d3b6ff5627cce0e9beaa4122b",
+  "prototype_bundle_digest": "142ca9f82ed5bc1469a4405c1878c519a8e4a245ddc7ba4cca5b35428b3f824a",
   "code_contract_digest": "4a740cd22733b9fe5605fe2fa9ce2425e77b2ce5d53f32626c174a85fe5f78cb",
   "api_endpoints": [
     "/api/cs/support/callback",
@@ -1777,7 +1777,7 @@
     },
     {
       "path": "docs/demo-static/web/user/PAGE-FLOW.html",
-      "sha256": "3e086480d772ce6d9629a2f266b3bb61b1cb2013c81824125a8f6810ba9c98bd",
+      "sha256": "968a0c50382d85be7466a9bdb6e658314fb69f803aa6f9171079fe5da1d55147",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1944,6 +1944,27 @@
       ]
     },
     {
+      "path": "docs/demo-static/web/user/drama-assistant.html",
+      "sha256": "6c80cd6b75d51aa94ee0556664955d9371f695494d3861079fdaa8b1d2277aca",
+      "surface": "user",
+      "bound_code_files": [
+        "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+      ],
+      "bound_endpoints": [
+        "/api/cs/support/callback",
+        "/api/download/bot",
+        "/api/ingest",
+        "/api/mcp",
+        "/api/mcp/tokens/create",
+        "/api/mcp/tokens/list"
+      ]
+    },
+    {
       "path": "docs/demo-static/web/user/edit-export.html",
       "sha256": "033fff71c9fd5d5fd45d29fefcb94a094547a55e22194cd6b7e3fd044a47be12",
       "surface": "user",
@@ -2029,7 +2050,7 @@
     },
     {
       "path": "docs/demo-static/web/user/index.html",
-      "sha256": "72998ca52680eea5a657c5cf196c722578de928e526e5aafdd54ad748fd13946",
+      "sha256": "16fd52366e59fd1b4e3835712798e0bf41f5ffe42464a2ab9484046914d0d225",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
