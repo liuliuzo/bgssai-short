@@ -8,18 +8,28 @@
   body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font: 16px/1.6 system-ui; color: #253044; background: #f7f8fa; }
   main { flex: 1; padding: 24px; }
   section { max-width: 420px; margin: 48px auto; padding: 24px; background: white; border-radius: 12px; }
-  footer { flex-shrink: 0; padding: 12px 16px; font-size: 12px; line-height: 1.7; text-align: center; color: #64748b; }
-  .legal-footer-filing { flex-basis: 100%; }
+  .legal-footer {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    flex-shrink: 0; box-sizing: border-box; width: 100%; max-width: 100%;
+    padding: 18px 16px 22px; font-size: 13px; line-height: 1.65; text-align: center;
+    color: #64748b; background: #f8fafc; border-top: 1px solid #e8eef5;
+  }
+  .legal-footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; max-width: min(42rem, 100%); margin: 0; }
+  .legal-footer-pair { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 0 2px; max-width: 100%; }
+  .legal-footer-copy, .legal-footer-filing { margin: 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+  .legal-footer-copy { font-size: 12.5px; line-height: 1.6; }
+  .legal-footer-filing { font-size: 12px; line-height: 1.55; color: #78879a; }
   a { color: inherit; text-decoration: none; }
   a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 2px; }
 </style>
 <main><section><h1>登录 AI 短剧平台</h1><p>AI 短剧剧本与分镜创作工作台</p><p>登录、注册及登录后页面共用同一公共页脚。</p></section></main>
-<footer class="legal-footer" aria-label="法律信息 Legal">
-  <nav aria-label="法律信息 Legal">
-    <span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">服务条款</a> / <a href="https://www.bgssai.com/en/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a></span>
-    <span> · <a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a> / <a href="https://www.bgssai.com/en/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a></span>
+<footer class="legal-footer">
+  <nav class="legal-footer-links" aria-label="法律信息 Legal">
+    <span class="legal-footer-pair"><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">服务条款</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a></span>
+    <span class="legal-footer-pair"><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a></span>
   </nav>
-  <div>© 2026 昆山兵贵神速智能科技有限公司</div>
-  <div class="legal-footer-filing"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></div>
+  <p class="legal-footer-copy">© 2026 昆山兵贵神速智能科技有限公司</p>
+  <p class="legal-footer-filing"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></p>
 </footer>
 </html>
