@@ -24,7 +24,7 @@
   --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 24px 60px -24px rgba(15, 23, 42, 0.22), 0 1px 2px rgba(15, 23, 42, 0.05);
 
-  min-height: calc(100vh - var(--icp-footer-height, var(--icp-footer-h, 52px)));
+  min-height: calc(100vh - var(--icp-footer-height, var(--icp-footer-h, var(--app-footer-clearance, 128px))));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   /* 浅灰底 + 顶部一层很淡的品牌蓝光，静止不动 */

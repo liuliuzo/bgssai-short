@@ -68,3 +68,7 @@
 用户端登录、注册只呈现用户协议与隐私政策两份文件的一行同意文案，已有勾选框保持原交互。管理端登录不放同意行。Web 全路由使用统一页脚，年份动态读取，域名 `bgssai-short.com` 已取得网站备案号 `苏ICP备2024070062号-15`，两端页脚补充工信部查询链接 `https://beian.miit.gov.cn/`（见 [网站 ICP 备案展示](icp-filing-footer.md)）。中英界面各显示当前语言，备案号保持中文不翻译。原生客户端只收敛已有同意及设置入口。内部审阅备注不进入产品界面，法务正文保持原内容。
 
 标准见 [bgssai-skeleton https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md 第 15 节](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md#15-法务同意行与页脚统一口径全产品线强制)。官网用户端沿用服务条款、隐私政策、法律信息和语言切换的页脚底栏。
+
+## 2026-11-12 登录页脚分层排版
+
+登录与全站共用页脚改为三层：条款双语链接行、版权行、备案行。链接可自然换行，不强制单行、不缩小到不可读；保留既有官网 URL 与 `苏ICP备2024070062号-15`。不改法律正文、不删英文标签。

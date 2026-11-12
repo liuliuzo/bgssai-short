@@ -189,7 +189,7 @@ body,
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  --app-footer-clearance: 96px;
+  --app-footer-clearance: 128px;
 }
 
 .app-routes {
