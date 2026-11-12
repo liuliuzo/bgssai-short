@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Card, Empty, Input, Modal, Tabs, Table, Typography, message } from 'antd'
+import { Alert, Button, Card, Empty, Input, Modal, Select, Table, Typography, message } from 'antd'
 import { CopyOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import mcpTokensApi from '../../api/mcpTokens'
@@ -125,11 +125,16 @@ export default function McpTokens() {
   const [modalOpen, setModalOpen] = useState(false)
   const [tokenName, setTokenName] = useState('')
   const [creating, setCreating] = useState(false)
-  const [groupKey, setGroupKey] = useState('foreign')
   const [agentKey, setAgentKey] = useState('cursor')
   const endpoint = `${window.location.origin}/api/mcp`
-  const visibleAgents = AGENTS.filter((agent) => agent.group === groupKey)
-  const activeAgent = visibleAgents.find((a) => a.key === agentKey) || visibleAgents[0]
+  const activeAgent = AGENTS.find((agent) => agent.key === agentKey) || AGENTS[0]
+  const agentOptions = GROUPS.map((group) => ({
+    label: group.label,
+    options: AGENTS.filter((agent) => agent.group === group.key).map((agent) => ({
+      value: agent.key,
+      label: agent.label,
+    })),
+  }))
 
   const load = async () => {
     setLoading(true)
@@ -216,42 +221,29 @@ export default function McpTokens() {
           style={{ marginBottom: 16 }}
           message="连接器分成国外、国内和 Bgssai Bot 三类，使用同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
         />
-        <Paragraph style={{ marginBottom: 8 }}>
+        <Paragraph style={{ marginBottom: 12 }}>
           端点：<Text code copyable>{endpoint}</Text>
         </Paragraph>
-        <Tabs
-          activeKey={groupKey}
-          onChange={(key) => {
-            setGroupKey(key)
-            const next = AGENTS.find((agent) => agent.group === key)
-            if (next) setAgentKey(next.key)
-          }}
-          style={{ marginBottom: 8 }}
-          items={GROUPS.map((group) => ({ key: group.key, label: group.label }))}
-        />
-        <Tabs
-          activeKey={activeAgent.key}
+        <Select
+          showSearch
+          optionFilterProp="label"
+          value={activeAgent.key}
           onChange={setAgentKey}
-          items={visibleAgents.map((agent) => ({
-            key: agent.key,
-            label: agent.label,
-            children: (
-              <div>
-                <Paragraph type="secondary" style={{ marginBottom: 12 }}>{agent.hint}</Paragraph>
-                <pre style={{
-                  fontSize: 12,
-                  background: 'var(--ant-color-fill-quaternary, #f5f5f5)',
-                  borderRadius: 8,
-                  padding: 12,
-                  overflowX: 'auto',
-                  marginBottom: 12,
-                  whiteSpace: 'pre-wrap',
-                }}>{agent.snippet(endpoint)}</pre>
-                <Button icon={<CopyOutlined />} onClick={copySnippet}>复制配置</Button>
-              </div>
-            ),
-          }))}
+          options={agentOptions}
+          style={{ width: '100%', maxWidth: 420, marginBottom: 16 }}
+          aria-label="选择 AI 工具"
         />
+        <Paragraph type="secondary" style={{ marginBottom: 12 }}>{activeAgent.hint}</Paragraph>
+        <pre style={{
+          fontSize: 12,
+          background: 'var(--ant-color-fill-quaternary, #f5f5f5)',
+          borderRadius: 8,
+          padding: 12,
+          overflowX: 'auto',
+          marginBottom: 12,
+          whiteSpace: 'pre-wrap',
+        }}>{activeAgent.snippet(endpoint)}</pre>
+        <Button icon={<CopyOutlined />} onClick={copySnippet}>复制配置</Button>
       </Card>
 
       <Card
