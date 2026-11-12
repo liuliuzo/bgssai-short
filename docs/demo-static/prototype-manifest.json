@@ -6,7 +6,7 @@
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
   "prototype_bundle_digest": "de31ed34a339184ce8cfde19e4972964c40f2174e09c089377d697e696c3e687",
-  "code_contract_digest": "e5414b2dc5576ddfeb31d3fd9c247d8fbf944abbbcf70ee9fcde0c0f23783398",
+  "code_contract_digest": "389789b8e1e4a799d485959fff1829cc5ebb7e7c0f619bcb35ca858fde2f1afc",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -578,7 +578,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "d860b318d3e6f972ea36b7d7f347531c4a8fb1557a1cc3c1168990acb6af4a97"
+      "sha256": "99b9be936d673051b58a2a7dd32f919909d52f69d50ef701b870906d93025643"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",

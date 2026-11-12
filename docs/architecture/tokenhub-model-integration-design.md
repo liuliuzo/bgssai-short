@@ -81,7 +81,7 @@ TEXT 的 `usage.total_tokens`、PixVerse 的 `tokenhub_usage.total_tokens` 等�
 | Hy ASR | `queued` / `in_progress` | `completed` | `failed` |
 
 轮询间隔取 `config_json.poll_interval_ms`，默认视频 3000ms、ASR 2000ms。画面和视频的现行客户端
-走 OpenAI 兼容媒体接口（见 3.3），轮询总时限是 `max(180 秒, timeout_sec)`，避免长视频在 180 秒被提前判失败。
+走 OpenAI 兼容媒体接口（见 3.3）。画面至少等 10 分钟，视频至少等 15 分钟；模型自己的 `timeout_sec` 更长时以模型为准。查询状态时单次超时或网关短暂 502/503/504 会继续查，不把还在生成的任务判失败。
 超时对用户展示「生成超时，任务可能仍在处理，请到任务中心查看或稍后重试」。审核失败与其它上游失败仍按
 既有失败码回写。Worker 只重试平台允许的超时和 5xx，不重试审核失败或参数错误。
 

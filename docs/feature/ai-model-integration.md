@@ -112,7 +112,8 @@
     DEV 要直连该公司网关：管理端清空 `ai.tokenhub_cn.api_key`（开发库 init 会把占位符写回）后再填写兼容密钥。
     走中枢则把真实中枢密钥写入 `ai.tokenhub_cn.api_key`，DEV 主机已是 `bgssai.llm.tokenhub-cn-base-url`。
     配音音色 `default_voice_id` 与画面 `size` 由管理端改成网关实际值，种子只给占位 `zh` 与 `512x768`。
-16. 画面和视频在中枢上的轮询时限是 `max(180 秒, timeout_sec)`。超时对用户写
+16. 画面在中枢上至少轮询 10 分钟，视频至少 15 分钟；`timeout_sec` 更长时以模型为准。
+    单次状态查询超时不会结束任务。整段时限用尽后才对用户写
     「生成超时，任务可能仍在处理，请到任务中心查看或稍后重试」，文案不出现中枢品牌或密钥名。
     视频任务入队前按目录核对 `video_generation`，不 POST 视频探测。
 

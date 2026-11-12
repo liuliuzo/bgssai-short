@@ -168,8 +168,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
             body.put("image", image);
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, timeoutSec));
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
+        int budget = mediaBudgetSec(timeoutSec, 600);
+        Map<String, Object> submitted = post(base + IMAGE_PATH, apiKey, body, Math.min(180, budget));
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, budget);
         return mediaResult(request, done, "image/png", 0, 1080, 1920, timeoutSec, base, apiKey);
     }
 
@@ -185,11 +186,12 @@ public class TencentTokenHubAiProvider implements AiProvider {
             body.put("image", image);
         }
         String resumeId = ShortJson.text(request.param("resume_request_id"));
+        int budget = mediaBudgetSec(timeoutSec, 900);
         Map<String, Object> submitted = resumeId.isBlank()
                 ? post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec))
                 : get(base + VIDEO_PATH + "/by-request/" + encodeQuery(resumeId) + "?model=" + encodeQuery(model), apiKey, 60);
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec);
-        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, timeoutSec, base, apiKey);
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, budget);
+        AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, budget, base, apiKey);
         if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
             ready.setDurationSec(duration);
         }
@@ -322,10 +324,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model content route mismatch");
             }
             requireHttps(base, "model gateway");
-            bytes = http.getBytes(URI.create(base).resolve(relative).toString(), generationHeaders(apiKey), Math.min(180, timeoutSec));
+            bytes = http.getBytes(URI.create(base).resolve(relative).toString(), generationHeaders(apiKey), timeoutSec);
         } else {
             requireHttps(url, "video url");
-            bytes = http.getBytes(url, Math.min(180, timeoutSec));
+            bytes = http.getBytes(url, timeoutSec);
         }
         AiProviderResult result = AiProviderResult.binary(bytes, "video/mp4");
         result.setDurationSec(durationSec);
@@ -346,6 +348,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
         return pollMedia(base, apiKey, model, taskId, cfg, timeoutSec);
     }
 
+    static int mediaBudgetSec(int timeoutSec, int floorSec) {
+        return Math.max(floorSec, Math.max(1, timeoutSec));
+    }
+
     static long mediaPollBudgetMs(int timeoutSec) {
         long configured = Math.max(1, timeoutSec) * 1000L;
         return Math.max(MEDIA_POLL_BUDGET_MS, configured);
@@ -361,13 +367,23 @@ public class TencentTokenHubAiProvider implements AiProvider {
         long intervalMs = Math.max(MEDIA_POLL_INTERVAL_MS, ProviderHttp.pollIntervalMs(cfg));
         long deadline = System.currentTimeMillis() + mediaPollBudgetMs(timeoutSec);
         while (System.currentTimeMillis() < deadline) {
-            Map<String, Object> resp = get(query, apiKey, 60);
-            PollState state = pollState(resp, PollKind.MEDIA);
-            if (state == PollState.SUCCEEDED) {
-                return resp;
-            }
-            if (state == PollState.FAILED) {
-                throw upstream("model task failed", resp);
+            try {
+                Map<String, Object> resp = get(query, apiKey, 60);
+                PollState state = pollState(resp, PollKind.MEDIA);
+                if (state == PollState.SUCCEEDED) {
+                    return resp;
+                }
+                if (state == PollState.FAILED) {
+                    throw upstream("model task failed", resp);
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw ex;
+            } catch (Exception ex) {
+                if (!TokenHubClientSupport.transientUpstream(ex) || System.currentTimeMillis() >= deadline) {
+                    throw ex;
+                }
+                log.warn("media status query will retry taskId={}", taskId);
             }
             sleeper.sleep(intervalMs);
         }

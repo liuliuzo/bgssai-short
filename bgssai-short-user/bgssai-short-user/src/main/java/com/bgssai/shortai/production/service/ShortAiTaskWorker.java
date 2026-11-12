@@ -322,14 +322,28 @@ public class ShortAiTaskWorker {
     }
 
     private int timeoutSecOf(ShortAiTask task) {
+        int base;
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             Integer t = model.getTimeoutSec();
-            return t == null || t <= 0 ? DEFAULT_TIMEOUT_SEC : t;
+            base = t == null || t <= 0 ? DEFAULT_TIMEOUT_SEC : t;
         } catch (RuntimeException ex) {
             // 模型行被停用 / 删除时仍要能回收，走兜底上限。
-            return DEFAULT_TIMEOUT_SEC;
+            base = DEFAULT_TIMEOUT_SEC;
         }
+        if ("VIDEO".equals(task.getTaskType())) {
+            return Math.max(base, 900) * 2 + 120;
+        }
+        if ("IMAGE".equals(task.getTaskType())) {
+            int perCall = Math.max(base, 600);
+            int count = 1;
+            if ("PORTRAIT".equals(task.getTargetType()) || "SCENE_PORTRAIT".equals(task.getTargetType())) {
+                count = Math.max(1, Math.min(8, com.bgssai.shortai.production.support.ShortJson.integer(
+                        com.bgssai.shortai.production.support.ShortJson.map(task.getRequestJson()).get("candidate_count"), 1)));
+            }
+            return perCall * count;
+        }
+        return base;
     }
 
     private void run(ShortAiTask task) {
