@@ -133,6 +133,8 @@ public class ShortAiTaskWorker {
     private AiProviderRegistry aiProviderRegistry;
     @Autowired
     private ObjectStorage objectStorage;
+    @Autowired(required = false)
+    private LookKnowledgeService lookKnowledgeService;
     @Autowired
     private Environment environment;
     @Autowired
@@ -785,6 +787,7 @@ public class ShortAiTaskWorker {
             request.getParams().put("color_index", i);
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
+            attachLookReference(row.getUserId(), "CHARACTER", prompt, request);
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getCharacterId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
@@ -814,6 +817,8 @@ public class ShortAiTaskWorker {
             request.getParams().put("color_index", i);
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
+            String kind = row.getCardType() == null || row.getCardType().isBlank() ? "SCENE" : row.getCardType();
+            attachLookReference(row.getUserId(), kind, prompt, request);
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getSceneCardId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
@@ -1022,6 +1027,25 @@ public class ShortAiTaskWorker {
      * IMAGE path: attach first locked character portrait as subject reference (Kling
      * image_reference=subject). Scene card appearance stays in prompt text.
      */
+    private void attachLookReference(String userId, String kind, String prompt, AiProviderRequest request) {
+        if (lookKnowledgeService == null || request.param("image_base64") != null || request.param("image_url") != null) {
+            return;
+        }
+        LookKnowledgeService.LookHit hit = lookKnowledgeService.bestMatch(userId, kind, prompt);
+        if (hit == null) {
+            return;
+        }
+        byte[] bytes = objectStorage.get(hit.storageKey());
+        if (bytes == null || bytes.length == 0) {
+            return;
+        }
+        request.getParams().put("image_base64", Base64.getEncoder().encodeToString(bytes));
+        request.getParams().put("image_mime", hit.mimeType());
+        request.getParams().put("image_reference", "subject");
+        request.getParams().put("image_fidelity", 0.82);
+        request.getParams().put("human_fidelity", 0.7);
+    }
+
     private void attachConsistencyRefs(ConsistencyBundle consistency, AiProviderRequest request) {
         if (consistency.characters().isEmpty()) {
             return;

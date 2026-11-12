@@ -30,6 +30,7 @@
 | `login.html` | `/en` | - | 与该页一致 | - |
 | `login.html` | `/en/*` | - | 与该页一致 | - |
 | `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
+| `look-library.html` | `/look-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
 | `mcp-tokens.html` | `/mcp-tokens` | - | 与该页一致 | - |
 | `oauth-callback.html` | `/oauth-callback` | - | 与该页一致 | - |
 | `subscription.html` | `/subscription` | - | 与该页一致 | - |

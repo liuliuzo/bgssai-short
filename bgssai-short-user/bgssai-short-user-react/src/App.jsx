@@ -15,6 +15,7 @@ import SubscriptionPage from './pages/subscription/SubscriptionPage'
 import AccountSettingsPage from './pages/account/AccountSettingsPage'
 import UsageBillingPage from './pages/usage/UsageBillingPage'
 import WorksPage from './pages/works/WorksPage'
+import LookLibraryPage from './pages/look/LookLibraryPage'
 import WorkStudio from './pages/works/WorkStudio'
 import TasksPage from './pages/tasks/TasksPage'
 
@@ -108,6 +109,7 @@ export default function App() {
         <Route path="/account" element={<AccountSettingsPage />} />
         <Route path="/usage" element={<UsageBillingPage />} />
         <Route path="/works" element={<WorksPage />} />
+        <Route path="/look-library" element={<LookLibraryPage />} />
         <Route path="/works/:workId" element={<WorkStudio />} />
         <Route path="/works/:workId/:tab" element={<WorkStudio />} />
         <Route path="/tasks" element={<TasksPage />} />
