@@ -35,7 +35,7 @@ Query：`ability_type`（可选）。需 `PLATFORM_ADMIN`。
     "updated_time": "2026-08-31 15:02:31" } ] } }
 ```
 
-响应不含任何密钥明文。
+响应不含任何密钥明文。上例是共享种子与生产库的 VIDEO 默认。开发库另有启用行 `model_code=bgssai-video`（`TENCENT_TOKENHUB`，`hub=cn`，`secret_ref=ai.tokenhub_cn.api_key`，`timeout_sec=900`），并且只在开发库把它设为 VIDEO 默认、同时取消 `m-tokenhub-video-minimax` 的默认。生产默认不改。
 
 ### POST /bgssai/admin/ai-models/create
 

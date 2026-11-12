@@ -308,6 +308,7 @@
         <code>bgssai-image</code>（BGSSAI Image）。VIDEO 模型来自
         <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
         <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交；存在首帧时由服务端走图生视频，否则走文生视频。
+        未传 <code>model_code</code> 时，开发库解析到已启用的 <code>bgssai-video</code>（国内中枢，超时 900 秒），不落到 MiniMax 或 <code>cogvideox</code>。生产默认模型不因该种子改动。
         页面与接口不展示网关编号。
         首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经
         <code>POST /bgssai/user/shots/frame-link-save</code> 与 <code>/frame-link-batch</code> 维护，
