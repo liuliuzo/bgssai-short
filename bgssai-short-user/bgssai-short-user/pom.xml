@@ -163,6 +163,12 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <version>8.19.4</version>
+        </dependency>
+
         <!-- Huawei Cloud OBS -->
         <dependency>
             <groupId>com.huaweicloud</groupId>

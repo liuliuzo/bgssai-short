@@ -31,7 +31,7 @@ import com.bgssai.shortai.storage.ObjectStorage;
 
 /**
  * 定妆知识库。形态对照多知识库容器：建库、上传图片素材、挂到定妆生成。
- * 图片按名称和说明与外观描述对齐后，作为主体参考图交给图像模型。
+ * 图片说明写入 Elasticsearch 做检索。生成时先用这张卡的图，没有再按外观描述召回。
  */
 @Service
 public class LookKnowledgeService {
@@ -48,6 +48,8 @@ public class LookKnowledgeService {
     private ObjectStorage objectStorage;
     @Autowired
     private Environment environment;
+    @Autowired(required = false)
+    private LookRagIndex lookRagIndex;
 
     public record LookHit(String materialId, String storageKey, String mimeType, String caption) {
     }
@@ -170,6 +172,9 @@ public class LookKnowledgeService {
         ShortLookLibraryExample libUp = new ShortLookLibraryExample();
         libUp.createCriteria().andIdEqualTo(library.getId());
         libraryMapper.updateByExampleSelective(libPatch, libUp);
+        if (lookRagIndex != null) {
+            lookRagIndex.remove(row.getMaterialId());
+        }
         return Responses.ok("ok");
     }
 
@@ -300,6 +305,12 @@ public class LookKnowledgeService {
         if (mounted.isEmpty()) {
             return null;
         }
+        if (lookRagIndex != null) {
+            LookHit retrieved = lookRagIndex.search(userId, mounted, wanted, prompt);
+            if (retrieved != null) {
+                return retrieved;
+            }
+        }
         ShortLookMaterial best = null;
         int bestScore = 0;
         for (ShortLookMaterial row : materialsOfUser(userId)) {
@@ -379,6 +390,9 @@ public class LookKnowledgeService {
             ShortLookMaterialExample up = new ShortLookMaterialExample();
             up.createCriteria().andIdEqualTo(row.getId());
             materialMapper.updateByExampleSelective(patch, up);
+            if (lookRagIndex != null) {
+                lookRagIndex.remove(row.getMaterialId());
+            }
         }
     }
 
@@ -418,6 +432,9 @@ public class LookKnowledgeService {
         libraryMapper.updateByExampleSelective(patch, up);
         library.setItemCount(patch.getItemCount());
         library.setUsageBytes(patch.getUsageBytes());
+        if (lookRagIndex != null) {
+            lookRagIndex.upsert(row);
+        }
         return row;
     }
 
