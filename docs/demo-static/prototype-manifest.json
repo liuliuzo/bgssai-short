@@ -6,7 +6,7 @@
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
   "prototype_bundle_digest": "142ca9f82ed5bc1469a4405c1878c519a8e4a245ddc7ba4cca5b35428b3f824a",
-  "code_contract_digest": "4a740cd22733b9fe5605fe2fa9ce2425e77b2ce5d53f32626c174a85fe5f78cb",
+  "code_contract_digest": "e5414b2dc5576ddfeb31d3fd9c247d8fbf944abbbcf70ee9fcde0c0f23783398",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -84,6 +84,8 @@
     "/bgssai/user/compliance/precheck",
     "/bgssai/user/credit-packs",
     "/bgssai/user/credit-packs/orders",
+    "/bgssai/user/drama-assist/advise",
+    "/bgssai/user/drama-assist/apply",
     "/bgssai/user/edit-projects/detail",
     "/bgssai/user/edit-projects/export",
     "/bgssai/user/edit-projects/list",
@@ -480,7 +482,15 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-      "sha256": "4cffe1442ba34df8299793d7eb5534a03e3a1959cca1bda7834a25b726112808"
+      "sha256": "e54a0b3bca57953191b207032db8b4ef597d8169dff7f4d67bc7e7d5ddf85173"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js",
+      "sha256": "55977287d42c4e4115ab698ac7fbc4dd6aa712a9ded31f83ea15c022d91d148b"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.test.js",
+      "sha256": "cc403a6e60d25a5eb053a531bb4dd5490aa0936b7086e8a0932126d5e2c6571f"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx",
@@ -508,7 +518,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/mcp/McpTokens.jsx",
-      "sha256": "04f4a3229e1ab934a18235223fe6cf7319710168ef95982ada071664370a2358"
+      "sha256": "ef129ea43be282e86b5097e6b9a44f89645c7ea014e08b75e7cb03a6fadbb7a6"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/subscription/NativePayQrModal.jsx",
@@ -568,7 +578,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "154b4cf39b415863e8bf89ab67517b8ef62c5368a732e84d20aeb240dc12bf47"
+      "sha256": "d860b318d3e6f972ea36b7d7f347531c4a8fb1557a1cc3c1168990acb6af4a97"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -576,23 +586,23 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/shotCardMedia.js",
-      "sha256": "a8350b066280ed8795973b2ed744a77335711491a4fc9e9596e00e555bb09d44"
+      "sha256": "80bdc0d5224336b47cce6b10d687713056b746fa68166b3509c44ff54ad3e3ee"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/shotCardMedia.test.js",
-      "sha256": "f1b90e323e1ddac0c67d9e8499964d7b1f371acc0de43895e9a309e14f42a2b9"
+      "sha256": "12387af95b5ffa9641aced0c5eab166475ad0af6780b8bd0846529410973631a"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/shotListMedia.jsx",
-      "sha256": "124dc920e25b986f1925cbcde6de5ce32d915085f51dbdb537c66ad6873a64b8"
+      "sha256": "2800bb987c4cc565e2ead213fa0f031e0a245974afde5e612be1489160858fd0"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/studioListUx.js",
-      "sha256": "acba2ab8db93e33720b28001d9c2514a2406eaeff753ce615c92d5de2d73871e"
+      "sha256": "2f1226752850649b545540eb6d8f762c4532323aa16909e388a329ee4402cf66"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/studioListUx.test.js",
-      "sha256": "f4d9ffa186e11982224c1bf398a1308f0945d61a36382509d2fd81af02e19e9b"
+      "sha256": "fd98c8b22e95f0de52018401b5e307eb53cb4951d100883016512952ddb63809"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/account/service/AccountDeletionService.java",
@@ -799,6 +809,10 @@
       "sha256": "db88385282eccdef04b18f6dde90e8a8d38c669f5e710d7756bd05865662389d"
     },
     {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/DramaAssistService.java",
+      "sha256": "a8e0ea61775dc2476718f5f200551b651b5dadbbee6f6866dfc494a4809cd6ae"
+    },
+    {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/DubbingService.java",
       "sha256": "a46001a85cd0f3a8b3a6cb908446422ed8afa7ea4e4c01645d15eb18aca81266"
     },
@@ -929,6 +943,10 @@
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/DeleteSourceController.java",
       "sha256": "578969a433c36e9a23dc7aab44b6069972e98b92db8c08e96999cabe16757f15"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/DramaAssistController.java",
+      "sha256": "3e13d9b46060d32c8bc400e2d9322d8c9f7df65a43344a46e04a8e5b145b0b16"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/ui/EditProjectDetailController.java",
@@ -1302,7 +1320,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1344,7 +1362,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1386,7 +1404,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1764,7 +1782,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1785,7 +1803,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1806,7 +1824,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1827,7 +1845,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1848,7 +1866,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1869,7 +1887,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1890,7 +1908,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1911,7 +1929,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1932,7 +1950,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1953,7 +1971,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1974,7 +1992,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1995,7 +2013,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2016,7 +2034,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2037,7 +2055,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2058,7 +2076,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2079,7 +2097,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2100,7 +2118,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2121,7 +2139,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2142,7 +2160,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2163,7 +2181,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2184,7 +2202,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2205,7 +2223,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2226,7 +2244,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2247,7 +2265,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2268,7 +2286,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2289,7 +2307,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2310,7 +2328,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2331,7 +2349,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2352,7 +2370,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2373,7 +2391,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2394,7 +2412,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2415,7 +2433,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2436,7 +2454,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2457,7 +2475,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2478,7 +2496,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2499,7 +2517,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2520,7 +2538,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2541,7 +2559,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2562,7 +2580,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2583,7 +2601,7 @@
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",

@@ -6,9 +6,46 @@ import mcpTokensApi from '../../api/mcpTokens'
 
 const { Paragraph, Text, Title } = Typography
 
+function remoteAgent(key, group, label, hint) {
+  return {
+    key,
+    group,
+    label,
+    hint,
+    snippet: (endpoint) => `MCP URL:  ${endpoint}
+Auth:     Authorization: Bearer bgs_mcp_你的令牌
+Transport: Streamable HTTP (POST)
+Name:     bgssai-short`,
+  }
+}
+
+function jsonAgent(key, group, label, hint, fileHint) {
+  return {
+    key,
+    group,
+    label,
+    hint: `${hint} 配置文件：${fileHint}。`,
+    snippet: (endpoint) => `{
+  "mcpServers": {
+    "bgssai-short": {
+      "url": "${endpoint}",
+      "headers": { "Authorization": "Bearer bgs_mcp_你的令牌" }
+    }
+  }
+}`,
+  }
+}
+
+const GROUPS = [
+  { key: 'foreign', label: '国外' },
+  { key: 'domestic', label: '国内' },
+  { key: 'bot', label: 'Bgssai Bot' },
+]
+
 const AGENTS = [
   {
     key: 'claude',
+    group: 'foreign',
     label: 'Claude',
     hint: 'Claude Code / Claude Desktop 通过 Streamable HTTP 连接本站 MCP。',
     snippet: (endpoint) => `claude mcp add --transport http bgssai-short ${endpoint} \\
@@ -16,6 +53,7 @@ const AGENTS = [
   },
   {
     key: 'codex',
+    group: 'foreign',
     label: 'Codex',
     hint: 'Codex CLI 添加远程 MCP，Bearer 头携带个人访问令牌。',
     snippet: (endpoint) => `codex mcp add bgssai-short --url ${endpoint} \\
@@ -23,6 +61,7 @@ const AGENTS = [
   },
   {
     key: 'cursor',
+    group: 'foreign',
     label: 'Cursor',
     hint: '写入项目或用户级 .cursor/mcp.json，重启 Cursor 后生效。',
     snippet: (endpoint) => `{
@@ -36,14 +75,39 @@ const AGENTS = [
   },
   {
     key: 'grok-bot',
+    group: 'foreign',
     label: 'Grok Bot',
     hint: '在 Grok Bot 的 MCP / 远程工具配置中填入端点与 Bearer 令牌。',
     snippet: (endpoint) => `MCP URL:  ${endpoint}
 Auth:     Authorization: Bearer bgs_mcp_你的令牌
 Transport: Streamable HTTP (POST)`,
   },
+  remoteAgent('chatgpt', 'foreign', 'ChatGPT', 'ChatGPT 桌面或网页的 Apps / Connectors 里添加远程 MCP。'),
+  jsonAgent('vscode', 'foreign', 'VS Code', 'GitHub Copilot 的 MCP 配置。', '.vscode/mcp.json'),
+  jsonAgent('windsurf', 'foreign', 'Windsurf', 'Windsurf / Devin Desktop 的 MCP 配置。', '~/.codeium/windsurf/mcp_config.json'),
+  jsonAgent('gemini', 'foreign', 'Gemini', 'Gemini CLI / Antigravity 的 MCP 配置。', '~/.gemini/settings.json'),
+  jsonAgent('cline', 'foreign', 'Cline', 'Cline 扩展的 MCP 配置。', '~/.cline/mcp.json'),
+  jsonAgent('continue', 'foreign', 'Continue', 'Continue 的 MCP 配置。', 'config.json'),
+  jsonAgent('zed', 'foreign', 'Zed', 'Zed 的上下文服务器配置。', '~/.config/zed/settings.json'),
+  jsonAgent('warp', 'foreign', 'Warp', 'Warp 桌面端的 MCP 配置。', '~/.warp/.mcp.json'),
+  jsonAgent('opencode', 'foreign', 'OpenCode', 'OpenCode 的 MCP 配置。', 'opencode.json'),
+  jsonAgent('goose', 'foreign', 'Goose', 'Goose 的扩展配置。', '~/.config/goose/config.yaml'),
+  jsonAgent('workbuddy', 'domestic', 'WorkBuddy', '腾讯 WorkBuddy 桌面端，用户级或项目级 mcp.json。', '~/.workbuddy/mcp.json'),
+  remoteAgent('doubao', 'domestic', '豆包 PC', '豆包 PC / 豆包工作的自定义 MCP 连接器里填写端点与 Bearer 令牌。'),
+  jsonAgent('kimi-work', 'domestic', 'Kimi Work', '月之暗面 Kimi Work 桌面端的 MCP 配置。', 'Kimi Work MCP 设置'),
+  jsonAgent('qoderwork', 'domestic', 'QoderWork', '阿里 QoderWork 桌面端的 MCP 配置。', 'QoderWork MCP 设置'),
+  jsonAgent('trae', 'domestic', 'TRAE', '字节 TRAE / TRAE Work 的 MCP 配置。', 'TRAE MCP 设置'),
+  jsonAgent('lingma', 'domestic', '通义灵码', '通义灵码或 Qwen Code 的 MCP 配置。', '~/.qwen/settings.json'),
+  jsonAgent('codebuddy', 'domestic', 'CodeBuddy', '腾讯云代码助手 CodeBuddy 的 MCP 配置。', 'CodeBuddy MCP 设置'),
+  remoteAgent('autoclaw', 'domestic', '智谱 AutoClaw', '智谱 AutoClaw 桌面端的自定义工具或 MCP 配置里填写端点。'),
+  remoteAgent('deepseek', 'domestic', 'DeepSeek', 'DeepSeek 桌面或 deepseek-harness 的 MCP 配置里填写端点。'),
+  remoteAgent('yuanbao', 'domestic', '腾讯元宝', '腾讯元宝桌面端若提供 MCP / 自定义工具，填写同一端点。'),
+  remoteAgent('wenxin', 'domestic', '文心', '文心一言或文心快码若提供 MCP / 自定义工具，填写同一端点。'),
+  remoteAgent('stepfun', 'domestic', '阶跃桌面伙伴', '阶跃 AI 桌面伙伴的 MCP 配置里填写端点。'),
+  remoteAgent('lobster', 'domestic', 'LobsterAI', '网易 LobsterAI 的本地 MCP 配置里填写端点。'),
   {
     key: 'bgssai-bot',
+    group: 'bot',
     label: 'Bgssai Bot',
     hint: 'Bgssai Bot 可用本页 PAT 连接；也支持「用 Chat 登录」后下发 MCP（不在本页）。',
     snippet: (endpoint) => `MCP URL:  ${endpoint}
@@ -61,9 +125,11 @@ export default function McpTokens() {
   const [modalOpen, setModalOpen] = useState(false)
   const [tokenName, setTokenName] = useState('')
   const [creating, setCreating] = useState(false)
+  const [groupKey, setGroupKey] = useState('foreign')
   const [agentKey, setAgentKey] = useState('cursor')
   const endpoint = `${window.location.origin}/api/mcp`
-  const activeAgent = AGENTS.find((a) => a.key === agentKey) || AGENTS[0]
+  const visibleAgents = AGENTS.filter((agent) => agent.group === groupKey)
+  const activeAgent = visibleAgents.find((a) => a.key === agentKey) || visibleAgents[0]
 
   const load = async () => {
     setLoading(true)
@@ -148,15 +214,25 @@ export default function McpTokens() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          message="为 Claude、Codex、Cursor、Grok Bot、Bgssai Bot 配置同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
+          message="连接器分成国外、国内和 Bgssai Bot 三类，使用同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
         />
         <Paragraph style={{ marginBottom: 8 }}>
           端点：<Text code copyable>{endpoint}</Text>
         </Paragraph>
         <Tabs
-          activeKey={agentKey}
+          activeKey={groupKey}
+          onChange={(key) => {
+            setGroupKey(key)
+            const next = AGENTS.find((agent) => agent.group === key)
+            if (next) setAgentKey(next.key)
+          }}
+          style={{ marginBottom: 8 }}
+          items={GROUPS.map((group) => ({ key: group.key, label: group.label }))}
+        />
+        <Tabs
+          activeKey={activeAgent.key}
           onChange={setAgentKey}
-          items={AGENTS.map((agent) => ({
+          items={visibleAgents.map((agent) => ({
             key: agent.key,
             label: agent.label,
             children: (
