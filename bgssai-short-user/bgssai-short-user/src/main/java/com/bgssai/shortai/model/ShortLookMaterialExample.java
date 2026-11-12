@@ -33,6 +33,8 @@ public class ShortLookMaterialExample {
         public Criteria andLibraryIdEqualTo(String value) { addCriterion("library_id =", value, "libraryId"); return (Criteria) this; }
         public Criteria andUserIdEqualTo(String value) { addCriterion("user_id =", value, "userId"); return (Criteria) this; }
         public Criteria andMaterialKindEqualTo(String value) { addCriterion("material_kind =", value, "materialKind"); return (Criteria) this; }
+        public Criteria andViewAngleEqualTo(String value) { addCriterion("view_angle =", value, "viewAngle"); return (Criteria) this; }
+        public Criteria andCardIdEqualTo(String value) { addCriterion("card_id =", value, "cardId"); return (Criteria) this; }
         public Criteria andDeletedFlagEqualTo(Integer value) { addCriterion("deleted_flag =", value, "deletedFlag"); return (Criteria) this; }
     }
 

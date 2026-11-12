@@ -13,6 +13,9 @@ public class ShortLookMaterial implements Serializable {
     private String materialName;
     private String caption;
     private String materialKind;
+    private String viewAngle;
+    private String cardId;
+    private String assetId;
     private String mimeType;
     private String storageKey;
     private Integer width;
@@ -36,6 +39,12 @@ public class ShortLookMaterial implements Serializable {
     public void setCaption(String caption) { this.caption = caption; }
     public String getMaterialKind() { return materialKind; }
     public void setMaterialKind(String materialKind) { this.materialKind = materialKind; }
+    public String getViewAngle() { return viewAngle; }
+    public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
+    public String getCardId() { return cardId; }
+    public void setCardId(String cardId) { this.cardId = cardId; }
+    public String getAssetId() { return assetId; }
+    public void setAssetId(String assetId) { this.assetId = assetId; }
     public String getMimeType() { return mimeType; }
     public void setMimeType(String mimeType) { this.mimeType = mimeType; }
     public String getStorageKey() { return storageKey; }

@@ -28,11 +28,11 @@ const portraitCharacter = (characterId, modelCode, candidateCount) =>
   })
 const lockCharacter = (characterId, assetId) =>
   http.post('/user/characters/lock', { character_id: characterId, asset_id: assetId })
-const uploadCharacterPortrait = (characterId, imageBase64, caption) =>
+const uploadCharacterPortrait = (characterId, imageBase64, viewAngle) =>
   http.post('/user/characters/portrait-upload', {
     character_id: characterId,
     image_base64: imageBase64,
-    caption,
+    view_angle: viewAngle || 'FRONT_FACE',
   })
 const consistencyPanel = (workId) => http.get('/user/assets/consistency-panel', { work_id: workId })
 const bindShotAssets = (body) => http.post('/user/shots/bind-assets', body)

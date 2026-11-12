@@ -1416,6 +1416,9 @@ CREATE TABLE `short_look_material` (
   `material_name` VARCHAR(120) NOT NULL,
   `caption` VARCHAR(500) DEFAULT NULL,
   `material_kind` VARCHAR(16) NOT NULL DEFAULT 'CHARACTER',
+  `view_angle` VARCHAR(16) DEFAULT NULL,
+  `card_id` VARCHAR(64) DEFAULT NULL,
+  `asset_id` VARCHAR(64) DEFAULT NULL,
   `mime_type` VARCHAR(64) NOT NULL,
   `storage_key` VARCHAR(512) NOT NULL,
   `width` INT DEFAULT NULL,
@@ -1427,5 +1430,6 @@ CREATE TABLE `short_look_material` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_short_look_material_id` (`material_id`),
   KEY `idx_short_look_material_library` (`library_id`, `deleted_flag`),
-  KEY `idx_short_look_material_user` (`user_id`, `material_kind`, `deleted_flag`)
+  KEY `idx_short_look_material_user` (`user_id`, `material_kind`, `deleted_flag`),
+  KEY `idx_short_look_material_card` (`card_id`, `view_angle`, `deleted_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定妆知识库素材';

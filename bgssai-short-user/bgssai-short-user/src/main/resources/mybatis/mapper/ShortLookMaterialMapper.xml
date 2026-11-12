@@ -9,6 +9,9 @@
     <result column="material_name" jdbcType="VARCHAR" property="materialName" />
     <result column="caption" jdbcType="VARCHAR" property="caption" />
     <result column="material_kind" jdbcType="VARCHAR" property="materialKind" />
+    <result column="view_angle" jdbcType="VARCHAR" property="viewAngle" />
+    <result column="card_id" jdbcType="VARCHAR" property="cardId" />
+    <result column="asset_id" jdbcType="VARCHAR" property="assetId" />
     <result column="mime_type" jdbcType="VARCHAR" property="mimeType" />
     <result column="storage_key" jdbcType="VARCHAR" property="storageKey" />
     <result column="width" jdbcType="INTEGER" property="width" />
@@ -59,7 +62,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, material_id, library_id, user_id, material_name, caption, material_kind, mime_type, storage_key, width, height, file_size_byte, deleted_flag, created_time, updated_time
+    id, material_id, library_id, user_id, material_name, caption, material_kind, view_angle, card_id, asset_id, mime_type, storage_key, width, height, file_size_byte, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortLookMaterialExample" resultMap="BaseResultMap">
     select <include refid="Base_Column_List" /> from short_look_material
@@ -81,6 +84,9 @@
       <if test="materialName != null">material_name,</if>
       <if test="caption != null">caption,</if>
       <if test="materialKind != null">material_kind,</if>
+      <if test="viewAngle != null">view_angle,</if>
+      <if test="cardId != null">card_id,</if>
+      <if test="assetId != null">asset_id,</if>
       <if test="mimeType != null">mime_type,</if>
       <if test="storageKey != null">storage_key,</if>
       <if test="width != null">width,</if>
@@ -97,6 +103,9 @@
       <if test="materialName != null">#{materialName,jdbcType=VARCHAR},</if>
       <if test="caption != null">#{caption,jdbcType=VARCHAR},</if>
       <if test="materialKind != null">#{materialKind,jdbcType=VARCHAR},</if>
+      <if test="viewAngle != null">#{viewAngle,jdbcType=VARCHAR},</if>
+      <if test="cardId != null">#{cardId,jdbcType=VARCHAR},</if>
+      <if test="assetId != null">#{assetId,jdbcType=VARCHAR},</if>
       <if test="mimeType != null">#{mimeType,jdbcType=VARCHAR},</if>
       <if test="storageKey != null">#{storageKey,jdbcType=VARCHAR},</if>
       <if test="width != null">#{width,jdbcType=INTEGER},</if>

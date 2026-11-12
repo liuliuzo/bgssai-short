@@ -145,6 +145,7 @@ public class ProductionDtos {
         private String modelCode;
         private String imageBase64;
         private String caption;
+        private String viewAngle;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
         public String getCharacterId() { return characterId; }
@@ -171,6 +172,8 @@ public class ProductionDtos {
         public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
         public String getCaption() { return caption; }
         public void setCaption(String caption) { this.caption = caption; }
+        public String getViewAngle() { return viewAngle; }
+        public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
     }
 
     public static class ShotReq {
