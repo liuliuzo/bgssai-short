@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Card, Input, Modal, Space, Switch, Typography, message } from 'antd'
+import { Link, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
+import { safeReturnPath } from '../../lib/safeReturn'
 import LookSlot from './LookSlot'
 import { LOOK_ANGLES, groupLooks } from './lookGroups'
 
@@ -71,6 +73,9 @@ function MaterialView({ item, onRemove }) {
 }
 
 export default function LookLibraryPage() {
+  const [params] = useSearchParams()
+  const back = safeReturnPath(params.get('return'))
+  const backLabel = back && back.includes('/characters') ? '返回角色定妆' : '返回'
   const [libraries, setLibraries] = useState([])
   const [libraryId, setLibraryId] = useState()
   const [creating, setCreating] = useState(false)
@@ -117,6 +122,25 @@ export default function LookLibraryPage() {
       await load()
     } catch {
       message.error('知识库没有建成')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function restoreLibrary() {
+    if (!current) return
+    setBusy(true)
+    try {
+      await productionApi.saveLookLibrary({
+        library_id: current.library_id,
+        library_name: current.library_name,
+        description: current.description || '',
+        mount_portrait: 1,
+        status: 'ACTIVE',
+      })
+      await load()
+    } catch {
+      message.error('没有恢复成功')
     } finally {
       setBusy(false)
     }
@@ -242,6 +266,16 @@ export default function LookLibraryPage() {
             )
           })}
         </div>
+        {look.extra.length ? (
+          <div style={{ marginTop: 8 }}>
+            <Text type="secondary">参考图</Text>
+            <Space wrap>
+              {look.extra.map((item) => (
+                <MaterialView key={item.material_id} item={item} onRemove={() => removeMaterial(item)} />
+              ))}
+            </Space>
+          </div>
+        ) : null}
       </Card>
     )
   }
@@ -249,9 +283,14 @@ export default function LookLibraryPage() {
   return (
     <Card
       title="定妆知识库"
-      extra={<Button type="primary" onClick={() => setCreating(true)}>新建知识库</Button>}
+      extra={(
+        <Space>
+          {back ? <Link to={back}>{backLabel}</Link> : <Link to="/works">去我的作品</Link>}
+          <Button type="primary" onClick={() => setCreating(true)}>新建知识库</Button>
+        </Space>
+      )}
     >
-      <Text type="secondary">一个造型放一起。点正脸、前面、背面或侧面的空位，把那一面的照片放进去。生成定妆时，优先用正脸。</Text>
+      <Text type="secondary">这里管理可以反复使用的造型。给角色定妆时，在角色卡上就能直接选，不用先跑来这里。</Text>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 16 }}>
         <div style={{ width: 200, flexShrink: 0 }}>
           {libraries.map((item) => (
@@ -278,15 +317,22 @@ export default function LookLibraryPage() {
               </Text>
             </button>
           ))}
-          {!libraries.length ? <Text type="secondary">还没有知识库。先新建一个。</Text> : null}
+          {!libraries.length ? <Text type="secondary">还没有知识库也没关系。在角色卡上上传照片，会自动放进「我的定妆」。</Text> : null}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           {current ? (
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              <Space wrap>
-                <Text>生成定妆时参考这个库</Text>
-                <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
-              </Space>
+              {current.status === 'ARCHIVED' ? (
+                <Space wrap>
+                  <Text>这个库已归档，生成时不会自动用。</Text>
+                  <Button size="small" disabled={busy} onClick={restoreLibrary}>恢复</Button>
+                </Space>
+              ) : (
+                <Space wrap>
+                  <Text>生成定妆时参考这个库</Text>
+                  <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
+                </Space>
+              )}
               <Space wrap>
                 <Input
                   value={lookName}

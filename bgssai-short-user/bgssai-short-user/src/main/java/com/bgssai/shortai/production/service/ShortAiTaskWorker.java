@@ -75,6 +75,7 @@ import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.EditBaselineCards;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
+import com.bgssai.shortai.production.support.CardAssetSelection;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.ShotConsistency;
@@ -780,6 +781,14 @@ public class ShortAiTaskWorker {
         int count = ShortJson.integer(req.get("candidate_count"), 4);
         String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
         String prompt = appearance.isBlank() ? row.getCharacterName() : appearance;
+        boolean keepLocked = "LOCKED".equals(row.getCardStatus())
+                && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank();
+        boolean skipLook = ShortJson.integer(req.get("skip_look_reference"), 0) == 1;
+        if (keepLocked) {
+            CardAssetSelection.selectOnly(shortAssetMapper, row.getUserId(), row.getCharacterId(), row.getRefImageAssetId());
+        } else {
+            CardAssetSelection.clear(shortAssetMapper, row.getUserId(), row.getCharacterId());
+        }
         for (int i = 0; i < count; i++) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "PORTRAIT");
             request.getParams().put("title", row.getCharacterName());
@@ -787,10 +796,12 @@ public class ShortAiTaskWorker {
             request.getParams().put("color_index", i);
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
-            attachLookReference(row.getUserId(), "CHARACTER", row.getCharacterId(), prompt, request);
+            if (!skipLook) {
+                attachLookReference(row.getUserId(), "CHARACTER", row.getCharacterId(), prompt, request);
+            }
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getCharacterId(), "IMAGE", result,
-                    task.getTaskId(), i == 0);
+                    task.getTaskId(), !keepLocked && i == 0);
         }
         ShortCharacter patch = new ShortCharacter();
         patch.setCardStatus(referenceCompletionStatus(task));
@@ -810,6 +821,14 @@ public class ShortAiTaskWorker {
         int count = ShortJson.integer(req.get("candidate_count"), 4);
         String appearance = row.getAppearancePrompt() == null ? "" : row.getAppearancePrompt().trim();
         String prompt = appearance.isBlank() ? row.getCardName() : appearance;
+        boolean keepLocked = "LOCKED".equals(row.getCardStatus())
+                && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank();
+        boolean skipLook = ShortJson.integer(req.get("skip_look_reference"), 0) == 1;
+        if (keepLocked) {
+            CardAssetSelection.selectOnly(shortAssetMapper, row.getUserId(), row.getSceneCardId(), row.getRefImageAssetId());
+        } else {
+            CardAssetSelection.clear(shortAssetMapper, row.getUserId(), row.getSceneCardId());
+        }
         for (int i = 0; i < count; i++) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "SCENE_PORTRAIT");
             request.getParams().put("title", row.getCardName());
@@ -818,10 +837,12 @@ public class ShortAiTaskWorker {
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
             String kind = row.getCardType() == null || row.getCardType().isBlank() ? "SCENE" : row.getCardType();
-            attachLookReference(row.getUserId(), kind, row.getSceneCardId(), prompt, request);
+            if (!skipLook) {
+                attachLookReference(row.getUserId(), kind, row.getSceneCardId(), prompt, request);
+            }
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getSceneCardId(), "IMAGE", result,
-                    task.getTaskId(), i == 0);
+                    task.getTaskId(), !keepLocked && i == 0);
         }
         ShortSceneCard patch = new ShortSceneCard();
         patch.setCardStatus(referenceCompletionStatus(task));

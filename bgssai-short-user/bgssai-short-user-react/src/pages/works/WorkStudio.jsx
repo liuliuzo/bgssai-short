@@ -2,7 +2,7 @@ import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
 import { publicModelText } from '../../publicModel'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Checkbox, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
 import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
@@ -18,7 +18,8 @@ import StoryboardCanvas from './StoryboardCanvas'
 import { shotCardStatusCode, shotHasPlayableVideo, shotLatestTaskBadge } from './shotCardMedia'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
 import LookSlot from '../look/LookSlot'
-import { LOOK_ANGLES } from '../look/lookGroups'
+import LibraryLookPicker, { ReferenceNotice } from '../look/LibraryLookPicker'
+import { LOOK_ANGLES, referenceLine } from '../look/lookGroups'
 import {
   appendPreset,
   assetBinderPlaceholder,
@@ -410,6 +411,21 @@ function LibrarySkeleton() {
   return <Skeleton active title={false} paragraph={{ rows: 3 }} />
 }
 
+function CardReference({ reference, busy, onUse }) {
+  const ref = reference || { used: 0, source: 'NONE' }
+  if (ref.source === 'NAME' && (ref.used === 1 || ref.used === true)) {
+    return (
+      <div style={{ marginTop: 12 }}>
+        <ReferenceNotice reference={ref} />
+        {ref.material_id ? (
+          <Button size="small" style={{ marginTop: 8 }} disabled={busy} onClick={() => onUse(ref.material_id)}>就用这张做定妆照</Button>
+        ) : null}
+      </div>
+    )
+  }
+  return <div style={{ marginTop: 12 }}><Text type="secondary">{referenceLine(ref)}</Text></div>
+}
+
 function CharacterPane({ work }) {
   const [chars, setChars] = useState([])
   const [scenes, setScenes] = useState([])
@@ -421,6 +437,8 @@ function CharacterPane({ work }) {
   const [propForm] = Form.useForm()
   const [portrait, setPortrait] = useState(null)
   const [portraitCount, setPortraitCount] = useState(4)
+  const [textOnly, setTextOnly] = useState(false)
+  const libraryHref = `/look-library?return=${encodeURIComponent(`/works/${work.work_id}/characters`)}`
   const [busyIds, setBusyIds] = useState(() => new Set())
   const busyRef = useRef(new Set())
   const ownImageRef = useRef(null)
@@ -462,20 +480,51 @@ function CharacterPane({ work }) {
     setBusyIds(new Set(busyRef.current))
   }
 
+  const openGenerate = (kind, id, title, reference) => {
+    setPortraitCount(4)
+    setTextOnly(false)
+    setPortrait({ kind, id, title, reference: reference || null })
+  }
+
+  const useLook = async (kind, id, materialId) => {
+    if (!materialId || busyRef.current.has(id)) return
+    markBusy(id, true)
+    try {
+      const call = kind === 'character'
+        ? productionApi.applyCharacterLook(id, materialId)
+        : productionApi.applySceneLook(id, materialId)
+      const { data } = await call
+      if (!data?.success) {
+        if (!data?.message) message.error('没有用上这张照片')
+        return
+      }
+      message.success('已用这张照片作为定妆照')
+      await load()
+    } catch {
+      message.error('没有用上这张照片')
+    } finally {
+      markBusy(id, false)
+    }
+  }
+
   const startPortrait = () => {
     if (!portrait || busyRef.current.has(portrait.id)) return
     const target = portrait
     const count = portraitCount
     const model = imageModelCode
+    const skip = textOnly
     setPortrait(null)
     markBusy(target.id, true)
     ;(async () => {
       try {
         const call = target.kind === 'character'
-          ? productionApi.portraitCharacter(target.id, model, count)
-          : productionApi.portraitScene(target.id, model, count)
+          ? productionApi.portraitCharacter(target.id, model, count, skip)
+          : productionApi.portraitScene(target.id, model, count, skip)
         const { data } = await call
-        if (!data?.success || !data.result?.task_id) return
+        if (!data?.success || !data.result?.task_id) {
+          if (!data?.message) message.error('生成没有提交成功')
+          return
+        }
         const done = await waitTask(work.work_id, data.result.task_id)
         if (done && done.task_status !== 'SUCCEEDED') {
           message.error(`生成失败：${friendlyFailReason(done.fail_reason) || done.fail_reason_code || '未知原因'}`)
@@ -515,10 +564,16 @@ function CharacterPane({ work }) {
       const call = target.kind === 'character'
         ? productionApi.uploadCharacterPortrait(target.id, imageBase64, target.angle)
         : productionApi.uploadScenePortrait(target.id, imageBase64)
-      await call
-      message.success(target.angle === 'FRONT_FACE' || !target.angle
-        ? '正脸已锁定为定妆照，全剧按这张脸走'
-        : '已保存这一面的定妆照')
+      const { data } = await call
+      if (!data?.success) {
+        if (!data?.message) message.error('图片没有上传成功')
+        return
+      }
+      message.success(target.kind === 'character'
+        ? (target.angle === 'FRONT_FACE'
+          ? '正脸已锁定为定妆照，照片也放进了「我的定妆」'
+          : '已保存这一面，照片放进了「我的定妆」')
+        : '已锁定为参考图，照片也放进了「我的定妆」')
       load()
     } catch {
       message.error('图片没有上传成功')
@@ -552,27 +607,33 @@ function CharacterPane({ work }) {
         </Form>
         <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
         <div style={{ marginBottom: 12 }}>
-          <Text type="secondary">点某一面上传自己的照片。正脸一传就锁定，全剧按这张脸走。</Text>
-          {' '}
-          <Link to="/look-library">去知识库看已有造型</Link>
+          <Text type="secondary">先选定一张参考图，再生成定妆。可以上传照片，也可以从定妆知识库里选，不用离开这个作品。</Text>
         </div>
         {!cardsReady ? <LibrarySkeleton /> : null}
+        {cardsReady && !chars.length ? <Text type="secondary">还没有角色。先在上面写下角色名，再来定妆。</Text> : null}
         {cardsReady ? chars.map((row) => {
           const views = row.look_view_list || []
           const viewOf = (angle) => views.find((view) => view.view_angle === angle && view.file_url)
+          const hasAnglePhoto = views.some((view) => view.file_url)
+          const candidates = [...(row.candidate_list || [])].sort((a, b) => {
+            if (a.asset_id === row.ref_image_asset_id) return -1
+            if (b.asset_id === row.ref_image_asset_id) return 1
+            return 0
+          })
           return (
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
-            <Button size="small" type="primary" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>生成定妆</Button>
+            <Button size="small" type="primary" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => openGenerate('character', row.character_id, row.character_name, row.look_reference)}>生成定妆</Button>
           }>
             <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
               {LOOK_ANGLES.map(([angle, label]) => {
                 const view = viewOf(angle)
+                const currentLook = angle === 'FRONT_FACE' && view && view.asset_id && view.asset_id === row.ref_image_asset_id
                 return (
                   <LookSlot
                     key={angle}
                     label={label}
-                    note={angle === 'FRONT_FACE' && view ? '已锁定' : ''}
-                    action={view ? '更换' : '上传'}
+                    note={currentLook ? '当前定妆' : ''}
+                    action={view ? '更换照片' : '上传照片'}
                     disabled={busyIds.has(row.character_id)}
                     onAction={() => { ownImageTarget.current = { kind: 'character', id: row.character_id, angle }; ownImageRef.current?.click() }}
                   >
@@ -581,21 +642,33 @@ function CharacterPane({ work }) {
                 )
               })}
             </div>
-            {!(views.some((view) => view.file_url)) && row.ref_image_url ? (
+            <LibraryLookPicker
+              kind="CHARACTER"
+              libraryHref={libraryHref}
+              busy={busyIds.has(row.character_id)}
+              onUse={(materialId) => useLook('character', row.character_id, materialId)}
+            />
+            {row.ref_image_url && !hasAnglePhoto ? (
               <div style={{ marginTop: 12 }}>
-                <Text type="secondary">当前锁定</Text>
-                <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={128} />
+                <Text type="secondary">当前定妆照</Text>
+                <div><ClickThumb alt="当前定妆照" src={row.ref_image_url} width={72} height={128} /></div>
               </div>
             ) : null}
-            {(row.candidate_list || []).length ? (
+            <CardReference
+              reference={row.look_reference}
+              busy={busyIds.has(row.character_id)}
+              onUse={(materialId) => useLook('character', row.character_id, materialId)}
+            />
+            {candidates.length ? (
               <div style={{ marginTop: 12 }}>
-                <Text type="secondary">候选，选定一张作为正脸</Text>
+                <Text type="secondary">这些是已经生成或上传的图。要换成某一张，点选定。</Text>
                 <Space wrap style={{ marginTop: 8 }}>
-                  {(row.candidate_list || []).map((c) => (
+                  {candidates.map((c) => (
                     <div key={c.asset_id} style={{ textAlign: 'center' }}>
                       <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />
                       <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
-                        await productionApi.lockCharacter(row.character_id, c.asset_id)
+                        const { data } = await productionApi.lockCharacter(row.character_id, c.asset_id)
+                        if (!data?.success) return
                         load()
                       }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
                     </div>
@@ -617,25 +690,39 @@ function CharacterPane({ work }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
+        {cardsReady && !scenes.length ? <Text type="secondary">还没有场景。先在上面写下场景名，再上传或从知识库选一张参考图。</Text> : null}
         {cardsReady ? scenes.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
-            <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
+            <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => openGenerate('scene', row.scene_card_id, row.card_name, row.look_reference)}>生成参考图</Button>
             <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
-            <Space wrap>
-              {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={96} height={64} /> : null}
+            <Text type="secondary">可以上传一张照片，也可以从知识库里选已有场景图。</Text>
+            <LibraryLookPicker
+              kind="SCENE"
+              libraryHref={libraryHref}
+              busy={busyIds.has(row.scene_card_id)}
+              onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
+            />
+            <Space wrap style={{ marginTop: 8 }}>
+              {row.ref_image_url ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={96} height={64} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="场景参考" src={c.file_url} width={96} height={64} />
-                  <Button size="small" onClick={async () => {
-                    await productionApi.lockScene(row.scene_card_id, c.asset_id)
+                  <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
+                    const { data } = await productionApi.lockScene(row.scene_card_id, c.asset_id)
+                    if (!data?.success) return
                     load()
-                  }}>锁定</Button>
+                  }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
                 </div>
               ))}
             </Space>
+            <CardReference
+              reference={row.look_reference}
+              busy={busyIds.has(row.scene_card_id)}
+              onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
+            />
           </Card>
         )) : null}
       </Card>
@@ -650,25 +737,39 @@ function CharacterPane({ work }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
+        {cardsReady && !props.length ? <Text type="secondary">还没有道具。先在上面写下道具名，再上传或从知识库选一张参考图。</Text> : null}
         {cardsReady ? props.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
-            <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
+            <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => openGenerate('scene', row.scene_card_id, row.card_name, row.look_reference)}>生成参考图</Button>
             <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
-            <Space wrap>
-              {row.ref_image_url ? <ClickThumb alt="已锁定参考" src={row.ref_image_url} width={72} height={72} /> : null}
+            <Text type="secondary">可以上传一张照片，也可以从知识库里选已有道具图。</Text>
+            <LibraryLookPicker
+              kind="PROP"
+              libraryHref={libraryHref}
+              busy={busyIds.has(row.scene_card_id)}
+              onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
+            />
+            <Space wrap style={{ marginTop: 8 }}>
+              {row.ref_image_url ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={72} height={72} /> : null}
               {(row.candidate_list || []).map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="道具参考" src={c.file_url} width={72} height={72} />
-                  <Button size="small" onClick={async () => {
-                    await productionApi.lockScene(row.scene_card_id, c.asset_id)
+                  <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
+                    const { data } = await productionApi.lockScene(row.scene_card_id, c.asset_id)
+                    if (!data?.success) return
                     load()
-                  }}>锁定</Button>
+                  }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
                 </div>
               ))}
             </Space>
+            <CardReference
+              reference={row.look_reference}
+              busy={busyIds.has(row.scene_card_id)}
+              onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
+            />
           </Card>
         )) : null}
       </Card>
@@ -688,7 +789,11 @@ function CharacterPane({ work }) {
             style={{ width: 160 }}
             options={[{ value: 2, label: '2 张' }, { value: 4, label: '4 张' }, { value: 8, label: '8 张' }]}
           />
-          <span>{portraitPrice}。已有正脸或知识库里对得上的造型时，会拿那张当参考。只有生成成功才会计入用量。</span>
+          <ReferenceNotice reference={portrait && portrait.reference} textOnly={textOnly} />
+          {portrait && portrait.reference && (portrait.reference.used === 1 || portrait.reference.used === true) ? (
+            <Checkbox checked={textOnly} onChange={(event) => setTextOnly(event.target.checked)}>这次不用参考图，只按文字生成</Checkbox>
+          ) : null}
+          <span>{portraitPrice}。只有生成成功才会计入用量。</span>
         </Space>
       </Modal>
     </Space>

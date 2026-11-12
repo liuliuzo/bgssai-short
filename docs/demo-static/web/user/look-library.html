@@ -21,7 +21,8 @@
   <main class="app-main">
     <div class="container">
       <h1 class="title">定妆知识库</h1>
-      <p class="subtitle">一个造型放一起。点正脸、前面、背面或侧面的空位上传。生成定妆时优先用正脸。视频用其中一帧。</p>
+      <p class="subtitle">这里管理可以反复使用的造型。给角色定妆时，在角色卡上就能直接选，不用先跑来这里。</p>
+      <p><a href="character-bible.html">返回角色定妆</a></p>
       <div class="card">
         <div class="card-hd"><h2>知识库</h2><button class="btn btn-primary btn-sm">新建知识库</button></div>
         <div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
@@ -53,7 +54,7 @@
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
         <code>POST /bgssai/user/look-materials/delete</code>。
-        多个知识库在左侧列表里点选，不用下拉框。一个造型的正脸、前面、背面、侧面放在一起，点空位上传，也可以放一段 MP4。角色卡同样点某一面上传。点生成定妆时，先用这张卡的图，优先正脸；没有再按说明从已挂载的知识库检索。视频用其中一帧交给模型。
+        多个知识库在左侧列表里点选。一个造型的正脸、前面、背面、侧面放在一起。角色卡上可以上传照片，也可以点选这里的造型。生成前写明将用哪一张；没有对上就只按文字生成。带 <code>return</code> 时显示「返回角色定妆」。视频用其中一帧交给模型。
       </div>
     </div>
   </main>

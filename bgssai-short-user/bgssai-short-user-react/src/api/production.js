@@ -20,12 +20,15 @@ const readyScript = (episodeId, forceReadyFlag) =>
 
 const listCharacters = (workId) => http.get('/user/characters/list', { work_id: workId })
 const createCharacter = (body) => http.post('/user/characters/create', body)
-const portraitCharacter = (characterId, modelCode, candidateCount) =>
+const portraitCharacter = (characterId, modelCode, candidateCount, textOnly) =>
   http.post('/user/characters/portrait-generate', {
     character_id: characterId,
     model_code: modelCode,
     candidate_count: candidateCount,
+    skip_look_reference: textOnly ? 1 : 0,
   })
+const applyCharacterLook = (characterId, materialId) =>
+  http.post('/user/characters/apply-look', { character_id: characterId, material_id: materialId })
 const lockCharacter = (characterId, assetId) =>
   http.post('/user/characters/lock', { character_id: characterId, asset_id: assetId })
 const uploadCharacterPortrait = (characterId, imageBase64, viewAngle) =>
@@ -38,12 +41,15 @@ const consistencyPanel = (workId) => http.get('/user/assets/consistency-panel', 
 const bindShotAssets = (body) => http.post('/user/shots/bind-assets', body)
 const listScenes = (workId, cardType) => http.get('/user/scene-cards/list', { work_id: workId, card_type: cardType })
 const createScene = (body) => http.post('/user/scene-cards/create', body)
-const portraitScene = (sceneCardId, modelCode, candidateCount) =>
+const portraitScene = (sceneCardId, modelCode, candidateCount, textOnly) =>
   http.post('/user/scene-cards/portrait-generate', {
     scene_card_id: sceneCardId,
     model_code: modelCode,
     candidate_count: candidateCount,
+    skip_look_reference: textOnly ? 1 : 0,
   })
+const applySceneLook = (sceneCardId, materialId) =>
+  http.post('/user/scene-cards/apply-look', { scene_card_id: sceneCardId, material_id: materialId })
 const lockScene = (sceneCardId, assetId) =>
   http.post('/user/scene-cards/lock', { scene_card_id: sceneCardId, asset_id: assetId })
 const uploadScenePortrait = (sceneCardId, imageBase64, caption) =>
@@ -115,11 +121,13 @@ export default {
   createCharacter,
   portraitCharacter,
   uploadCharacterPortrait,
+  applyCharacterLook,
   lockCharacter,
   listScenes,
   createScene,
   portraitScene,
   uploadScenePortrait,
+  applySceneLook,
   lockScene,
   listLookLibraries,
   saveLookLibrary,

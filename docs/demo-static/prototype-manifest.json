@@ -1861,7 +1861,7 @@
     },
     {
       "path": "docs/demo-static/web/user/PAGE-FLOW.html",
-      "sha256": "6baa868d0266afa68eb296af9fbfc3f6ba63e7bfca0a69236dfb2a3cf8408a82",
+      "sha256": "1fa7a51cc5e639fc04a7cab6c66b0ad33e4fab1fe37478bc40af9d1dc323cb63",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1966,7 +1966,7 @@
     },
     {
       "path": "docs/demo-static/web/user/character-bible.html",
-      "sha256": "4d1f3c5dc57e943fb32f83421d2c8192a35500b02600b499eb4463a7e6800ddf",
+      "sha256": "d9fe9f98724be036d7511c743dd622b0ecd6d393787e9c0a70e6f1d93d86be56",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2239,7 +2239,7 @@
     },
     {
       "path": "docs/demo-static/web/user/look-library.html",
-      "sha256": "2a5f6ade605048af00b0ac5f234888c89fd6f2518eecdb3b71f5893256695a49",
+      "sha256": "9df4ec81f5684d96a6d6185b887b1c5c2afed3422d2e2b3d5268c53740b941a5",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

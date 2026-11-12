@@ -146,6 +146,8 @@ public class ProductionDtos {
         private String imageBase64;
         private String caption;
         private String viewAngle;
+        private String materialId;
+        private Integer skipLookReference;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
         public String getCharacterId() { return characterId; }
@@ -174,6 +176,10 @@ public class ProductionDtos {
         public void setCaption(String caption) { this.caption = caption; }
         public String getViewAngle() { return viewAngle; }
         public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
+        public String getMaterialId() { return materialId; }
+        public void setMaterialId(String materialId) { this.materialId = materialId; }
+        public Integer getSkipLookReference() { return skipLookReference; }
+        public void setSkipLookReference(Integer skipLookReference) { this.skipLookReference = skipLookReference; }
     }
 
     public static class ShotReq {
