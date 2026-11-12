@@ -248,6 +248,44 @@ public class LookKnowledgeService {
         return "FRONT_FACE".equals(viewAngle) ? score + 15 : score;
     }
 
+    /** Photos already filed on this card. Front face wins, then front, back, side. */
+    public LookHit referenceForCard(String userId, String cardId) {
+        if (userId == null || userId.isBlank() || cardId == null || cardId.isBlank() || materialMapper == null) {
+            return null;
+        }
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andCardIdEqualTo(cardId).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("id desc");
+        ShortLookMaterial chosen = pickCardReference(materialMapper.selectByExample(ex));
+        if (chosen == null) {
+            return null;
+        }
+        return new LookHit(chosen.getMaterialId(), chosen.getStorageKey(), chosen.getMimeType(), chosen.getCaption());
+    }
+
+    static ShortLookMaterial pickCardReference(List<ShortLookMaterial> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        for (String angle : List.of("FRONT_FACE", "FRONT", "BACK", "SIDE")) {
+            for (ShortLookMaterial row : rows) {
+                if (angle.equals(row.getViewAngle()) && hasBytes(row)) {
+                    return row;
+                }
+            }
+        }
+        for (ShortLookMaterial row : rows) {
+            if (hasBytes(row)) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    private static boolean hasBytes(ShortLookMaterial row) {
+        return row != null && row.getStorageKey() != null && !row.getStorageKey().isBlank();
+    }
+
     public LookHit bestMatch(String userId, String kind, String prompt) {
         if (userId == null || userId.isBlank()) {
             return null;

@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
+import com.bgssai.shortai.model.ShortLookMaterial;
 import com.bgssai.shortai.production.support.LookImage;
 
 class LookKnowledgeMatchTest {
@@ -13,6 +16,14 @@ class LookKnowledgeMatchTest {
     void nameInsideTheLookDescriptionScoresHighEnoughToAttach() {
         int score = LookKnowledgeService.matchScore("26岁女性，鹅蛋脸，黑色长直发", "沈知微", "鹅蛋脸 黑色长直发");
         assertTrue(score >= 3);
+    }
+
+    @Test
+    void cardReferencePrefersFrontFaceOverLaterSidePhoto() {
+        ShortLookMaterial side = material("SIDE", "side-key");
+        ShortLookMaterial face = material("FRONT_FACE", "face-key");
+        ShortLookMaterial chosen = LookKnowledgeService.pickCardReference(List.of(side, face));
+        assertEquals("face-key", chosen.getStorageKey());
     }
 
     @Test
@@ -25,6 +36,13 @@ class LookKnowledgeMatchTest {
     @Test
     void twoSharedCharactersAreNotEnough() {
         assertTrue(LookKnowledgeService.matchScore("女性角色", "办公室", "落地窗") < 3);
+    }
+
+    private static ShortLookMaterial material(String angle, String key) {
+        ShortLookMaterial row = new ShortLookMaterial();
+        row.setViewAngle(angle);
+        row.setStorageKey(key);
+        return row;
     }
 
     @Test

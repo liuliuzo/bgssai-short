@@ -787,7 +787,7 @@ public class ShortAiTaskWorker {
             request.getParams().put("color_index", i);
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
-            attachLookReference(row.getUserId(), "CHARACTER", prompt, request);
+            attachLookReference(row.getUserId(), "CHARACTER", row.getCharacterId(), prompt, request);
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getCharacterId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
@@ -818,7 +818,7 @@ public class ShortAiTaskWorker {
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
             String kind = row.getCardType() == null || row.getCardType().isBlank() ? "SCENE" : row.getCardType();
-            attachLookReference(row.getUserId(), kind, prompt, request);
+            attachLookReference(row.getUserId(), kind, row.getSceneCardId(), prompt, request);
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getSceneCardId(), "IMAGE", result,
                     task.getTaskId(), i == 0);
@@ -1027,11 +1027,14 @@ public class ShortAiTaskWorker {
      * IMAGE path: attach first locked character portrait as subject reference (Kling
      * image_reference=subject). Scene card appearance stays in prompt text.
      */
-    private void attachLookReference(String userId, String kind, String prompt, AiProviderRequest request) {
+    private void attachLookReference(String userId, String kind, String cardId, String prompt, AiProviderRequest request) {
         if (lookKnowledgeService == null || request.param("image_base64") != null || request.param("image_url") != null) {
             return;
         }
-        LookKnowledgeService.LookHit hit = lookKnowledgeService.bestMatch(userId, kind, prompt);
+        LookKnowledgeService.LookHit hit = lookKnowledgeService.referenceForCard(userId, cardId);
+        if (hit == null) {
+            hit = lookKnowledgeService.bestMatch(userId, kind, prompt);
+        }
         if (hit == null) {
             return;
         }
