@@ -5,7 +5,7 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "142ca9f82ed5bc1469a4405c1878c519a8e4a245ddc7ba4cca5b35428b3f824a",
+  "prototype_bundle_digest": "de31ed34a339184ce8cfde19e4972964c40f2174e09c089377d697e696c3e687",
   "code_contract_digest": "4a740cd22733b9fe5605fe2fa9ce2425e77b2ce5d53f32626c174a85fe5f78cb",
   "api_endpoints": [
     "/api/cs/support/callback",
@@ -1399,7 +1399,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/ai-models.html",
-      "sha256": "632642b546597d360c9b764b527279340ac27db86c6472f1b8fa4154fed58b2c",
+      "sha256": "f95add33d572014d3f17652e90046ba01dda0de5b4bec4ea22272a94e2015c17",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
@@ -2386,7 +2386,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard.html",
-      "sha256": "8ea88d4fca4d6e594b7e8a196cdfe137d04d8b5993be2b7e910b3d29063a6150",
+      "sha256": "c1a1423236393ac9d7f17cb78584599229c2e56facc99bc9fd8407c42a2f6970",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
