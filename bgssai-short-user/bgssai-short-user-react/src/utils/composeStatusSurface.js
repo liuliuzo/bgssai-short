@@ -67,16 +67,20 @@ export function composeSurfaceFromEntry(entry) {
   return composeSurface({ settled: true, film: entry.film, precheck: entry.precheck })
 }
 
+function scriptReviewPair(ep) {
+  return `${ep?.script_status_name || ep?.script_status || '-'}/${ep?.review_status_name || ep?.review_status || '-'}`
+}
+
 export function episodeSelectLabel(ep, { onCompose = false, surface = null } = {}) {
   const head = `第${ep?.episode_no ?? ''}集 ${ep?.episode_title || ''}`.trim()
-  const stored = `${ep?.script_status_name || ep?.script_status || '-'}/${ep?.review_status_name || ep?.review_status || '-'}`
+  const stored = scriptReviewPair(ep)
   if (!onCompose) return `${head}（${stored}）`
   if (surface?.allowReadyPassChip) return `${head}（${stored}）`
   return `${head}（${surface?.chipText || '核对中'}）`
 }
 
 export function episodeComposeTag(ep, { onCompose = false, surface = null } = {}) {
-  if (!onCompose) return ep?.compose_status_name || ep?.compose_status || '-'
+  if (!onCompose) return scriptReviewPair(ep)
   if (surface?.allowReadyPassChip) return '已就绪'
   return surface?.chipText || '核对中'
 }

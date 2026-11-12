@@ -5,7 +5,7 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "a260e9dee393887a288bca33e40b430452f4558887f931cbcae6fd339a5f5f3a",
+  "prototype_bundle_digest": "9d8718f6b4faf8baa15c56a52815a5fee15e9f8350f1f399373935a5f0aa65a7",
   "code_contract_digest": "470402e40ed61db42e23c36ea0e01a1a89a97fa5162a3b7406418ec01c125cbd",
   "api_endpoints": [
     "/api/cs/support/callback",
@@ -2239,7 +2239,7 @@
     },
     {
       "path": "docs/demo-static/web/user/script-studio.html",
-      "sha256": "ec83e08ba37282b2060215028a9ca961b643053f17e10372bf7cb77135d9b08d",
+      "sha256": "f42cc96a8791c495d967a13d4fa75324205af6d103a318089eb700a6efa7309e",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2344,7 +2344,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard-canvas.html",
-      "sha256": "fe0de5bddec55d7c95d1700191574d88846f89bcd9692bef52798c0ed72aa39b",
+      "sha256": "0851a6f43c7490fbc0cb915be5b0dcb5b506023e2bed0ebd0d615b8a50f71def",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2365,7 +2365,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard.html",
-      "sha256": "235ca7f35ae401986576f57140a2776a1acf626db9abd0738418d075035f6b1a",
+      "sha256": "f03c2be15d9749c9b317e3f40fc1219b063157a4616f2fcb8c5d5538d6f59a21",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2491,7 +2491,7 @@
     },
     {
       "path": "docs/demo-static/web/user/voice-studio.html",
-      "sha256": "3763f7876b82f7cd3a3b728aadc61a4a8751dc53d6a5575580420cf2bab09c06",
+      "sha256": "7b63ea88fdf486c802db765eb1b51222bfe5661f963f7b3b1323777994e86cd8",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

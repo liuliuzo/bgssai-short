@@ -80,6 +80,7 @@
             "voice_id": "v-female-cold-01", "voice_speed": 1.0, "emotion": "COLD",
             "line_text": "退婚书我签，但有个条件。",
             "audio_asset_id": "a-51001", "audio_duration_sec": 3.2 } ],
+        "dialogue_text": "退婚书我签，但有个条件。",
         "shot_duration_sec": 4.0, "audio_duration_sec": 3.2,
         "align_status": "ALIGNED", "align_status_name": "已对齐",
         "align_gap_sec": -0.8, "suggest_action": "PAD_SILENCE", "auto_fixed_flag": 1 } ],
@@ -106,6 +107,8 @@
 
 `dubbing_status`（剧集级）：`NONE` → `GENERATING` → `DRAFT`（已出音频，存在未对齐项）→
 `READY`（全部镜头 `ALIGNED` 且字幕已生成）。
+尚无配音行时 `align_status` 仍可为 `PENDING`，但 `align_status_name` 写「未配音」，不得写成「生成中」。已有配音行且状态为 `PENDING` 时写「待对齐」；`GENERATING` 才写「生成中」。`dialogue_text` 随配音列表返回，`line_list` 为空时表格仍显示这句台词。镜头秒与列表相同：成片时长和 `shot_duration_sec` 不一致时写成「成片 N秒 · 计划 M秒」。配音表在数据返回前保持加载，不先画出空白台词。
+
 `align_status`（镜头级）：`PENDING` → `ALIGNED` / `MISALIGNED`；免费解法（`PAD_SILENCE` /
 可解的 `ADJUST_SPEED`）由系统自动执行后直接落 `ALIGNED` 并记 `auto_fixed_flag=1`，
 仍为 `MISALIGNED` 的均为待付费确认项。

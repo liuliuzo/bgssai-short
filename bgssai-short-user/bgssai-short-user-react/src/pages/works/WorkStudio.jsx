@@ -2,7 +2,7 @@ import { modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
 import { publicModelText } from '../../publicModel'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
@@ -20,12 +20,16 @@ import {
   appendPreset,
   assetBinderPlaceholder,
   assetLibrarySummary,
+  bindOptionLabel,
+  bindSelectProps,
   frameLinkOptions,
   knownSceneName,
   modelSelectProps,
+  outlineLongTextProps,
   presetIsActive,
   reconcileEmptyScene,
   selectionFeeLine,
+  shotCardContainment,
   shotPresetGroups,
   shotTimingLabel,
   shotVideoDialogProps,
@@ -321,20 +325,32 @@ function ScriptPane({ work, episodeId, onReload, initialOutlineTaskId }) {
             {
               title: '梗概',
               dataIndex: 'episode_synopsis',
-              render: (v, row, i) => <Input value={v} onChange={(e) => {
-                const next = outline.slice()
-                next[i] = { ...row, episode_synopsis: e.target.value }
-                setOutline(next)
-              }} />,
+              render: (v, row, i) => (
+                <Input.TextArea
+                  {...outlineLongTextProps()}
+                  value={v}
+                  onChange={(e) => {
+                    const next = outline.slice()
+                    next[i] = { ...row, episode_synopsis: e.target.value }
+                    setOutline(next)
+                  }}
+                />
+              ),
             },
             {
               title: '钩子',
               dataIndex: 'ending_hook',
-              render: (v, row, i) => <Input value={v} onChange={(e) => {
-                const next = outline.slice()
-                next[i] = { ...row, ending_hook: e.target.value }
-                setOutline(next)
-              }} />,
+              render: (v, row, i) => (
+                <Input.TextArea
+                  {...outlineLongTextProps()}
+                  value={v}
+                  onChange={(e) => {
+                    const next = outline.slice()
+                    next[i] = { ...row, ending_hook: e.target.value }
+                    setOutline(next)
+                  }}
+                />
+              ),
             },
           ]}
         />
@@ -385,10 +401,15 @@ function cardStatusName(status) {
   return { CANDIDATE: '待建卡', DRAFT: '待定妆', GENERATING: '生成中', LOCKED: '已锁定' }[status] || status || '-'
 }
 
+function LibrarySkeleton() {
+  return <Skeleton active title={false} paragraph={{ rows: 3 }} />
+}
+
 function CharacterPane({ work }) {
   const [chars, setChars] = useState([])
   const [scenes, setScenes] = useState([])
   const [props, setProps] = useState([])
+  const [cardsReady, setCardsReady] = useState(false)
   const [imageModels, setImageModels] = useState([])
   const [imageModelCode, setImageModelCode] = useState()
   const [form] = Form.useForm()
@@ -404,10 +425,14 @@ function CharacterPane({ work }) {
     : '按任务实际对账'
 
   const load = useCallback(async () => {
-    const { data } = await productionApi.consistencyPanel(work.work_id)
-    setChars(data?.result?.character_list || [])
-    setScenes(data?.result?.scene_list || [])
-    setProps(data?.result?.prop_list || [])
+    try {
+      const { data } = await productionApi.consistencyPanel(work.work_id)
+      setChars(data?.result?.character_list || [])
+      setScenes(data?.result?.scene_list || [])
+      setProps(data?.result?.prop_list || [])
+    } finally {
+      setCardsReady(true)
+    }
   }, [work])
 
   useEffect(() => { load() }, [load])
@@ -480,7 +505,8 @@ function CharacterPane({ work }) {
           <Form.Item name="appearance_prompt"><Input placeholder="外观描述" style={{ width: 220 }} /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
-        {chars.map((row) => (
+        {!cardsReady ? <LibrarySkeleton /> : null}
+        {cardsReady ? chars.map((row) => (
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={<Space>
             <Button size="small" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'character', id: row.character_id, title: row.character_name }) }}>定妆</Button>
           </Space>}>
@@ -499,7 +525,7 @@ function CharacterPane({ work }) {
               ))}
             </Space>
           </Card>
-        ))}
+        )) : null}
       </Card>
       <Card title="场景卡">
         <Form layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
@@ -510,7 +536,8 @@ function CharacterPane({ work }) {
           <Form.Item name="appearance_prompt"><Input placeholder="布景描述" /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
-        {scenes.map((row) => (
+        {!cardsReady ? <LibrarySkeleton /> : null}
+        {cardsReady ? scenes.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
           }>
@@ -527,7 +554,7 @@ function CharacterPane({ work }) {
               ))}
             </Space>
           </Card>
-        ))}
+        )) : null}
       </Card>
       <Card title="道具卡">
         <Form form={propForm} layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
@@ -539,7 +566,8 @@ function CharacterPane({ work }) {
           <Form.Item name="appearance_prompt"><Input placeholder="外观描述" /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
-        {props.map((row) => (
+        {!cardsReady ? <LibrarySkeleton /> : null}
+        {cardsReady ? props.map((row) => (
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => { setPortraitCount(4); setPortrait({ kind: 'scene', id: row.scene_card_id, title: row.card_name }) }}>生成参考图</Button>
           }>
@@ -556,7 +584,7 @@ function CharacterPane({ work }) {
               ))}
             </Space>
           </Card>
-        ))}
+        )) : null}
       </Card>
       <Modal
         title={portrait ? `确认生成「${portrait.title || ''}」` : '确认生成'}
@@ -594,6 +622,7 @@ function StoryboardPane({ work, episodeId }) {
   const [imageModelCode, setImageModelCode] = useState()
   const [videoModelCode, setVideoModelCode] = useState()
   const [panel, setPanel] = useState({ character_list: [], scene_list: [], prop_list: [] })
+  const [panelReady, setPanelReady] = useState(false)
   const [bindChars, setBindChars] = useState([])
   const [bindScene, setBindScene] = useState()
   const [bindProps, setBindProps] = useState([])
@@ -606,8 +635,14 @@ function StoryboardPane({ work, episodeId }) {
     const { data } = await productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 100 })
     setRows(Array.isArray(data?.result) ? data.result : [])
     if (work?.work_id) {
-      const panelRes = await productionApi.consistencyPanel(work.work_id)
-      setPanel(panelRes.data?.result || { character_list: [], scene_list: [], prop_list: [] })
+      try {
+        const panelRes = await productionApi.consistencyPanel(work.work_id)
+        setPanel(panelRes.data?.result || { character_list: [], scene_list: [], prop_list: [] })
+      } finally {
+        setPanelReady(true)
+      }
+    } else {
+      setPanelReady(true)
     }
   }, [episodeId, work])
 
@@ -687,7 +722,14 @@ function StoryboardPane({ work, episodeId }) {
   const selectedIds = selected.length ? selected : undefined
 
   if (canvasView) {
-    return <StoryboardCanvas episodeId={episodeId} onSwitchToList={() => setCanvasView(false)} />
+    return (
+      <StoryboardCanvas
+        episodeId={episodeId}
+        initialRows={rows}
+        sceneCards={panel.scene_list || []}
+        onSwitchToList={() => setCanvasView(false)}
+      />
+    )
   }
 
   const submitLevel = async (taskType, autoNext) => {
@@ -753,36 +795,39 @@ function StoryboardPane({ work, episodeId }) {
           <Select
             mode="multiple"
             allowClear
-            placeholder={assetBinderPlaceholder('角色', (panel.character_list || []).length)}
+            {...bindSelectProps()}
+            placeholder={assetBinderPlaceholder('角色', (panel.character_list || []).length, panelReady)}
             style={{ minWidth: 180 }}
             value={bindChars}
             onChange={setBindChars}
             options={(panel.character_list || []).map((c) => ({
               value: c.character_id,
-              label: `${c.character_name} ${cardStatusName(c.card_status)}`,
+              label: bindOptionLabel(c.character_name, cardStatusName(c.card_status)),
             }))}
           />
           <Select
             allowClear
-            placeholder={assetBinderPlaceholder('场景', (panel.scene_list || []).length)}
+            {...bindSelectProps()}
+            placeholder={assetBinderPlaceholder('场景', (panel.scene_list || []).length, panelReady)}
             style={{ minWidth: 160 }}
             value={bindScene}
             onChange={setBindScene}
             options={(panel.scene_list || []).map((c) => ({
               value: c.scene_card_id,
-              label: `${c.card_name} ${cardStatusName(c.card_status)}`,
+              label: bindOptionLabel(c.card_name, cardStatusName(c.card_status)),
             }))}
           />
           <Select
             mode="multiple"
             allowClear
-            placeholder={assetBinderPlaceholder('道具', (panel.prop_list || []).length)}
+            {...bindSelectProps()}
+            placeholder={assetBinderPlaceholder('道具', (panel.prop_list || []).length, panelReady)}
             style={{ minWidth: 160 }}
             value={bindProps}
             onChange={setBindProps}
             options={(panel.prop_list || []).map((c) => ({
               value: c.scene_card_id,
-              label: `${c.card_name} ${cardStatusName(c.card_status)}`,
+              label: bindOptionLabel(c.card_name, cardStatusName(c.card_status)),
             }))}
           />
           <Button
@@ -805,6 +850,7 @@ function StoryboardPane({ work, episodeId }) {
         </Space>
         <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
           {assetLibrarySummary({
+            ready: panelReady,
             characters: (panel.character_list || []).map((item) => item.character_name),
             scenes: (panel.scene_list || []).map((item) => item.card_name),
             props: (panel.prop_list || []).map((item) => item.card_name),
@@ -910,6 +956,8 @@ function StoryboardPane({ work, episodeId }) {
         return (
         <Card
           key={row.shot_id}
+          className="shot-card"
+          style={shotCardContainment()}
           size="small"
           title={`镜 ${row.shot_no} · ${shotTimingLabel({
             plannedSec: row.shot_duration_sec,
@@ -950,14 +998,17 @@ function StoryboardPane({ work, episodeId }) {
               <Space wrap size={[4, 4]} style={{ marginBottom: 8 }}>
                 {(row.character_ref_json || []).map((id) => {
                   const card = (panel.character_list || []).find((c) => c.character_id === id)
-                  return <Tag key={id}>{card?.character_name || id}</Tag>
+                  const label = bindOptionLabel(card?.character_name, '')
+                  if (!card?.character_name || label === '未命名') return null
+                  return <Tag key={id}>{card.character_name}</Tag>
                 })}
-                {row.scene_card_id ? (
-                  <Tag color="blue">{(panel.scene_list || []).find((c) => c.scene_card_id === row.scene_card_id)?.card_name || row.scene_card_id}</Tag>
+                {sceneCardName ? (
+                  <Tag color="blue">{sceneCardName}</Tag>
                 ) : null}
                 {(row.prop_ref_json || []).map((id) => {
                   const card = (panel.prop_list || []).find((c) => c.scene_card_id === id)
-                  return <Tag key={id} color="gold">{card?.card_name || id}</Tag>
+                  if (!card?.card_name) return null
+                  return <Tag key={id} color="gold">{card.card_name}</Tag>
                 })}
               </Space>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
@@ -1019,12 +1070,13 @@ function StoryboardPane({ work, episodeId }) {
               ) : null}
               <Text type="secondary">人话分镜（改这里免费，不用写提示词）</Text>
               <TextArea
+                className="shot-spoken"
                 rows={4}
                 style={{ marginTop: 6 }}
                 value={spoken}
                 onChange={(e) => setDrafts((cur) => ({ ...cur, [row.shot_id]: e.target.value }))}
               />
-              <Space style={{ marginTop: 8 }} wrap>
+              <Space className="shot-actions" style={{ marginTop: 8 }} wrap>
                 <Button size="small" onClick={async () => {
                   const text = spoken
                   const { data } = await featuresApi.previzSave({ shot_id: row.shot_id, previz_text: text })
@@ -1108,7 +1160,6 @@ function StoryboardPane({ work, episodeId }) {
         {videoPreview && videoPreview.video_url ? (
           <ListShotVideo
             src={videoPreview.video_url}
-            poster={videoPreview.first_frame_url}
             label="播放或暂停"
             autoPlay
             onDuration={(seconds) => setClipSeconds((cur) => (
