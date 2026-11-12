@@ -782,6 +782,7 @@ public class LookKnowledgeService {
             }
             file.put("width", material.getWidth());
             file.put("height", material.getHeight());
+            file.put("file_size_byte", material.getFileSizeByte() == null ? 0 : material.getFileSizeByte());
             files.add(file);
         }
         item.put("material_list", files);

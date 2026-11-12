@@ -12,13 +12,78 @@ export function groupLooksOfKind(materials, kind) {
   return groupLooks((materials || []).filter((item) => (item.material_kind || 'CHARACTER') === wanted))
 }
 
+export function isVideoMaterial(item) {
+  return !!(item && typeof item.mime_type === 'string' && item.mime_type.startsWith('video/'))
+}
+
+function hasPicture(item) {
+  return !!(item && (item.file_url || item.poster_url))
+}
+
+function photoKey(item) {
+  const size = item && item.file_size_byte
+  const width = item && item.width
+  const height = item && item.height
+  if (!size || !width || !height) return null
+  return `${item.mime_type || ''}|${width}|${height}|${size}`
+}
+
+/** Identical bytes filed from more than one card stay as one photo. */
+export function dedupePhotos(items) {
+  const kept = []
+  const index = new Map()
+  for (const item of items || []) {
+    const key = photoKey(item)
+    if (!key) {
+      kept.push(item)
+      continue
+    }
+    const previous = index.get(key)
+    if (previous) {
+      previous.same_material_ids.push(item.material_id)
+      continue
+    }
+    const copy = { ...item, same_material_ids: [item.material_id] }
+    index.set(key, copy)
+    kept.push(copy)
+  }
+  return kept
+}
+
+/**
+ * One angle: the newest still is the photo people see first.
+ * A reference video is never that photo — its cover is one frame and can be a blurry crop.
+ */
+export function arrangeAngle(items) {
+  const stills = []
+  const videos = []
+  const missing = []
+  for (const item of dedupePhotos(items)) {
+    if (isVideoMaterial(item)) videos.push(item)
+    else if (hasPicture(item)) stills.push(item)
+    else missing.push(item)
+  }
+  return {
+    primary: stills[0] || null,
+    extras: stills.slice(1),
+    videos,
+    missing,
+  }
+}
+
 export function lookCover(look) {
   if (!look) return null
-  for (const [angle] of LOOK_ANGLES) {
-    const item = look.slots[angle] && look.slots[angle][0]
-    if (item && (item.poster_url || item.file_url)) return item
+  const pools = LOOK_ANGLES.map(([angle]) => (look.slots[angle] || []))
+  pools.push(look.extra || [])
+  for (const pool of pools) {
+    const still = pool.find((item) => !isVideoMaterial(item) && hasPicture(item))
+    if (still) return still
   }
-  return (look.extra || []).find((item) => item.poster_url || item.file_url) || null
+  for (const pool of pools) {
+    const any = pool.find((item) => hasPicture(item))
+    if (any) return any
+  }
+  return null
 }
 
 export function referenceImage(ref) {
