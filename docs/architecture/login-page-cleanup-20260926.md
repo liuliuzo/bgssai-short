@@ -13,3 +13,7 @@
 同意句允许在卡片内换行。空提交只在未通过的字段下写一条 `role=alert`（密码页账号为空是「请输入账号」，挂在账号框下）。同一校验不再 `message.warning`，也不在主按钮下重复。
 Ant Design `button.autoInsertSpace` 关闭，两个汉字的按钮不再被插入空格。页面跳转与字段不变，原型 HTML 不改。
 `/en`、`/en/`、`/en/*` 的 GET / HEAD 由 `EnglishEntryRedirectFilter` 返回 302，`Location` 为 `/login` 并带上原查询串。前端路由仍保留；文档若仍被返回，则用 `location.replace` 离开 `/en`。浏览器保留 hash。
+
+## 2026-11-12 区号箭头（t484）
+
+`PhoneDialSearchSelect` 的 `.phone-dial-combo-caret` 由 border 实心三角改为两段圆角描边构成的 V 形 chevron；`aria-expanded=true` 时仍 `rotate(180deg)`。不改区号数据、点击区与登录契约。管理端无此控件。
