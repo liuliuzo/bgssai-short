@@ -44,7 +44,7 @@ export default function QualityReportPage({ work, episodeId }) {
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <Card
         loading={loading}
-        title="质量报告"
+        title="质量"
         extra={<Space>
           <Select style={{ width: 140 }} value={gateCode} options={GATES} onChange={setGateCode} />
           <Button type="primary" onClick={async () => {

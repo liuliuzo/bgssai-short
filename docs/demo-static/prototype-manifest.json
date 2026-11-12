@@ -5,7 +5,7 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "d4ca29dcab9b864351f772c692be4d8a0961c011e6a7b249e7418ed4b2deaa34",
+  "prototype_bundle_digest": "b35c46fb307aac857530dfc07c39e0cfb3e2a94c6443fdd11b3d44515dedb824",
   "code_contract_digest": "4a740cd22733b9fe5605fe2fa9ce2425e77b2ce5d53f32626c174a85fe5f78cb",
   "api_endpoints": [
     "/api/cs/support/callback",
@@ -548,7 +548,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/QualityReportPage.jsx",
-      "sha256": "fe48110e9bd4763877012abe297fde6549868432febcc92ba7e0b294265939a4"
+      "sha256": "674fb4971755b141565df02b39f0a1c24a62de7da71620c0d2451d88e35ca322"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/SourceImportPage.jsx",
@@ -556,7 +556,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/StoryMapPage.jsx",
-      "sha256": "913c84c73075286a31ca885ea679d26ed40b6101568d044309f29d076986bcb1"
+      "sha256": "eabdf215006dec48f6006cee7ebbbd4346686c3fc1e3781fa9ec79019824005a"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/StoryboardCanvas.jsx",
@@ -568,7 +568,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "652e46d5b2101fe0ccff6b7f79ada96ca4131d9309c60e5e58f8387259436e2b"
+      "sha256": "6cbcdca8b01539d5ad10252c012131ec454b76754b1204aded5205b466b82265"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -1777,7 +1777,7 @@
     },
     {
       "path": "docs/demo-static/web/user/PAGE-FLOW.html",
-      "sha256": "1dbcaf78c4c2eda4ff5a31a65ffa36de7608dcd7ae8e15dcc7edb394e977d2bb",
+      "sha256": "08bcd76acf6437960e78415a8efb5ed324c73cd65b576b2a1ca1f9eeb1e9bb9f",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1882,7 +1882,7 @@
     },
     {
       "path": "docs/demo-static/web/user/character-bible.html",
-      "sha256": "178bb4975f9f8c53fee64fc40e7920ce5500fd7cbe95a4253e6cf87bcbbc7e10",
+      "sha256": "14158b394372344119a36ef8021cd1e7bb37522105f519b698d2d72ff0058237",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1903,7 +1903,7 @@
     },
     {
       "path": "docs/demo-static/web/user/compose-export.html",
-      "sha256": "29c8e26ba3fcce160ae9b5d28f9df2d1bc655132765742d1bf7a5f5ae32016e6",
+      "sha256": "f6dfce3f4689f41c716d10947e2fa81a5a17a2b3054f8a41d6a310842466ee7f",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1924,7 +1924,7 @@
     },
     {
       "path": "docs/demo-static/web/user/continuity-center.html",
-      "sha256": "cd67e4b59d689343198d69b474f504085d17576fa8822fa14b65beae73197568",
+      "sha256": "f2e792f244a7005c7a14d55cc6d3aedcbe9401e36a8331625f287cf14966d5ef",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1945,7 +1945,7 @@
     },
     {
       "path": "docs/demo-static/web/user/edit-export.html",
-      "sha256": "8ef3be4176fec2ea16d9f7e1fbbd28b2fa0a1bbe9f6d70667a31f07bd5be6b7f",
+      "sha256": "033fff71c9fd5d5fd45d29fefcb94a094547a55e22194cd6b7e3fd044a47be12",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1966,7 +1966,7 @@
     },
     {
       "path": "docs/demo-static/web/user/episode-preview.html",
-      "sha256": "240c7905915ea83a5fbded7a18f322136edcf2eb826e8a8426b3ada41c0b8e8e",
+      "sha256": "dd95641f7ac6381dd88b6be696b6b61a58bbff2646eef2eb7ca1727d5b842db4",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -1987,7 +1987,7 @@
     },
     {
       "path": "docs/demo-static/web/user/home.html",
-      "sha256": "e4ca1ed494de86ba33c8bbb578752f97de70d6a92f7ce66e5f95664f3c281339",
+      "sha256": "acbf1d48293c862f52fb1edcc01ddee1ad2909688d6c550f060c03d230f333b6",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2029,7 +2029,7 @@
     },
     {
       "path": "docs/demo-static/web/user/index.html",
-      "sha256": "c364f7ecacaa0ee5e3359f8c6ab45397ff2671a49dbf976e05f4ba9b325dd0ad",
+      "sha256": "8a15b2b055ee3db45de63db0a36da7c19d357772e2d8a6e3e2908b5c1638ea43",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2218,7 +2218,7 @@
     },
     {
       "path": "docs/demo-static/web/user/quality-report.html",
-      "sha256": "7dba7b04e66e96f26e65cbc40e7ec134cd294307566afb01c282e4a81c83b991",
+      "sha256": "d0d33c1b7febfd3e5339871d62c2bed074e09e7e78faf8bdf6abdeac63d45e37",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2239,7 +2239,7 @@
     },
     {
       "path": "docs/demo-static/web/user/script-studio.html",
-      "sha256": "f42cc96a8791c495d967a13d4fa75324205af6d103a318089eb700a6efa7309e",
+      "sha256": "b7518715b5dc3a560c98b20695ef75143ee7bc52f2bdd5b932f3861530acb50f",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2302,7 +2302,7 @@
     },
     {
       "path": "docs/demo-static/web/user/source-import.html",
-      "sha256": "758248309dce8a3129a1c455493d83cea451d9af5a468a0d0ae30219a4124acd",
+      "sha256": "950ceccf08319baace196180ef8917f84ad4210d0f380e511e1e1f344ed22e40",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2323,7 +2323,7 @@
     },
     {
       "path": "docs/demo-static/web/user/story-map.html",
-      "sha256": "122b1c954beb4ae8ee5374230e18cb605394426fc75e5af24bb07e16e1b07052",
+      "sha256": "3fb433d5a8dea1d5b2a2aafb5c2ae9236609ccdc4bcd44374b68bbbd3c34fc36",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2344,7 +2344,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard-canvas.html",
-      "sha256": "0851a6f43c7490fbc0cb915be5b0dcb5b506023e2bed0ebd0d615b8a50f71def",
+      "sha256": "39466bdfc98151251bdf2b3bdfd38cbbedb17a01f5544206c2cb433e9b256bf6",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2365,7 +2365,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard.html",
-      "sha256": "f03c2be15d9749c9b317e3f40fc1219b063157a4616f2fcb8c5d5538d6f59a21",
+      "sha256": "6aca13a73d25dc591d431e6a8fcb8e290070e8f457c595b84cdec265f35dacba",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2428,7 +2428,7 @@
     },
     {
       "path": "docs/demo-static/web/user/task-center.html",
-      "sha256": "3fae679d6d535379edca951c4bfb872dcfd165236c78c93fbfa185999d3d96d2",
+      "sha256": "cd305a8b96c773f8bae80afd3ea8b6e3d75ff0fd9a0e673b19f59dda00e37707",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2491,7 +2491,7 @@
     },
     {
       "path": "docs/demo-static/web/user/voice-studio.html",
-      "sha256": "7b63ea88fdf486c802db765eb1b51222bfe5661f963f7b3b1323777994e86cd8",
+      "sha256": "aa09426577d3583913ba4bdb349cbca7c81eb810a04f5673931db6114970ae88",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2512,7 +2512,7 @@
     },
     {
       "path": "docs/demo-static/web/user/work-create.html",
-      "sha256": "ef2302b729a7ea60c6f65a37a52f63d3e41be0f22b0851e85fba9ff9e6cb0f35",
+      "sha256": "dc0607a646898f2d664d250e4873d40bcf7734590b04b30001b3f708b81c0473",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2533,7 +2533,7 @@
     },
     {
       "path": "docs/demo-static/web/user/work-detail.html",
-      "sha256": "405114ee50242d5a14e5c687b78ec4b09bb449548addb9da5a9803dd33bd2f2c",
+      "sha256": "6092c7edb5fb4d91574755b427f8287093dcc2571859e45bc0463c962f3b7dac",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2554,7 +2554,7 @@
     },
     {
       "path": "docs/demo-static/web/user/works.html",
-      "sha256": "005d1f4285bd6712b182716f64d43a801bd6d06b8deb92c34dd76691d8bd8324",
+      "sha256": "97577ebcc291652132befdf47ede81dbc90e8230e035ccdb5d8181ac80d947e9",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

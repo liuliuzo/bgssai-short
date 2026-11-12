@@ -1835,17 +1835,17 @@ export default function WorkStudio() {
         onChange={(key) => navigate(`/works/${workId}/${key}`)}
         tabBarGutter={12}
         items={[
-          { key: 'source', label: '原著导入', children: <SourceImportPage work={work} /> },
+          { key: 'source', label: '原著', children: <SourceImportPage work={work} /> },
           { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={load} initialOutlineTaskId={outlineTaskId} /> },
-          { key: 'characters', label: '资产一致性', children: <CharacterPane work={work} /> },
-          { key: 'storyboard', label: '创作台', children: <StoryboardPane work={work} episodeId={episodeId} /> },
-          { key: 'voice', label: '配音字幕', children: <VoiceStudioPage work={work} episodeId={episodeId} /> },
-          { key: 'story-map', label: '剧情图谱', children: <StoryMapPage work={work} episodeId={episodeId} /> },
-          { key: 'quality', label: '质量报告', children: <QualityReportPage work={work} episodeId={episodeId} /> },
-          { key: 'preview', label: '三问预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
+          { key: 'characters', label: '角色场景', children: <CharacterPane work={work} /> },
+          { key: 'storyboard', label: '分镜', children: <StoryboardPane work={work} episodeId={episodeId} /> },
+          { key: 'voice', label: '配音', children: <VoiceStudioPage work={work} episodeId={episodeId} /> },
+          { key: 'story-map', label: '剧情', children: <StoryMapPage work={work} episodeId={episodeId} /> },
+          { key: 'quality', label: '质量', children: <QualityReportPage work={work} episodeId={episodeId} /> },
+          { key: 'preview', label: '预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
           { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
-          { key: 'tasks', label: '本剧任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
-          { key: 'compose', label: '成片提审', children: (
+          { key: 'tasks', label: '任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
+          { key: 'compose', label: '成片', children: (
             <ComposePane
               work={work}
               episodeId={episodeId}
@@ -1856,7 +1856,7 @@ export default function WorkStudio() {
               onMediaPreflight={setMediaPreflight}
             />
           ) },
-          { key: 'edit-export', label: '剪辑工程', children: <EditExportPage episodeId={episodeId} /> },
+          { key: 'edit-export', label: '剪辑', children: <EditExportPage episodeId={episodeId} /> },
         ]}
       />
       <DramaAssistantDrawer
