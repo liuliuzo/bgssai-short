@@ -38,14 +38,37 @@
   letter-spacing: 0.01em;
 }
 
+/* Rounded outline chevron (two strokes) — not a solid CSS border triangle */
 .phone-dial-combo-caret {
   flex-shrink: 0;
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid currentColor;
-  opacity: 0.45;
+  position: relative;
+  width: 12px;
+  height: 7px;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+
+.phone-dial-combo-caret::before,
+.phone-dial-combo-caret::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  width: 7.5px;
+  height: 1.75px;
+  background: currentColor;
+  border-radius: 999px;
+}
+
+.phone-dial-combo-caret::before {
+  left: 0;
+  transform: rotate(38deg);
+  transform-origin: right center;
+}
+
+.phone-dial-combo-caret::after {
+  right: 0;
+  transform: rotate(-38deg);
+  transform-origin: left center;
 }
 
 .phone-dial-combo-trigger[aria-expanded="true"] .phone-dial-combo-caret {
