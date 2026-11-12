@@ -55,6 +55,8 @@
 镜头：`PENDING` → `IMAGE_GENERATING` → `IMAGE_READY` → `VIDEO_GENERATING` → `VIDEO_READY` → `LOCKED`。
 视频任务失败或取消且 `video_asset_id` 仍在时，从 `VIDEO_GENERATING` 回到 `VIDEO_READY`，失败路径不改写素材 id；
 没有视频但首帧仍在则回到 `IMAGE_READY`。首帧任务失败且首帧仍在时，已有视频回到 `VIDEO_READY`，否则回到 `IMAGE_READY`。
+列表上，`VIDEO_READY` / `LOCKED` 且成片仍绑定的镜头不以历史视频失败或取消作为常驻标签；状态尚未回到 `VIDEO_READY` 时，已有成片的失败尝试仍可提示，且不得说成没有视频。进行中的任务仍显示进度。任务记录保留。
+已有成片时，首帧缩略图旁的「查看首帧」单行排在当前缩略图宽度内，点击仍放大同一张图。
 
 任务：`QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`；`QUEUED` / `RUNNING` 可 `CANCELED`；
 `FAILED` / `CANCELED` 经 `retry` / `recover` 回 `QUEUED`。`PAUSED` 本切片不实现暂停入口。

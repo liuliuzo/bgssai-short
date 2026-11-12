@@ -33,6 +33,12 @@ import {
   shotTimingLabel,
   shotVideoDialogProps,
   showSettledEmpty,
+  FIRST_FRAME_CAPTION,
+  LAST_FRAME_CAPTION,
+  LIST_FIRST_FRAME_THUMB_WIDTH,
+  captionEmWidth,
+  frameCaptionFits,
+  frameCaptionStyle,
   thumbPlaceholderStyle,
   voiceRowView,
   tokenAmountLabel,
@@ -194,4 +200,19 @@ test('shot cards, thumbs, outline fields, and the drawer stay clear of the page 
   assert.equal(thumbPlaceholderStyle().background, '#e8edf3')
   assert.ok(outlineLongTextProps().autoSize.minRows >= 2)
   assert.ok(shotDrawerProps().zIndex > 1200)
+})
+
+test('first-frame caption stays one line inside the narrow thumb', () => {
+  assert.equal(LIST_FIRST_FRAME_THUMB_WIDTH, 72)
+  assert.equal(FIRST_FRAME_CAPTION, '查看首帧')
+  assert.equal(LAST_FRAME_CAPTION, '查看尾帧')
+  assert.equal(frameCaptionFits(FIRST_FRAME_CAPTION, LIST_FIRST_FRAME_THUMB_WIDTH), true)
+  assert.equal(frameCaptionFits(LAST_FRAME_CAPTION, LIST_FIRST_FRAME_THUMB_WIDTH), true)
+  const oldCaption = '首帧，点击查看'
+  assert.equal(frameCaptionFits(oldCaption, LIST_FIRST_FRAME_THUMB_WIDTH), false)
+  assert.equal(captionEmWidth(oldCaption.slice(0, -1)) * 11 <= LIST_FIRST_FRAME_THUMB_WIDTH, true)
+  const style = frameCaptionStyle()
+  assert.equal(style.whiteSpace, 'nowrap')
+  assert.equal(style.fontSize, 11)
+  assert.equal(style.width, '100%')
 })

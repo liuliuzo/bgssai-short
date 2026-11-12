@@ -2,8 +2,12 @@ import { useState, useRef } from 'react'
 import { Button, Image, Typography } from 'antd'
 import { shotHasPlayableVideo } from './shotCardMedia'
 import {
+  FIRST_FRAME_CAPTION,
+  LAST_FRAME_CAPTION,
+  LIST_FIRST_FRAME_THUMB_WIDTH,
   SHOT_VIDEO_DIALOG_Z_INDEX,
   enlargePlaybackButtonProps,
+  frameCaptionStyle,
   listPlayerFrameStyle,
   listPlayerToggleStyle,
   listPlayerVideoStyle,
@@ -43,18 +47,7 @@ export function ClickThumb({ src, alt, width, height, caption }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          style={{
-            display: 'block',
-            marginTop: 2,
-            padding: 0,
-            border: 0,
-            background: 'transparent',
-            color: '#64748b',
-            fontSize: 11,
-            lineHeight: 1.4,
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
+          style={frameCaptionStyle()}
         >
           {caption}
         </button>
@@ -123,7 +116,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
           </Button>
           {row.first_frame_url ? (
             <div style={{ marginTop: 6 }}>
-              <ClickThumb alt="首帧" src={row.first_frame_url} width={72} caption="首帧，点击查看" />
+              <ClickThumb alt="首帧" src={row.first_frame_url} width={LIST_FIRST_FRAME_THUMB_WIDTH} caption={FIRST_FRAME_CAPTION} />
             </div>
           ) : null}
         </div>
@@ -141,7 +134,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration }) {
       )}
       {row.last_frame_url ? (
         <div style={{ marginTop: 6 }}>
-          <ClickThumb alt="尾帧" src={row.last_frame_url} width={90} caption="尾帧，点击查看" />
+          <ClickThumb alt="尾帧" src={row.last_frame_url} width={90} caption={LAST_FRAME_CAPTION} />
         </div>
       ) : null}
     </div>

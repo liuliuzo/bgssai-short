@@ -100,6 +100,47 @@ export function thumbPlaceholderStyle() {
   }
 }
 
+/** Narrow first-frame thumb under a playable list clip. Do not widen it to fit the caption. */
+export const LIST_FIRST_FRAME_THUMB_WIDTH = 72
+
+/** One line at 11px inside LIST_FIRST_FRAME_THUMB_WIDTH. Click still opens the same preview. */
+export const FIRST_FRAME_CAPTION = '查看首帧'
+
+export const LAST_FRAME_CAPTION = '查看尾帧'
+
+/** CJK and fullwidth punctuation take one em; ASCII takes half. */
+export function captionEmWidth(caption) {
+  let em = 0
+  for (const ch of String(caption || '')) {
+    em += ch.charCodeAt(0) <= 0xff ? 0.5 : 1
+  }
+  return em
+}
+
+/** True when the caption stays on one line inside the thumb, with no orphan glyph. */
+export function frameCaptionFits(caption, thumbWidth = LIST_FIRST_FRAME_THUMB_WIDTH, fontSize = 11) {
+  const text = String(caption || '')
+  if (!text || /[\r\n]/.test(text)) return false
+  return captionEmWidth(text) * fontSize <= thumbWidth
+}
+
+export function frameCaptionStyle() {
+  return {
+    display: 'block',
+    width: '100%',
+    marginTop: 2,
+    padding: 0,
+    border: 0,
+    background: 'transparent',
+    color: '#64748b',
+    fontSize: 11,
+    lineHeight: 1.4,
+    cursor: 'pointer',
+    textAlign: 'left',
+    whiteSpace: 'nowrap',
+  }
+}
+
 export function outlineLongTextProps() {
   return { autoSize: { minRows: 2, maxRows: 8 } }
 }

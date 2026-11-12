@@ -206,7 +206,7 @@
 | `quality_level` 模型质量档 | `FAST` 快速 / `STANDARD` 标准 / `HIGH` 高质 |
 | `price_unit` 计费单位 | `PER_CALL` 按次 / `PER_SECOND` 按视频秒 / `PER_KILO_TOKEN` 按千 token / `PER_MINUTE` 按音频分钟 |
 
-镜头已绑定 `video_asset_id` 时，视频任务失败或取消不得清空该绑定。状态若停在 `VIDEO_GENERATING`，回到 `VIDEO_READY`；还没有视频但首帧仍在，则回到 `IMAGE_READY`。创作台列表用 `video_url` 直接播放。
+镜头已绑定 `video_asset_id` 时，视频任务失败或取消不得清空该绑定。状态若停在 `VIDEO_GENERATING`，回到 `VIDEO_READY`；还没有视频但首帧仍在，则回到 `IMAGE_READY`。创作台列表用 `video_url` 直接播放。镜头已是 `VIDEO_READY` 或 `LOCKED` 且成片仍绑定后，不再把更早一次失败的视频任务显示成常驻失败标签。进行中的任务仍显示进度。已有成片时首帧文案为「查看首帧」，单行排在现有缩略图宽度内。
 
 ## 九、四层同步检查清单
 
