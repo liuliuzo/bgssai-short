@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Card, Form, Input, Select, Space, Switch, Typography, message } from 'antd'
+import { Button, Card, Form, Input, Space, Switch, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 
 const { Text } = Typography
@@ -103,29 +103,44 @@ export default function LookLibraryPage() {
           <Form.Item><Button htmlType="submit" type="primary" loading={loading}>新建</Button></Form.Item>
         </Form>
       </Card>
-      <Card title="素材" extra={
-        <Space>
-          <Select
-            style={{ width: 220 }}
-            placeholder="选择知识库"
-            value={libraryId}
-            onChange={setLibraryId}
-            options={libraries.map((item) => ({ value: item.library_id, label: item.library_name }))}
-          />
-          <Select
-            style={{ width: 120 }}
-            value={viewAngle}
-            onChange={setViewAngle}
-            options={[
-              { value: 'FRONT_FACE', label: '正脸' },
-              { value: 'FRONT', label: '前面' },
-              { value: 'BACK', label: '背面' },
-              { value: 'SIDE', label: '侧面' },
-            ]}
-          />
+      <Card title="素材">
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ width: 200, flexShrink: 0 }}>
+          {libraries.map((item) => (
+            <button
+              key={item.library_id}
+              type="button"
+              onClick={() => setLibraryId(item.library_id)}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                marginBottom: 8,
+                padding: '10px 12px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                border: item.library_id === libraryId ? '1px solid #d48806' : '1px solid #f0f0f0',
+                background: item.library_id === libraryId ? '#fff7e6' : '#fff',
+              }}
+            >
+              <div>{item.library_name}</div>
+              <Text type="secondary">{(item.material_list || []).length} 个素材</Text>
+            </button>
+          ))}
+          {!libraries.length ? <Text type="secondary">还没有知识库。</Text> : null}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+        <Space style={{ marginBottom: 12 }} wrap>
+          {[
+            ['FRONT_FACE', '正脸'],
+            ['FRONT', '前面'],
+            ['BACK', '背面'],
+            ['SIDE', '侧面'],
+          ].map(([value, label]) => (
+            <Button key={value} type={viewAngle === value ? 'primary' : 'default'} onClick={() => setViewAngle(value)}>{label}</Button>
+          ))}
           <Button disabled={!libraryId} onClick={() => fileRef.current?.click()}>上传素材</Button>
         </Space>
-      }>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4" hidden onChange={async (event) => {
           const file = event.target.files && event.target.files[0]
           event.target.value = ''
@@ -163,6 +178,8 @@ export default function LookLibraryPage() {
           </Card>
         ))}
         {current && !(current.material_list || []).length ? <Text type="secondary">这个知识库还没有素材。</Text> : null}
+        </div>
+        </div>
       </Card>
     </Space>
   )
