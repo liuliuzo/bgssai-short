@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +34,10 @@ import com.bgssai.shortai.model.ShortSceneCardExample;
 import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.production.dto.ProductionDtos.CharacterReq;
+import com.bgssai.shortai.production.support.LookImage;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShotConsistency;
+import com.bgssai.shortai.storage.ObjectStorage;
 
 @Service
 public class CharacterService {
@@ -58,6 +61,12 @@ public class CharacterService {
     private ShortAssetMapper shortAssetMapper;
     @Autowired(required = false)
     private ShortContinuityIssueMapper shortContinuityIssueMapper;
+    @Autowired
+    private LookKnowledgeService lookKnowledgeService;
+    @Autowired
+    private ObjectStorage objectStorage;
+    @Autowired
+    private Environment environment;
 
     public ApiResponse listCharacters(String workId) {
         ShortWork work = workAccessService.requireWork(workId);
@@ -163,11 +172,25 @@ public class CharacterService {
     }
 
     @Transactional
+    public ApiResponse uploadCharacterPortrait(CharacterReq req) {
+        ShortCharacter row = requireCharacter(req == null ? null : req.getCharacterId());
+        LookImage.Decoded image = LookImage.decode(req.getImageBase64());
+        ShortAsset asset = saveCardImage(row.getUserId(), row.getWorkId(), row.getCharacterId(), image);
+        String caption = req.getCaption();
+        if (caption == null || caption.isBlank()) {
+            caption = joinCaption(row.getCharacterName(), row.getAppearancePrompt());
+        }
+        lookKnowledgeService.fileImage(row.getUserId(), "CHARACTER", row.getCharacterName(), caption, image);
+        return Responses.ok(uploaded(asset));
+    }
+
+    @Transactional
     public ApiResponse lockCharacter(CharacterReq req) {
         ShortCharacter row = requireCharacter(req == null ? null : req.getCharacterId());
         if (req.getAssetId() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "asset_id required");
         }
+        requireCardImage(row.getUserId(), row.getWorkId(), row.getCharacterId(), req.getAssetId());
         ShortCharacter patch = new ShortCharacter();
         patch.setRefImageAssetId(req.getAssetId());
         patch.setCardStatus("LOCKED");
@@ -314,8 +337,26 @@ public class CharacterService {
     }
 
     @Transactional
+    public ApiResponse uploadScenePortrait(CharacterReq req) {
+        ShortSceneCard row = requireScene(req == null ? null : req.getSceneCardId());
+        LookImage.Decoded image = LookImage.decode(req.getImageBase64());
+        ShortAsset asset = saveCardImage(row.getUserId(), row.getWorkId(), row.getSceneCardId(), image);
+        String kind = row.getCardType() == null ? "SCENE" : row.getCardType();
+        String caption = req.getCaption();
+        if (caption == null || caption.isBlank()) {
+            caption = joinCaption(row.getCardName(), row.getAppearancePrompt());
+        }
+        lookKnowledgeService.fileImage(row.getUserId(), kind, row.getCardName(), caption, image);
+        return Responses.ok(uploaded(asset));
+    }
+
+    @Transactional
     public ApiResponse lockScene(CharacterReq req) {
         ShortSceneCard row = requireScene(req == null ? null : req.getSceneCardId());
+        if (req == null || req.getAssetId() == null || req.getAssetId().isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "asset_id required");
+        }
+        requireCardImage(row.getUserId(), row.getWorkId(), row.getSceneCardId(), req.getAssetId());
         ShortSceneCard patch = new ShortSceneCard();
         patch.setRefImageAssetId(req.getAssetId());
         patch.setCardStatus("LOCKED");
@@ -497,6 +538,7 @@ public class CharacterService {
             item.put("asset_id", asset.getAssetId());
             item.put("file_url", assetService.resolveUrl(asset.getAssetId()));
             item.put("selected_flag", asset.getSelectedFlag());
+            item.put("image_origin", imageOrigin(asset));
             list.add(item);
         }
         return list;
@@ -504,6 +546,77 @@ public class CharacterService {
 
     private String assetUrl(String assetId) {
         return assetService.resolveUrl(assetId);
+    }
+
+    private Map<String, Object> uploaded(ShortAsset asset) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("asset_id", asset.getAssetId());
+        result.put("file_url", assetService.resolveUrl(asset.getAssetId()));
+        result.put("image_origin", "USER");
+        return result;
+    }
+
+    private ShortAsset saveCardImage(String userId, String workId, String cardId, LookImage.Decoded image) {
+        ShortAsset asset = new ShortAsset();
+        asset.setAssetId(ShortIds.id("a-"));
+        asset.setUserId(userId);
+        asset.setWorkId(workId);
+        asset.setShotId(cardId);
+        asset.setAssetType("IMAGE");
+        asset.setMimeType(image.mimeType());
+        String[] profiles = environment == null ? null : environment.getActiveProfiles();
+        String env = profiles != null && profiles.length > 0 && profiles[0] != null && !profiles[0].isBlank()
+                ? profiles[0] : "local";
+        String key = "short/" + env + "/" + userId + "/" + workId + "/" + asset.getAssetId() + "."
+                + LookImage.extension(image.mimeType());
+        objectStorage.put(key, image.bytes(), image.mimeType());
+        asset.setStorageKey(key);
+        asset.setFileUrl("/bgssai/user/assets/" + asset.getAssetId());
+        asset.setFileSizeByte(image.bytes().length);
+        if (image.width() > 0) {
+            asset.setWidth(image.width());
+        }
+        if (image.height() > 0) {
+            asset.setHeight(image.height());
+        }
+        asset.setSelectedFlag(0);
+        asset.setDraftFlag(0);
+        asset.setDeletedFlag(0);
+        asset.setCreatedTime(new Date());
+        shortAssetMapper.insertSelective(asset);
+        return asset;
+    }
+
+    private void requireCardImage(String userId, String workId, String cardId, String assetId) {
+        ShortAssetExample ex = new ShortAssetExample();
+        ex.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ex);
+        if (asset == null || !userId.equals(asset.getUserId()) || asset.getWorkId() == null
+                || !workId.equals(asset.getWorkId()) || !cardId.equals(asset.getShotId())
+                || !"IMAGE".equals(asset.getAssetType())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "只能锁定这张卡上的图片");
+        }
+    }
+
+    private static String imageOrigin(ShortAsset asset) {
+        String mime = asset.getMimeType() == null ? "" : asset.getMimeType();
+        boolean photo = mime.contains("jpeg") || mime.contains("png") || mime.contains("webp");
+        if (photo && (asset.getSourceTaskId() == null || asset.getSourceTaskId().isBlank())) {
+            return "USER";
+        }
+        return "GENERATED";
+    }
+
+    private static String joinCaption(String name, String appearance) {
+        String title = name == null ? "" : name.trim();
+        String look = appearance == null ? "" : appearance.trim();
+        if (title.isEmpty()) {
+            return look;
+        }
+        if (look.isEmpty()) {
+            return title;
+        }
+        return title + " " + look;
     }
 
     private ShortCharacter requireCharacter(String characterId) {

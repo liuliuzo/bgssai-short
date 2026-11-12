@@ -1387,3 +1387,45 @@ CREATE TABLE `ledger_external_subscription` (
   KEY `idx_ledger_ext_sub_ext_user` (`client_id`, `external_user_id`),
   KEY `idx_ledger_ext_sub_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='本库自有订阅上报账本表';
+
+DROP TABLE IF EXISTS `short_look_material`;
+DROP TABLE IF EXISTS `short_look_library`;
+CREATE TABLE `short_look_library` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `library_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `library_name` VARCHAR(120) NOT NULL,
+  `description` VARCHAR(500) DEFAULT NULL,
+  `status` VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
+  `mount_portrait` TINYINT NOT NULL DEFAULT 1,
+  `item_count` INT NOT NULL DEFAULT 0,
+  `usage_bytes` BIGINT NOT NULL DEFAULT 0,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_look_library_id` (`library_id`),
+  KEY `idx_short_look_library_user` (`user_id`, `deleted_flag`, `status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定妆知识库';
+
+CREATE TABLE `short_look_material` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `material_id` VARCHAR(64) NOT NULL,
+  `library_id` VARCHAR(64) NOT NULL,
+  `user_id` VARCHAR(64) NOT NULL,
+  `material_name` VARCHAR(120) NOT NULL,
+  `caption` VARCHAR(500) DEFAULT NULL,
+  `material_kind` VARCHAR(16) NOT NULL DEFAULT 'CHARACTER',
+  `mime_type` VARCHAR(64) NOT NULL,
+  `storage_key` VARCHAR(512) NOT NULL,
+  `width` INT DEFAULT NULL,
+  `height` INT DEFAULT NULL,
+  `file_size_byte` INT NOT NULL DEFAULT 0,
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0,
+  `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_short_look_material_id` (`material_id`),
+  KEY `idx_short_look_material_library` (`library_id`, `deleted_flag`),
+  KEY `idx_short_look_material_user` (`user_id`, `material_kind`, `deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定妆知识库素材';
