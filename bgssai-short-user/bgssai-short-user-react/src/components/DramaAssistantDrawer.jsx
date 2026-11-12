@@ -1,36 +1,36 @@
 import React, { useState } from 'react'
-import { Drawer, Radio, Input, Button, Space, Tag, Typography, Card, Divider, message } from 'antd'
-import { buildEnhancedPrompt, DRAMA_STYLES, CAMERA_MOVEMENTS, SHOT_TYPES } from '../utils/CinematographyHelper'
+import { Drawer, Radio, Input, Button, Space, Tag, Typography, Divider, message, Spin, Alert, Modal } from 'antd'
+import productionApi from '../api/production'
 
-const { Paragraph, Text, Title } = Typography
+const { Paragraph, Text } = Typography
 const { TextArea } = Input
 
 const AGENT_ROLES = [
   {
     key: 'SCRIPT',
     name: '编剧专家',
-    desc: '专注短剧快节奏、矛盾冲突、情绪爆发点与反转对白设计',
+    desc: '对白张力、反转与集尾钩子；可确认后写回镜头对白',
     tag: '爽点与对白',
     color: 'magenta',
   },
   {
     key: 'DIRECTOR',
     name: '分镜导演',
-    desc: '规划镜头组接、景别节奏过渡（全景->特写）与首尾帧衔接',
+    desc: '景别节奏、机位与镜头衔接；可确认后写回镜头描述',
     tag: '分镜语言',
     color: 'blue',
   },
   {
     key: 'VISUAL',
     name: '视觉专家',
-    desc: '强化光影氛围、构图质感、色彩基调与提示词参数调优',
-    tag: '8K光影构图',
-    color: 'purple',
+    desc: '光影构图与提示词参数；可确认后写回额外提示',
+    tag: '光影构图',
+    color: 'geekblue',
   },
   {
     key: 'EDITOR',
     name: '剪辑顾问',
-    desc: '建议背景音乐进出点、音效重音、节奏卡点与工程导出规范',
+    desc: '时长卡点、音效与导出建议；默认不直接改镜头字段',
     tag: '剪辑与声音',
     color: 'cyan',
   },
@@ -38,68 +38,150 @@ const AGENT_ROLES = [
 
 const QUICK_ACTIONS = {
   SCRIPT: [
-    { label: '增加台词火药味与反转', prompt: '请帮我优化这段台词，让双方矛盾更加尖锐，结尾带有一句出人意料的反转回击。' },
-    { label: '设计集尾留存钩子', prompt: '请帮我为当前集设计一个抓人的卡点悬念，让观众有强烈的欲望立刻点开下一集。' },
-    { label: '精炼对白（去废话）', prompt: '请精简当前对话，去除不必要的客套废话，只保留核心戏剧动机。' },
+    { label: '增加台词火药味与反转', prompt: '请优化当前对白，让矛盾更尖锐，结尾带一句反转回击。' },
+    { label: '设计集尾留存钩子', prompt: '请为当前集设计一个抓人的卡点悬念。' },
+    { label: '精炼对白（去废话）', prompt: '请精简当前对话，只保留核心戏剧动机。' },
   ],
   DIRECTOR: [
-    { label: '拆解为三镜头递进组合', prompt: '请将这段戏拆解为【全景入场 -> 中景对话 -> 特写爆发】的经典分镜组合。' },
-    { label: '优化相邻镜头首尾衔接', prompt: '请检查当前两个镜头的人物走位与视线方向，确保镜头切接时不发生跳轴。' },
-    { label: '转换为四宫格机位预览', prompt: '请给出这一关键情节的4个不同视角的构图建议（正拍、反拍、特写、俯拍）。' },
+    { label: '拆解为三镜头递进组合', prompt: '请将这段戏拆成全景入场、中景对话、特写爆发的分镜组合。' },
+    { label: '优化相邻镜头首尾衔接', prompt: '请检查相邻镜头走位与视线，避免跳轴。' },
+    { label: '给出四机位构图建议', prompt: '请给出正拍、反拍、特写、俯拍四个构图建议。' },
   ],
   VISUAL: [
-    { label: '一键注入电影感光影关键词', prompt: 'cinematic lighting, dramatic volumetric light, 8k uhd, photorealistic, sharp focus' },
-    { label: '转换为悬疑冷调光影', prompt: 'moody dramatic shadows, cool blue undertones, neon reflections, cinematic film grain' },
-    { label: '转换为豪门奢华暖金基调', prompt: 'high-end penthouse interior, luxury gold and marble accents, warm rim light, elegant bokeh' },
+    { label: '强化电影感光影', prompt: '请为当前镜头补充电影感光影与质感关键词。' },
+    { label: '转为悬疑冷调', prompt: '请把当前画面基调改成悬疑冷调。' },
+    { label: '转为暖金奢华基调', prompt: '请把当前画面基调改成暖金奢华。' },
   ],
   EDITOR: [
-    { label: '建议BGM情绪与音效点', prompt: '请为这组镜头推荐背景音乐风格（如激昂交响、低沉重音鼓点）及关键重音打点位置。' },
-    { label: '剪辑节奏卡点建议', prompt: '建议每个镜头的保留时长，以及在对话句尾还是动作高潮处切镜头。' },
+    { label: '建议BGM与音效点', prompt: '请推荐背景音乐风格与关键重音打点位置。' },
+    { label: '剪辑节奏卡点建议', prompt: '请建议镜头保留时长与切点。' },
   ],
 }
 
-export default function DramaAssistantDrawer({ visible, onClose, currentShot, onApplyPrompt, onApplyDialogue }) {
+function applyLabel(target) {
+  if (target === 'dialogue_text') return '确认写回对白'
+  if (target === 'shot_desc') return '确认写回镜头描述'
+  if (target === 'extra_prompt') return '确认写回额外提示'
+  return null
+}
+
+export default function DramaAssistantDrawer({
+  visible,
+  onClose,
+  workId,
+  episodeId,
+  currentShot,
+  onApplied,
+}) {
   const [activeRole, setActiveRole] = useState('DIRECTOR')
   const [inputVal, setInputVal] = useState('')
+  const [sending, setSending] = useState(false)
   const [messages, setMessages] = useState([
     {
       sender: 'assistant',
       role: 'DIRECTOR',
-      text: '你好！我是AI戏剧多专家协同助理。你可以选择上方不同的专家角色（编剧/分镜/视觉/剪辑），我将为你提供专业建议或一键优化提示词与台词。',
+      text: '选择专家角色后提问。建议会走文本模型并读取当前作品上下文；写回需你确认，不会自动改作品。',
     },
   ])
 
-  const handleSend = () => {
-    if (!inputVal.trim()) return
-    const userMsg = { sender: 'user', text: inputVal }
-    let replyText = ''
+  const currentRoleObj = AGENT_ROLES.find((r) => r.key === activeRole)
 
-    if (activeRole === 'SCRIPT') {
-      replyText = `【编剧专家建议】针对你的需求：「${inputVal}」\n建议优化对白：\n“你以为你赢了？睁大眼睛看清楚，这盘棋从一开始就是我布的局！”\n（戏剧动机：反客为主，在第3秒制造听觉冲击，强化观众留存率。）`
-    } else if (activeRole === 'DIRECTOR') {
-      replyText = `【分镜导演建议】针对构思：「${inputVal}」\n推荐分镜机位配置：\n1. 镜1：过肩中景（OTS），交代对峙关系与空间位置；\n2. 镜2：缓慢推镜头至眼部特写（Push In），捕捉情绪波动；\n3. 镜3：仰拍反打（Low Angle），凸显气势反超。`
-    } else if (activeRole === 'VISUAL') {
-      replyText = `【视觉专家建议】推荐融合专业渲染关键词：\n${buildEnhancedPrompt(inputVal, { styleKey: 'URBAN_REVENGE', qualityBoost: true })}`
-    } else {
-      replyText = `【剪辑顾问建议】针对剪辑节奏：「${inputVal}」\n建议将镜头时长压缩至2.5秒以内，重音点卡在人物转身的瞬间；输出工程时选择导出剪映草稿或FCPXML，以便继续微调音效轨道。`
+  const handleSend = async () => {
+    if (!inputVal.trim() || sending) return
+    if (!workId) {
+      message.error('缺少作品上下文，无法请求专家建议')
+      return
     }
-
-    setMessages((prev) => [...prev, userMsg, { sender: 'assistant', role: activeRole, text: replyText }])
+    const question = inputVal.trim()
+    const userMsg = { sender: 'user', text: question }
+    setMessages((prev) => [...prev, userMsg])
     setInputVal('')
+    setSending(true)
+    try {
+      const { data } = await productionApi.dramaAssistAdvise({
+        work_id: workId,
+        episode_id: episodeId || undefined,
+        shot_id: currentShot?.shot_id || undefined,
+        role: activeRole,
+        question,
+      })
+      if (!data?.success) {
+        const errText = data?.message || '专家建议失败，请稍后重试'
+        setMessages((prev) => [...prev, { sender: 'assistant', role: activeRole, text: errText, error: true }])
+        message.error(errText)
+        return
+      }
+      const result = data.result || {}
+      const actions = Array.isArray(result.action_list) ? result.action_list : []
+      const actionBlock = actions.length ? `\n可执行动作：\n- ${actions.join('\n- ')}` : ''
+      const replyText = `【${result.role_name || currentRoleObj?.name || activeRole}】${result.summary ? `\n${result.summary}\n` : '\n'}${result.advice_text || ''}${actionBlock}`
+      setMessages((prev) => [...prev, {
+        sender: 'assistant',
+        role: activeRole,
+        text: replyText,
+        apply_target: result.apply_target,
+        apply_text: result.apply_text,
+        context_used: result.context_used,
+      }])
+    } catch (err) {
+      const errText = err?.response?.data?.message || err?.message || '模型暂时不可用，请稍后重试'
+      setMessages((prev) => [...prev, { sender: 'assistant', role: activeRole, text: errText, error: true }])
+      message.error(errText)
+    } finally {
+      setSending(false)
+    }
   }
 
   const handleQuickAction = (qa) => {
     setInputVal(qa.prompt)
   }
 
-  const handleApplyToPrompt = (text) => {
-    if (onApplyPrompt) {
-      onApplyPrompt(text)
-      message.success('已应用至当前镜头视觉描述')
-    }
+  const resolveShotId = async () => {
+    if (currentShot?.shot_id) return { shot_id: currentShot.shot_id, shot_no: currentShot.shot_no }
+    if (!episodeId) return null
+    const { data } = await productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 20 })
+    const list = Array.isArray(data?.result) ? data.result : (data?.result?.shot_list || [])
+    const first = list[0]
+    if (!first?.shot_id) return null
+    return { shot_id: first.shot_id, shot_no: first.shot_no }
   }
 
-  const currentRoleObj = AGENT_ROLES.find((r) => r.key === activeRole)
+  const handleConfirmApply = async (msg) => {
+    if (!msg?.apply_text || !msg?.apply_target || msg.apply_target === 'none') return
+    let targetShot
+    try {
+      targetShot = await resolveShotId()
+    } catch (err) {
+      message.error(err?.response?.data?.message || '无法读取镜头列表')
+      return
+    }
+    if (!targetShot?.shot_id) {
+      message.warning('当前剧集没有可写回的镜头')
+      return
+    }
+    Modal.confirm({
+      title: `确认写回镜头 ${targetShot.shot_no || ''}？`,
+      content: currentShot?.shot_id
+        ? '只会更新你确认的字段，不会自动生成画面或视频。'
+        : '未显式选中镜头，将写回本集第一个镜头；只会更新确认字段。',
+      okText: '确认写回',
+      cancelText: '取消',
+      onOk: async () => {
+        const { data } = await productionApi.dramaAssistApply({
+          work_id: workId,
+          shot_id: targetShot.shot_id,
+          apply_target: msg.apply_target,
+          apply_text: msg.apply_text,
+        })
+        if (!data?.success) {
+          message.error(data?.message || '写回失败')
+          throw new Error('apply failed')
+        }
+        message.success('已写回镜头')
+        if (onApplied) onApplied()
+      },
+    })
+  }
 
   return (
     <Drawer
@@ -108,10 +190,20 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
       width={460}
       open={visible}
       onClose={onClose}
-      extra={
-        <Tag color={currentRoleObj?.color}>{currentRoleObj?.tag}</Tag>
-      }
+      extra={<Tag color={currentRoleObj?.color}>{currentRoleObj?.tag}</Tag>}
     >
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 12 }}
+        message="真实文本模型建议"
+        description={
+          currentShot?.shot_id
+            ? `已绑定作品与镜头 ${currentShot.shot_no || ''}；写回需二次确认。`
+            : '已绑定作品；未选中镜头时只给建议，不提供写回。'
+        }
+      />
+
       <div style={{ marginBottom: 16 }}>
         <Text strong>切换专家协同角色：</Text>
         <Radio.Group
@@ -123,7 +215,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
         >
           {AGENT_ROLES.map((role) => (
             <Radio.Button key={role.key} value={role.key}>
-              {role.name.split(' ')[0]}
+              {role.name}
             </Radio.Button>
           ))}
         </Radio.Group>
@@ -138,12 +230,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
         <Text strong style={{ fontSize: 12 }}>常用快捷指令：</Text>
         <Space wrap style={{ marginTop: 6 }}>
           {(QUICK_ACTIONS[activeRole] || []).map((qa, idx) => (
-            <Button
-              key={idx}
-              size="small"
-              type="dashed"
-              onClick={() => handleQuickAction(qa)}
-            >
+            <Button key={idx} size="small" type="dashed" onClick={() => handleQuickAction(qa)}>
               {qa.label}
             </Button>
           ))}
@@ -176,7 +263,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
                 padding: '8px 12px',
                 borderRadius: 8,
                 backgroundColor: m.sender === 'user' ? '#1677ff' : '#ffffff',
-                color: m.sender === 'user' ? '#ffffff' : '#333333',
+                color: m.error ? '#a8071a' : (m.sender === 'user' ? '#ffffff' : '#333333'),
                 boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                 textAlign: 'left',
                 whiteSpace: 'pre-wrap',
@@ -185,21 +272,22 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
               }}
             >
               {m.text}
-              {m.sender === 'assistant' && onApplyPrompt && (
+              {m.sender === 'assistant' && applyLabel(m.apply_target) && m.apply_text ? (
                 <div style={{ marginTop: 6, borderTop: '1px dashed #e8e8e8', paddingTop: 4 }}>
                   <Button
                     size="small"
                     type="link"
                     style={{ padding: 0, fontSize: 12 }}
-                    onClick={() => handleApplyToPrompt(m.text)}
+                    onClick={() => handleConfirmApply(m)}
                   >
-                    应用到提示词
+                    {applyLabel(m.apply_target)}
                   </Button>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         ))}
+        {sending ? <div style={{ textAlign: 'center', padding: 8 }}><Spin size="small" /></div> : null}
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
@@ -207,7 +295,8 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
           rows={2}
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
-          placeholder={`向${currentRoleObj?.name.split(' ')[0]}提问，如：“优化这段分镜对白与机位”`}
+          placeholder={`向${currentRoleObj?.name || '专家'}提问`}
+          disabled={sending}
           onPressEnter={(e) => {
             if (!e.shiftKey) {
               e.preventDefault()
@@ -215,7 +304,7 @@ export default function DramaAssistantDrawer({ visible, onClose, currentShot, on
             }
           }}
         />
-        <Button type="primary" style={{ height: 'auto' }} onClick={handleSend}>
+        <Button type="primary" style={{ height: 'auto' }} loading={sending} onClick={handleSend}>
           发送
         </Button>
       </div>

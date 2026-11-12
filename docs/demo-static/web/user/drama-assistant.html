@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI 戏剧多专家协同 · 用户端原型</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; color: #1f1f1f; }
+    .box { border: 1px solid #e5e5e5; border-radius: 8px; padding: 16px; max-width: 460px; }
+    .roles button { margin: 4px 4px 0 0; }
+    .msg { background: #fafafa; border-radius: 8px; padding: 8px 12px; margin: 8px 0; white-space: pre-wrap; }
+    code { background: #f5f5f5; padding: 1px 4px; }
+  </style>
+</head>
+<body>
+  <h1>AI 戏剧多专家协同工作台</h1>
+  <p>入口：作品工作室页按钮「AI 协同专家」。正式实现：`DramaAssistantDrawer.jsx`。</p>
+  <div class="box">
+    <p><strong>切换专家协同角色</strong></p>
+    <div class="roles">
+      <button type="button">编剧专家</button>
+      <button type="button">分镜导演</button>
+      <button type="button">视觉专家</button>
+      <button type="button">剪辑顾问</button>
+    </div>
+    <p>真实文本模型建议；已绑定作品上下文；写回需确认。</p>
+    <div class="msg">【分镜导演】建议检查相邻镜头视线方向，避免跳轴。</div>
+    <p>确认写回镜头描述（二次确认后调用 apply）</p>
+    <p>接口：</p>
+    <ul>
+      <li><code>POST /bgssai/user/drama-assist/advise</code></li>
+      <li><code>POST /bgssai/user/drama-assist/apply</code></li>
+    </ul>
+  </div>
+</body>
+</html>
