@@ -17,3 +17,7 @@ Ant Design `button.autoInsertSpace` 关闭，两个汉字的按钮不再被插�
 ## 2026-11-12 区号箭头（t484）
 
 `PhoneDialSearchSelect` 的 `.phone-dial-combo-caret` 由 border 实心三角改为两段圆角描边构成的 V 形 chevron；`aria-expanded=true` 时仍 `rotate(180deg)`。不改区号数据、点击区与登录契约。管理端无此控件。
+
+## 2026-11-13 全页 Select 箭头（t501u / t502u）
+
+用户端 / 管理端通过 `styles/rounded-chevron-caret.css` 覆写 `.ant-select-arrow`（隐藏默认 anticon，两段圆角描边 V）；Ant 展开态仍旋转该节点。原型 `theme.css` 对原生 `select` 去 `appearance` 并用同款 SVG。布局与法律页脚不变。`caretSpikeGuard` 防止 border 三角回流到源码与 static 产物。
