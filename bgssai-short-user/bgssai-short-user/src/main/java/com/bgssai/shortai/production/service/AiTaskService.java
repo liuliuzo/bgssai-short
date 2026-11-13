@@ -707,6 +707,8 @@ public class AiTaskService {
         item.put("result_json", clientResult(row));
         item.put("cost_cent", row.getCostCent());
         item.put("created_time", row.getCreatedTime());
+        item.put("started_time", row.getStartedTime());
+        item.put("finished_time", row.getFinishedTime());
         return item;
     }
 

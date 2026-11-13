@@ -3,8 +3,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Select, Space, Table, Tag, Typography } from 'antd'
 import productionApi from '../../api/production'
 import { labelOf, TARGET_TYPE_LABEL, visibleFailReason } from '../../lib/displayLabels'
+import { formatDateTime } from '../../lib/formatTime'
 
 const { Title, Paragraph } = Typography
+
+function taskTime(value) {
+  const text = formatDateTime(value)
+  return text === '-' ? '—' : text
+}
 
 export default function TasksPage() {
   const [rows, setRows] = useState([])
@@ -56,6 +62,7 @@ export default function TasksPage() {
           size="small"
           loading={loading}
           dataSource={rows}
+          scroll={{ x: 1180 }}
           pagination={{
             current: pageNum,
             pageSize,
@@ -67,7 +74,9 @@ export default function TasksPage() {
             { title: '类型', dataIndex: 'task_type_name', width: 90, render: (v, row) => v || row.task_type },
             { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
             { title: '目标', dataIndex: 'target_type_name', width: 110, render: (v, row) => v || labelOf(TARGET_TYPE_LABEL, row.target_type, row.target_type) },
-            { title: '进度', dataIndex: 'progress_percent', width: 280, render: (_, row) => row.progress_hint || row.progress_percent },
+            { title: '进度', dataIndex: 'progress_percent', width: 220, render: (_, row) => row.progress_hint || row.progress_percent },
+            { title: '开始时间', dataIndex: 'started_time', width: 170, render: taskTime },
+            { title: '结束时间', dataIndex: 'finished_time', width: 170, render: taskTime },
             { title: '费用(元)', dataIndex: 'cost_cent', width: 90, render: (v) => ((Number(v) || 0) / 100).toFixed(2) },
             { title: '失败原因', key: 'fail_reason', render: (_, row) => visibleFailReason(row) || '—' },
             {
