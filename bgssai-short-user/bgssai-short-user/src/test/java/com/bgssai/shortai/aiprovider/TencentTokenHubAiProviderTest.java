@@ -172,6 +172,23 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void imageForwardsLockedLookReference() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"data\":[{\"b64_json\":\"AQIDBA==\"}]}");
+        AiProviderRequest request = request("IMAGE", "kling-v3", "沈知微");
+        request.getParams().put("image_url", "https://cdn.example/look.png");
+        request.getParams().put("image_reference", "subject");
+        request.getParams().put("image_fidelity", 0.75d);
+        request.getParams().put("human_fidelity", 0.55d);
+        provider(http, "key").execute(request);
+        String body = http.postedBodies.get(0);
+        assertTrue(body.contains("\"image\":\"https://cdn.example/look.png\""));
+        assertTrue(body.contains("\"image_reference\":\"subject\""));
+        assertTrue(body.contains("\"image_fidelity\":0.75"));
+        assertTrue(body.contains("\"human_fidelity\":0.55"));
+    }
+
+    @Test
     void selectedImageModelIgnoresVendorHost() {
         FakeClient http = new FakeClient();
         http.posts.add("{\"data\":[{\"b64_json\":\"AQIDBA==\"}]}");

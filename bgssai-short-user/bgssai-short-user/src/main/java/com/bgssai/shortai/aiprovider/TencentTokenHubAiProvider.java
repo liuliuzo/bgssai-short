@@ -173,6 +173,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         String image = ProviderHttp.imagePayload(request);
         if (!image.isBlank()) {
             body.put("image", image);
+            putLookControls(body, request);
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
         int budget = mediaBudgetSec(timeoutSec, 600);
@@ -191,6 +192,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
         String image = ProviderHttp.imagePayload(request);
         if (!image.isBlank()) {
             body.put("image", image);
+            putLookControls(body, request);
         }
         String resumeId = ShortJson.text(request.param("resume_request_id"));
         boolean official = "bgssai-video".equals(model);
@@ -207,6 +209,20 @@ public class TencentTokenHubAiProvider implements AiProvider {
             ready.setDurationSec(duration);
         }
         return ready;
+    }
+
+    /** 人物定妆要带上参考方式，只传 image 时模型会按文字另画一张脸。 */
+    private static void putLookControls(Map<String, Object> body, AiProviderRequest request) {
+        String ref = ShortJson.text(request.param("image_reference"));
+        if (!ref.isBlank()) {
+            body.put("image_reference", ref);
+        }
+        if (request.param("image_fidelity") != null) {
+            body.put("image_fidelity", request.param("image_fidelity"));
+        }
+        if (request.param("human_fidelity") != null) {
+            body.put("human_fidelity", request.param("human_fidelity"));
+        }
     }
 
     private AiProviderResult speech(String base, String apiKey, Map<String, Object> cfg,
