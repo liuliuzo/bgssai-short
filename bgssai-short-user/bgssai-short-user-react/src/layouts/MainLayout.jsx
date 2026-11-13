@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { key: '/login-logs', label: '我的登录日志', icon: <ProfileOutlined /> },
 ]
 
-const BOT_DOWNLOAD = { key: '/download/bot', label: '下载 Bgssai Bot', icon: <DownloadOutlined /> }
+const BOT_DOWNLOAD = { key: '/download/bot', label: '下载 BGSSAI Bot', icon: <DownloadOutlined /> }
 
 const SHELL_PRIMARY = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },

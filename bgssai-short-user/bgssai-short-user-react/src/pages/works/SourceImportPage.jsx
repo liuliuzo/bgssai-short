@@ -24,7 +24,7 @@ export default function SourceImportPage({ work }) {
   const [targetCount, setTargetCount] = useState(6)
   const [estimate, setEstimate] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [fileLabel, setFileLabel] = useState('还没有选择文件')
+  const [fileLabel, setFileLabel] = useState('暂未选择本地文件')
   const fileRef = useRef(null)
 
   const workId = work?.work_id
@@ -90,7 +90,7 @@ export default function SourceImportPage({ work }) {
   const pickFile = (event) => {
     const file = event.target.files?.[0]
     if (!file) {
-      setFileLabel('还没有选择文件')
+      setFileLabel('暂未选择本地文件')
       return
     }
     setFileLabel(file.name)
@@ -150,7 +150,7 @@ export default function SourceImportPage({ work }) {
       target_episode_count: targetCount,
     })
     if (data?.success) {
-      message.success('改编任务已提交，完成后回总剧本查看大纲')
+      message.success('剧本拆解与改编任务已提交，完成后可在「总剧本」查看分集大纲')
     }
   }
 

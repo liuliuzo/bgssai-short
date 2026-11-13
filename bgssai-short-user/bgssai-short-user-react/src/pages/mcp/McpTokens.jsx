@@ -33,7 +33,7 @@ function httpJson(endpoint, extra) {
 const GROUPS = [
   { key: 'foreign', label: '国外' },
   { key: 'domestic', label: '国内' },
-  { key: 'bot', label: 'Bgssai Bot' },
+  { key: 'bot', label: 'BGSSAI Bot' },
 ]
 
 const AGENTS = [
@@ -191,8 +191,8 @@ codex mcp add bgssai-short --url ${endpoint} --bearer-token-env-var BGSSAI_SHORT
   manual('wenxin', 'domestic', '文心', '文心没有公开的固定 MCP 配置文件。'),
   manual('stepfun', 'domestic', '阶跃桌面伙伴', '阶跃桌面伙伴没有公开的固定 MCP 配置文件。'),
   manual('lobster', 'domestic', 'LobsterAI', 'LobsterAI 没有公开的固定 MCP 配置文件。'),
-  agent('bgssai-bot', 'bot', 'Bgssai Bot',
-    '在 Bot 里填写这个产品的 MCP 地址和个人访问令牌。也可以用 Chat 登录后由平台下发，那时不用粘贴令牌。',
+  agent('bgssai-bot', 'bot', 'BGSSAI Bot',
+    '在 BGSSAI Bot 桌面客户端中填写本应用的 MCP 地址与个人访问令牌；使用统一账号登录后也可直接授权连接。',
     (endpoint) => `名称：bgssai-short
 MCP URL：${endpoint}
 PAT：${TOKEN}`),
@@ -300,7 +300,7 @@ export default function McpTokens() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          message="连接器分成国外、国内和 Bgssai Bot 三类，使用同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
+          message="连接器分成国外、国内和 BGSSAI Bot 三类，使用同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
         />
         <Paragraph style={{ marginBottom: 12 }}>
           端点：<Text code copyable>{endpoint}</Text>
@@ -335,7 +335,7 @@ export default function McpTokens() {
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          message="令牌明文只在创建时显示一次。建议按工具命名（Claude Code / Codex / Cursor / Bgssai Bot）。每人最多 5 枚。"
+          message="令牌明文只在创建时显示一次。建议按工具命名（Claude Code / Codex / Cursor / BGSSAI Bot）。每人最多 5 枚。"
         />
         <Table rowKey="id" loading={loading} columns={columns} dataSource={rows}
           pagination={false} locale={{ emptyText: <Empty description="还没有 MCP 令牌" /> }} />
@@ -344,7 +344,7 @@ export default function McpTokens() {
       <Modal title="创建 MCP 令牌" open={modalOpen} onOk={create} confirmLoading={creating}
         onCancel={() => setModalOpen(false)} okText="创建" cancelText="取消">
         <Input
-          placeholder="备注名，例如 Cursor / Claude Code / Bgssai Bot"
+          placeholder="备注名，例如 Cursor / Claude Code / BGSSAI Bot"
           value={tokenName}
           maxLength={64}
           onChange={(e) => setTokenName(e.target.value)}
