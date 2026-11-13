@@ -495,6 +495,64 @@ class ShortAiTaskWorkerTest {
     }
 
     @Test
+    void scriptVideoUsesLockedPersonEvenWhenFirstFrameExists() {
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        var shots = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class);
+        var characters = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortCharacterMapper.class);
+        var assets = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        var storage = org.mockito.Mockito.mock(com.bgssai.shortai.storage.ObjectStorage.class);
+        var registry = org.mockito.Mockito.mock(AiProviderRegistry.class);
+        var provider = org.mockito.Mockito.mock(com.bgssai.shortai.aiprovider.AiProvider.class);
+        ReflectionTestUtils.setField(worker, "shortShotMapper", shots);
+        ReflectionTestUtils.setField(worker, "shortCharacterMapper", characters);
+        ReflectionTestUtils.setField(worker, "shortAssetMapper", assets);
+        ReflectionTestUtils.setField(worker, "objectStorage", storage);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        var shot = new com.bgssai.shortai.model.ShortShot();
+        shot.setShotId("s-1");
+        shot.setShotNo(2);
+        shot.setShotDesc("沈知微推门进来");
+        shot.setFirstFrameAssetId("a-frame");
+        shot.setCharacterRefJson("[{\"character_id\":\"c-1\"}]");
+        var character = new com.bgssai.shortai.model.ShortCharacter();
+        character.setCharacterId("c-1");
+        character.setCharacterName("沈知微");
+        character.setCardStatus("LOCKED");
+        character.setRefImageAssetId("a-look");
+        var frame = new com.bgssai.shortai.model.ShortAsset();
+        frame.setAssetId("a-frame");
+        frame.setStorageKey("frame.png");
+        frame.setMimeType("image/png");
+        var look = new com.bgssai.shortai.model.ShortAsset();
+        look.setAssetId("a-look");
+        look.setStorageKey("look.png");
+        look.setMimeType("image/png");
+        when(shots.selectOneByExample(any())).thenReturn(shot);
+        when(characters.selectOneByExample(any())).thenReturn(character);
+        when(assets.selectOneByExample(any())).thenReturn(frame, look);
+        when(storage.presignGet(any(), anyInt())).thenAnswer(call ->
+                new com.bgssai.shortai.storage.ObjectStorage.PresignResult(
+                        "https://cdn.example/" + call.getArgument(0), java.time.Instant.now().plusSeconds(3600)));
+        var model = new AiModelConfig();
+        model.setProviderCode("TENCENT_TOKENHUB");
+        model.setModelCode("bgssai-video");
+        when(registry.resolve(model)).thenReturn(provider);
+        var captured = new java.util.concurrent.atomic.AtomicReference<com.bgssai.shortai.aiprovider.AiProviderRequest>();
+        when(provider.execute(any())).thenAnswer(call -> {
+            captured.set(call.getArgument(0));
+            throw new IllegalStateException("test-stop-before-media-generation");
+        });
+        var task = new ShortAiTask();
+        task.setTargetId("s-1");
+        task.setTaskType("VIDEO");
+        task.setRequestJson("{}");
+        Assertions.assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(worker, "finishShot", task, model));
+        Assertions.assertEquals("https://cdn.example/look.png", captured.get().param("image_url"));
+        Assertions.assertEquals("subject", captured.get().param("image_reference"));
+    }
+
+    @Test
     void videoStopsWhenLockedLookCannotBeRead() {
         ShortAiTaskWorker worker = new ShortAiTaskWorker();
         var shots = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortShotMapper.class);
