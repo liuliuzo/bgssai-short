@@ -6,13 +6,13 @@ import { friendlyFailReason } from '../../lib/displayLabels'
 import { modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { subtitleClock, voiceRowView, voiceStudioSummary } from './studioListUx'
 
-const { Paragraph } = Typography
+const { Title, Paragraph } = Typography
 
 function formatYuan(cent) {
   return ((cent || 0) / 100).toFixed(2)
 }
 
-export default function VoiceStudioPage({ work, episodeId }) {
+export default function VoiceStudioPage({ work, episodeId, onJumpTab }) {
   const [dubbings, setDubbings] = useState([])
   const [misaligned, setMisaligned] = useState(0)
   const [subtitles, setSubtitles] = useState([])
@@ -113,6 +113,17 @@ export default function VoiceStudioPage({ work, episodeId }) {
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <Title level={5} style={{ margin: 0 }}>第 4 步：配音与字幕（可选）</Title>
+          <Paragraph style={{ marginBottom: 0, color: '#334155' }}>
+            可为有台词的镜头生成人声配音并对齐时长；如暂不配音，可直接跳过本步去合成成片（默认按镜头对白自动烧录字幕）。
+          </Paragraph>
+        </div>
+        {onJumpTab ? (
+          <Button type="primary" onClick={() => onJumpTab('compose')}>去第 5 步：合成成片</Button>
+        ) : null}
+      </div>
       <Card
         loading={loading}
         title="配音"

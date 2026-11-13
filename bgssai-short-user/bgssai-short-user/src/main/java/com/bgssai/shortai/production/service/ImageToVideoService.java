@@ -99,6 +99,8 @@ public class ImageToVideoService {
     private PaidOrderGrantService paidOrderGrantService;
     @Autowired(required = false)
     private ShotGenerateOutcome shotGenerateOutcome;
+    @Autowired(required = false)
+    private FinishedFilmLifecycle finishedFilmLifecycle;
 
     void setMediaCheck(MediaCheck mediaCheck) {
         this.mediaCheck = mediaCheck == null ? MediaMetadata::verify : mediaCheck;
@@ -114,6 +116,10 @@ public class ImageToVideoService {
      * Does not clear the shot's current video. The caller sets VIDEO_GENERATING.
      */
     public ShortAiTask enqueueForShot(ShortShot shot, String assetId, String prompt, int costCent) {
+        return enqueueForShot(shot, assetId, prompt, costCent, null);
+    }
+
+    public ShortAiTask enqueueForShot(ShortShot shot, String assetId, String prompt, int costCent, String batchId) {
         if (shot == null || assetId == null || assetId.isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "图生视频需要一张真实照片。");
         }
@@ -132,7 +138,7 @@ public class ImageToVideoService {
         Params params = new Params(text, 384, 256, 25, 8, 20, 42);
         ShortAiTask task = new ShortAiTask();
         task.setTaskId(ShortIds.id("t-"));
-        task.setBatchId(ShortIds.id("b-"));
+        task.setBatchId(batchId == null || batchId.isBlank() ? ShortIds.id("b-") : batchId.trim());
         task.setUserId(shot.getUserId());
         task.setWorkId(shot.getWorkId());
         task.setEpisodeId(shot.getEpisodeId());
@@ -662,10 +668,14 @@ public class ImageToVideoService {
         ShortShot patch = new ShortShot();
         patch.setVideoAssetId(videoAssetId);
         patch.setShotStatus("VIDEO_READY");
+        patch.setStaleFlag(0);
         patch.setUpdatedTime(new Date());
         ShortShotExample up = new ShortShotExample();
         up.createCriteria().andIdEqualTo(shot.getId()).andShotStatusNotEqualTo("LOCKED");
-        shortShotMapper.updateByExampleSelective(patch, up);
+        int updated = shortShotMapper.updateByExampleSelective(patch, up);
+        if (updated > 0 && finishedFilmLifecycle != null) {
+            finishedFilmLifecycle.expireAfterUpstreamChange(shot.getEpisodeId());
+        }
     }
 
     private ShortAiTask requireOwn(String taskId) {

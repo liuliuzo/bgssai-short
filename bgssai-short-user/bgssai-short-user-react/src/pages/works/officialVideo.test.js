@@ -66,3 +66,27 @@ test('a confirmed regenerate submits once and does not resume', async () => {
   assert.deepEqual(bodies, [{ confirm_cost: 1 }])
   assert.equal(outcome.result.resumed_existing_video, false)
 })
+
+test('preview and submit errors return readable failure messages', async () => {
+  const previewErr = await runOfficialShotVideo({
+    preview: async () => ({ success: false, message: '可用额度不足，请先充值加量包' }),
+    confirm: async () => true,
+    submit: async () => ({ success: true }),
+  })
+  assert.equal(previewErr.submitted, false)
+  assert.equal(previewErr.reason, 'preview_failed')
+  assert.match(previewErr.message, /额度不足/)
+
+  const submitErr = await runOfficialShotVideo({
+    preview: async () => ({ success: true, result: { shot_list: [{ shot_id: 's-1', blocked: 0 }] } }),
+    confirm: async () => true,
+    submit: async () => {
+      const err = new Error('network')
+      err.response = { data: { message: '镜1 引用的角色「沈知微」尚未定妆，请先完成定妆' } }
+      throw err
+    },
+  })
+  assert.equal(submitErr.submitted, false)
+  assert.equal(submitErr.reason, 'submit_failed')
+  assert.match(submitErr.message, /沈知微/)
+})

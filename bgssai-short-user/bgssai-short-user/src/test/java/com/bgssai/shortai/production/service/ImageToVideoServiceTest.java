@@ -276,6 +276,44 @@ class ImageToVideoServiceTest {
         verify(settlement, never()).settle(any(), any(), anyInt());
     }
 
+    @Test
+    void officialShotPreservesBatchIdAndExpiresFilmOnSuccess() {
+        FinishedFilmLifecycle filmLifecycle = mock(FinishedFilmLifecycle.class);
+        ReflectionTestUtils.setField(service, "finishedFilmLifecycle", filmLifecycle);
+        ShortShot shot = new ShortShot();
+        shot.setId(11L);
+        shot.setShotId("s-11");
+        shot.setUserId("u-1");
+        shot.setWorkId("w-1");
+        shot.setEpisodeId("e-1");
+        shot.setShotStatus("VIDEO_GENERATING");
+        shot.setStaleFlag(1);
+        when(shots.selectOneByExample(any(ShortShotExample.class))).thenReturn(shot);
+        when(shots.updateByExampleSelective(any(), any())).thenReturn(1);
+
+        ShortAiTask queued = service.enqueueForShot(shot, "a-1", "镜头缓推", 80, "b-official-1");
+        assertEquals("b-official-1", queued.getBatchId());
+        assertEquals("s-11", queued.getTargetId());
+
+        stored.get().setTaskStatus("RUNNING");
+        stored.get().setStartedTime(new Date());
+        when(client.submit(any(), any(), any(), any(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt()))
+                .thenReturn(new SubmitDecision(SubmitKind.ACCEPTED, JOB, "", ""));
+        service.kickoff(stored.get());
+        dueNow();
+        when(client.poll(any(), eq(JOB))).thenReturn(new PollDecision(PollKind.COMPLETED, "", ""));
+        when(client.fetch(any(), eq(JOB))).thenReturn(new ContentDecision(ContentKind.READY,
+                new byte[] {0, 0, 0, 20, 'f', 't', 'y', 'p'}, "", ""));
+        when(settlement.settle(any(), any(), anyInt())).thenReturn(true);
+        service.pollImageToVideo();
+
+        org.mockito.ArgumentCaptor<ShortShot> shotPatch = org.mockito.ArgumentCaptor.forClass(ShortShot.class);
+        verify(shots).updateByExampleSelective(shotPatch.capture(), any());
+        assertEquals("VIDEO_READY", shotPatch.getValue().getShotStatus());
+        assertEquals(0, shotPatch.getValue().getStaleFlag());
+        verify(filmLifecycle).expireAfterUpstreamChange("e-1");
+    }
+
     private void dueNow() {
         Map<String, Object> body = ShortJson.map(stored.get().getRequestJson());
         body.put("next_poll_at_ms", 0);

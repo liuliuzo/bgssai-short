@@ -98,7 +98,7 @@ export default function WorksPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>我的作品</Title>
       <Paragraph style={{ color: '#334155' }}>
-        创建短剧后按剧本、角色、分镜、成片、提审走完闭环。只有剧名和一句话梗概是必填，其余走默认值，想改再展开高级设置。
+        创建短剧后按「1. 剧本与定稿 → 2. 角色定妆 → 3. 分镜与视频 → 4. 配音字幕（可选） → 5. 合成成片」五步走完视频生成。只需填写剧名和一句话梗概即可开始，其余均有默认值，想改再展开高级设置。
       </Paragraph>
       <Card extra={<Button type="primary" onClick={() => setOpen(true)}>新建作品</Button>}>
         <Table

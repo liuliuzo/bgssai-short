@@ -78,13 +78,13 @@ public class ShotService {
     public ApiResponse split(ShotReq req) {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
         if (!"READY".equals(ep.getScriptStatus())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "script must be READY before split");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "请先在「剧本与定稿」页完成本集定稿，再拆解分镜");
         }
         ShortScriptExample sx = new ShortScriptExample();
         sx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId());
         ShortScript script = shortScriptMapper.selectOneByExample(sx);
         if (script == null) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "script not found");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "未找到本集剧本，请先生成本集剧本");
         }
         ShortWorkExample wx = new ShortWorkExample();
         wx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
@@ -144,10 +144,12 @@ public class ShotService {
         ex.setOrderByClause("shot_no asc");
         PageHelper.startPage(safePageNum, safePageSize);
         List<ShortShot> rows = shortShotMapper.selectByExample(ex);
-        long total = ((com.github.pagehelper.Page<ShortShot>) rows).getTotal();
+        long total = rows instanceof com.github.pagehelper.Page<?> page ? page.getTotal() : rows.size();
+        List<ShortCharacter> characters = loadWorkCharacters(ep.getWorkId());
+        List<ShortSceneCard> sceneCards = loadWorkSceneCards(ep.getWorkId());
         List<Map<String, Object>> items = new ArrayList<>();
         for (ShortShot row : rows) {
-            items.add(view(row));
+            items.add(view(row, characters, sceneCards));
         }
         PageResponse response = new PageResponse();
         response.setCode("0");
@@ -421,7 +423,31 @@ public class ShotService {
         patchStoryboard(ep, total > 0 && total == lockedCount ? "READY" : "DRAFT");
     }
 
+    private List<ShortCharacter> loadWorkCharacters(String workId) {
+        if (shortCharacterMapper == null || workId == null || workId.isBlank()) {
+            return List.of();
+        }
+        ShortCharacterExample cx = new ShortCharacterExample();
+        cx.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        List<ShortCharacter> rows = shortCharacterMapper.selectByExample(cx);
+        return rows == null ? List.of() : rows;
+    }
+
+    private List<ShortSceneCard> loadWorkSceneCards(String workId) {
+        if (shortSceneCardMapper == null || workId == null || workId.isBlank()) {
+            return List.of();
+        }
+        ShortSceneCardExample scx = new ShortSceneCardExample();
+        scx.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
+        List<ShortSceneCard> rows = shortSceneCardMapper.selectByExample(scx);
+        return rows == null ? List.of() : rows;
+    }
+
     private Map<String, Object> view(ShortShot row) {
+        return view(row, loadWorkCharacters(row.getWorkId()), loadWorkSceneCards(row.getWorkId()));
+    }
+
+    private Map<String, Object> view(ShortShot row, List<ShortCharacter> characters, List<ShortSceneCard> sceneCards) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("shot_id", row.getShotId());
         item.put("shot_no", row.getShotNo());
@@ -432,7 +458,7 @@ public class ShotService {
         item.put("shot_size", row.getShotSize());
         item.put("camera_move", row.getCameraMove());
         item.put("shot_duration_sec", row.getShotDurationSec());
-        String anchors = anchorText(row);
+        String anchors = ShotConsistency.anchorFragmentForShot(row, characters, sceneCards);
         item.put("image_prompt", ShotConsistency.leadWithAnchors(row.getImagePrompt(), anchors));
         List<Map<String, String>> segments = new ArrayList<>(PromptComposer.segments(row));
         if (!anchors.isBlank()) {
@@ -445,8 +471,8 @@ public class ShotService {
         item.put("prompt_segments", segments);
         item.put("previz_text", row.getPrevizText());
         item.put("look_plain", PromptComposer.lookPlain(row));
-        boolean framePlaceholder = assetService.placeholderImage(row.getFirstFrameAssetId());
-        boolean videoPlaceholder = assetService.placeholderVideo(row.getVideoAssetId());
+        boolean framePlaceholder = assetService != null && assetService.placeholderImage(row.getFirstFrameAssetId());
+        boolean videoPlaceholder = assetService != null && assetService.placeholderVideo(row.getVideoAssetId());
         item.put("first_frame_placeholder_flag", framePlaceholder ? 1 : 0);
         item.put("video_placeholder_flag", videoPlaceholder ? 1 : 0);
         item.put("reference_note", framePlaceholder
@@ -461,24 +487,33 @@ public class ShotService {
         item.put("prompt_pass_flag", check.get("pass_flag"));
         item.put("first_frame_asset_id", row.getFirstFrameAssetId());
         item.put("video_asset_id", row.getVideoAssetId());
-        item.put("first_frame_url", assetService.resolveUrl(row.getFirstFrameAssetId()));
-        item.put("video_url", assetService.resolveUrl(row.getVideoAssetId()));
+        item.put("first_frame_url", assetService == null ? null : assetService.resolveUrl(row.getFirstFrameAssetId()));
+        item.put("video_url", assetService == null ? null : assetService.resolveUrl(row.getVideoAssetId()));
         item.put("last_frame_asset_id", row.getLastFrameAssetId());
-        item.put("last_frame_url", assetService.resolveUrl(row.getLastFrameAssetId()));
+        item.put("last_frame_url", assetService == null ? null : assetService.resolveUrl(row.getLastFrameAssetId()));
         item.put("last_frame_prompt", row.getLastFramePrompt());
         item.put("frame_link_mode", row.getFrameLinkMode() == null ? "NONE" : row.getFrameLinkMode());
-        item.putAll(frameLinkService.effectiveState(row));
+        if (frameLinkService != null) {
+            item.putAll(frameLinkService.effectiveState(row));
+        }
         item.put("character_ref_json", ShotConsistency.characterIds(row.getCharacterRefJson()));
         item.put("scene_card_id", row.getSceneCardId());
         item.put("prop_ref_json", ShotConsistency.propIds(row.getPropRefJson()));
         item.put("stale_flag", row.getStaleFlag() == null ? 0 : row.getStaleFlag());
-        item.put("blocked_flag", row.getBlockedFlag());
+        boolean blocked = hasUnlockedRefs(row, characters, sceneCards) || ShotConsistency.shotNeedsPrompt(row);
+        item.put("blocked_flag", blocked ? 1 : 0);
+        item.put("block_reason", blocked
+                ? ShotConsistency.describeShotBlockReason(row, characters, sceneCards)
+                : "");
         item.put("risk_level", row.getRiskLevel());
         item.put("latest_task", latestTask(row.getShotId()));
         return item;
     }
 
     private Map<String, Object> latestTask(String shotId) {
+        if (shortAiTaskMapper == null || shotId == null || shotId.isBlank()) {
+            return null;
+        }
         ShortAiTaskExample ex = new ShortAiTaskExample();
         ex.createCriteria().andTargetIdEqualTo(shotId);
         ex.setOrderByClause("id desc");

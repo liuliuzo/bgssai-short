@@ -177,7 +177,7 @@ create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
 
 `GET /bgssai/user/shots/list` 每镜另回 `look_plain`（这一镜观众会看到什么）、`prompt_score`、`previz_level`。
 
-`GET /bgssai/user/shots/list` 另回 `prop_ref_json`、`latest_task`
+`GET /bgssai/user/shots/list` 另回 `prop_ref_json`、`block_reason`（当 `blocked_flag=1` 时给出可读中文阻塞原因，如待定妆的角色名、场景名、道具名或缺失画面描述；就绪时为空串）、`latest_task`
 （`task_id` / `task_type` / `task_status` / `task_status_name` / `progress_percent`），
 以及 `video_url` / `first_frame_url` / `last_frame_url`。
 列表在 `video_url` 有值时直接播放；`video_asset_id` 仍在而最新视频任务失败时，不得把镜头展示成没有视频。
@@ -223,7 +223,7 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 
 ### POST /bgssai/user/ai-tasks/official-video/submit
 
-同上，且 `confirm_cost=1`。未确认不入队、不改镜头。确认后新建任务，请求里没有 `resume_request_id`。图生视频 `target_type=IMAGE_TO_VIDEO`，不占文生视频 GPU 车道；文生视频仍是 `bgssai-video`。只把镜头状态改为 `VIDEO_GENERATING`，不清除 `video_asset_id`。同一镜已有活动视频时返回 4006，文案「这一镜视频已在生成中」。USER 限流。
+同上，且 `confirm_cost=1`。未确认不入队、不改镜头。确认后新建任务，请求里没有 `resume_request_id`，本批入队的图生视频与文生视频任务共用响应返回的 `batch_id`（供 `batch-progress` 统一轮询）。图生视频 `target_type=IMAGE_TO_VIDEO`，不占文生视频 GPU 车道；文生视频仍是 `bgssai-video`。只把镜头状态改为 `VIDEO_GENERATING`，不清除 `video_asset_id`。同一镜已有活动视频时返回 4006，文案「这一镜视频已在生成中」。USER 限流。
 
 ### GET /bgssai/user/ai-tasks/list
 

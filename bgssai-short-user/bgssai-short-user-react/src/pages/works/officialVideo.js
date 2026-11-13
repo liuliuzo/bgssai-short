@@ -1,5 +1,14 @@
 export const OFFICIAL_VIDEO_IN_PROGRESS = '这一镜视频已在生成中'
 
+function extractErrorMessage(source) {
+  if (!source) return ''
+  if (typeof source === 'string') return source
+  const responseMessage = source?.response?.data?.message
+  if (responseMessage) return String(responseMessage)
+  if (source?.message) return String(source.message)
+  return ''
+}
+
 export function officialRunnableShots(preview) {
   const shots = preview && Array.isArray(preview.shot_list) ? preview.shot_list : []
   return {
@@ -16,20 +25,29 @@ export async function runOfficialShotVideo({ preview, confirm, submit, regenerat
   let viewed
   try {
     viewed = await preview()
-  } catch {
-    return { submitted: false, reason: 'preview_failed' }
+  } catch (err) {
+    return {
+      submitted: false,
+      reason: 'preview_failed',
+      message: extractErrorMessage(err) || '视频费用预估失败，请稍后重试',
+    }
   }
   if (!viewed || viewed.success === false) {
-    return { submitted: false, reason: 'preview_failed' }
+    return {
+      submitted: false,
+      reason: 'preview_failed',
+      message: extractErrorMessage(viewed) || '视频费用预估失败，请检查前置条件',
+    }
   }
   const result = viewed.result || viewed
   const { runnable, blocked } = officialRunnableShots(result)
   if (!runnable.length) {
-    const reason = blocked[0] && blocked[0].block_reason
+    const reasons = [...new Set(blocked.map((item) => item && item.block_reason).filter(Boolean))]
     return {
       submitted: false,
       reason: 'in_progress',
-      message: reason || OFFICIAL_VIDEO_IN_PROGRESS,
+      message: reasons.join('；') || OFFICIAL_VIDEO_IN_PROGRESS,
+      blocked,
     }
   }
   const accepted = await confirm(result, { regenerate: !!regenerate })
@@ -39,11 +57,19 @@ export async function runOfficialShotVideo({ preview, confirm, submit, regenerat
   let submitted
   try {
     submitted = await submit({ confirm_cost: 1 })
-  } catch {
-    return { submitted: false, reason: 'submit_failed' }
+  } catch (err) {
+    return {
+      submitted: false,
+      reason: 'submit_failed',
+      message: extractErrorMessage(err) || '视频任务提交失败，请稍后重试',
+    }
   }
   if (!submitted || submitted.success === false) {
-    return { submitted: false, reason: 'submit_failed' }
+    return {
+      submitted: false,
+      reason: 'submit_failed',
+      message: extractErrorMessage(submitted) || '视频任务提交失败，请稍后重试',
+    }
   }
   return { submitted: true, reason: 'queued', result: submitted.result || null }
 }

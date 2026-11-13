@@ -144,7 +144,7 @@ public class OfficialShotVideoService {
 
     private ShortAiTask enqueue(Plan plan, String batchId) {
         if (OfficialVideoCopy.ROUTE_I2V.equals(plan.route)) {
-            return imageToVideoService.enqueueForShot(plan.shot, plan.assetId, plan.prompt, plan.costCent);
+            return imageToVideoService.enqueueForShot(plan.shot, plan.assetId, plan.prompt, plan.costCent, batchId);
         }
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("shot_id", plan.shot.getShotId());

@@ -448,6 +448,7 @@
         四道门徽标一律显示中文（剧本门 / 分镜门 / 画面门 / 成片门 + 分数），
         内部代号收在 <code>title</code> 属性。
         作品状态由下游产出自动推进，不提供手工改状态入口（<code>ARCHIVED</code> 除外）。
+        作品工作台页顶常驻五步成片引导条（1. 剧本与定稿 → 2. 角色定妆 → 3. 分镜与视频 → 4. 配音字幕（可选） → 5. 合成成片），按当前剧集剧本状态、定妆锁定情况、镜头视频完成度与合成状态给出唯一「下一步」主按钮，直达对应页签。
         「作品设置」区块（<code>#work-settings</code>）保存走
         <code>POST /bgssai/user/short-works/update</code>：<code>cost_budget_cent</code>
         预算上限（可选，空即不限）· <code>quality_threshold_score</code>
