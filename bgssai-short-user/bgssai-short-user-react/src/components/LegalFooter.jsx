@@ -1,22 +1,5 @@
-import { Fragment } from 'react'
 import { COPYRIGHT_LINE, ICP_FILING_NUMBER, ICP_FILING_URL, LEGAL_PAGES, LOGIN_CONSENT_PAGES, legalPageUrl } from '../lib/legalLinks'
 import './legal-footer.css'
-
-function LanguageRow({ locale }) {
-  const english = locale === 'en'
-  return (
-    <div className={english ? 'legal-footer-lang legal-footer-lang-en' : 'legal-footer-lang'}>
-      {LEGAL_PAGES.map((page, index) => (
-        <Fragment key={page.key}>
-          {index > 0 ? <span className="legal-footer-sep" aria-hidden="true">·</span> : null}
-          <a href={legalPageUrl(page, locale)} target="_blank" rel="noopener noreferrer">
-            {english ? page.footer_en : page.footer_zh}
-          </a>
-        </Fragment>
-      ))}
-    </div>
-  )
-}
 
 export default function LegalFooter({ variant = 'app', checked, onChange, describedBy, invalid }) {
   const consentLink = (page) => (
@@ -41,18 +24,19 @@ export default function LegalFooter({ variant = 'app', checked, onChange, descri
   }
   return (
     <footer className="legal-footer">
-      <nav className="legal-footer-links" aria-label="法律信息">
-        <LanguageRow locale="zh" />
-        <LanguageRow locale="en" />
-      </nav>
-      <div className="legal-footer-meta">
-        <p className="legal-footer-copy">{COPYRIGHT_LINE}</p>
-        <p className="legal-footer-filing">
-          <a href={ICP_FILING_URL} target="_blank" rel="noopener noreferrer">
-            {ICP_FILING_NUMBER}
-          </a>
-        </p>
-      </div>
+      <p className="legal-footer-line">
+        <span>{COPYRIGHT_LINE}</span>
+        {LEGAL_PAGES.map((page) => (
+          <span key={page.key}>
+            <span className="legal-footer-dot" aria-hidden="true"> · </span>
+            <a href={legalPageUrl(page, 'zh')} target="_blank" rel="noopener noreferrer">{page.label_zh}</a>
+          </span>
+        ))}
+        <span>
+          <span className="legal-footer-dot" aria-hidden="true"> · </span>
+          <a className="legal-footer-filing-link" href={ICP_FILING_URL} target="_blank" rel="noopener noreferrer">{ICP_FILING_NUMBER}</a>
+        </span>
+      </p>
     </footer>
   )
 }

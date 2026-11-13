@@ -87,59 +87,50 @@
   .legal-fanout-links { gap: 10px 14px; font-size: 13.5px; }
 }
 
-/* User footer, 2026-11-13: language rows, no slash pairs, no pale band.
-   Admin pages keep the previous .legal-fanout rules. */
+/* User footer: one muted Chinese line. Admin pages keep .legal-fanout. */
 .legal-fanout.legal-quiet {
-  gap: 6px;
-  padding: 8px 16px 10px;
+  gap: 0;
+  padding: 12px 16px 14px;
   font-size: 12px;
-  line-height: 1.4;
-  color: #5c6a7c;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #8a93a6;
   background: transparent;
   border-top: 1px solid #eceef3;
 }
 .footer.legal-fanout.legal-quiet {
-  margin-top: 12px;
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 1px solid #eceef3;
+  background: transparent;
 }
-.legal-fanout.legal-quiet .legal-fanout-links {
-  column-gap: 28px;
-  row-gap: 2px;
-  max-width: 40rem;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: #3d4758;
-}
-.legal-fanout-lang {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
+.legal-quiet-line {
+  margin: 0;
   max-width: 100%;
-}
-.legal-fanout-lang-en {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 400;
-  letter-spacing: 0.01em;
-  color: #5c6a7c;
+  line-height: 1.5;
+  color: #8a93a6;
 }
-.legal-fanout-sep {
-  margin: 0 0.55em;
-  color: #9aa3b2;
-  font-weight: 400;
+.legal-fanout.legal-quiet a,
+.legal-quiet-line a {
+  color: inherit;
+  text-decoration: none;
 }
-.legal-fanout.legal-quiet .legal-fanout-copy,
-.legal-fanout.legal-quiet .legal-fanout-filing {
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: #5c6a7c;
-  overflow-wrap: break-word;
-  word-break: normal;
+.legal-fanout.legal-quiet a:hover,
+.legal-quiet-line a:hover {
+  color: #6d7688;
+  text-decoration: none;
 }
-.legal-fanout.legal-quiet .legal-fanout-filing a { white-space: nowrap; }
+.legal-fanout.legal-quiet a:focus-visible,
+.legal-quiet-line a:focus-visible {
+  outline: 2px solid #8a93a6;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.legal-quiet-line a[href*="beian.miit.gov.cn"] { white-space: nowrap; }
 @media (max-width: 375px) {
-  .legal-fanout.legal-quiet { gap: 5px; padding: 8px 12px 10px; font-size: 12px; }
-  .legal-fanout.legal-quiet .legal-fanout-links { column-gap: 16px; font-size: 12px; }
+  .legal-fanout.legal-quiet { padding: 12px 12px 14px; font-size: 12px; }
 }
 .legal-review-note { margin-top: 8px; font-size: 11px; color: var(--muted); }
 
