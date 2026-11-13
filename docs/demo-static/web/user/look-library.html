@@ -15,27 +15,33 @@
     <div class="side-sec">制作</div>
     <a class="side-link" href="home.html">首页</a>
     <a class="side-link" href="works.html">我的作品</a>
-    <a class="side-link active" href="look-library.html">定妆知识库</a>
+    <a class="side-link active" href="look-library.html">定妆与场景库</a>
     <a class="side-link" href="task-center.html">任务中心</a>
   </aside>
   <main class="app-main">
     <div class="container">
-      <h1 class="title">定妆知识库</h1>
-      <p class="subtitle">这里管理可以反复使用的造型。给角色定妆时，在角色卡上就能直接选。每个造型按正脸、前面、背面、侧面排好，点照片可以看大图。</p>
-      <p><a href="character-bible.html">返回角色定妆</a></p>
+      <h1 class="title">定妆与场景参考库</h1>
+      <p class="subtitle">这里集中管理跨剧集、跨作品复用的人物定妆、场景参考和道具参考。角色按正脸、前面、背面、侧面排好；场景按全景主图、中景机位、局部陈设排好；道具按主视图、特写细节排好。</p>
+      <p><a href="character-bible.html">返回角色与场景</a></p>
       <div class="card">
-        <div class="card-hd"><h2>知识库</h2><button class="btn btn-primary btn-sm">新建知识库</button></div>
+        <div class="card-hd"><h2>参考库</h2><button class="btn btn-primary btn-sm">新建参考库</button></div>
         <div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
-          <div style="width:180px;flex-shrink:0">
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">白纱花瓣<div class="text-muted">1 个造型 · 生成时参考</div></div>
-            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">礼服装<div class="text-muted">1 个造型 · 生成时参考</div></div>
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">运动装</div>
+          <div style="width:196px;flex-shrink:0">
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆<div class="text-muted">2 个造型 · 2 个场景 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">现代都市剧资产库<div class="text-muted">1 个造型 · 2 个场景 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">古装王府场景库<div class="text-muted">0 个造型 · 3 个场景 · 先放着</div></div>
           </div>
           <div style="flex:1">
-            <div class="row" style="margin-bottom:12px">
-              <span>生成定妆时参考这个库</span>
+            <div class="row" style="margin-bottom:12px;gap:8px">
+              <button class="btn btn-primary btn-sm">人物定妆（1）</button>
+              <button class="btn btn-default btn-sm">场景参考（2）</button>
+              <button class="btn btn-default btn-sm">道具参考（1）</button>
+              <span style="margin-left:auto">生成参考图时自动匹配这个库</span>
               <input type="checkbox" checked disabled />
-              <input placeholder="造型名称，例如白纱花瓣" />
+            </div>
+            <div class="row" style="margin-bottom:12px;gap:8px">
+              <input placeholder="名称，例如红礼服、总裁办公室" />
+              <input placeholder="外观或布景特征（可选，便于自动匹配）" />
               <button class="btn btn-default btn-sm">添加造型</button>
             </div>
             <div class="card-hd" style="padding:0 0 12px"><h2>红礼服</h2><button class="btn btn-default btn-sm">删除造型</button></div>

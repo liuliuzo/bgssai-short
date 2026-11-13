@@ -125,7 +125,11 @@ public class LookRagIndex {
                             .must(must -> must.multiMatch(match -> match.query(prompt)
                                     .fields("material_name^3", "caption")))
                             .should(should -> should.term(term -> term.field("view_angle")
-                                    .value("FRONT_FACE").boost(3.0f))))),
+                                    .value("FRONT_FACE").boost(3.0f)))
+                            .should(should -> should.term(term -> term.field("view_angle")
+                                    .value("ESTABLISHING").boost(3.0f)))
+                            .should(should -> should.term(term -> term.field("view_angle")
+                                    .value("MAIN_PROP").boost(3.0f))))),
                     Map.class);
             return choose(prompt, response.hits().hits());
         } catch (Exception ex) {

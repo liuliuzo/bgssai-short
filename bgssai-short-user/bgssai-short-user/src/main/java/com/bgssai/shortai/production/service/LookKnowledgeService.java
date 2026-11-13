@@ -153,10 +153,31 @@ public class LookKnowledgeService {
         if (!"ACTIVE".equals(library.getStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "已归档的知识库不能再放素材");
         }
-        LookImage.Decoded image = LookImage.decode(req.getImageBase64());
-        LookImage.Decoded poster = posterOf(req.getPosterBase64(), image.mimeType());
         String kind = normalizeKind(req.getMaterialKind());
-        String name = req.getMaterialName() == null || req.getMaterialName().isBlank() ? "未命名定妆" : req.getMaterialName().trim();
+        boolean fromAsset = (req.getImageBase64() == null || req.getImageBase64().isBlank())
+                && req.getAssetId() != null && !req.getAssetId().isBlank();
+        LookImage.Decoded image;
+        String sourceAssetId = null;
+        if (fromAsset) {
+            sourceAssetId = req.getAssetId().trim();
+            ShortAsset asset = loadAsset(userId, sourceAssetId);
+            if (asset == null || !"IMAGE".equals(asset.getAssetType()) || !objectKey(asset.getStorageKey())) {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "参考图素材不存在或不可用");
+            }
+            byte[] bytes;
+            try {
+                bytes = objectStorage.get(asset.getStorageKey());
+            } catch (RuntimeException ex) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "这张参考图读不出来，请换一张");
+            }
+            image = LookImage.decodeBytes(bytes);
+        } else {
+            image = LookImage.decode(req.getImageBase64());
+        }
+        LookImage.Decoded poster = posterOf(req.getPosterBase64(), image.mimeType());
+        String name = req.getMaterialName() == null || req.getMaterialName().isBlank()
+                ? defaultMaterialName(kind)
+                : req.getMaterialName().trim();
         if (name.length() > 120) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "素材名称最多 120 个字");
         }
@@ -164,8 +185,8 @@ public class LookKnowledgeService {
         if (caption != null && caption.length() > 500) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "说明最多 500 个字");
         }
-        String angle = characterAngle(kind, req.getViewAngle(), caption);
-        ShortLookMaterial saved = store(library, userId, kind, name, caption, image, poster, angle, null, null);
+        String angle = resolveAngleForKind(kind, req.getViewAngle(), caption, true);
+        ShortLookMaterial saved = store(library, userId, kind, name, caption, image, poster, angle, null, sourceAssetId);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("material_id", saved.getMaterialId());
         result.put("library_id", library.getLibraryId());
@@ -214,13 +235,14 @@ public class LookKnowledgeService {
             String viewAngle, String cardId, String assetId) {
         ShortLookLibrary library = personalLibrary(userId);
         String normalizedKind = normalizeKind(kind);
-        String angle = characterAngle(normalizedKind, viewAngle, caption);
+        String angle = resolveAngleForKind(normalizedKind, viewAngle, caption, "CHARACTER".equals(normalizedKind));
         if (angle == null) {
             replaceCardAll(userId, cardId);
         } else {
             replaceCardAngle(userId, cardId, angle);
         }
-        store(library, userId, normalizedKind, name == null || name.isBlank() ? "未命名定妆" : name.trim(),
+        store(library, userId, normalizedKind,
+                name == null || name.isBlank() ? defaultMaterialName(normalizedKind) : name.trim(),
                 blankToNull(caption), image, null, angle, cardId, assetId);
     }
 
@@ -365,33 +387,72 @@ public class LookKnowledgeService {
     }
 
     public static String normalizeView(String raw, boolean required) {
+        return normalizeViewForKind("CHARACTER", raw, required);
+    }
+
+    public static String normalizeViewForKind(String kind, String raw, boolean required) {
+        String normalizedKind = normalizeKind(kind);
         if (raw == null || raw.isBlank()) {
-            return required ? "FRONT_FACE" : null;
+            return required ? defaultPrimaryAngle(normalizedKind) : null;
         }
         String value = raw.trim().toUpperCase();
+        if ("SCENE".equals(normalizedKind)) {
+            if (!List.of("ESTABLISHING", "MAIN_VIEW", "DETAIL_VIEW").contains(value)) {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "场景机位只能是全景主图、中景机位、局部陈设");
+            }
+            return value;
+        }
+        if ("PROP".equals(normalizedKind)) {
+            if (!List.of("MAIN_PROP", "DETAIL_PROP").contains(value)) {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "道具视角只能是主视图、特写细节");
+            }
+            return value;
+        }
         if (!List.of("FRONT_FACE", "FRONT", "BACK", "SIDE").contains(value)) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "定妆角度只能是正脸、前面、背面、侧面");
         }
         return value;
     }
 
+    private static String defaultPrimaryAngle(String kind) {
+        if ("SCENE".equals(kind)) {
+            return "ESTABLISHING";
+        }
+        if ("PROP".equals(kind)) {
+            return "MAIN_PROP";
+        }
+        return "FRONT_FACE";
+    }
+
     public static String viewName(String angle) {
+        if (angle == null) {
+            return "";
+        }
         return switch (angle) {
             case "FRONT" -> "前面";
             case "BACK" -> "背面";
             case "SIDE" -> "侧面";
+            case "ESTABLISHING" -> "全景主图";
+            case "MAIN_VIEW" -> "中景机位";
+            case "DETAIL_VIEW" -> "局部陈设";
+            case "MAIN_PROP" -> "主视图";
+            case "DETAIL_PROP" -> "特写细节";
             default -> "正脸";
         };
+    }
+
+    public static boolean isPrimaryAngle(String viewAngle) {
+        return "FRONT_FACE".equals(viewAngle) || "ESTABLISHING".equals(viewAngle) || "MAIN_PROP".equals(viewAngle);
     }
 
     static int rankScore(int score, String viewAngle) {
         if (score < 3) {
             return score;
         }
-        return "FRONT_FACE".equals(viewAngle) ? score + 15 : score;
+        return isPrimaryAngle(viewAngle) ? score + 15 : score;
     }
 
-    /** Photos already filed on this card. Front face wins, then front, back, side. */
+    /** Photos already filed on this card. Primary view wins first, then secondary angles, then unslotted photos. */
     public LookHit referenceForCard(String userId, String cardId) {
         return toHit(userId, cardMaterial(userId, cardId));
     }
@@ -410,7 +471,8 @@ public class LookKnowledgeService {
         if (rows == null || rows.isEmpty()) {
             return null;
         }
-        for (String angle : List.of("FRONT_FACE", "FRONT", "BACK", "SIDE")) {
+        for (String angle : List.of("FRONT_FACE", "ESTABLISHING", "MAIN_PROP", "FRONT", "MAIN_VIEW", "DETAIL_PROP",
+                "BACK", "SIDE", "DETAIL_VIEW")) {
             for (ShortLookMaterial row : rows) {
                 if (angle.equals(row.getViewAngle()) && hasBytes(row)) {
                     return row;
@@ -796,7 +858,8 @@ public class LookKnowledgeService {
         Set<String> seen = new LinkedHashSet<>();
         for (ShortLookMaterial material : materials) {
             String angle = shownAngle(material);
-            String marker = (material.getMaterialName() == null ? "" : material.getMaterialName())
+            String marker = (material.getMaterialKind() == null ? "CHARACTER" : material.getMaterialKind())
+                    + "\n" + (material.getMaterialName() == null ? "" : material.getMaterialName())
                     + "\n" + (angle == null ? "" : angle)
                     + "\n" + (material.getStorageKey() == null ? "" : material.getStorageKey());
             if (!seen.add(marker)) {
@@ -1067,11 +1130,29 @@ public class LookKnowledgeService {
         return mime == null || !mime.startsWith("video/");
     }
 
-    private static String shownAngle(ShortLookMaterial row) {
+    static String shownAngle(ShortLookMaterial row) {
         if (row == null) {
             return null;
         }
-        return LookAngle.resolve(row.getViewAngle(), row.getCaption());
+        String kind = row.getMaterialKind();
+        if (kind == null || kind.isBlank() || "CHARACTER".equalsIgnoreCase(kind)) {
+            String canonical = LookAngle.canonical(row.getViewAngle());
+            if (canonical != null || row.getViewAngle() == null || row.getViewAngle().isBlank()) {
+                return LookAngle.resolve(canonical, row.getCaption());
+            }
+            return LookAngle.classify(row.getCaption());
+        }
+        if (row.getViewAngle() == null || row.getViewAngle().isBlank()) {
+            return null;
+        }
+        String value = row.getViewAngle().trim().toUpperCase();
+        if ("SCENE".equalsIgnoreCase(kind)) {
+            return List.of("ESTABLISHING", "MAIN_VIEW", "DETAIL_VIEW").contains(value) ? value : null;
+        }
+        if ("PROP".equalsIgnoreCase(kind)) {
+            return List.of("MAIN_PROP", "DETAIL_PROP").contains(value) ? value : null;
+        }
+        return null;
     }
 
     private static String faceMime(ShortLookMaterial row) {
@@ -1079,12 +1160,22 @@ public class LookKnowledgeService {
         return mime == null || mime.isBlank() ? "image/jpeg" : mime;
     }
 
-    private static String characterAngle(String kind, String explicit, String caption) {
-        if (!"CHARACTER".equals(kind)) {
-            return null;
+    private static String resolveAngleForKind(String kind, String explicit, String caption, boolean defaultIfBlank) {
+        if ("CHARACTER".equals(kind)) {
+            String angle = LookAngle.resolve(explicit, caption);
+            return angle == null && defaultIfBlank ? "FRONT_FACE" : angle;
         }
-        String angle = LookAngle.resolve(explicit, caption);
-        return angle == null ? "FRONT_FACE" : angle;
+        return normalizeViewForKind(kind, explicit, defaultIfBlank);
+    }
+
+    private static String defaultMaterialName(String kind) {
+        if ("SCENE".equals(kind)) {
+            return "未命名场景";
+        }
+        if ("PROP".equals(kind)) {
+            return "未命名道具";
+        }
+        return "未命名定妆";
     }
 
     private ShortAsset loadAsset(String userId, String assetId) {

@@ -1338,7 +1338,9 @@ public class ShortAiTaskWorker {
         request.getParams().put("image_mime", mime);
         request.getParams().put("image_reference", "subject");
         request.getParams().put("image_fidelity", 0.9);
-        request.getParams().put("human_fidelity", 0.85);
+        if ("CHARACTER".equalsIgnoreCase(kind)) {
+            request.getParams().put("human_fidelity", 0.85);
+        }
         return true;
     }
 

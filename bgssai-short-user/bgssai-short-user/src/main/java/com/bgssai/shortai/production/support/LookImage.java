@@ -39,7 +39,14 @@ public final class LookImage {
         } catch (IllegalArgumentException ex) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "文件内容无法识别");
         }
-        if (bytes.length == 0 || bytes.length > MAX_BYTES) {
+        return decodeBytes(bytes);
+    }
+
+    public static Decoded decodeBytes(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请上传图片或视频");
+        }
+        if (bytes.length > MAX_BYTES) {
             throw new BizException(CommonErrorCode.REQUEST_TOO_LARGE, "文件不能超过 6MB");
         }
         String mime = sniff(bytes);

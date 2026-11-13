@@ -646,7 +646,10 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   const [portrait, setPortrait] = useState(null)
   const [portraitCount, setPortraitCount] = useState(4)
   const [textOnly, setTextOnly] = useState(false)
-  const libraryHref = `/look-library?return=${encodeURIComponent(`/works/${work.work_id}/characters`)}`
+  const returnParam = encodeURIComponent(`/works/${work.work_id}/characters`)
+  const characterLibraryHref = `/look-library?return=${returnParam}`
+  const sceneLibraryHref = `/look-library?kind=SCENE&return=${returnParam}`
+  const propLibraryHref = `/look-library?kind=PROP&return=${returnParam}`
   const [busyIds, setBusyIds] = useState(() => new Set())
   const busyRef = useRef(new Set())
   const ownImageRef = useRef(null)
@@ -707,10 +710,35 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         if (!data?.message) message.error('没有用上这张照片')
         return
       }
-      message.success('已用这张照片作为定妆照')
+      message.success(kind === 'character' ? '已用这张照片作为定妆照' : '已用这张照片作为参考图')
       await load()
     } catch {
       message.error('没有用上这张照片')
+    } finally {
+      markBusy(id, false)
+    }
+  }
+
+  const saveCardToLibrary = async (materialKind, id, cardName, prompt, assetId) => {
+    if (!assetId || busyRef.current.has(id)) return
+    markBusy(id, true)
+    const storeName = materialKind === 'PROP' ? '道具参考' : materialKind === 'SCENE' ? '场景参考' : '人物定妆'
+    try {
+      const caption = [cardName, prompt].filter(Boolean).join(' ')
+      const { data } = await productionApi.uploadLookMaterial({
+        asset_id: assetId,
+        material_kind: materialKind,
+        material_name: cardName,
+        caption,
+      })
+      if (!data?.success) {
+        if (!data?.message) message.error('没有存进参考库')
+        return
+      }
+      message.success(`已存入「我的定妆 · ${storeName}」，后续剧集和作品可直接选用`)
+      await load()
+    } catch {
+      message.error('没有存进参考库')
     } finally {
       markBusy(id, false)
     }
@@ -939,6 +967,15 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Card key={row.character_id} size="small" style={{ marginBottom: 8 }} title={`${row.character_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
               {isLocked ? <Tag color="green">已锁定</Tag> : (hasRealCandidates ? <Tag color="orange">请点下方「选定」锁定</Tag> : null)}
+              {row.ref_image_asset_id && isRealPhotoUrl(row.ref_image_url) ? (
+                <Button
+                  size="small"
+                  disabled={busyIds.has(row.character_id)}
+                  onClick={() => saveCardToLibrary('CHARACTER', row.character_id, row.character_name, row.appearance_prompt, row.ref_image_asset_id)}
+                >
+                  存入定妆库
+                </Button>
+              ) : null}
               <Button size="small" type="primary" loading={busyIds.has(row.character_id)} disabled={busyIds.has(row.character_id)} onClick={() => openGenerate('character', row.character_id, row.character_name, row.look_reference)}>生成定妆</Button>
             </Space>
           }>
@@ -982,7 +1019,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             ) : null}
             <LibraryLookPicker
               kind="CHARACTER"
-              libraryHref={libraryHref}
+              libraryHref={characterLibraryHref}
               busy={busyIds.has(row.character_id)}
               onUse={(materialId) => useLook('character', row.character_id, materialId)}
             />
@@ -1040,14 +1077,23 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
             {isLocked ? <Tag color="green">已锁定</Tag> : (realSceneCandidates.length > 0 ? <Tag color="orange">请点下方「选定」锁定</Tag> : null)}
+            {row.ref_image_asset_id && isRealPhotoUrl(row.ref_image_url) ? (
+              <Button
+                size="small"
+                disabled={busyIds.has(row.scene_card_id)}
+                onClick={() => saveCardToLibrary('SCENE', row.scene_card_id, row.card_name, row.appearance_prompt, row.ref_image_asset_id)}
+              >
+                存入场景库
+              </Button>
+            ) : null}
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => openGenerate('scene', row.scene_card_id, row.card_name, row.look_reference)}>生成参考图</Button>
             <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
-            <Text type="secondary">可以上传一张照片，也可以从知识库里选已有场景图。</Text>
+            <Text type="secondary">可以上传一张照片，也可以从场景库里选用已有场景，或把选定的生成图一键存入场景库。</Text>
             <LibraryLookPicker
               kind="SCENE"
-              libraryHref={libraryHref}
+              libraryHref={sceneLibraryHref}
               busy={busyIds.has(row.scene_card_id)}
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
@@ -1096,14 +1142,23 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Card key={row.scene_card_id} size="small" style={{ marginBottom: 8 }} title={`${row.card_name}（${cardStatusName(row.card_status)}）· ${row.used_shot_count || 0} 镜`} extra={
             <Space>
             {isLocked ? <Tag color="green">已锁定</Tag> : (realPropCandidates.length > 0 ? <Tag color="orange">请点下方「选定」锁定</Tag> : null)}
+            {row.ref_image_asset_id && isRealPhotoUrl(row.ref_image_url) ? (
+              <Button
+                size="small"
+                disabled={busyIds.has(row.scene_card_id)}
+                onClick={() => saveCardToLibrary('PROP', row.scene_card_id, row.card_name, row.appearance_prompt, row.ref_image_asset_id)}
+              >
+                存入道具库
+              </Button>
+            ) : null}
             <Button size="small" loading={busyIds.has(row.scene_card_id)} disabled={busyIds.has(row.scene_card_id)} onClick={() => openGenerate('scene', row.scene_card_id, row.card_name, row.look_reference)}>生成参考图</Button>
             <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
-            <Text type="secondary">可以上传一张照片，也可以从知识库里选已有道具图。</Text>
+            <Text type="secondary">可以上传一张照片，也可以从道具库里选用已有道具，或把选定的生成图一键存入道具库。</Text>
             <LibraryLookPicker
               kind="PROP"
-              libraryHref={libraryHref}
+              libraryHref={propLibraryHref}
               busy={busyIds.has(row.scene_card_id)}
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />

@@ -90,4 +90,86 @@ class LookKnowledgeMatchTest {
         assertEquals("image/png", image.mimeType());
         assertTrue(image.bytes().length > 0);
     }
+
+    @Test
+    void sceneAndPropViewAnglesNormalizeRankAndPreferPrimaryView() {
+        assertEquals("ESTABLISHING", LookKnowledgeService.normalizeViewForKind("SCENE", null, true));
+        assertEquals("MAIN_VIEW", LookKnowledgeService.normalizeViewForKind("SCENE", "main_view", false));
+        assertEquals("MAIN_PROP", LookKnowledgeService.normalizeViewForKind("PROP", null, true));
+        assertEquals("全景主图", LookKnowledgeService.viewName("ESTABLISHING"));
+        assertEquals("主视图", LookKnowledgeService.viewName("MAIN_PROP"));
+        assertTrue(LookKnowledgeService.rankScore(8, "ESTABLISHING") > LookKnowledgeService.rankScore(8, "DETAIL_VIEW"));
+        assertTrue(LookKnowledgeService.rankScore(8, "MAIN_PROP") > LookKnowledgeService.rankScore(8, "DETAIL_PROP"));
+
+        ShortLookMaterial detail = material("DETAIL_VIEW", "scene-detail");
+        detail.setMaterialKind("SCENE");
+        ShortLookMaterial establishing = material("ESTABLISHING", "scene-main");
+        establishing.setMaterialKind("SCENE");
+        assertEquals("scene-main", LookKnowledgeService.pickCardReference(List.of(detail, establishing)).getStorageKey());
+        assertEquals("ESTABLISHING", LookKnowledgeService.shownAngle(establishing));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void uploadFromAssetFilesIntoSceneEstablishingAndListShowsMixedKindsCleanly() {
+        LookKnowledgeService service = new LookKnowledgeService();
+        WorkAccessService access = org.mockito.Mockito.mock(WorkAccessService.class);
+        com.bgssai.shortai.mapper.ShortLookLibraryMapper libraries = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortLookLibraryMapper.class);
+        com.bgssai.shortai.mapper.ShortLookMaterialMapper materials = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortLookMaterialMapper.class);
+        com.bgssai.shortai.mapper.ShortAssetMapper assets = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        com.bgssai.shortai.storage.ObjectStorage storage = org.mockito.Mockito.mock(com.bgssai.shortai.storage.ObjectStorage.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "workAccessService", access);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "libraryMapper", libraries);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "materialMapper", materials);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "shortAssetMapper", assets);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "objectStorage", storage);
+
+        org.mockito.Mockito.when(access.requireUser()).thenReturn("u-1");
+        com.bgssai.shortai.model.ShortLookLibrary lib = new com.bgssai.shortai.model.ShortLookLibrary();
+        lib.setId(1L);
+        lib.setLibraryId("lk-1");
+        lib.setUserId("u-1");
+        lib.setLibraryName(LookKnowledgeService.DEFAULT_NAME);
+        lib.setStatus("ACTIVE");
+        lib.setMountPortrait(1);
+        org.mockito.Mockito.when(libraries.selectByExample(org.mockito.ArgumentMatchers.any())).thenReturn(List.of(lib));
+
+        byte[] png = java.util.Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+        com.bgssai.shortai.model.ShortAsset asset = new com.bgssai.shortai.model.ShortAsset();
+        asset.setAssetId("as-scene-1");
+        asset.setUserId("u-1");
+        asset.setAssetType("IMAGE");
+        asset.setStorageKey("short/local/u-1/card/as-scene-1.png");
+        org.mockito.Mockito.when(assets.selectOneByExample(org.mockito.ArgumentMatchers.any())).thenReturn(asset);
+        org.mockito.Mockito.when(storage.get("short/local/u-1/card/as-scene-1.png")).thenReturn(png);
+
+        com.bgssai.shortai.production.dto.LookDtos.LookMaterialReq req = new com.bgssai.shortai.production.dto.LookDtos.LookMaterialReq();
+        req.setAssetId("as-scene-1");
+        req.setMaterialKind("SCENE");
+        req.setMaterialName("总裁办公室");
+        req.setCaption("落地窗 冷色调");
+        service.upload(req);
+
+        org.mockito.ArgumentCaptor<ShortLookMaterial> saved = org.mockito.ArgumentCaptor.forClass(ShortLookMaterial.class);
+        org.mockito.Mockito.verify(materials).insertSelective(saved.capture());
+        assertEquals("SCENE", saved.getValue().getMaterialKind());
+        assertEquals("ESTABLISHING", saved.getValue().getViewAngle());
+        assertEquals("总裁办公室", saved.getValue().getMaterialName());
+        assertEquals("as-scene-1", saved.getValue().getAssetId());
+
+        ShortLookMaterial sameNameChar = material("FRONT_FACE", saved.getValue().getStorageKey());
+        sameNameChar.setMaterialId("lm-char");
+        sameNameChar.setMaterialKind("CHARACTER");
+        sameNameChar.setMaterialName("总裁办公室");
+        org.mockito.Mockito.when(materials.selectByExample(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of(saved.getValue(), sameNameChar));
+
+        java.util.Map<String, Object> listResp = (java.util.Map<String, Object>) service.list().getResult();
+        List<java.util.Map<String, Object>> libs = (List<java.util.Map<String, Object>>) listResp.get("library_list");
+        List<java.util.Map<String, Object>> items = (List<java.util.Map<String, Object>>) libs.get(0).get("material_list");
+        assertEquals(2, items.size());
+        assertEquals("全景主图", items.get(0).get("view_name"));
+        assertEquals("正脸", items.get(1).get("view_name"));
+    }
 }
