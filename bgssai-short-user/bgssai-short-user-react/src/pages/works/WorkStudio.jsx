@@ -15,6 +15,7 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
+import ProductionGuide from './ProductionGuide'
 import { shotCardStatusCode, shotHasPlayableVideo, shotLatestTaskBadge } from './shotCardMedia'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
 import LookSlot from '../look/LookSlot'
@@ -964,8 +965,8 @@ function StoryboardPane({ work, episodeId }) {
       <Alert
         type="info"
         showIcon
-        message="先定妆、再写镜、再出图、再出视频"
-        description="分镜会自动挂上角色/场景/道具。右侧面板可改绑。引用未定妆卡时提交会被拦截。定妆变更会标「定妆已变」。视频必须先有首帧。已有成片的镜头在卡片左侧直接播放，不必切到画布。成片发布后的观看在 Tube。"
+        message="按顶部步骤出视频"
+        description="定妆没锁定，或者镜头还没有首帧时，生成视频会被拒绝。顶部步骤按这个顺序带你做。下面这些按钮留给要改单镜的时候用。已有成片的镜头在卡片左侧直接播放。成片发布后的观看在 Tube。"
       />
       {videoWatch ? (
         <Alert
@@ -1975,10 +1976,7 @@ export default function WorkStudio() {
           </Paragraph>
         </div>
         <Space wrap>
-          <Button
-            type="primary"
-            onClick={() => setAssistantOpen(true)}
-          >
+          <Button onClick={() => setAssistantOpen(true)}>
             AI 协同专家
           </Button>
           <Button
@@ -2008,22 +2006,23 @@ export default function WorkStudio() {
           </Tag>
         ) : null}
       </Space>
+      <ProductionGuide
+        work={work}
+        episode={current}
+        onOpenTab={(key) => {
+          if (key && key !== active) navigate(`/works/${workId}/${key}`)
+        }}
+        onChanged={load}
+      />
       <Tabs
         className="work-studio-tabs"
         activeKey={active}
         onChange={(key) => navigate(`/works/${workId}/${key}`)}
         tabBarGutter={12}
         items={[
-          { key: 'source', label: '原著', children: <SourceImportPage work={work} /> },
           { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={load} initialOutlineTaskId={outlineTaskId} /> },
           { key: 'characters', label: '角色场景', children: <CharacterPane work={work} /> },
           { key: 'storyboard', label: '分镜', children: <StoryboardPane work={work} episodeId={episodeId} /> },
-          { key: 'voice', label: '配音', children: <VoiceStudioPage work={work} episodeId={episodeId} /> },
-          { key: 'story-map', label: '剧情', children: <StoryMapPage work={work} episodeId={episodeId} /> },
-          { key: 'quality', label: '质量', children: <QualityReportPage work={work} episodeId={episodeId} /> },
-          { key: 'preview', label: '预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
-          { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
-          { key: 'tasks', label: '任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
           { key: 'compose', label: '成片', children: (
             <ComposePane
               work={work}
@@ -2035,6 +2034,13 @@ export default function WorkStudio() {
               onMediaPreflight={setMediaPreflight}
             />
           ) },
+          { key: 'source', label: '原著', children: <SourceImportPage work={work} /> },
+          { key: 'voice', label: '配音', children: <VoiceStudioPage work={work} episodeId={episodeId} /> },
+          { key: 'preview', label: '预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
+          { key: 'story-map', label: '剧情', children: <StoryMapPage work={work} episodeId={episodeId} /> },
+          { key: 'quality', label: '质量', children: <QualityReportPage work={work} episodeId={episodeId} /> },
+          { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
+          { key: 'tasks', label: '任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
           { key: 'edit-export', label: '剪辑', children: <EditExportPage episodeId={episodeId} /> },
         ]}
       />

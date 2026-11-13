@@ -9,6 +9,7 @@ import {
   attentionItems,
   ownedSamplePath,
   continuePath,
+  continueLabel,
   coverUrl,
   episodeProgress,
   nextStepText,
@@ -162,7 +163,7 @@ export default function Home() {
                       size="small"
                       onClick={() => navigate(continuePath(work, episodes))}
                     >
-                      继续创作
+                      {continueLabel(work, episodes)}
                     </Button>
                   </div>
                 </div>

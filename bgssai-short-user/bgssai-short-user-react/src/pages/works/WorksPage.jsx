@@ -85,7 +85,7 @@ export default function WorksPage() {
     <div>
       <Title level={4} style={{ marginTop: 0 }}>我的作品</Title>
       <Paragraph type="secondary">
-        创建短剧后按剧本、角色、分镜、成片、提审走完闭环。只有剧名和一句话梗概是必填，其余走默认值，想改再展开高级设置。
+        新建后进入作品，按顶部步骤做：大纲、这一集剧本、定稿、定妆、拆镜、首帧、生成视频。配音和质量检查不挡住第一条视频。想先看一条视频，把高级设置里的集数改成 1。只有剧名和一句话梗概是必填。
       </Paragraph>
       <Card extra={<Button type="primary" onClick={() => setOpen(true)}>新建作品</Button>}>
         <Table
