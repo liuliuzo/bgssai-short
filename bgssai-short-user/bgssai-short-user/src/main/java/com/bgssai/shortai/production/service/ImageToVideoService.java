@@ -418,7 +418,8 @@ public class ImageToVideoService {
             ShortAiTaskExample up = new ShortAiTaskExample();
             up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
             shortAiTaskMapper.updateByExampleSelective(patch, up);
-            attachShot(task, req, video.getAssetId());
+            Integer playableSec = com.bgssai.shortai.production.support.PlayableVideoDuration.floorSeconds(bytes);
+            attachShot(task, req, video.getAssetId(), playableSec != null ? playableSec : probed.getDurationSec());
         }
         if (settlement != null) {
             settlement.settle(task, model, 1);
@@ -654,7 +655,7 @@ public class ImageToVideoService {
         return asset;
     }
 
-    private void attachShot(ShortAiTask task, Map<String, Object> req, String videoAssetId) {
+    private void attachShot(ShortAiTask task, Map<String, Object> req, String videoAssetId, Integer actualDurationSec) {
         String shotId = ShortJson.text(req.get("shot_id"));
         if (shotId.isBlank() || shortShotMapper == null) {
             return;
@@ -667,6 +668,10 @@ public class ImageToVideoService {
         }
         ShortShot patch = new ShortShot();
         patch.setVideoAssetId(videoAssetId);
+        if (actualDurationSec != null && actualDurationSec > 0
+                && (shot.getShotDurationSec() == null || shot.getShotDurationSec() > actualDurationSec)) {
+            patch.setShotDurationSec(actualDurationSec);
+        }
         patch.setShotStatus("VIDEO_READY");
         patch.setStaleFlag(0);
         patch.setUpdatedTime(new Date());

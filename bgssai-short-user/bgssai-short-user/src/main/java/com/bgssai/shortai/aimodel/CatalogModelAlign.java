@@ -173,6 +173,7 @@ public final class CatalogModelAlign {
             case "IMAGE" -> List.of("bgssai-image", "sd-turbo");
             case "VIDEO" -> List.of("bgssai-video");
             case "VOICE" -> List.of("bgssai-tts", "piper", "edge-tts");
+            case "MUSIC" -> List.of("bgssai-music", "musicgen-small");
             default -> List.of();
         };
     }
@@ -184,6 +185,7 @@ public final class CatalogModelAlign {
             case "IMAGE" -> "sd-turbo".equals(value) || "bgssai-image".equals(value);
             case "VIDEO" -> "bgssai-video".equals(value);
             case "VOICE" -> "piper".equals(value) || "bgssai-tts".equals(value) || "edge-tts".equals(value);
+            case "MUSIC" -> "bgssai-music".equals(value) || value.startsWith("musicgen");
             default -> false;
         };
     }
@@ -198,6 +200,7 @@ public final class CatalogModelAlign {
             case "IMAGE" -> "image_generation";
             case "VIDEO" -> "video_generation";
             case "VOICE" -> "audio_speech";
+            case "MUSIC" -> "audio_music";
             default -> null;
         };
     }

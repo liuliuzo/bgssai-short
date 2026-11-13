@@ -15,6 +15,7 @@ import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
+import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortDubbingMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
@@ -22,6 +23,8 @@ import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortSubtitleMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.ShortAiTask;
+import com.bgssai.shortai.model.ShortAsset;
+import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.model.ShortCharacter;
 import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortDubbing;
@@ -66,6 +69,8 @@ public class DubbingService {
     private ShortEpisodeMapper shortEpisodeMapper;
     @Autowired
     private ShortWorkMapper shortWorkMapper;
+    @Autowired(required = false)
+    private ShortAssetMapper shortAssetMapper;
     @Autowired
     private AiTaskService aiTaskService;
 
@@ -233,6 +238,7 @@ public class DubbingService {
             String suggest = null;
             int autoFixed = 0;
             double gap = 0;
+            int boundVideoSec = boundVideoDurationSec(shot);
             for (ShortDubbing d : lines) {
                 Map<String, Object> line = new LinkedHashMap<>();
                 line.put("dubbing_id", d.getDubbingId());
@@ -252,7 +258,7 @@ public class DubbingService {
                 autoFixed = d.getAutoFixedFlag() == null ? 0 : d.getAutoFixedFlag();
                 gap = parseGap(d.getAlignGapSec());
                 suggest = suggestAction(shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec(),
-                        d.getAudioDurationSec() == null ? 0 : d.getAudioDurationSec(), alignStatus);
+                        d.getAudioDurationSec() == null ? 0 : d.getAudioDurationSec(), alignStatus, boundVideoSec);
             }
             item.put("line_list", lineList);
             item.put("dialogue_text", shot.getDialogueText() == null ? "" : shot.getDialogueText());
@@ -311,7 +317,8 @@ public class DubbingService {
             ShortShot shot = requireShot(row.getShotId());
             int shotDur = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
             int audioDur = row.getAudioDurationSec() == null ? 0 : row.getAudioDurationSec();
-            String suggest = suggestAction(shotDur, audioDur, "MISALIGNED");
+            int boundVideoSec = boundVideoDurationSec(shot);
+            String suggest = suggestAction(shotDur, audioDur, "MISALIGNED", boundVideoSec);
             if ("PAD_SILENCE".equals(suggest) || "ADJUST_SPEED".equals(suggest)) {
                 fixed.add(applyAlign(shot, row, suggest, true));
             } else {
@@ -660,6 +667,7 @@ public class DubbingService {
     private Map<String, Object> applyAlign(ShortShot shot, ShortDubbing row, String action, boolean freeOnly) {
         int shotDur = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
         int audioDur = row.getAudioDurationSec() == null ? 0 : row.getAudioDurationSec();
+        int boundVideoSec = boundVideoDurationSec(shot);
         ShortDubbing patch = new ShortDubbing();
         patch.setUpdatedTime(new Date());
         if ("PAD_SILENCE".equals(action)) {
@@ -667,17 +675,24 @@ public class DubbingService {
             patch.setAutoFixedFlag(1);
             patch.setAlignGapSec(String.valueOf(audioDur - shotDur));
         } else if ("ADJUST_SPEED".equals(action)) {
-            if (audioDur > shotDur * 1.25 && freeOnly) {
+            if (boundVideoSec <= 0 && audioDur > shotDur * 1.25 && freeOnly) {
                 throw new BizException(CommonErrorCode.RULE_REJECT, "ADJUST_SPEED exceeds 1.25x; use EXTEND_SHOT");
             }
-            double speed = shotDur <= 0 ? 1.0 : Math.min(1.25, (double) audioDur / Math.max(1, shotDur));
+            double maxSpeed = boundVideoSec > 0 ? 2.0 : 1.25;
+            double speed = shotDur <= 0 ? 1.0 : Math.min(maxSpeed, Math.max(1.0, (double) audioDur / Math.max(1, shotDur)));
             patch.setVoiceSpeed(String.format("%.2f", speed));
             patch.setAlignStatus("ALIGNED");
             patch.setAutoFixedFlag(1);
-            patch.setAlignGapSec(String.valueOf(audioDur - shotDur));
+            patch.setAlignGapSec("0");
         } else if ("EXTEND_SHOT".equals(action)) {
+            int nextShotDur = Math.max(shotDur, audioDur);
+            if (boundVideoSec > 0 && nextShotDur > boundVideoSec) {
+                nextShotDur = Math.max(1, boundVideoSec);
+                double speed = Math.min(2.0, Math.max(1.0, (double) audioDur / nextShotDur));
+                patch.setVoiceSpeed(String.format("%.2f", speed));
+            }
             ShortShot shotPatch = new ShortShot();
-            shotPatch.setShotDurationSec(Math.max(shotDur, audioDur));
+            shotPatch.setShotDurationSec(nextShotDur);
             shotPatch.setUpdatedTime(new Date());
             ShortShotExample upShot = new ShortShotExample();
             upShot.createCriteria().andIdEqualTo(shot.getId());
@@ -854,7 +869,20 @@ public class DubbingService {
         return beginMs + (int) (span * index / count);
     }
 
-    private static String suggestAction(int shotDur, int audioDur, String alignStatus) {
+    private int boundVideoDurationSec(ShortShot shot) {
+        if (shortAssetMapper == null || shot == null || shot.getVideoAssetId() == null
+                || shot.getVideoAssetId().isBlank()) {
+            return 0;
+        }
+        ShortAssetExample ex = new ShortAssetExample();
+        ex.createCriteria().andAssetIdEqualTo(shot.getVideoAssetId().trim())
+                .andAssetTypeEqualTo("VIDEO").andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ex);
+        return asset != null && asset.getDurationSec() != null && asset.getDurationSec() > 0
+                ? asset.getDurationSec() : 0;
+    }
+
+    private static String suggestAction(int shotDur, int audioDur, String alignStatus, int boundVideoSec) {
         if ("ALIGNED".equals(alignStatus) || "PENDING".equals(alignStatus)) {
             return null;
         }
@@ -862,7 +890,7 @@ public class DubbingService {
         if (gap <= 0) {
             return "PAD_SILENCE";
         }
-        if (audioDur <= shotDur * 1.25) {
+        if (audioDur <= shotDur * 1.25 || (boundVideoSec > 0 && audioDur > boundVideoSec)) {
             return "ADJUST_SPEED";
         }
         return "EXTEND_SHOT";

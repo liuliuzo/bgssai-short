@@ -26,6 +26,8 @@ class DevCompanyVideoSeedTest {
         assertTrue(statement.contains("`default_flag` = 1"));
         assertTrue(shared.contains("'m-compat-asr-whisper'"));
         assertTrue(shared.contains("'m-bgssai-image-to-video'"));
+        assertTrue(shared.contains("'m-tokenhub-music-bgssai'"));
+        assertTrue(shared.contains("'m-compat-music-musicgen'"));
         assertTrue(shared.contains("'ai.openai_compat.api_key', ''"));
         assertTrue(shared.contains("'ai.image_to_video.api_key', ''"));
         assertFalse(shared.substring(shared.indexOf("2026-11-13")).contains("sk-"));
@@ -57,6 +59,8 @@ class DevCompanyVideoSeedTest {
         assertTrue(block.contains("'m-tokenhub-video-bgssai'"));
         assertTrue(block.contains("'m-compat-asr-whisper'"));
         assertTrue(block.contains("'m-bgssai-image-to-video'"));
+        assertTrue(block.contains("'m-tokenhub-music-bgssai'"));
+        assertTrue(block.contains("'m-compat-music-musicgen'"));
         assertTrue(block.contains("SET `default_flag` = 0 WHERE `model_id` = 'm-tokenhub-video-minimax'"));
         assertTrue(block.contains("NOT (`provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video')"));
         assertTrue(block.contains("'ai.openai_compat.api_key', ''"));

@@ -211,6 +211,7 @@ public class TokenHubModelCatalog {
             case "IMAGE" -> "image_generation";
             case "VIDEO" -> "video_generation";
             case "VOICE" -> "audio_speech";
+            case "MUSIC" -> "audio_music";
             default -> null;
         };
     }

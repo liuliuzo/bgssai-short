@@ -877,6 +877,37 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
     }
   }
 
+  const [lockingAll, setLockingAll] = useState(false)
+  const lockAllPendingCandidates = async () => {
+    if (lockingAll) return
+    setLockingAll(true)
+    try {
+      let locked = 0
+      for (const row of chars) {
+        if (row.card_status === 'LOCKED') continue
+        const first = (row.candidate_list || []).find((item) => isRealPhotoUrl(item.file_url))
+        if (first?.asset_id) {
+          const { data } = await productionApi.lockCharacter(row.character_id, first.asset_id)
+          if (data?.success) locked += 1
+        }
+      }
+      for (const row of [...scenes, ...props]) {
+        if (row.card_status === 'LOCKED') continue
+        const first = (row.candidate_list || []).find((item) => isRealPhotoUrl(item.file_url))
+        if (first?.asset_id) {
+          const { data } = await productionApi.lockScene(row.scene_card_id, first.asset_id)
+          if (data?.success) locked += 1
+        }
+      }
+      if (locked > 0) {
+        message.success(`已一键锁定 ${locked} 张参考卡`)
+        await load()
+      }
+    } finally {
+      setLockingAll(false)
+    }
+  }
+
   const cardSummary = summarizeConsistencyCards({
     character_list: chars,
     scene_list: scenes,
@@ -921,9 +952,18 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           showIcon
           message={`还有 ${cardSummary.unlockedCards.length} 张资产卡未锁定（已锁定 ${cardSummary.lockedCount}/${cardSummary.totalCards}）`}
           description={cardSummary.pendingSelectionCards.length > 0
-            ? `${cardSummary.pendingSelectionCards.map((c) => `${c.kind}「${c.name}」`).join('、')} 已有候选图，请点击该卡片下方某张图旁边的「选定」完成锁定；未锁定的卡片会导致引用它的分镜无法出图和生成视频。`
+            ? `${cardSummary.pendingSelectionCards.map((c) => `${c.kind}「${c.name}」`).join('、')} 已有候选图，可点右侧「一键锁定已有候选图」，或点卡片下方某张图旁边的「选定」完成锁定；未锁定的卡片会导致引用它的分镜无法出图和生成视频。`
             : `待锁定：${cardSummary.unlockedCards.slice(0, 6).map((c) => `${c.kind}「${c.name}」`).join('、')}。可生成参考图后点「选定」，或直接上传照片、从知识库选用。`}
-          action={<Button size="small" onClick={() => onJumpTab?.('storyboard')}>先去分镜与视频</Button>}
+          action={(
+            <Space>
+              {cardSummary.pendingSelectionCards.length > 0 ? (
+                <Button size="small" type="primary" loading={lockingAll} onClick={lockAllPendingCandidates}>
+                  一键锁定已有候选图
+                </Button>
+              ) : null}
+              <Button size="small" onClick={() => onJumpTab?.('storyboard')}>先去分镜与视频</Button>
+            </Space>
+          )}
         />
       ) : null}
       {cardsReady && cardSummary.totalCards > 0 && cardSummary.unlockedCards.length === 0 ? (
@@ -1374,6 +1414,34 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
     }
   }
 
+  const handleReadyAndSplitShots = async () => {
+    if (!episodeId || splitting) return
+    setSplitting(true)
+    setActionError(null)
+    try {
+      const readyRes = await productionApi.readyScript(episodeId, 1)
+      if (!readyRes?.data?.success) {
+        onJumpTab?.('script')
+        message.warning(readyRes?.data?.message || '请先在第 1 步生成本集分场剧本后再定稿')
+        return
+      }
+      const splitRes = await productionApi.splitShots(episodeId)
+      if (!splitRes?.data?.success) {
+        showActionError(splitRes?.data?.message || '拆解分镜失败，请稍后重试')
+        return
+      }
+      await featuresApi.previzGenerateText({ episode_id: episodeId })
+      message.success('已完成剧本定稿并自动拆解分镜')
+      await load()
+      await onReload?.()
+    } catch (err) {
+      onJumpTab?.('script')
+      message.warning(err?.response?.data?.message || '请先在第 1 步生成本集分场剧本后再定稿')
+    } finally {
+      setSplitting(false)
+    }
+  }
+
   if (canvasView) {
     return (
       <StoryboardCanvas
@@ -1549,11 +1617,14 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
               ? '点击下方「一键从剧本拆解分镜」，系统会自动生成本集镜头表、出场角色绑定和人话画面描述，随后即可生成草图与镜头视频。'
               : '分镜需要从已定稿的分场剧本自动拆解。请先前往「1. 剧本与定稿」生成本集剧本并点击「定稿剧本」，再回到本页一键拆镜。'}
           </Paragraph>
-          <Space>
+          <Space wrap>
             {scriptReady ? (
               <Button type="primary" loading={splitting} onClick={handleSplitShots}>一键从剧本拆解分镜</Button>
             ) : (
-              <Button type="primary" onClick={() => onJumpTab?.('script')}>去第 1 步完成剧本定稿</Button>
+              <>
+                <Button type="primary" loading={splitting} onClick={handleReadyAndSplitShots}>一键定稿本集并拆解分镜</Button>
+                <Button onClick={() => onJumpTab?.('script')}>去第 1 步完成剧本定稿</Button>
+              </>
             )}
             <Button onClick={() => onJumpTab?.('characters')}>查看角色定妆</Button>
           </Space>
@@ -2421,6 +2492,33 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
             await load()
           }}
         />
+        {(() => {
+          const candidates = film?.bgm_candidate_list || []
+          const selectedBgm = candidates.find((item) => item.asset_id === film?.bgm_asset_id)
+          const previewBgm = selectedBgm || candidates[0]
+          if (!previewBgm?.file_url) return null
+          return (
+            <Space size="small">
+              <audio
+                controls
+                preload="metadata"
+                src={previewBgm.file_url}
+                style={{ height: 32, verticalAlign: 'middle' }}
+              />
+              {!selectedBgm ? (
+                <Button size="small" onClick={async () => {
+                  await featuresApi.filmSettingsSave({
+                    work_id: work.work_id,
+                    episode_id: episodeId,
+                    compose_setting: { bgm_asset_id: previewBgm.asset_id },
+                  })
+                  message.success('背景音乐已选用')
+                  await load()
+                }}>选用最新候选</Button>
+              ) : null}
+            </Space>
+          )
+        })()}
       </Space>
       <Space wrap>
         <Button onClick={load}>刷新</Button>
