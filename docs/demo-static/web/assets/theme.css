@@ -632,6 +632,18 @@ textarea {
   transition: border-color .15s, box-shadow .15s;
 }
 
+/* Native <select>: hide browser spike arrow; use rounded stroke chevron (t501/t502). */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-inline-end: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 7' fill='none'%3E%3Cpath d='M1.5 1.75L6 5.25L10.5 1.75' stroke='%2364758b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 7px;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
