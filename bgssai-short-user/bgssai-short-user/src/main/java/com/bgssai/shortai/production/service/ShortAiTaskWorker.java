@@ -1124,7 +1124,11 @@ public class ShortAiTaskWorker {
             if (!resumeId.isBlank()) request.getParams().put("resume_request_id", resumeId);
             else {
                 attachFrames(shot, request, model);
-                if (OfficialVideoLane.isOfficial(task) && !hasReferenceImage(request)) {
+                // 剧本视频以已定妆的人物为准。首帧只是构图，不能把定妆照顶掉。
+                if (!consistency.characters().isEmpty()) {
+                    clearConditionImage(request);
+                    attachConsistencyRefs(consistency, request);
+                } else if (!hasReferenceImage(request)) {
                     attachRealAnchors(consistency, request);
                 }
                 if (OfficialVideoLane.isOfficial(task) && !hasReferenceImage(request) && claimedReference(shot, consistency)) {
@@ -1290,8 +1294,7 @@ public class ShortAiTaskWorker {
     }
 
     /**
-     * IMAGE path: attach first locked character portrait as subject reference (Kling
-     * image_reference=subject). Scene card appearance stays in prompt text.
+     * 定妆候选：把知识库里对上的那张图作为人物参考。没有对上时允许只按文字生成。
      */
     private boolean attachLookReference(String userId, String kind, String cardId, String prompt, AiProviderRequest request) {
         if (lookKnowledgeService == null || request.param("image_base64") != null || request.param("image_url") != null) {
@@ -1383,17 +1386,52 @@ public class ShortAiTaskWorker {
         }
     }
 
+    /**
+     * 镜头画面必须带上已锁定的定妆图。人物用 subject 参考；没有人物时用场景或道具的锁定图。
+     * 图读不出来就停止，不能悄悄改成文生图，否则成片会和定妆无关。
+     */
     private void attachConsistencyRefs(ConsistencyBundle consistency, AiProviderRequest request) {
-        if (consistency.characters().isEmpty()) {
-            return;
-        }
-        ShortCharacter primary = consistency.characters().get(0);
-        attachFrameAsset(primary.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime");
-        if (request.param("image_base64") != null || request.param("image_url") != null) {
+        if (!consistency.characters().isEmpty()) {
+            ShortCharacter primary = consistency.characters().get(0);
+            attachFrameAsset(primary.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime");
+            if (!hasConditionImage(request)) {
+                throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "定妆照没有送到生成请求，已停止，避免生成和定妆无关的画面");
+            }
             request.getParams().put("image_reference", "subject");
             request.getParams().put("image_fidelity", 0.75);
             request.getParams().put("human_fidelity", 0.55);
+            return;
         }
+        ShortSceneCard card = consistency.scene();
+        String label = "场景定妆图";
+        if (card == null && consistency.props() != null && !consistency.props().isEmpty()) {
+            card = consistency.props().get(0);
+            label = "道具定妆图";
+        }
+        if (card == null) {
+            return;
+        }
+        attachFrameAsset(card.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime");
+        if (!hasConditionImage(request)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    label + "没有送到生成请求，已停止，避免生成和定妆无关的画面");
+        }
+        request.getParams().put("image_fidelity", 0.75);
+    }
+
+    private static boolean hasConditionImage(AiProviderRequest request) {
+        String url = ShortJson.text(request.param("image_url"));
+        if (url.startsWith("https://") || url.startsWith("http://")) {
+            return !url.contains("/bgssai/user/local-objects");
+        }
+        return !ShortJson.text(request.param("image_base64")).isBlank();
+    }
+
+    private static void clearConditionImage(AiProviderRequest request) {
+        request.getParams().remove("image_url");
+        request.getParams().remove("image_base64");
+        request.getParams().remove("image_mime");
     }
 
     private record ConsistencyBundle(List<ShortCharacter> characters, ShortSceneCard scene,
@@ -1894,9 +1932,13 @@ public class ShortAiTaskWorker {
         }
         if (request.getModel() != null && TencentTokenHubAiProvider.CODE.equals(request.getModel().getProviderCode())) {
             try {
-                request.getParams().put(urlKey,
-                        objectStorage.presignGet(frame.getStorageKey(), 3600).downloadUrl());
-                return true;
+                String signed = objectStorage.presignGet(frame.getStorageKey(), 3600).downloadUrl();
+                if (signed != null && (signed.startsWith("https://") || signed.startsWith("http://"))
+                        && !signed.contains("/bgssai/user/local-objects")) {
+                    request.getParams().put(urlKey, signed);
+                    return true;
+                }
+                log.warn("presign frame is not a remote object url, sending bytes assetId={}", frame.getAssetId());
             } catch (RuntimeException ex) {
                 log.warn("presign frame failed, falling back to base64 assetId={}", frame.getAssetId(), ex);
             }
