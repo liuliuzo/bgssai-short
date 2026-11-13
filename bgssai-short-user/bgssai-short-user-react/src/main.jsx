@@ -7,6 +7,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import App from './App'
 import './styles/global.css'
+import './styles/rounded-chevron-caret.css'
 import { syncBgssaiShell } from './lib/bgssaiShell'
 
 syncBgssaiShell(window.location, window.sessionStorage, document)

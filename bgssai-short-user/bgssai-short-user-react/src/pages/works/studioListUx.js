@@ -195,6 +195,26 @@ export function dialogueCaption(row) {
   return shotDialogueLine(row) || AMBIENT_DIALOGUE
 }
 
+export function subtitleClock(ms) {
+  if (ms == null || ms === '') return '—'
+  const value = Number(ms)
+  if (!Number.isFinite(value)) return '—'
+  return `${(value / 1000).toFixed(1)} 秒`
+}
+
+export function voiceStudioSummary(rows, misalignedCount) {
+  const list = Array.isArray(rows) ? rows : []
+  if (!list.length) return '还没有配音条目。'
+  const pending = list.filter((row) => dubbingAlignLabel(row) === '待对齐').length
+  const fromRows = list.filter((row) => dubbingAlignLabel(row) === '未对齐').length
+  const misaligned = Math.max(Number(misalignedCount) || 0, fromRows)
+  const parts = []
+  if (pending) parts.push(`${pending} 条还在等待配音（待对齐）`)
+  if (misaligned) parts.push(`${misaligned} 条声音和画面时长对不上（未对齐）`)
+  if (!pending && !misaligned) parts.push('没有待对齐，也没有时长对不上的')
+  return `${parts.join('。')}。`
+}
+
 export function dubbingAlignLabel(row) {
   const status = String(row?.align_status || '')
   const lines = Array.isArray(row?.line_list) ? row.line_list.length : 0

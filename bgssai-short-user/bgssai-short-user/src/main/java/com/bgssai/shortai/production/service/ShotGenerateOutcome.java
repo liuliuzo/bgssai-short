@@ -8,11 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.mapper.ShortAiTaskMapper;
+import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortAiTaskExample;
+import com.bgssai.shortai.model.ShortAsset;
+import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.ShortShotExample;
+import com.bgssai.shortai.production.support.ImageToVideoPolicy;
+import com.bgssai.shortai.production.support.OfficialVideoLane;
+import com.bgssai.shortai.production.support.ShortJson;
 
 /**
  * A failed or canceled shot generate must not hide a clip or still that is already bound.
@@ -25,8 +31,14 @@ public class ShotGenerateOutcome {
     private ShortShotMapper shortShotMapper;
     @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
+    @Autowired(required = false)
+    private ShortAssetMapper shortAssetMapper;
 
     public void restoreBoundMedia(ShortAiTask task) {
+        if (task != null && ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
+            restoreImageConditionedShot(task);
+            return;
+        }
         if (task == null || !"SHOT".equals(task.getTargetType())) {
             return;
         }
@@ -57,7 +69,7 @@ public class ShotGenerateOutcome {
         if (shot == null) {
             return;
         }
-        String next = nextStatus(type, shot);
+        String next = nextStatus(type, shot, realBoundVideo(shot), realBoundImage(shot.getFirstFrameAssetId()));
         if (next == null || next.equals(shot.getShotStatus())) {
             return;
         }
@@ -72,6 +84,11 @@ public class ShotGenerateOutcome {
      * The patch never carries asset ids, so a failure cannot unbind or overwrite them.
      */
     static String nextStatus(String taskType, ShortShot shot) {
+        return nextStatus(taskType, shot, present(shot == null ? null : shot.getVideoAssetId()),
+                present(shot == null ? null : shot.getFirstFrameAssetId()));
+    }
+
+    static String nextStatus(String taskType, ShortShot shot, boolean realVideo, boolean realFrame) {
         if (shot == null) {
             return null;
         }
@@ -79,19 +96,69 @@ public class ShotGenerateOutcome {
             if (!"VIDEO_GENERATING".equals(shot.getShotStatus())) {
                 return null;
             }
-            if (present(shot.getVideoAssetId())) {
+            if (realVideo) {
                 return "VIDEO_READY";
             }
             // The first frame was already accepted. Do not leave the shot looking like it is still rendering.
-            return present(shot.getFirstFrameAssetId()) ? "IMAGE_READY" : null;
+            return realFrame ? "IMAGE_READY" : null;
         }
         if ("IMAGE".equals(taskType)) {
-            if (!"IMAGE_GENERATING".equals(shot.getShotStatus()) || !present(shot.getFirstFrameAssetId())) {
+            if (!"IMAGE_GENERATING".equals(shot.getShotStatus()) || !realFrame) {
                 return null;
             }
-            return present(shot.getVideoAssetId()) ? "VIDEO_READY" : "IMAGE_READY";
+            return realVideo ? "VIDEO_READY" : "IMAGE_READY";
         }
         return null;
+    }
+
+    private void restoreImageConditionedShot(ShortAiTask task) {
+        String shotId = ShortJson.text(ShortJson.map(task.getRequestJson()).get("shot_id"));
+        if (shotId.isBlank() || task.getUserId() == null) {
+            return;
+        }
+        if (activeShotVideo(task, shotId)) {
+            return;
+        }
+        ShortShotExample ex = new ShortShotExample();
+        ex.createCriteria().andShotIdEqualTo(shotId).andUserIdEqualTo(task.getUserId()).andDeletedFlagEqualTo(0);
+        ShortShot shot = shortShotMapper.selectOneByExample(ex);
+        if (shot == null || !"VIDEO_GENERATING".equals(shot.getShotStatus())) {
+            return;
+        }
+        String next = nextStatus("VIDEO", shot, realBoundVideo(shot), realBoundImage(shot.getFirstFrameAssetId()));
+        if (next == null || next.equals(shot.getShotStatus())) {
+            return;
+        }
+        ShortShot patch = new ShortShot();
+        patch.setShotStatus(next);
+        patch.setUpdatedTime(new Date());
+        ShortShotExample up = new ShortShotExample();
+        up.createCriteria().andIdEqualTo(shot.getId()).andShotStatusEqualTo("VIDEO_GENERATING");
+        shortShotMapper.updateByExampleSelective(patch, up);
+    }
+
+    private boolean activeShotVideo(ShortAiTask task, String shotId) {
+        ShortAiTaskExample official = new ShortAiTaskExample();
+        official.createCriteria().andTargetIdEqualTo(shotId).andTaskTypeEqualTo("VIDEO")
+                .andTargetTypeEqualTo("SHOT")
+                .andTaskStatusIn(List.of("QUEUED", "RUNNING", "PAUSED"));
+        if (shortAiTaskMapper.countByExample(official) > 0) {
+            return true;
+        }
+        ShortAiTaskExample images = new ShortAiTaskExample();
+        ShortAiTaskExample.Criteria criteria = images.createCriteria().andTaskTypeEqualTo("VIDEO")
+                .andTargetTypeEqualTo(ImageToVideoPolicy.TARGET)
+                .andTaskStatusIn(List.of("QUEUED", "RUNNING", "PAUSED"));
+        if (task.getTaskId() != null && !task.getTaskId().isBlank()) {
+            criteria.andTaskIdNotEqualTo(task.getTaskId());
+        }
+        for (ShortAiTask other : shortAiTaskMapper.selectByExample(images)) {
+            String otherShot = ShortJson.text(ShortJson.map(other.getRequestJson()).get("shot_id"));
+            if (shotId.equals(otherShot) || shotId.equals(other.getTargetId())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean activeSibling(ShortAiTask task) {
@@ -106,6 +173,38 @@ public class ShotGenerateOutcome {
             criteria.andTaskIdNotEqualTo(task.getTaskId());
         }
         return shortAiTaskMapper.countByExample(active) > 0;
+    }
+
+    private boolean realBoundImage(String assetId) {
+        if (!present(assetId)) {
+            return false;
+        }
+        if (shortAssetMapper == null) {
+            return true;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null) {
+            return true;
+        }
+        return !OfficialVideoLane.isPlaceholderImage(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
+    }
+
+    private boolean realBoundVideo(ShortShot shot) {
+        if (shot == null || !present(shot.getVideoAssetId())) {
+            return false;
+        }
+        if (shortAssetMapper == null) {
+            return true;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(shot.getVideoAssetId()).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null) {
+            return true;
+        }
+        return !OfficialVideoLane.isPlaceholderVideo(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
     }
 
     private static boolean present(String id) {

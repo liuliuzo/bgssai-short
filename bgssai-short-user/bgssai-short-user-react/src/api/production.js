@@ -5,7 +5,7 @@ const listWorks = (params) => http.get('/user/short-works/list', params)
 const createWork = (body) => http.post('/user/short-works/create', body)
 const getWork = (workId) => http.get('/user/short-works/detail', { work_id: workId })
 const updateWork = (body) => http.post('/user/short-works/update', body)
-const archiveWork = (workId) => http.post('/user/short-works/archive', { work_id: workId, archived_flag: 1 })
+const archiveWork = (workId, archivedFlag = 1) => http.post('/user/short-works/archive', { work_id: workId, archived_flag: archivedFlag })
 
 const getOutline = (workId) => http.get('/user/scripts/outline', { work_id: workId })
 const generateOutline = (workId, modelCode) =>
@@ -62,6 +62,7 @@ const listLookLibraries = () => http.get('/user/look-libraries/list')
 const saveLookLibrary = (body) => http.post('/user/look-libraries/save', body)
 const uploadLookMaterial = (body) => http.post('/user/look-materials/upload', body)
 const deleteLookMaterial = (materialId) => http.post('/user/look-materials/delete', { material_id: materialId })
+const completeLookAngles = (body) => http.post('/user/look-materials/complete-angles', body)
 
 const splitShots = (episodeId) => http.post('/user/shots/split-from-script', { episode_id: episodeId })
 const listShots = (params) => http.get('/user/shots/list', params)
@@ -73,6 +74,8 @@ const reorderShots = (body) => http.post('/user/shots/reorder', body)
 const listAiModels = (abilityType) => http.get('/user/ai-models/list', { ability_type: abilityType })
 const estimateTasks = (body) => http.post('/user/ai-tasks/estimate', body)
 const submitTasks = (body) => http.post('/user/ai-tasks/submit', body)
+const previewOfficialVideo = (body) => http.post('/user/ai-tasks/official-video/preview', body)
+const submitOfficialVideo = (body) => http.post('/user/ai-tasks/official-video/submit', body)
 const listTasks = (params) => http.get('/user/ai-tasks/list', params)
 const batchProgress = (batchId) => http.get('/user/ai-tasks/batch-progress', { batch_id: batchId })
 const retryTask = (taskId) => http.post('/user/ai-tasks/retry', { task_id: taskId })
@@ -133,6 +136,7 @@ export default {
   saveLookLibrary,
   uploadLookMaterial,
   deleteLookMaterial,
+  completeLookAngles,
   splitShots,
   listShots,
   lockShot,
@@ -142,6 +146,8 @@ export default {
   listAiModels,
   estimateTasks,
   submitTasks,
+  previewOfficialVideo,
+  submitOfficialVideo,
   listTasks,
   batchProgress,
   retryTask,

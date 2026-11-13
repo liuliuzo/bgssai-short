@@ -122,6 +122,10 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         body.put("prompt", ProviderHttp.promptOf(request));
         body.put("n", 1);
         body.put("size", ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("size")), "512x768"));
+        String image = ProviderHttp.imagePayload(request);
+        if (!image.isBlank()) {
+            body.put("image", image);
+        }
         int budget = Math.max(600, timeoutSec);
         String raw = http.postJson(join(baseUrl, path), headers(apiKey, cfg), ShortJson.toJson(body),
                 Math.min(180, budget));

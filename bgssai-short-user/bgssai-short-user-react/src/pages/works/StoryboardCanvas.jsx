@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Card, Drawer, Image, Input, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Drawer, Image, Input, Modal, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 import { publicModelText } from '../../publicModel'
-import { shotCanvasStatusKey } from './shotCardMedia'
+import { shotCanvasStatusKey, shotOffersVideoRegenerate } from './shotCardMedia'
+import { runOfficialShotVideo } from './officialVideo'
 import {
   SHOT_VIDEO_DIALOG_Z_INDEX,
   dialogueCaption,
@@ -99,7 +100,41 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
     setCost(data?.result)
   }
 
+  const submitOfficial = async (shotIds, regenerate) => {
+    const body = { episode_id: episodeId, shot_ids: shotIds }
+    const outcome = await runOfficialShotVideo({
+      regenerate,
+      preview: async () => (await productionApi.previewOfficialVideo(body)).data,
+      confirm: (preview) => new Promise((resolve) => {
+        const note = ((preview.shot_list || []).find((shot) => Number(shot.blocked) !== 1) || {}).size_note || ''
+        Modal.confirm({
+          title: regenerate ? '重新生成这一镜视频' : '确认生成视频',
+          content: `${regenerate ? '将开始一次新的生成并计费。当前成片会保留到新视频成功。' : '确认后开始生成并计费。'} ${note} 预计 ${((preview.estimated_cost_cent || 0) / 100).toFixed(2)} 元。`,
+          okText: regenerate ? '确认重新生成' : '确认提交',
+          cancelText: '取消',
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        })
+      }),
+      submit: async () => (await productionApi.submitOfficialVideo({ ...body, confirm_cost: 1 })).data,
+    })
+    if (outcome.reason === 'in_progress') {
+      message.warning(outcome.message || '这一镜视频已在生成中')
+      return false
+    }
+    return outcome.submitted
+  }
+
   const submit = async () => {
+    if (batchTaskType === 'VIDEO') {
+      const ok = await submitOfficial(selected.length ? selected : undefined, false)
+      if (ok) {
+        message.success('视频已提交，去任务中心看进度')
+        setCost(null)
+        load()
+      }
+      return
+    }
     const { data } = await productionApi.submitTasks({
       episode_id: episodeId,
       shot_ids: selected.length ? selected : undefined,
@@ -121,6 +156,14 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
     if (!editing) return
     setSubmittingSingle(true)
     try {
+      if (taskType === 'VIDEO') {
+        const ok = await submitOfficial([editing.shot_id], false)
+        if (ok) {
+          message.success(`已提交第 ${editing.shot_no} 镜视频`)
+          await load()
+        }
+        return
+      }
       const { data } = await productionApi.submitTasks({
         episode_id: episodeId,
         shot_ids: [editing.shot_id],
@@ -480,6 +523,20 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
               <Space wrap>
                 <Button loading={submittingSingle} onClick={() => runSingleShot('IMAGE')}>出首帧图</Button>
                 <Button loading={submittingSingle} onClick={() => runSingleShot('VIDEO')}>生成视频</Button>
+                {shotOffersVideoRegenerate(editing) ? (
+                  <Button loading={submittingSingle} type="primary" onClick={async () => {
+                    setSubmittingSingle(true)
+                    try {
+                      const ok = await submitOfficial([editing.shot_id], true)
+                      if (ok) {
+                        message.success('已重新提交这一镜视频，当前成片会保留到新视频成功')
+                        await load()
+                      }
+                    } finally {
+                      setSubmittingSingle(false)
+                    }
+                  }}>重新生成</Button>
+                ) : null}
                 <Button loading={submittingSingle} onClick={() => runSingleShot('VOICE')}>合成对白</Button>
               </Space>
             </div>

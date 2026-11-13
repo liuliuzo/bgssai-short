@@ -224,6 +224,12 @@
               <div><div class="text-muted">侧面</div><button class="btn btn-default btn-sm">上传</button></div>
             </div>
             <div class="row" style="margin-bottom:10px; align-items:center">
+              <button class="btn btn-default btn-sm">按正脸生成前面</button>
+              <button class="btn btn-default btn-sm">按正脸生成背面</button>
+              <button class="btn btn-default btn-sm">按正脸生成侧面</button>
+            </div>
+            <p class="text-muted" style="font-size:12px">缺的面按正脸来画，还是同一个人、同一套衣服。确认费用后才出图。</p>
+            <div class="row" style="margin-bottom:10px; align-items:center">
               <button class="btn btn-default btn-sm">从知识库选</button>
               <a href="look-library.html?return=%2Fworks%2Fw-demo%2Fcharacters">管理知识库</a>
             </div>
@@ -400,6 +406,7 @@
         <code>card_status</code>（<code>CANDIDATE</code> / <code>DRAFT</code> / <code>GENERATING</code> /
         <code>LOCKED</code>）· <code>appearance_prompt</code> · <code>consistency_seed</code> ·
         <code>ref_image_asset_id</code> · <code>look_reference</code>（<code>source</code> 为 <code>CARD</code> / <code>NAME</code> / <code>NONE</code>，生成前展示将用的库和造型）·
+        有正脸后可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>，<code>confirm_cost=1</code> 才出图）按正脸补前面、背面、侧面 ·
         <code>default_outfit_code</code> · <code>outfit_list</code> ·
         <code>voice_id</code> / <code>voice_speed</code> · <code>used_shot_count</code>；
         <code>character_role</code>（<code>FEMALE_LEAD</code> / <code>MALE_LEAD</code> /

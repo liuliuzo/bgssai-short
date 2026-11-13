@@ -1,14 +1,32 @@
 /** List-card media decisions. A bound clip stays playable even when the latest video job failed. */
 
+import { SHOT_STATUS_LABEL, labelOf } from '../../lib/displayLabels.js'
+import { isPlaceholderMediaUrl } from '../../lib/mediaUrl.js'
+import { shotTimingLabel } from './studioListUx.js'
+
 const SETTLED_CLIP_STATUS = new Set(['VIDEO_READY', 'LOCKED'])
 
 export function shotHasBoundVideo(row) {
   if (!row || typeof row !== 'object') return false
+  if (row.video_placeholder_flag === 1 || isPlaceholderMediaUrl(row.video_url)) return false
   return text(row.video_url) !== '' || text(row.video_asset_id) !== ''
 }
 
 export function shotHasPlayableVideo(row) {
-  return text(row && row.video_url) !== ''
+  const url = text(row && row.video_url)
+  return url !== '' && !isPlaceholderMediaUrl(url)
+}
+
+/**
+ * A decoded frame with no positive duration is not a successful clip.
+ * pending: metadata has not arrived. ready: a real length. broken: empty or errored.
+ */
+export function classifyVideoDuration(duration, { errored = false, hasFrame = false } = {}) {
+  if (errored) return 'broken'
+  if (Number.isFinite(duration) && duration > 0.05) return 'ready'
+  if (duration === 0) return 'broken'
+  if (hasFrame) return 'broken'
+  return 'pending'
 }
 
 /** Title status. A bound clip reads as 视频, including while a later attempt is generating or failed. */
@@ -25,8 +43,30 @@ export function shotCardStatusCode(row) {
  * Once the shot has settled on that clip (VIDEO_READY / LOCKED), the historical
  * failure is not the standing label. An in-flight attempt can still show it.
  */
+export function shotCardHeading(row, { actualSec, playback } = {}) {
+  const no = row && row.shot_no != null ? row.shot_no : ''
+  const planned = shotTimingLabel({ plannedSec: row && row.shot_duration_sec, hasPlayableVideo: false })
+  if (isPlaceholderMediaUrl(row && row.video_url) || playback === 'placeholder') {
+    return `镜 ${no} · 计划 ${planned} · 这是占位图，不能播放`
+  }
+  if (playback === 'broken') {
+    return `镜 ${no} · 计划 ${planned} · 这段视频打不开`
+  }
+  const timing = shotTimingLabel({
+    plannedSec: row && row.shot_duration_sec,
+    actualSec,
+    hasPlayableVideo: shotHasPlayableVideo(row),
+  })
+  const status = labelOf(SHOT_STATUS_LABEL, shotCardStatusCode(row))
+  return `镜 ${no} · ${timing} · ${status}`
+}
+
 export function shotLatestTaskBadge(row) {
   const task = row && row.latest_task
+  const inFlight = task && (task.task_status === 'QUEUED' || task.task_status === 'RUNNING')
+  if (!inFlight && (row && (row.video_placeholder_flag === 1 || isPlaceholderMediaUrl(row.video_url)))) {
+    return { color: 'orange', text: '这是占位图，不能播放' }
+  }
   if (!task || typeof task !== 'object') return null
   const type = String(task.task_type || '')
   const status = String(task.task_status || '')
@@ -39,6 +79,10 @@ export function shotLatestTaskBadge(row) {
   }
   const typeName = task.task_type_name || task.task_type || ''
   const statusName = task.task_status_name || task.task_status || ''
+  if (type === 'VIDEO' && (status === 'QUEUED' || status === 'RUNNING') && task.status_note) {
+    const color = status === 'QUEUED' ? 'gold' : 'blue'
+    return { color, text: `${typeName} ${statusName}，${task.status_note}`.trim() }
+  }
   let color = 'blue'
   if (status === 'FAILED') color = 'red'
   else if (status === 'SUCCEEDED') color = 'green'
@@ -52,6 +96,26 @@ export function shotCanvasStatusKey(row) {
   if (shotHasBoundVideo(row)) return 'VIDEO_READY'
   if (row.blocked_flag === 1) return 'FAILED'
   return row.shot_status || 'PENDING'
+}
+
+const ACTIVE_VIDEO = new Set(['QUEUED', 'RUNNING', 'PAUSED'])
+
+/** A finished, broken, placeholder, or failed clip can be generated again. Locked shots stay locked. */
+export function shotOffersVideoRegenerate(row, playback) {
+  if (!row || typeof row !== 'object' || row.shot_status === 'LOCKED') return false
+  if (playback === 'broken') return true
+  if (row.shot_status === 'VIDEO_READY' || row.shot_status === 'FAILED') return true
+  if (row.video_placeholder_flag === 1 || isPlaceholderMediaUrl(row.video_url)) return true
+  if (text(row.video_asset_id) !== '' || text(row.video_url) !== '') return true
+  const task = row.latest_task
+  return !!(task && task.task_type === 'VIDEO' && (task.task_status === 'FAILED' || task.task_status === 'CANCELED'))
+}
+
+export function shotVideoRegenerateBlocked(row) {
+  if (!row || typeof row !== 'object') return false
+  const task = row.latest_task
+  if (task && task.task_type === 'VIDEO' && ACTIVE_VIDEO.has(task.task_status)) return true
+  return (!task || task.task_type !== 'VIDEO') && row.shot_status === 'VIDEO_GENERATING'
 }
 
 function text(value) {

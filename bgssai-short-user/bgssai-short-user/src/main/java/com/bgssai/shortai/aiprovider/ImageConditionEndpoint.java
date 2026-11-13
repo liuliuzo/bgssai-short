@@ -36,7 +36,41 @@ public final class ImageConditionEndpoint {
     private ImageConditionEndpoint() {
     }
 
+    /** Public CPU image-to-video prefix. Text-to-video stays on {@code /v1}. */
+    public static final String COMPANY_IMAGE_TO_VIDEO = "https://chat.bgssai.com/i2v";
+
     public record Origin(String value) {
+    }
+
+    /**
+     * The company image-to-video service is published at {@code /i2v}, not on the
+     * text-to-video host root and not on the unexposed 8007 listener.
+     */
+    private static Optional<Origin> companyImageToVideo(URI uri) {
+        if (!"https".equalsIgnoreCase(uri.getScheme())) {
+            return Optional.empty();
+        }
+        if (uri.getUserInfo() != null && !uri.getUserInfo().isBlank()) {
+            return Optional.empty();
+        }
+        if (uri.getRawQuery() != null || uri.getRawFragment() != null) {
+            return Optional.empty();
+        }
+        if (uri.getPort() != -1 && uri.getPort() != 443) {
+            return Optional.empty();
+        }
+        String host = uri.getHost();
+        if (host == null || !CompanyCompatGateway.HOST.equalsIgnoreCase(host)) {
+            return Optional.empty();
+        }
+        String path = uri.getPath() == null ? "" : uri.getPath();
+        if (path.endsWith("/") && path.length() > 1) {
+            path = path.substring(0, path.length() - 1);
+        }
+        if (!"/i2v".equals(path)) {
+            return Optional.empty();
+        }
+        return Optional.of(new Origin(COMPANY_IMAGE_TO_VIDEO));
     }
 
     /**
@@ -62,6 +96,10 @@ public final class ImageConditionEndpoint {
         }
         if (uri.getRawQuery() != null || uri.getRawFragment() != null) {
             return Optional.empty();
+        }
+        Optional<Origin> companyImage = companyImageToVideo(uri);
+        if (companyImage.isPresent()) {
+            return companyImage;
         }
         String path = uri.getPath();
         if (path != null && !path.isBlank() && !"/".equals(path)) {

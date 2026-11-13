@@ -90,7 +90,7 @@ public class AiTaskQueue {
         task.setAutoNextFlag(autoNext);
         int usage = estimatedUsage(model, req);
         int priced = aiModelResolveService.costCent(model, usage);
-        task.setCostCent(priced > 0 ? priced : com.bgssai.shortai.production.support.TaskPrices.cost(taskType));
+        task.setCostCent(priced > 0 ? priced : com.bgssai.shortai.production.support.TaskPrices.cost(taskType) * usage);
         Date now = new Date();
         task.setQueuedTime(now);
         task.setCreatedTime(now);
@@ -102,6 +102,10 @@ public class AiTaskQueue {
     }
 
     private static int estimatedUsage(AiModelConfig model, Map<String, Object> request) {
+        int explicit = ShortJson.integer(request.get("usage_count"), 0);
+        if (explicit > 0) {
+            return explicit;
+        }
         String unit = model.getPriceUnit();
         if ("PER_SECOND".equals(unit)) {
             int seconds = ShortJson.integer(request.get("duration_sec"), 0);

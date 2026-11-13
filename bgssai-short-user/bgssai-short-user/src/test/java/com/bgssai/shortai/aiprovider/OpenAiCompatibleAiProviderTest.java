@@ -47,6 +47,18 @@ class OpenAiCompatibleAiProviderTest {
         assertTrue(http.postedUrls.get(0).startsWith("https://chat.bgssai.com/v1/images/generations"));
         assertEquals("Bearer sk-company", http.postedHeaders.get(0).get("Authorization"));
         assertTrue(http.postedBodies.get(0).contains("\"size\":\"512x768\""));
+        assertFalse(http.postedBodies.get(0).contains("\"image\""));
+    }
+
+    @Test
+    void imageForwardsTheReferencePhoto() throws Exception {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"data\":[{\"b64_json\":\"" + Base64.getEncoder().encodeToString("png".getBytes(StandardCharsets.UTF_8)) + "\"}]}");
+        AiProviderRequest request = request("IMAGE", "bgssai-image", "背面");
+        request.getParams().put("image_base64", Base64.getEncoder().encodeToString("face".getBytes(StandardCharsets.UTF_8)));
+        request.getParams().put("image_mime", "image/jpeg");
+        provider(http, "sk-company").execute(request);
+        assertTrue(http.postedBodies.get(0).contains("\"image\":\"data:image/jpeg;base64,"));
     }
 
     @Test

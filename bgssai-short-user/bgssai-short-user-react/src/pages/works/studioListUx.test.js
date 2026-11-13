@@ -40,7 +40,9 @@ import {
   frameCaptionFits,
   frameCaptionStyle,
   thumbPlaceholderStyle,
+  subtitleClock,
   voiceRowView,
+  voiceStudioSummary,
   tokenAmountLabel,
 } from './studioListUx.js'
 
@@ -215,4 +217,16 @@ test('first-frame caption stays one line inside the narrow thumb', () => {
   assert.equal(style.whiteSpace, 'nowrap')
   assert.equal(style.fontSize, 11)
   assert.equal(style.width, '100%')
+})
+
+test('voice summary does not call pending rows 未对齐 0, and subtitle times are seconds', () => {
+  const rows = [
+    { align_status: 'PENDING', line_list: [{ line_text: '退婚书我签' }] },
+    { align_status: 'PENDING', line_list: [{ line_text: '你凭什么' }] },
+  ]
+  const summary = voiceStudioSummary(rows, 0)
+  assert.match(summary, /待对齐/)
+  assert.doesNotMatch(summary, /未对齐 0/)
+  assert.equal(subtitleClock(1500), '1.5 秒')
+  assert.equal(subtitleClock(null), '—')
 })

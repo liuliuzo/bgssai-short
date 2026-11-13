@@ -37,6 +37,22 @@ class ShotConsistencyTest {
         assertTrue(frag.contains("天台"));
         String prompt = ShotConsistency.withConsistency("中景对话", frag);
         assertTrue(prompt.contains("一致性要求"));
+        String lead = ShotConsistency.leadWithAnchors("中景对话", frag);
+        assertTrue(lead.startsWith("角色「林晚」"));
+        assertTrue(lead.indexOf("林晚") < lead.indexOf("中景对话"));
+    }
+
+    @Test
+    void outfitJoinsTheLockedLook() {
+        ShortCharacter c = new ShortCharacter();
+        c.setCharacterName("沈知微");
+        c.setAppearancePrompt("二十五岁都市女性，短发，冷白皮");
+        c.setDefaultOutfitCode("OUTFIT_DEFAULT");
+        c.setOutfitJson("[{\"outfit_code\":\"OUTFIT_DEFAULT\",\"outfit_name\":\"默认正装\",\"prompt\":\"利落西装\"}]");
+        String frag = ShotConsistency.appearanceFragment(List.of(c), null, List.of());
+        assertTrue(frag.contains("沈知微"));
+        assertTrue(frag.contains("利落西装"));
+        assertTrue(frag.contains("服装"));
     }
 
     @Test

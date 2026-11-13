@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Collapse, Form, Input, InputNumber, Modal, Radio, Select, Space, Table, Typography, message } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
+import { CREATE_WORK_DEFAULTS, createWorkSettingLine } from './workCreateDefaults'
 
 const { Title, Paragraph } = Typography
 
@@ -25,11 +26,23 @@ const STYLE_OPTIONS = [
 // 单集时长只允许 60 / 90 / 120，后端同样校验（超出范围不予创建）。
 const DURATION_OPTIONS = [60, 90, 120]
 
-const DEFAULTS = {
-  genre: 'REVENGE',
-  visual_style: 'MODERN_URBAN',
-  episode_count: 24,
-  episode_duration_sec: 90,
+const DEFAULTS = CREATE_WORK_DEFAULTS
+
+function CreateWorkSettingLine() {
+  const genre = Form.useWatch('genre')
+  const visualStyle = Form.useWatch('visual_style')
+  const episodeCount = Form.useWatch('episode_count')
+  const episodeSeconds = Form.useWatch('episode_duration_sec')
+  return (
+    <Paragraph style={{ color: '#334155' }}>
+      {createWorkSettingLine({
+        genre: genre || DEFAULTS.genre,
+        visual_style: visualStyle || DEFAULTS.visual_style,
+        episode_count: episodeCount || DEFAULTS.episode_count,
+        episode_duration_sec: episodeSeconds || DEFAULTS.episode_duration_sec,
+      })}
+    </Paragraph>
+  )
 }
 
 export default function WorksPage() {
@@ -70,7 +83,7 @@ export default function WorksPage() {
 
   const create = async () => {
     const values = await form.validateFields()
-    const { data } = await productionApi.createWork(values)
+    const { data } = await productionApi.createWork({ ...DEFAULTS, ...values })
     if (data?.success) {
       message.success('已创建，正在生成大纲')
       setOpen(false)
@@ -84,8 +97,8 @@ export default function WorksPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>我的作品</Title>
-      <Paragraph type="secondary">
-        新建后进入作品，按顶部步骤做：大纲、这一集剧本、定稿、定妆、拆镜、首帧、生成视频。配音和质量检查不挡住第一条视频。想先看一条视频，把高级设置里的集数改成 1。只有剧名和一句话梗概是必填。
+      <Paragraph style={{ color: '#334155' }}>
+        新建后进入作品，按顶部步骤做：大纲、这一集剧本、定稿、定妆、拆镜、首帧、生成视频。配音和质量检查不挡住第一条视频。只有剧名和一句话梗概是必填，其余按当前的试做设置。
       </Paragraph>
       <Card extra={<Button type="primary" onClick={() => setOpen(true)}>新建作品</Button>}>
         <Table
@@ -101,29 +114,39 @@ export default function WorksPage() {
             showSizeChanger: true,
             onChange: (num, size) => load(num, size),
           }}
+          tableLayout="fixed"
           columns={[
-            { title: '标题', dataIndex: 'work_title' },
-            { title: '类型', dataIndex: 'genre_name', width: 100 },
-            { title: '状态', dataIndex: 'work_status_name', width: 100 },
-            { title: '集数', dataIndex: 'episode_count', width: 80 },
+            {
+              title: '标题',
+              dataIndex: 'work_title',
+              width: '28%',
+              ellipsis: false,
+              render: (value) => <span style={{ overflowWrap: 'anywhere' }}>{value}</span>,
+            },
+            { title: '类型', dataIndex: 'genre_name', width: '14%' },
+            { title: '状态', dataIndex: 'work_status_name', width: '12%', render: (value) => <span style={{ whiteSpace: 'nowrap' }}>{value}</span> },
+            { title: '集数', dataIndex: 'episode_count', width: '8%' },
             {
               title: '已花费(元)',
               dataIndex: 'cost_spent_cent',
-              width: 110,
+              width: '14%',
               render: (v) => ((Number(v) || 0) / 100).toFixed(2),
             },
             {
               title: '操作',
-              width: 160,
-              render: (_, row) => (
-                <Space>
-                  <Button type="link" size="small" onClick={() => navigate(`/works/${row.work_id}/script`)}>进入制作</Button>
-                  <Button type="link" size="small" onClick={async () => {
-                    await productionApi.archiveWork(row.work_id)
-                    load(pageNum, pageSize)
-                  }}>归档</Button>
-                </Space>
-              ),
+              width: '24%',
+              render: (_, row) => {
+                const archived = row.work_status === 'ARCHIVED'
+                return (
+                  <Space>
+                    <Button type="link" size="small" onClick={() => navigate(`/works/${row.work_id}/script`)}>进入制作</Button>
+                    <Button type="link" size="small" onClick={async () => {
+                      await productionApi.archiveWork(row.work_id, archived ? 0 : 1)
+                      load(pageNum, pageSize)
+                    }}>{archived ? '恢复' : '归档'}</Button>
+                  </Space>
+                )
+              },
             },
           ]}
         />
@@ -138,22 +161,23 @@ export default function WorksPage() {
         okText="创建并生成大纲"
       >
         <Form form={form} layout="vertical" initialValues={DEFAULTS}>
-          <Form.Item name="work_title" label="作品标题" rules={[{ required: true }]}>
-            <Input placeholder="退婚三年后她成了首富" />
+          <Form.Item name="work_title" label="作品标题" rules={[{ required: true, message: '请输入作品标题' }]}>
+            <Input placeholder="例如：女帝归来" />
           </Form.Item>
           <Form.Item
             name="one_line_pitch"
             label="一句话梗概"
-            rules={[{ required: true }]}
-            extra="提交后立刻按这句话生成全剧分集大纲"
+            rules={[{ required: true, message: '请输入一句话梗概' }]}
+            extra="灰字只是例子，不是已经填好的内容。提交后立刻按这句话生成全剧分集大纲。"
           >
-            <Input.TextArea rows={3} placeholder="被退婚的落魄千金三年后带着资本回归" />
+            <Input.TextArea rows={3} placeholder="例如：落魄千金三年后带着资本回来" />
           </Form.Item>
+          <CreateWorkSettingLine />
           <Collapse
             ghost
             items={[{
               key: 'advanced',
-              label: '高级设置（不展开也能创建：复仇逆袭 · 24 集 × 90 秒 · 都市写实）',
+              label: '高级设置（不打开也会按上面这句话创建）',
               children: (
                 <>
                   <Space size="large" style={{ display: 'flex' }}>

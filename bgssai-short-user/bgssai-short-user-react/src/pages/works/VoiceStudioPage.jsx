@@ -1,9 +1,10 @@
-import { modelPricingLabel } from '../../modelPricing'
 import { useCallback, useEffect, useState } from 'react'
-import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
+import { Alert, Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
 import productionApi from '../../api/production'
-import { voiceRowView } from './studioListUx'
+import { friendlyFailReason } from '../../lib/displayLabels'
+import { modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
+import { subtitleClock, voiceRowView, voiceStudioSummary } from './studioListUx'
 
 const { Paragraph } = Typography
 
@@ -22,17 +23,21 @@ export default function VoiceStudioPage({ work, episodeId }) {
   const [asrModelCode, setAsrModelCode] = useState()
   const [loading, setLoading] = useState(true)
   const [clipSeconds, setClipSeconds] = useState({})
+  const [voiceFailures, setVoiceFailures] = useState([])
   const [styleForm] = Form.useForm()
 
   const load = useCallback(async () => {
     if (!episodeId) return
     setLoading(true)
     try {
-      const [dRes, sRes, vRes, shotRes] = await Promise.all([
+      const [dRes, sRes, vRes, shotRes, taskRes] = await Promise.all([
         featuresApi.listDubbings(episodeId),
         featuresApi.subtitleDetail(episodeId),
         featuresApi.listVoices(),
         productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 200 }),
+        work?.work_id
+          ? productionApi.listTasks({ work_id: work.work_id, task_status: 'FAILED', page_num: 1, page_size: 50 })
+          : Promise.resolve({ data: { result: [] } }),
       ])
       const shots = Array.isArray(shotRes.data?.result) ? shotRes.data.result : []
       const byId = new Map(shots.map((shot) => [shot.shot_id, shot]))
@@ -52,10 +57,16 @@ export default function VoiceStudioPage({ work, episodeId }) {
       const style = sRes.data?.result?.subtitle_style || {}
       styleForm.setFieldsValue(style)
       setVoices(vRes.data?.result?.voice_list || [])
+      const failed = (Array.isArray(taskRes.data?.result) ? taskRes.data.result : []).filter((row) => {
+        const type = String(row.task_type || '').toUpperCase()
+        if (type !== 'VOICE' && type !== 'DUBBING') return false
+        return !row.episode_id || row.episode_id === episodeId
+      })
+      setVoiceFailures(failed)
     } finally {
       setLoading(false)
     }
-  }, [episodeId, styleForm])
+  }, [episodeId, styleForm, work?.work_id])
 
   useEffect(() => { load() }, [load])
 
@@ -113,7 +124,8 @@ export default function VoiceStudioPage({ work, episodeId }) {
             style={{ width: 220 }}
             options={voiceModels.map((m) => ({
               value: m.model_code,
-              label: modelPricingLabel(m),
+              label: modelPricingCompactLabel(m),
+              title: modelPricingLabel(m),
             }))}
           />
           <Button type="primary" onClick={async () => {
@@ -148,16 +160,27 @@ export default function VoiceStudioPage({ work, episodeId }) {
           <Button onClick={load}>刷新</Button>
         </Space>}
       >
-        <Paragraph type="secondary">未对齐 {misaligned} · 音色库 {voices.length}</Paragraph>
+        {voiceFailures.length ? (
+          <Alert
+            type="error"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message={`${voiceFailures.length} 条配音没有做成`}
+            description={friendlyFailReason(voiceFailures[0].fail_reason) || '模型服务暂时不可用，请稍后重试。可以点这一行的「重配」。'}
+          />
+        ) : null}
+        <Paragraph style={{ color: '#334155' }}>{voiceStudioSummary(dubbings, misaligned)} 音色库 {voices.length} 个。</Paragraph>
         <Table
           rowKey="shot_id"
           size="small"
           pagination={false}
+          tableLayout="fixed"
           dataSource={dubbings}
           columns={[
-            { title: '镜号', dataIndex: 'shot_no', width: 70 },
+            { title: '镜号', dataIndex: 'shot_no', width: 72 },
             {
               title: '台词',
+              width: '36%',
               render: (_, row) => voiceRowView(row, clipSeconds[row.shot_id]).dialogue || '（无对白）',
             },
             {
@@ -205,7 +228,8 @@ export default function VoiceStudioPage({ work, episodeId }) {
             style={{ width: 220 }}
             options={asrModels.map((m) => ({
               value: m.model_code,
-              label: modelPricingLabel(m),
+              label: modelPricingCompactLabel(m),
+              title: modelPricingLabel(m),
             }))}
           />
           <Button type="primary" onClick={async () => {
@@ -219,22 +243,35 @@ export default function VoiceStudioPage({ work, episodeId }) {
               await load()
             }
           }}>语音识别生成字幕</Button>
-          <Button onClick={async () => {
-            await featuresApi.subtitleRegen(episodeId)
-            message.success('字幕已重生')
-            await load()
-          }}>重生字幕</Button>
+          <Button onClick={() => {
+            Modal.confirm({
+              title: '按对白重新整理字幕',
+              content: '这会按现有对白重新整理这一集的字幕，不会新建一部作品，也不会重新配音。',
+              okText: '开始整理',
+              cancelText: '取消',
+              onOk: async () => {
+                await featuresApi.subtitleRegen(episodeId)
+                message.success('字幕已按对白整理')
+                await load()
+              },
+            })
+          }}>按对白重新整理字幕</Button>
         </Space>}
       >
+        {!subtitles.length ? (
+          <Paragraph style={{ color: '#334155' }}>还没有字幕。配音完成后，点「语音识别生成字幕」。</Paragraph>
+        ) : null}
         <Table
           rowKey="subtitle_id"
           size="small"
           pagination={false}
+          tableLayout="fixed"
+          locale={{ emptyText: '还没有字幕。配音完成后，点「语音识别生成字幕」。' }}
           dataSource={subtitles}
           columns={[
-            { title: '序号', dataIndex: 'subtitle_no', width: 70 },
-            { title: '开始ms', dataIndex: 'start_ms', width: 90 },
-            { title: '结束ms', dataIndex: 'end_ms', width: 90 },
+            { title: '序号', dataIndex: 'subtitle_no', width: 72 },
+            { title: '开始', dataIndex: 'start_ms', width: 110, render: (value) => subtitleClock(value) },
+            { title: '结束', dataIndex: 'end_ms', width: 110, render: (value) => subtitleClock(value) },
             {
               title: '文本',
               dataIndex: 'subtitle_text',
@@ -266,9 +303,10 @@ export default function VoiceStudioPage({ work, episodeId }) {
             message.success('样式已保存')
           }}
         >
-          <Form.Item name="font_size" label="字号"><InputNumber /></Form.Item>
-          <Form.Item name="font_color" label="颜色"><Input style={{ width: 110 }} /></Form.Item>
-          <Form.Item name="stroke_color" label="描边"><Input style={{ width: 110 }} /></Form.Item>
+          <Paragraph style={{ width: '100%', color: '#334155' }}>留空时用白字、黑边、底部。</Paragraph>
+          <Form.Item name="font_size" label="字号"><InputNumber placeholder="例如 28" /></Form.Item>
+          <Form.Item name="font_color" label="颜色"><Input style={{ width: 140 }} placeholder="例如 #ffffff" /></Form.Item>
+          <Form.Item name="stroke_color" label="描边"><Input style={{ width: 140 }} placeholder="例如 #000000" /></Form.Item>
           <Form.Item name="position" label="位置">
             <Select style={{ width: 120 }} options={[
               { value: 'BOTTOM', label: '底部' },

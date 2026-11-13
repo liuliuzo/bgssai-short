@@ -13,12 +13,12 @@
   .bot-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px clamp(16px, 4vw, 48px); border-bottom: 1px solid rgba(128,128,128,.18); background: #fff; }
   .bot-nav strong { font-size: 14px; font-weight: 600; }
   .bot-nav a { min-height: 44px; display: inline-flex; align-items: center; padding: 10px 16px; border: 1px solid rgba(128,128,128,.3); border-radius: 8px; color: inherit; font-size: 13px; font-weight: 600; text-decoration: none; }
-  .page { display: flex; justify-content: center; padding: 40px 16px; }
-  .card { width: 100%; max-width: 420px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px 28px 24px; box-shadow: 0 12px 40px rgba(15,23,42,.06); }
+  .page { display: flex; justify-content: center; padding: 16px 16px 20px; }
+  .card { width: 100%; max-width: 680px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 28px 12px; box-shadow: 0 12px 40px rgba(15,23,42,.06); }
   .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 700; }
   .brand .lang { border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; padding: 4px 10px; font-weight: 500; }
-  .motion { height: 72px; margin: 10px 0 4px; border-radius: 12px; background: radial-gradient(circle at 50% 50%, rgba(37,99,235,.14), transparent 60%); }
-  h1 { font-size: 22px; margin: 6px 0 16px; }
+  .motion { height: 72px; margin: 0 0 4px; overflow: hidden; border-radius: 12px; background: radial-gradient(circle at 50% 50%, rgba(37,99,235,.14), transparent 60%); }
+  h1 { font-size: 22px; margin: 0 0 10px; }
   .tabs { display: flex; gap: 4px; background: #f0f3f8; border-radius: 10px; padding: 4px; margin-bottom: 16px; }
   .tabs button { flex: 1; border: 0; background: none; padding: 10px 4px; border-radius: 7px; white-space: nowrap; font: inherit; font-size: 14px; color: #475569; }
   .tabs button[aria-selected="true"] { background: #fff; color: #2563eb; font-weight: 600; }
@@ -27,6 +27,16 @@
   .row { display: flex; gap: 8px; }
   input { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
   .row button { flex: 0 0 auto; padding: 0 14px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; white-space: nowrap; }
+  .phone-dial-field { display: flex; align-items: stretch; min-width: 0; padding: 0 8px 0 2px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
+  .phone-dial-combo { flex: 0 0 72px; max-width: 40%; position: relative; }
+  .phone-dial-combo-trigger { width: 100%; min-height: 42px; display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; margin: 0; padding: 0 4px 0 10px; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+  .phone-dial-combo-caret { flex-shrink: 0; position: relative; width: 12px; height: 7px; opacity: .5; transition: transform .15s ease; }
+  .phone-dial-combo-caret::before, .phone-dial-combo-caret::after { content: ""; position: absolute; top: 1px; width: 7.5px; height: 1.75px; background: currentColor; border-radius: 999px; }
+  .phone-dial-combo-caret::before { left: 0; transform: rotate(38deg); transform-origin: right center; }
+  .phone-dial-combo-caret::after { right: 0; transform: rotate(-38deg); transform-origin: left center; }
+  .phone-dial-combo-trigger[aria-expanded="true"] .phone-dial-combo-caret { transform: rotate(180deg); }
+  .phone-dial-divider { width: 1px; flex: 0 0 1px; align-self: stretch; margin: 10px 6px; background: currentColor; opacity: .16; }
+  .phone-dial-number { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; padding: 11px 4px; font: inherit; }
   .primary { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font-size: 15px; font-weight: 600; }
   .links { text-align: center; font-size: 13px; margin: 14px 0 0; }
   .links a { color: #2563eb; text-decoration: none; }
@@ -81,7 +91,17 @@
           <button class="primary" type="submit">登录 / 注册</button>
         </div>
         <div data-panel="phone">
-          <div class="field"><label class="sr-only" for="p1">手机号</label><input id="p1" placeholder="+86  请输入手机号" inputmode="tel"></div>
+          <div class="field"><label class="sr-only" for="p1">手机号</label>
+            <div class="phone-dial-field">
+              <div class="phone-dial-combo">
+                <button type="button" class="phone-dial-combo-trigger" aria-label="国家区号" aria-expanded="false" aria-haspopup="listbox">
+                  <span>+86</span><span class="phone-dial-combo-caret" aria-hidden="true"></span>
+                </button>
+              </div>
+              <span class="phone-dial-divider" aria-hidden="true"></span>
+              <input id="p1" class="phone-dial-number" placeholder="请输入手机号" inputmode="tel">
+            </div>
+          </div>
           <div class="field row"><label class="sr-only" for="c1">验证码</label><input id="c1" placeholder="6 位验证码" inputmode="numeric"><button type="button">获取验证码</button></div>
           <button class="primary" type="submit">登录 / 注册</button>
         </div>

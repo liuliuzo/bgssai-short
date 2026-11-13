@@ -1,3 +1,5 @@
+import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl.js'
+
 export const LOOK_ANGLES = [
   ['FRONT_FACE', '正脸'],
   ['FRONT', '前面'],
@@ -12,13 +14,91 @@ export function groupLooksOfKind(materials, kind) {
   return groupLooks((materials || []).filter((item) => (item.material_kind || 'CHARACTER') === wanted))
 }
 
+export function isVideoMaterial(item) {
+  return !!(item && typeof item.mime_type === 'string' && item.mime_type.startsWith('video/'))
+}
+
+function hasPicture(item) {
+  return !!(item && (item.file_url || item.poster_url))
+}
+
+function photoKey(item) {
+  const size = item && item.file_size_byte
+  const width = item && item.width
+  const height = item && item.height
+  if (!size || !width || !height) return null
+  return `${item.mime_type || ''}|${width}|${height}|${size}`
+}
+
+/** Identical bytes filed from more than one card stay as one photo. */
+export function dedupePhotos(items) {
+  const kept = []
+  const index = new Map()
+  for (const item of items || []) {
+    const key = photoKey(item)
+    if (!key) {
+      kept.push(item)
+      continue
+    }
+    const previous = index.get(key)
+    if (previous) {
+      previous.same_material_ids.push(item.material_id)
+      continue
+    }
+    const copy = { ...item, same_material_ids: [item.material_id] }
+    index.set(key, copy)
+    kept.push(copy)
+  }
+  return kept
+}
+
+/** 站姿、坐姿是补充，不能盖住这一面本来的那张。 */
+export function isPoseExtra(item) {
+  return /站姿|坐姿|行走|走动/.test(`${(item && item.caption) || ''}`)
+}
+
+/**
+ * One angle: a plain still is the photo people see first.
+ * A pose note (站姿) stays in 其他照片 when a plain photo of this angle exists.
+ * A reference video is never that photo — its cover is one frame and can be a blurry crop.
+ */
+export function arrangeAngle(items) {
+  const stills = []
+  const videos = []
+  const missing = []
+  for (const item of dedupePhotos(items)) {
+    if (isVideoMaterial(item)) videos.push(item)
+    else if (hasPicture(item)) stills.push(item)
+    else missing.push(item)
+  }
+  const plain = []
+  const pose = []
+  for (const item of stills) {
+    if (isPoseExtra(item)) pose.push(item)
+    else plain.push(item)
+  }
+  const ordered = plain.length ? [...plain, ...pose] : stills
+  return {
+    primary: ordered[0] || null,
+    extras: ordered.slice(1),
+    videos,
+    missing,
+  }
+}
+
 export function lookCover(look) {
   if (!look) return null
-  for (const [angle] of LOOK_ANGLES) {
-    const item = look.slots[angle] && look.slots[angle][0]
-    if (item && (item.poster_url || item.file_url)) return item
+  const pools = LOOK_ANGLES.map(([angle]) => (look.slots[angle] || []))
+  pools.push(look.extra || [])
+  for (const pool of pools) {
+    const still = pool.find((item) => !isVideoMaterial(item) && hasPicture(item))
+    if (still) return still
   }
-  return (look.extra || []).find((item) => item.poster_url || item.file_url) || null
+  for (const pool of pools) {
+    const any = pool.find((item) => hasPicture(item))
+    if (any) return any
+  }
+  return null
 }
 
 export function referenceImage(ref) {
@@ -41,6 +121,35 @@ export function referenceLine(ref, textOnly) {
     return `「${library}」里的「${look}${angle}」和外观描述比较接近，生成时会用这张。可以换一张，或改成只按文字生成。`
   }
   return `生成时会用「${library}」里的「${look}${angle}」。`
+}
+
+function realCandidatePhotos(candidates) {
+  return (Array.isArray(candidates) ? candidates : []).filter((item) => isRealPhotoUrl(item && item.file_url))
+}
+
+/**
+ * Portrait generation follows the library hit. A selected card photo is not that hit.
+ * Seed SVG tiles are not photos, so they must not make the "no reference" line look false.
+ */
+export function cardGenerationCopy({ reference, refImageUrl, candidates, selectedAssetId, textOnly } = {}) {
+  if (textOnly) return referenceLine(reference, true)
+  const ref = reference || {}
+  if ((ref.used === 1 || ref.used === true) && ref.source && ref.source !== 'NONE') {
+    return referenceLine(ref)
+  }
+  const photos = realCandidatePhotos(candidates)
+  const selectedReal = photos.some((item) => item.asset_id && item.asset_id === selectedAssetId)
+    || isRealPhotoUrl(refImageUrl)
+  if (selectedReal) {
+    return '这张卡上已经选定了一张照片，但这次生成不会用它，只按外观描述。'
+  }
+  if (photos.length) {
+    return '这次没有参考图，只按外观描述生成。下面的照片还没选定，这次生成也不会用它们。'
+  }
+  if (isPlaceholderMediaUrl(refImageUrl)) {
+    return '这次没有参考图，只按外观描述生成。'
+  }
+  return referenceLine(ref)
 }
 
 export function groupLooks(materials) {

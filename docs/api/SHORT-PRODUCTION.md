@@ -50,8 +50,9 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
   "one_line_pitch": "被退婚的落魄千金三年后带着资本回归" }
 ```
 
-可选：`genre` `episode_count` `episode_duration_sec` `visual_style`。默认 `REVENGE` / 24 / 90 /
-`MODERN_URBAN`，画幅固定 `VERTICAL_9_16`。创建后插入等量剧集占位，并入队 `TEXT` 大纲任务。
+可选：`genre` `episode_count` `episode_duration_sec` `visual_style`。请求省略时默认 `REVENGE` / 24 / 90 /
+`MODERN_URBAN`，画幅固定 `VERTICAL_9_16`。用户端新建页会显式提交先试做的 3 集 × 60 秒，不依赖这组省略默认。
+创建后插入等量剧集占位，并入队 `TEXT` 大纲任务。
 
 文本、图片或配音模型在当前网关不可用时，整次创建回滚，返回 `4014`。`message` 点明不能开始的步骤，
 例如「以下步骤现在不能开始：大纲、剧本、分镜（模型服务暂未开通）；配音（该模型暂未开放：BGSSAI TTS）。请稍后重试」。
@@ -216,6 +217,14 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 
 同上 + 余额校验。返回 `{ "batch_id", "task_id_list", "task_count", "estimated_cost_cent" }`。USER 限流。
 
+### POST /bgssai/user/ai-tasks/official-video/preview
+
+`{ "episode_id"?, "shot_id"?, "shot_ids"? }`。不写任务。每个镜头返回 `route`（`IMAGE_TO_VIDEO` 或 `TEXT_TO_VIDEO`）、`route_name`、`size_note`、`blocked`、`block_reason`、`estimated_cost_cent`。有真实 PNG/JPEG 且图生视频就绪时为图生视频，并写明 384×256、约 3 秒、不是竖屏。否则为文生视频，并写明约 720×480、约 6 秒。已排队或执行中的镜头 `blocked=1`。
+
+### POST /bgssai/user/ai-tasks/official-video/submit
+
+同上，且 `confirm_cost=1`。未确认不入队、不改镜头。确认后新建任务，请求里没有 `resume_request_id`。图生视频 `target_type=IMAGE_TO_VIDEO`，不占文生视频 GPU 车道；文生视频仍是 `bgssai-video`。只把镜头状态改为 `VIDEO_GENERATING`，不清除 `video_asset_id`。同一镜已有活动视频时返回 4006，文案「这一镜视频已在生成中」。USER 限流。
+
 ### GET /bgssai/user/ai-tasks/list
 
 query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id` `work_id`
@@ -238,6 +247,7 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 `skip_look_reference=1` 时这一次不附带知识库或角色卡上的参考图。
 
 list 每条另回 `task_status_name`、`task_type_name`、`recoverable_flag`、`cancellable_flag`。
+公司视频（`bgssai-video`）在排队时另回 `queue_ahead`、`progress_hint`（排队中，前面还有几条，一次只生成一条，通常每条约十多分钟）、`status_note`，`progress_percent` 为 0。执行中另回 `elapsed_sec` 和 `progress_hint`（已等待多久），进度随等待时间变化，不固定在 30。镜头列表的 `latest_task` 使用同一组字段。`image_prompt` 展示时带上已锁定的定妆外貌、服装、场景和道具。首帧若是占位图，`first_frame_placeholder_flag=1`，并给出 `reference_note`。
 TEXT / IMAGE / VIDEO / VOICE / COMPOSE 共用
 `QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`，可 `CANCELED`。
 

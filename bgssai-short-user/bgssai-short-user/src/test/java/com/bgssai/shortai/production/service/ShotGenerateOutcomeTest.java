@@ -37,6 +37,24 @@ class ShotGenerateOutcomeTest {
     }
 
     @Test
+    void seedVideoDoesNotCountAsFinished() {
+        ShortShotMapper shots = mock(ShortShotMapper.class);
+        ShortAiTaskMapper tasks = mock(ShortAiTaskMapper.class);
+        com.bgssai.shortai.mapper.ShortAssetMapper assets = mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        ShotGenerateOutcome outcome = outcome(shots, tasks);
+        org.springframework.test.util.ReflectionTestUtils.setField(outcome, "shortAssetMapper", assets);
+        when(tasks.countByExample(any())).thenReturn(0L);
+        when(shots.selectOneByExample(any())).thenReturn(shot("VIDEO_GENERATING", "as-dm-001-s01v01", "as-dm-001-s01i01"));
+        com.bgssai.shortai.model.ShortAsset seed = new com.bgssai.shortai.model.ShortAsset();
+        seed.setStorageKey("<svg xmlns='http://www.w3.org/2000/svg'>seed 9:16</svg>");
+        when(assets.selectOneByExample(any())).thenReturn(seed);
+
+        outcome.restoreBoundMedia(videoTask());
+
+        verify(shots, never()).restoreBoundMediaAfterTerminalTask(any(), any(), any());
+    }
+
+    @Test
     void failedFirstVideoReturnsToTheFirstFrame() {
         ShortShotMapper shots = mock(ShortShotMapper.class);
         ShortAiTaskMapper tasks = mock(ShortAiTaskMapper.class);
