@@ -1473,10 +1473,14 @@ public class ShortAiTaskWorker {
         ShortWorkExample wx = new ShortWorkExample();
         wx.createCriteria().andWorkIdEqualTo(workId).andDeletedFlagEqualTo(0);
         ShortWork work = shortWorkMapper.selectOneByExample(wx);
-        if (work == null || work.getAspectRatio() == null || work.getAspectRatio().isBlank()) {
+        if (work == null) {
             return "9:16";
         }
-        return work.getAspectRatio().trim();
+        String overrideRatio = ShortJson.text(ShortJson.map(work.getComposeSettingJson()).get("aspect_ratio"));
+        if (!overrideRatio.isBlank()) {
+            return com.bgssai.shortai.production.support.AspectRatios.normalize(overrideRatio);
+        }
+        return com.bgssai.shortai.production.support.AspectRatios.normalize(work.getAspectRatio());
     }
 
     private List<ShortCharacter> loadWorkCharacters(String workId) {

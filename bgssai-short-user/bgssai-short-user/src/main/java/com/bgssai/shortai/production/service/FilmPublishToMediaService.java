@@ -461,7 +461,7 @@ public class FilmPublishToMediaService {
     }
 
     public static boolean isValidAspectRatio(String aspectRatio) {
-        String normalized = (aspectRatio == null || aspectRatio.isBlank()) ? "9:16" : aspectRatio.trim();
+        String normalized = com.bgssai.shortai.production.support.AspectRatios.normalize(aspectRatio);
         return "9:16".equals(normalized)
                 || "16:9".equals(normalized)
                 || "1:1".equals(normalized)

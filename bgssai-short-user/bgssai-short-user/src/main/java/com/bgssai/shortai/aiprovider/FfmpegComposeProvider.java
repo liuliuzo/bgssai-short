@@ -194,8 +194,9 @@ public class FfmpegComposeProvider implements AiProvider {
     private record ClipInfo(double duration, boolean audio) { }
 
     private static Canvas canvasOf(AiProviderRequest request) {
-        String ratio = ShortJson.text(request.param(PARAM_ASPECT_RATIO)).trim();
-        return switch (ratio.isEmpty() ? "9:16" : ratio) {
+        String ratio = com.bgssai.shortai.production.support.AspectRatios.normalize(
+                ShortJson.text(request.param(PARAM_ASPECT_RATIO)));
+        return switch (ratio) {
             case "9:16" -> new Canvas(1080, 1920);
             case "16:9" -> new Canvas(1920, 1080);
             case "1:1" -> new Canvas(1080, 1080);

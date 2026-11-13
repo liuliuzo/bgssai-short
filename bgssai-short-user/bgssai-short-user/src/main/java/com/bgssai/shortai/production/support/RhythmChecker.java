@@ -144,7 +144,7 @@ public final class RhythmChecker {
     }
 
     public static Map<String, Object> validateAspectRatioAndSafeZone(String aspectRatio, Integer subtitleMarginPct) {
-        String normalized = (aspectRatio == null || aspectRatio.isBlank()) ? "9:16" : aspectRatio.trim();
+        String normalized = AspectRatios.normalize(aspectRatio);
         boolean ratioValid = "9:16".equals(normalized)
                 || "16:9".equals(normalized)
                 || "1:1".equals(normalized)
