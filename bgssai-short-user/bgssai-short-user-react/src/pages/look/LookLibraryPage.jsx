@@ -149,6 +149,23 @@ function uploadButtonStyle(disabled) {
   }
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function waitBatch(batchId) {
+  const deadline = Date.now() + 16 * 60 * 1000
+  while (Date.now() < deadline) {
+    const { data } = await productionApi.listTasks({ batch_id: batchId, page_num: 1, page_size: 20 })
+    const rows = Array.isArray(data?.result) ? data.result : []
+    if (rows.length && rows.every((row) => row.task_status === 'SUCCEEDED' || row.task_status === 'FAILED' || row.task_status === 'CANCELED')) {
+      return rows[0]
+    }
+    await sleep(2000)
+  }
+  return null
+}
+
 function sideMedia(look) {
   const extras = []
   const videos = []
@@ -349,6 +366,68 @@ export default function LookLibraryPage() {
     removeIds(ids)
   }
 
+  function faceStill(look) {
+    return arrangeAngle(look.slots.FRONT_FACE).primary
+  }
+
+  function missingBody(look) {
+    return LOOK_ANGLES.filter(([angle]) => angle !== 'FRONT_FACE' && !arrangeAngle(look.slots[angle]).primary)
+  }
+
+  async function generateAngles(look, angle, replace) {
+    if (!libraryId || !look || busy) return
+    const body = {
+      library_id: libraryId,
+      material_name: look.name,
+      replace_existing: replace ? 1 : 0,
+      confirm_cost: 0,
+    }
+    if (angle) body.view_angle = angle
+    setBusy(true)
+    let quote
+    try {
+      const { data } = await productionApi.completeLookAngles(body)
+      if (!data?.success) {
+        if (!data?.message) message.error('没有排上生成')
+        return
+      }
+      quote = data.result || {}
+    } catch {
+      message.error('没有排上生成')
+      return
+    } finally {
+      setBusy(false)
+    }
+    const names = (quote.angle_name_list || []).join('、') || '这一面'
+    const cost = Number(quote.estimated_cost_cent) || 0
+    const price = cost > 0 ? `预计 ${(cost / 100).toFixed(2)} 元。` : '费用按这次出图对账。'
+    Modal.confirm({
+      title: replace ? `按正脸重做${names}` : `按正脸生成${names}`,
+      content: `会把「${look.name}」的正脸交给模型，要求还是同一个人、同一套衣服。${price}模型有时仍会画走样，不满意可以再重做。`,
+      okText: '开始生成',
+      cancelText: '取消',
+      onOk: async () => {
+        setBusy(true)
+        try {
+          const { data } = await productionApi.completeLookAngles({ ...body, confirm_cost: 1 })
+          if (!data?.success || !data.result?.batch_id) {
+            if (!data?.message) message.error('没有排上生成')
+            return
+          }
+          const done = await waitBatch(data.result.batch_id)
+          if (!done) message.info('还在生成，可以到任务中心看结果')
+          else if (done.task_status !== 'SUCCEEDED') message.error(done.fail_reason || '这一面没有生成出来')
+          else message.success('已按正脸画好')
+          await load()
+        } catch {
+          message.error('没有排上生成')
+        } finally {
+          setBusy(false)
+        }
+      },
+    })
+  }
+
   function removeLook(look) {
     const items = [
       ...LOOK_ANGLES.flatMap(([angle]) => look.slots[angle]),
@@ -371,6 +450,8 @@ export default function LookLibraryPage() {
 
   function renderLook(look, draft) {
     const side = sideMedia(look)
+    const face = faceStill(look)
+    const missing = missingBody(look)
     return (
       <Card
         key={look.name}
@@ -439,10 +520,30 @@ export default function LookLibraryPage() {
                   >
                     {shown ? '再传一张' : '上传这一面'}
                   </button>
+                  {face && angle !== 'FRONT_FACE' ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => generateAngles(look, angle, !!shown)}
+                      style={{ ...uploadButtonStyle(busy), marginTop: 6 }}
+                    >
+                      {shown ? '按正脸重做' : '按正脸生成'}
+                    </button>
+                  ) : null}
                 </div>
               )
             })}
           </div>
+          {face ? (
+            <div style={{ marginTop: 8 }}>
+              <Text type="secondary">缺的面可以按正脸生成。侧面和背面会跟着这张正脸的人和衣服来画，模型有时仍会走样。</Text>
+              {missing.length >= 2 ? (
+                <div>
+                  <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => generateAngles(look, null, false)}>一次补齐缺的面</Button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {side.duplicated ? <div style={{ marginTop: 8 }}><Text type="secondary">有的照片在多个角色卡上是同一张，这里只显示一次。</Text></div> : null}
           {side.extras.length || side.broken.length ? (
             <div style={{ marginTop: 14 }}>

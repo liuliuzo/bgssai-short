@@ -563,6 +563,64 @@ function CharacterPane({ work }) {
     }
   }
 
+  async function completeAngles(row, angle, replace) {
+    if (!row || busyRef.current.has(row.character_id)) return
+    const body = {
+      character_id: row.character_id,
+      model_code: imageModelCode,
+      replace_existing: replace ? 1 : 0,
+      confirm_cost: 0,
+    }
+    if (angle) body.view_angle = angle
+    markBusy(row.character_id, true)
+    let quote
+    try {
+      const { data } = await productionApi.completeLookAngles(body)
+      if (!data?.success) {
+        if (!data?.message) message.error('没有排上生成')
+        return
+      }
+      quote = data.result || {}
+    } catch {
+      message.error('没有排上生成')
+      return
+    } finally {
+      markBusy(row.character_id, false)
+    }
+    const names = (quote.angle_name_list || []).join('、') || '这一面'
+    const cost = Number(quote.estimated_cost_cent) || 0
+    const price = cost > 0 ? `预计 ${(cost / 100).toFixed(2)} 元。` : '费用按这次出图对账。'
+    Modal.confirm({
+      title: replace ? `按正脸重做${names}` : `按正脸生成${names}`,
+      content: `会用「${row.character_name}」的正脸来画，要求还是同一个人、同一套衣服。${price}模型有时仍会画走样，不满意可以再重做。`,
+      okText: '开始生成',
+      cancelText: '取消',
+      onOk: async () => {
+        markBusy(row.character_id, true)
+        try {
+          const { data } = await productionApi.completeLookAngles({ ...body, confirm_cost: 1 })
+          if (!data?.success || !data.result?.task_id) {
+            if (!data?.message) message.error('没有排上生成')
+            return
+          }
+          const done = await waitTask(work.work_id, data.result.task_id)
+          if (done && done.task_status !== 'SUCCEEDED') {
+            message.error(done.fail_reason || '这一面没有生成出来')
+          } else if (done) {
+            message.success('已按正脸画好')
+          } else {
+            message.info('还在生成，可以到任务中心看结果')
+          }
+          load()
+        } catch {
+          message.error('没有排上生成')
+        } finally {
+          markBusy(row.character_id, false)
+        }
+      },
+    })
+  }
+
   const startPortrait = () => {
     if (!portrait || busyRef.current.has(portrait.id)) return
     const target = portrait
@@ -698,6 +756,26 @@ function CharacterPane({ work }) {
                 )
               })}
             </div>
+            {(viewOf('FRONT_FACE') || isRealPhotoUrl(row.ref_image_url)) ? (
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary">缺的面可以按正脸生成。侧面和背面会跟着这张正脸的人和衣服来画。</Text>
+                <Space wrap style={{ marginTop: 4 }}>
+                  {LOOK_ANGLES.filter(([angle]) => angle !== 'FRONT_FACE').map(([angle, label]) => (
+                    <Button
+                      key={angle}
+                      size="small"
+                      disabled={busyIds.has(row.character_id)}
+                      onClick={() => completeAngles(row, angle, !!viewOf(angle))}
+                    >
+                      {viewOf(angle) ? `按正脸重做${label}` : `按正脸生成${label}`}
+                    </Button>
+                  ))}
+                  {LOOK_ANGLES.filter(([angle]) => angle !== 'FRONT_FACE' && !viewOf(angle)).length >= 2 ? (
+                    <Button size="small" type="link" disabled={busyIds.has(row.character_id)} onClick={() => completeAngles(row, null, false)}>一次补齐缺的面</Button>
+                  ) : null}
+                </Space>
+              </div>
+            ) : null}
             <LibraryLookPicker
               kind="CHARACTER"
               libraryHref={libraryHref}

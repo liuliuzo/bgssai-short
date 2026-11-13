@@ -53,6 +53,7 @@
                 <div class="phone empty"><div class="ph-body">这一面<br>还没有照片</div></div>
                 <div style="height:28px"></div>
                 <div><button class="btn btn-default btn-sm">上传这一面</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">按正脸生成</button></div>
               </div>
               <div style="width:112px">
                 <div class="text-muted">背面</div>
@@ -90,8 +91,9 @@
         <code>GET /bgssai/user/look-libraries/list</code> ·
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
-        <code>POST /bgssai/user/look-materials/delete</code>。
-        多个知识库在左侧列表里点选。一个造型的正脸、前面、背面、侧面同一行对齐。没有照片的那一面写「这一面还没有照片」。点「查看」看大图，同一面的第二张、第三张也一样，放在「其他照片」。参考视频单独小图放在下面，点「播放」，封面发糊也不和定妆照一样大。列表素材带 <code>width</code>、<code>height</code>、<code>file_size_byte</code>，同一张重复照片只显示一次。角色卡上可以上传照片，也可以点选这里的造型。生成前写明将用哪一张；没有对上就只按文字生成。带 <code>return</code> 时显示「返回角色定妆」。视频用其中一帧交给模型。
+        <code>POST /bgssai/user/look-materials/delete</code> ·
+        <code>POST /bgssai/user/look-materials/complete-angles</code>。
+        多个知识库在左侧列表里点选。一个造型的正脸、前面、背面、侧面同一行对齐。没有照片的那一面写「这一面还没有照片」，可以上传，也可以「按正脸生成」。已有的侧面或背面可以「按正脸重做」。确认费用后才出图，请求带上正脸参考图，并要求同一个人、同一套衣服。站姿这类补充放到「其他照片」，不占主位。点「查看」看大图，同一面的第二张、第三张也一样，放在「其他照片」。参考视频单独小图放在下面，点「播放」，封面发糊也不和定妆照一样大。列表素材带 <code>width</code>、<code>height</code>、<code>file_size_byte</code>，同一张重复照片只显示一次。角色卡上可以上传照片，也可以点选这里的造型，也可以按正脸补面。生成前写明将用哪一张；没有对上就只按文字生成。带 <code>return</code> 时显示「返回角色定妆」。视频用其中一帧交给模型。
       </div>
     </div>
   </main>

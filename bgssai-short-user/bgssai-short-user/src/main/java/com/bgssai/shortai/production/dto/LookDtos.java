@@ -50,4 +50,29 @@ public final class LookDtos {
         public String getPosterBase64() { return posterBase64; }
         public void setPosterBase64(String posterBase64) { this.posterBase64 = posterBase64; }
     }
+
+    public static class LookCompleteReq {
+        private String libraryId;
+        private String materialName;
+        private String characterId;
+        private String viewAngle;
+        private String modelCode;
+        private Integer confirmCost;
+        private Integer replaceExisting;
+
+        public String getLibraryId() { return libraryId; }
+        public void setLibraryId(String libraryId) { this.libraryId = libraryId; }
+        public String getMaterialName() { return materialName; }
+        public void setMaterialName(String materialName) { this.materialName = materialName; }
+        public String getCharacterId() { return characterId; }
+        public void setCharacterId(String characterId) { this.characterId = characterId; }
+        public String getViewAngle() { return viewAngle; }
+        public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
+        public String getModelCode() { return modelCode; }
+        public void setModelCode(String modelCode) { this.modelCode = modelCode; }
+        public Integer getConfirmCost() { return confirmCost; }
+        public void setConfirmCost(Integer confirmCost) { this.confirmCost = confirmCost; }
+        public Integer getReplaceExisting() { return replaceExisting; }
+        public void setReplaceExisting(Integer replaceExisting) { this.replaceExisting = replaceExisting; }
+    }
 }
