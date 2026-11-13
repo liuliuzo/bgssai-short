@@ -37,7 +37,7 @@ export function isValidBillingMultiplier(multiplier) {
   return ALLOWED_MULTIPLIERS.some((allowed) => Math.abs(n - allowed) < 1e-9)
 }
 
-export function validateTokenhubCnRoute(row = {}) {
+export function validateDomesticGatewayRoute(row = {}) {
   const isString = typeof row === 'string'
   const region = isString
     ? DOMESTIC_GATEWAY_REGION
@@ -82,7 +82,7 @@ export function detectMultiplierDrift(selectedModel = {}, latestCatalogRow = {})
   if (!selectedModel || !latestCatalogRow) {
     return { changed: false, drifted: false, valid: true, reason: '' }
   }
-  const routeCheck = validateTokenhubCnRoute(latestCatalogRow)
+  const routeCheck = validateDomesticGatewayRoute(latestCatalogRow)
   if (!routeCheck.valid) {
     return {
       changed: true,
@@ -180,7 +180,8 @@ export function modelPricingLabel(row = {}) {
   const value = multiplier == null ? null : Number(multiplier)
   const parts = [name]
   if (isValidBillingMultiplier(value)) {
-    parts.push(`${value}×`)
+    const tier = value === 0.5 ? '经济倍率' : value === 1 ? '标准倍率' : '增强倍率'
+    parts.push(`${value}× ${tier}`)
   }
   if (row.price_version != null) {
     parts.push(`v${row.price_version}`)

@@ -59,7 +59,7 @@
         <div class="row">
           <span class="badge badge-info">生产目录</span>
           <div style="font-size:13px">
-            首批文本、视频、语音、ASR 与音乐模型只走境内中枢。密钥为
+            首批文本、视频、语音、ASR 与音乐模型统一接入境内模型服务通道。密钥引用为
             <code>ai.tokenhub_cn.api_key</code>。境外模型行保持停用，不作为回退。
             配置页只保存 <code>hub</code> / <code>secret_ref</code>，不保存密钥明文。
             真实密钥在 <a href="ai-secrets.html">AI 密钥</a> 页写入 <code>sys_secret</code>。
@@ -290,12 +290,12 @@
 
       <div class="spec">
         <div class="spec-t">公司视频选型</div>
-        <code>VIDEO / bgssai-video</code> 只选择国内中枢的公司视频配置，优先精确编号。
+        <code>VIDEO / bgssai-video</code> 优先匹配境内模型服务通道的标准视频生成配置。
         历史公司种子仅在供应商、国内区域和公开别名均相符时兼容；保持该行价格、超时与凭据引用。
         用户目录、估价与提交使用同一配置；缺少公司配置时不展示，不以第三方默认或零价临时模型替代。
         自定义别名与显式第三方编号保持原义；目录存在不代表上游已成功生成。
         表中 MiniMax 行是共享种子与生产库的 VIDEO 默认。开发库把启用的 <code>bgssai-video</code>
-        （国内中枢、<code>timeout_sec=900</code>）设为唯一 VIDEO 默认，并取消 MiniMax 与 <code>cogvideox</code> 的默认。
+        （境内网关通道、<code>timeout_sec=900</code>）设为唯一 VIDEO 默认，并取消 MiniMax 与 <code>cogvideox</code> 的默认。
         生产默认不改。
       </div>
 

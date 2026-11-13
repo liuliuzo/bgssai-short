@@ -80,7 +80,7 @@ export default function DramaAssistantDrawer({
     {
       sender: 'assistant',
       role: 'DIRECTOR',
-      text: '选择专家角色后提问。建议会走文本模型并读取当前作品上下文；写回需你确认，不会自动改作品。',
+      text: '请选择编剧、分镜导演、视觉或剪辑专家角色后提问。所有写回分镜字段的操作均需您二次确认后才会生效。',
     },
   ])
 
@@ -185,7 +185,7 @@ export default function DramaAssistantDrawer({
 
   return (
     <Drawer
-      title="AI戏剧多专家协同工作台"
+      title="AI 短剧多专家协同工作台"
       placement="right"
       width={460}
       open={visible}
@@ -196,11 +196,11 @@ export default function DramaAssistantDrawer({
         type="info"
         showIcon
         style={{ marginBottom: 12 }}
-        message="真实文本模型建议"
+        message="结合剧集与分镜上下文协同创作"
         description={
           currentShot?.shot_id
-            ? `已绑定作品与镜头 ${currentShot.shot_no || ''}；写回需二次确认。`
-            : '已绑定作品；未选中镜头时只给建议，不提供写回。'
+            ? `已关联当前作品与第 ${currentShot.shot_no || ''} 镜；采纳建议写回字段前需经您二次确认。`
+            : '已关联当前作品；未选中具体分镜时仅提供创作建议，不会直接修改分镜。'
         }
       />
 

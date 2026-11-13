@@ -13,7 +13,7 @@ export default function UsageReceipts({ workRef }) {
  }
  useEffect(() => { load() }, [workRef])
  return <Collapse style={{marginBottom:16}} items={[{key:'usage',label:'模型任务实际用量',children:<>
-  <p>逐次请求对账。待对账不代表免费。最多显示最近 100 次请求。</p>
+  <p>按每次生成任务实时登记用量；待对账表示费用结算进行中，此处最多展示最近 100 条调用记录。</p>
   <Button loading={loading} onClick={load}>刷新对账</Button>
   {error && <Alert type="warning" message={error} />}
   <Table size="small" rowKey={(row)=>row.request_id || row.task_ref} dataSource={rows} scroll={{x:1100}} columns={[

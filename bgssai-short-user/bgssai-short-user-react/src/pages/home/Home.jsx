@@ -132,7 +132,7 @@ export default function Home() {
         <Alert
           type="warning"
           showIcon
-          message="作品列表暂时读不到"
+          message="作品列表加载失败，请检查网络后重试"
           action={<Button size="small" onClick={load}>重试</Button>}
         />
       ) : null}

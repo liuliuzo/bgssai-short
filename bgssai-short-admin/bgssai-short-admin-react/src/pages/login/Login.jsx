@@ -90,7 +90,7 @@ export default function Login() {
         <div className="admin-login-head">
           <img className="admin-login-mark" src="/brand/bgss-mark-tile.png" alt="" width={52} height={52} />
           <h1 className="admin-login-title">BGSSAI 短剧 · 运营管理后台</h1>
-          <p className="admin-login-sub">仅限 ADMIN 角色登录</p>
+          <p className="admin-login-sub">管理控制台仅限授权管理员账号登录</p>
         </div>
 
         <form onSubmit={handleSubmit}>

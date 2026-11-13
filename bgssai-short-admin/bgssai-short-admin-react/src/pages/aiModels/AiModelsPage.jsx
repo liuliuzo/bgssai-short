@@ -184,7 +184,7 @@ export default function AiModelsPage() {
           <Form.Item name="max_retry" label="最大重试" rules={[{ required: true }]}>
             <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
-          <Form.Item name="config_json" label="config_json">
+          <Form.Item name="config_json" label="网关扩展配置 (JSON)">
             <Input.TextArea rows={3} placeholder='{"base_url":"...","secret_ref":"ai.openai_compat.api_key"}' />
           </Form.Item>
           <Form.Item name="default_flag" label="设为默认">

@@ -44,7 +44,7 @@ export default function QualityReportPage({ work, episodeId }) {
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <Card
         loading={loading}
-        title="质量"
+        title="成片质量门禁"
         extra={<Space>
           <Select style={{ width: 140 }} value={gateCode} options={GATES} onChange={setGateCode} />
           <Button type="primary" onClick={async () => {
@@ -58,7 +58,7 @@ export default function QualityReportPage({ work, episodeId }) {
               setResult(data.result)
               await load()
             }
-          }}>跑门禁</Button>
+          }}>执行质检</Button>
           <Button onClick={load}>刷新</Button>
         </Space>}
       >
@@ -94,7 +94,7 @@ export default function QualityReportPage({ work, episodeId }) {
                     })
                     message.success('已标记不改')
                     await load()
-                  }}>不改</Button>
+                  }}>保留现状</Button>
                 </Space>
               ),
             },
@@ -140,7 +140,7 @@ export default function QualityReportPage({ work, episodeId }) {
           ]}
         />
       </Card>
-      <Card title="多方案" extra={<Button onClick={async () => {
+      <Card title="关键节点多方案择优" extra={<Button onClick={async () => {
         const { data } = await featuresApi.qualityVariantsGenerate({
           work_id: work.work_id,
           episode_id: episodeId,
@@ -152,7 +152,7 @@ export default function QualityReportPage({ work, episodeId }) {
           message.success(`生成 ${data.result?.variant_list?.length || 0} 个方案`)
         }
       }}>生成开场方案</Button>}>
-        <Paragraph type="secondary">关键节点多方案择优入口已接通。</Paragraph>
+        <Paragraph type="secondary">针对开场黄金三秒与集尾钩子生成多套候选分镜方案，辅助导演对比择优。</Paragraph>
       </Card>
     </Space>
   )

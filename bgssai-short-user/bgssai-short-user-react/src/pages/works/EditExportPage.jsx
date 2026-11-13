@@ -106,8 +106,8 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
         type="info"
         showIcon
         style={{ marginBottom: 12 }}
-        message="导出不要求本集已合成、已过审"
-        description="剪辑工程是拿出去改的，前置只要求至少有一个镜头出了视频。缺片的镜头会列在下面，时间轴上直接跳过，不插黑场占位。导出不调模型、不计费、不占配额，也不会改动成片与审核状态。"
+        message="支持随时导出剪辑工程草稿"
+        description="只要本集至少包含一个已生成视频的分镜即可导出工程包；暂未出片的分镜将在下方清单中标注并在时间轴上自动跳过。导出工程不消耗模型额度，也不会变更成片与审核状态。"
       />
 
       <Card title="导出基准" size="small" style={{ marginBottom: 12 }}>

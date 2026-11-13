@@ -17,7 +17,7 @@ function ChannelTable({ rows, loading, onEdit, onActive, nameKey, extraKey }) {
         { title: '商户名', dataIndex: 'merchant_name' },
         { title: extraKey === 'mch_id' ? '商户号' : 'AppId', dataIndex: extraKey === 'mch_id' ? 'mch_id' : 'app_id' },
         { title: '部署环境 / 支付网关', dataIndex: 'env_mode', render: (v) => `${deployEnvLabel()} · ${v === 'SANDBOX' ? '沙箱网关' : '正式网关'}` },
-        { title: '凭据••••末四位', key: 'secret_mask', render: (_, row) => row.app_private_key || row.mch_private_key || row.api_v3_key || '—' },
+        { title: '密钥掩码', key: 'secret_mask', render: (_, row) => row.app_private_key || row.mch_private_key || row.api_v3_key || '—' },
         { title: '启用', dataIndex: 'is_enabled', render: (v) => (v ? '是' : '否') },
         { title: '收款', dataIndex: 'is_collection_active', render: (v) => (v ? '是' : '否') },
         {
@@ -72,7 +72,7 @@ export default function PayMerchantsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>支付商户</Title>
-      <Paragraph type="secondary">支付宝 / 微信商户配置。列表只显示 ••••末四位；编辑不回填凭据，留空保存保持库中原值。</Paragraph>
+      <Paragraph type="secondary">管理支付宝与微信支付收款商户配置。敏感密钥仅展示掩码，编辑时留空即保留原有配置。</Paragraph>
       <Card extra={<Button type="primary" onClick={() => { form.resetFields(); setOpen(true) }}>新建</Button>}>
         <Tabs
           onChange={setChannel}

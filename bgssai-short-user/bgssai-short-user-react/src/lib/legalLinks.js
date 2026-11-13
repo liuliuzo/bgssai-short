@@ -1,7 +1,7 @@
 /**
  * Official legal pages live only on bgssai-website.
  * Paths match bgssai-website docs/legal/README.md EXACTLY.
- * This module is outbound links. Status: 需法务审阅.
+ * Outbound links to official legal documents on bgssai-website.
  * Approved ICP filing for bgssai-short.com: 苏ICP备2024070062号-15.
  * Do not invent other ICP / license numbers.
  *

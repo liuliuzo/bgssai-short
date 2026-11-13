@@ -75,17 +75,17 @@ export default function BotDownloadPage() {
         </Space>
       ) : null}
 
-      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 Bgssai Bot</Title>
+      <Title level={loggedIn ? 4 : 3} style={{ marginTop: 0 }}>下载 BGSSAI Bot</Title>
       <Paragraph type="secondary">
-        安装后可将本应用托管给 Bot 直接操作。本页可在未登录时访问；安装包由本站提供。
+        安装 BGSSAI Bot 桌面客户端后，可通过自然语言对话授权智能体协助完成本应用内的日常操作，支持 Windows 与 Linux 环境。
       </Paragraph>
 
       {items.length === 0 && !loading ? (
         <Alert
           type="info"
           showIcon
-          message="安装包即将上线"
-          description="当前尚未发布可下载的安装包，请稍后再来，或关注产品更新通知。"
+          message="当前暂无可下载的安装包"
+          description="最新版本正在准备中，发布后即可在此直接下载对应系统的安装程序。"
           style={{ marginBottom: 24 }}
         />
       ) : (

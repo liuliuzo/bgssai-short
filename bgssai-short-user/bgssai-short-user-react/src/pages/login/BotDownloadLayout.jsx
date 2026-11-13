@@ -23,7 +23,7 @@ export default function BotDownloadLayout({ children }) {
         </span>
         <Link to="/download/bot">
           <DownloadIcon />
-          下载 Bgssai Bot
+          下载 BGSSAI Bot
         </Link>
       </nav>
       <div className="bot-download-content">{children}</div>
