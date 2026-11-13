@@ -1287,130 +1287,130 @@
   "historical_suites": [
     {
       "path": "docs/review/test-cases/TC-ai-capability-usage.md",
-      "sha256": "ef4562d0abb06e46f066476bf32ae1d3934a57c8bb5398490cc064f595e73bc6"
+      "sha256": "b7b9ae2b7fa31a173eccaeca17bb6cbef139060e9d1e2c76a0c8f2701cefb006"
     },
     {
       "path": "docs/review/test-cases/TC-ai-model-integration.md",
-      "sha256": "7ee2a19339075255a32411c965c526da6019ecade892d402e15a05836bd6d359"
+      "sha256": "6271a0caf25e7b1d3e5c2e70c7baad3913a9ff17b0a340308c9ed10b130f9f0b"
     },
     {
       "path": "docs/review/test-cases/TC-asset-consistency-panel.md",
-      "sha256": "619a7aac509db1a5876fa3541f012bffe0a0d9f28edd99744db461fcabd19f49"
+      "sha256": "d9c0f3d0584c4f60b8309e28bb65369b8c94b002be336a46fbfcff4421b2241b"
     },
     {
       "path": "docs/review/test-cases/TC-bot-mobile-downloads.md",
-      "sha256": "e929fc7a97629354f155f961d4b85a3acce9f9e6751736364b97f0418c2a84a6"
+      "sha256": "1f1e77908a6a161a6abf74faf93167c01f417bbecc1a491fb931c4539b4fc0d1"
     },
     {
       "path": "docs/review/test-cases/TC-character-bible.md",
-      "sha256": "4eb7aa4f89a2219a1135e76fe94ee98219ffeb5c63e2715236604d55186115f6"
+      "sha256": "e9c7ab5cab2ef12398bdb462a20e9e5ed2ea81bbd71bbf3d4c045f491cf798ea"
     },
     {
       "path": "docs/review/test-cases/TC-content-compliance.md",
-      "sha256": "5a8d86aeef9ccaa388b75a23ea5d9a2e81ef20b0d11120d7293aa5b1280979ab"
+      "sha256": "da1ccd01f50483c0f6f7f700c044ca4b41601eacc7a1bf005d5bbb45b49b9733"
     },
     {
       "path": "docs/review/test-cases/TC-edit-project-export.md",
-      "sha256": "8b714a87abcbb43ce8478660aaaff47ed3bed265d7ad679fae93f53176fad695"
+      "sha256": "474e2572cf6b2e91739fa87378374387c81317ae2afd7f721d8abb2252005813"
     },
     {
       "path": "docs/review/test-cases/TC-film-compose-export.md",
-      "sha256": "43d255c07c3d720696064a3be6348616c61fd6e59e9f4fc42a0d05ed8de5ebd4"
+      "sha256": "bb077efc4377527de7648d51bee3da08278172006734a9f751efe2ddfbfa8c0c"
     },
     {
       "path": "docs/review/test-cases/TC-film-publish-media.md",
-      "sha256": "694d6e20ea081f7a454b2b8bdb396fa0e79d1057fc1b9f100fe1285f22a7143a"
+      "sha256": "11290b2bd9358ba501314e56dbdd1ffb3357095a7191cab359e482425da6c07a"
     },
     {
       "path": "docs/review/test-cases/TC-frame-continuity.md",
-      "sha256": "0790b3af9b571629978b5ad5256e9880668ffaff8808b0ef7dd922b7ad38395f"
+      "sha256": "39188d2dfcc109e004c8a62d1dc95e11acbf200be5651e8da8535eaa2d16721e"
     },
     {
       "path": "docs/review/test-cases/TC-health-check.md",
-      "sha256": "1bbe0d8f175f7ed26b5b6049fec7a6dc9fb5a4817a6188fabc4210dc1b53c743"
+      "sha256": "91e8973bd255a69aa0adf26da74eceafdb1710fb7a0d19b7fa3aad8e03172067"
     },
     {
       "path": "docs/review/test-cases/TC-in-app-support.md",
-      "sha256": "0410bc8c10f4b4865f27db878bde50c3fd5a19c4e697418edd0a29302e242a99"
+      "sha256": "8b4410b795c1993845187ac84621f93b42c19dca92e6f55fc37fc7255bb5dcaf"
     },
     {
       "path": "docs/review/test-cases/TC-launch-audit-20260907.md",
-      "sha256": "db453d5cec54abaf665b153e90c4bccb6baf9cf422a7e7b986adecb61a230702"
+      "sha256": "f99dc4fe04e7eb2a7561d3e8b4fb0bc5e328fae073c7da7ab3789f3f9a21a313"
     },
     {
       "path": "docs/review/test-cases/TC-legal-fan-out.md",
-      "sha256": "5b02dc3e218997c2515f4e2c687e4ee1ff9a54214c5f792b1d3ad698b3025e89"
+      "sha256": "2c714dfd420e4be83586a32023d680fb94cba61162fa4a47f9c8c949dda19bbb"
     },
     {
       "path": "docs/review/test-cases/TC-mcp-server.md",
-      "sha256": "02007921cf91812078682dd674ce83fb7fadc9ca4a51d64cfd033a3653fce6f8"
+      "sha256": "0b839eed0ebd32b4b050c5488dbef9ead8d4ebfcfdc6bb83feeb637580172fb4"
     },
     {
       "path": "docs/review/test-cases/TC-mobile-in-bot-shell.md",
-      "sha256": "35746196dbca8a2c1efe2dd91f5f3fe0dfa2dcaf603560afe263e37eeb869cfe"
+      "sha256": "dff094e8a5021bcab3c1f0ed476e5646d84fedbabf8743e2f6b83b5051cb39ef"
     },
     {
       "path": "docs/review/test-cases/TC-previz-text-storyboard.md",
-      "sha256": "f45d18752a6b6b11eafea8a27a41fb136d292834ab47d8fa63065995662257ab"
+      "sha256": "7bf4c2eb8c68f6e77841e895afb0856d3a15774e5bef57516203e5511b8db5e8"
     },
     {
       "path": "docs/review/test-cases/TC-quality-pipeline.md",
-      "sha256": "3af624bf3f3cb40e91089242bd8f1049f7d003a546778a6a2d84fa575b0533c2"
+      "sha256": "f9afc6b920b4f6d86e90b2b01b408aeca26a88ab74e067ab04d7d91dfc5ba811"
     },
     {
       "path": "docs/review/test-cases/TC-script-studio.md",
-      "sha256": "fb19244ae53bddbcd70d3f1208ac3baf6c182d5da99fc622e2a7f0c4716da6e1"
+      "sha256": "866f4b49fdae90648666dc76ba3fe30131b0a5d229c900ddb698d6f170cd0930"
     },
     {
       "path": "docs/review/test-cases/TC-short-01-commercial-gate.md",
-      "sha256": "951f6f5a031d36679184656efab04b7075e630a679ab4a59b60b55ce695bcf3f"
+      "sha256": "70d856539ffe5e9c2084ed173c2033421967df328c9d557ff9a577d06c662356"
     },
     {
       "path": "docs/review/test-cases/TC-short-work-management.md",
-      "sha256": "2715d95190eec4fb859a99824d3507fb6fd8be9051d4d8c57dc7c376983ea9e3"
+      "sha256": "826e6e5a0f1621b6774938876abe8474831dc25d0a077a8b40abd719ffc06cf7"
     },
     {
       "path": "docs/review/test-cases/TC-shot-generation.md",
-      "sha256": "005b1f91a06dcaad64c186a56d5130637013d1bbc5df525c7958a7e01c308364"
+      "sha256": "811ed0f7331e61ea05aca7fb7df03b450095d50297e1c9bbe63284dd99e017c7"
     },
     {
       "path": "docs/review/test-cases/TC-source-import.md",
-      "sha256": "91240b4c126d425f89d762d7f8d55a4e5007d3e9dc061691a9bebd95fd3164cb"
+      "sha256": "b3ed4bda224ce1b8bd6d1e7abf83b68cd1fd1e8412003f418a33f57b06454ec8"
     },
     {
       "path": "docs/review/test-cases/TC-story-map.md",
-      "sha256": "510c5107ca77580662cdc230606672b277f94a4d7d0be960a2aa1440621b9be7"
+      "sha256": "e65906bbdf22e8968c7812d4152774ce3017e7dbe6ff805ae6fb3ad692ba8dc2"
     },
     {
       "path": "docs/review/test-cases/TC-storyboard-canvas.md",
-      "sha256": "20db0b4bfb76ff7e7313ee6028d74d522336daa622cb18a4e817c93ca663b438"
+      "sha256": "a2ea86430241c69de1c922bef18031b00567c863d7761ffef726b374eccbb81e"
     },
     {
       "path": "docs/review/test-cases/TC-storyboard-workbench.md",
-      "sha256": "1a0cd968c094c589ec313163e16c20b36d686961d14d98e1d0fc79a0bdfcb62e"
+      "sha256": "9382eca31add18aed7502a746ddec64bffa2ffd9d88a65e760a5bb0c97e30d8a"
     },
     {
       "path": "docs/review/test-cases/TC-subscription-credit.md",
-      "sha256": "23a91c0e36b993f4239d42c6f915ebdfa392730a625b04ee471e4f22cf5f9603"
+      "sha256": "ed2f6fc28af6eb9c79f7b74dce0bc0928e244eeaed8fdb007a8570c7cce7e494"
     },
     {
       "path": "docs/review/test-cases/TC-ux-three-questions.md",
-      "sha256": "df369b8aee89a2e63ebdf9acdf6b051f14fe90818208c588f86103bc4bcaebff"
+      "sha256": "ca3fe7cfb2b82dcc3c364a8e0b9d3433d6fe518af47f3b924c9f9a4ebf159064"
     },
     {
       "path": "docs/review/test-cases/TC-voice-subtitle.md",
-      "sha256": "35c6e4f19e18828af6941146fbb43b428d0cb48eb066d92b2165d2a76ea460e2"
+      "sha256": "cf26cf0692e2491b75ab056b7b682175242229118e8d827cadb6d0bce5bb01d9"
     },
     {
       "path": "docs/test/TC-dev-20261015.md",
-      "sha256": "4af0d947ba0fd76944a461d80e96e049779ae137fda8a6cabe7c45813f5016da"
+      "sha256": "8650603fcd38a99a876f1b0efe1bf27ebc75bc50f10b12158d47762648453eb3"
     }
   ],
   "progress": {
     "待测": 63,
-    "通过": 4,
+    "通过": 15,
     "失败": 0,
-    "阻塞": 13,
+    "阻塞": 18,
     "不适用": 0
   },
   "suite_counts": {
@@ -1419,6 +1419,13 @@
       "通过": 4,
       "失败": 0,
       "阻塞": 0,
+      "不适用": 0
+    },
+    "TC-dev-20261108.md": {
+      "待测": 0,
+      "通过": 11,
+      "失败": 0,
+      "阻塞": 5,
       "不适用": 0
     },
     "TC-feature-gaps-20261017.md": {
