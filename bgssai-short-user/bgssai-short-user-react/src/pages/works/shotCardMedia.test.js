@@ -64,6 +64,26 @@ test('an in-flight failed regen can still say the existing clip remains', () => 
   assert.equal(badge.text.includes('已失败'), false)
 })
 
+test('official video queue is not shown as running', () => {
+  const row = {
+    shot_status: 'VIDEO_GENERATING',
+    video_placeholder_flag: 1,
+    video_asset_id: 'as-dm-001-s01v01',
+    video_url: 'data:image/svg+xml;base64,abc',
+    latest_task: {
+      task_type: 'VIDEO',
+      task_type_name: '视频',
+      task_status: 'QUEUED',
+      task_status_name: '排队中',
+      status_note: '前面还有 2 条',
+    },
+  }
+  assert.equal(shotHasBoundVideo(row), false)
+  assert.match(shotLatestTaskBadge(row).text, /排队中/)
+  assert.match(shotLatestTaskBadge(row).text, /前面还有 2 条/)
+  assert.equal(shotLatestTaskBadge(row).text.includes('执行中'), false)
+})
+
 test('a settled ready clip still shows a video job that is actually running', () => {
   const row = {
     shot_status: 'VIDEO_READY',

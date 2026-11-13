@@ -27,6 +27,7 @@ import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.aiprovider.AiProvider;
 import com.bgssai.shortai.aiprovider.AiProviderRegistry;
 import com.bgssai.shortai.aiprovider.ImageConditionedVideoProtocol;
+import com.bgssai.shortai.aiprovider.OfficialVideoStillOpenException;
 import com.bgssai.shortai.aiprovider.AiProviderRequest;
 import com.bgssai.shortai.aiprovider.AiProviderResult;
 import com.bgssai.shortai.aiprovider.FfmpegComposeProvider;
@@ -74,6 +75,7 @@ import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.EditBaselineCards;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
+import com.bgssai.shortai.production.support.OfficialVideoLane;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.LookViewPrompt;
 import com.bgssai.shortai.production.support.CardAssetSelection;
@@ -169,6 +171,11 @@ public class ShortAiTaskWorker {
 
     private final AtomicInteger pollFailureStreak = new AtomicInteger();
     private volatile long pollPauseUntilEpochMs;
+    /** Company video calls currently inside this process. The lane stays at one. */
+    private final java.util.Set<Long> officialInFlight = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    @Autowired(required = false)
+    private com.bgssai.shortai.billing.UsageReceiptService usageReceiptService;
 
     @Scheduled(fixedDelay = 800)
     public void tick() {
@@ -176,10 +183,11 @@ public class ShortAiTaskWorker {
             return;
         }
         try {
+            boolean officialBusy = reconcileOfficialLane();
             ShortAiTaskExample ex = new ShortAiTaskExample();
             ex.createCriteria().andTaskStatusEqualTo("QUEUED");
-            ex.setOrderByClause("id asc");
-            ShortAiTask task = shortAiTaskMapper.selectOneByExample(ex);
+            ex.setOrderByClause("id asc limit 40");
+            ShortAiTask task = OfficialVideoLane.nextClaim(shortAiTaskMapper.selectByExample(ex), officialBusy);
             if (task == null) {
                 onPollSuccess();
                 return;
@@ -187,7 +195,7 @@ public class ShortAiTaskWorker {
             ShortAiTask running = new ShortAiTask();
             running.setTaskStatus("RUNNING");
             running.setStartedTime(new Date());
-            running.setProgressPercent(30);
+            running.setProgressPercent(OfficialVideoLane.isOfficial(task) ? 8 : 30);
             running.setUpdatedTime(new Date());
             ShortAiTaskExample cas = new ShortAiTaskExample();
             cas.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("QUEUED");
@@ -196,12 +204,7 @@ public class ShortAiTaskWorker {
                 onPollSuccess();
                 return;
             }
-            try {
-                aiTaskExecutor.execute(() -> run(task));
-            } catch (RejectedExecutionException rejected) {
-                // 池子满了就把任务退回排队，交给下一轮 tick，不在内存里堆积。
-                requeue(task);
-            }
+            submitWorker(task, true);
             onPollSuccess();
         } catch (DataAccessException ex) {
             onPollFailure("tick", ex);
@@ -235,6 +238,15 @@ public class ShortAiTaskWorker {
                     continue;
                 }
                 long ageSec = (System.currentTimeMillis() - started.getTime()) / 1000L;
+                if (OfficialVideoLane.isOfficial(task)) {
+                    if (ageSec >= OfficialVideoLane.MAX_OPEN_SEC) {
+                        if (failIfRunning(task, "MODEL_TIMEOUT", "公司视频等待过久，仍未拿到成片")) noteTerminalFailure(task);
+                    } else if (ageSec >= 180 && !officialInFlight.contains(task.getId())
+                            && OfficialVideoLane.resumeId(task).isBlank() && !hasDurableReceipt(task)) {
+                        if (failIfRunning(task, "MODEL_TIMEOUT", "公司视频没有提交回执，生成未开始")) noteTerminalFailure(task);
+                    }
+                    continue;
+                }
                 if (ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
                     if (!ImageToVideoPolicy.hasProviderJob(task)) {
                         if (ageSec >= 180) {
@@ -396,9 +408,16 @@ public class ShortAiTaskWorker {
                         "任务结果未能落账（可能已被超时回收），请在任务中心重试")) noteTerminalFailure(task);
             }
         } catch (BizException exBiz) {
+            if (keepOfficialVideoOpen(task, exBiz)) {
+                return;
+            }
             if (failIfRunning(task, exBiz.getCode(), exBiz.getMessage())) noteTerminalFailure(task);
         } catch (Exception exAll) {
             log.warn("ai task failed taskId={}", task.getTaskId(), exAll);
+            if (OfficialVideoLane.isOfficial(task) && OfficialVideoLane.deferrable(null, exAll.getMessage())
+                    && keepOfficialVideoOpen(task, null)) {
+                return;
+            }
             if (failIfRunning(task, "MODEL_TIMEOUT", exAll.getMessage())) noteTerminalFailure(task);
         } finally {
             executionUsage.remove();
@@ -418,6 +437,208 @@ public class ShortAiTaskWorker {
                     task.getTaskId(), ex.getClass().getSimpleName());
             failIfRunning(task, "I2V_AMBIGUOUS", ImageConditionedVideoProtocol.AMBIGUOUS);
         }
+    }
+
+    /**
+     * One company video stays 执行中. Any other company video still marked 执行中 goes back to 排队中
+     * and keeps the original receipt, so the next turn polls that job instead of starting a new one.
+     * @return true when a company video is already occupying the lane
+     */
+    private boolean reconcileOfficialLane() {
+        java.util.List<ShortAiTask> running = officialRunning();
+        ShortAiTask keeper = null;
+        for (ShortAiTask task : running) {
+            if (task.getId() != null && officialInFlight.contains(task.getId())) {
+                keeper = task;
+                break;
+            }
+        }
+        if (keeper == null && !running.isEmpty()) {
+            keeper = running.get(0);
+        }
+        for (ShortAiTask extra : running) {
+            if (keeper != null && keeper.getId() != null && keeper.getId().equals(extra.getId())) {
+                continue;
+            }
+            if (extra.getId() != null && officialInFlight.contains(extra.getId())) {
+                continue;
+            }
+            demoteOfficial(extra);
+        }
+        return keeper != null || !officialInFlight.isEmpty();
+    }
+
+    @Scheduled(fixedDelay = 4_000)
+    public void continueOfficialVideo() {
+        if (isPollPaused()) {
+            return;
+        }
+        try {
+            java.util.List<ShortAiTask> running = officialRunning();
+            ShortAiTask active = null;
+            for (ShortAiTask task : running) {
+                if (task.getId() != null && officialInFlight.contains(task.getId())) {
+                    return;
+                }
+                if (active == null) {
+                    active = task;
+                }
+            }
+            if (active == null || active.getId() == null) {
+                return;
+            }
+            long updated = active.getUpdatedTime() == null ? 0L : active.getUpdatedTime().getTime();
+            if (System.currentTimeMillis() - updated < 3_000L) {
+                return;
+            }
+            if (OfficialVideoLane.resumeId(active).isBlank() && !adoptReceipt(active)) {
+                return;
+            }
+            submitWorker(active, false);
+        } catch (DataAccessException ex) {
+            onPollFailure("continueOfficialVideo", ex);
+        } catch (RuntimeException ex) {
+            if (looksLikeSchemaOrDatasourceFailure(ex)) {
+                onPollFailure("continueOfficialVideo", ex);
+            } else {
+                log.error("official video continue failed", ex);
+            }
+        }
+    }
+
+    private void submitWorker(ShortAiTask task, boolean requeueOnReject) {
+        boolean trackOfficial = OfficialVideoLane.isOfficial(task) && task.getId() != null;
+        if (trackOfficial) {
+            officialInFlight.add(task.getId());
+        }
+        try {
+            aiTaskExecutor.execute(() -> {
+                try {
+                    run(task);
+                } finally {
+                    if (trackOfficial) {
+                        officialInFlight.remove(task.getId());
+                    }
+                }
+            });
+        } catch (RejectedExecutionException rejected) {
+            if (trackOfficial) {
+                officialInFlight.remove(task.getId());
+            }
+            if (requeueOnReject) {
+                requeue(task);
+            }
+        }
+    }
+
+    private java.util.List<ShortAiTask> officialRunning() {
+        ShortAiTaskExample ex = new ShortAiTaskExample();
+        ex.createCriteria().andTaskStatusEqualTo("RUNNING").andTaskTypeEqualTo("VIDEO")
+                .andModelCodeEqualTo(OfficialVideoLane.MODEL);
+        ex.setOrderByClause("id asc");
+        java.util.List<ShortAiTask> rows = shortAiTaskMapper.selectByExample(ex);
+        java.util.List<ShortAiTask> official = new java.util.ArrayList<>();
+        if (rows == null) {
+            return official;
+        }
+        for (ShortAiTask row : rows) {
+            if (OfficialVideoLane.isOfficial(row) && "RUNNING".equals(row.getTaskStatus())) {
+                official.add(row);
+            }
+        }
+        return official;
+    }
+
+    private void demoteOfficial(ShortAiTask task) {
+        adoptReceipt(task);
+        ShortAiTask back = new ShortAiTask();
+        back.setTaskStatus("QUEUED");
+        back.setProgressPercent(0);
+        back.setRequestJson(task.getRequestJson());
+        back.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+        shortAiTaskMapper.updateByExampleSelective(back, up);
+        log.info("official video waiting taskId={}", task.getTaskId());
+    }
+
+    private boolean adoptReceipt(ShortAiTask task) {
+        if (!OfficialVideoLane.resumeId(task).isBlank()) {
+            return true;
+        }
+        String requestId = lookupReceipt(task);
+        if (requestId == null || requestId.isBlank()) {
+            return false;
+        }
+        Map<String, Object> req = new LinkedHashMap<>(ShortJson.map(task.getRequestJson()));
+        req.put("resume_request_id", requestId);
+        String json = ShortJson.toJson(req);
+        ShortAiTask patch = new ShortAiTask();
+        patch.setRequestJson(json);
+        patch.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
+        shortAiTaskMapper.updateByExampleSelective(patch, up);
+        task.setRequestJson(json);
+        return true;
+    }
+
+    private boolean keepOfficialVideoOpen(ShortAiTask task, BizException error) {
+        if (!OfficialVideoLane.isOfficial(task)) {
+            return false;
+        }
+        String hinted = error instanceof OfficialVideoStillOpenException open ? open.requestId() : null;
+        boolean defer = error == null || error instanceof OfficialVideoStillOpenException
+                || OfficialVideoLane.deferrable(error.getCode(), error.getMessage());
+        if (!defer) {
+            return false;
+        }
+        String requestId = hinted == null || hinted.isBlank() ? OfficialVideoLane.resumeId(task) : hinted;
+        if (requestId == null || requestId.isBlank()) {
+            requestId = lookupReceipt(task);
+        }
+        if (requestId == null || requestId.isBlank()) {
+            return false;
+        }
+        Map<String, Object> req = new LinkedHashMap<>(ShortJson.map(task.getRequestJson()));
+        req.put("resume_request_id", requestId);
+        String json = ShortJson.toJson(req);
+        ShortAiTask patch = new ShortAiTask();
+        patch.setRequestJson(json);
+        patch.setUpdatedTime(new Date());
+        ShortAiTaskExample up = new ShortAiTaskExample();
+        ShortAiTaskExample.Criteria criteria = up.createCriteria().andIdEqualTo(task.getId())
+                .andTaskStatusEqualTo("RUNNING");
+        if (task.getRetryCount() == null) {
+            criteria.andRetryCountIsNull();
+        } else {
+            criteria.andRetryCountEqualTo(task.getRetryCount());
+        }
+        boolean alreadyOpen = requestId.equals(OfficialVideoLane.resumeId(task));
+        if (shortAiTaskMapper.updateByExampleSelective(patch, up) == 1) {
+            task.setRequestJson(json);
+            log.info("official video remains open taskId={} resume existing receipt", task.getTaskId());
+            return true;
+        }
+        return alreadyOpen;
+    }
+
+    private String lookupReceipt(ShortAiTask task) {
+        if (usageReceiptService == null || task == null) {
+            return null;
+        }
+        try {
+            com.bgssai.shortai.billing.UsageReceiptRow row = usageReceiptService.requireVideoReceipt(
+                    task.getUserId(), task.getWorkId(), task.getTaskId(), OfficialVideoLane.MODEL);
+            return row == null ? null : row.requestId;
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
+    private boolean hasDurableReceipt(ShortAiTask task) {
+        String id = lookupReceipt(task);
+        return id != null && !id.isBlank();
     }
 
     private void requeue(ShortAiTask task) {
@@ -896,12 +1117,21 @@ public class ShortAiTaskWorker {
             request.getParams().put("duration_sec", shot.getShotDurationSec());
         }
         ConsistencyBundle consistency = loadConsistency(shot);
-        String prompt = ShotConsistency.withConsistency(shotPrompt(shot, ability), consistency.fragment());
+        String prompt = ShotConsistency.leadWithAnchors(shotPrompt(shot, ability), consistency.fragment());
         request.setPrompt(prompt);
         if ("VIDEO".equals(ability)) {
             String resumeId = ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id"));
             if (!resumeId.isBlank()) request.getParams().put("resume_request_id", resumeId);
-            else attachFrames(shot, request, model);
+            else {
+                attachFrames(shot, request, model);
+                if (OfficialVideoLane.isOfficial(task) && !hasReferenceImage(request)) {
+                    attachRealAnchors(consistency, request);
+                }
+                if (OfficialVideoLane.isOfficial(task) && !hasReferenceImage(request) && claimedReference(shot, consistency)) {
+                    throw new BizException(CommonErrorCode.RULE_REJECT,
+                            "镜" + shot.getShotNo() + " 的首帧和定妆都还是占位图，不能拿来生成视频。请先换成真实定妆照片，并出一张首帧。");
+                }
+            }
         } else {
             attachConsistencyRefs(consistency, request);
         }
@@ -912,6 +1142,9 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
                     ("VIDEO".equals(ability) ? "video" : "image")
                             + " provider returned empty content");
+        }
+        if (OfficialVideoLane.isOfficial(task) && !OfficialVideoLane.isRealMp4(result.getBinaryContent())) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "还没有拿到可播放的视频成片");
         }
         if (recoveringVideo) {
             finishRecoveredVideo(task, shot, result);
@@ -980,7 +1213,7 @@ public class ShortAiTaskWorker {
                 || !Objects.equals(task.getWorkId(), current.getWorkId())
                 || !Objects.equals(task.getEpisodeId(), current.getEpisodeId())
                 || "LOCKED".equals(current.getShotStatus())
-                || (current.getVideoAssetId() != null && !current.getVideoAssetId().isBlank())
+                || realVideoBound(current)
                 || !Objects.equals(original.getUpdatedTime(), current.getUpdatedTime())
                 || !Objects.equals(original.getShotVersion(), current.getShotVersion())
                 || !Objects.equals(original.getPromptVersion(), current.getPromptVersion())
@@ -1550,6 +1783,71 @@ public class ShortAiTaskWorker {
      * 悄悄只送首帧——「以为按首尾帧生成、实际只用了首帧」出来的片子不报错、只是接不好，
      * 创作者会去怀疑提示词、反复重抽，唯独想不到尾帧根本没送出去。
      */
+    private static boolean claimedReference(ShortShot shot, ConsistencyBundle consistency) {
+        if (shot != null && shot.getFirstFrameAssetId() != null && !shot.getFirstFrameAssetId().isBlank()) {
+            return true;
+        }
+        if (consistency == null) {
+            return false;
+        }
+        for (ShortCharacter character : consistency.characters()) {
+            if (character != null && character.getRefImageAssetId() != null && !character.getRefImageAssetId().isBlank()) {
+                return true;
+            }
+        }
+        if (consistency.scene() != null && consistency.scene().getRefImageAssetId() != null
+                && !consistency.scene().getRefImageAssetId().isBlank()) {
+            return true;
+        }
+        for (ShortSceneCard prop : consistency.props()) {
+            if (prop != null && prop.getRefImageAssetId() != null && !prop.getRefImageAssetId().isBlank()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasReferenceImage(AiProviderRequest request) {
+        return request != null && (request.param("image_url") != null || request.param("image_base64") != null);
+    }
+
+    /** A seed SVG is not a reference. Use a real first frame, otherwise a locked look, scene, or prop photo. */
+    private void attachRealAnchors(ConsistencyBundle consistency, AiProviderRequest request) {
+        if (consistency == null || hasReferenceImage(request)) {
+            return;
+        }
+        for (ShortCharacter character : consistency.characters()) {
+            if (character != null && attachFrameAsset(character.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime")) {
+                return;
+            }
+        }
+        if (consistency.scene() != null
+                && attachFrameAsset(consistency.scene().getRefImageAssetId(), request, "image_url", "image_base64", "image_mime")) {
+            return;
+        }
+        for (ShortSceneCard prop : consistency.props()) {
+            if (prop != null && attachFrameAsset(prop.getRefImageAssetId(), request, "image_url", "image_base64", "image_mime")) {
+                return;
+            }
+        }
+    }
+
+    private boolean realVideoBound(ShortShot shot) {
+        if (shot == null || shot.getVideoAssetId() == null || shot.getVideoAssetId().isBlank()) {
+            return false;
+        }
+        if (shortAssetMapper == null) {
+            return true;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(shot.getVideoAssetId()).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null) {
+            return true;
+        }
+        return !OfficialVideoLane.isPlaceholderVideo(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
+    }
+
     private void attachFrames(ShortShot shot, AiProviderRequest request, AiModelConfig model) {
         String mode = shot.getFrameLinkMode() == null ? "NONE" : shot.getFrameLinkMode();
         String firstFrameAssetId = shot.getFirstFrameAssetId();
@@ -1575,40 +1873,44 @@ public class ShortAiTaskWorker {
                 "last_image_url", "last_image_base64", "last_image_mime");
     }
 
-    private void attachFrameAsset(String assetId, AiProviderRequest request, String urlKey,
+    private boolean attachFrameAsset(String assetId, AiProviderRequest request, String urlKey,
             String base64Key, String mimeKey) {
-        if (assetId == null || assetId.isBlank()) {
-            return;
+        if (assetId == null || assetId.isBlank() || shortAssetMapper == null) {
+            return false;
         }
         ShortAssetExample ax = new ShortAssetExample();
         ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
         ShortAsset frame = shortAssetMapper.selectOneByExample(ax);
-        if (frame == null || frame.getStorageKey() == null || frame.getStorageKey().isBlank()) {
-            return;
+        if (frame == null || OfficialVideoLane.isPlaceholderImage(frame.getStorageKey(), frame.getMimeType(), frame.getFileSizeByte())) {
+            return false;
         }
         String mime = frame.getMimeType() == null ? "" : frame.getMimeType().toLowerCase();
         if (mime.contains("svg") || mime.contains("json")) {
-            return;
+            return false;
         }
         if (!(mime.contains("png") || mime.contains("jpeg") || mime.contains("jpg") || mime.contains("webp")
-                || mime.contains("image/"))) {
-            return;
+                || mime.contains("image/") || mime.isBlank())) {
+            return false;
         }
-        if (TencentTokenHubAiProvider.CODE.equals(request.getModel().getProviderCode())) {
+        if (request.getModel() != null && TencentTokenHubAiProvider.CODE.equals(request.getModel().getProviderCode())) {
             try {
                 request.getParams().put(urlKey,
                         objectStorage.presignGet(frame.getStorageKey(), 3600).downloadUrl());
-                return;
+                return true;
             } catch (RuntimeException ex) {
                 log.warn("presign frame failed, falling back to base64 assetId={}", frame.getAssetId(), ex);
             }
         }
+        if (objectStorage == null) {
+            return false;
+        }
         byte[] bytes = objectStorage.get(frame.getStorageKey());
         if (bytes == null || bytes.length == 0) {
-            return;
+            return false;
         }
         request.getParams().put(base64Key, Base64.getEncoder().encodeToString(bytes));
         request.getParams().put(mimeKey, frame.getMimeType());
+        return true;
     }
 
     /**

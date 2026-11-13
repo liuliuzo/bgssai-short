@@ -40,7 +40,10 @@ import com.bgssai.shortai.model.UserQuota;
 import com.bgssai.shortai.payment.service.PaidOrderGrantService;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
+import com.bgssai.shortai.model.ShortAsset;
+import com.bgssai.shortai.model.ShortAssetExample;
 import com.bgssai.shortai.production.support.GenerationTaskStatus;
+import com.bgssai.shortai.production.support.OfficialVideoLane;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.ShortLabels;
@@ -67,6 +70,10 @@ public class AiTaskService {
     private ShortSceneCardMapper shortSceneCardMapper;
     @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
+    @Autowired(required = false)
+    private com.bgssai.shortai.mapper.ShortAssetMapper shortAssetMapper;
+    @Autowired(required = false)
+    private OfficialVideoQueue officialVideoQueue;
     @Autowired
     private QuotaWalletService quotaWalletService;
     @Autowired
@@ -412,8 +419,8 @@ public class AiTaskService {
         sx.createCriteria().andShotIdEqualTo(task.getTargetId()).andDeletedFlagEqualTo(0);
         ShortShot shot = shortShotMapper.selectOneByExample(sx);
         if (shot == null || !task.getUserId().equals(shot.getUserId()) || !task.getWorkId().equals(shot.getWorkId())
-                || !task.getEpisodeId().equals(shot.getEpisodeId()) || "LOCKED".equals(shot.getShotStatus())
-                || (shot.getVideoAssetId() != null && !shot.getVideoAssetId().isBlank())) {
+                || !task.getEpisodeId().equals(shot.getEpisodeId())                 || "LOCKED".equals(shot.getShotStatus())
+                || realVideoAsset(shot.getVideoAssetId())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "目标镜头已改变或已有视频，不能恢复旧任务");
         }
         ShortAiTaskExample siblings = new ShortAiTaskExample();
@@ -527,6 +534,69 @@ public class AiTaskService {
         return shortShotMapper.selectByExample(ex);
     }
 
+    private boolean realVideoAsset(String assetId) {
+        if (assetId == null || assetId.isBlank()) {
+            return false;
+        }
+        if (shortAssetMapper == null) {
+            return true;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null) {
+            return true;
+        }
+        return !OfficialVideoLane.isPlaceholderVideo(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
+    }
+
+    private boolean realImageAsset(String assetId) {
+        if (assetId == null || assetId.isBlank()) {
+            return false;
+        }
+        if (shortAssetMapper == null) {
+            return true;
+        }
+        ShortAssetExample ax = new ShortAssetExample();
+        ax.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
+        if (asset == null) {
+            return false;
+        }
+        return !OfficialVideoLane.isPlaceholderImage(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
+    }
+
+    private boolean hasRealAnchorPhoto(ShortShot shot) {
+        if (shot == null || shortAssetMapper == null) {
+            return false;
+        }
+        for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
+            if (row != null && realImageAsset(row.getRefImageAssetId())) {
+                return true;
+            }
+        }
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            ShortSceneCardExample sx = new ShortSceneCardExample();
+            sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
+            ShortSceneCard scene = shortSceneCardMapper.selectOneByExample(sx);
+            if (scene != null && realImageAsset(scene.getRefImageAssetId())) {
+                return true;
+            }
+        }
+        for (String propId : ShotConsistency.propIds(shot.getPropRefJson())) {
+            ShortSceneCardExample px = new ShortSceneCardExample();
+            px.createCriteria().andSceneCardIdEqualTo(propId).andDeletedFlagEqualTo(0);
+            ShortSceneCard prop = shortSceneCardMapper.selectOneByExample(px);
+            if (prop != null && realImageAsset(prop.getRefImageAssetId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void assertShotReady(ShortShot shot, String type) {
         if ("LOCKED".equals(shot.getShotStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
@@ -536,10 +606,9 @@ public class AiTaskService {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "镜" + shot.getShotNo() + " 还没有可生成的画面描述，先写人话分镜");
         }
-        if ("VIDEO".equals(type)
-                && (shot.getFirstFrameAssetId() == null || shot.getFirstFrameAssetId().isBlank())) {
+        if ("VIDEO".equals(type) && !realImageAsset(shot.getFirstFrameAssetId()) && !hasRealAnchorPhoto(shot)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
-                    "镜" + shot.getShotNo() + " 需先出图确认构图，再生成视频");
+                    "镜" + shot.getShotNo() + " 的首帧和定妆都还是占位图，不能拿来生成视频。请先换成真实定妆照片，并出一张首帧。");
         }
         for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
             ShortCharacterExample cx = new ShortCharacterExample();
@@ -628,6 +697,9 @@ public class AiTaskService {
         item.put("target_type_name", ShortLabels.targetTypeName(row.getTargetType()));
         item.put("target_id", row.getTargetId());
         item.put("progress_percent", row.getProgressPercent());
+        if (officialVideoQueue != null) {
+            officialVideoQueue.enrich(item, row);
+        }
         item.put("fail_reason_code", "FAILED".equals(row.getTaskStatus()) ? row.getFailReasonCode() : null);
         item.put("fail_reason", visibleFailReason(
                 row.getTaskStatus(), row.getFailReasonCode(), row.getFailReason()));

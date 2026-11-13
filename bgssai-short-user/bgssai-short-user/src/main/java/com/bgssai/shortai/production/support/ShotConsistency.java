@@ -171,6 +171,10 @@ public final class ShotConsistency {
                 if (!appearance.isBlank()) {
                     sb.append("：").append(appearance);
                 }
+                String outfit = outfitLine(c);
+                if (!outfit.isBlank()) {
+                    sb.append("，服装：").append(outfit);
+                }
             }
         }
         if (lockedScene != null) {
@@ -202,6 +206,43 @@ public final class ShotConsistency {
             }
         }
         return sb.toString();
+    }
+
+    /** Anchors lead the prompt so a short video model sees the looks before the action line. */
+    public static String leadWithAnchors(String action, String anchors) {
+        String act = action == null ? "" : action.trim();
+        String anc = anchors == null ? "" : anchors.trim();
+        if (anc.isBlank()) {
+            return act;
+        }
+        if (act.isBlank() || act.contains(anc)) {
+            return act.isBlank() ? anc : act;
+        }
+        return anc + "。" + act;
+    }
+
+    static String outfitLine(com.bgssai.shortai.model.ShortCharacter character) {
+        if (character == null) {
+            return "";
+        }
+        String code = character.getDefaultOutfitCode() == null ? "" : character.getDefaultOutfitCode().trim();
+        String chosen = "";
+        for (java.util.Map<String, Object> item : ShortJson.list(character.getOutfitJson())) {
+            String itemCode = ShortJson.text(item.get("outfit_code"));
+            String name = ShortJson.text(item.get("outfit_name"));
+            String prompt = ShortJson.text(item.get("prompt"));
+            String line = name.isBlank() ? prompt : (prompt.isBlank() ? name : name + "，" + prompt);
+            if (line.isBlank()) {
+                continue;
+            }
+            if (!code.isBlank() && code.equals(itemCode)) {
+                return line;
+            }
+            if (chosen.isBlank()) {
+                chosen = line;
+            }
+        }
+        return chosen;
     }
 
     public static String withConsistency(String basePrompt, String fragment) {

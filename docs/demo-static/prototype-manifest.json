@@ -2514,7 +2514,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard.html",
-      "sha256": "1052c9de696871232e77bddab47e371dc93eac5573406af07d06928ecc97f1e6",
+      "sha256": "58d3f311757e7d26dc59b9501ccd8a2dccc7ae148cfdf247ab1e5ad51ee9a523",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2577,7 +2577,7 @@
     },
     {
       "path": "docs/demo-static/web/user/task-center.html",
-      "sha256": "cd305a8b96c773f8bae80afd3ea8b6e3d75ff0fd9a0e673b19f59dda00e37707",
+      "sha256": "2ba7eabb1b1128b4ce24531f009a948af83f93e5fed6ddd25f128b04d682e36a",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

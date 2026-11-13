@@ -71,6 +71,8 @@ public class ShotService {
     private ShortSceneCardMapper shortSceneCardMapper;
     @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
+    @Autowired(required = false)
+    private OfficialVideoQueue officialVideoQueue;
 
     @Transactional
     public ApiResponse split(ShotReq req) {
@@ -430,10 +432,26 @@ public class ShotService {
         item.put("shot_size", row.getShotSize());
         item.put("camera_move", row.getCameraMove());
         item.put("shot_duration_sec", row.getShotDurationSec());
-        item.put("image_prompt", row.getImagePrompt());
-        item.put("prompt_segments", PromptComposer.segments(row));
+        String anchors = anchorText(row);
+        item.put("image_prompt", ShotConsistency.leadWithAnchors(row.getImagePrompt(), anchors));
+        List<Map<String, String>> segments = new ArrayList<>(PromptComposer.segments(row));
+        if (!anchors.isBlank()) {
+            Map<String, String> anchor = new LinkedHashMap<>();
+            anchor.put("source", "ANCHOR");
+            anchor.put("label", "定妆");
+            anchor.put("text", anchors);
+            segments.add(anchor);
+        }
+        item.put("prompt_segments", segments);
         item.put("previz_text", row.getPrevizText());
         item.put("look_plain", PromptComposer.lookPlain(row));
+        boolean framePlaceholder = assetService.placeholderImage(row.getFirstFrameAssetId());
+        boolean videoPlaceholder = assetService.placeholderVideo(row.getVideoAssetId());
+        item.put("first_frame_placeholder_flag", framePlaceholder ? 1 : 0);
+        item.put("video_placeholder_flag", videoPlaceholder ? 1 : 0);
+        item.put("reference_note", framePlaceholder
+                ? "首帧还是占位图，不会当作参考。公司视频按定妆外貌、服装和场景文字生成，有真实定妆照片时会作为参考图提交。"
+                : null);
         item.put("previz_level", row.getPrevizLevel() == null ? "NONE" : row.getPrevizLevel());
         item.put("emotion", row.getEmotion());
         item.put("lighting", row.getLighting());
@@ -475,6 +493,43 @@ public class ShotService {
         item.put("task_status", task.getTaskStatus());
         item.put("progress_percent", task.getProgressPercent());
         item.putAll(GenerationTaskStatus.flags(task.getTaskStatus(), task.getTaskType()));
+        if (officialVideoQueue != null) {
+            officialVideoQueue.enrich(item, task);
+        }
         return item;
+    }
+
+    private String anchorText(ShortShot shot) {
+        if (shot == null) {
+            return "";
+        }
+        List<ShortCharacter> characters = new ArrayList<>();
+        for (String characterId : ShotConsistency.characterIds(shot.getCharacterRefJson())) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
+            if (row != null && "LOCKED".equals(row.getCardStatus())) {
+                characters.add(row);
+            }
+        }
+        ShortSceneCard scene = null;
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            ShortSceneCardExample sx = new ShortSceneCardExample();
+            sx.createCriteria().andSceneCardIdEqualTo(shot.getSceneCardId()).andDeletedFlagEqualTo(0);
+            ShortSceneCard row = shortSceneCardMapper.selectOneByExample(sx);
+            if (row != null && "LOCKED".equals(row.getCardStatus())) {
+                scene = row;
+            }
+        }
+        List<ShortSceneCard> props = new ArrayList<>();
+        for (String propId : ShotConsistency.propIds(shot.getPropRefJson())) {
+            ShortSceneCardExample px = new ShortSceneCardExample();
+            px.createCriteria().andSceneCardIdEqualTo(propId).andDeletedFlagEqualTo(0);
+            ShortSceneCard row = shortSceneCardMapper.selectOneByExample(px);
+            if (row != null && "LOCKED".equals(row.getCardStatus())) {
+                props.add(row);
+            }
+        }
+        return ShotConsistency.appearanceFragment(characters, scene, props);
     }
 }

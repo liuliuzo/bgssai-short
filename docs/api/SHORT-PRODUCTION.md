@@ -239,6 +239,7 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 `skip_look_reference=1` 时这一次不附带知识库或角色卡上的参考图。
 
 list 每条另回 `task_status_name`、`task_type_name`、`recoverable_flag`、`cancellable_flag`。
+公司视频（`bgssai-video`）在排队时另回 `queue_ahead`、`progress_hint`（排队中，前面还有几条，一次只生成一条，通常每条约十多分钟）、`status_note`，`progress_percent` 为 0。执行中另回 `elapsed_sec` 和 `progress_hint`（已等待多久），进度随等待时间变化，不固定在 30。镜头列表的 `latest_task` 使用同一组字段。`image_prompt` 展示时带上已锁定的定妆外貌、服装、场景和道具。首帧若是占位图，`first_frame_placeholder_flag=1`，并给出 `reference_note`。
 TEXT / IMAGE / VIDEO / VOICE / COMPOSE 共用
 `QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`，可 `CANCELED`。
 
