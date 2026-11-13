@@ -48,6 +48,6 @@
 
 用户反馈登录页 `+86` 旁箭头「像个锥子」。把 `.phone-dial-combo-caret` 从 CSS border 实心尖三角改为圆润描边 V 形 chevron（两段圆角笔帽描边，宽短一些）；展开仍 180° 旋转。不改登录逻辑、区号数据与法律页脚。管理端无区号控件，仅用户端 + 登录原型同步。
 
-## 2026-11-13 补充：全页下拉箭头（t501u / t502u）
+## 2026-11-13 补充：全页下拉箭头（t501u / t502u / t503u）
 
-登录区号已验收后，用户要求 Short 全产品页（作品台、分镜/工作室、模型·画风·音色选择、筛选、对话框、角色/定妆库表单等）统一去掉难看尖锥箭头。用户端与管理端全部 Ant Design `Select` 箭头改为与登录区号一致的圆润描边 chevron；原型 `theme.css` 对原生 `<select>` 去浏览器默认尖箭头并换同款 SVG chevron。不改布局/文案/法律页脚；顶栏 `DownOutlined` 等正常 Ant 图标保留；禁止 CSS border 实心三角回流（见 `caretSpikeGuard` 测试）。
+登录区号已验收后，用户要求 Short 全产品页（作品台、分镜/工作室、模型·画风·音色选择、筛选、对话框、角色/定妆库表单等）统一去掉难看尖锥箭头。用户端与管理端 Ant Design `Select` 仅替换 `.ant-select-arrow > .anticon-down`（`:has(> .anticon-down)` 才绘制伪元素 chevron），不隐藏 loading / clear / 自定义 suffix；折叠面板 `anticon-right` 不改。原型 `theme.css` 对原生 `<select>` 去浏览器默认尖箭头并换同款 SVG chevron。不改布局/文案/法律页脚；顶栏 `DownOutlined` 保留；`caretSpikeGuard` + `selectCaretStates` 防回流并覆盖开合/加载/清除/键盘态。

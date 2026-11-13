@@ -1,11 +1,15 @@
 /*
- * Rounded stroke V caret for all Ant Design Selects (workspace / filters /
- * model·style·voice pickers / dialogs). Matches login phone-dial chevron:
- * short wide outline V, rounded caps, ~1.75px stroke. Not a CSS border spike.
- * Keeps Ant open-state 180° rotation on .ant-select-arrow.
+ * Rounded stroke V for Ant Design Select *down* arrow only.
+ * Target (DEV): .ant-select-arrow > .anticon-down.ant-select-suffix > svg[data-icon=down]
+ *
+ * - Do NOT hide all .anticon (would hit loading / custom suffix).
+ * - Pseudo chevron only when :has(> .anticon-down); loading/search/custom suffix keep native icon.
+ * - Collapse anticon-right and other surfaces are untouched.
+ * - Ant Design 5 Select no longer rotates the arrow; flip the host when open so the
+ *   pseudo chevron still reads as open/closed.
  */
 
-.ant-select .ant-select-arrow {
+.ant-select .ant-select-arrow:has(> .anticon-down) {
   width: 12px;
   height: 7px;
   margin-top: -3.5px;
@@ -14,12 +18,13 @@
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.ant-select .ant-select-arrow .anticon {
+.ant-select .ant-select-arrow > .anticon-down {
+  /* Hide only the down glyph; leave loading / other arrow children visible. */
   display: none !important;
 }
 
-.ant-select .ant-select-arrow::before,
-.ant-select .ant-select-arrow::after {
+.ant-select .ant-select-arrow:has(> .anticon-down)::before,
+.ant-select .ant-select-arrow:has(> .anticon-down)::after {
   content: "";
   position: absolute;
   top: 1px;
@@ -27,20 +32,25 @@
   height: 1.75px;
   background: currentColor;
   border-radius: 999px;
+  pointer-events: none;
 }
 
-.ant-select .ant-select-arrow::before {
+.ant-select .ant-select-arrow:has(> .anticon-down)::before {
   left: 0;
   transform: rotate(38deg);
   transform-origin: right center;
 }
 
-.ant-select .ant-select-arrow::after {
+.ant-select .ant-select-arrow:has(> .anticon-down)::after {
   right: 0;
   transform: rotate(-38deg);
   transform-origin: left center;
 }
 
-.ant-select-disabled .ant-select-arrow {
+.ant-select-open .ant-select-arrow:has(> .anticon-down) {
+  transform: rotate(180deg);
+}
+
+.ant-select-disabled .ant-select-arrow:has(> .anticon-down) {
   opacity: 0.35;
 }

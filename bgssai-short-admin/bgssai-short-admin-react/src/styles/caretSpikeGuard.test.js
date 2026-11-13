@@ -1,5 +1,5 @@
 /**
- * Guard: admin shipped CSS must not reintroduce CSS border-triangle carets.
+ * Guard: admin Select caret override stays down-only; no border-triangle carets.
  */
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
@@ -36,7 +36,7 @@ function findSpikes(files) {
 
 test('admin react source CSS has no border-triangle carets', () => {
   const files = listCssFiles(path.join(reactRoot, 'src'))
-  assert.ok(files.length > 0, 'expected CSS under admin react src')
+  assert.ok(files.length > 0)
   assert.deepEqual(findSpikes(files), [])
 })
 
@@ -50,13 +50,19 @@ test('admin shipped static CSS has no border-triangle carets', () => {
   assert.deepEqual(findSpikes(files), [])
 })
 
-test('admin ant select caret override is wired', () => {
+test('admin select caret override only hides anticon-down and gates pseudos with :has', () => {
   const css = fs.readFileSync(
     path.join(reactRoot, 'src/styles/rounded-chevron-caret.css'),
     'utf8',
   )
-  assert.match(css, /\.ant-select\s+\.ant-select-arrow::before/)
-  assert.match(css, /border-radius:\s*999px/)
+  assert.match(css, /\.ant-select-arrow:has\(\s*>\s*\.anticon-down\s*\)/)
+  assert.match(css, /\.ant-select-arrow\s*>\s*\.anticon-down/)
+  assert.doesNotMatch(
+    css,
+    /\.ant-select-arrow\s+\.anticon\s*\{[^}]*display\s*:\s*none/s,
+  )
+  assert.match(css, /:has\(\s*>\s*\.anticon-down\s*\)::before/)
+  assert.match(css, /\.ant-select-open\s+\.ant-select-arrow:has\(\s*>\s*\.anticon-down\s*\)/)
   const main = fs.readFileSync(path.join(reactRoot, 'src/main.jsx'), 'utf8')
   assert.match(main, /rounded-chevron-caret\.css/)
 })
