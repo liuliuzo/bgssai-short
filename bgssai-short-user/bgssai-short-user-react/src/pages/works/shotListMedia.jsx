@@ -109,7 +109,16 @@ export function ListShotVideo({ src, poster, onDuration, onPlayback, label, auto
   )
 }
 
-export function ShotMediaColumn({ row, onEnlarge, onDuration, onPlayback }) {
+function RegenerateButton({ onRegenerate, row }) {
+  if (!onRegenerate) return null
+  return (
+    <Button type="primary" block style={{ marginTop: 8 }} onClick={() => onRegenerate(row)}>
+      重新生成
+    </Button>
+  )
+}
+
+export function ShotMediaColumn({ row, onEnlarge, onDuration, onPlayback, onRegenerate }) {
   const placeholder = isPlaceholderMediaUrl(row && row.video_url)
   const playable = shotHasPlayableVideo(row)
   const enlarge = enlargePlaybackButtonProps()
@@ -119,6 +128,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration, onPlayback }) {
         <Text strong style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>占位图</Text>
         <ClickThumb alt="占位图" src={row.video_url} width={96} height={160} />
         <Text type="secondary" style={{ fontSize: 12 }}>这是占位图，不是能播放的视频。</Text>
+        <RegenerateButton onRegenerate={onRegenerate} row={row} />
       </div>
     )
   }
@@ -140,6 +150,7 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration, onPlayback }) {
           >
             放大播放
           </Button>
+          <RegenerateButton onRegenerate={onRegenerate} row={row} />
           {row.first_frame_url ? (
             <div style={{ marginTop: 6 }}>
               <ClickThumb alt="首帧" src={row.first_frame_url} width={LIST_FIRST_FRAME_THUMB_WIDTH} caption={FIRST_FRAME_CAPTION} />
@@ -152,10 +163,12 @@ export function ShotMediaColumn({ row, onEnlarge, onDuration, onPlayback }) {
           {row.video_asset_id ? (
             <Text type="secondary" style={{ fontSize: 11 }}>已绑定视频，播放地址暂时不可用</Text>
           ) : null}
+          <RegenerateButton onRegenerate={onRegenerate} row={row} />
         </div>
       ) : (
         <div style={{ width: 90, height: 160, background: '#f1f5f9', borderRadius: 8, padding: 8, fontSize: 12, color: '#64748b' }}>
           {row.video_asset_id ? '已绑定视频，播放地址暂时不可用' : '还没出图'}
+          <RegenerateButton onRegenerate={onRegenerate} row={row} />
         </div>
       )}
       {row.last_frame_url ? (

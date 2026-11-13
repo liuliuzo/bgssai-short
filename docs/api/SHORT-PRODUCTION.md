@@ -217,6 +217,14 @@ update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_durati
 
 同上 + 余额校验。返回 `{ "batch_id", "task_id_list", "task_count", "estimated_cost_cent" }`。USER 限流。
 
+### POST /bgssai/user/ai-tasks/official-video/preview
+
+`{ "episode_id"?, "shot_id"?, "shot_ids"? }`。不写任务。每个镜头返回 `route`（`IMAGE_TO_VIDEO` 或 `TEXT_TO_VIDEO`）、`route_name`、`size_note`、`blocked`、`block_reason`、`estimated_cost_cent`。有真实 PNG/JPEG 且图生视频就绪时为图生视频，并写明 384×256、约 3 秒、不是竖屏。否则为文生视频，并写明约 720×480、约 6 秒。已排队或执行中的镜头 `blocked=1`。
+
+### POST /bgssai/user/ai-tasks/official-video/submit
+
+同上，且 `confirm_cost=1`。未确认不入队、不改镜头。确认后新建任务，请求里没有 `resume_request_id`。图生视频 `target_type=IMAGE_TO_VIDEO`，不占文生视频 GPU 车道；文生视频仍是 `bgssai-video`。只把镜头状态改为 `VIDEO_GENERATING`，不清除 `video_asset_id`。同一镜已有活动视频时返回 4006，文案「这一镜视频已在生成中」。USER 限流。
+
 ### GET /bgssai/user/ai-tasks/list
 
 query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id` `work_id`

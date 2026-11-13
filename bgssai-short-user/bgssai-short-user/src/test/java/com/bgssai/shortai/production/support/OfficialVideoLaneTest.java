@@ -25,6 +25,11 @@ class OfficialVideoLaneTest {
         assertEquals(image.getId(), OfficialVideoLane.nextClaim(List.of(first, image, second), true).getId());
         assertEquals(first.getId(), OfficialVideoLane.nextClaim(List.of(first, second), false).getId());
         assertNull(OfficialVideoLane.nextClaim(List.of(first, second), true));
+        ShortAiTask imageToVideo = task(4L, "VIDEO", "QUEUED", "bgssai-video-i2v");
+        imageToVideo.setTargetType("IMAGE_TO_VIDEO");
+        assertEquals(first.getId(), OfficialVideoLane.nextClaim(List.of(imageToVideo, first), false, true).getId());
+        assertNull(OfficialVideoLane.nextClaim(List.of(imageToVideo), false, true));
+        assertEquals(imageToVideo.getId(), OfficialVideoLane.nextClaim(List.of(imageToVideo, first), true, false).getId());
     }
 
     @Test

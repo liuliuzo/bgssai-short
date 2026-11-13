@@ -16,7 +16,8 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
-import { shotCardHeading, shotLatestTaskBadge } from './shotCardMedia'
+import { shotCardHeading, shotLatestTaskBadge, shotOffersVideoRegenerate } from './shotCardMedia'
+import { runOfficialShotVideo } from './officialVideo'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
 import LookSlot from '../look/LookSlot'
 import LibraryLookPicker, { ReferenceNotice } from '../look/LibraryLookPicker'
@@ -81,6 +82,37 @@ function confirmEstimate(est, title) {
         </div>
       ),
       okText: '确认提交',
+      cancelText: '取消',
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
+    })
+  })
+}
+
+function confirmOfficialVideo(preview, { regenerate } = {}) {
+  const shots = (preview && preview.shot_list) || []
+  const lines = shots.filter((shot) => Number(shot.blocked) !== 1)
+  const blocked = shots.filter((shot) => Number(shot.blocked) === 1)
+  return new Promise((resolve) => {
+    Modal.confirm({
+      title: regenerate ? '重新生成这一镜视频' : '确认生成视频',
+      content: (
+        <div>
+          <p>
+            {regenerate
+              ? '将开始一次新的生成，并按这一次计费。不会接着上次未完成的回执继续。当前成片会保留，直到新视频成功后才替换。'
+              : '确认后开始一次新的生成，并按这一次计费。'}
+          </p>
+          {lines.map((shot) => (
+            <p key={shot.shot_id}>镜{shot.shot_no}：{shot.route_name}。{shot.size_note}</p>
+          ))}
+          <p>预计费用 {formatYuan(preview.estimated_cost_cent)} 元，余额可用 {formatYuan(preview.available_cent)} 元。</p>
+          {blocked.map((shot) => (
+            <p key={`blocked-${shot.shot_id}`}>镜{shot.shot_no}：{shot.block_reason}</p>
+          ))}
+        </div>
+      ),
+      okText: regenerate ? '确认重新生成' : '确认提交',
       cancelText: '取消',
       onOk: () => resolve(true),
       onCancel: () => resolve(false),
@@ -1067,7 +1099,34 @@ function StoryboardPane({ work, episodeId }) {
     )
   }
 
+  const runOfficial = async (shotIds, { regenerate = false } = {}) => {
+    const body = { episode_id: episodeId, shot_ids: shotIds }
+    const outcome = await runOfficialShotVideo({
+      regenerate,
+      preview: async () => (await productionApi.previewOfficialVideo(body)).data,
+      confirm: (preview, options) => confirmOfficialVideo(preview, options),
+      submit: async () => (await productionApi.submitOfficialVideo({ ...body, confirm_cost: 1 })).data,
+    })
+    if (outcome.reason === 'in_progress') {
+      message.warning(outcome.message || '这一镜视频已在生成中')
+      return
+    }
+    if (!outcome.submitted) return
+    const batchId = outcome.result && outcome.result.batch_id
+    const notes = ((outcome.result && outcome.result.shot_list) || []).map((shot) => shot.size_note).filter(Boolean)
+    message.success(regenerate ? '已重新提交这一镜视频，当前成片会保留到新视频成功' : '视频已提交，生成通常要几分钟')
+    if (notes[0]) message.info(notes[0])
+    if (batchId) {
+      setVideoWatch({ batchId, progress: null, done: false, lingering: false, error: '' })
+    }
+    load()
+  }
+
   const submitLevel = async (taskType, autoNext) => {
+    if (taskType === 'VIDEO') {
+      await runOfficial(selectedIds, { regenerate: false })
+      return
+    }
     const estimateBody = {
       episode_id: episodeId,
       shot_ids: selectedIds,
@@ -1333,6 +1392,7 @@ function StoryboardPane({ work, episodeId }) {
           <Space align="start" size="large" style={{ width: '100%' }}>
             <ShotMediaColumn
               row={row}
+              onRegenerate={shotOffersVideoRegenerate(row, playback) ? () => runOfficial([row.shot_id], { regenerate: true }) : null}
               onEnlarge={setVideoPreview}
               onDuration={(seconds) => setClipSeconds((cur) => (
                 cur[row.shot_id] === seconds ? cur : { ...cur, [row.shot_id]: seconds }
@@ -1471,26 +1531,14 @@ function StoryboardPane({ work, episodeId }) {
                     load()
                   }
                 }}>出一张图看看</Button>
-                <Button size="small" type="primary" disabled={!row.first_frame_asset_id || row.shot_status === 'LOCKED'} onClick={async () => {
-                  const body = {
-                    episode_id: episodeId,
-                    shot_ids: [row.shot_id],
-                    task_type: 'VIDEO',
-                    auto_next_flag: 0,
-                    model_code: videoModelCode,
-                  }
-                  const { data: estRes } = await productionApi.estimateTasks(body)
-                  if (!estRes?.success) return
-                  const ok = await confirmEstimate(estRes.result, '确认视频费用')
-                  if (!ok) return
-                  const { data } = await productionApi.submitTasks(body)
-                  if (data?.success) {
-                    message.success('构图已确认，开始生成视频')
-                    await waitTask(work.work_id, data.result.task_id_list?.[0])
-                    load()
-                  }
-                }}>生成视频</Button>
+                <Button size="small" type="primary" disabled={row.shot_status === 'LOCKED'} onClick={() => runOfficial([row.shot_id], { regenerate: false })}>生成视频</Button>
+                {shotOffersVideoRegenerate(row, playback) ? (
+                  <Button size="small" type="primary" onClick={() => runOfficial([row.shot_id], { regenerate: true })}>重新生成</Button>
+                ) : null}
               </Space>
+              <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
+                有真实首帧或定妆照时走图生视频：384×256，约 3 秒，不是竖屏 9:16。没有真实照片时改走文生视频：约 720×480，约 6 秒。
+              </Paragraph>
               {(row.prompt_issues || []).length ? (
                 <div style={{ marginTop: 8 }}>
                   {(row.prompt_issues || []).slice(0, 3).map((it, i) => (

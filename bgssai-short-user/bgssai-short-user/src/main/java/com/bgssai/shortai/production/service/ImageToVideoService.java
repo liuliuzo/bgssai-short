@@ -97,9 +97,64 @@ public class ImageToVideoService {
     private Environment environment;
     @Autowired(required = false)
     private PaidOrderGrantService paidOrderGrantService;
+    @Autowired(required = false)
+    private ShotGenerateOutcome shotGenerateOutcome;
 
     void setMediaCheck(MediaCheck mediaCheck) {
         this.mediaCheck = mediaCheck == null ? MediaMetadata::verify : mediaCheck;
+    }
+
+    public boolean readyForOfficial() {
+        AiModelConfig model = loadModel();
+        return model != null && videoClient.ready(model);
+    }
+
+    /**
+     * Queue one official shot clip on the CPU image-to-video lane.
+     * Does not clear the shot's current video. The caller sets VIDEO_GENERATING.
+     */
+    public ShortAiTask enqueueForShot(ShortShot shot, String assetId, String prompt, int costCent) {
+        if (shot == null || assetId == null || assetId.isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "图生视频需要一张真实照片。");
+        }
+        OwnedImage image = loadStored(shot.getUserId(), assetId);
+        AiModelConfig model = loadModel();
+        if (model == null || !videoClient.ready(model)) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, ImageConditionedVideoProtocol.UNAVAILABLE);
+        }
+        String text = prompt == null ? "" : prompt.trim();
+        if (text.isEmpty()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "提示词需要 1 到 2000 个字符。");
+        }
+        if (text.length() > 2000) {
+            text = text.substring(0, 2000);
+        }
+        Params params = new Params(text, 384, 256, 25, 8, 20, 42);
+        ShortAiTask task = new ShortAiTask();
+        task.setTaskId(ShortIds.id("t-"));
+        task.setBatchId(ShortIds.id("b-"));
+        task.setUserId(shot.getUserId());
+        task.setWorkId(shot.getWorkId());
+        task.setEpisodeId(shot.getEpisodeId());
+        task.setTaskType("VIDEO");
+        task.setTaskStatus("QUEUED");
+        task.setTargetType(ImageToVideoPolicy.TARGET);
+        task.setTargetId(shot.getShotId());
+        task.setModelCode(model.getModelCode());
+        Map<String, Object> body = requestBody(shot.getShotId(), fingerprint(image.asset().getAssetId(), params),
+                new OwnedImage(image.asset(), image.bytes(), shot.getWorkId(), shot.getEpisodeId(), shot), params);
+        body.put("official_shot", 1);
+        task.setRequestJson(ShortJson.toJson(body));
+        task.setProgressPercent(0);
+        task.setRetryCount(0);
+        task.setAutoNextFlag(0);
+        task.setCostCent(Math.max(0, costCent));
+        Date now = new Date();
+        task.setQueuedTime(now);
+        task.setCreatedTime(now);
+        task.setUpdatedTime(now);
+        shortAiTaskMapper.insertSelective(task);
+        return task;
     }
 
     public ApiResponse capability() {
@@ -407,7 +462,9 @@ public class ImageToVideoService {
         patch.setUpdatedTime(new Date());
         ShortAiTaskExample up = new ShortAiTaskExample();
         up.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
-        shortAiTaskMapper.updateByExampleSelective(patch, up);
+        if (shortAiTaskMapper.updateByExampleSelective(patch, up) == 1 && shotGenerateOutcome != null) {
+            shotGenerateOutcome.restoreBoundMedia(task);
+        }
     }
 
     private Map<String, Object> view(ShortAiTask task) {

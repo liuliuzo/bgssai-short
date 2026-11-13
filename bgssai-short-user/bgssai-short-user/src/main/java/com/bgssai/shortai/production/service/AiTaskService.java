@@ -511,7 +511,7 @@ public class AiTaskService {
         return Responses.ok("ok");
     }
 
-    private List<ShortShot> resolveShots(AiTaskReq req) {
+    List<ShortShot> resolveShots(AiTaskReq req) {
         if (req == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "body required");
         }
@@ -597,7 +597,11 @@ public class AiTaskService {
         return false;
     }
 
-    private void assertShotReady(ShortShot shot, String type) {
+    void assertShotReady(ShortShot shot, String type) {
+        assertShotReady(shot, type, true);
+    }
+
+    void assertShotReady(ShortShot shot, String type, boolean requirePhoto) {
         if ("LOCKED".equals(shot.getShotStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "镜" + shot.getShotNo() + " 已定稿，不能再生成");
@@ -606,7 +610,7 @@ public class AiTaskService {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "镜" + shot.getShotNo() + " 还没有可生成的画面描述，先写人话分镜");
         }
-        if ("VIDEO".equals(type) && !realImageAsset(shot.getFirstFrameAssetId()) && !hasRealAnchorPhoto(shot)) {
+        if (requirePhoto && "VIDEO".equals(type) && !realImageAsset(shot.getFirstFrameAssetId()) && !hasRealAnchorPhoto(shot)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "镜" + shot.getShotNo() + " 的首帧和定妆都还是占位图，不能拿来生成视频。请先换成真实定妆照片，并出一张首帧。");
         }

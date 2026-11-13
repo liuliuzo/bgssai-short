@@ -36,8 +36,21 @@ public final class OfficialVideoLane {
         return ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id"));
     }
 
+    public static boolean isImageToVideo(ShortAiTask task) {
+        return task != null && "IMAGE_TO_VIDEO".equals(task.getTargetType());
+    }
+
     /** Skip official clips while one is already in the lane, and keep later non-video work moving. */
     public static ShortAiTask nextClaim(List<ShortAiTask> queuedOldestFirst, boolean officialLaneBusy) {
+        return nextClaim(queuedOldestFirst, officialLaneBusy, false);
+    }
+
+    /**
+     * Image-to-video is CPU and does not take the text-to-video GPU lane.
+     * A running image-to-video job only holds back the next image-to-video job.
+     */
+    public static ShortAiTask nextClaim(List<ShortAiTask> queuedOldestFirst, boolean officialLaneBusy,
+            boolean imageToVideoBusy) {
         if (queuedOldestFirst == null) {
             return null;
         }
@@ -46,6 +59,9 @@ public final class OfficialVideoLane {
                 continue;
             }
             if (officialLaneBusy && isOfficial(task)) {
+                continue;
+            }
+            if (imageToVideoBusy && isImageToVideo(task)) {
                 continue;
             }
             return task;

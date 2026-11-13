@@ -8,6 +8,8 @@ import {
   shotCardStatusCode,
   shotLatestTaskBadge,
   shotCanvasStatusKey,
+  shotOffersVideoRegenerate,
+  shotVideoRegenerateBlocked,
 } from './shotCardMedia.js'
 
 test('a ready clip with a failed video job stays a video without a standing failure chip', () => {
@@ -185,6 +187,37 @@ test('a seed svg is not a playable video and is not labeled as a finished clip',
   assert.equal(shotLatestTaskBadge(row).text, '这是占位图，不能播放')
   assert.match(shotCardHeading(row), /占位图，不能播放/)
   assert.doesNotMatch(shotCardHeading(row), /成片/)
+})
+
+test('a finished official clip offers regenerate, and a running one does not submit again', () => {
+  const ready = {
+    shot_status: 'VIDEO_READY',
+    video_asset_id: 'vid-1',
+    video_url: 'https://cdn.example/shot.mp4',
+    latest_task: { task_type: 'VIDEO', task_status: 'SUCCEEDED' },
+  }
+  assert.equal(shotOffersVideoRegenerate(ready), true)
+  assert.equal(shotVideoRegenerateBlocked(ready), false)
+  const running = {
+    ...ready,
+    shot_status: 'VIDEO_GENERATING',
+    latest_task: { task_type: 'VIDEO', task_status: 'QUEUED' },
+  }
+  assert.equal(shotOffersVideoRegenerate(running), true)
+  assert.equal(shotVideoRegenerateBlocked(running), true)
+  const seed = {
+    shot_status: 'VIDEO_READY',
+    video_placeholder_flag: 1,
+    video_url: 'data:image/svg+xml;base64,abc',
+  }
+  assert.equal(shotOffersVideoRegenerate(seed), true)
+  const failed = {
+    shot_status: 'IMAGE_READY',
+    latest_task: { task_type: 'VIDEO', task_status: 'FAILED' },
+  }
+  assert.equal(shotOffersVideoRegenerate(failed), true)
+  assert.equal(shotOffersVideoRegenerate({ shot_status: 'LOCKED', video_url: 'https://cdn.example/shot.mp4' }), false)
+  assert.equal(shotOffersVideoRegenerate({ shot_status: 'IMAGE_READY' }, 'broken'), true)
 })
 
 test('a frame with no duration is a broken clip, not a success', () => {
