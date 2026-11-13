@@ -380,7 +380,15 @@
       and episode_id = #{expected.episodeId,jdbcType=VARCHAR}
       and deleted_flag = 0
       and (shot_status is null or shot_status != 'LOCKED')
-      and (video_asset_id is null or trim(video_asset_id) = '')
+      and (
+        video_asset_id is null or trim(video_asset_id) = ''
+        or exists (
+          select 1 from short_asset placeholder_video
+          where placeholder_video.asset_id = short_shot.video_asset_id
+            and placeholder_video.deleted_flag = 0
+            and placeholder_video.storage_key like '&lt;svg%'
+        )
+      )
       <choose>
         <when test="expected.updatedTime != null">and updated_time = #{expected.updatedTime,jdbcType=TIMESTAMP}</when>
         <otherwise>and updated_time is null</otherwise>

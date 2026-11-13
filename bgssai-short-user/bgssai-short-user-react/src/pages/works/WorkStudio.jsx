@@ -1408,6 +1408,9 @@ function StoryboardPane({ work, episodeId }) {
                   </div>
                 ))}
               </div>
+              {row.reference_note ? (
+                <Paragraph type="secondary" style={{ marginBottom: 8 }}>{row.reference_note}</Paragraph>
+              ) : null}
               {row.image_prompt ? (
                 <div style={{ marginBottom: 8 }}>
                   <Text type="secondary">画面提示词</Text>
@@ -1580,7 +1583,7 @@ function TasksPane({ workId, episodeId }) {
           { title: '类型', dataIndex: 'task_type_name', width: 90, render: (v, row) => v || row.task_type },
           { title: '目标', dataIndex: 'target_type_name', width: 110, render: (v, row) => v || labelOf(TARGET_TYPE_LABEL, row.target_type, row.target_type || '-') },
           { title: '状态', dataIndex: 'task_status_name', width: 110, render: (v, row) => <Tag>{v || row.task_status}</Tag> },
-          { title: '进度', dataIndex: 'progress_percent', width: 80 },
+          { title: '进度', dataIndex: 'progress_percent', width: 280, render: (_, row) => row.progress_hint || row.progress_percent },
           { title: '费用(元)', dataIndex: 'cost_cent', width: 90, render: (v) => ((Number(v) || 0) / 100).toFixed(2) },
           { title: '失败', key: 'fail_reason', render: (_, row) => visibleFailReason(row) || '—' },
           {

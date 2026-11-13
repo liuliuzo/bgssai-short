@@ -8,7 +8,7 @@ const SETTLED_CLIP_STATUS = new Set(['VIDEO_READY', 'LOCKED'])
 
 export function shotHasBoundVideo(row) {
   if (!row || typeof row !== 'object') return false
-  if (isPlaceholderMediaUrl(row.video_url)) return false
+  if (row.video_placeholder_flag === 1 || isPlaceholderMediaUrl(row.video_url)) return false
   return text(row.video_url) !== '' || text(row.video_asset_id) !== ''
 }
 
@@ -62,10 +62,11 @@ export function shotCardHeading(row, { actualSec, playback } = {}) {
 }
 
 export function shotLatestTaskBadge(row) {
-  if (isPlaceholderMediaUrl(row && row.video_url)) {
+  const task = row && row.latest_task
+  const inFlight = task && (task.task_status === 'QUEUED' || task.task_status === 'RUNNING')
+  if (!inFlight && (row && (row.video_placeholder_flag === 1 || isPlaceholderMediaUrl(row.video_url)))) {
     return { color: 'orange', text: '这是占位图，不能播放' }
   }
-  const task = row && row.latest_task
   if (!task || typeof task !== 'object') return null
   const type = String(task.task_type || '')
   const status = String(task.task_status || '')
@@ -78,6 +79,10 @@ export function shotLatestTaskBadge(row) {
   }
   const typeName = task.task_type_name || task.task_type || ''
   const statusName = task.task_status_name || task.task_status || ''
+  if (type === 'VIDEO' && (status === 'QUEUED' || status === 'RUNNING') && task.status_note) {
+    const color = status === 'QUEUED' ? 'gold' : 'blue'
+    return { color, text: `${typeName} ${statusName}，${task.status_note}`.trim() }
+  }
   let color = 'blue'
   if (status === 'FAILED') color = 'red'
   else if (status === 'SUCCEEDED') color = 'green'

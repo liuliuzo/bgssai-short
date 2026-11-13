@@ -34,6 +34,8 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private static final String IMAGE_PATH = "/v1/images/generations";
     private static final String VIDEO_PATH = "/v1/videos/generations";
     private static final long MEDIA_POLL_BUDGET_MS = 180_000L;
+    /** Company video releases the worker between slices and resumes the same receipt. */
+    private static final int OFFICIAL_VIDEO_SLICE_SEC = 20;
     private static final long MEDIA_POLL_INTERVAL_MS = 3_000L;
     private static final String SPEECH_PATH = "/v1/audio/speech";
     private static final String ASR_SUBMIT = "/v1/wand/asrproxy/async_create";
@@ -122,10 +124,15 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 default -> throw new BizException(CommonErrorCode.RULE_REJECT,
                         "unsupported ability for model gateway: " + ability);
             };
+        } catch (OfficialVideoStillOpenException ex) {
+            throw ex;
         } catch (BizException ex) {
             throw new BizException(ex.getCode(), TokenHubClientSupport.userFacingMessage(ex.getMessage()));
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
+            if (officialVideo(request) && receipt != null && receipt.requestId != null) {
+                throw new OfficialVideoStillOpenException(receipt.requestId);
+            }
             throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,
                     TokenHubClientSupport.userFacingMessage("model call interrupted"));
         } catch (Exception ex) {
@@ -186,11 +193,15 @@ public class TencentTokenHubAiProvider implements AiProvider {
             body.put("image", image);
         }
         String resumeId = ShortJson.text(request.param("resume_request_id"));
-        int budget = mediaBudgetSec(timeoutSec, 900);
+        boolean official = "bgssai-video".equals(model);
+        Integer sliceSec = official
+                ? ShortJson.integer(request.param("official_slice_sec"), OFFICIAL_VIDEO_SLICE_SEC) : null;
+        int budget = official ? Math.max(1, sliceSec == null ? OFFICIAL_VIDEO_SLICE_SEC : sliceSec)
+                : mediaBudgetSec(timeoutSec, 900);
         Map<String, Object> submitted = resumeId.isBlank()
                 ? post(base + VIDEO_PATH, apiKey, body, Math.min(60, timeoutSec))
                 : get(base + VIDEO_PATH + "/by-request/" + encodeQuery(resumeId) + "?model=" + encodeQuery(model), apiKey, 60);
-        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, budget);
+        Map<String, Object> done = awaitMedia(base, apiKey, model, submitted, cfg, budget, sliceSec);
         AiProviderResult ready = mediaResult(request, done, "video/mp4", duration, 1080, 1920, budget, base, apiKey);
         if (ready.getDurationSec() == null || ready.getDurationSec() <= 0) {
             ready.setDurationSec(duration);
@@ -339,13 +350,25 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private Map<String, Object> awaitMedia(String base, String apiKey, String model,
             Map<String, Object> submitted, Map<String, Object> cfg, int timeoutSec) throws Exception {
+        return awaitMedia(base, apiKey, model, submitted, cfg, timeoutSec, null);
+    }
+
+    private Map<String, Object> awaitMedia(String base, String apiKey, String model,
+            Map<String, Object> submitted, Map<String, Object> cfg, int timeoutSec,
+            Integer officialSliceSec) throws Exception {
         if (hasMediaPayload(submitted)) {
             return submitted;
         }
         String taskId = ProviderHttp.firstNonBlank(ShortJson.text(submitted.get("id")),
                 ShortJson.text(submitted.get("task_id")), nestedText(submitted, "data", "id"),
                 nestedText(submitted, "task", "id"));
-        return pollMedia(base, apiKey, model, taskId, cfg, timeoutSec);
+        return pollMedia(base, apiKey, model, taskId, cfg, timeoutSec, officialSliceSec);
+    }
+
+    private static boolean officialVideo(AiProviderRequest request) {
+        return request != null && request.getModel() != null
+                && "VIDEO".equalsIgnoreCase(request.getAbilityType())
+                && "bgssai-video".equals(request.getModel().getModelCode());
     }
 
     static int mediaBudgetSec(int timeoutSec, int floorSec) {
@@ -359,13 +382,20 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private Map<String, Object> pollMedia(String base, String apiKey, String model, String taskId,
             Map<String, Object> cfg, int timeoutSec) throws Exception {
+        return pollMedia(base, apiKey, model, taskId, cfg, timeoutSec, null);
+    }
+
+    private Map<String, Object> pollMedia(String base, String apiKey, String model, String taskId,
+            Map<String, Object> cfg, int timeoutSec, Integer officialSliceSec) throws Exception {
         if (taskId == null || taskId.isBlank()) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model submit missing task_id");
         }
         String query = base + "/v1/videos/generations/" + encodeQuery(taskId.trim())
                 + "?model=" + encodeQuery(model);
         long intervalMs = Math.max(MEDIA_POLL_INTERVAL_MS, ProviderHttp.pollIntervalMs(cfg));
-        long deadline = System.currentTimeMillis() + mediaPollBudgetMs(timeoutSec);
+        long deadline = officialSliceSec == null
+                ? System.currentTimeMillis() + mediaPollBudgetMs(timeoutSec)
+                : System.currentTimeMillis() + Math.max(0, officialSliceSec) * 1000L;
         while (System.currentTimeMillis() < deadline) {
             try {
                 Map<String, Object> resp = get(query, apiKey, 60);
@@ -386,6 +416,10 @@ public class TencentTokenHubAiProvider implements AiProvider {
                 log.warn("media status query will retry taskId={}", taskId);
             }
             sleeper.sleep(intervalMs);
+        }
+        if (officialSliceSec != null) {
+            var open = activeReceipt.get();
+            throw new OfficialVideoStillOpenException(open == null ? null : open.requestId);
         }
         throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "model task timeout");
     }

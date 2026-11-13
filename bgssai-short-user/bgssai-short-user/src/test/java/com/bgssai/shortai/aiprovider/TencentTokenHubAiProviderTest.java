@@ -472,6 +472,37 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void officialVideoTimeoutResumesTheOriginalReceiptAndDoesNotSubmitAgain() {
+        FakeClient http = new FakeClient();
+        http.posts.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        var receipts = org.mockito.Mockito.mock(com.bgssai.shortai.billing.UsageReceiptService.class);
+        var receipt = new com.bgssai.shortai.billing.UsageReceiptRow();
+        String requestId = "981ab970-447e-4a04-a2f0-a085ebbf435b";
+        receipt.requestId = requestId;
+        org.mockito.Mockito.when(receipts.begin(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(receipt);
+        org.mockito.Mockito.when(receipts.resumeVideo(requestId, "https://www.bgssai-tokenhub.cn", "key", "bgssai-video"))
+                .thenReturn(receipt);
+        TencentTokenHubAiProvider provider = provider(http, "key");
+        org.springframework.test.util.ReflectionTestUtils.setField(provider, "receipts", receipts);
+        AiProviderRequest first = request("VIDEO", "bgssai-video", "banquet");
+        first.getParams().put("official_slice_sec", 0);
+        OfficialVideoStillOpenException open = assertThrows(OfficialVideoStillOpenException.class, () -> provider.execute(first));
+        assertEquals(requestId, open.requestId());
+        assertEquals(1, http.postedUrls.size());
+        http.gets.add("{\"id\":\"video_0123456789abcdef01234567\",\"status\":\"queued\"}");
+        AiProviderRequest again = request("VIDEO", "bgssai-video", "banquet");
+        again.getParams().put("resume_request_id", requestId);
+        again.getParams().put("official_slice_sec", 0);
+        assertThrows(OfficialVideoStillOpenException.class, () -> provider.execute(again));
+        assertEquals(1, http.postedUrls.size());
+        assertTrue(http.polledUrls.get(0).contains("/by-request/" + requestId));
+        org.mockito.Mockito.verify(receipts, org.mockito.Mockito.times(1)).begin(
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
     void mediaPollBudgetHonorsModelTimeout() {
         assertEquals(180_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(60));
         assertEquals(900_000L, TencentTokenHubAiProvider.mediaPollBudgetMs(900));

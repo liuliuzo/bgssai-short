@@ -12,6 +12,8 @@ Worker 恢复完成后先持久化 selected_flag=0 的真实 VIDEO 候选，再�
 
 MediaMetadata 对真实视频字节解析得到的 duration_sec 用于资产和用量；shot_duration_sec 仅是请求及合成计划，不回写覆盖真实视频时长。回归使用已有合法 MP4 fixture 经真实 ffprobe，并通过实际 Worker 调用及 MyBatis/H2 条件更新验证并发拒绝、候选选择顺序和时长保留。
 
+公司视频在 Short 侧串行：已有一条执行中时，其余保持排队。列表按队列实时给出 `queue_ahead`、`elapsed_sec`、`progress_hint`、`status_note`，不落库。轮询超过一小段仍未完成时抛出仍在处理，写回原 `resume_request_id` 后继续查同一回执，不调用新的生成。种子 SVG 可以在恢复落镜时被真实 mp4 替换；已经是对象存储成片的 `video_asset_id` 仍拒绝覆盖。提示词把定妆外貌、服装、场景和道具放在动作描述之前。没有真实参考图时不把占位首帧当成已出图。
+
 镜头 CAS 与资产 selected_flag 更新放在同一短数据库事务；任一步未命中或失败均回滚落镜，已保存的候选仍未选。模型轮询、媒体探测和对象存储不占用该事务。资产 ID 实体读取会 trim，因此 CAS 对非 null 空白资产值按 trim 后空值比较，null 保持独立匹配。
 
 short_shot.updated_time 的 DATETIME 秒精度不能独立标识编辑版本。Worker 原快照与重读结果还须同时比较 shot_version、prompt_version；最终 CAS 对这两个字段同样执行 null-safe 精确比较，null 不视为零。同时间戳而版本变化的 Worker/H2 回归必须拒绝，避免同秒编辑被覆盖。

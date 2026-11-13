@@ -20,6 +20,7 @@ import com.bgssai.shortai.common.exception.ForbiddenException;
 import com.bgssai.shortai.mapper.ShortAssetMapper;
 import com.bgssai.shortai.model.ShortAsset;
 import com.bgssai.shortai.model.ShortAssetExample;
+import com.bgssai.shortai.production.support.OfficialVideoLane;
 import com.bgssai.shortai.storage.ObjectStorage;
 
 @Service
@@ -41,6 +42,31 @@ public class AssetService {
      * JSON 的接口；前端把它塞进 &lt;img src&gt; 后浏览器既不带头也拿不到图片字节，画面必然是裂的。
      * 预签名是本地 HMAC 计算，不发网络请求，可以安全地在列表里逐条调用。
      */
+    public boolean placeholderImage(String assetId) {
+        ShortAsset asset = load(assetId);
+        if (asset == null) {
+            return false;
+        }
+        return OfficialVideoLane.isPlaceholderImage(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
+    }
+
+    public boolean placeholderVideo(String assetId) {
+        ShortAsset asset = load(assetId);
+        if (asset == null) {
+            return false;
+        }
+        return OfficialVideoLane.isPlaceholderVideo(asset.getStorageKey(), asset.getMimeType(), asset.getFileSizeByte());
+    }
+
+    private ShortAsset load(String assetId) {
+        if (assetId == null || assetId.isBlank()) {
+            return null;
+        }
+        ShortAssetExample ex = new ShortAssetExample();
+        ex.createCriteria().andAssetIdEqualTo(assetId).andDeletedFlagEqualTo(0);
+        return shortAssetMapper.selectOneByExample(ex);
+    }
+
     public String resolveUrl(String assetId) {
         if (assetId == null || assetId.isBlank()) {
             return null;

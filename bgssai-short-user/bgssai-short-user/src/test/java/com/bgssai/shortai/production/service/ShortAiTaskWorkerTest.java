@@ -159,7 +159,7 @@ class ShortAiTaskWorkerTest {
         character.setCharacterName("Test character");
         character.setUserId("u-test");
         character.setWorkId("w-test");
-        when(tasks.selectOneByExample(any())).thenReturn(task);
+        when(tasks.selectByExample(any())).thenReturn(java.util.List.of(task));
         when(tasks.updateByExampleSelective(any(), any())).thenReturn(1);
         when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
         when(characters.selectOneByExample(any())).thenReturn(character);
@@ -191,7 +191,7 @@ class ShortAiTaskWorkerTest {
         task.setId(9L);
         task.setTaskId("t-1");
         task.setTaskStatus("QUEUED");
-        when(mapper.selectOneByExample(any())).thenReturn(task);
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(task));
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(0);
         worker.tick();
         verify(settlement, never()).settle(any(), any(), anyInt());
@@ -227,7 +227,7 @@ class ShortAiTaskWorkerTest {
         model.setUnitPriceCent(15);
         model.setQualityLevel("STANDARD");
         model.setPriceUnit("PER_CALL");
-        when(mapper.selectOneByExample(any())).thenReturn(task);
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(task));
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
         when(resolve.resolve(any(), any())).thenReturn(model);
         worker.tick();
@@ -258,7 +258,7 @@ class ShortAiTaskWorkerTest {
         task.setTargetType("OUTLINE");
         task.setModelCode("bgssai-chat");
         task.setCostCent(1);
-        when(mapper.selectOneByExample(any())).thenReturn(task);
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(task));
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
         when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
         doThrow(new BizException(CommonErrorCode.QUOTA_INSUFFICIENT)).when(quota).assertAffordable("u-1", 1);
@@ -324,7 +324,7 @@ class ShortAiTaskWorkerTest {
         task.setTargetType("SHOT");
         task.setTargetId("sh-1");
         task.setModelCode("bgssai-video");
-        when(mapper.selectOneByExample(any())).thenReturn(task);
+        when(mapper.selectByExample(any())).thenReturn(java.util.List.of(task));
         when(mapper.updateByExampleSelective(any(), any())).thenReturn(1);
         when(resolve.resolve(any(), any())).thenReturn(new AiModelConfig());
         worker.tick();
@@ -416,14 +416,14 @@ class ShortAiTaskWorkerTest {
         ShortAiTaskWorker worker = new ShortAiTaskWorker();
         ReflectionTestUtils.setField(worker, "shortAiTaskMapper", mapper);
         ReflectionTestUtils.setField(worker, "aiTaskExecutor", new SyncTaskExecutor());
-        when(mapper.selectOneByExample(any())).thenThrow(
+        when(mapper.selectByExample(any())).thenThrow(
                 new InvalidDataAccessResourceUsageException(
                         "Table 'bgssai_short.short_ai_task' doesn't exist"));
 
         worker.tick();
         worker.tick();
 
-        verify(mapper, times(1)).selectOneByExample(any());
+        verify(mapper, times(1)).selectByExample(any());
         long pauseUntil = (Long) ReflectionTestUtils.getField(worker, "pollPauseUntilEpochMs");
         Assertions.assertTrue(pauseUntil > System.currentTimeMillis());
         Assertions.assertEquals(1, ReflectionTestUtils.getField(worker, "pollFailureStreak")

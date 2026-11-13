@@ -150,8 +150,7 @@ class WorkerVideoRecoveryTest {
             task.setTaskStatus("QUEUED"); task.setModelCode("bgssai-video");
             task.setRequestJson(recovery ? "{\"resume_request_id\":\"original-request\"}" : "{}");
             model.setPriceUnit("PER_SECOND"); model.setModelCode("bgssai-video");
-            when(tasks.selectOneByExample(any())).thenReturn(task);
-            when(tasks.selectByExample(any())).thenReturn(List.of());
+            when(tasks.selectByExample(any())).thenReturn(List.of(task));
             when(tasks.updateByExampleSelective(any(), any())).thenReturn(1);
             when(shots.selectOneByExample(any())).thenAnswer(c -> current.get());
             when(shots.attachRecoveredVideoIfUnchanged(any(), any(), any())).thenReturn(1);

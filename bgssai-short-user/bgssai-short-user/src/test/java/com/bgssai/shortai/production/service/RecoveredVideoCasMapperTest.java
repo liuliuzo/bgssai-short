@@ -26,6 +26,7 @@ class RecoveredVideoCasMapperTest {
         transactions = new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds);
         db.execute("create table short_shot(id bigint primary key, shot_id varchar(64), user_id varchar(64), work_id varchar(64), episode_id varchar(64), deleted_flag int, shot_status varchar(32), updated_time timestamp, video_asset_id varchar(64), last_frame_asset_id varchar(64), shot_version int, prompt_version int)");
         db.execute("create table short_ai_task(id bigint primary key, user_id varchar(64), work_id varchar(64), episode_id varchar(64), target_id varchar(64), target_type varchar(32), task_type varchar(32), task_status varchar(32))");
+        db.execute("create table short_asset(asset_id varchar(64), deleted_flag int, storage_key varchar(4000))");
         db.update("insert into short_shot values(7,'shot','owner','work','episode',0,'IMAGE_READY',?,null,null,1,1)", new Date(1000));
         db.update("insert into short_ai_task values(9,'owner','work','episode','shot','SHOT','VIDEO','RUNNING')");
         var factory = new SqlSessionFactoryBean();
@@ -36,6 +37,16 @@ class RecoveredVideoCasMapperTest {
         expected.setWorkId("work"); expected.setEpisodeId("episode"); expected.setShotStatus("IMAGE_READY"); expected.setUpdatedTime(new Date(1000));
         expected.setShotVersion(1); expected.setPromptVersion(1);
         patch = new ShortShot(); patch.setVideoAssetId("recovered"); patch.setLastFrameAssetId("tail"); patch.setUpdatedTime(new Date(3000));
+    }
+    @Test void seedSvgCanBeReplacedAndAStoredClipCannot() {
+        db.update("update short_shot set video_asset_id='as-seed'");
+        db.update("insert into short_asset values('as-seed',0,'<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>')");
+        expected.setVideoAssetId("as-seed");
+        assertEquals(1, mapper.attachRecoveredVideoIfUnchanged(expected, patch, 9L));
+        db.update("update short_shot set video_asset_id='as-real',shot_status='IMAGE_READY',updated_time=?", new Date(1000));
+        db.update("insert into short_asset values('as-real',0,'short/dev/owner/work/clip.mp4')");
+        expected.setVideoAssetId("as-real");
+        assertEquals(0, mapper.attachRecoveredVideoIfUnchanged(expected, patch, 9L));
     }
     @Test void nullAndBlankVideoAreAttachedOnceWithExactSnapshot() {
         assertEquals(1, mapper.attachRecoveredVideoIfUnchanged(expected, patch, 9L));
