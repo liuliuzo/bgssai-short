@@ -60,6 +60,7 @@ public final class CompanyCompatGateway {
             case "IMAGE" -> "sd-turbo".equals(id) || "bgssai-image".equals(id);
             case "VIDEO" -> id.startsWith("cogvideox") || "bgssai-video".equals(id);
             case "VOICE" -> "piper".equals(id) || "bgssai-tts".equals(id) || "edge-tts".equals(id);
+            case "ASR" -> "whisper-1".equals(id) || id.startsWith("faster-whisper") || "bgssai-asr".equals(id);
             default -> false;
         };
     }
@@ -73,6 +74,7 @@ public final class CompanyCompatGateway {
             case "IMAGE" -> "sd-turbo";
             case "VIDEO" -> "cogvideox";
             case "VOICE" -> "piper";
+            case "ASR" -> "whisper-1";
             default -> "";
         };
     }
@@ -105,6 +107,8 @@ public final class CompanyCompatGateway {
         cfg.put("image_path", "/images/generations");
         cfg.put("video_path", "/videos/generations");
         cfg.put("speech_path", "/audio/speech");
+        cfg.put("transcription_path", "/audio/transcriptions");
+        cfg.put("language", "zh");
         cfg.put("size", "512x768");
         cfg.put("default_voice_id", "zh");
         cfg.put("poll_interval_ms", 3000);
@@ -117,6 +121,7 @@ public final class CompanyCompatGateway {
             case "IMAGE" -> "分镜画面";
             case "VIDEO" -> "镜头视频";
             case "VOICE" -> "台词配音";
+            case "ASR" -> "台词转写";
             default -> "";
         };
     }

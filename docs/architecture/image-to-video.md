@@ -34,7 +34,7 @@
 
 ## 4. 官方镜头
 
-- 开发种子启用 `m-bgssai-image-to-video`，地址 `https://chat.bgssai.com/i2v`，超时 14400 秒，单价与文生视频同为每秒 20 分，按 25 帧 / 8 fps 向上取整计费。生产种子不写这一行。
+- 共享种子、开发种子与生产种子均启用 `m-bgssai-image-to-video`，地址 `https://chat.bgssai.com/i2v`，超时 14400 秒，单价与文生视频同为每秒 20 分，按 25 帧 / 8 fps 向上取整计费；仓库只写空占位密钥，由管理端注入真实密钥后正式生效。
 - 官方按钮有真实 PNG/JPEG 时入队图生视频，并沿用 `OfficialShotVideoService.submit` 分配的 `batch_id` 以便 `batch-progress` 追踪整批进度；成功后才把 `video_asset_id` 换成新成片，同时清零 `stale_flag` 并调用 `FinishedFilmLifecycle.expireAfterUpstreamChange` 将旧成片置为过期。失败把 `VIDEO_GENERATING` 按仍绑定的真实成片或首帧退回。种子占位不算照片，改走文生视频。
 - 供应商技术成片是 384×256、25 帧、8 fps、约 3 秒。界面照实写，不说成 9:16 或 6 秒。
 - v0.2 在解码前拒绝超过 16000000 像素，返回 HTTP 400。完成前读取内容返回 409。应用侧仍先做同样的像素检查，并且只在 `completed` 且相对路径吻合时取成片。

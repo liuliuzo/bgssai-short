@@ -776,6 +776,15 @@ public class ShortAiTaskWorker {
         String inputUrl = objectStorage.presignGet(asset.getStorageKey(), 3600).downloadUrl();
         AiProviderRequest request = baseRequest(model, "ASR", "SUBTITLE_TRANSCRIBE");
         request.getParams().put("input_url", inputUrl);
+        if (com.bgssai.shortai.aiprovider.OpenAiCompatibleAiProvider.CODE.equalsIgnoreCase(model.getProviderCode())) {
+            byte[] audioBytes = objectStorage.get(asset.getStorageKey());
+            if (audioBytes != null && audioBytes.length > 0) {
+                request.getParams().put("audio_bytes", audioBytes);
+            }
+            if (asset.getMimeType() != null && !asset.getMimeType().isBlank()) {
+                request.getParams().put("audio_mime", asset.getMimeType());
+            }
+        }
         request.setPrompt("Transcribe dubbing " + dubbing.getDubbingId());
         AiProviderResult result = execute(model, request);
         Map<String, Object> output = ShortJson.map(result.getTextContent());

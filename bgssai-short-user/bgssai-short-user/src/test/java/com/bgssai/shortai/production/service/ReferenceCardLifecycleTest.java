@@ -29,7 +29,12 @@ class ReferenceCardLifecycleTest {
         ReflectionTestUtils.setField(service, "shortSceneCardMapper", scenes);
         ReflectionTestUtils.setField(service, "shortShotMapper", shots);
         ReflectionTestUtils.setField(service, "shortAiTaskMapper", tasks);
-        ReflectionTestUtils.setField(service, "shortAssetMapper", mock(ShortAssetMapper.class));
+        ShortAssetMapper assets = mock(ShortAssetMapper.class);
+        ShortAsset cardImg = new ShortAsset();
+        cardImg.setAssetId("a-new"); cardImg.setUserId("u-1"); cardImg.setWorkId("w-1");
+        cardImg.setShotId("sc-1"); cardImg.setAssetType("IMAGE");
+        when(assets.selectOneByExample(any())).thenReturn(cardImg);
+        ReflectionTestUtils.setField(service, "shortAssetMapper", assets);
         ReflectionTestUtils.setField(service, "assetService", mock(AssetService.class));
         when(access.requireUser()).thenReturn("u-1");
         ShortWork work = new ShortWork(); work.setWorkId("w-1"); work.setUserId("u-1");

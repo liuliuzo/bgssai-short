@@ -32,16 +32,14 @@ INSERT INTO `wechat_pay_config` (`merchant_name`, `mch_id`, `app_id`, `notify_ur
 INSERT INTO `alipay_config` (`merchant_name`, `app_id`, `notify_url`, `env_mode`, `is_enabled`, `is_collection_active`, `del_flag`, `creator`) VALUES ('BGSSAI Short Alipay', '2021006196627810', 'https://dev.user.bgssai-short.com/bgssai/user/payment/alipay/notify', 'PRODUCTION', 1, 1, 0, 'seed') ON DUPLICATE KEY UPDATE `notify_url` = IF(`notify_url` IS NULL OR `notify_url` = '', VALUES(`notify_url`), `notify_url`);
 
 -- 
--- Force TokenHub-CN API key + DeepSeek TEXT default (2026-09-17)
+-- Keep TokenHub-CN routing normalized without overriding company defaults
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`)
 VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'TokenHub-CN gateway key (bgssai-short)', 1, 'system')
 ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
 UPDATE ai_model_config
-SET model_code = 'deepseek-chat', model_name = 'DeepSeek Chat', default_flag = 1,
+SET model_code = 'deepseek-chat', model_name = 'DeepSeek Chat', default_flag = 0,
     config_json = JSON_REMOVE(JSON_SET(COALESCE(config_json, '{}'), '$.hub', 'cn', '$.chat_path', '/v1/chat/completions', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
 WHERE model_id = 'm-tokenhub-text-deepseek';
-UPDATE ai_model_config SET default_flag = 0
-WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT' AND model_id <> 'm-tokenhub-text-deepseek';
 UPDATE ai_model_config
 SET config_json = JSON_REMOVE(COALESCE(config_json, '{}'), '$.base_url')
 WHERE provider_code = 'TENCENT_TOKENHUB';
@@ -57,9 +55,8 @@ SET `enabled_flag` = 0, `default_flag` = 0
 WHERE `model_id` LIKE 'm-tokenhub-global-%'
    OR (`provider_code` = 'TENCENT_TOKENHUB' AND JSON_UNQUOTE(JSON_EXTRACT(`config_json`, '$.hub')) = 'global');
 
--- 图片默认：网关已注册的可灵文生图。不新增密钥。
-INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-image-kling', 'IMAGE', 'TENCENT_TOKENHUB', 'kling-v3', '可灵文生图', 'STANDARD', 'PER_CALL', 80, 1, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
-UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'IMAGE' AND `model_id` <> 'm-tokenhub-image-kling' AND `deleted_flag` = 0;
+-- 可灵文生图保留为可选备选模型，不覆盖公司默认 bgssai-image。
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-image-kling', 'IMAGE', 'TENCENT_TOKENHUB', 'kling-v3', '可灵文生图', 'STANDARD', 'PER_CALL', 80, 0, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 0, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
 
 -- 本库账本默认套餐目录（开发环境幂等回填）
 INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price_cent`, `yearly_price_cent`, `five_hour_limit_tokens`, `weekly_limit_tokens`, `sort_no`, `enabled`, `del_flag`, `creator`, `modifier`) VALUES ('FREE', '免费版', 0, 0, 1000, 10000, 1, 1, 0, 'system', 'system') ON DUPLICATE KEY UPDATE `plan_name` = VALUES(`plan_name`), `five_hour_limit_tokens` = VALUES(`five_hour_limit_tokens`), `weekly_limit_tokens` = VALUES(`weekly_limit_tokens`), `enabled` = 1, `del_flag` = 0;
@@ -75,25 +72,25 @@ INSERT INTO `ledger_subscription_plan` (`plan_code`, `plan_name`, `monthly_price
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e1e72ce67088450f822c', 'qa_short_a', 'qa_short_a', 'PM3nrTt9PIaRT3p8L07g', 'qa+short+a@bgssai-test.local', 'PLATFORM_ADMIN', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('qa-e47544decfbd4c74bfd2', 'qa_short_u', 'qa_short_u', 'Ckeh8Pqt3eSjN5BWaOh9', 'qa+short+u@bgssai-test.local', 'USER', 1, 0, 'qa-seed-20261015') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `email` = VALUES(`email`), `real_name` = VALUES(`real_name`), `org_code` = VALUES(`org_code`), `status` = 1, `del_flag` = 0;
 
--- 公司自托管的文本、画面、配音默认不在本文件改写，也不写 ai.openai_compat.api_key。
--- VIDEO 例外只在下面 2026-11-12 段：开发库把 bgssai-video 设为默认。生产种子没有这段。
--- 直连 https://chat.bgssai.com/v1 前，管理端须同时清空 ai.tokenhub_cn.api_key 与 ai.tencent_tokenhub.api_key
--- （本文件会把占位符写回这两行），再填写 ai.openai_compat.api_key。
+-- 公司自托管多模态模型目录对齐（2026-11-12 / 2026-11-13）：
+-- 文本（bgssai-chat）、分镜图（bgssai-image）、配音（bgssai-tts）、文生视频（bgssai-video）统一设为默认。
+-- 图生视频（https://chat.bgssai.com/i2v）与公司直连语音转写（https://chat.bgssai.com/v1/audio/transcriptions）仅写空占位密钥，绝不写入真实密钥。
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-text-bgssai-chat', 'TEXT', 'TENCENT_TOKENHUB', 'bgssai-chat', 'BGSSAI Chat', 'STANDARD', 'PER_KILO_TOKEN', 1, 1, 1, 120, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","chat_path":"/v1/chat/completions","public_alias":"bgssai-chat","public_name":"BGSSAI Chat"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'TEXT' AND `model_id` <> 'm-tokenhub-text-bgssai-chat' AND `deleted_flag` = 0;
 
--- DEV only（2026-11-12）：页内「生成视频」未传模型，或中枢目录快照为空时，走公司模型 bgssai-video。
--- 只改 ai_model_config 的 VIDEO 默认。不写密钥，不改集、分镜或成片素材。
--- sql/prod/DML.sql 不包含本段。生产 VIDEO 默认仍是 m-tokenhub-video-minimax / minimax-video-h3。
--- 历史行 m-tokenhub-video-cogvideox 若 model_code 仍是 cogvideox，下面的新 model_id 与它不冲突。
--- 新装库里该编号已经落在历史 id 上时，唯一键更新那一行，不另插第二条 bgssai-video。
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-image-bgssai', 'IMAGE', 'TENCENT_TOKENHUB', 'bgssai-image', 'BGSSAI Image', 'STANDARD', 'PER_CALL', 40, 1, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","public_alias":"bgssai-image","public_name":"BGSSAI Image"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'IMAGE' AND `model_id` <> 'm-tokenhub-image-bgssai' AND `deleted_flag` = 0;
+
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-voice-bgssai-tts', 'VOICE', 'TENCENT_TOKENHUB', 'bgssai-tts', 'BGSSAI TTS', 'STANDARD', 'PER_CALL', 2, 1, 1, 180, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","default_voice_id":"alloy","public_alias":"bgssai-tts","public_name":"BGSSAI TTS"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `default_flag` = 1, `enabled_flag` = 1, `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
+UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'VOICE' AND `model_id` <> 'm-tokenhub-voice-bgssai-tts' AND `deleted_flag` = 0;
+
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-tokenhub-video-bgssai', 'VIDEO', 'TENCENT_TOKENHUB', 'bgssai-video', 'BGSSAI Video', 'STANDARD', 'PER_SECOND', 20, 1, 1, 900, 1, '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}') ON DUPLICATE KEY UPDATE `model_code` = 'bgssai-video', `provider_code` = 'TENCENT_TOKENHUB', `model_name` = 'BGSSAI Video', `enabled_flag` = 1, `deleted_flag` = 0, `timeout_sec` = 900, `default_flag` = 1, `config_json` = '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}';
 UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `model_id` = 'm-tokenhub-video-minimax';
 UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'VIDEO' AND `deleted_flag` = 0 AND `model_code` = 'cogvideox';
 UPDATE `ai_model_config` SET `default_flag` = 0 WHERE `ability_type` = 'VIDEO' AND `deleted_flag` = 0 AND NOT (`provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video');
 UPDATE `ai_model_config` SET `provider_code` = 'TENCENT_TOKENHUB', `model_name` = 'BGSSAI Video', `enabled_flag` = 1, `deleted_flag` = 0, `timeout_sec` = 900, `default_flag` = 1, `config_json` = '{"hub":"cn","secret_ref":"ai.tokenhub_cn.api_key","poll_interval_ms":3000,"public_alias":"bgssai-video","public_name":"BGSSAI Video"}' WHERE `ability_type` = 'VIDEO' AND `provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video' AND `deleted_flag` = 0;
 
--- 图生视频（2026-11-13）：公网入口 https://chat.bgssai.com/i2v/ ，CPU，不占文生视频的 T4。
--- 成片固定约 384×256、25 帧、8 fps（约 3 秒），不是 9:16。密钥不写进本文件。
--- 专用键 ai.image_to_video.api_key 为空时，应用改读已有的公司键 ai.openai_compat.api_key，不读中枢键。
--- 只在开发种子启用。生产种子没有这一行。
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.openai_compat.api_key', '', '公司自建多模态网关 Bearer（https://chat.bgssai.com/v1）。不写真实密钥。', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.image_to_video.api_key', '', '图生视频 Bearer。空值时改用公司键 ai.openai_compat.api_key 调用 https://chat.bgssai.com/i2v 。不写真实密钥。', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-compat-asr-whisper', 'ASR', 'OPENAI_COMPAT', 'whisper-1', '台词转写', 'STANDARD', 'PER_MINUTE', 2, 0, 1, 300, 1, '{"base_url":"https://chat.bgssai.com/v1","secret_ref":"ai.openai_compat.api_key","transcription_path":"/audio/transcriptions","language":"zh","public_alias":"bgssai-asr","public_name":"BGSSAI ASR"}') ON DUPLICATE KEY UPDATE `model_code` = VALUES(`model_code`), `model_name` = VALUES(`model_name`), `provider_code` = VALUES(`provider_code`), `enabled_flag` = 1, `timeout_sec` = VALUES(`timeout_sec`), `config_json` = VALUES(`config_json`), `deleted_flag` = 0;
 INSERT INTO `ai_model_config` (`model_id`, `ability_type`, `provider_code`, `model_code`, `model_name`, `quality_level`, `price_unit`, `unit_price_cent`, `default_flag`, `enabled_flag`, `timeout_sec`, `max_retry`, `config_json`) VALUES ('m-bgssai-image-to-video', 'VIDEO', 'IMAGE_CONDITIONED_VIDEO', 'bgssai-video-i2v', 'BGSSAI Video', 'STANDARD', 'PER_SECOND', 20, 0, 1, 14400, 0, '{"base_url":"https://chat.bgssai.com/i2v","secret_ref":"ai.image_to_video.api_key","public_alias":"bgssai-video","public_name":"BGSSAI Video","width":384,"height":256,"num_frames":25,"fps":8}') ON DUPLICATE KEY UPDATE `model_name` = 'BGSSAI Video', `price_unit` = 'PER_SECOND', `unit_price_cent` = 20, `timeout_sec` = 14400, `enabled_flag` = 1, `default_flag` = 0, `deleted_flag` = 0, `config_json` = '{"base_url":"https://chat.bgssai.com/i2v","secret_ref":"ai.image_to_video.api_key","public_alias":"bgssai-video","public_name":"BGSSAI Video","width":384,"height":256,"num_frames":25,"fps":8}';

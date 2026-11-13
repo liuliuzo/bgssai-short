@@ -70,6 +70,18 @@ public class AiModelResolveService {
                 if (hubRow != null) {
                     return hubRow;
                 }
+                if ("ASR".equals(ability) && compatKeyReady()) {
+                    AiModelConfig compatRow = firstCompanyCompat(rows);
+                    if (compatRow != null) {
+                        return compatRow;
+                    }
+                    if (CompanyCompatGateway.directModel(ability, modelCode.trim())) {
+                        AiModelConfig compat = CompanyCompatGateway.synthetic(ability, modelCode.trim());
+                        if (compat != null) {
+                            return compat;
+                        }
+                    }
+                }
                 AiModelConfig hubModel = syntheticHubModel(ability, modelCode.trim());
                 if (hubModel != null) {
                     return hubModel;
@@ -98,7 +110,7 @@ public class AiModelResolveService {
             }
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, closed(ability, modelCode));
         }
-        if (!hubKeyReady() && compatKeyReady()) {
+        if ((!hubKeyReady() || "ASR".equals(ability)) && compatKeyReady()) {
             AiModelConfig compat = resolveCompatDefault(ability);
             if (compat != null) {
                 return compat;
