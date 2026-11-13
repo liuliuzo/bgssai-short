@@ -97,7 +97,7 @@ public final class EditBaselineCards {
         record.put("character_version_list", locked);
         record.put("voided_character_list", voided);
         record.put("timeline_version", timeline);
-        record.put("aspect_ratio", aspectRatio == null || aspectRatio.isBlank() ? "9:16" : aspectRatio.trim());
+        record.put("aspect_ratio", AspectRatios.normalize(aspectRatio));
         record.put("consistent_flag", aligned ? 1 : 0);
         record.put("baseline_note", voided.isEmpty()
                 ? (aligned ? "成片与已锁定的角色版本、时间轴版本一致" : "时间轴尚未锁定，不能标成与现行时间轴一致")
