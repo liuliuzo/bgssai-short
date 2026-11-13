@@ -28,6 +28,7 @@ class CompanyModelSeederTest {
         mapper.add("m-tokenhub-image-kling", "IMAGE", "TENCENT_TOKENHUB", "kling-v3", 1);
         mapper.add("m-tokenhub-video-minimax", "VIDEO", "TENCENT_TOKENHUB", "minimax-video-h3", 1);
         mapper.add("m-tokenhub-video-cogvideox", "VIDEO", "TENCENT_TOKENHUB", "bgssai-video", 0);
+        mapper.add("m-tokenhub-music-minimax", "MUSIC", "TENCENT_TOKENHUB", "minimax-music-v2.6", 1);
 
         new CompanyModelSeeder(mapper).run(new DefaultApplicationArguments());
 
@@ -43,11 +44,13 @@ class CompanyModelSeederTest {
         assertEquals("bgssai-image", mapper.defaultOf("IMAGE").getModelCode());
         assertEquals("bgssai-tts", mapper.defaultOf("VOICE").getModelCode());
         assertEquals("bgssai-video", mapper.defaultOf("VIDEO").getModelCode());
+        assertEquals("bgssai-music", mapper.defaultOf("MUSIC").getModelCode());
         assertEquals("ffmpeg-concat", mapper.defaultOf("COMPOSE").getModelCode());
 
         assertEquals(0, mapper.byModelId("m-tokenhub-text-deepseek").getDefaultFlag());
         assertEquals(0, mapper.byModelId("m-tokenhub-image-kling").getDefaultFlag());
         assertEquals(0, mapper.byModelId("m-tokenhub-video-minimax").getDefaultFlag());
+        assertEquals(0, mapper.byModelId("m-tokenhub-music-minimax").getDefaultFlag());
 
         AiModelConfig i2v = mapper.byModelId("m-bgssai-image-to-video");
         assertNotNull(i2v);
@@ -57,6 +60,10 @@ class CompanyModelSeederTest {
         AiModelConfig asr = mapper.byModelId("m-compat-asr-whisper");
         assertNotNull(asr);
         assertEquals("whisper-1", asr.getModelCode());
+
+        AiModelConfig musicCompat = mapper.byModelId("m-compat-music-musicgen");
+        assertNotNull(musicCompat);
+        assertEquals("musicgen-small", musicCompat.getModelCode());
     }
 
     @Test

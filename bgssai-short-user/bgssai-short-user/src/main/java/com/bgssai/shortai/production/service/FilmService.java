@@ -469,7 +469,7 @@ public class FilmService {
 
     private List<Map<String, Object>> bgmCandidates(ShortEpisode ep, String selectedBgm) {
         ShortAssetExample ex = new ShortAssetExample();
-        ex.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andAssetTypeEqualTo("AUDIO")
+        ex.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andAssetTypeEqualTo("AUDIO")
                 .andDeletedFlagEqualTo(0);
         ex.setOrderByClause("created_time desc, id desc");
         List<Map<String, Object>> result = new ArrayList<>();
@@ -494,9 +494,8 @@ public class FilmService {
         ex.createCriteria().andAssetIdEqualTo(assetId).andUserIdEqualTo(work.getUserId())
                 .andWorkIdEqualTo(work.getWorkId()).andAssetTypeEqualTo("AUDIO").andDeletedFlagEqualTo(0);
         ShortAsset asset = shortAssetMapper.selectOneByExample(ex);
-        if (asset == null || (asset.getShotId() != null && !asset.getShotId().isBlank())
-                || (episodeId != null && !episodeId.isBlank() && !episodeId.equals(asset.getEpisodeId()))) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "BGM asset not found in this episode");
+        if (asset == null || (asset.getShotId() != null && !asset.getShotId().isBlank())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "BGM asset not found in this work");
         }
     }
 

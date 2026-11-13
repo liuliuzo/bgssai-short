@@ -805,6 +805,9 @@ public class ShortAiTaskWorker {
         request.setPrompt(ShortJson.text(req.get("prompt")));
         request.getParams().put("lyrics", req.get("lyrics"));
         request.getParams().put("is_instrumental", req.get("is_instrumental"));
+        if (req.get("duration_sec") != null) {
+            request.getParams().put("duration_sec", req.get("duration_sec"));
+        }
         AiProviderResult result = execute(model, request);
         if (result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "music provider returned empty audio");
@@ -1185,6 +1188,12 @@ public class ShortAiTaskWorker {
         ShortShot patch = new ShortShot();
         if ("VIDEO".equals(task.getTaskType())) {
             patch.setVideoAssetId(asset.getAssetId());
+            Integer playableSec = com.bgssai.shortai.production.support.PlayableVideoDuration.floorSeconds(result.getBinaryContent());
+            Integer clampSec = playableSec != null ? playableSec : asset.getDurationSec();
+            if (clampSec != null && clampSec > 0
+                    && (shot.getShotDurationSec() == null || shot.getShotDurationSec() > clampSec)) {
+                patch.setShotDurationSec(clampSec);
+            }
             patch.setShotStatus("VIDEO_READY");
             String lastFrameAssetId = extractLastFrame(shot, result, task);
             if (lastFrameAssetId != null) {
@@ -1489,12 +1498,21 @@ public class ShortAiTaskWorker {
         sx.createCriteria().andEpisodeIdEqualTo(ep.getEpisodeId()).andDeletedFlagEqualTo(0);
         sx.setOrderByClause("shot_no asc");
         List<ShortShot> shots = shortShotMapper.selectByExample(sx);
+        List<byte[]> clips = loadClips(shots);
         Map<String, Object> timelineMap = new LinkedHashMap<>();
         timelineMap.put("episode_id", ep.getEpisodeId());
         List<Map<String, Object>> shotMeta = new ArrayList<>();
         int duration = 0;
-        for (ShortShot shot : shots) {
+        for (int i = 0; i < shots.size(); i++) {
+            ShortShot shot = shots.get(i);
             int dur = shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec();
+            Integer playable = i < clips.size()
+                    ? com.bgssai.shortai.production.support.PlayableVideoDuration.floorSeconds(clips.get(i))
+                    : null;
+            if (playable != null && playable > 0 && playable < dur) {
+                dur = playable;
+                shot.setShotDurationSec(dur);
+            }
             duration += dur;
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("shot_no", shot.getShotNo());
@@ -1514,7 +1532,7 @@ public class ShortAiTaskWorker {
         request.getParams().put("title", ep.getEpisodeTitle());
         request.getParams().put("duration_sec", duration);
         request.getParams().put(FfmpegComposeProvider.PARAM_ASPECT_RATIO, workAspectRatio(ep.getWorkId()));
-        request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, loadClips(shots));
+        request.getParams().put(FfmpegComposeProvider.PARAM_CLIPS, clips);
         List<Integer> clipDurations = new ArrayList<>();
         List<String> dubbingMissing = new ArrayList<>();
         List<byte[]> dubbingAudio = loadDubbingAudio(shots, clipDurations, dubbingMissing);
@@ -1696,10 +1714,11 @@ public class ShortAiTaskWorker {
             return null;
         }
         ShortAssetExample ax = new ShortAssetExample();
-        ax.createCriteria().andAssetIdEqualTo(assetId).andEpisodeIdEqualTo(ep.getEpisodeId())
+        ax.createCriteria().andAssetIdEqualTo(assetId).andWorkIdEqualTo(ep.getWorkId())
                 .andAssetTypeEqualTo("AUDIO").andDeletedFlagEqualTo(0);
         ShortAsset asset = shortAssetMapper.selectOneByExample(ax);
-        if (asset == null || asset.getStorageKey() == null || asset.getStorageKey().isBlank()) {
+        if (asset == null || (asset.getShotId() != null && !asset.getShotId().isBlank())
+                || asset.getStorageKey() == null || asset.getStorageKey().isBlank()) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "selected BGM asset is unavailable");
         }
         byte[] bytes = objectStorage.get(asset.getStorageKey());
@@ -2150,8 +2169,14 @@ public class ShortAiTaskWorker {
         if (mime.contains("jpeg") || mime.contains("jpg")) {
             return "jpg";
         }
+        if (mime.contains("webp")) {
+            return "webp";
+        }
         if (mime.contains("mp4")) {
             return "mp4";
+        }
+        if (mime.contains("wav")) {
+            return "wav";
         }
         if (mime.contains("mpeg") || mime.contains("mp3")) {
             return "mp3";

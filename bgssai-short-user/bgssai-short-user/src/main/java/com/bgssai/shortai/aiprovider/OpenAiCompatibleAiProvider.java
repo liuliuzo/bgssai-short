@@ -65,6 +65,9 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         String secretRef = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
                 SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
         String apiKey = secretReader.get(secretRef);
+        if (apiKey.isBlank() && SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(secretRef)) {
+            apiKey = secretReader.get(SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY);
+        }
         if (apiKey.isBlank()) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
                     TokenHubClientSupport.userFacingMessage("AI api key missing for " + secretRef));
@@ -83,6 +86,9 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
             }
             if ("VOICE".equals(ability)) {
                 return voice(baseUrl, apiKey, cfg, request, timeoutSec);
+            }
+            if ("MUSIC".equals(ability)) {
+                return music(baseUrl, apiKey, cfg, request, timeoutSec);
             }
             if ("ASR".equals(ability)) {
                 return asr(baseUrl, apiKey, cfg, request, timeoutSec);
@@ -198,6 +204,44 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         String mime = raw.length >= 4 && raw[0] == 'R' && raw[1] == 'I' && raw[2] == 'F' && raw[3] == 'F'
                 ? "audio/wav" : "audio/mpeg";
         return AiProviderResult.binary(raw, mime);
+    }
+
+    private AiProviderResult music(String baseUrl, String apiKey, Map<String, Object> cfg,
+            AiProviderRequest request, int timeoutSec) throws Exception {
+        String path = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("music_path")), "/audio/music");
+        int durationSec = Math.max(5, Math.min(30, ShortJson.integer(request.param("duration_sec"), 12)));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", request.getModel().getModelCode());
+        body.put("prompt", ProviderHttp.promptOf(request));
+        String lyrics = ShortJson.text(request.param("lyrics"));
+        if (!lyrics.isBlank()) {
+            body.put("lyrics", lyrics);
+        }
+        Object instrumental = request.param("is_instrumental");
+        body.put("is_instrumental", instrumental == null || "1".equals(String.valueOf(instrumental).trim())
+                || "true".equalsIgnoreCase(String.valueOf(instrumental).trim()));
+        body.put("duration", durationSec);
+        byte[] raw = http.postBytes(join(baseUrl, path), headers(apiKey, cfg), ShortJson.toJson(body),
+                Math.min(240, Math.max(60, timeoutSec)));
+        if (raw == null || raw.length == 0) {
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
+                    TokenHubClientSupport.userFacingMessage("model audio missing"));
+        }
+        String text = new String(raw, StandardCharsets.UTF_8).trim();
+        if (text.startsWith("{")) {
+            Map<String, Object> parsed = ShortJson.map(text);
+            AiProviderResult res = mediaBytes(parsed, apiKey, timeoutSec, "audio/mpeg");
+            int parsedDur = ShortJson.integer(parsed.get("duration_sec"), durationSec);
+            if (parsedDur > 0) {
+                res.setDurationSec(parsedDur);
+            }
+            return res;
+        }
+        String mime = raw.length >= 4 && raw[0] == 'R' && raw[1] == 'I' && raw[2] == 'F' && raw[3] == 'F'
+                ? "audio/wav" : "audio/mpeg";
+        AiProviderResult res = AiProviderResult.binary(raw, mime);
+        res.setDurationSec(durationSec);
+        return res;
     }
 
     private AiProviderResult asr(String baseUrl, String apiKey, Map<String, Object> cfg,

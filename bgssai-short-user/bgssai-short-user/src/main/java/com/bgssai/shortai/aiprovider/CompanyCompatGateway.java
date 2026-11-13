@@ -61,6 +61,7 @@ public final class CompanyCompatGateway {
             case "VIDEO" -> id.startsWith("cogvideox") || "bgssai-video".equals(id);
             case "VOICE" -> "piper".equals(id) || "bgssai-tts".equals(id) || "edge-tts".equals(id);
             case "ASR" -> "whisper-1".equals(id) || id.startsWith("faster-whisper") || "bgssai-asr".equals(id);
+            case "MUSIC" -> "musicgen-small".equals(id) || id.startsWith("musicgen") || "bgssai-music".equals(id);
             default -> false;
         };
     }
@@ -75,6 +76,7 @@ public final class CompanyCompatGateway {
             case "VIDEO" -> "cogvideox";
             case "VOICE" -> "piper";
             case "ASR" -> "whisper-1";
+            case "MUSIC" -> "musicgen-small";
             default -> "";
         };
     }
@@ -94,7 +96,7 @@ public final class CompanyCompatGateway {
         model.setUnitPriceCent(0);
         model.setDefaultFlag(0);
         model.setEnabledFlag(1);
-        model.setTimeoutSec("VIDEO".equals(kind) ? 900 : 180);
+        model.setTimeoutSec("MUSIC".equals(kind) ? 240 : ("VIDEO".equals(kind) ? 900 : 180));
         model.setConfigJson(ShortJson.toJson(config()));
         return model;
     }
@@ -107,6 +109,7 @@ public final class CompanyCompatGateway {
         cfg.put("image_path", "/images/generations");
         cfg.put("video_path", "/videos/generations");
         cfg.put("speech_path", "/audio/speech");
+        cfg.put("music_path", "/audio/music");
         cfg.put("transcription_path", "/audio/transcriptions");
         cfg.put("language", "zh");
         cfg.put("size", "512x768");
@@ -122,6 +125,7 @@ public final class CompanyCompatGateway {
             case "VIDEO" -> "镜头视频";
             case "VOICE" -> "台词配音";
             case "ASR" -> "台词转写";
+            case "MUSIC" -> "背景配乐";
             default -> "";
         };
     }

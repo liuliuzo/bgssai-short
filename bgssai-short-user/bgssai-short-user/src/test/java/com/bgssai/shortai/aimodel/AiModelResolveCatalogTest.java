@@ -122,6 +122,41 @@ class AiModelResolveCatalogTest {
         assertEquals("whisper-1", chosen.getModelCode());
     }
 
+    @Test
+    void asrFallsBackToImageToVideoCompanyKeyWhenCompatKeyIsBlank() {
+        ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key -> {
+            if (SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY.equals(key)) {
+                return "sk-company";
+            }
+            if (SysSecretReader.AI_TOKENHUB_CN_API_KEY.equals(key)) {
+                return "sk-hub";
+            }
+            return "";
+        }));
+        AiModelConfig whisper = row("ASR", "OPENAI_COMPAT", "whisper-1");
+        whisper.setDefaultFlag(0);
+        whisper.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\",\"transcription_path\":\"/audio/transcriptions\"}");
+        when(mapper.selectByExample(any())).thenReturn(List.of(whisper));
+        AiModelConfig chosen = service.resolve("ASR", null);
+        assertEquals("OPENAI_COMPAT", chosen.getProviderCode());
+        assertEquals("whisper-1", chosen.getModelCode());
+    }
+
+    @Test
+    void explicitLocalFfmpegComposeResolvesLocalProviderEvenWhenHubKeyIsSet() {
+        ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key -> "sk"));
+        AiModelConfig ffmpeg = row("COMPOSE", "FFMPEG", "ffmpeg-concat");
+        when(mapper.selectByExample(any())).thenReturn(List.of(ffmpeg));
+        AiModelConfig chosen = service.resolve("COMPOSE", "ffmpeg-concat");
+        assertEquals("FFMPEG", chosen.getProviderCode());
+        assertEquals("ffmpeg-concat", chosen.getModelCode());
+
+        when(mapper.selectByExample(any())).thenReturn(List.of());
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.bgssai.shortai.common.exception.BizException.class,
+                () -> service.resolve("COMPOSE", "ffmpeg-concat"));
+    }
+
     private static AiModelConfig row(String ability, String provider, String code) {
         AiModelConfig row = new AiModelConfig();
         row.setAbilityType(ability);

@@ -17,7 +17,7 @@ const CODE_BY_ABILITY = {
   MUSIC: 'bgssai-music',
 }
 
-const VENDOR = /stable[\s-]?diffusion|sd-turbo|sdxl|cogvideox|cogvideo|qwen|deepseek|minimax|海螺|kling|可灵|pixverse|hunyuan|混元|openai|chatgpt|gpt-|claude|anthropic|gemini|midjourney|whisper|piper|edge-tts|cosyvoice|dashscope|moonshot|\bkimi\b|vidu|seedance|token\s*-?\s*hub|tencentmaas|\bflux\b|\bsora\b|runway|\bluma\b|\bpika\b|\bsuno\b|\budio\b|即梦|豆包|zhipu|chatglm|hailuo|wanx|kolors|通义|文心|hy-asr|hy-vision|hy[0-9]|speech-[0-9]|image-01|lightricks|ltx-video/i
+const VENDOR = /stable[\s-]?diffusion|sd-turbo|sdxl|cogvideox|cogvideo|qwen|deepseek|minimax|海螺|kling|可灵|pixverse|hunyuan|混元|openai|chatgpt|gpt-|claude|anthropic|gemini|midjourney|whisper|piper|edge-tts|cosyvoice|dashscope|moonshot|\bkimi\b|vidu|seedance|token\s*-?\s*hub|tencentmaas|\bflux\b|\bsora\b|runway|\bluma\b|\bpika\b|\bsuno\b|\budio\b|即梦|豆包|zhipu|chatglm|hailuo|wanx|kolors|通义|文心|hy-asr|hy-vision|hy[0-9]|speech-[0-9]|image-01|lightricks|ltx-video|musicgen/i
 
 export function publicModelCode(value, ability) {
   const raw = String(value || '').trim()

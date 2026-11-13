@@ -49,7 +49,8 @@
 | `ASR` | Hy-ASR-3.0-Preview | `hy-asr-3.0-preview` | 是 | 配音成品的字幕转写与时间轴校准 |
 | `IMAGE` | 可灵文生图 | `kling-v3` | 是 | 定妆、镜头画面 |
 | `VOICE` | MiniMax-Speech-2.8-HD | `minimax-speech-2.8-hd` | 是 | 镜头台词配音 |
-| `MUSIC` | MiniMax-Music-v2.6 | `minimax-music-v2.6` | 是 | 成片背景音乐生成 |
+| `MUSIC` | BGSSAI Music | `bgssai-music` | 是 | 成片背景音乐生成（公司自托管默认） |
+| `MUSIC` | MiniMax-Music-v2.6 | `minimax-music-v2.6` | 否 | 成片背景音乐生成（备用） |
 
 上表只描述服务端解析和网关调用。创作台对应步骤只展示 2.1 的别名。
 以上模型统一使用 `provider_code=TENCENT_TOKENHUB`。首批不删除 `OPENAI_COMPAT`、`KLING`、
@@ -103,9 +104,9 @@
     额度。创建作品在写入和入队之前做这笔预检，额度不足返回 `4007`，不创建作品、不启动会失败的大纲任务。
     已绑定 Chat 的账号仍扣中央账本。Worker 在真正请求模型前再查一次，避免大纲已写入而任务被记成
     `MODEL_TIMEOUT`。
-15. 公司自托管多模态（文本 `qwen`、画面 `sd-turbo`、视频 `cogvideox`、配音 `piper`）不把密钥写入仓库，两条路互斥：
+15. 公司自托管多模态（文本 `qwen`、画面 `sd-turbo`、视频 `cogvideox`、配音 `piper`、音乐 `musicgen-small`）不把密钥写入仓库，两条路互斥：
     境内中枢密钥非空时仍走中枢，主机只来自环境 profile。目录里没有当前默认编号时，若同一能力已列出公司模型
-    （优先 `bgssai-chat` / `qwen`、`bgssai-image` / `sd-turbo`、`cogvideox`、`bgssai-tts` / `piper` / `edge-tts`），
+    （优先 `bgssai-chat` / `qwen`、`bgssai-image` / `sd-turbo`、`cogvideox`、`bgssai-tts` / `piper` / `edge-tts`、`bgssai-music` / `musicgen-small`），
     改用该编号；已经列出的可灵或 MiniMax 不改，也不把一种第三方换成另一种。
     中枢密钥为空且 `sys_secret.ai.openai_compat.api_key` 已填写时，只允许 `https://chat.bgssai.com/v1`。
     `api.openai.com`、可灵、海螺等其它主机仍不直连。这时开跑前只 `GET /v1/models`，不对画面、视频、配音发会扣费的探测。

@@ -65,12 +65,16 @@ public class AiModelResolveService {
             // Prefer default + registered provider when catalog has duplicate model_code rows.
             ex.setOrderByClause("default_flag desc, id asc");
             List<AiModelConfig> rows = aiModelConfigMapper.selectByExample(ex);
+            AiModelConfig localRow = firstLocalTool(rows);
+            if (localRow != null) {
+                return localRow;
+            }
             AiModelConfig hubRow = firstHub(rows);
             if (hubKeyReady()) {
                 if (hubRow != null) {
                     return hubRow;
                 }
-                if ("ASR".equals(ability) && compatKeyReady()) {
+                if ("ASR".equals(ability) && asrCompatKeyReady()) {
                     AiModelConfig compatRow = firstCompanyCompat(rows);
                     if (compatRow != null) {
                         return compatRow;
@@ -89,7 +93,7 @@ public class AiModelResolveService {
                 throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
                         closed(ability, modelCode));
             }
-            if (compatKeyReady()) {
+            if ("ASR".equals(ability) ? asrCompatKeyReady() : compatKeyReady()) {
                 AiModelConfig compatRow = firstCompanyCompat(rows);
                 if (compatRow != null) {
                     return compatRow;
@@ -110,7 +114,7 @@ public class AiModelResolveService {
             }
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, closed(ability, modelCode));
         }
-        if ((!hubKeyReady() || "ASR".equals(ability)) && compatKeyReady()) {
+        if ("ASR".equals(ability) ? asrCompatKeyReady() : (!hubKeyReady() && compatKeyReady())) {
             AiModelConfig compat = resolveCompatDefault(ability);
             if (compat != null) {
                 return compat;
@@ -167,6 +171,29 @@ public class AiModelResolveService {
 
     private boolean compatKeyReady() {
         return secrets != null && secrets.has(SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
+    }
+
+    private boolean asrCompatKeyReady() {
+        return compatKeyReady() || (secrets != null && secrets.has(SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY));
+    }
+
+    private AiModelConfig firstLocalTool(List<AiModelConfig> rows) {
+        if (rows == null) {
+            return null;
+        }
+        for (AiModelConfig row : rows) {
+            if (row == null || !domestic(row) || isHubConfig(row) || imageConditioned(row)) {
+                continue;
+            }
+            String provider = row.getProviderCode() == null ? "" : row.getProviderCode().trim();
+            if (OpenAiCompatibleAiProvider.CODE.equalsIgnoreCase(provider)) {
+                continue;
+            }
+            if (aiProviderRegistry.supports(provider) || aiProviderRegistry.resolvable(row)) {
+                return row;
+            }
+        }
+        return null;
     }
 
     private static AiModelConfig firstCompanyCompat(List<AiModelConfig> rows) {
@@ -286,6 +313,10 @@ public class AiModelResolveService {
     }
 
     private AiModelConfig syntheticHubModel(String ability, String modelCode) {
+        if ("COMPOSE".equalsIgnoreCase(ability)
+                || (modelCode != null && modelCode.trim().toLowerCase(java.util.Locale.ROOT).startsWith("ffmpeg"))) {
+            return null;
+        }
         if (!safeModelId(modelCode) || TokenHubClientSupport.wouldSelectGlobal(Map.of(), modelCode)) {
             return null;
         }
@@ -296,7 +327,7 @@ public class AiModelResolveService {
         model.setModelName(modelCode);
         model.setPriceUnit("PER_CALL");
         model.setUnitPriceCent(0);
-        model.setTimeoutSec("VIDEO".equals(ability) ? 900 : 180);
+        model.setTimeoutSec("MUSIC".equals(ability) ? 240 : ("VIDEO".equals(ability) ? 900 : 180));
         model.setEnabledFlag(1);
         model.setConfigJson("{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\"}");
         return model;

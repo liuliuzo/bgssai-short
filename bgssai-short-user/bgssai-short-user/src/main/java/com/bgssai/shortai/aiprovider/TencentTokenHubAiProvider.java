@@ -38,6 +38,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     private static final int OFFICIAL_VIDEO_SLICE_SEC = 20;
     private static final long MEDIA_POLL_INTERVAL_MS = 3_000L;
     private static final String SPEECH_PATH = "/v1/audio/speech";
+    private static final String MUSIC_PATH = "/v1/audio/music";
     private static final String ASR_SUBMIT = "/v1/wand/asrproxy/async_create";
     private static final String ASR_TASK = "/v1/wand/asrproxy/tasks/{task_id}";
     private static final String NATIVE_PATH = "/v1/native";
@@ -251,7 +252,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
             int durationMs = nestedInt(resp, "extra_info", "audio_length", 0);
             return audioResult(request, audio, durationMs, timeoutSec);
         }
-        AiProviderResult result = AiProviderResult.binary(raw, "audio/mpeg");
+        String mime = raw.length >= 4 && raw[0] == 'R' && raw[1] == 'I' && raw[2] == 'F' && raw[3] == 'F'
+                ? "audio/wav" : "audio/mpeg";
+        AiProviderResult result = AiProviderResult.binary(raw, mime);
         result.setUsageAmount(usageAmount(request, 0, 0));
         return result;
     }
@@ -284,9 +287,48 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private AiProviderResult music(String base, String apiKey,
             AiProviderRequest request, int timeoutSec) throws Exception {
+        String model = requireModel(request);
+        if (isCompanyMusic(model)) {
+            int durationSec = Math.max(5, Math.min(30, ShortJson.integer(request.param("duration_sec"), 12)));
+            Map<String, Object> companyBody = new LinkedHashMap<>();
+            companyBody.put("model", model);
+            companyBody.put("prompt", ProviderHttp.promptOf(request));
+            String lyrics = ShortJson.text(request.param("lyrics"));
+            if (!lyrics.isBlank()) {
+                companyBody.put("lyrics", lyrics);
+            }
+            companyBody.put("is_instrumental", bool(request.param("is_instrumental"), true));
+            companyBody.put("duration", durationSec);
+            companyBody.put("response_format", "mp3");
+            byte[] raw = http.postBytes(base + MUSIC_PATH, generationHeaders(apiKey),
+                    ShortJson.toJson(companyBody), Math.min(240, Math.max(60, timeoutSec)));
+            if (raw == null || raw.length == 0) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "model audio missing");
+            }
+            String text = new String(raw, StandardCharsets.UTF_8).trim();
+            if (text.startsWith("{")) {
+                Map<String, Object> resp = ShortJson.map(text);
+                assertBaseOk(resp, "music");
+                Map<String, Object> data = child(resp, "data");
+                String audio = ProviderHttp.firstNonBlank(ShortJson.text(resp.get("b64_json")),
+                        ShortJson.text(data.get("b64_json")), ShortJson.text(data.get("audio")),
+                        ShortJson.text(resp.get("audio")), mediaUrl(resp));
+                int durationMs = nestedInt(resp, "extra_info", "music_duration", 0);
+                if (durationMs <= 0) {
+                    int sec = ShortJson.integer(resp.get("duration_sec"), durationSec);
+                    durationMs = sec * 1000;
+                }
+                return audioResult(request, audio, durationMs, timeoutSec);
+            }
+            String mime = raw.length >= 4 && raw[0] == 'R' && raw[1] == 'I' && raw[2] == 'F' && raw[3] == 'F'
+                    ? "audio/wav" : "audio/mpeg";
+            AiProviderResult result = AiProviderResult.binary(raw, mime);
+            result.setDurationSec(durationSec);
+            result.setUsageAmount(usageAmount(request, 0, durationSec));
+            return result;
+        }
         Map<String, Object> body = new LinkedHashMap<>();
         // TokenHub forwards native payloads verbatim; translate stored Tencent model aliases.
-        String model = request.getModel().getModelCode();
         body.put("model", switch (model) {
             case "minimax-music-v2.6" -> "music-2.6";
             case "minimax-music-v3.0" -> "music-3.0";
@@ -663,6 +705,14 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     private static boolean isCompanyEdgeSpeech(String model) {
         return "bgssai-tts".equalsIgnoreCase(model) || "edge-tts".equalsIgnoreCase(model);
+    }
+
+    private static boolean isCompanyMusic(String model) {
+        if (model == null) {
+            return false;
+        }
+        String value = model.trim().toLowerCase(Locale.ROOT);
+        return "bgssai-music".equals(value) || value.startsWith("musicgen");
     }
 
     /** Product presets are translated only for the verified company Edge TTS route. */

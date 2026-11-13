@@ -395,6 +395,33 @@ class TencentTokenHubAiProviderTest {
     }
 
     @Test
+    void companyMusicUsesAudioMusicRouteAndAcceptsRawMp3() {
+        FakeClient http = new FakeClient();
+        http.postBinaryReplies.add(new byte[] { 'I', 'D', '3', 4, 0 });
+        AiProviderRequest request = request("MUSIC", "bgssai-music", "温暖治愈钢琴配乐");
+        request.getParams().put("duration_sec", 12);
+        AiProviderResult result = provider(http, "key").execute(request);
+        assertEquals("https://www.bgssai-tokenhub.cn/v1/audio/music", http.postedUrls.get(0));
+        Map<String, Object> body = ShortJson.map(http.postedBodies.get(0));
+        assertEquals("bgssai-music", body.get("model"));
+        assertEquals("温暖治愈钢琴配乐", body.get("prompt"));
+        assertEquals(12, body.get("duration"));
+        assertEquals("mp3", body.get("response_format"));
+        assertEquals("audio/mpeg", result.getMimeType());
+        assertEquals(12, result.getDurationSec());
+        assertArrayEquals(new byte[] { 'I', 'D', '3', 4, 0 }, result.getBinaryContent());
+    }
+
+    @Test
+    void companySpeechSniffsWavHeaderFromRawAudioBytes() {
+        FakeClient http = new FakeClient();
+        http.postBinaryReplies.add(new byte[] { 'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E' });
+        AiProviderResult result = provider(http, "key").execute(request("VOICE", "bgssai-tts", "你好"));
+        assertEquals("audio/wav", result.getMimeType());
+        assertEquals(12, result.getBinaryContent().length);
+    }
+
+    @Test
     void missingCredentialIsRejectedBeforeNetworkCall() {
         FakeClient http = new FakeClient();
         BizException ex = assertThrows(BizException.class,
@@ -548,6 +575,7 @@ class TencentTokenHubAiProviderTest {
 
     private static final class FakeClient implements ProviderHttp.Client {
         private final Queue<String> posts = new ArrayDeque<>();
+        private final Queue<byte[]> postBinaryReplies = new ArrayDeque<>();
         private final Queue<String> gets = new ArrayDeque<>();
         private final Queue<Exception> getFailures = new ArrayDeque<>();
         private final List<String> postedUrls = new ArrayList<>();
@@ -567,6 +595,18 @@ class TencentTokenHubAiProviderTest {
             postedTimeouts.add(timeoutSec);
             postedHeaders.add(headers);
             return posts.remove();
+        }
+
+        @Override
+        public byte[] postBytes(String url, Map<String, String> headers, String body, int timeoutSec) throws Exception {
+            if (!postBinaryReplies.isEmpty()) {
+                postedUrls.add(url);
+                postedBodies.add(body);
+                postedTimeouts.add(timeoutSec);
+                postedHeaders.add(headers);
+                return postBinaryReplies.remove();
+            }
+            return ProviderHttp.Client.super.postBytes(url, headers, body, timeoutSec);
         }
 
         @Override

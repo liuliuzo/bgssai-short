@@ -216,7 +216,7 @@ export default function VoiceStudioPage({ work, episodeId, onJumpTab }) {
                     message.success('已重配')
                     await load()
                   }}>重配</Button>
-                  {row.suggest_action && row.suggest_action !== 'EXTEND_SHOT' ? (
+                  {row.suggest_action ? (
                     <Button size="small" onClick={async () => {
                       await featuresApi.alignDubbing({ shot_id: row.shot_id, align_action: row.suggest_action })
                       message.success('已对齐')

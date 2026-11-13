@@ -62,6 +62,7 @@ public final class ProductModelAlias {
             + "|hy-asr[a-z0-9._-]*|hy-vision[a-z0-9._-]*|hy-image[a-z0-9._-]*|hy-video[a-z0-9._-]*|hy-mt[a-z0-9._-]*"
             + "|hy[0-9][a-z0-9._-]*"
             + "|lightricks|ltx-video[a-z0-9._-]*"
+            + "|musicgen[a-z0-9._-]*"
             + "|speech-[0-9][a-z0-9._-]*|image-01"
             + ")(?![a-z0-9])");
 

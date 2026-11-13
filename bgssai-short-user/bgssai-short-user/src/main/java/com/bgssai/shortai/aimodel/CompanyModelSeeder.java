@@ -45,7 +45,8 @@ public class CompanyModelSeeder implements ApplicationRunner {
             "TEXT", Set.of("deepseek-chat", "deepseek-v3", "gpt-4o-mini", "qwen-plus"),
             "IMAGE", Set.of("kling-v3", "kling-v2-1", "image-01"),
             "VOICE", Set.of("minimax-speech-2.8-hd", "speech-02-hd", "tts-1"),
-            "VIDEO", Set.of("minimax-video-h3", "minimax-hailuo-2.3", "kling-v2-6", "cogvideox"));
+            "VIDEO", Set.of("minimax-video-h3", "minimax-hailuo-2.3", "kling-v2-6", "cogvideox"),
+            "MUSIC", Set.of("minimax-music-v2.6", "minimax-music-v3.0", "music-2.6", "music-3.0"));
 
     private final AiModelConfigMapper mapper;
     private final DataSource dataSource;
@@ -172,6 +173,7 @@ public class CompanyModelSeeder implements ApplicationRunner {
         promoteAbilityDefault("IMAGE", "TENCENT_TOKENHUB", "bgssai-image");
         promoteAbilityDefault("VOICE", "TENCENT_TOKENHUB", "bgssai-tts");
         promoteAbilityDefault("VIDEO", "TENCENT_TOKENHUB", "bgssai-video");
+        promoteAbilityDefault("MUSIC", "TENCENT_TOKENHUB", "bgssai-music");
     }
 
     private void promoteAbilityDefault(String ability, String providerCode, String modelCode) {
@@ -294,6 +296,9 @@ public class CompanyModelSeeder implements ApplicationRunner {
                 new SeedRow("m-tokenhub-video-bgssai", "VIDEO", "TENCENT_TOKENHUB", "bgssai-video",
                         "BGSSAI Video", "STANDARD", "PER_SECOND", 20, 900, 1,
                         "{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\",\"poll_interval_ms\":3000,\"public_alias\":\"bgssai-video\",\"public_name\":\"BGSSAI Video\"}"),
+                new SeedRow("m-tokenhub-music-bgssai", "MUSIC", "TENCENT_TOKENHUB", "bgssai-music",
+                        "BGSSAI Music", "STANDARD", "PER_CALL", 20, 240, 1,
+                        "{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\",\"public_alias\":\"bgssai-music\",\"public_name\":\"BGSSAI Music\"}"),
                 new SeedRow(ImageConditionedVideoProvider.MODEL_ID, "VIDEO", ImageConditionedVideoProvider.CODE,
                         ImageConditionedVideoProvider.MODEL_CODE, "BGSSAI Video", "STANDARD", "PER_SECOND", 20, 14400, 0,
                         "{\"base_url\":\"https://chat.bgssai.com/i2v\",\"secret_ref\":\"ai.image_to_video.api_key\",\"public_alias\":\"bgssai-video\",\"public_name\":\"BGSSAI Video\",\"width\":384,\"height\":256,\"num_frames\":25,\"fps\":8}"),
@@ -309,6 +314,9 @@ public class CompanyModelSeeder implements ApplicationRunner {
                 new SeedRow("m-compat-voice-piper", "VOICE", OpenAiCompatibleAiProvider.CODE, "piper",
                         "台词配音", "STANDARD", "PER_CALL", 2, 180, 1,
                         "{\"base_url\":\"" + CompanyCompatGateway.DEFAULT_BASE + "\",\"secret_ref\":\"ai.openai_compat.api_key\",\"speech_path\":\"/audio/speech\",\"default_voice_id\":\"zh\"}"),
+                new SeedRow("m-compat-music-musicgen", "MUSIC", OpenAiCompatibleAiProvider.CODE, "musicgen-small",
+                        "背景配乐", "STANDARD", "PER_CALL", 20, 240, 1,
+                        "{\"base_url\":\"" + CompanyCompatGateway.DEFAULT_BASE + "\",\"secret_ref\":\"ai.openai_compat.api_key\",\"music_path\":\"/audio/music\",\"public_alias\":\"bgssai-music\",\"public_name\":\"BGSSAI Music\"}"),
                 new SeedRow("m-compat-asr-whisper", "ASR", OpenAiCompatibleAiProvider.CODE, "whisper-1",
                         "台词转写", "STANDARD", "PER_MINUTE", 2, 300, 1,
                         "{\"base_url\":\"" + CompanyCompatGateway.DEFAULT_BASE + "\",\"secret_ref\":\"ai.openai_compat.api_key\",\"transcription_path\":\"/audio/transcriptions\",\"language\":\"zh\",\"public_alias\":\"bgssai-asr\",\"public_name\":\"BGSSAI ASR\"}"));

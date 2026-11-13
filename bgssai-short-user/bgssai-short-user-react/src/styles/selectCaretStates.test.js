@@ -19,7 +19,18 @@ const caretCss = fs.readFileSync(
 )
 
 const require = createRequire(import.meta.url)
-let chromePath = '/usr/local/bin/google-chrome'
+const chromeCandidates = [
+  process.env.CHROME_BIN,
+  '/usr/local/bin/google-chrome',
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+].filter(Boolean)
+let chromePath = chromeCandidates.find((p) => fs.existsSync(p)) || '/usr/local/bin/google-chrome'
 try {
   // optional; fall back to system chrome
   require.resolve('playwright-core')
