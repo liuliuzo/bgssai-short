@@ -110,6 +110,18 @@ class AiModelResolveCatalogTest {
         assertEquals("TENCENT_TOKENHUB", chosen.getProviderCode());
     }
 
+    @Test
+    void asrUsesCompanyWhisperWhenBothSecretsAreSet() {
+        ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key -> "sk"));
+        AiModelConfig whisper = row("ASR", "OPENAI_COMPAT", "whisper-1");
+        whisper.setDefaultFlag(0);
+        whisper.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\",\"transcription_path\":\"/audio/transcriptions\"}");
+        when(mapper.selectByExample(any())).thenReturn(List.of(whisper));
+        AiModelConfig chosen = service.resolve("ASR", null);
+        assertEquals("OPENAI_COMPAT", chosen.getProviderCode());
+        assertEquals("whisper-1", chosen.getModelCode());
+    }
+
     private static AiModelConfig row(String ability, String provider, String code) {
         AiModelConfig row = new AiModelConfig();
         row.setAbilityType(ability);

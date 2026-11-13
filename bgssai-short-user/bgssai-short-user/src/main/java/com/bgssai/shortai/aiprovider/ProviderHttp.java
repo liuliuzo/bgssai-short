@@ -28,6 +28,11 @@ final class ProviderHttp {
         default byte[] postBytes(String url, Map<String, String> headers, String body, int timeoutSec) throws Exception {
             return postJson(url, headers, body, timeoutSec).getBytes(StandardCharsets.UTF_8);
         }
+
+        default String postMultipart(String url, Map<String, String> headers, byte[] fileBytes,
+                String filename, String mimeType, Map<String, String> fields, int timeoutSec) throws Exception {
+            throw new UnsupportedOperationException("multipart not implemented");
+        }
     }
 
     interface Sleeper {
@@ -54,6 +59,45 @@ final class ProviderHttp {
                 reject(resp.statusCode(), resp.body());
             }
             return resp.body() == null ? new byte[0] : resp.body();
+        }
+
+        @Override
+        public String postMultipart(String url, Map<String, String> headers, byte[] fileBytes,
+                String filename, String mimeType, Map<String, String> fields, int timeoutSec) throws Exception {
+            String boundary = "----bgssai" + java.util.UUID.randomUUID().toString().replace("-", "");
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            String safeName = (filename == null || filename.isBlank()) ? "audio.wav"
+                    : filename.replace("\"", "").replace("\r", "").replace("\n", "");
+            String safeMime = (mimeType == null || mimeType.isBlank()) ? "audio/wav"
+                    : mimeType.replace("\r", "").replace("\n", "");
+            out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+            out.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + safeName + "\"\r\n")
+                    .getBytes(StandardCharsets.UTF_8));
+            out.write(("Content-Type: " + safeMime + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+            if (fileBytes != null && fileBytes.length > 0) {
+                out.write(fileBytes);
+            }
+            out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+            if (fields != null) {
+                for (Map.Entry<String, String> entry : fields.entrySet()) {
+                    if (entry.getKey() == null || entry.getValue() == null || entry.getValue().isBlank()) {
+                        continue;
+                    }
+                    String key = entry.getKey().replace("\"", "").replace("\r", "").replace("\n", "");
+                    out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+                    out.write(("Content-Disposition: form-data; name=\"" + key + "\"\r\n\r\n")
+                            .getBytes(StandardCharsets.UTF_8));
+                    out.write(entry.getValue().getBytes(StandardCharsets.UTF_8));
+                    out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+                }
+            }
+            out.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+            HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url))
+                    .timeout(Duration.ofSeconds(Math.max(15, timeoutSec)))
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(out.toByteArray()));
+            apply(b, headers);
+            b.header("Content-Type", "multipart/form-data; boundary=" + boundary);
+            return handleJson(httpClient.send(b.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)));
         }
 
         @Override

@@ -9,13 +9,13 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 /**
- * Seed contract for the DEV official generate-video default.
- * Production DML must not gain this default.
+ * Seed contract for the BGSSAI company multimodal defaults across shared, DEV, and PROD DML.
+ * Real company API keys must never appear in SQL seeds.
  */
 class DevCompanyVideoSeedTest {
 
     @Test
-    void sharedSeedAddsEnabledCompanyVideoWithoutTakingTheDefault() throws Exception {
+    void sharedSeedConfiguresCompanyMultimodalDefaultsAndPlaceholders() throws Exception {
         String shared = Files.readString(root().resolve("sql/DML.sql"));
         String statement = statementContaining(shared, "'m-tokenhub-video-bgssai'");
         assertTrue(statement.contains("'VIDEO'"));
@@ -23,42 +23,45 @@ class DevCompanyVideoSeedTest {
         assertTrue(statement.contains("'bgssai-video'"));
         assertTrue(statement.contains("\"hub\":\"cn\""));
         assertTrue(statement.contains("\"secret_ref\":\"ai.tokenhub_cn.api_key\""));
-        assertTrue(statement.contains(", 20, 0, 1, 900, 1,"));
-        String duplicate = statement.substring(statement.indexOf("ON DUPLICATE"));
-        assertFalse(duplicate.contains("default_flag"));
-        assertFalse(statement.contains("sk-"));
+        assertTrue(statement.contains("`default_flag` = 1"));
+        assertTrue(shared.contains("'m-compat-asr-whisper'"));
+        assertTrue(shared.contains("'m-bgssai-image-to-video'"));
+        assertTrue(shared.contains("'ai.openai_compat.api_key', ''"));
+        assertTrue(shared.contains("'ai.image_to_video.api_key', ''"));
+        assertFalse(shared.substring(shared.indexOf("2026-11-13")).contains("sk-"));
     }
 
     @Test
-    void devSeedMakesCompanyVideoTheOnlyVideoDefault() throws Exception {
+    void devSeedAlignsAllCompanyDefaultsWithoutLeakingSecrets() throws Exception {
         String dev = Files.readString(root().resolve("sql/dev/DML.sql"));
-        int at = dev.indexOf("2026-11-12");
-        assertTrue(at > 0);
-        String block = dev.substring(at);
-        assertTrue(block.contains("'m-tokenhub-video-bgssai'"));
-        assertTrue(block.contains("'bgssai-video'"));
-        assertTrue(block.contains("\"hub\":\"cn\""));
-        assertTrue(block.contains("\"secret_ref\":\"ai.tokenhub_cn.api_key\""));
-        assertTrue(block.contains("`default_flag` = 1"));
-        assertTrue(block.contains("`timeout_sec` = 900"));
-        assertTrue(block.contains("SET `default_flag` = 0 WHERE `model_id` = 'm-tokenhub-video-minimax'"));
-        assertTrue(block.contains("`model_code` = 'cogvideox'"));
-        assertTrue(block.contains("NOT (`provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video')"));
-        assertFalse(block.contains("secret_value"));
-        assertFalse(block.contains("sk-"));
-        int promote = block.indexOf("`default_flag` = 1");
-        int clearMinimax = block.indexOf("SET `default_flag` = 0 WHERE `model_id` = 'm-tokenhub-video-minimax'");
-        assertTrue(promote > 0 && clearMinimax > promote);
-        assertTrue(block.lastIndexOf("`default_flag` = 1") > block.indexOf("`model_code` = 'cogvideox'"));
+        assertCompanyAlignment(dev);
     }
 
     @Test
-    void productionSeedDoesNotFlipVideoDefaults() throws Exception {
+    void prodSeedAlignsAllCompanyDefaultsWithoutLeakingSecrets() throws Exception {
         String prod = Files.readString(root().resolve("sql/prod/DML.sql"));
-        assertFalse(prod.contains("m-tokenhub-video-bgssai"));
-        assertFalse(prod.contains("bgssai-video"));
-        assertFalse(prod.contains("m-tokenhub-video-minimax"));
-        assertFalse(prod.contains("cogvideox"));
+        assertCompanyAlignment(prod);
+    }
+
+    private static void assertCompanyAlignment(String sql) {
+        assertFalse(sql.contains("model_code = 'deepseek-chat', model_name = 'DeepSeek Chat', default_flag = 1"));
+        assertFalse(sql.contains("AND model_id <> 'm-tokenhub-text-deepseek'"));
+        assertFalse(sql.contains("AND `model_id` <> 'm-tokenhub-image-kling'"));
+
+        int at = sql.indexOf("2026-11-1");
+        assertTrue(at > 0);
+        String block = sql.substring(at);
+        assertTrue(block.contains("'m-tokenhub-text-bgssai-chat'"));
+        assertTrue(block.contains("'m-tokenhub-image-bgssai'"));
+        assertTrue(block.contains("'m-tokenhub-voice-bgssai-tts'"));
+        assertTrue(block.contains("'m-tokenhub-video-bgssai'"));
+        assertTrue(block.contains("'m-compat-asr-whisper'"));
+        assertTrue(block.contains("'m-bgssai-image-to-video'"));
+        assertTrue(block.contains("SET `default_flag` = 0 WHERE `model_id` = 'm-tokenhub-video-minimax'"));
+        assertTrue(block.contains("NOT (`provider_code` = 'TENCENT_TOKENHUB' AND `model_code` = 'bgssai-video')"));
+        assertTrue(block.contains("'ai.openai_compat.api_key', ''"));
+        assertTrue(block.contains("'ai.image_to_video.api_key', ''"));
+        assertFalse(block.contains("sk-"));
     }
 
     private static String statementContaining(String sql, String marker) {

@@ -84,6 +84,9 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
             if ("VOICE".equals(ability)) {
                 return voice(baseUrl, apiKey, cfg, request, timeoutSec);
             }
+            if ("ASR".equals(ability)) {
+                return asr(baseUrl, apiKey, cfg, request, timeoutSec);
+            }
             throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported ability");
         } catch (BizException ex) {
             throw new BizException(ex.getCode(), TokenHubClientSupport.userFacingMessage(ex.getMessage()));
@@ -195,6 +198,79 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
         String mime = raw.length >= 4 && raw[0] == 'R' && raw[1] == 'I' && raw[2] == 'F' && raw[3] == 'F'
                 ? "audio/wav" : "audio/mpeg";
         return AiProviderResult.binary(raw, mime);
+    }
+
+    private AiProviderResult asr(String baseUrl, String apiKey, Map<String, Object> cfg,
+            AiProviderRequest request, int timeoutSec) throws Exception {
+        String path = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("transcription_path")),
+                "/audio/transcriptions");
+        byte[] audio = audioPayload(request, timeoutSec);
+        if (audio == null || audio.length == 0) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "audio input required");
+        }
+        String mime = ProviderHttp.firstNonBlank(ShortJson.text(request.param("audio_mime")),
+                audio.length >= 4 && audio[0] == 'R' && audio[1] == 'I' && audio[2] == 'F' && audio[3] == 'F'
+                        ? "audio/wav" : "audio/mpeg");
+        String filename = mime.contains("wav") ? "audio.wav" : "audio.mp3";
+        Map<String, String> fields = new LinkedHashMap<>();
+        fields.put("model", ProviderHttp.firstNonBlank(request.getModel().getModelCode(), "whisper-1"));
+        String language = ProviderHttp.firstNonBlank(ShortJson.text(request.param("language")),
+                ShortJson.text(cfg.get("language")), "zh");
+        if (!language.isBlank()) {
+            fields.put("language", language);
+        }
+        String raw = http.postMultipart(join(baseUrl, path), headers(apiKey, cfg), audio, filename, mime,
+                fields, Math.min(300, Math.max(60, timeoutSec)));
+        Map<String, Object> parsed = new LinkedHashMap<>(ShortJson.map(raw));
+        if (!(parsed.get("sentences") instanceof List<?>) && parsed.get("segments") instanceof List<?> segs) {
+            List<Map<String, Object>> sentences = new java.util.ArrayList<>();
+            for (Object item : segs) {
+                if (item instanceof Map<?, ?> seg) {
+                    String segText = ShortJson.text(seg.get("text")).trim();
+                    if (segText.isBlank()) {
+                        continue;
+                    }
+                    int beginMs = millis(seg.get("start"));
+                    int endMs = Math.max(beginMs + 100, millis(seg.get("end")));
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("begin_ms", beginMs);
+                    row.put("end_ms", endMs);
+                    row.put("text", segText);
+                    sentences.add(row);
+                }
+            }
+            if (!sentences.isEmpty()) {
+                parsed.put("sentences", sentences);
+            }
+        }
+        return AiProviderResult.text(ShortJson.toJson(parsed));
+    }
+
+    private byte[] audioPayload(AiProviderRequest request, int timeoutSec) throws Exception {
+        Object direct = request.param("audio_bytes");
+        if (direct instanceof byte[] bytes && bytes.length > 0) {
+            return bytes;
+        }
+        String b64 = ShortJson.text(request.param("audio_base64"));
+        if (!b64.isBlank()) {
+            return decode(b64);
+        }
+        String inputUrl = ShortJson.text(request.param("input_url"));
+        if (inputUrl.startsWith("https://") || inputUrl.startsWith("http://")) {
+            return http.getBytes(inputUrl, Math.min(180, timeoutSec));
+        }
+        return new byte[0];
+    }
+
+    private static int millis(Object seconds) {
+        if (seconds instanceof Number num) {
+            return Math.max(0, (int) Math.round(num.doubleValue() * 1000.0));
+        }
+        try {
+            return Math.max(0, (int) Math.round(Double.parseDouble(ShortJson.text(seconds)) * 1000.0));
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
     }
 
     private Map<String, Object> awaitMedia(String baseUrl, String apiKey, String model,
