@@ -132,6 +132,94 @@ public final class ShotConsistency {
         return false;
     }
 
+    public static String describeShotBlockReason(ShortShot shot, List<ShortCharacter> characters,
+            List<ShortSceneCard> scenes) {
+        if (shot == null) {
+            return "";
+        }
+        List<String> pending = new ArrayList<>();
+        for (String id : characterIds(shot.getCharacterRefJson())) {
+            ShortCharacter card = characters == null ? null : characters.stream()
+                    .filter(c -> c != null && id.equals(c.getCharacterId())).findFirst().orElse(null);
+            if (card == null) {
+                pending.add("角色素材缺失");
+            } else if (!usableReference(card.getCardStatus(), card.getRefImageAssetId())) {
+                String name = card.getCharacterName() == null || card.getCharacterName().isBlank()
+                        ? id : card.getCharacterName().trim();
+                pending.add("角色「" + name + "」");
+            }
+        }
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            String sid = shot.getSceneCardId().trim();
+            ShortSceneCard scene = scenes == null ? null : scenes.stream()
+                    .filter(c -> c != null && sid.equals(c.getSceneCardId()) && isType(c, "SCENE"))
+                    .findFirst().orElse(null);
+            if (scene == null) {
+                pending.add("场景素材缺失");
+            } else if (!usableReference(scene.getCardStatus(), scene.getRefImageAssetId())) {
+                String name = scene.getCardName() == null || scene.getCardName().isBlank()
+                        ? sid : scene.getCardName().trim();
+                pending.add("场景「" + name + "」");
+            }
+        }
+        for (String id : propIds(shot.getPropRefJson())) {
+            ShortSceneCard prop = scenes == null ? null : scenes.stream()
+                    .filter(c -> c != null && id.equals(c.getSceneCardId()) && isType(c, "PROP"))
+                    .findFirst().orElse(null);
+            if (prop == null) {
+                pending.add("道具素材缺失");
+            } else if (!usableReference(prop.getCardStatus(), prop.getRefImageAssetId())) {
+                String name = prop.getCardName() == null || prop.getCardName().isBlank()
+                        ? id : prop.getCardName().trim();
+                pending.add("道具「" + name + "」");
+            }
+        }
+        boolean missingPrompt = shotNeedsPrompt(shot);
+        if (missingPrompt && pending.isEmpty()) {
+            return "缺少画面描述，请先填写分镜内容";
+        }
+        if (!pending.isEmpty()) {
+            String reason = "待锁定定妆：" + String.join("、", pending) + "（在「角色定妆」页选定图片即可解锁）";
+            return missingPrompt ? "缺少画面描述；" + reason : reason;
+        }
+        return "";
+    }
+
+    public static String anchorFragmentForShot(ShortShot shot, List<ShortCharacter> characters,
+            List<ShortSceneCard> scenes) {
+        if (shot == null) {
+            return "";
+        }
+        List<ShortCharacter> lockedChars = new ArrayList<>();
+        for (String characterId : characterIds(shot.getCharacterRefJson())) {
+            ShortCharacter row = characters == null ? null : characters.stream()
+                    .filter(c -> c != null && characterId.equals(c.getCharacterId())).findFirst().orElse(null);
+            if (row != null && "LOCKED".equals(row.getCardStatus())) {
+                lockedChars.add(row);
+            }
+        }
+        ShortSceneCard lockedScene = null;
+        if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
+            String sid = shot.getSceneCardId().trim();
+            ShortSceneCard row = scenes == null ? null : scenes.stream()
+                    .filter(c -> c != null && sid.equals(c.getSceneCardId()) && isType(c, "SCENE"))
+                    .findFirst().orElse(null);
+            if (row != null && "LOCKED".equals(row.getCardStatus())) {
+                lockedScene = row;
+            }
+        }
+        List<ShortSceneCard> lockedProps = new ArrayList<>();
+        for (String propId : propIds(shot.getPropRefJson())) {
+            ShortSceneCard row = scenes == null ? null : scenes.stream()
+                    .filter(c -> c != null && propId.equals(c.getSceneCardId()) && isType(c, "PROP"))
+                    .findFirst().orElse(null);
+            if (row != null && "LOCKED".equals(row.getCardStatus())) {
+                lockedProps.add(row);
+            }
+        }
+        return appearanceFragment(lockedChars, lockedScene, lockedProps);
+    }
+
     private static boolean usableScene(List<ShortSceneCard> scenes, String id, String type) {
         ShortSceneCard card = scenes == null ? null : scenes.stream()
                 .filter(c -> id.equals(c.getSceneCardId()) && isType(c, type)).findFirst().orElse(null);

@@ -121,8 +121,29 @@
       <button class="btn btn-primary">全部生成 约 4.40 元</button>
     </header>
 
+    <div class="stepline">
+      <a href="script-studio.html"><span class="dot done"></span>1. 剧本与定稿</a>
+      <a href="character-bible.html"><span class="dot warn"></span>2. 角色定妆（1 待锁定）</a>
+      <a href="storyboard.html" class="active"><span class="dot doing"></span>3. 分镜与视频</a>
+      <a href="voice-studio.html"><span class="dot"></span>4. 配音字幕（可选）</a>
+      <a href="compose-export.html"><span class="dot"></span>5. 合成成片</a>
+    </div>
+
     <div class="app-page">
       <div class="lane">
+
+        <div class="card" style="margin-bottom:12px; border-color:#bfdbfe; background:#eff6ff">
+          <div class="row" style="gap:10px; flex-wrap:wrap">
+            <span class="badge">当前下一步</span>
+            <div style="font-size:13px">
+              <strong>还有 1 张角色卡「苏曼」未锁定定妆</strong>
+              <span class="text-sub">：锁定定妆照后即可批量勾选待生视频镜头，一键提交生成视频。</span>
+            </div>
+            <span class="spacer"></span>
+            <button class="btn btn-default btn-sm" type="button">勾选待生视频镜头</button>
+            <a class="btn btn-primary btn-sm" href="character-bible.html">去角色定妆</a>
+          </div>
+        </div>
 
         <div class="shot-row">
           <div class="no">1<small>成片 6秒 · 计划 4秒</small></div>
@@ -323,7 +344,8 @@
         <code>POST /bgssai/user/compliance/precheck</code> <code>check_scope=SHOT</code>：
         命中片段高亮 + <code>risk_category</code> 中文 + 改写建议 + 「采纳改写」），仅在有问题时出现。
         连贯性提示不阻塞生成（该镜生成按钮不禁用），可「忽略这条」——忽略留痕并计入分镜门
-        <code>G2_STORYBOARD</code> 评分；未定妆角色 / 场景 / 道具的镜头仍禁用生成（<code>blocked_flag=1</code>）。
+        <code>G2_STORYBOARD</code> 评分；未定妆角色 / 场景 / 道具的镜头仍禁用生成（<code>blocked_flag=1</code>，并由 <code>shots/list</code> 返回可读中文 <code>block_reason</code> 与「去角色定妆」直达入口）。
+        出草图与生成视频主工具条直接展开在分镜列表上方（含「勾选待生视频镜头」快捷勾选），手动改绑资产与独立单图试做收在辅助折叠区；官方视频 <code>POST /bgssai/user/ai-tasks/official-video/submit</code> 无论走图生视频还是文生视频均保持同一 <code>batch_id</code>，由 <code>batch-progress</code> 统一追踪并在完成后自动刷新列表。
         顶部画面模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=IMAGE</code>，未点选时默认
         <code>bgssai-image</code>（BGSSAI Image）。VIDEO 模型来自
         <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选

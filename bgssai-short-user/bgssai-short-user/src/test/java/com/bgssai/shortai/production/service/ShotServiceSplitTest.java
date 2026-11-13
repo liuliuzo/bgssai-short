@@ -140,4 +140,76 @@ class ShotServiceSplitTest {
         }
     }
 
+    @Test
+    void splitRequiresReadyScriptWithChineseGuidanceAndListExposesBlockReason() {
+        ShortEpisodeMapper episodeMapper = (ShortEpisodeMapper) ReflectionTestUtils.getField(service, "shortEpisodeMapper");
+        ShortEpisode draftEp = new ShortEpisode();
+        draftEp.setId(2L);
+        draftEp.setEpisodeId("e-draft");
+        draftEp.setWorkId("w-1");
+        draftEp.setUserId("u-1");
+        draftEp.setScriptStatus("DRAFT");
+        when(episodeMapper.selectOneByExample(any())).thenReturn(draftEp);
+        ShotReq draftReq = new ShotReq();
+        draftReq.setEpisodeId("e-draft");
+        var ex = org.junit.jupiter.api.Assertions.assertThrows(
+                com.bgssai.shortai.common.exception.BizException.class,
+                () -> service.split(draftReq));
+        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("定稿"));
+
+        ShortEpisode readyEp = new ShortEpisode();
+        readyEp.setId(1L);
+        readyEp.setEpisodeId("e-1");
+        readyEp.setWorkId("w-1");
+        readyEp.setUserId("u-1");
+        readyEp.setScriptStatus("READY");
+        when(episodeMapper.selectOneByExample(any())).thenReturn(readyEp);
+
+        var unlockedChar = new com.bgssai.shortai.model.ShortCharacter();
+        unlockedChar.setCharacterId("c-1");
+        unlockedChar.setCharacterName("沈知微");
+        unlockedChar.setCardStatus("DRAFT");
+        var unlockedScene = new com.bgssai.shortai.model.ShortSceneCard();
+        unlockedScene.setSceneCardId("sc-1");
+        unlockedScene.setCardType("SCENE");
+        unlockedScene.setCardName("宴会厅");
+        unlockedScene.setCardStatus("CANDIDATE");
+
+        ShortCharacterMapper characterMapper = (ShortCharacterMapper) ReflectionTestUtils.getField(service, "shortCharacterMapper");
+        ShortSceneCardMapper sceneCardMapper = (ShortSceneCardMapper) ReflectionTestUtils.getField(service, "shortSceneCardMapper");
+        when(characterMapper.selectByExample(any())).thenReturn(List.of(unlockedChar));
+        when(sceneCardMapper.selectByExample(any())).thenReturn(List.of(unlockedScene));
+
+        var shot = new com.bgssai.shortai.model.ShortShot();
+        shot.setShotId("sh-1");
+        shot.setShotNo(1);
+        shot.setSceneNo(1);
+        shot.setWorkId("w-1");
+        shot.setEpisodeId("e-1");
+        shot.setUserId("u-1");
+        shot.setShotStatus("PENDING");
+        shot.setShotDesc("沈知微步入宴会厅");
+        shot.setImagePrompt("沈知微步入宴会厅");
+        shot.setCharacterRefJson("[\"c-1\"]");
+        shot.setSceneCardId("sc-1");
+        when(shortShotMapper.selectByExample(any())).thenReturn(List.of(shot));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> listed = (List<Map<String, Object>>) service.list("e-1", 1, 20, null).getResult();
+        assertEquals(1, listed.size());
+        assertEquals(1, listed.get(0).get("blocked_flag"));
+        String reason = String.valueOf(listed.get(0).get("block_reason"));
+        org.junit.jupiter.api.Assertions.assertTrue(reason.contains("沈知微"));
+        org.junit.jupiter.api.Assertions.assertTrue(reason.contains("宴会厅"));
+
+        unlockedChar.setCardStatus("LOCKED");
+        unlockedChar.setRefImageAssetId("a-char");
+        unlockedScene.setCardStatus("LOCKED");
+        unlockedScene.setRefImageAssetId("a-scene");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> unblocked = (List<Map<String, Object>>) service.list("e-1", 1, 20, null).getResult();
+        assertEquals(0, unblocked.get(0).get("blocked_flag"));
+        assertEquals("", unblocked.get(0).get("block_reason"));
+    }
+
 }

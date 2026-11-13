@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/pages/subscription/payOrderPoll.test.js src/pages/login/loginFieldError.test.js src/lib/bgssaiShell.test.js src/lib/legalLinks.test.js src/lib/displayLabels.test.js src/lib/safeReturn.test.js src/lib/chineseEntry.test.js src/modelPricing.test.js src/utils/baselineCards.test.js src/utils/composeStatusSurface.test.js src/pages/works/shotCardMedia.test.js src/pages/works/officialVideo.test.js src/pages/works/studioListUx.test.js src/pages/home/homeWorkbench.test.js src/pages/works/productionGuide.test.js src/imageToVideo.test.js src/pages/look/lookGroups.test.js src/pages/works/workCreateDefaults.test.js src/styles/caretSpikeGuard.test.js src/styles/selectCaretStates.test.js",
+    "test": "node --test src/pages/subscription/payOrderPoll.test.js src/pages/login/loginFieldError.test.js src/lib/bgssaiShell.test.js src/lib/legalLinks.test.js src/lib/displayLabels.test.js src/lib/safeReturn.test.js src/lib/chineseEntry.test.js src/modelPricing.test.js src/utils/baselineCards.test.js src/utils/composeStatusSurface.test.js src/pages/works/shotCardMedia.test.js src/pages/works/officialVideo.test.js src/pages/works/productionFlow.test.js src/pages/works/productionGuide.test.js src/pages/works/studioListUx.test.js src/pages/home/homeWorkbench.test.js src/imageToVideo.test.js src/pages/look/lookGroups.test.js src/pages/works/workCreateDefaults.test.js src/styles/caretSpikeGuard.test.js src/styles/selectCaretStates.test.js",
     "build:deploy": "vite build && node scripts/sync-static.mjs"
   },
   "dependencies": {

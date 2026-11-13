@@ -98,7 +98,7 @@ class OfficialShotVideoServiceTest {
         when(aiTasks.selectByExample(any())).thenReturn(List.of());
         ShortAiTask queued = new ShortAiTask();
         queued.setTaskId("t-new");
-        when(imageToVideo.enqueueForShot(any(), eq("frame-1"), anyString(), anyInt())).thenReturn(queued);
+        when(imageToVideo.enqueueForShot(any(), eq("frame-1"), anyString(), anyInt(), anyString())).thenReturn(queued);
 
         AiTaskReq preview = req();
         @SuppressWarnings("unchecked")
@@ -108,16 +108,20 @@ class OfficialShotVideoServiceTest {
         assertEquals(OfficialVideoCopy.ROUTE_I2V, rows.get(0).get("route"));
         assertTrue(String.valueOf(rows.get(0).get("size_note")).contains("384×256"));
         assertTrue(String.valueOf(rows.get(0).get("size_note")).contains("不是竖屏"));
-        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt());
+        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt(), any());
 
         AiTaskReq missing = req();
         assertThrows(BizException.class, () -> service.submit(missing));
-        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt());
+        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt(), any());
 
         AiTaskReq submit = req();
         submit.setConfirmCost(1);
-        service.submit(submit);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> firstSubmit = (Map<String, Object>) service.submit(submit).getResult();
         verify(queue, never()).enqueue(any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), any());
+        ArgumentCaptor<String> batchCaptor = ArgumentCaptor.forClass(String.class);
+        verify(imageToVideo).enqueueForShot(eq(shot), eq("frame-1"), anyString(), anyInt(), batchCaptor.capture());
+        assertEquals(firstSubmit.get("batch_id"), batchCaptor.getValue());
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
         verify(shots).updateByExampleSelective(patch.capture(), any());
         assertEquals("VIDEO_GENERATING", patch.getValue().getShotStatus());
@@ -158,7 +162,7 @@ class OfficialShotVideoServiceTest {
         List<Map<String, Object>> rows = (List<Map<String, Object>>) done.get("shot_list");
         assertEquals(OfficialVideoCopy.ROUTE_T2V, rows.get(0).get("route"));
         assertTrue(String.valueOf(rows.get(0).get("size_note")).contains("720×480"));
-        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt());
+        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt(), any());
         assertEquals("vid-old", shot.getVideoAssetId());
     }
 
@@ -179,7 +183,7 @@ class OfficialShotVideoServiceTest {
         submit.setConfirmCost(1);
         BizException ex = assertThrows(BizException.class, () -> service.submit(submit));
         assertTrue(ex.getMessage().contains("已在生成中"));
-        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt());
+        verify(imageToVideo, never()).enqueueForShot(any(), any(), any(), anyInt(), any());
         verify(queue, never()).enqueue(any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), any());
         verify(shots, never()).updateByExampleSelective(any(), any());
     }

@@ -105,7 +105,7 @@ public class ScriptService {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
         ShortWork work = workAccessService.requireWork(ep.getWorkId());
         if (work.getOutlineJson() == null || work.getOutlineJson().isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "outline is required before generating a script");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "请先生成或保存全剧大纲，再生成本集剧本");
         }
         patchEpisodeScriptStatus(ep, "GENERATING");
         Map<String, Object> request = new LinkedHashMap<>();
@@ -179,12 +179,12 @@ public class ScriptService {
         List<Map<String, Object>> scenes = ShortJson.list(script.getSceneJson());
         Map<String, Object> precheck = scanScript(scenes);
         if ("BLOCK".equals(precheck.get("risk_level"))) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "compliance BLOCK, cannot ready");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "剧本含违规内容（合规拦截），请修改后再定稿");
         }
         int score = script.getTotalScore() == null ? 0 : script.getTotalScore();
         int force = req.getForceReadyFlag() == null ? 0 : req.getForceReadyFlag();
         if (score < 60 && force != 1) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "rhythm total_score < 60, set force_ready_flag=1");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "当前剧本节奏评分未满 60 分，如需继续请点击「强制定稿」");
         }
         ShortScript patch = new ShortScript();
         patch.setScriptStatus("READY");
