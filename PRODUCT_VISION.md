@@ -127,7 +127,7 @@ Tube 平台自身的分发与数据回流、多人协作与权限细分（一个
   库内只存 `storage_key`；对外下载走 30 分钟有效的签名 URL，不暴露永久地址。
 - 长耗时任务（M1 定口径）：全部生成类动作统一走 `short_ai_task` 任务体系（排队 / 执行 / 重试 /
   断点续跑 / 计费），前端按 `task_id` 与 `batch_id` 恢复视图（见 `docs/feature/shot-generation.md`）。
-- 供应商选型：首批生产模型统一走 `TENCENT_TOKENHUB`，端点参数与异步轮询由模型 `config_json` 驱动；
+- 供应商选型：境内生产模型统一走 `bgssai-tokenhub-cn`（禁止跨区回退 `bgssai-tokenhub-global`，用户端隐去中枢名称仅展示模型与 `0.5x / 1x / 1.5x` 额度倍率；库内 `provider_code` 保留 `TENCENT_TOKENHUB` 兼容枚举），端点参数与异步轮询由模型 `config_json` 驱动；
   对象存储继续使用华为云 OBS（本地 profile 可回退），任务调度继续复用当前线程池 Worker。
 
 ## 六、里程碑

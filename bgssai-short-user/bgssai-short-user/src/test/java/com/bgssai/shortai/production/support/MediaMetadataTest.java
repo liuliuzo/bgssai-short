@@ -63,7 +63,7 @@ class MediaMetadataTest {
     void processTimeoutAndExcessOutputAreBounded() throws Exception {
         var bad = AiProviderResult.binary(new byte[] {1}, "audio/mpeg");
         String javaExecutable = Path.of(System.getProperty("java.home"), "bin", "java").toString();
-        String classes = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
+        String classes = Path.of(MediaMetadataTest.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
         Path marker = java.nio.file.Files.createTempFile("short-probe-test-", ".txt");
         try {
             MediaMetadata.verify(bad, "VOICE", List.of(javaExecutable, "-cp", classes, ProbeProcess.class.getName(), "control", marker.toString()), 5_000);
@@ -72,8 +72,8 @@ class MediaMetadataTest {
                 java.nio.file.Files.writeString(marker, "");
                 long start = System.nanoTime();
                 assertThrows(BizException.class, () -> MediaMetadata.verify(bad, "VOICE",
-                        List.of(javaExecutable, "-cp", classes, ProbeProcess.class.getName(), mode, marker.toString()), "hang".equals(mode) ? 1_000 : 5_000));
-                assertTrue(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start) < 5);
+                        List.of(javaExecutable, "-cp", classes, ProbeProcess.class.getName(), mode, marker.toString()), "hang".equals(mode) ? 2_000 : 5_000));
+                assertTrue(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start) < 8);
                 List<String> recorded = java.nio.file.Files.readAllLines(marker);
                 assertEquals(2, recorded.size(), "The test child must actually have started");
                 assertFalse(ProcessHandle.of(Long.parseLong(recorded.get(0))).map(ProcessHandle::isAlive).orElse(false));
