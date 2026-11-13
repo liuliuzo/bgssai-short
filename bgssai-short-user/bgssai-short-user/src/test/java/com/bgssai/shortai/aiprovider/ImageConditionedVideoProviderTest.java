@@ -93,6 +93,26 @@ class ImageConditionedVideoProviderTest {
     }
 
     @Test
+    void blankBaseUsesTheCompanyImageRouteAndCompanyKey() {
+        List<ImageConditionedVideoProvider.HttpCall> calls = new ArrayList<>();
+        SysSecretReader secrets = new SysSecretReader(key ->
+                SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(key) ? "company-key"
+                        : "ai.tokenhub_cn.api_key".equals(key) ? "hub-secret" : "");
+        ImageConditionedVideoProvider provider = new ImageConditionedVideoProvider(secrets, call -> {
+            calls.add(call);
+            return new ImageConditionedVideoProvider.HttpReply(202, "application/json",
+                    accepted().getBytes(StandardCharsets.UTF_8));
+        }, ms -> {
+        });
+        AiModelConfig model = model("ai.image_to_video.api_key");
+        model.setConfigJson("{\"secret_ref\":\"ai.image_to_video.api_key\"}");
+        var decision = provider.submit(model, PNG, "image/png", "a cat walks", 384, 256, 25, 8, 20, 42);
+        assertEquals(SubmitKind.ACCEPTED, decision.kind());
+        assertEquals("https://chat.bgssai.com/i2v/v1/videos", calls.get(0).url());
+        assertEquals("company-key", calls.get(0).bearer());
+    }
+
+    @Test
     void otherSecretRefsAreNotUsed() {
         List<ImageConditionedVideoProvider.HttpCall> calls = new ArrayList<>();
         SysSecretReader secrets = new SysSecretReader(key -> "ai.tokenhub_cn.api_key".equals(key) ? "hub-secret" : "");

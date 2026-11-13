@@ -187,7 +187,8 @@ public class ShortAiTaskWorker {
             ShortAiTaskExample ex = new ShortAiTaskExample();
             ex.createCriteria().andTaskStatusEqualTo("QUEUED");
             ex.setOrderByClause("id asc limit 40");
-            ShortAiTask task = OfficialVideoLane.nextClaim(shortAiTaskMapper.selectByExample(ex), officialBusy);
+            ShortAiTask task = OfficialVideoLane.nextClaim(shortAiTaskMapper.selectByExample(ex), officialBusy,
+                    imageToVideoBusy());
             if (task == null) {
                 onPollSuccess();
                 return;
@@ -249,14 +250,14 @@ public class ShortAiTaskWorker {
                 }
                 if (ImageToVideoPolicy.TARGET.equals(task.getTargetType())) {
                     if (!ImageToVideoPolicy.hasProviderJob(task)) {
-                        if (ageSec >= 180) {
-                            failIfRunning(task, "I2V_AMBIGUOUS", ImageConditionedVideoProtocol.AMBIGUOUS);
+                        if (ageSec >= 180 && failIfRunning(task, "I2V_AMBIGUOUS", ImageConditionedVideoProtocol.AMBIGUOUS)) {
+                            noteTerminalFailure(task);
                         }
                         continue;
                     }
                     int imageLimit = ImageConditionedVideoProtocol.DEADLINE_SEC + STALE_GRACE_SEC;
-                    if (ageSec >= imageLimit) {
-                        failIfRunning(task, "I2V_TIMEOUT", ImageConditionedVideoProtocol.TIMEOUT);
+                    if (ageSec >= imageLimit && failIfRunning(task, "I2V_TIMEOUT", ImageConditionedVideoProtocol.TIMEOUT)) {
+                        noteTerminalFailure(task);
                     }
                     continue;
                 }
@@ -444,6 +445,13 @@ public class ShortAiTaskWorker {
      * and keeps the original receipt, so the next turn polls that job instead of starting a new one.
      * @return true when a company video is already occupying the lane
      */
+    private boolean imageToVideoBusy() {
+        ShortAiTaskExample running = new ShortAiTaskExample();
+        running.createCriteria().andTaskStatusEqualTo("RUNNING")
+                .andTargetTypeEqualTo(com.bgssai.shortai.production.support.ImageToVideoPolicy.TARGET);
+        return shortAiTaskMapper.countByExample(running) > 0;
+    }
+
     private boolean reconcileOfficialLane() {
         java.util.List<ShortAiTask> running = officialRunning();
         ShortAiTask keeper = null;

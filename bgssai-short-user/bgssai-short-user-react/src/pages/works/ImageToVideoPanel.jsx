@@ -78,7 +78,7 @@ export default function ImageToVideoPanel({ workId, episodeId, shots }) {
           message={capability?.reason || '图生视频暂不可用。文生视频不受影响。'}
         />
       ) : null}
-      <p style={{ marginTop: 0, color: '#334155' }}>这是低画质小样，用来看动作，不是最终成片。宽、高、帧数可以留空。</p>
+      <p style={{ marginTop: 0, color: '#334155' }}>镜头上的「生成视频」在有真实画面时走同一条图生视频，成片是 384×256、约 3 秒，不是竖屏 9:16。这里也可以另选一张图。宽、高、帧数可以留空。</p>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Space wrap>
           <Upload
@@ -109,7 +109,7 @@ export default function ImageToVideoPanel({ workId, episodeId, shots }) {
           rows={2}
           maxLength={2000}
           value={prompt}
-          placeholder="用一句话说明画面怎么动。这是低画质小样，出片慢，不能当成成片。"
+          placeholder="用一句话说明画面怎么动。成片是 384×256、约 3 秒，出片比文生视频更慢。"
           onChange={(event) => setPrompt(event.target.value)}
         />
         <Space wrap>

@@ -23,7 +23,7 @@
 | `ai.minimax.api_key` | MiniMax / 海螺 API Key（Bearer） |
 | `ai.seedance.api_key` | 火山方舟 Seedance API Key（Bearer） |
 | `ai.veo.api_key` | Google Gemini / Veo API Key（`x-goog-api-key`） |
-| `ai.image_to_video.api_key` | 图生视频 Bearer。只在 `sql/dev/DML.sql` 放空种子，不进 `sql/prod/DML.sql`，不写进源码、夹具或日志。没有管理端 `base_url` 时能力保持关闭。该地址只来自模型行：拒绝应用回环，以及模型机公网或内网地址的 8007 端口；其它管理端源站（含以后的专用网关）可以接通。用户请求不能提供这个地址或图片 URL。不回退到中枢或公司网关密钥 |
+| `ai.image_to_video.api_key` | 图生视频 Bearer。只在 `sql/dev/DML.sql` 放空种子。空值时改读 `ai.openai_compat.api_key`，只用于 `https://chat.bgssai.com/i2v`。不读中枢键，不把密钥写进仓库。模型机 8007 端口和公司主机根路径仍然拒绝 |
 | `ai.{provider_code}.{model_code}.api_key` | 单模型覆盖（可选） |
 
 本仓 DML 对所有 AI 供应商只放空值占位行；真实值由 **Admin「AI 密钥」页**

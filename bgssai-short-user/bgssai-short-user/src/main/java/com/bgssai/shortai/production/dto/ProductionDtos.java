@@ -229,6 +229,8 @@ public class ProductionDtos {
         private List<String> shotIds;
         private Integer autoNextFlag;
         private Integer fallbackModelFlag;
+        private Integer confirmCost;
+        private String shotId;
         public String getWorkId() { return workId; }
         public void setWorkId(String workId) { this.workId = workId; }
         public String getEpisodeId() { return episodeId; }
@@ -249,6 +251,10 @@ public class ProductionDtos {
         public void setAutoNextFlag(Integer autoNextFlag) { this.autoNextFlag = autoNextFlag; }
         public Integer getFallbackModelFlag() { return fallbackModelFlag; }
         public void setFallbackModelFlag(Integer fallbackModelFlag) { this.fallbackModelFlag = fallbackModelFlag; }
+        public Integer getConfirmCost() { return confirmCost; }
+        public void setConfirmCost(Integer confirmCost) { this.confirmCost = confirmCost; }
+        public String getShotId() { return shotId; }
+        public void setShotId(String shotId) { this.shotId = shotId; }
     }
 
     public static class FilmReq {

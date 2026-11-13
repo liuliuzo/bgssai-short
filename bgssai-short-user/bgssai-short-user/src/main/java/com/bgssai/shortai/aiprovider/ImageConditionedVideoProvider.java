@@ -200,22 +200,36 @@ public class ImageConditionedVideoProvider implements AiProvider, ImageCondition
         if (model == null) {
             return Optional.empty();
         }
-        return ImageConditionEndpoint.admit(ShortJson.text(ShortJson.map(model.getConfigJson()).get("base_url")));
+        String raw = ShortJson.text(ShortJson.map(model.getConfigJson()).get("base_url")).trim();
+        if (raw.isBlank()) {
+            raw = ImageConditionEndpoint.COMPANY_IMAGE_TO_VIDEO;
+        }
+        return ImageConditionEndpoint.admit(raw);
     }
 
+    /**
+     * Prefer the image-to-video secret. When that row is still empty, use the
+     * company gateway key already stored for chat.bgssai.com. Never a literal key,
+     * and never the TokenHub key.
+     */
     private String bearer(AiModelConfig model) {
         if (secrets == null || model == null) {
             return "";
         }
         String ref = ShortJson.text(ShortJson.map(model.getConfigJson()).get("secret_ref")).trim();
-        if (ref.isBlank()) {
-            ref = SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY;
+        if (ref.isBlank() || SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY.equals(ref)) {
+            String dedicated = secrets.get(SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY);
+            if (dedicated != null && !dedicated.isBlank()) {
+                return dedicated.trim();
+            }
+            String company = secrets.get(SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
+            return company == null ? "" : company.trim();
         }
-        if (!SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY.equals(ref)) {
-            return "";
+        if (SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(ref)) {
+            String company = secrets.get(SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
+            return company == null ? "" : company.trim();
         }
-        String value = secrets.get(ref);
-        return value == null ? "" : value.trim();
+        return "";
     }
 
     private static byte[] imageBytes(AiProviderRequest request) {
