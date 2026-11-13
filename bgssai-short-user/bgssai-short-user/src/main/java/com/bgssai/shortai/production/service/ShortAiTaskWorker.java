@@ -507,7 +507,8 @@ public class ShortAiTaskWorker {
     }
 
     private void submitWorker(ShortAiTask task, boolean requeueOnReject) {
-        if (task.getId() != null) {
+        boolean trackOfficial = OfficialVideoLane.isOfficial(task) && task.getId() != null;
+        if (trackOfficial) {
             officialInFlight.add(task.getId());
         }
         try {
@@ -515,13 +516,13 @@ public class ShortAiTaskWorker {
                 try {
                     run(task);
                 } finally {
-                    if (task.getId() != null) {
+                    if (trackOfficial) {
                         officialInFlight.remove(task.getId());
                     }
                 }
             });
         } catch (RejectedExecutionException rejected) {
-            if (task.getId() != null) {
+            if (trackOfficial) {
                 officialInFlight.remove(task.getId());
             }
             if (requeueOnReject) {
@@ -613,11 +614,13 @@ public class ShortAiTaskWorker {
         } else {
             criteria.andRetryCountEqualTo(task.getRetryCount());
         }
+        boolean alreadyOpen = requestId.equals(OfficialVideoLane.resumeId(task));
         if (shortAiTaskMapper.updateByExampleSelective(patch, up) == 1) {
             task.setRequestJson(json);
             log.info("official video remains open taskId={} resume existing receipt", task.getTaskId());
+            return true;
         }
-        return true;
+        return alreadyOpen;
     }
 
     private String lookupReceipt(ShortAiTask task) {
