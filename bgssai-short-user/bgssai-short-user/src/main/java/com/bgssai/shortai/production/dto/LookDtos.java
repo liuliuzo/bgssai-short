@@ -30,6 +30,7 @@ public final class LookDtos {
         private String caption;
         private String materialKind;
         private String viewAngle;
+        private String assetId;
         private String imageBase64;
         private String posterBase64;
 
@@ -45,6 +46,8 @@ public final class LookDtos {
         public void setMaterialKind(String materialKind) { this.materialKind = materialKind; }
         public String getViewAngle() { return viewAngle; }
         public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
+        public String getAssetId() { return assetId; }
+        public void setAssetId(String assetId) { this.assetId = assetId; }
         public String getImageBase64() { return imageBase64; }
         public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
         public String getPosterBase64() { return posterBase64; }

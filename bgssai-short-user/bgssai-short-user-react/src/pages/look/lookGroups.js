@@ -7,11 +7,72 @@ export const LOOK_ANGLES = [
   ['SIDE', '侧面'],
 ]
 
-const ANGLE_KEYS = new Set(LOOK_ANGLES.map(([value]) => value))
+export const SCENE_ANGLES = [
+  ['ESTABLISHING', '全景主图'],
+  ['MAIN_VIEW', '中景机位'],
+  ['DETAIL_VIEW', '局部陈设'],
+]
+
+export const PROP_ANGLES = [
+  ['MAIN_PROP', '主视图'],
+  ['DETAIL_PROP', '特写细节'],
+]
+
+export const LOOK_KINDS = [
+  { key: 'CHARACTER', label: '人物定妆', itemNoun: '造型', cardNoun: '角色' },
+  { key: 'SCENE', label: '场景参考', itemNoun: '场景', cardNoun: '场景' },
+  { key: 'PROP', label: '道具参考', itemNoun: '道具', cardNoun: '道具' },
+]
+
+export function normalizeLookKind(kind) {
+  const upper = String(kind || '').trim().toUpperCase()
+  if (upper === 'SCENE' || upper === 'PROP') return upper
+  return 'CHARACTER'
+}
+
+export function anglesForKind(kind) {
+  const normalized = normalizeLookKind(kind)
+  if (normalized === 'SCENE') return SCENE_ANGLES
+  if (normalized === 'PROP') return PROP_ANGLES
+  return LOOK_ANGLES
+}
+
+export function primaryAngleForKind(kind) {
+  const normalized = normalizeLookKind(kind)
+  if (normalized === 'SCENE') return 'ESTABLISHING'
+  if (normalized === 'PROP') return 'MAIN_PROP'
+  return 'FRONT_FACE'
+}
+
+export function emptySlotsForKind(kind) {
+  const slots = {}
+  for (const [angle] of anglesForKind(kind)) {
+    slots[angle] = []
+  }
+  return slots
+}
 
 export function groupLooksOfKind(materials, kind) {
-  const wanted = kind || 'CHARACTER'
-  return groupLooks((materials || []).filter((item) => (item.material_kind || 'CHARACTER') === wanted))
+  const wanted = normalizeLookKind(kind)
+  return groupLooks(
+    (materials || []).filter((item) => normalizeLookKind(item && item.material_kind) === wanted),
+    wanted,
+  )
+}
+
+export function librarySummaryCounts(materials) {
+  return {
+    characterCount: groupLooksOfKind(materials, 'CHARACTER').length,
+    sceneCount: groupLooksOfKind(materials, 'SCENE').length,
+    propCount: groupLooksOfKind(materials, 'PROP').length,
+  }
+}
+
+export function librarySummaryText(materials) {
+  const { characterCount, sceneCount, propCount } = librarySummaryCounts(materials)
+  const parts = [`${characterCount} 个造型`, `${sceneCount} 个场景`]
+  if (propCount > 0) parts.push(`${propCount} 个道具`)
+  return parts.join(' · ')
 }
 
 export function isVideoMaterial(item) {
@@ -88,7 +149,13 @@ export function arrangeAngle(items) {
 
 export function lookCover(look) {
   if (!look) return null
-  const pools = LOOK_ANGLES.map(([angle]) => (look.slots[angle] || []))
+  const slots = look.slots || {}
+  const priority = ['FRONT_FACE', 'ESTABLISHING', 'MAIN_PROP']
+  const orderedKeys = [
+    ...priority.filter((key) => Object.prototype.hasOwnProperty.call(slots, key)),
+    ...Object.keys(slots).filter((key) => !priority.includes(key)),
+  ]
+  const pools = orderedKeys.map((angle) => slots[angle] || [])
   pools.push(look.extra || [])
   for (const pool of pools) {
     const still = pool.find((item) => !isVideoMaterial(item) && hasPicture(item))
@@ -152,7 +219,9 @@ export function cardGenerationCopy({ reference, refImageUrl, candidates, selecte
   return referenceLine(ref)
 }
 
-export function groupLooks(materials) {
+export function groupLooks(materials, kind = 'CHARACTER') {
+  const angles = anglesForKind(kind)
+  const angleKeys = new Set(angles.map(([value]) => value))
   const order = []
   const groups = new Map()
   for (const item of materials || []) {
@@ -160,14 +229,15 @@ export function groupLooks(materials) {
     if (!groups.has(name)) {
       groups.set(name, {
         name,
-        slots: { FRONT_FACE: [], FRONT: [], BACK: [], SIDE: [] },
+        kind: normalizeLookKind(kind),
+        slots: emptySlotsForKind(kind),
         extra: [],
       })
       order.push(name)
     }
     const group = groups.get(name)
     const angle = item && item.view_angle
-    if (ANGLE_KEYS.has(angle)) group.slots[angle].push(item)
+    if (angleKeys.has(angle)) group.slots[angle].push(item)
     else group.extra.push(item)
   }
   return order.map((name) => groups.get(name))

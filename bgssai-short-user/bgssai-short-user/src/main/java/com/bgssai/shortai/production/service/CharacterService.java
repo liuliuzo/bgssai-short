@@ -374,12 +374,16 @@ public class CharacterService {
         if (caption == null || caption.isBlank()) {
             caption = joinCaption(row.getCardName(), row.getAppearancePrompt());
         }
-        lookKnowledgeService.fileImage(row.getUserId(), kind, row.getCardName(), caption, image, null, row.getSceneCardId(), asset.getAssetId());
+        String angle = LookKnowledgeService.normalizeViewForKind(kind, req.getViewAngle(), true);
+        caption = joinCaption(caption, LookKnowledgeService.viewName(angle));
+        lookKnowledgeService.fileImage(row.getUserId(), kind, row.getCardName(), caption, image, angle, row.getSceneCardId(), asset.getAssetId());
         CharacterReq lock = new CharacterReq();
         lock.setSceneCardId(row.getSceneCardId());
         lock.setAssetId(asset.getAssetId());
         lockScene(lock);
-        return Responses.ok(uploaded(asset));
+        Map<String, Object> result = uploaded(asset);
+        result.put("view_angle", angle);
+        return Responses.ok(result);
     }
 
     @Transactional

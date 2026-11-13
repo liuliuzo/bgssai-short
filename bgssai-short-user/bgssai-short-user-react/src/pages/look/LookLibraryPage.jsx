@@ -3,7 +3,18 @@ import { Button, Card, Image, Input, Modal, Skeleton, Space, Switch, Typography,
 import { Link, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import { safeReturnPath } from '../../lib/safeReturn'
-import { LOOK_ANGLES, arrangeAngle, groupLooks } from './lookGroups'
+import {
+  LOOK_ANGLES,
+  LOOK_KINDS,
+  anglesForKind,
+  arrangeAngle,
+  emptySlotsForKind,
+  groupLooksOfKind,
+  librarySummaryCounts,
+  librarySummaryText,
+  normalizeLookKind,
+  primaryAngleForKind,
+} from './lookGroups'
 import { laplacianScore, posterTimes } from './lookPoster'
 
 const { Paragraph, Text } = Typography
@@ -166,14 +177,16 @@ async function waitBatch(batchId) {
   return null
 }
 
-function sideMedia(look) {
+function sideMedia(look, kind) {
+  const angles = anglesForKind(kind)
+  const unslottedLabel = kind === 'SCENE' ? '未分机位' : kind === 'PROP' ? '未分视角' : '未分面'
   const extras = []
   const videos = []
   const broken = []
   let duplicated = false
   const pools = [
-    ...LOOK_ANGLES.map(([angle, label]) => ({ label, items: (look.slots && look.slots[angle]) || [] })),
-    { label: '未分面', items: look.extra || [] },
+    ...angles.map(([angle, label]) => ({ label, items: (look.slots && look.slots[angle]) || [] })),
+    { label: unslottedLabel, items: look.extra || [] },
   ]
   const noteDup = (item) => {
     if (item && item.same_material_ids && item.same_material_ids.length > 1) duplicated = true
@@ -189,31 +202,88 @@ function sideMedia(look) {
       noteDup(item)
       videos.push({ ...item, angleLabel: pool.label })
     }
-    if (pool.label === '未分面' && view.primary) {
+    if (pool.label === unslottedLabel && view.primary) {
       noteDup(view.primary)
       extras.push({ ...view.primary, angleLabel: pool.label })
     }
-    const rest = (pool.label === '未分面' || view.primary) ? view.missing : view.missing.slice(1)
+    const rest = (pool.label === unslottedLabel || view.primary) ? view.missing : view.missing.slice(1)
     for (const item of rest) broken.push({ ...item, angleLabel: pool.label })
   }
   return { extras, videos, broken, duplicated }
 }
 
+const KIND_COPY = {
+  CHARACTER: {
+    itemNoun: '造型',
+    slotNoun: '面',
+    namePlaceholder: '造型名称，例如白纱花瓣',
+    descPlaceholder: '外观特征（可选，例如黑长直、珍珠耳环）',
+    emptyText: '这个库里还没有人物造型。写一个造型名称，再往四面里放照片。',
+    uploadEmpty: '上传这一面',
+    subHint: '每个造型按正脸、前面、背面、侧面排好；先放好正脸，还可以按正脸补齐其他面。点照片可看大图。',
+    slotWidth: 112,
+    slotHeight: 148,
+    extraWidth: 84,
+    extraHeight: 112,
+  },
+  SCENE: {
+    itemNoun: '场景',
+    slotNoun: '机位',
+    namePlaceholder: '场景名称，例如总裁办公室、雨夜便利店',
+    descPlaceholder: '布景与光影特征（可选，例如落地窗夜景、暖光吧台）',
+    emptyText: '这个库里还没有场景参考。可以先添加一个场景名称上传全景主图，也可以在作品场景卡上点「存入场景库」。',
+    uploadEmpty: '上传参考图',
+    subHint: '每个场景按全景主图、中景机位、局部陈设排好；全景主图会在生成场景与空镜时优先参考。点照片可看大图。',
+    slotWidth: 164,
+    slotHeight: 108,
+    extraWidth: 112,
+    extraHeight: 74,
+  },
+  PROP: {
+    itemNoun: '道具',
+    slotNoun: '视角',
+    namePlaceholder: '道具名称，例如退婚书、祖传玉佩',
+    descPlaceholder: '材质与外观特征（可选，例如烫金红封、青白玉）',
+    emptyText: '这个库里还没有道具参考。可以先添加一个道具名称上传主视图，也可以在作品道具卡上点「存入道具库」。',
+    uploadEmpty: '上传参考图',
+    subHint: '每个道具按主视图、特写细节排好；主视图会在生成道具参考图时优先参考。点照片可看大图。',
+    slotWidth: 120,
+    slotHeight: 120,
+    extraWidth: 84,
+    extraHeight: 84,
+  },
+}
+
 export default function LookLibraryPage() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  const activeKind = normalizeLookKind(params.get('kind'))
+  const kindUi = KIND_COPY[activeKind] || KIND_COPY.CHARACTER
+  const activeAngles = anglesForKind(activeKind)
+  const primaryAngle = primaryAngleForKind(activeKind)
   const back = safeReturnPath(params.get('return'))
-  const backLabel = back && back.includes('/characters') ? '返回角色定妆' : '返回'
+  const backLabel = back && back.includes('/characters') ? '返回角色与场景' : '返回'
   const [libraries, setLibraries] = useState([])
   const [librariesReady, setLibrariesReady] = useState(false)
   const [libraryId, setLibraryId] = useState()
   const [creating, setCreating] = useState(false)
   const [libraryName, setLibraryName] = useState('')
   const [lookName, setLookName] = useState('')
+  const [lookDesc, setLookDesc] = useState('')
   const [drafts, setDrafts] = useState([])
   const [busy, setBusy] = useState(false)
   const [playing, setPlaying] = useState(null)
   const fileRef = useRef(null)
   const uploadTarget = useRef(null)
+
+  const switchKind = (nextKind) => {
+    const normalized = normalizeLookKind(nextKind)
+    const next = new URLSearchParams(params)
+    if (normalized === 'CHARACTER') next.delete('kind')
+    else next.set('kind', normalized)
+    setParams(next, { replace: true })
+    setLookName('')
+    setLookDesc('')
+  }
 
   const load = useCallback(async () => {
     try {
@@ -230,9 +300,10 @@ export default function LookLibraryPage() {
   useEffect(() => { load() }, [load])
 
   const current = libraries.find((item) => item.library_id === libraryId)
-  const looks = groupLooks(current?.material_list)
+  const currentCounts = librarySummaryCounts(current?.material_list)
+  const looks = groupLooksOfKind(current?.material_list, activeKind)
   const named = new Set(looks.map((look) => look.name))
-  const visibleDrafts = drafts.filter((name) => !named.has(name))
+  const visibleDrafts = drafts.filter((draft) => draft.kind === activeKind && !named.has(draft.name))
 
   async function createLibrary() {
     const name = libraryName.trim()
@@ -300,16 +371,20 @@ export default function LookLibraryPage() {
 
   function addLook() {
     const name = lookName.trim()
+    const desc = lookDesc.trim()
     if (!name) {
-      message.error('先写造型名称')
+      message.error(`先写${kindUi.itemNoun}名称`)
       return
     }
-    if (!named.has(name) && !drafts.includes(name)) setDrafts((rows) => [name, ...rows])
+    if (!named.has(name) && !drafts.some((row) => row.kind === activeKind && row.name === name)) {
+      setDrafts((rows) => [{ kind: activeKind, name, desc }, ...rows])
+    }
     setLookName('')
+    setLookDesc('')
   }
 
-  function openUpload(name, angle) {
-    uploadTarget.current = { name, angle }
+  function openUpload(name, angle, desc = '') {
+    uploadTarget.current = { kind: activeKind, name, angle, desc }
     fileRef.current?.click()
   }
 
@@ -323,12 +398,14 @@ export default function LookLibraryPage() {
       const imageBase64 = await readFile(file)
       const video = (file.type || '').startsWith('video/') || /\.mp4$/i.test(file.name)
       const posterBase64 = video ? await posterOf(file) : undefined
-      const angleName = LOOK_ANGLES.find(([value]) => value === target.angle)?.[1] || '参考'
+      const angles = anglesForKind(target.kind)
+      const angleName = angles.find(([value]) => value === target.angle)?.[1] || '参考'
+      const captionParts = [target.name, target.desc, angleName].filter(Boolean)
       await productionApi.uploadLookMaterial({
         library_id: libraryId,
         material_name: target.name,
-        caption: `${target.name} ${angleName}`,
-        material_kind: 'CHARACTER',
+        caption: captionParts.join(' '),
+        material_kind: target.kind,
         view_angle: target.angle,
         image_base64: imageBase64,
         poster_base64: posterBase64,
@@ -430,54 +507,64 @@ export default function LookLibraryPage() {
 
   function removeLook(look) {
     const items = [
-      ...LOOK_ANGLES.flatMap(([angle]) => look.slots[angle]),
-      ...look.extra,
+      ...activeAngles.flatMap(([angle]) => look.slots[angle] || []),
+      ...(look.extra || []),
     ]
     Modal.confirm({
       title: `删除「${look.name}」`,
-      content: '这个造型里的照片都会从库里拿掉。',
+      content: `这个${kindUi.itemNoun}里的参考图都会从库里拿掉。`,
       okText: '删除',
       cancelText: '取消',
       onOk: async () => {
         for (const item of items) {
           await productionApi.deleteLookMaterial(item.material_id)
         }
-        setDrafts((rows) => rows.filter((name) => name !== look.name))
+        setDrafts((rows) => rows.filter((row) => !(row.kind === activeKind && row.name === look.name)))
         await load()
       },
     })
   }
 
-  function renderLook(look, draft) {
-    const side = sideMedia(look)
-    const face = faceStill(look)
-    const missing = missingBody(look)
+  function renderLook(look, draft, draftDesc = '') {
+    const side = sideMedia(look, activeKind)
+    const isCharacter = activeKind === 'CHARACTER'
+    const face = isCharacter ? faceStill(look) : null
+    const missing = isCharacter ? missingBody(look) : []
+    const firstCaption = [
+      ...activeAngles.flatMap(([angle]) => look.slots[angle] || []),
+      ...(look.extra || []),
+    ].find((item) => item && item.caption)?.caption || draftDesc
     return (
       <Card
-        key={look.name}
+        key={`${activeKind}-${look.name}`}
         size="small"
         style={{ marginBottom: 12 }}
         title={look.name}
         extra={draft ? (
-          <Button type="link" size="small" onClick={() => setDrafts((rows) => rows.filter((name) => name !== look.name))}>取消</Button>
+          <Button type="link" size="small" onClick={() => setDrafts((rows) => rows.filter((row) => !(row.kind === activeKind && row.name === look.name)))}>取消</Button>
         ) : (
-          <Button type="link" size="small" onClick={() => removeLook(look)}>删除造型</Button>
+          <Button type="link" size="small" onClick={() => removeLook(look)}>删除{kindUi.itemNoun}</Button>
         )}
       >
+        {firstCaption && firstCaption !== look.name ? (
+          <div style={{ marginBottom: 8 }}>
+            <Text type="secondary">匹配特征：{firstCaption}</Text>
+          </div>
+        ) : null}
         <Image.PreviewGroup preview={{ zIndex: PREVIEW_Z }}>
           <div style={{ display: 'flex', gap: 12, overflowX: 'auto', alignItems: 'flex-start' }}>
-            {LOOK_ANGLES.map(([angle, label]) => {
+            {activeAngles.map(([angle, label]) => {
               const view = arrangeAngle(look.slots[angle])
               const shown = view.primary || view.missing[0] || null
               return (
-                <div key={angle} data-angle={angle} style={{ width: 112, flex: '0 0 112px' }}>
+                <div key={angle} data-angle={angle} style={{ width: kindUi.slotWidth, flex: `0 0 ${kindUi.slotWidth}px` }}>
                   <div style={{ minHeight: 34, marginBottom: 6, fontSize: 12, lineHeight: '17px', color: '#595959' }}>
                     <div>{label}</div>
-                    <div style={{ minHeight: 17, color: '#d48806' }}>{angle === 'FRONT_FACE' ? '生成时优先用' : ''}</div>
+                    <div style={{ minHeight: 17, color: '#d48806' }}>{angle === primaryAngle ? '生成时优先用' : ''}</div>
                   </div>
                   <div style={{
-                    width: 112,
-                    height: 148,
+                    width: kindUi.slotWidth,
+                    height: kindUi.slotHeight,
                     boxSizing: 'border-box',
                     borderRadius: 8,
                     overflow: 'hidden',
@@ -502,8 +589,8 @@ export default function LookLibraryPage() {
                           </>
                         ) : (
                           <>
-                            <div>这一面</div>
-                            <div>还没有照片</div>
+                            <div>这一{kindUi.slotNoun}</div>
+                            <div>还没有参考图</div>
                           </>
                         )}
                       </div>
@@ -515,12 +602,12 @@ export default function LookLibraryPage() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => openUpload(look.name, angle)}
+                    onClick={() => openUpload(look.name, angle, draftDesc)}
                     style={uploadButtonStyle(busy)}
                   >
-                    {shown ? '再传一张' : '上传这一面'}
+                    {shown ? '再传一张' : kindUi.uploadEmpty}
                   </button>
-                  {face && angle !== 'FRONT_FACE' ? (
+                  {isCharacter && face && angle !== 'FRONT_FACE' ? (
                     <button
                       type="button"
                       disabled={busy}
@@ -534,7 +621,7 @@ export default function LookLibraryPage() {
               )
             })}
           </div>
-          {face ? (
+          {isCharacter && face ? (
             <div style={{ marginTop: 8 }}>
               <Text type="secondary">缺的面可以按正脸生成。侧面和背面会跟着这张正脸的人和衣服来画，模型有时仍会走样。</Text>
               {missing.length >= 2 ? (
@@ -544,23 +631,23 @@ export default function LookLibraryPage() {
               ) : null}
             </div>
           ) : null}
-          {side.duplicated ? <div style={{ marginTop: 8 }}><Text type="secondary">有的照片在多个角色卡上是同一张，这里只显示一次。</Text></div> : null}
+          {side.duplicated ? <div style={{ marginTop: 8 }}><Text type="secondary">有的照片在多个卡片上是同一张，这里只显示一次。</Text></div> : null}
           {side.extras.length || side.broken.length ? (
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 13, marginBottom: 4 }}>其他照片</div>
-              <Text type="secondary">上面是这一面最新的一张。更早的放在这里，点开可以看大图，不需要就移除。</Text>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>其他参考图</div>
+              <Text type="secondary">上面是每个{kindUi.slotNoun}最新的一张。更早上传或未分{kindUi.slotNoun}的放在这里，点开可以看大图，不需要就移除。</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.extras.map((item) => (
-                  <div key={item.material_id} style={{ width: 84 }}>
+                  <div key={item.material_id} style={{ width: kindUi.extraWidth }}>
                     <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
-                    <PhotoThumb item={item} width={84} height={112} alt={`${look.name} ${item.angleLabel}`} />
+                    <PhotoThumb item={item} width={kindUi.extraWidth} height={kindUi.extraHeight} alt={`${look.name} ${item.angleLabel}`} />
                     <Button type="link" size="small" style={{ padding: 0 }} onClick={() => removeMaterial(item)}>移除</Button>
                   </div>
                 ))}
                 {side.broken.map((item) => (
-                  <div key={item.material_id} style={{ width: 84 }}>
+                  <div key={item.material_id} style={{ width: kindUi.extraWidth }}>
                     <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
-                    <div style={{ width: 84, height: 112, borderRadius: 8, background: '#f6f7f9', color: '#8c8c8c', fontSize: 12, lineHeight: 1.45, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', boxSizing: 'border-box' }}>
+                    <div style={{ width: kindUi.extraWidth, height: kindUi.extraHeight, borderRadius: 8, background: '#f6f7f9', color: '#8c8c8c', fontSize: 12, lineHeight: 1.45, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', boxSizing: 'border-box' }}>
                       <div style={{ whiteSpace: 'nowrap' }}>这张照片</div>
                       <div style={{ whiteSpace: 'nowrap' }}>没有加载出来</div>
                     </div>
@@ -573,15 +660,15 @@ export default function LookLibraryPage() {
           {side.videos.length ? (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 13, marginBottom: 4 }}>参考视频</div>
-              <Text type="secondary">这是视频，不拿来当定妆照。封面只是其中一帧，人如果在动，这一帧会发糊或者切得很近。点开可以播放。</Text>
+              <Text type="secondary">这是视频，不拿来当静态参考图。封面只是其中一帧，点开可以播放。</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.videos.map((item) => (
-                  <div key={item.material_id} data-video="true" style={{ width: 84 }}>
+                  <div key={item.material_id} data-video="true" style={{ width: kindUi.extraWidth }}>
                     <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
                     <button
                       type="button"
                       onClick={() => setPlaying(item)}
-                      style={{ width: 84, height: 112, padding: 0, border: '1px solid #f0f0f0', borderRadius: 8, background: '#f6f7f9', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                      style={{ width: kindUi.extraWidth, height: kindUi.extraHeight, padding: 0, border: '1px solid #f0f0f0', borderRadius: 8, background: '#f6f7f9', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
                     >
                       {item.poster_url ? (
                         <img alt={`${look.name} ${item.angleLabel} 参考视频`} src={item.poster_url} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
@@ -601,24 +688,30 @@ export default function LookLibraryPage() {
     )
   }
 
+  const kindCountOf = (kindKey) => {
+    if (kindKey === 'SCENE') return currentCounts.sceneCount
+    if (kindKey === 'PROP') return currentCounts.propCount
+    return currentCounts.characterCount
+  }
+
   return (
     <Card
-      title="定妆知识库"
+      title="定妆与场景参考库"
       extra={(
         <Space>
           {back ? <Link to={back}>{backLabel}</Link> : <Link to="/works">去我的作品</Link>}
-          <Button type="primary" onClick={() => setCreating(true)}>新建知识库</Button>
+          <Button type="primary" onClick={() => setCreating(true)}>新建参考库</Button>
         </Space>
       )}
     >
       <Paragraph style={{ marginBottom: 8, color: '#334155', lineHeight: 1.7 }}>
-        这里放可以反复使用的造型。给角色定妆时，在角色卡上就能直接选。
+        这里放可以跨剧集、跨作品反复使用的人物造型、场景参考和道具参考。在作品的角色与场景卡上可以直接选用，也可以把已锁定的参考图一键存回库里。
       </Paragraph>
       <Paragraph style={{ marginBottom: 0, color: '#334155', lineHeight: 1.7 }}>
-        每个造型按正脸、前面、背面、侧面排好。点照片可以看大图。
+        {kindUi.subHint}
       </Paragraph>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 16 }}>
-        <div style={{ width: 220, flexShrink: 0 }}>
+        <div style={{ width: 236, flexShrink: 0 }}>
           {!librariesReady ? <Skeleton active title={false} paragraph={{ rows: 4 }} /> : null}
           {libraries.map((item) => (
             <button
@@ -637,45 +730,65 @@ export default function LookLibraryPage() {
                 background: item.library_id === libraryId ? '#fff7e6' : '#fff',
               }}
             >
-              <div>{item.library_name}</div>
-              <Text type="secondary">
-                {groupLooks(item.material_list).length} 个造型
+              <div style={{ fontWeight: item.library_id === libraryId ? 600 : 400 }}>{item.library_name}</div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {librarySummaryText(item.material_list)}
                 {item.mount_portrait === 1 ? ' · 生成时参考' : ' · 先放着'}
               </Text>
             </button>
           ))}
-          {librariesReady && !libraries.length ? <Text>还没有知识库也没关系。在角色卡上上传照片，会自动放进「我的定妆」。</Text> : null}
+          {librariesReady && !libraries.length ? <Text>还没有参考库也没关系。在角色卡、场景卡或道具卡上上传照片，会自动放进「我的定妆」。</Text> : null}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           {current ? (
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              {current.status === 'ARCHIVED' ? (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 <Space wrap>
-                  <Text>这个库已归档，生成时不会自动用。</Text>
-                  <Button size="small" disabled={busy} onClick={restoreLibrary}>恢复</Button>
+                  {LOOK_KINDS.map((kindItem) => (
+                    <Button
+                      key={kindItem.key}
+                      type={kindItem.key === activeKind ? 'primary' : 'default'}
+                      onClick={() => switchKind(kindItem.key)}
+                    >
+                      {kindItem.label}（{kindCountOf(kindItem.key)}）
+                    </Button>
+                  ))}
                 </Space>
-              ) : (
-                <Space wrap>
-                  <Text>生成定妆时参考这个库</Text>
-                  <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
-                </Space>
-              )}
+                {current.status === 'ARCHIVED' ? (
+                  <Space wrap>
+                    <Text>这个库已归档，生成时不会自动匹配。</Text>
+                    <Button size="small" disabled={busy} onClick={restoreLibrary}>恢复</Button>
+                  </Space>
+                ) : (
+                  <Space wrap>
+                    <Text>生成参考图时自动匹配这个库</Text>
+                    <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
+                  </Space>
+                )}
+              </div>
               <Space wrap>
                 <Input
                   value={lookName}
-                  placeholder="造型名称，例如白纱花瓣"
-                  style={{ width: 240 }}
+                  placeholder={kindUi.namePlaceholder}
+                  style={{ width: 260 }}
                   onChange={(event) => setLookName(event.target.value)}
                   onPressEnter={addLook}
                 />
-                <Button onClick={addLook}>添加造型</Button>
+                <Input
+                  value={lookDesc}
+                  placeholder={kindUi.descPlaceholder}
+                  style={{ width: 300 }}
+                  onChange={(event) => setLookDesc(event.target.value)}
+                  onPressEnter={addLook}
+                />
+                <Button onClick={addLook}>添加{kindUi.itemNoun}</Button>
               </Space>
-              {visibleDrafts.map((name) => renderLook({ name, slots: { FRONT_FACE: [], FRONT: [], BACK: [], SIDE: [] }, extra: [] }, true))}
+              {visibleDrafts.map((draft) => renderLook({ name: draft.name, slots: emptySlotsForKind(activeKind), extra: [] }, true, draft.desc))}
               {looks.map((look) => renderLook(look, false))}
-              {!looks.length && !visibleDrafts.length ? <Text type="secondary">这个库还没有造型。写一个名称，再往四面里放照片。</Text> : null}
+              {!looks.length && !visibleDrafts.length ? <Text type="secondary">{kindUi.emptyText}</Text> : null}
             </Space>
           ) : librariesReady ? (
-            <Text>还没有打开知识库。左边列出库之后会自动打开第一个；也可以点「新建知识库」。</Text>
+            <Text>还没有打开参考库。左边列出库之后会自动打开第一个；也可以点「新建参考库」。</Text>
           ) : <Skeleton active paragraph={{ rows: 6 }} />}
         </div>
       </div>
@@ -699,12 +812,12 @@ export default function LookLibraryPage() {
               playsInline
               style={{ width: '100%', maxHeight: 520, background: '#111', borderRadius: 8 }}
             />
-            <div style={{ marginTop: 8 }}><Text type="secondary">封面只是视频里的一帧。发糊或切得很近时，不会和定妆照摆在一起。</Text></div>
+            <div style={{ marginTop: 8 }}><Text type="secondary">封面只是视频里的一帧。发糊或切得很近时，不会和静态参考图摆在一起。</Text></div>
           </div>
         ) : null}
       </Modal>
       <Modal
-        title="新建知识库"
+        title="新建参考库"
         open={creating}
         okText="创建"
         cancelText="取消"
@@ -714,11 +827,11 @@ export default function LookLibraryPage() {
       >
         <Input
           value={libraryName}
-          placeholder="例如礼服装"
+          placeholder="例如现代都市剧资产库、古装王府场景库"
           onChange={(event) => setLibraryName(event.target.value)}
           onPressEnter={createLibrary}
         />
-        <div style={{ marginTop: 8 }}><Text type="secondary">建好后就可以往里面加造型。生成定妆时会用到这个库。</Text></div>
+        <div style={{ marginTop: 8 }}><Text type="secondary">同一个参考库里可以分类存放人物定妆、场景参考和道具参考，整部剧集可直接共用。</Text></div>
       </Modal>
     </Card>
   )

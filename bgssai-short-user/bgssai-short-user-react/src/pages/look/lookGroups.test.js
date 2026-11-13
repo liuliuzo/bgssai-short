@@ -1,6 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { arrangeAngle, cardGenerationCopy, groupLooks, groupLooksOfKind, lookCover, referenceLine } from './lookGroups.js'
+import {
+  arrangeAngle,
+  cardGenerationCopy,
+  groupLooks,
+  groupLooksOfKind,
+  librarySummaryCounts,
+  librarySummaryText,
+  lookCover,
+  referenceLine,
+} from './lookGroups.js'
 import { laplacianScore, posterTimes } from './lookPoster.js'
 
 test('同一造型的四面归到一张卡上', () => {
@@ -130,6 +139,35 @@ test('视频封面躲开开头的晃动', () => {
     }
   }
   assert.ok(laplacianScore(edge) > laplacianScore(flat) * 5)
+})
+
+test('场景参考按全景主图、中景机位、局部陈设分组，封面优先全景主图', () => {
+  const materials = [
+    { material_name: '总裁办公室', material_kind: 'SCENE', view_angle: 'DETAIL_VIEW', file_url: 'https://cdn.example/desk.jpg' },
+    { material_name: '总裁办公室', material_kind: 'SCENE', view_angle: 'ESTABLISHING', file_url: 'https://cdn.example/wide.jpg' },
+    { material_name: '雨夜便利店', material_kind: 'SCENE', view_angle: null, file_url: 'https://cdn.example/legacy.jpg' },
+    { material_name: '退婚书', material_kind: 'PROP', view_angle: 'MAIN_PROP', file_url: 'https://cdn.example/prop.jpg' },
+    { material_name: '沈知微', material_kind: 'CHARACTER', view_angle: 'FRONT_FACE', file_url: 'https://cdn.example/face.jpg' },
+  ]
+  const scenes = groupLooksOfKind(materials, 'SCENE')
+  assert.equal(scenes.length, 2)
+  assert.equal(scenes[0].slots.ESTABLISHING.length, 1)
+  assert.equal(scenes[0].slots.DETAIL_VIEW.length, 1)
+  assert.equal(scenes[0].slots.MAIN_VIEW.length, 0)
+  assert.equal(lookCover(scenes[0]).file_url, 'https://cdn.example/wide.jpg')
+  assert.equal(scenes[1].extra.length, 1)
+  assert.equal(lookCover(scenes[1]).file_url, 'https://cdn.example/legacy.jpg')
+
+  const props = groupLooksOfKind(materials, 'PROP')
+  assert.equal(props.length, 1)
+  assert.equal(lookCover(props[0]).file_url, 'https://cdn.example/prop.jpg')
+
+  assert.deepEqual(librarySummaryCounts(materials), {
+    characterCount: 1,
+    sceneCount: 2,
+    propCount: 1,
+  })
+  assert.equal(librarySummaryText(materials), '1 个造型 · 2 个场景 · 1 个道具')
 })
 
 function solid(width, height, value) {
