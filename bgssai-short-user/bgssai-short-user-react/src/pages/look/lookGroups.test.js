@@ -93,6 +93,20 @@ test('尺寸不全的照片不合并，避免误伤不同的图', () => {
   assert.equal(view.extras.length, 1)
 })
 
+test('侧面站姿不占主位，改到其他照片', () => {
+  const view = arrangeAngle([
+    { material_id: 'pose', caption: '白衬衫-侧面-站姿', mime_type: 'image/jpeg', file_url: 'pose' },
+    { material_id: 'side', caption: '白衬衫-侧面', mime_type: 'image/jpeg', file_url: 'side' },
+  ])
+  assert.equal(view.primary.material_id, 'side')
+  assert.equal(view.extras[0].material_id, 'pose')
+  const onlyPose = arrangeAngle([
+    { material_id: 'pose', caption: '白衬衫-侧面-站姿', mime_type: 'image/jpeg', file_url: 'pose' },
+  ])
+  assert.equal(onlyPose.primary.material_id, 'pose')
+  assert.equal(onlyPose.extras.length, 0)
+})
+
 test('封面优先用照片，不用视频那一帧', () => {
   const groups = groupLooks([
     { material_name: '红礼服', view_angle: 'FRONT_FACE', mime_type: 'video/mp4', file_url: 'clip', poster_url: 'blur' },
