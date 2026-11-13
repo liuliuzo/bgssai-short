@@ -97,6 +97,9 @@ describe('legalLinks', () => {
     assert.equal(footerSrc.includes('ICP_FILING_URL'), true)
     assert.equal(footerSrc.includes('target="_blank"'), true)
     assert.equal(footerSrc.includes('rel="noopener noreferrer"'), true)
+    assert.equal(footerSrc.includes('footer_zh'), true)
+    assert.equal(footerSrc.includes('footer_en'), true)
+    assert.equal(footerSrc.includes('legal-footer-slash'), false)
   })
 
   it('rejects invented license numbers and retired legal paths', () => {
