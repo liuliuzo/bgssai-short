@@ -21,6 +21,7 @@
 
 | 功能 | 解决的痛点 | 需求文档 | 配图 | 原型 |
 | --- | --- | --- | --- | --- |
+| **出视频步骤** | 页签并列，创作者不知道先定稿、定妆、出首帧，生成视频会被直接拒绝 | [`video-path-guide.md`](./video-path-guide.md) | [`flow-video-path-guide.html`](./flow-video-path-guide.html) | 用户端 `video-path-guide`（作品页顶部，不新增路由） |
 | **三个问题体验主线** | 功能按管线组织，但用户关心的是：视频会是什么样 / 剧情连不连贯 / 管起来方不方便 | [`ux-three-questions.md`](./ux-three-questions.md) | [`flow-ux-three-questions.html`](./flow-ux-three-questions.html) | 用户端 `episode-preview` / `continuity-center` + `work-detail` 三问入口 |
 | 作品与剧集管理 | 产物散落、进度靠记，没有承载整部剧的容器 | [`short-work-management.md`](./short-work-management.md) | [`flow-production-pipeline.html`](./flow-production-pipeline.html) | 用户端 `works` / `work-create` / `work-detail` |
 | 剧本工作台与节奏体检 | AI 写成小说腔，没钩子没反转，节奏对不上时长 | [`script-studio.md`](./script-studio.md) | [`flow-script-generation.html`](./flow-script-generation.html) | 用户端 `script-studio` |

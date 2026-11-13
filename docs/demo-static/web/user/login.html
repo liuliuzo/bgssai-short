@@ -48,19 +48,20 @@
   .consent { margin: 18px 0 0; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6; }
   .consent a { color: #2563eb; text-decoration: none; }
   footer.legal-fanout {
-    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
     box-sizing: border-box; width: 100%; max-width: 100%;
-    padding: 22px 16px 28px; text-align: center; font-size: 14px; line-height: 1.7; color: #475569;
-    border-top: 1px solid #e2e8f0; background: #f8fafc;
+    padding: 8px 24px 10px; text-align: center; font-size: 12px; line-height: 1.4; color: #5c6a7c;
+    border-top: 1px solid #eceef3; background: transparent;
   }
-  .legal-fanout-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 20px; max-width: min(42rem, 100%); margin: 0; font-size: 14px; font-weight: 500; color: #334155; }
-  .legal-fanout-pair { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 0 2px; max-width: 100%; }
+  .legal-fanout-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; column-gap: 28px; row-gap: 2px; max-width: 100%; margin: 0; font-size: 12px; font-weight: 500; line-height: 1.4; color: #3d4758; }
+  .legal-fanout-lang { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: baseline; max-width: 100%; }
+  .legal-fanout-lang-en { font-size: 11.5px; font-weight: 400; color: #5c6a7c; }
+  .legal-fanout-sep { margin: 0 0.55em; color: #9aa3b2; font-weight: 400; }
   .legal-fanout a { color: inherit; text-decoration: none; }
-  .legal-fanout-links a:hover, .legal-fanout-filing a:hover { color: #1d4ed8; text-decoration: underline; }
-  .legal-fanout a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 2px; }
-  .legal-fanout-copy, .legal-fanout-filing { margin: 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
-  .legal-fanout-copy { font-size: 13px; line-height: 1.65; color: #475569; }
-  .legal-fanout-filing { font-size: 13px; line-height: 1.6; color: #64748b; }
+  .legal-fanout-links a:hover, .legal-fanout-filing a:hover { color: #3060c8; text-decoration: underline; text-underline-offset: 2px; }
+  .legal-fanout a:focus-visible { outline: 2px solid #3060c8; outline-offset: 2px; border-radius: 2px; }
+  .legal-fanout-copy, .legal-fanout-filing { margin: 0; max-width: 100%; font-size: 11.5px; line-height: 1.4; color: #5c6a7c; }
+  .legal-fanout-filing a { white-space: nowrap; }
   .demo { position: fixed; right: 12px; bottom: 12px; font-size: 12px; background: #fffbe6; border: 1px solid #faad14; border-radius: 8px; padding: 8px 10px; z-index: 40; }
   .demo input { width: auto; }
   @media (max-width: 480px) { .card { padding: 22px 18px; } }
@@ -119,14 +120,11 @@
       <p class="consent">登录或注册即表示已阅读并同意<a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">《用户协议》</a>与<a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">《隐私政策》</a></p>
     </div>
   </main>
-  <footer class="legal-fanout">
-    <nav class="legal-fanout-links" aria-label="法律信息 Legal">
-      <span class="legal-fanout-pair"><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">服务条款</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a></span>
-      <span class="legal-fanout-pair"><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a></span>
-      <span class="legal-fanout-pair"><a href="https://www.bgssai.com/personal-information-inventory/" target="_blank" rel="noopener noreferrer">个人信息收集清单</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/personal-information-inventory/" target="_blank" rel="noopener noreferrer">Personal Information Inventory</a></span>
-      <span class="legal-fanout-pair"><a href="https://www.bgssai.com/third-party-sharing/" target="_blank" rel="noopener noreferrer">第三方信息共享清单</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/third-party-sharing/" target="_blank" rel="noopener noreferrer">Third-Party Sharing</a></span>
-      <span class="legal-fanout-pair"><a href="https://www.bgssai.com/app-permissions/" target="_blank" rel="noopener noreferrer">应用权限</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/app-permissions/" target="_blank" rel="noopener noreferrer">App Permissions</a></span>
-    </nav>
+  <footer class="legal-fanout legal-quiet">
+    <nav class="legal-fanout-links" aria-label="法律信息">
+          <div class="legal-fanout-lang"><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">服务条款</a><span class="legal-fanout-sep" aria-hidden="true">·</span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a></div>
+          <div class="legal-fanout-lang legal-fanout-lang-en"><a href="https://www.bgssai.com/en/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a><span class="legal-fanout-sep" aria-hidden="true">·</span><a href="https://www.bgssai.com/en/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a></div>
+        </nav>
     <div class="legal-fanout-copy">© 2026 昆山兵贵神速智能科技有限公司</div>
     <div class="legal-fanout-filing"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></div>
   </footer>

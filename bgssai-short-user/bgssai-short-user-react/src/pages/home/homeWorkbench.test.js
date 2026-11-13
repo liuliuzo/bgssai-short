@@ -7,6 +7,7 @@ import {
   attentionItems,
   ownedSamplePath,
   continuePath,
+  continueLabel,
   coverUrl,
   episodeProgress,
   nextStepText,
@@ -63,6 +64,10 @@ test('continue opens the step that is actually next', () => {
   assert.equal(continuePath(work('w1', '甲'), [
     { episode_id: 'e4', review_status: 'NOT_SUBMITTED', script_status: 'READY', storyboard_status: 'FAILED' },
   ]), '/works/w1/storyboard?episode_id=e4')
+  assert.equal(continueLabel(work('w1', '甲'), []), '去写剧本')
+  assert.equal(continueLabel(work('w1', '甲'), [
+    { episode_id: 'e3', review_status: 'NOT_SUBMITTED', script_status: 'READY', storyboard_status: 'DRAFT' },
+  ]), '去生成视频')
 })
 
 test('attention is empty when nothing is stuck', () => {
@@ -125,7 +130,7 @@ test('next step answers what to do, including the empty and failed cases', () =>
   assert.equal(nextStepText({
     works: [work('w1', '悬疑法医手记')],
     attention: [],
-  }), '接着做《悬疑法医手记》。')
+  }), '接着做《悬疑法医手记》。打开作品后，按顶部步骤做到生成视频。')
   assert.match(nextStepText({
     works: [work('w1', '悬疑法医手记')],
     attention: [{ kind: 'generate_failed', workTitle: '悬疑法医手记' }],

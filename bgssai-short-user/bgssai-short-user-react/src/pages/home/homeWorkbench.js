@@ -176,5 +176,14 @@ export function nextStepText({ loadError, works, attention }) {
   if (rejected) return `《${rejected.workTitle}》有审核驳回，先去改。`
   const pending = items.find((item) => item.kind === 'review_pending')
   if (pending) return `《${pending.workTitle}》有剧集在等审核，先去看结果。`
-  return `接着做《${list[0].work_title || '最近的作品'}》。`
+  return `接着做《${list[0].work_title || '最近的作品'}》。打开作品后，按顶部步骤做到生成视频。`
+}
+
+export function continueLabel(work, episodes) {
+  const path = continuePath(work, episodes)
+  if (path.includes('/storyboard')) return '去生成视频'
+  if (path.includes('/script')) return '去写剧本'
+  if (path.includes('/voice')) return '去配音'
+  if (path.includes('/compose')) return '去看成片'
+  return '继续创作'
 }

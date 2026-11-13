@@ -16,10 +16,10 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
+import ProductionGuide from './ProductionGuide.jsx'
 import { shotCardHeading, shotLatestTaskBadge, shotOffersVideoRegenerate } from './shotCardMedia'
 import { runOfficialShotVideo } from './officialVideo'
 import {
-  buildProductionFlow,
   hasPlayableShotVideo,
   hasRealFirstFrame,
   resolveRepairAction,
@@ -1420,12 +1420,12 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <div>
-        <Title level={5} style={{ margin: 0 }}>第 3 步：分镜拆解与生成视频</Title>
-        <Paragraph style={{ marginBottom: 0, color: '#334155' }}>
-          从定稿剧本拆出每一镜后，可免费调整人话描述；确认无误即可先出草图看构图，或直接一键生成镜头视频。
-        </Paragraph>
-      </div>
+      <Alert
+        type="info"
+        showIcon
+        message="按顶部步骤出视频"
+        description="顶部步骤会带到定稿、定妆、拆镜、首帧和生成视频。这一页改人话分镜不花钱；确认无误后可一键出首帧并批量生成镜头视频。有视频的镜头在卡片左边播放；放不了的会直接写明。"
+      />
       {actionError ? (
         <Alert
           type="error"
@@ -1452,7 +1452,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
           type="success"
           showIcon
           message={`本集全部 ${rows.length} 个镜头视频已就绪，可以合成成片`}
-          description="可直接进入第 5 步把所有镜头拼接为完整 MP4 并烧录台词字幕；如需人声配音，也可先去第 4 步。"
+          description="可直接进入合成成片把所有镜头拼接为完整 MP4 并烧录台词字幕；如需人声配音，也可先去配音字幕。"
           action={(
             <Space>
               <Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>下一步：去合成成片</Button>
@@ -2537,13 +2537,6 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
   )
 }
 
-function stepTagColor(status) {
-  if (status === 'done') return 'green'
-  if (status === 'blocked') return 'orange'
-  if (status === 'doing') return 'blue'
-  return 'default'
-}
-
 export default function WorkStudio() {
   const { workId, tab } = useParams()
   const navigate = useNavigate()
@@ -2638,14 +2631,6 @@ export default function WorkStudio() {
   const episodes = work?.episode_list || []
   const current = useMemo(() => episodes.find((e) => e.episode_id === episodeId), [episodes, episodeId])
   const chipSurface = composeSurfaceFromEntry(composeByEpisode[episodeId])
-  const flow = useMemo(() => buildProductionFlow({
-    episode: current,
-    outlineCount: flowState.outlineCount,
-    scriptSceneCount: flowState.scriptSceneCount,
-    consistency: flowState.consistency,
-    shots: flowState.shots,
-    composeEntry: composeByEpisode[episodeId],
-  }), [current, flowState, composeByEpisode, episodeId])
 
   if (!work) return <Card loading />
 
@@ -2664,10 +2649,7 @@ export default function WorkStudio() {
           </Paragraph>
         </div>
         <Space wrap>
-          <Button
-            type="primary"
-            onClick={() => setAssistantOpen(true)}
-          >
+          <Button onClick={() => setAssistantOpen(true)}>
             AI 协同专家
           </Button>
           <Button
@@ -2697,65 +2679,24 @@ export default function WorkStudio() {
           </Tag>
         ) : null}
       </Space>
-      <div className="production-flow-bar">
-        <div className="production-flow-steps">
-          {flow.steps.map((step) => {
-            const isCurrentTab = active === step.tab
-            const isRecommended = flow.nextAction?.stepNo === step.stepNo
-            return (
-              <button
-                key={step.key}
-                type="button"
-                className={`production-flow-step${isCurrentTab ? ' is-active' : ''}${isRecommended ? ' is-recommended' : ''}`}
-                onClick={() => jumpTab(step.tab)}
-              >
-                <div className="production-flow-step-head">
-                  <span className="production-flow-step-title">{step.title}</span>
-                  <Tag color={stepTagColor(step.status)} style={{ marginInlineEnd: 0 }}>
-                    {step.statusText}
-                  </Tag>
-                </div>
-                <div className="production-flow-step-summary">{step.summary}</div>
-              </button>
-            )
-          })}
-        </div>
-        {flow.nextAction ? (
-          <Alert
-            type={flow.nextAction.tone === 'blocked' ? 'warning' : (flow.nextAction.tone || 'info')}
-            showIcon
-            message={flow.nextAction.title}
-            description={flow.nextAction.description}
-            action={(
-              <Space wrap>
-                {active !== flow.nextAction.primaryTab ? (
-                  <Button size="small" type="primary" onClick={() => jumpTab(flow.nextAction.primaryTab)}>
-                    {flow.nextAction.primaryLabel}
-                  </Button>
-                ) : (
-                  <Tag color="blue" style={{ marginInlineEnd: 0 }}>当前就在这一步，请按下方提示操作</Tag>
-                )}
-                {flow.nextAction.secondaryLabel && flow.nextAction.secondaryTab && active !== flow.nextAction.secondaryTab ? (
-                  <Button size="small" onClick={() => jumpTab(flow.nextAction.secondaryTab)}>
-                    {flow.nextAction.secondaryLabel}
-                  </Button>
-                ) : null}
-              </Space>
-            )}
-          />
-        ) : null}
-      </div>
+      <ProductionGuide
+        work={work}
+        episode={current}
+        onOpenTab={(key) => {
+          if (key && key !== active) navigate(`/works/${workId}/${key}`)
+        }}
+        onChanged={reloadStudio}
+      />
       <Tabs
         className="work-studio-tabs"
         activeKey={active}
         onChange={(key) => navigate(`/works/${workId}/${key}`)}
         tabBarGutter={12}
         items={[
-          { key: 'script', label: '1. 剧本与定稿', children: <ScriptPane work={work} episodeId={episodeId} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} initialOutlineTaskId={outlineTaskId} /> },
-          { key: 'characters', label: '2. 角色定妆', children: <CharacterPane work={work} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
-          { key: 'storyboard', label: '3. 分镜与视频', children: <StoryboardPane work={work} episodeId={episodeId} currentEpisode={current} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
-          { key: 'voice', label: '4. 配音字幕（可选）', children: <VoiceStudioPage work={work} episodeId={episodeId} onJumpTab={jumpTab} /> },
-          { key: 'compose', label: '5. 合成成片', children: (
+          { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} initialOutlineTaskId={outlineTaskId} /> },
+          { key: 'characters', label: '角色场景', children: <CharacterPane work={work} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
+          { key: 'storyboard', label: '分镜', children: <StoryboardPane work={work} episodeId={episodeId} currentEpisode={current} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
+          { key: 'compose', label: '成片', children: (
             <ComposePane
               work={work}
               episodeId={episodeId}
@@ -2768,13 +2709,14 @@ export default function WorkStudio() {
               onMediaPreflight={setMediaPreflight}
             />
           ) },
-          { key: 'source', label: '原著导入', children: <SourceImportPage work={work} /> },
-          { key: 'preview', label: '看样片', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
-          { key: 'tasks', label: '任务进度', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
+          { key: 'source', label: '原著', children: <SourceImportPage work={work} /> },
+          { key: 'voice', label: '配音', children: <VoiceStudioPage work={work} episodeId={episodeId} onJumpTab={jumpTab} /> },
+          { key: 'preview', label: '预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
+          { key: 'story-map', label: '剧情', children: <StoryMapPage work={work} episodeId={episodeId} /> },
+          { key: 'quality', label: '质量', children: <QualityReportPage work={work} episodeId={episodeId} /> },
           { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
-          { key: 'story-map', label: '剧情图谱', children: <StoryMapPage work={work} episodeId={episodeId} /> },
-          { key: 'quality', label: '质量门', children: <QualityReportPage work={work} episodeId={episodeId} /> },
-          { key: 'edit-export', label: '导出剪辑', children: <EditExportPage episodeId={episodeId} /> },
+          { key: 'tasks', label: '任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
+          { key: 'edit-export', label: '剪辑', children: <EditExportPage episodeId={episodeId} /> },
         ]}
       />
       <DramaAssistantDrawer
@@ -2785,55 +2727,6 @@ export default function WorkStudio() {
         onApplied={reloadStudio}
       />
       <style>{`
-        .production-flow-bar {
-          margin-bottom: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .production-flow-steps {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
-          gap: 8px;
-        }
-        .production-flow-step {
-          appearance: none;
-          background: #ffffff;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          padding: 10px 12px;
-          text-align: left;
-          cursor: pointer;
-          transition: border-color 0.15s ease, background-color 0.15s ease;
-        }
-        .production-flow-step:hover {
-          border-color: #60a5fa;
-          background: #f8fafc;
-        }
-        .production-flow-step.is-recommended {
-          border-color: #93c5fd;
-        }
-        .production-flow-step.is-active {
-          border-color: #2563eb;
-          background: #eff6ff;
-        }
-        .production-flow-step-head {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 4px;
-        }
-        .production-flow-step-title {
-          font-weight: 600;
-          font-size: 13px;
-          color: #0f172a;
-        }
-        .production-flow-step-summary {
-          font-size: 12px;
-          color: #475569;
-          line-height: 1.4;
-        }
         .work-studio-tabs .ant-tabs-nav { margin-bottom: 12px; }
         .work-studio-tabs .ant-tabs-nav-list { flex-wrap: wrap; }
         .work-studio-tabs .ant-tabs-tab { white-space: normal; padding: 8px 0; }
