@@ -52,8 +52,14 @@ export function dedupePhotos(items) {
   return kept
 }
 
+/** 站姿、坐姿是补充，不能盖住这一面本来的那张。 */
+export function isPoseExtra(item) {
+  return /站姿|坐姿|行走|走动/.test(`${(item && item.caption) || ''}`)
+}
+
 /**
- * One angle: the newest still is the photo people see first.
+ * One angle: a plain still is the photo people see first.
+ * A pose note (站姿) stays in 其他照片 when a plain photo of this angle exists.
  * A reference video is never that photo — its cover is one frame and can be a blurry crop.
  */
 export function arrangeAngle(items) {
@@ -65,9 +71,16 @@ export function arrangeAngle(items) {
     else if (hasPicture(item)) stills.push(item)
     else missing.push(item)
   }
+  const plain = []
+  const pose = []
+  for (const item of stills) {
+    if (isPoseExtra(item)) pose.push(item)
+    else plain.push(item)
+  }
+  const ordered = plain.length ? [...plain, ...pose] : stills
   return {
-    primary: stills[0] || null,
-    extras: stills.slice(1),
+    primary: ordered[0] || null,
+    extras: ordered.slice(1),
     videos,
     missing,
   }

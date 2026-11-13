@@ -75,6 +75,7 @@ import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.EditBaselineCards;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
+import com.bgssai.shortai.production.support.LookViewPrompt;
 import com.bgssai.shortai.production.support.CardAssetSelection;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -364,6 +365,12 @@ public class ShortAiTaskWorker {
                 count = Math.max(1, Math.min(8, com.bgssai.shortai.production.support.ShortJson.integer(
                         com.bgssai.shortai.production.support.ShortJson.map(task.getRequestJson()).get("candidate_count"), 1)));
             }
+            if ("LOOK_ANGLE".equals(task.getTargetType())) {
+                Object angles = com.bgssai.shortai.production.support.ShortJson.map(task.getRequestJson()).get("angles");
+                if (angles instanceof List<?> list && !list.isEmpty()) {
+                    count = Math.max(1, Math.min(4, list.size()));
+                }
+            }
             return perCall * count;
         }
         return base;
@@ -447,6 +454,10 @@ public class ShortAiTaskWorker {
         }
         if ("SCENE_PORTRAIT".equals(task.getTargetType())) {
             finishScenePortrait(task, req, model);
+            return;
+        }
+        if ("LOOK_ANGLE".equals(task.getTargetType())) {
+            finishLookAngles(task, req, model);
             return;
         }
         if ("SHOT".equals(task.getTargetType())) {
@@ -796,8 +807,9 @@ public class ShortAiTaskWorker {
             request.getParams().put("color_index", i);
             request.getParams().put("aspect_ratio", "9:16");
             request.setPrompt(prompt);
-            if (!skipLook) {
-                attachLookReference(row.getUserId(), "CHARACTER", row.getCharacterId(), prompt, request);
+            boolean referenced = !skipLook && attachLookReference(row.getUserId(), "CHARACTER", row.getCharacterId(), prompt, request);
+            if (referenced) {
+                request.setPrompt(LookViewPrompt.compose(prompt, "FRONT_FACE", true));
             }
             AiProviderResult result = execute(model, request);
             saveBinary(row.getUserId(), row.getWorkId(), null, row.getCharacterId(), "IMAGE", result,
@@ -1048,16 +1060,16 @@ public class ShortAiTaskWorker {
      * IMAGE path: attach first locked character portrait as subject reference (Kling
      * image_reference=subject). Scene card appearance stays in prompt text.
      */
-    private void attachLookReference(String userId, String kind, String cardId, String prompt, AiProviderRequest request) {
+    private boolean attachLookReference(String userId, String kind, String cardId, String prompt, AiProviderRequest request) {
         if (lookKnowledgeService == null || request.param("image_base64") != null || request.param("image_url") != null) {
-            return;
+            return false;
         }
         LookKnowledgeService.LookHit hit = lookKnowledgeService.referenceForCard(userId, cardId);
         if (hit == null) {
             hit = lookKnowledgeService.bestMatch(userId, kind, prompt);
         }
         if (hit == null) {
-            return;
+            return false;
         }
         String storageKey = hit.storageKey();
         String mime = hit.mimeType();
@@ -1067,13 +1079,75 @@ public class ShortAiTaskWorker {
         }
         byte[] bytes = objectStorage.get(storageKey);
         if (bytes == null || bytes.length == 0) {
-            return;
+            return false;
         }
         request.getParams().put("image_base64", Base64.getEncoder().encodeToString(bytes));
         request.getParams().put("image_mime", mime);
         request.getParams().put("image_reference", "subject");
-        request.getParams().put("image_fidelity", 0.82);
-        request.getParams().put("human_fidelity", 0.7);
+        request.getParams().put("image_fidelity", 0.9);
+        request.getParams().put("human_fidelity", 0.85);
+        return true;
+    }
+
+    private void finishLookAngles(ShortAiTask task, Map<String, Object> req, AiModelConfig model) {
+        if (lookKnowledgeService == null || objectStorage == null) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "出图还没准备好，请稍后再试");
+        }
+        String key = ShortJson.text(req.get("reference_storage_key"));
+        if (key.isBlank()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "先有一张正脸，才能按这张脸补齐其他面");
+        }
+        byte[] face;
+        try {
+            face = objectStorage.get(key);
+        } catch (RuntimeException ex) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "正脸照片读不出来，请换一张正脸后再试");
+        }
+        if (face == null || face.length == 0) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "正脸照片读不出来，请换一张正脸后再试");
+        }
+        String mime = ShortJson.text(req.get("reference_mime"));
+        if (mime.isBlank()) {
+            mime = "image/jpeg";
+        }
+        String libraryId = ShortJson.text(req.get("library_id"));
+        String name = ShortJson.text(req.get("material_name"));
+        String appearance = ShortJson.text(req.get("appearance"));
+        String cardId = ShortJson.text(req.get("card_id"));
+        List<String> angles = new ArrayList<>();
+        Object rawAngles = req.get("angles");
+        if (rawAngles instanceof List<?> list) {
+            for (Object item : list) {
+                String angle = ShortJson.text(item);
+                if (!angle.isBlank()) {
+                    angles.add(angle);
+                }
+            }
+        }
+        if (libraryId.isBlank() || name.isBlank() || angles.isEmpty()) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "要补的造型已经不在了，请重新选一次");
+        }
+        String encoded = Base64.getEncoder().encodeToString(face);
+        for (String angle : angles) {
+            AiProviderRequest request = baseRequest(model, "IMAGE", "LOOK_ANGLE");
+            request.setPrompt(LookViewPrompt.compose(appearance, angle, true));
+            request.getParams().put("title", name);
+            request.getParams().put("aspect_ratio", "9:16");
+            request.getParams().put("image_base64", encoded);
+            request.getParams().put("image_mime", mime);
+            request.getParams().put("image_reference", "subject");
+            request.getParams().put("image_fidelity", 0.92);
+            request.getParams().put("human_fidelity", 0.88);
+            AiProviderResult result = execute(model, request);
+            if (result == null || result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
+                throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "这一面没有生成出来");
+            }
+            int width = result.getWidth() == null ? 0 : result.getWidth();
+            int height = result.getHeight() == null ? 0 : result.getHeight();
+            lookKnowledgeService.saveGenerated(task.getUserId(), libraryId, name,
+                    LookViewPrompt.caption(name, appearance, angle), angle, result.getBinaryContent(),
+                    result.getMimeType(), width, height, cardId.isBlank() ? null : cardId);
+        }
     }
 
     private void attachConsistencyRefs(ConsistencyBundle consistency, AiProviderRequest request) {
