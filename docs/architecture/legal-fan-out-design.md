@@ -1,7 +1,8 @@
 # 官网法律页分发（HOW）
 
 需求权威：[`../feature/legal-fan-out.md`](../feature/legal-fan-out.md)。状态：**需法务审阅**。
-对齐 bgssai-blog feature-088 **v003** 登录精简策略。
+
+现行口径（2026-11-14）：`LEGAL_PAGES` 登记五页。用户端页脚渲染中文标签，`title` 与 `legalFooterLabel(page, 'en')` 提供英文回退，链接指向中文官网页。管理端页脚同时给出中文页与英文页。登录同意句只用用户协议和隐私政策。两端产品页脚都不渲染备案号。下文旧句若仍写备案行或只列两页，以本段为准。
 
 - 落点：用户端 / 管理端各一份 `src/lib/legalLinks.js`，服务条款与隐私政策中英 URL、标签及已核准网站备案号只在这里登记，路径对齐官网 `docs/legal/README.md`。
 - 基址：`https://www.bgssai.com`。中文路径无前缀、英文路径 `/en/`，均带尾斜杠。

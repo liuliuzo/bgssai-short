@@ -2,6 +2,7 @@ package com.bgssai.shortai.production.service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,14 @@ public class ContinuityService {
 
     public ApiResponse overview(String workId) {
         ShortWork work = workAccessService.requireWork(workId);
+        ShortShotExample shotEx = new ShortShotExample();
+        shotEx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+        Map<String, ShortShot> liveShots = new HashMap<>();
+        for (ShortShot shot : shortShotMapper.selectByExample(shotEx)) {
+            if (shot.getShotId() != null) {
+                liveShots.put(shot.getShotId(), shot);
+            }
+        }
         ShortContinuityIssueExample ex = new ShortContinuityIssueExample();
         ex.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
         ex.setOrderByClause("id desc");
@@ -66,6 +75,14 @@ public class ContinuityService {
             item.put("severity", i.getSeverity());
             item.put("issue_desc", i.getIssueDesc());
             item.put("shot_id", i.getShotId());
+            ShortShot shot = liveShots.get(i.getShotId());
+            if (shot == null) {
+                item.put("shot_no", null);
+                item.put("shot_in_episode", 0);
+            } else {
+                item.put("shot_no", shot.getShotNo());
+                item.put("shot_in_episode", 1);
+            }
             item.put("related_shot_id", i.getRelatedShotId());
             item.put("handle_status", i.getHandleStatus());
             issues.add(item);

@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   buildProductionFlow,
+  scriptStudioGuide,
   resolveRepairAction,
   selectPendingVideoShotIds,
 } from './productionFlow.js'
@@ -122,6 +123,18 @@ test('guides creator step-by-step from empty work to finalized script, look lock
   })
   assert.equal(stepCompleted.steps[4].status, 'done')
   assert.equal(stepCompleted.nextAction.primaryLabel, '查看与下载成片')
+})
+
+test('a finalized episode that already has a film does not keep step 1 as the next action', () => {
+  const filmed = scriptStudioGuide({ scriptStatus: 'READY', composeStatus: 'READY' })
+  assert.equal(filmed.mode, 'filmed')
+  assert.equal(filmed.offerGenerate, false)
+  assert.equal(filmed.title.includes('第 1 步'), false)
+  assert.match(filmed.detail, /成片/)
+  const editing = scriptStudioGuide({ scriptStatus: 'READY', composeStatus: 'NONE' })
+  assert.equal(editing.mode, 'editing')
+  assert.equal(editing.offerGenerate, true)
+  assert.match(editing.title, /第 1 步/)
 })
 
 test('resolveRepairAction routes quota, look, and script errors to exact destination', () => {

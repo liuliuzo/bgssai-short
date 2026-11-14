@@ -23,15 +23,34 @@ function composeLabel(code) {
  * 剧集列表上的剧本「已就绪」/ 审核「已通过」以及较粗的 compose_status=READY
  * 不能在预检尚未返回时当作合成结论。未返回时两边都显示核对中，不把空预检画成「未就绪」。
  */
+function filmPlayable(film) {
+  return Boolean(film?.download_url) && film?.expired_flag !== 1
+}
+
+export function portraitFilmPlayerStyle() {
+  return {
+    width: 180,
+    maxWidth: '100%',
+    aspectRatio: '9 / 16',
+    maxHeight: 280,
+    height: 'auto',
+    objectFit: 'contain',
+    background: '#111',
+    display: 'block',
+  }
+}
+
 export function composeSurface({ settled = false, error = false, film = null, precheck = null } = {}) {
   if (!settled) {
+    const showFilm = filmPlayable(film)
     return {
       phase: 'loading',
       paneText: '合成状态 加载中 / 预检 核对中 / 风险 -',
       chipText: '核对中',
-      headline: '正在核对这一集能不能合成',
-      nextStep: '核对完成前先不要点合成。',
+      headline: showFilm ? '这一集已有可用成片' : '正在核对这一集能不能合成',
+      nextStep: showFilm ? '预检还在核对，成片可以先看。' : '核对完成前先不要点合成。',
       allowReadyPassChip: false,
+      showFilm,
     }
   }
   if (error) {
@@ -75,6 +94,7 @@ export function composeSurface({ settled = false, error = false, film = null, pr
     headline,
     nextStep,
     allowReadyPassChip: affirmative,
+    showFilm: filmPlayable(film),
     preflightReady,
     compose,
     risk,
@@ -83,8 +103,8 @@ export function composeSurface({ settled = false, error = false, film = null, pr
 }
 
 export function composeSurfaceFromEntry(entry) {
-  if (!entry || entry.phase === 'loading') return composeSurface({ settled: false })
-  if (entry.phase === 'error') return composeSurface({ settled: true, error: true })
+  if (!entry || entry.phase === 'loading') return composeSurface({ settled: false, film: entry?.film || null })
+  if (entry.phase === 'error') return composeSurface({ settled: true, error: true, film: entry?.film || null })
   return composeSurface({ settled: true, film: entry.film, precheck: entry.precheck })
 }
 
@@ -95,20 +115,23 @@ function scriptReviewPair(ep) {
 export function episodeSelectLabel(ep, { onCompose = false, surface = null } = {}) {
   const head = `第${ep?.episode_no ?? ''}集 ${ep?.episode_title || ''}`.trim()
   const stored = scriptReviewPair(ep)
-  if (!onCompose) return `${head}（${stored}）`
-  if (surface?.allowReadyPassChip) return `${head}（${stored}）`
-  return `${head}（${surface?.chipText || '核对中'}）`
+  if (!onCompose || !surface || surface.phase === 'loading' || surface.phase === 'error') {
+    return `${head}（${stored}）`
+  }
+  if (surface.allowReadyPassChip) return `${head}（${stored}）`
+  return `${head}（${surface.chipText || stored}）`
 }
 
 export function episodeComposeTag(ep, { onCompose = false, surface = null } = {}) {
-  if (!onCompose) return scriptReviewPair(ep)
-  if (surface?.allowReadyPassChip) return '已就绪'
-  return surface?.chipText || '核对中'
+  if (!onCompose || !surface || surface.phase === 'loading' || surface.phase === 'error') {
+    return scriptReviewPair(ep)
+  }
+  if (surface.allowReadyPassChip) return '已就绪'
+  return surface.chipText || scriptReviewPair(ep)
 }
 
 export function episodeComposeTagColor(onCompose, surface) {
-  if (!onCompose || !surface) return undefined
-  if (surface.phase === 'loading') return 'processing'
+  if (!onCompose || !surface || surface.phase === 'loading') return undefined
   if (surface.phase === 'error') return 'default'
   if (!surface.allowReadyPassChip) return 'warning'
   return 'success'

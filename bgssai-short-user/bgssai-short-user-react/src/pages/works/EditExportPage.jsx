@@ -34,7 +34,8 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
   const [jianyingVersion, setJianyingVersion] = useState('V6')
   const [mediaMode, setMediaMode] = useState('WITH_MEDIA')
   const [draftDir, setDraftDir] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [settled, setSettled] = useState(false)
   const draftDirTouched = useRef(false)
 
   const load = useCallback(async () => {
@@ -54,6 +55,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
       }
     } finally {
       setLoading(false)
+      setSettled(true)
     }
   }, [episodeId])
 
@@ -114,7 +116,9 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
         <Paragraph type="secondary" style={{ marginTop: 0 }}>
           已锁定的角色和分镜时间轴才是这次导出对照的版本。已作废的角色版本不会标成与现行时间轴一致。
         </Paragraph>
-        {baseline.characters.length ? baseline.characters.map((row) => (
+        {!settled ? (
+          <div style={{ minHeight: 72 }} />
+        ) : baseline.characters.length ? baseline.characters.map((row) => (
           <Card
             key={row.character_id}
             size="small"
@@ -128,7 +132,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
         )) : (
           <Paragraph type="secondary">还没有已锁定的角色版本。</Paragraph>
         )}
-        {baseline.timeline ? (
+        {settled && baseline.timeline ? (
           <Card
             size="small"
             style={{ marginBottom: 8 }}
@@ -153,9 +157,9 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
               />
             ) : null}
           </Card>
-        ) : (
+        ) : settled ? (
           <Paragraph type="secondary">时间轴尚未锁定，不显示时间轴版本。</Paragraph>
-        )}
+        ) : null}
         {baseline.voided.map((row) => (
           <Alert
             key={row.character_id || row.character_name}
@@ -172,7 +176,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
         <Space size={48} wrap>
           <Statistic
             title="可导镜头"
-            value={precheck ? `${precheck.ready_shot_count} / ${precheck.total_shot_count}` : '-'}
+            value={!settled ? '读取中' : (precheck ? `${precheck.ready_shot_count} / ${precheck.total_shot_count}` : '尚无')}
           />
           <Statistic title="缺片镜头" value={missing.length} />
           <Statistic title="素材总量" value={readableByte(precheck?.estimated_media_byte)} />

@@ -240,6 +240,22 @@ export function voiceRowView(row, actualSec) {
   }
 }
 
+export function canvasSwitchState(shotCount, { ready = true } = {}) {
+  if (!ready) return { disabled: true, reason: '正在读取镜头' }
+  const count = Number(shotCount) || 0
+  if (count > 0) {
+    return { disabled: false, reason: '按场次查看这一集的镜头' }
+  }
+  return { disabled: true, reason: '这一集还没有镜头，拆镜后才能切到画布' }
+}
+
+export function taskRowsFromResult(result) {
+  if (Array.isArray(result)) return result
+  if (Array.isArray(result?.task_list)) return result.task_list
+  if (Array.isArray(result?.list)) return result.list
+  return []
+}
+
 export function showSettledEmpty(ready, count) {
   return ready === true && !(Number(count) > 0)
 }

@@ -32,7 +32,9 @@ import {
   shotSpokenText,
   shotTimingLabel,
   shotVideoDialogProps,
+  canvasSwitchState,
   showSettledEmpty,
+  taskRowsFromResult,
   FIRST_FRAME_CAPTION,
   LAST_FRAME_CAPTION,
   LIST_FIRST_FRAME_THUMB_WIDTH,
@@ -192,6 +194,14 @@ test('bind options stay human and empty states wait until the request settles', 
   assert.equal(showSettledEmpty(false, 0), false)
   assert.equal(showSettledEmpty(true, 0), true)
   assert.equal(showSettledEmpty(true, 6), false)
+  const open = canvasSwitchState(1)
+  assert.equal(open.disabled, false)
+  assert.match(open.reason, /场次/)
+  const closed = canvasSwitchState(0)
+  assert.equal(closed.disabled, true)
+  assert.match(closed.reason, /拆镜/)
+  assert.deepEqual(taskRowsFromResult({ task_list: [{ task_id: 't1' }] }).map((row) => row.task_id), ['t1'])
+  assert.deepEqual(taskRowsFromResult({}), [])
 })
 
 test('shot cards, thumbs, outline fields, and the drawer stay clear of the page chrome', () => {

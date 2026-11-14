@@ -54,6 +54,7 @@ class CharacterServiceContinuityTest {
         ShortShot shot = new ShortShot();
         shot.setId(20L);
         shot.setShotId("s-101");
+        shot.setShotNo(1);
         shot.setEpisodeId("ep-1");
         shot.setWorkId("w-1");
         shot.setShotStatus("READY");
@@ -92,6 +93,7 @@ class CharacterServiceContinuityTest {
         inject(continuityService, "workAccessService", workAccessService);
         inject(continuityService, "shortContinuityIssueMapper", issueMapper);
         inject(continuityService, "shortEpisodeGapMapper", gapMapper);
+        inject(continuityService, "shortShotMapper", shotMapper);
 
         ApiResponse overview = continuityService.overview("w-1");
         @SuppressWarnings("unchecked")
@@ -101,6 +103,8 @@ class CharacterServiceContinuityTest {
         List<Map<String, Object>> issueList = (List<Map<String, Object>>) data.get("issue_list");
         assertEquals(1, issueList.size());
         assertTrue(String.valueOf(issueList.get(0).get("issue_desc")).contains("阿青"));
+        assertEquals(1, issueList.get(0).get("shot_no"));
+        assertEquals(1, issueList.get(0).get("shot_in_episode"));
     }
 
     private static void inject(Object target, String fieldName, Object value) throws Exception {

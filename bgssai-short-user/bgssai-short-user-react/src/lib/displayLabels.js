@@ -190,10 +190,10 @@ export function softenTechId(id, kind) {
     return m ? `角色 ${Number(m[1])}` : '角色'
   }
   if (kind === 'shot' || /^sh[-_]/.test(s)) {
+    if (/^sh-[0-9a-f]{8,}$/i.test(s)) return '镜头'
     const parts = s.match(/(\d+)[-_](\d+)\s*$/)
     if (parts) return `镜 ${Number(parts[2])}`
-    const m = s.match(/(\d+)\s*$/)
-    return m ? `镜 ${Number(m[1])}` : '镜头'
+    return '镜头'
   }
   if (kind === 'asset' || /^as[-_]/.test(s)) {
     return '素材'

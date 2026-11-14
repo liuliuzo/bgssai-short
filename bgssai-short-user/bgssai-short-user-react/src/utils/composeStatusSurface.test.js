@@ -6,6 +6,7 @@ import {
   composeSurfaceFromEntry,
   episodeComposeTag,
   episodeSelectLabel,
+  portraitFilmPlayerStyle,
 } from './composeStatusSurface.js'
 
 const episode = {
@@ -17,18 +18,29 @@ const episode = {
   compose_status_name: '已就绪',
 }
 
-test('unsettled compose status does not claim ready or not-ready', () => {
+test('unsettled precheck does not replace the stored episode status', () => {
   const surface = composeSurface({ settled: false })
   const label = episodeSelectLabel(episode, { onCompose: true, surface })
   const tag = episodeComposeTag(episode, { onCompose: true, surface })
   assert.equal(surface.paneText, '合成状态 加载中 / 预检 核对中 / 风险 -')
   assert.equal(surface.chipText, '核对中')
-  assert.equal(label, '第1集 归来（核对中）')
-  assert.equal(tag, '核对中')
+  assert.equal(label, '第1集 归来（已就绪/已通过）')
+  assert.equal(tag, '已就绪/已通过')
   assert.equal(claimsReadyPass(surface.paneText), false)
-  assert.equal(claimsReadyPass(label), false)
-  assert.equal(claimsReadyPass(tag), false)
+  assert.equal(surface.showFilm, false)
   assert.equal(surface.paneText.includes('未就绪'), false)
+})
+
+test('a known film stays visible while precheck is still loading', () => {
+  const surface = composeSurface({
+    settled: false,
+    film: { compose_status: 'READY', download_url: 'https://cdn.example/film.mp4', expired_flag: 0 },
+  })
+  const label = episodeSelectLabel(episode, { onCompose: true, surface })
+  assert.equal(surface.showFilm, true)
+  assert.match(surface.headline, /已有可用成片/)
+  assert.equal(label, '第1集 归来（已就绪/已通过）')
+  assert.equal(surface.allowReadyPassChip, false)
 })
 
 test('settled ready preflight restores the ready/pass chip and the pane together', () => {
@@ -60,12 +72,14 @@ test('coarse episode READY does not keep a ready chip when live preflight is not
   assert.equal(claimsReadyPass(tag), false)
 })
 
-test('failed status fetch is not shown as not-ready or passed', () => {
+test('failed status fetch keeps the stored episode label', () => {
   const surface = composeSurface({ settled: true, error: true })
   const label = episodeSelectLabel(episode, { onCompose: true, surface })
+  const tag = episodeComposeTag(episode, { onCompose: true, surface })
   assert.equal(surface.chipText, '未能核对')
   assert.equal(surface.paneText.includes('未就绪'), false)
-  assert.equal(claimsReadyPass(label), false)
+  assert.equal(label, '第1集 归来（已就绪/已通过）')
+  assert.equal(tag, '已就绪/已通过')
 })
 
 test('another episode or a tab outside compose keeps the stored script and review label', () => {
@@ -91,12 +105,21 @@ test('off the compose tab a producing episode does not wear the compose not-star
   assert.equal(tag.includes('未开始'), false)
 })
 
-test('a missing episode entry stays unsettled for both chip and pane', () => {
+test('a missing episode entry stays unsettled without rewriting the episode label', () => {
   const surface = composeSurfaceFromEntry(undefined)
   const label = episodeSelectLabel(episode, { onCompose: true, surface })
   assert.equal(surface.phase, 'loading')
   assert.equal(surface.paneText.includes('未就绪'), false)
-  assert.equal(claimsReadyPass(label), false)
+  assert.equal(label, '第1集 归来（已就绪/已通过）')
+  assert.equal(claimsReadyPass(surface.paneText), false)
+})
+
+test('the film player stays a short 9:16 frame', () => {
+  const style = portraitFilmPlayerStyle()
+  assert.equal(style.aspectRatio, '9 / 16')
+  assert.ok(style.maxHeight <= 280)
+  assert.ok(style.width <= 180)
+  assert.notEqual(style.width, '100%')
 })
 
 test('an expired film is not offered as ready to compose', () => {

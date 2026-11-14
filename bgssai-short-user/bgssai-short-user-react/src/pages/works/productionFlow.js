@@ -90,6 +90,26 @@ export function resolveRepairAction(errorMessage) {
   return { label: '打开任务中心', href: '/tasks' }
 }
 
+/** Script tab copy once the episode is already finalized and has a film. */
+export function scriptStudioGuide({ scriptStatus, composeStatus } = {}) {
+  const ready = scriptStatus === 'READY' || scriptStatus === 'LOCKED'
+  const filmed = composeStatus === 'READY'
+  if (ready && filmed) {
+    return {
+      mode: 'filmed',
+      title: '剧本已定稿，这一集已有成片',
+      detail: '生成剧本、定稿和强制定稿不是当前要做的事。要看或下载成片，去合成页。',
+      offerGenerate: false,
+    }
+  }
+  return {
+    mode: 'editing',
+    title: '第 1 步：剧本与定稿',
+    detail: '先确认全集大纲，再生成当前这一集的分场剧本并点击「定稿剧本」。定稿后会自动提取角色和场景，进入下一步。',
+    offerGenerate: true,
+  }
+}
+
 export function buildProductionFlow({
   episode = null,
   outlineCount = 0,

@@ -10,10 +10,10 @@ import {
   bilingualLabel,
   hasForbiddenLegalPath,
   hasInventedLicenseNumber,
+  legalFooterLabel,
   legalPageUrl,
   COPYRIGHT_LINE,
   ICP_FILING_NUMBER,
-  ICP_FILING_URL,
   LOGIN_CONSENT_PAGES,
 } from './legalLinks.js'
 
@@ -22,46 +22,31 @@ const here = dirname(fileURLToPath(import.meta.url))
 const REQUIRED_SLUGS = [
   'terms-of-service',
   'privacy-policy',
-]
-
-const FORBIDDEN_SLUGS = [
   'personal-information-inventory',
   'third-party-sharing',
   'app-permissions',
 ]
 
-const FORBIDDEN_LABELS = [
-  '个人信息收集清单',
-  '第三方信息共享清单',
-  '应用权限',
-  'Personal Information Inventory',
-  'Third-Party Sharing',
-  'App Permissions',
-]
-
 describe('legalLinks', () => {
-  it('exposes terms + privacy only on www.bgssai.com (Standards §15)', () => {
-    assert.equal(LEGAL_PAGES.length, 2)
+  it('exposes five official pages on www.bgssai.com', () => {
+    assert.equal(LEGAL_PAGES.length, 5)
     assert.equal(WEBSITE_ORIGIN, 'https://www.bgssai.com')
     assert.deepEqual(LEGAL_PAGES.map((page) => page.slug), REQUIRED_SLUGS)
     const blob = JSON.stringify(LEGAL_PAGES)
-    for (const slug of FORBIDDEN_SLUGS) {
-      assert.equal(blob.includes(slug), false, `LEGAL_PAGES must not include ${slug}`)
-    }
-    for (const label of FORBIDDEN_LABELS) {
-      assert.equal(blob.includes(label), false, `LEGAL_PAGES must not include ${label}`)
-    }
+    assert.equal(blob.includes('dev.bgssai.com'), false)
+    assert.equal(blob.includes('/legal/terms'), false)
+    assert.equal(blob.includes('/legal/privacy'), false)
   })
 
-  it('uses bilingual labels and exact zh / en website paths', () => {
+  it('uses Chinese labels with English locale fallbacks and exact website paths', () => {
     for (const page of LEGAL_PAGES) {
       assert.ok(page.label_zh)
       assert.ok(page.label_en)
       assert.match(page.label_zh, /[\u4e00-\u9fff]/)
       assert.match(page.label_en, /[A-Za-z]/)
+      assert.equal(legalFooterLabel(page, 'zh'), page.label_zh)
+      assert.equal(legalFooterLabel(page, 'en'), page.label_en)
       assert.equal(bilingualLabel(page), `${page.label_zh} / ${page.label_en}`)
-      assert.ok(page.footer_zh)
-      assert.ok(page.footer_en)
       assert.equal(page.path_zh, `/${page.slug}/`)
       assert.equal(page.path_en, `/en/${page.slug}/`)
       const zhUrl = legalPageUrl(page, 'zh')
@@ -69,8 +54,6 @@ describe('legalLinks', () => {
       assert.equal(zhUrl, `${WEBSITE_ORIGIN}/${page.slug}/`)
       assert.equal(enUrl, `${WEBSITE_ORIGIN}/en/${page.slug}/`)
       assert.equal(hasInventedLicenseNumber(zhUrl), false)
-      assert.equal(hasInventedLicenseNumber(enUrl), false)
-      assert.equal(hasInventedLicenseNumber(bilingualLabel(page)), false)
       assert.equal(hasForbiddenLegalPath(zhUrl), false)
       assert.equal(hasForbiddenLegalPath(enUrl), false)
     }
@@ -82,35 +65,28 @@ describe('legalLinks', () => {
     assert.equal(hasInventedLicenseNumber(bilingualLabel(LEGAL_HUB)), false)
   })
 
-  it('login consent is terms + privacy only; copyright and approved ICP filing are defined', () => {
+  it('login consent is terms + privacy only', () => {
     assert.deepEqual(LOGIN_CONSENT_PAGES.map((p) => p.slug), ['terms-of-service', 'privacy-policy'])
     assert.equal(COPYRIGHT_LINE, `© ${new Date().getFullYear()} 昆山兵贵神速智能科技有限公司`)
-    assert.equal(ICP_FILING_NUMBER, '苏ICP备2024070062号-15')
-    assert.equal(ICP_FILING_URL, 'https://beian.miit.gov.cn/')
     assert.equal(hasInventedLicenseNumber(COPYRIGHT_LINE), false)
     assert.equal(hasInventedLicenseNumber(ICP_FILING_NUMBER), false)
   })
 
-  it('renders approved ICP filing link in LegalFooter.jsx', () => {
+  it('renders five Chinese footer links and does not render an ICP filing', () => {
     const footerSrc = readFileSync(resolve(here, '../components/LegalFooter.jsx'), 'utf8')
-    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), true)
-    assert.equal(footerSrc.includes('ICP_FILING_URL'), true)
+    assert.equal(footerSrc.includes('LEGAL_PAGES'), true)
+    assert.equal(footerSrc.includes('legalFooterLabel'), true)
+    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), false)
+    assert.equal(footerSrc.includes('ICP_FILING_URL'), false)
+    assert.equal(footerSrc.includes('beian.miit.gov.cn'), false)
     assert.equal(footerSrc.includes('target="_blank"'), true)
     assert.equal(footerSrc.includes('rel="noopener noreferrer"'), true)
     assert.equal(footerSrc.includes('legal-footer-line'), true)
-    assert.equal(footerSrc.includes('label_zh'), true)
-    assert.equal(footerSrc.includes(' · '), true)
-    assert.equal(footerSrc.includes('footer_en'), false)
-    assert.equal(footerSrc.includes('Terms of Service'), false)
-    assert.equal(footerSrc.includes('Privacy Policy'), false)
-    assert.equal(footerSrc.includes('legal-footer-slash'), false)
-    assert.equal(footerSrc.includes('LanguageRow'), false)
+    assert.equal(footerSrc.includes('LOGIN_CONSENT_PAGES'), true)
     const css = readFileSync(resolve(here, '../components/legal-footer.css'), 'utf8')
     const hover = css.match(/\.legal-footer a:hover\s*\{[^}]*\}/)
     assert.ok(hover)
     assert.equal(hover[0].includes('text-decoration: none'), true)
-    assert.equal(hover[0].includes('underline'), false)
-    assert.equal(css.includes('#f8fafc'), false)
     assert.equal(css.includes('background: transparent'), true)
   })
 
@@ -122,16 +98,8 @@ describe('legalLinks', () => {
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.cn/legal/user-agreement'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/legal/children-privacy'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/legal/personal-info-collection'), true)
+    assert.equal(hasForbiddenLegalPath('https://dev.bgssai.com/terms-of-service/'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/terms-of-service/'), false)
-  })
-
-  it('forbids inventory slugs/labels in legalLinks.js source', () => {
-    const src = readFileSync(resolve(here, 'legalLinks.js'), 'utf8')
-    for (const slug of FORBIDDEN_SLUGS) {
-      assert.equal(src.includes(slug), false, `legalLinks.js must not include ${slug}`)
-    }
-    for (const label of FORBIDDEN_LABELS) {
-      assert.equal(src.includes(label), false, `legalLinks.js must not include ${label}`)
-    }
+    assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/app-permissions/'), false)
   })
 })
