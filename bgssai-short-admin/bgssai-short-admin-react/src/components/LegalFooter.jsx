@@ -1,4 +1,4 @@
-import { COPYRIGHT_LINE, LEGAL_PAGES, legalFooterLabel, legalPageUrl } from '../lib/legalLinks'
+import { COPYRIGHT_LINE, ICP_FILING_NUMBER, ICP_FILING_URL, LEGAL_PAGES, legalFooterLabel, legalPageUrl } from '../lib/legalLinks'
 import './legal-footer.css'
 
 export default function LegalFooter() {
@@ -14,6 +14,9 @@ export default function LegalFooter() {
         ))}
       </nav>
       <p className="legal-footer-copy">{COPYRIGHT_LINE}</p>
+      <p className="legal-footer-filing">
+        <a href={ICP_FILING_URL} target="_blank" rel="noopener noreferrer">{ICP_FILING_NUMBER}</a>
+      </p>
     </footer>
   )
 }

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import {
   COPYRIGHT_LINE,
   ICP_FILING_NUMBER,
+  ICP_FILING_URL,
   LEGAL_HUB,
   LEGAL_PAGES,
   WEBSITE_ORIGIN,
@@ -51,12 +52,16 @@ describe('legalLinks', () => {
     assert.equal(legalPageUrl(LEGAL_HUB, 'en'), 'https://www.bgssai.com/en/legal/')
   })
 
-  it('defines copyright without putting the filing number in the footer', () => {
+  it('renders five bilingual footer links and the approved ICP filing', () => {
     assert.equal(COPYRIGHT_LINE, `© ${new Date().getFullYear()} 昆山兵贵神速智能科技有限公司`)
+    assert.equal(ICP_FILING_NUMBER, '苏ICP备2024070062号-15')
+    assert.equal(ICP_FILING_URL, 'https://beian.miit.gov.cn/')
     assert.equal(hasInventedLicenseNumber(COPYRIGHT_LINE), false)
     assert.equal(hasInventedLicenseNumber(ICP_FILING_NUMBER), false)
     const footerSrc = readFileSync(resolve(here, '../components/LegalFooter.jsx'), 'utf8')
-    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), false)
+    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), true)
+    assert.equal(footerSrc.includes('ICP_FILING_URL'), true)
+    assert.equal(footerSrc.includes('legal-footer-filing'), true)
     assert.equal(footerSrc.includes('beian.miit.gov.cn'), false)
     assert.equal(footerSrc.includes('legalFooterLabel(page, \'zh\')'), true)
     assert.equal(footerSrc.includes('legalFooterLabel(page, \'en\')'), true)
@@ -65,6 +70,9 @@ describe('legalLinks', () => {
   })
 
   it('rejects invented license numbers and retired legal paths', () => {
+    assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-15'), false)
+    assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-1'), true)
+    assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-16'), true)
     assert.equal(hasInventedLicenseNumber('苏ICP备12345678号'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.cn/legal/user-agreement'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.com/legal/personal-info-collection'), true)

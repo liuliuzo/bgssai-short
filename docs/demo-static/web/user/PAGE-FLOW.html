@@ -58,7 +58,7 @@
               <td><a href="login.html">登录页</a></td>
               <td><code>/login</code></td>
               <td>未登录访问任意受保护路由；顶部头像「退出登录」</td>
-              <td>首页；页脚五条官网法律外链（新标签，非站内路由）</td>
+              <td>首页；页脚五条官网法律外链与备案号苏ICP备2024070062号-15（新标签，非站内路由）</td>
               <td class="text-muted">无外壳</td>
               <td>公开</td>
             </tr>
@@ -432,16 +432,17 @@
           对应按钮<strong>禁用并给出可读原因与直达修复链接</strong>，不静默隐藏——用户必须知道自己卡在哪。</li>
         <li><strong>只读态</strong>：剧集提交审核后其编辑入口整体转只读（撤回后恢复），
           避免「审核中的内容仍在被改」。</li>
-        <li><strong>法律页只外链</strong>：登录页与全站页脚指向官网五条中英法律页（基址
-          <code>https://www.bgssai.com</code>，中文无前缀、英文 <code>/en/</code>），不新增站内
-          <code>/legal</code> 路由，统一链接至官网权威条款页面。</li>
+        <li><strong>法律页只外链</strong>：登录页与全站页脚指向官网五条法律页（基址
+          <code>https://www.bgssai.com</code>，中文无前缀、英文 <code>/en/</code>），并展示备案号
+          <code>苏ICP备2024070062号-15</code>（链接 <code>https://beian.miit.gov.cn/</code>）。不新增站内
+          <code>/legal</code> 路由。登录同意句仍只有用户协议和隐私政策。</li>
         <li><strong>只有中文界面</strong>：<code>/en</code> 与 <code>/en/*</code> 不是英文站，替换进入已有中文登录页
           <code>/login</code>。其它未知路径仍显示「页面不存在」。</li>
       </ol>
     </div>
 
     <div class="footer legal-fanout legal-quiet">
-      <p class="legal-quiet-line"><span>© 2026 昆山兵贵神速智能科技有限公司</span><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">用户协议</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/personal-information-inventory/" target="_blank" rel="noopener noreferrer" title="Personal Information Inventory">个人信息收集清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/third-party-sharing/" target="_blank" rel="noopener noreferrer" title="Third-Party Sharing">第三方信息共享清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/app-permissions/" target="_blank" rel="noopener noreferrer" title="App Permissions">应用权限说明</a></p>
+      <p class="legal-quiet-line"><span>© 2026 昆山兵贵神速智能科技有限公司</span><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">用户协议</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/personal-information-inventory/" target="_blank" rel="noopener noreferrer" title="Personal Information Inventory">个人信息收集清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/third-party-sharing/" target="_blank" rel="noopener noreferrer" title="Third-Party Sharing">第三方信息共享清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/app-permissions/" target="_blank" rel="noopener noreferrer" title="App Permissions">应用权限说明</a><span aria-hidden="true"> · </span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></p>
     </div>
   </div>
 <p><a href="bot-download-entry.html">2026-09-26：登录页顶部 Bot 下载导航</a>，替代旧悬浮或可关闭下载推广卡。</p>
