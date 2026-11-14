@@ -62,6 +62,8 @@ const listLookLibraries = () => http.get('/user/look-libraries/list')
 const saveLookLibrary = (body) => http.post('/user/look-libraries/save', body)
 const uploadLookMaterial = (body) => http.post('/user/look-materials/upload', body)
 const deleteLookMaterial = (materialId) => http.post('/user/look-materials/delete', { material_id: materialId })
+const promoteLookMaterial = (materialId, characterId) =>
+  http.post('/user/look-materials/promote', { material_id: materialId, character_id: characterId })
 const completeLookAngles = (body) => http.post('/user/look-materials/complete-angles', body)
 
 const splitShots = (episodeId) => http.post('/user/shots/split-from-script', { episode_id: episodeId })
@@ -136,6 +138,7 @@ export default {
   saveLookLibrary,
   uploadLookMaterial,
   deleteLookMaterial,
+  promoteLookMaterial,
   completeLookAngles,
   splitShots,
   listShots,

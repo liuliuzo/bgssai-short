@@ -31,6 +31,7 @@ public final class LookDtos {
         private String materialKind;
         private String viewAngle;
         private String assetId;
+        private String characterId;
         private String imageBase64;
         private String posterBase64;
 
@@ -48,6 +49,8 @@ public final class LookDtos {
         public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
         public String getAssetId() { return assetId; }
         public void setAssetId(String assetId) { this.assetId = assetId; }
+        public String getCharacterId() { return characterId; }
+        public void setCharacterId(String characterId) { this.characterId = characterId; }
         public String getImageBase64() { return imageBase64; }
         public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
         public String getPosterBase64() { return posterBase64; }
@@ -59,6 +62,9 @@ public final class LookDtos {
         private String materialName;
         private String characterId;
         private String viewAngle;
+        private String caption;
+        private String referenceMaterialId;
+        private Integer skipReference;
         private String modelCode;
         private Integer confirmCost;
         private Integer replaceExisting;
@@ -71,6 +77,12 @@ public final class LookDtos {
         public void setCharacterId(String characterId) { this.characterId = characterId; }
         public String getViewAngle() { return viewAngle; }
         public void setViewAngle(String viewAngle) { this.viewAngle = viewAngle; }
+        public String getCaption() { return caption; }
+        public void setCaption(String caption) { this.caption = caption; }
+        public String getReferenceMaterialId() { return referenceMaterialId; }
+        public void setReferenceMaterialId(String referenceMaterialId) { this.referenceMaterialId = referenceMaterialId; }
+        public Integer getSkipReference() { return skipReference; }
+        public void setSkipReference(Integer skipReference) { this.skipReference = skipReference; }
         public String getModelCode() { return modelCode; }
         public void setModelCode(String modelCode) { this.modelCode = modelCode; }
         public Integer getConfirmCost() { return confirmCost; }

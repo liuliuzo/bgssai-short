@@ -3,7 +3,7 @@ import { creatorToolLabel, publicModelText } from '../../publicModel'
 import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button, Card, Checkbox, Collapse, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Checkbox, Collapse, Form, Input, Modal, Radio, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
 import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
@@ -734,6 +734,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   const [portrait, setPortrait] = useState(null)
   const [portraitCount, setPortraitCount] = useState(4)
   const [textOnly, setTextOnly] = useState(false)
+  const [angleRedoModal, setAngleRedoModal] = useState(null)
   const returnParam = encodeURIComponent(`/works/${work.work_id}/characters`)
   const characterLibraryHref = `/look-library?return=${returnParam}`
   const sceneLibraryHref = `/scene-library?return=${returnParam}`
@@ -832,15 +833,38 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
     }
   }
 
+  async function restoreCardAngleMaterial(characterId, materialId) {
+    if (!characterId || !materialId || busyRef.current.has(characterId)) return
+    markBusy(characterId, true)
+    try {
+      const { data } = await productionApi.promoteLookMaterial(materialId, characterId)
+      if (!data?.success) {
+        if (!data?.message) message.error('没有换回成功')
+        return
+      }
+      message.success('已换回原来的照片，替换下来的版本也继续保留')
+      await load()
+    } catch {
+      message.error('没有换回成功')
+    } finally {
+      markBusy(characterId, false)
+    }
+  }
+
   async function completeAngles(row, angle, replace) {
     if (!row || busyRef.current.has(row.character_id)) return
+    const views = row.look_view_list || []
+    const hasRefPhoto = views.some((v) => isRealPhotoUrl(v.file_url)) || isRealPhotoUrl(row.ref_image_url)
+    const defaultSkipRef = !hasRefPhoto || (angle === 'FRONT_FACE' && replace)
     const body = {
       character_id: row.character_id,
       model_code: imageModelCode,
       replace_existing: replace ? 1 : 0,
+      skip_reference: defaultSkipRef ? 1 : 0,
       confirm_cost: 0,
     }
     if (angle) body.view_angle = angle
+    if (row.appearance_prompt) body.caption = row.appearance_prompt
     markBusy(row.character_id, true)
     let quote
     try {
@@ -858,36 +882,56 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
     }
     const names = (quote.angle_name_list || []).join('、') || '这一面'
     const cost = Number(quote.estimated_cost_cent) || 0
-    const price = cost > 0 ? `预计 ${(cost / 100).toFixed(2)} 元。` : '费用按这次出图对账。'
-    Modal.confirm({
-      title: replace ? `按正脸重做${names}` : `按正脸生成${names}`,
-      content: `会用「${row.character_name}」的正脸来画，要求还是同一个人、同一套衣服。${price}模型有时仍会画走样，不满意可以再重做。`,
-      okText: '开始生成',
-      cancelText: '取消',
-      onOk: async () => {
-        markBusy(row.character_id, true)
-        try {
-          const { data } = await productionApi.completeLookAngles({ ...body, confirm_cost: 1 })
-          if (!data?.success || !data.result?.task_id) {
-            if (!data?.message) message.error('没有排上生成')
-            return
-          }
-          const done = await waitTask(work.work_id, data.result.task_id)
-          if (done && done.task_status !== 'SUCCEEDED') {
-            message.error(done.fail_reason || '这一面没有生成出来')
-          } else if (done) {
-            message.success('已按正脸画好')
-          } else {
-            message.info('还在生成，可以到任务中心看结果')
-          }
-          load()
-        } catch {
-          message.error('没有排上生成')
-        } finally {
-          markBusy(row.character_id, false)
-        }
-      },
+    const priceText = cost > 0 ? `预计 ${(cost / 100).toFixed(2)} 元。` : '费用按这次出图对账。'
+    setAngleRedoModal({
+      characterId: row.character_id,
+      characterName: row.character_name,
+      angle: angle || null,
+      replace: !!replace,
+      angleLabel: names,
+      hasRefPhoto,
+      skipRef: defaultSkipRef,
+      caption: row.appearance_prompt || '',
+      priceText,
     })
+  }
+
+  async function confirmAngleRedoModal() {
+    if (!angleRedoModal || busyRef.current.has(angleRedoModal.characterId)) return
+    const modalState = angleRedoModal
+    setAngleRedoModal(null)
+    markBusy(modalState.characterId, true)
+    try {
+      const reqBody = {
+        character_id: modalState.characterId,
+        model_code: imageModelCode,
+        replace_existing: modalState.replace ? 1 : 0,
+        skip_reference: modalState.skipRef ? 1 : 0,
+        confirm_cost: 1,
+      }
+      if (modalState.angle) reqBody.view_angle = modalState.angle
+      if (modalState.caption && modalState.caption.trim()) {
+        reqBody.caption = modalState.caption.trim()
+      }
+      const { data } = await productionApi.completeLookAngles(reqBody)
+      if (!data?.success || !data.result?.task_id) {
+        if (!data?.message) message.error('没有排上生成')
+        return
+      }
+      const done = await waitTask(work.work_id, data.result.task_id)
+      if (done && done.task_status !== 'SUCCEEDED') {
+        message.error(done.fail_reason || '这一面没有生成出来')
+      } else if (done) {
+        message.success(modalState.replace ? '已重做完成，原照片已自动保留可随时换回' : '已生成完成')
+      } else {
+        message.info('还在生成，可以到任务中心看结果')
+      }
+      load()
+    } catch {
+      message.error('没有排上生成')
+    } finally {
+      markBusy(modalState.characterId, false)
+    }
   }
 
   const startPortrait = () => {
@@ -1125,23 +1169,43 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
                 )
               })}
             </div>
-            {(viewOf('FRONT_FACE') || isRealPhotoUrl(row.ref_image_url)) ? (
-              <div style={{ marginTop: 8 }}>
-                <Text type="secondary">缺的面可以按正脸生成。侧面和背面会跟着这张正脸的人和衣服来画。</Text>
-                <Space wrap style={{ marginTop: 4 }}>
-                  {LOOK_ANGLES.filter(([angle]) => angle !== 'FRONT_FACE').map(([angle, label]) => (
-                    <Button
-                      key={angle}
-                      size="small"
-                      disabled={busyIds.has(row.character_id)}
-                      onClick={() => completeAngles(row, angle, !!viewOf(angle))}
-                    >
-                      {viewOf(angle) ? `按正脸重做${label}` : `按正脸生成${label}`}
-                    </Button>
+            <div style={{ marginTop: 8 }}>
+              <Text type="secondary">正脸、前面、背面、侧面均可随时生成或重做；重做不强制绑定正脸，原照片会自动保留方便随时换回。</Text>
+              <Space wrap style={{ marginTop: 4 }}>
+                {LOOK_ANGLES.map(([angle, label]) => (
+                  <Button
+                    key={angle}
+                    size="small"
+                    disabled={busyIds.has(row.character_id)}
+                    onClick={() => completeAngles(row, angle, !!viewOf(angle))}
+                  >
+                    {viewOf(angle) ? `重做${label}` : `生成${label}`}
+                  </Button>
+                ))}
+                {LOOK_ANGLES.filter(([angle]) => !viewOf(angle)).length >= 2 ? (
+                  <Button size="small" type="link" disabled={busyIds.has(row.character_id)} onClick={() => completeAngles(row, null, false)}>一次补齐空缺面</Button>
+                ) : null}
+              </Space>
+            </div>
+            {views.some((v) => Array.isArray(v.history_list) && v.history_list.some((h) => isRealPhotoUrl(h.file_url))) ? (
+              <div style={{ marginTop: 10 }}>
+                <Text type="secondary">已保留的历史照片（点「换回这张」可替换回对应角度）：</Text>
+                <Space wrap style={{ marginTop: 6 }}>
+                  {views.flatMap((v) => (v.history_list || []).filter((h) => isRealPhotoUrl(h.file_url))).map((h) => (
+                    <div key={h.material_id} style={{ textAlign: 'center', width: 84 }}>
+                      <div style={{ fontSize: 12, color: '#595959', marginBottom: 2 }}>{h.view_name}</div>
+                      <ClickThumb alt={`${row.character_name} ${h.view_name}`} src={h.file_url} width={72} height={100} />
+                      <Button
+                        size="small"
+                        type="link"
+                        style={{ padding: 0 }}
+                        disabled={busyIds.has(row.character_id)}
+                        onClick={() => restoreCardAngleMaterial(row.character_id, h.material_id)}
+                      >
+                        换回这张
+                      </Button>
+                    </div>
                   ))}
-                  {LOOK_ANGLES.filter(([angle]) => angle !== 'FRONT_FACE' && !viewOf(angle)).length >= 2 ? (
-                    <Button size="small" type="link" disabled={busyIds.has(row.character_id)} onClick={() => completeAngles(row, null, false)}>一次补齐缺的面</Button>
-                  ) : null}
                 </Space>
               </div>
             ) : null}
@@ -1338,6 +1402,46 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           ) : null}
           <span>{portraitPrice}。只有生成成功才会计入用量。</span>
         </Space>
+      </Modal>
+      <Modal
+        title={angleRedoModal ? `${angleRedoModal.replace ? '重做' : '生成'}「${angleRedoModal.characterName || ''} · ${angleRedoModal.angleLabel}」` : '生成定妆'}
+        open={!!angleRedoModal}
+        okText={angleRedoModal?.replace ? '开始重做' : '开始生成'}
+        cancelText="取消"
+        okButtonProps={{ disabled: angleRedoModal ? busyIds.has(angleRedoModal.characterId) : false }}
+        onCancel={() => setAngleRedoModal(null)}
+        onOk={confirmAngleRedoModal}
+      >
+        {angleRedoModal ? (
+          <Space direction="vertical" style={{ width: '100%' }} size="small">
+            {angleRedoModal.hasRefPhoto ? (
+              <div>
+                <div style={{ marginBottom: 6, fontWeight: 500 }}>重做方式</div>
+                <Radio.Group
+                  value={angleRedoModal.skipRef ? 'fresh' : 'ref'}
+                  onChange={(e) => setAngleRedoModal((prev) => (prev ? { ...prev, skipRef: e.target.value === 'fresh' } : null))}
+                >
+                  <Space direction="vertical">
+                    <Radio value="fresh">直接重做（不参考已有照片，按角色与外观描述重新生成）</Radio>
+                    <Radio value="ref">参考已有定妆照（保持同一个人与同一套衣服）</Radio>
+                  </Space>
+                </Radio.Group>
+              </div>
+            ) : null}
+            <div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>外观特征与重做说明（可选）</div>
+              <Input
+                value={angleRedoModal.caption}
+                placeholder="例如：黑色长直发、正红色礼服长裙、五官清晰面向镜头"
+                onChange={(e) => setAngleRedoModal((prev) => (prev ? { ...prev, caption: e.target.value } : null))}
+              />
+            </div>
+            <Text type="secondary">
+              {angleRedoModal.priceText}
+              {angleRedoModal.replace ? '重做后原来的照片会自动保留在角色卡与定妆库中，随时可点「换回这张」替换回去。' : ''}
+            </Text>
+          </Space>
+        ) : null}
       </Modal>
     </Space>
   )

@@ -145,13 +145,15 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 
 参考视频不进主图。封面是视频里的一帧；人在动时这一帧会发糊或只剩肩颈，所以单独小图放在「参考视频」，点开播放整段。新上传的视频会在几个时间点里挑更清楚的一帧当封面。已有的糊封面不改文件，只是不再和定妆照一样大。用户上传的正常照片不删除。
 
-## 定妆四面按正脸补齐（2026-11-13）
+## 定妆四面生成、全角度独立重做与历史照片无损换回（2026-11-14）
 
-空的前面、背面、侧面不再只靠手传。`POST /bgssai/user/look-materials/complete-angles` 用该造型已有的正脸做参考图，按缺的角度各出一张；`view_angle` 指定一面，`replace_existing=1` 时重做已有的一面。正脸不作为生成目标。
+`LookAngle.ALL` 覆盖 `FRONT_FACE`（正脸）、`FRONT`（前面）、`BACK`（背面）、`SIDE`（侧面）全部四面。`POST /bgssai/user/look-materials/complete-angles` 支持任一角度单面生成或重做（`replace_existing=1`），也支持一次补齐空缺面，不再拒绝 `FRONT_FACE`，也不再强制要求先上传正脸或必须按正脸重做：
+- 当 `skip_reference=1` 或当前造型尚无任何静态定妆照时，`ShortAiTaskWorker.finishLookAngles` 直接按造型名、外观描述与补充说明执行纯文生图，不塞参考图。
+- 当用户选择参考已有定妆照时，优先采用 `reference_material_id` 指定的照片（未指定时默认取正脸或该造型任意已有静态照片）写入 `image` 主体参考字段；重做 `FRONT_FACE` 采用适度主体权重（`0.80/0.82`）允许更新神态与细节，生成其他角度采用高一致性权重（`0.92/0.88`）。
 
-角度以格子为准。说明里只出现一个角度词、又没指定格子时，按正脸 / 前面 / 背面 / 侧面归位。以前没写角度会全部落到正脸；说明明明是背面时，不再继续占着正脸。站姿、坐姿、行走仍算那一面的补充，这一面已有普通照片时排到其他照片，不拿补充去填另一个空格。
+角度以格子为准。说明里只出现一个角度词、又没指定格子时，按正脸 / 前面 / 背面 / 侧面归位。站姿、坐姿、行走仍算那一面的补充，这一面已有普通照片时排到「历史与补充照片」，不拿补充去填另一个空格。
 
-出图请求把正脸字节放进 `image`（公司网关和中枢同一字段），提示词写明同一个人、同一套衣服，以及这一面是前面、背面还是侧面。角色定妆若挂了知识库参考，提示词同样收紧。`bgssai-image` 是否锁死身份取决于模型本身，网站只保证参考图和角度要求已经送出。
+重做或新传同一角度照片时，`LookKnowledgeService.fileImage` 与 `saveGenerated` 保留原有的全部历史 `ShortLookMaterial` 行，不再逻辑删除同角度旧图；列表按 `id desc` 取最新一条作为当前格位主图，其余自动归入 `extras` / `history_list`。角色卡重做 `FRONT_FACE` 完成落库时，`syncCharacterFrontFaceAsset` 同步写入新的 `ShortAsset` 并切换 `ShortCharacter.refImageAssetId`，同时完整保留角色卡上的历史候选资产。新增 `POST /bgssai/user/look-materials/promote`（`PromoteLookMaterialController`），将指定的历史照片复用同一 `storage_key` 插入新顶层记录并退役旧行 ID（零对象存储复制、配额计数不变），原主图自动退入历史列表，实现正脸及其他各面的一键无损「换回上一张 / 换回这张」。
 
 ## 五步成片引导与官方视频批次一致性（2026-11-13）
 

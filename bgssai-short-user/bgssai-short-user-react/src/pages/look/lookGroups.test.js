@@ -1,5 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   arrangeAngle,
   cardGenerationCopy,
@@ -184,6 +187,28 @@ test('场景参考按全景主图、中景机位、局部陈设分组，封面�
   assert.equal(legacyKindRedirectTarget('PROP', 'https://evil.example'), '/prop-library')
   assert.equal(legacyKindRedirectTarget('CHARACTER', '/works/w-1/characters'), null)
   assert.equal(legacyKindRedirectTarget(null, '/works/w-1/characters'), null)
+})
+
+test('定妆库与角色卡支持正脸及全部四面独立重做、原照片保留与一键换回', () => {
+  const dir = path.dirname(fileURLToPath(import.meta.url))
+  const lookPage = fs.readFileSync(path.join(dir, 'LookLibraryPage.jsx'), 'utf8')
+  const studioPage = fs.readFileSync(path.join(dir, '..', 'works', 'WorkStudio.jsx'), 'utf8')
+  const productionApi = fs.readFileSync(path.join(dir, '..', '..', 'api', 'production.js'), 'utf8')
+
+  assert.doesNotMatch(lookPage, /按正脸重做/)
+  assert.doesNotMatch(lookPage, /angle !== 'FRONT_FACE'/)
+  assert.match(lookPage, /promoteLookMaterial/)
+  assert.match(lookPage, /换回上一张/)
+  assert.match(lookPage, /换回这张/)
+  assert.match(lookPage, /直接重做/)
+  assert.match(lookPage, /skip_reference/)
+
+  assert.doesNotMatch(studioPage, /按正脸重做/)
+  assert.match(studioPage, /promoteLookMaterial/)
+  assert.match(studioPage, /换回这张/)
+  assert.match(studioPage, /skip_reference/)
+
+  assert.match(productionApi, /\/user\/look-materials\/promote/)
 })
 
 function solid(width, height, value) {
