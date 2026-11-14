@@ -12,6 +12,7 @@ public class UserContext {
     private static final ThreadLocal<String> userCompanyCode = new ThreadLocal<>();
     private static final ThreadLocal<String> userCompanyName = new ThreadLocal<>();
     private static final ThreadLocal<String> userRole = new ThreadLocal<>();
+    private static final ThreadLocal<String> sessionId = new ThreadLocal<>();
 
     public static void setUserId(String id) {
         userId.set(id);
@@ -61,6 +62,14 @@ public class UserContext {
         return userRole.get();
     }
 
+    public static void setSessionId(String id) {
+        sessionId.set(id);
+    }
+
+    public static String getSessionId() {
+        return sessionId.get();
+    }
+
     public static void clear() {
         userId.remove();
         realName.remove();
@@ -68,5 +77,6 @@ public class UserContext {
         userCompanyCode.remove();
         userCompanyName.remove();
         userRole.remove();
+        sessionId.remove();
     }
 }

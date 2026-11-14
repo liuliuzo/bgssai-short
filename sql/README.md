@@ -83,4 +83,6 @@ SecretId / SecretKey 占位示例见仓库根 `sms/credentials.example.env`（�
 Mapper XML，并保持需求 / 原型 / 设计 / 代码四层一致（Standards §0、§9）。应用启动期不自动执行 DDL，
 schema 由部署方手动执行。
 
+已有库补登录日志明细时执行 `sql/upgrade/20261114_login_log_context.sql`（只加列，可重复执行）。新库仍以 `DDL.sql` 为准。
+
 短剧业务种子可由 `tmp/gen_short_seed_dml.py` 重新生成后写回 `DML.sql` 的 `SHORT-BIZ-SEED` 段。

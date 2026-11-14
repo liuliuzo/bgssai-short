@@ -1772,7 +1772,7 @@
     },
     {
       "path": "docs/demo-static/web/admin/login-logs.html",
-      "sha256": "c179bfc45f35e388db06b354c7ea72a4d6b840843fa38510f13e12390dc9cc51",
+      "sha256": "d23a3f71dfe2c44993df2be2739c3c7f8ec91f6c2eb305bd266f285473ecc6b7",
       "surface": "admin",
       "bound_code_files": [
         "bgssai-short-admin/bgssai-short-admin-react/src/App.jsx",
@@ -2318,7 +2318,7 @@
     },
     {
       "path": "docs/demo-static/web/user/login-logs.html",
-      "sha256": "083b943c25a09eafd3cb1941768a2b649694bef43fc7ea32e55c501a17801fb1",
+      "sha256": "bd50b0c9b2ebf3cfbc1e553a25ef374edb720547bcf5b64b1c5777015341f1a6",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

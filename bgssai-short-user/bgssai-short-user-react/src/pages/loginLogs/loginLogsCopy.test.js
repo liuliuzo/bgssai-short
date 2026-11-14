@@ -14,4 +14,7 @@ test('/login-logs navigation and heading use 登录日志 instead of 我的登�
   assert.equal(pageSrc.includes('我的登录日志'), false)
   assert.match(layoutSrc, /key:\s*'\/login-logs',\s*label:\s*'登录日志'/)
   assert.match(pageSrc, />登录日志<\/Title>/)
+  assert.match(pageSrc, /方式/)
+  assert.match(pageSrc, /设备/)
+  assert.match(pageSrc, /未知/)
 })

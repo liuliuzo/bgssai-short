@@ -7,6 +7,35 @@
     <result column="action" jdbcType="VARCHAR" property="action" />
     <result column="ip_address" jdbcType="VARCHAR" property="ipAddress" />
     <result column="user_agent" jdbcType="VARCHAR" property="userAgent" />
+    <result column="login_result" jdbcType="VARCHAR" property="loginResult" />
+    <result column="result_reason" jdbcType="VARCHAR" property="resultReason" />
+    <result column="login_method" jdbcType="VARCHAR" property="loginMethod" />
+    <result column="identifier_type" jdbcType="VARCHAR" property="identifierType" />
+    <result column="identifier_masked" jdbcType="VARCHAR" property="identifierMasked" />
+    <result column="client_channel" jdbcType="VARCHAR" property="clientChannel" />
+    <result column="browser_name" jdbcType="VARCHAR" property="browserName" />
+    <result column="os_name" jdbcType="VARCHAR" property="osName" />
+    <result column="device_type" jdbcType="VARCHAR" property="deviceType" />
+    <result column="device_label" jdbcType="VARCHAR" property="deviceLabel" />
+    <result column="ip_country" jdbcType="VARCHAR" property="ipCountry" />
+    <result column="ip_province" jdbcType="VARCHAR" property="ipProvince" />
+    <result column="ip_city" jdbcType="VARCHAR" property="ipCity" />
+    <result column="ip_isp" jdbcType="VARCHAR" property="ipIsp" />
+    <result column="request_scheme" jdbcType="VARCHAR" property="requestScheme" />
+    <result column="tls_protocol" jdbcType="VARCHAR" property="tlsProtocol" />
+    <result column="referer_host" jdbcType="VARCHAR" property="refererHost" />
+    <result column="entry_path" jdbcType="VARCHAR" property="entryPath" />
+    <result column="request_id" jdbcType="VARCHAR" property="requestId" />
+    <result column="session_id" jdbcType="VARCHAR" property="sessionId" />
+    <result column="session_issued_at" jdbcType="TIMESTAMP" property="sessionIssuedAt" />
+    <result column="session_expires_at" jdbcType="TIMESTAMP" property="sessionExpiresAt" />
+    <result column="session_last_seen_at" jdbcType="TIMESTAMP" property="sessionLastSeenAt" />
+    <result column="logout_time" jdbcType="TIMESTAMP" property="logoutTime" />
+    <result column="accept_language" jdbcType="VARCHAR" property="acceptLanguage" />
+    <result column="client_timezone" jdbcType="VARCHAR" property="clientTimezone" />
+    <result column="client_hints" jdbcType="VARCHAR" property="clientHints" />
+    <result column="risk_new_device" jdbcType="TINYINT" property="riskNewDevice" />
+    <result column="risk_new_city" jdbcType="TINYINT" property="riskNewCity" />
     <result column="del_flag" jdbcType="BIT" property="delFlag" />
     <result column="create_by" jdbcType="VARCHAR" property="createBy" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
@@ -148,6 +177,93 @@
       <if test="userAgent != null">
         user_agent,
       </if>
+      <if test="loginResult != null">
+        login_result,
+      </if>
+      <if test="resultReason != null">
+        result_reason,
+      </if>
+      <if test="loginMethod != null">
+        login_method,
+      </if>
+      <if test="identifierType != null">
+        identifier_type,
+      </if>
+      <if test="identifierMasked != null">
+        identifier_masked,
+      </if>
+      <if test="clientChannel != null">
+        client_channel,
+      </if>
+      <if test="browserName != null">
+        browser_name,
+      </if>
+      <if test="osName != null">
+        os_name,
+      </if>
+      <if test="deviceType != null">
+        device_type,
+      </if>
+      <if test="deviceLabel != null">
+        device_label,
+      </if>
+      <if test="ipCountry != null">
+        ip_country,
+      </if>
+      <if test="ipProvince != null">
+        ip_province,
+      </if>
+      <if test="ipCity != null">
+        ip_city,
+      </if>
+      <if test="ipIsp != null">
+        ip_isp,
+      </if>
+      <if test="requestScheme != null">
+        request_scheme,
+      </if>
+      <if test="tlsProtocol != null">
+        tls_protocol,
+      </if>
+      <if test="refererHost != null">
+        referer_host,
+      </if>
+      <if test="entryPath != null">
+        entry_path,
+      </if>
+      <if test="requestId != null">
+        request_id,
+      </if>
+      <if test="sessionId != null">
+        session_id,
+      </if>
+      <if test="sessionIssuedAt != null">
+        session_issued_at,
+      </if>
+      <if test="sessionExpiresAt != null">
+        session_expires_at,
+      </if>
+      <if test="sessionLastSeenAt != null">
+        session_last_seen_at,
+      </if>
+      <if test="logoutTime != null">
+        logout_time,
+      </if>
+      <if test="acceptLanguage != null">
+        accept_language,
+      </if>
+      <if test="clientTimezone != null">
+        client_timezone,
+      </if>
+      <if test="clientHints != null">
+        client_hints,
+      </if>
+      <if test="riskNewDevice != null">
+        risk_new_device,
+      </if>
+      <if test="riskNewCity != null">
+        risk_new_city,
+      </if>
       <if test="delFlag != null">
         del_flag,
       </if>
@@ -179,6 +295,93 @@
       </if>
       <if test="userAgent != null">
         #{userAgent,jdbcType=VARCHAR},
+      </if>
+      <if test="loginResult != null">
+        #{loginResult,jdbcType=VARCHAR},
+      </if>
+      <if test="resultReason != null">
+        #{resultReason,jdbcType=VARCHAR},
+      </if>
+      <if test="loginMethod != null">
+        #{loginMethod,jdbcType=VARCHAR},
+      </if>
+      <if test="identifierType != null">
+        #{identifierType,jdbcType=VARCHAR},
+      </if>
+      <if test="identifierMasked != null">
+        #{identifierMasked,jdbcType=VARCHAR},
+      </if>
+      <if test="clientChannel != null">
+        #{clientChannel,jdbcType=VARCHAR},
+      </if>
+      <if test="browserName != null">
+        #{browserName,jdbcType=VARCHAR},
+      </if>
+      <if test="osName != null">
+        #{osName,jdbcType=VARCHAR},
+      </if>
+      <if test="deviceType != null">
+        #{deviceType,jdbcType=VARCHAR},
+      </if>
+      <if test="deviceLabel != null">
+        #{deviceLabel,jdbcType=VARCHAR},
+      </if>
+      <if test="ipCountry != null">
+        #{ipCountry,jdbcType=VARCHAR},
+      </if>
+      <if test="ipProvince != null">
+        #{ipProvince,jdbcType=VARCHAR},
+      </if>
+      <if test="ipCity != null">
+        #{ipCity,jdbcType=VARCHAR},
+      </if>
+      <if test="ipIsp != null">
+        #{ipIsp,jdbcType=VARCHAR},
+      </if>
+      <if test="requestScheme != null">
+        #{requestScheme,jdbcType=VARCHAR},
+      </if>
+      <if test="tlsProtocol != null">
+        #{tlsProtocol,jdbcType=VARCHAR},
+      </if>
+      <if test="refererHost != null">
+        #{refererHost,jdbcType=VARCHAR},
+      </if>
+      <if test="entryPath != null">
+        #{entryPath,jdbcType=VARCHAR},
+      </if>
+      <if test="requestId != null">
+        #{requestId,jdbcType=VARCHAR},
+      </if>
+      <if test="sessionId != null">
+        #{sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="sessionIssuedAt != null">
+        #{sessionIssuedAt,jdbcType=TIMESTAMP},
+      </if>
+      <if test="sessionExpiresAt != null">
+        #{sessionExpiresAt,jdbcType=TIMESTAMP},
+      </if>
+      <if test="sessionLastSeenAt != null">
+        #{sessionLastSeenAt,jdbcType=TIMESTAMP},
+      </if>
+      <if test="logoutTime != null">
+        #{logoutTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="acceptLanguage != null">
+        #{acceptLanguage,jdbcType=VARCHAR},
+      </if>
+      <if test="clientTimezone != null">
+        #{clientTimezone,jdbcType=VARCHAR},
+      </if>
+      <if test="clientHints != null">
+        #{clientHints,jdbcType=VARCHAR},
+      </if>
+      <if test="riskNewDevice != null">
+        #{riskNewDevice,jdbcType=TINYINT},
+      </if>
+      <if test="riskNewCity != null">
+        #{riskNewCity,jdbcType=TINYINT},
       </if>
       <if test="delFlag != null">
         #{delFlag,jdbcType=BIT},
@@ -302,5 +505,32 @@
       update_by = #{updateBy,jdbcType=VARCHAR},
       update_time = #{updateTime,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <select id="selectRecentSuccess" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from login_log
+    where del_flag = 0 and user_id = #{userId} and action = 'LOGIN_SUCCESS'
+    order by id desc
+    limit #{limit}
+  </select>
+  <update id="touchLastSeen">
+    update login_log
+    set session_last_seen_at = #{seenAt,jdbcType=TIMESTAMP},
+        update_time = #{seenAt,jdbcType=TIMESTAMP}
+    where session_id = #{sessionId}
+      and del_flag = 0
+      and logout_time is null
+      and action = 'LOGIN_SUCCESS'
+  </update>
+  <update id="markLogout">
+    update login_log
+    set logout_time = #{logoutAt,jdbcType=TIMESTAMP},
+        update_time = #{logoutAt,jdbcType=TIMESTAMP}
+    where session_id = #{sessionId}
+      and del_flag = 0
+      and logout_time is null
+      and action = 'LOGIN_SUCCESS'
   </update>
 </mapper>

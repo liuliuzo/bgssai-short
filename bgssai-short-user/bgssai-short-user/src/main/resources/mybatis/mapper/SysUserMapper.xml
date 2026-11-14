@@ -483,4 +483,11 @@
       deleted_at = #{deletedAt,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=INTEGER}
   </update>
+  <update id="clearCurrentSessionIdByExample" parameterType="com.bgssai.shortai.model.SysUserExample">
+    update sys_user
+    set current_session_id = null
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </update>
 </mapper>

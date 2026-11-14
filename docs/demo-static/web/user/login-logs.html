@@ -27,17 +27,40 @@
         响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
         最近登录与安全相关操作记录，仅展示本人账号
       -->
-      <p>IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。未覆盖时显示未知。</p>
-      <div style="overflow-x:auto"><table style="min-width:900px">
+      <p>能在登录当时确定的结果、方式、账号、设备和会话会记下来。采集不到的项显示未知。IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。不展示密码、验证码或令牌。</p>
+      <div style="overflow-x:auto"><table style="min-width:1100px">
         <thead>
-          <tr><th>id</th><th>user_id</th><th>action</th><th>登录IP (ip_address)</th><th>IP归属地（参考）(ip_location)</th><th>create_time</th></tr>
+          <tr>
+            <th>时间</th><th>结果</th><th>原因</th><th>方式</th><th>账号</th><th>设备</th>
+            <th>登录IP</th><th>IP归属地（参考）</th><th>对照</th>
+          </tr>
         </thead>
         <tbody>
-          <tr><td>207</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.41</td><td>非公网地址</td><td>2026-07-19 09:31:22</td></tr>
-          <tr><td>206</td><td>u-demo-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.41</td><td>非公网地址</td><td>2026-07-19 09:30:58</td></tr>
-          <tr><td>205</td><td>u-demo-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.9</td><td>非公网地址</td><td>2026-07-18 20:14:37</td></tr>
+          <tr>
+            <td>2026-07-19 09:31:22</td><td class="pill-ok">成功</td><td>登录成功</td><td>密码</td>
+            <td>d***@example.com</td><td>Chrome 120 · Windows 10 · 桌面</td>
+            <td>203.0.113.41</td><td>非公网地址</td><td>曾用设备</td>
+          </tr>
+          <tr>
+            <td>2026-07-19 09:30:58</td><td class="pill-danger">失败</td><td>账号或密码不正确</td><td>密码</td>
+            <td>d***@example.com</td><td>Chrome 120 · Windows 10 · 桌面</td>
+            <td>203.0.113.41</td><td>非公网地址</td><td>未知</td>
+          </tr>
+          <tr>
+            <td>2026-07-18 20:14:37</td><td class="pill-ok">成功</td><td>登录成功</td><td>微信</td>
+            <td>微信</td><td>微信 · Android 13 · 手机</td>
+            <td>198.51.100.9</td><td>非公网地址</td><td>新设备</td>
+          </tr>
         </tbody>
       </table></div>
+      <h2>记录详情（点一行打开）</h2>
+      <p>示例：2026-07-19 09:31:22 密码登录成功。</p>
+      <ul>
+        <li>登录编号 207 · 会话 7f3c1a9e0b · 签发 2026-07-19 09:31:22 · 过期 2026-07-20 09:31:22 · 最近活跃 2026-07-19 11:02:18 · 退出 尚未记录</li>
+        <li>客户端 用户端网页 · 浏览器 Chrome 120 · 系统 Windows 10 · 语言 zh-CN · 时区 未知</li>
+        <li>协议 https · TLS 未知 · 来源主机 www.bgssai.com · 入口路径 /bgssai/user/login · 请求号 未知</li>
+        <li>国家 / 省区 / 城市 / 运营商：未知（示例地址不是公网定位）</li>
+      </ul>
 
       <div class="pager">
         <button class="btn">上一页</button>

@@ -22,6 +22,9 @@ public class JwtTokenAspect {
     @org.springframework.beans.factory.annotation.Autowired
     private SingleSessionGuard singleSessionGuard;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.bgssai.shortai.login.service.LoginSessionSeen loginSessionSeen;
+
     @Around("execution(public * com.bgssai.shortai..*(..)) && " + "@within(com.bgssai.shortai.common.aop.NeedAop) || "
             + "@annotation(com.bgssai.shortai.common.aop.NeedAop)")
     public Object validateJwtToken(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -37,7 +40,8 @@ public class JwtTokenAspect {
         }
 
         String userId = JwtUtil.getUserIdFromToken(jwtToken);
-        SessionState state = singleSessionGuard.check(userId, JwtUtil.getSessionIdFromToken(jwtToken));
+        String sessionId = JwtUtil.getSessionIdFromToken(jwtToken);
+        SessionState state = singleSessionGuard.check(userId, sessionId);
         if (state == SessionState.SUPERSEDED) throw new BizException("2003", "账号已在其他设备登录");
         if (state != SessionState.VALID) throw new UnauthorizedException();
         String realName = JwtUtil.getRealNameFromToken(jwtToken);
@@ -51,6 +55,10 @@ public class JwtTokenAspect {
         UserContext.setUserCompanyCode(companyCode);
         UserContext.setUserCompanyName(companyName);
         UserContext.setUserRole(role);
+        UserContext.setSessionId(sessionId);
+        if (loginSessionSeen != null) {
+            loginSessionSeen.touch(sessionId);
+        }
         MdcSupport.putUserContext(userId, companyCode);
 
         try {

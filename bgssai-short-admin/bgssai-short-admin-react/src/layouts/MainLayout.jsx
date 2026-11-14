@@ -2,6 +2,7 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, message } from 'antd'
 import { DashboardOutlined, ProfileOutlined, AuditOutlined, TeamOutlined, GiftOutlined, PayCircleOutlined, RobotOutlined, KeyOutlined, FundOutlined, ExperimentOutlined, CustomerServiceOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
+import loginLogsApi from '../api/loginLogs'
 import './main-layout.css'
 
 // Navigation items — two sample sections ship with the scaffold; add product routes here.
@@ -27,9 +28,11 @@ export default function MainLayout() {
   const clearUserInfo = useUserStore((s) => s.clearUserInfo)
 
   const handleLogout = () => {
-    clearUserInfo()
-    navigate('/login', { replace: true })
-    message.success('已退出登录')
+    loginLogsApi.logout().catch(() => {}).finally(() => {
+      clearUserInfo()
+      navigate('/login', { replace: true })
+      message.success('已退出登录')
+    })
   }
 
   const userMenuItems = [

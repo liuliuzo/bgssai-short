@@ -33,4 +33,11 @@ public class SingleSessionGuard {
                 || user.getCurrentSessionId() == null || user.getCurrentSessionId().isBlank()) return SessionState.EXPIRED;
         return sessionId.equals(user.getCurrentSessionId()) ? SessionState.VALID : SessionState.SUPERSEDED;
     }
+
+    public int clearSession(String userId) {
+        if (userId == null || userId.isBlank()) return 0;
+        SysUserExample query = new SysUserExample();
+        query.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(false);
+        return users.clearCurrentSessionIdByExample(query);
+    }
 }

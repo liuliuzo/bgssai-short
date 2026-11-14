@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, Drawer, message } from 'antd'
 import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined, DownloadOutlined, AppstoreOutlined, SettingOutlined, UserOutlined, PictureOutlined, GoldOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
+import loginLogsApi from '../api/loginLogs'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
 import SupportWidget from '../components/SupportWidget'
 import './main-layout.css'
@@ -81,9 +82,11 @@ export default function MainLayout() {
   const [moreOpen, setMoreOpen] = useState(false)
 
   const handleLogout = () => {
-    clearUserInfo()
-    navigate('/login', { replace: true })
-    message.success('已退出登录')
+    loginLogsApi.logout().catch(() => {}).finally(() => {
+      clearUserInfo()
+      navigate('/login', { replace: true })
+      message.success('已退出登录')
+    })
   }
 
   const userMenuItems = [

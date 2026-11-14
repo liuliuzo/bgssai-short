@@ -121,8 +121,39 @@
       "id": 101,
       "user_id": "u-admin-0001",
       "action": "LOGIN_SUCCESS",
+      "login_result": "SUCCESS",
+      "result_reason": "登录成功",
+      "login_method": "password",
+      "identifier_type": "username",
+      "identifier_masked": "admin",
+      "client_channel": "admin",
+      "browser_name": "Edge 120",
+      "os_name": "Windows 10",
+      "device_type": "desktop",
+      "device_label": "Edge 120 · Windows 10 · 桌面",
       "ip_address": "203.0.113.7",
       "ip_location": "非公网地址",
+      "ip_country": null,
+      "ip_province": null,
+      "ip_city": null,
+      "ip_isp": null,
+      "ip_geo_source": "none",
+      "request_scheme": "https",
+      "tls_protocol": null,
+      "referer_host": null,
+      "entry_path": "/bgssai/admin/login",
+      "request_id": "a1b2c3d4e5f67890",
+      "accept_language": "zh-CN",
+      "client_timezone": null,
+      "client_hints": null,
+      "session_id": "9c2e88ab0123456789abcdef01234567",
+      "session_issued_at": "2026-07-19 10:00:00",
+      "session_expires_at": "2026-07-20 10:00:00",
+      "session_last_seen_at": "2026-07-19 10:05:00",
+      "logout_time": null,
+      "risk_new_device": false,
+      "risk_new_city": null,
+      "risk_summary": "曾用设备",
       "user_agent": "Mozilla/5.0 ...",
       "create_time": "2026-07-19 10:00:00"
     }
@@ -133,9 +164,28 @@
 }
 ```
 
+列表和详情使用同一行。空值表示当时不知道，界面显示「未知」；`logout_time` 为空表示还没有记到主动退出，界面显示「尚未记录」。
+
+| 字段 | 说明 |
+| --- | --- |
+| `login_result` / `result_reason` | `SUCCESS` 或 `FAILURE`，以及固定文案。不回口令、验证码、JWT、Cookie 或 OAuth code |
+| `login_method` | `password` / `email_otp` / `phone_otp` / `wechat` / `alipay` / `douyin` / `baidu` / `bgssai` / `oauth` |
+| `identifier_masked` | 用户名原文，或邮箱、手机号脱敏。第三方登录只写渠道名 |
+| `client_channel` | 用户端 `web`，管理端 `admin`。请求若已带 `X-Bgssai-Client: app` 则记 `app` |
+| `browser_name` / `os_name` / `device_type` / `device_label` | 从已保存的 User-Agent 解析。认不出则为空 |
+| `ip_country` / `ip_province` / `ip_city` / `ip_isp` | 登录时离线库有的段。`ip_geo_source=snapshot` 表示当时记下；旧行没有快照时用 `lookup` 按当前库补全；都没有则 `none` |
+| `request_scheme` / `tls_protocol` | 方案来自连接或同机反代的 `X-Forwarded-Proto`。TLS 版本只在应用自己终止 TLS 时才有 |
+| `referer_host` / `entry_path` | 只保留主机和路径，去掉查询串 |
+| `request_id` | 当次 traceId |
+| `session_id` | 登录签发的会话标识，可展示，不是 JWT |
+| `session_issued_at` / `session_expires_at` / `session_last_seen_at` | 签发、按 JWT 有效期计算的过期、最近一次鉴权通过。没有会话的失败记录这三项为空 |
+| `risk_new_device` / `risk_new_city` | 只和该用户更早的成功登录里已经记下的设备或城市对照。没有可对照历史时为空，不打分 |
+
+主动退出：`POST /bgssai/user/logout` 与 `POST /bgssai/admin/logout`（无请求体，需 `Jwttoken`）。服务端清掉当前会话，并把该 `session_id` 的 `logout_time` 记上。
+
 ### 未授权 / 无权限响应
 
-登录日志行新增只读 `ip_location`（string）：离线解析已有 `ip_address` 得到可识别的国家/地区/城市，供参考，不是精确位置。值可为“本地”“内网”“非公网地址”“未知”或“未知（IPv6 暂未覆盖）”。示例 IP 是文档保留地址，不映射为真实城市。原始 IP、用户范围、分页、排序均不变；不新增请求参数、不改数据库。历史归属地按当前离线库查询，不代表登录当时快照。详见 [归属地设计](../architecture/login-ip-location.md)。
+`ip_location`（string）仍是离线解析 `ip_address` 得到的国家/地区/城市，供参考，不是精确位置。值可为“本地”“内网”“非公网地址”“未知”或“未知（IPv6 暂未覆盖）”。示例 IP 是文档保留地址，不映射为真实城市。原始 IP、用户范围、分页、排序不变，不新增列表查询参数。登录当时能解析出的国家、省区、城市和运营商另记在行上，见上文明细字段。历史行若没有快照，`ip_location` 仍按当前离线库查询。详见 [归属地设计](../architecture/login-ip-location.md) 与 [登录明细](../architecture/login-log-detail.md)。
 
 token 缺失或失效时切面直接返回（HTTP 200）：
 

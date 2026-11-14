@@ -5,5 +5,6 @@ import http from '../utils/http'
 // Requires a valid JWT (header Jwttoken, injected by the axios interceptor).
 // Returns the PageResponse envelope: { code, message, success, result, page_num, page_size, total_size }.
 const list = (params) => http.get('/admin/login-logs', params)
+const logout = () => http.post('/admin/logout', {})
 
-export default { list }
+export default { list, logout }

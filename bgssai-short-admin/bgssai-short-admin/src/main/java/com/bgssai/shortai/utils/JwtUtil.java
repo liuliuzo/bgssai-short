@@ -135,6 +135,10 @@ public class JwtUtil {
         return getClaims(token).get("sid", String.class);
     }
 
+    public static long expirationMillis() {
+        return EXPIRATION_TIME_MS;
+    }
+
     public static String getRoleFromToken(String token) {
         return getClaims(token).get("role", String.class);
     }
