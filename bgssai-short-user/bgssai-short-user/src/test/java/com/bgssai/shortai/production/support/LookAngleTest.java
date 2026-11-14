@@ -40,12 +40,15 @@ class LookAngleTest {
     }
 
     @Test
-    void planFillsOnlyMissingBodyAnglesAndNeverRedrawsTheFace() {
+    void planSupportsAllFourAnglesIncludingFrontFaceRedo() {
         assertEquals(java.util.List.of("FRONT"), LookAngle.plan(Set.of("FRONT_FACE", "BACK", "SIDE"), null, false));
         assertEquals(java.util.List.of("BACK"), LookAngle.plan(Set.of("FRONT_FACE", "FRONT", "SIDE"), null, false));
+        assertEquals(java.util.List.of("FRONT_FACE"), LookAngle.plan(Set.of("FRONT", "BACK", "SIDE"), null, false));
         assertEquals(java.util.List.of("SIDE"), LookAngle.plan(Set.of("SIDE"), "SIDE", true));
-        assertThrows(BizException.class, () -> LookAngle.plan(Set.of("FRONT_FACE"), "FRONT_FACE", true));
-        assertThrows(BizException.class, () -> LookAngle.plan(Set.of("FRONT", "BACK", "SIDE"), null, false));
+        assertEquals(java.util.List.of("FRONT_FACE"), LookAngle.plan(Set.of("FRONT_FACE"), "FRONT_FACE", true));
+        assertEquals(java.util.List.of("FRONT_FACE"), LookAngle.plan(Set.of(), "FRONT_FACE", false));
+        assertThrows(BizException.class, () -> LookAngle.plan(Set.of("FRONT_FACE"), "FRONT_FACE", false));
+        assertThrows(BizException.class, () -> LookAngle.plan(Set.of("FRONT_FACE", "FRONT", "BACK", "SIDE"), null, false));
         assertThrows(BizException.class, () -> LookAngle.plan(Set.of("FRONT"), "FRONT", false));
     }
 }

@@ -35,6 +35,7 @@ import com.bgssai.shortai.model.ShortLookMaterialExample;
 import com.bgssai.shortai.production.dto.LookDtos.LookCompleteReq;
 import com.bgssai.shortai.production.dto.LookDtos.LookLibraryReq;
 import com.bgssai.shortai.production.dto.LookDtos.LookMaterialReq;
+import com.bgssai.shortai.production.support.CardAssetSelection;
 import com.bgssai.shortai.production.support.LookAngle;
 import com.bgssai.shortai.production.support.LookImage;
 import com.bgssai.shortai.production.support.LookViewPrompt;
@@ -229,7 +230,10 @@ public class LookKnowledgeService {
         return Responses.ok("ok");
     }
 
-    /** Card upload files the same photo into 「我的定妆」, creating that library when it is missing. */
+    /**
+     * Card upload files the same photo into 「我的定妆」, creating that library when it is missing.
+     * Earlier photos of the same angle stay preserved in history so the user can swap back anytime.
+     */
     @Transactional
     public void fileImage(String userId, String kind, String name, String caption, LookImage.Decoded image,
             String viewAngle, String cardId, String assetId) {
@@ -238,12 +242,110 @@ public class LookKnowledgeService {
         String angle = resolveAngleForKind(normalizedKind, viewAngle, caption, "CHARACTER".equals(normalizedKind));
         if (angle == null) {
             replaceCardAll(userId, cardId);
-        } else {
-            replaceCardAngle(userId, cardId, angle);
         }
         store(library, userId, normalizedKind,
                 name == null || name.isBlank() ? defaultMaterialName(normalizedKind) : name.trim(),
                 blankToNull(caption), image, null, angle, cardId, assetId);
+    }
+
+    /**
+     * Promote a preserved historical photo back to the active slot while keeping the displaced photo in history.
+     */
+    @Transactional
+    public ApiResponse promoteMaterial(LookMaterialReq req) {
+        String userId = workAccessService.requireUser();
+        if (req == null || req.getMaterialId() == null || req.getMaterialId().isBlank()) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要换回的照片");
+        }
+        ShortLookMaterial row = findMaterial(userId, req.getMaterialId().trim());
+        if (row == null) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "照片不存在");
+        }
+        ShortLookLibrary library = requireLibrary(userId, row.getLibraryId());
+        if (!"ACTIVE".equals(library.getStatus())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "已归档的知识库不能修改");
+        }
+        if (!stillImage(row)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "只能换回静态定妆照片");
+        }
+        String angle = shownAngle(row);
+        if (angle == null) {
+            angle = defaultPrimaryAngle(normalizeKind(row.getMaterialKind()));
+        }
+        String cleanedCaption = stripPoseWords(row.getCaption());
+        String key = row.getStorageKey();
+        String name = row.getMaterialName() == null ? "" : row.getMaterialName();
+        String kind = row.getMaterialKind() == null ? "CHARACTER" : row.getMaterialKind();
+
+        ShortLookMaterialExample ex = new ShortLookMaterialExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andLibraryIdEqualTo(row.getLibraryId()).andDeletedFlagEqualTo(0);
+        ex.setOrderByClause("id asc");
+        List<ShortLookMaterial> matches = materialMapper.selectByExample(ex);
+        List<ShortLookMaterial> targets = new ArrayList<>();
+        if (matches != null) {
+            for (ShortLookMaterial m : matches) {
+                if (!key.equals(m.getStorageKey())) {
+                    continue;
+                }
+                String mName = m.getMaterialName() == null ? "" : m.getMaterialName();
+                String mKind = m.getMaterialKind() == null ? "CHARACTER" : m.getMaterialKind();
+                if (name.equals(mName) && kind.equals(mKind)) {
+                    targets.add(m);
+                }
+            }
+        }
+        if (targets.isEmpty()) {
+            targets.add(row);
+        }
+
+        ShortLookMaterial primaryPromoted = null;
+        String boundCardId = blankToNull(req.getCharacterId());
+        String boundAssetId = null;
+        for (ShortLookMaterial old : targets) {
+            ShortLookMaterial copy = new ShortLookMaterial();
+            copy.setMaterialId(ShortIds.id("lm-"));
+            copy.setLibraryId(old.getLibraryId());
+            copy.setUserId(userId);
+            copy.setMaterialName(old.getMaterialName());
+            copy.setCaption(cleanedCaption);
+            copy.setMaterialKind(old.getMaterialKind());
+            copy.setViewAngle(angle);
+            copy.setCardId(old.getCardId());
+            copy.setAssetId(old.getAssetId());
+            copy.setMimeType(old.getMimeType());
+            copy.setStorageKey(old.getStorageKey());
+            copy.setWidth(old.getWidth());
+            copy.setHeight(old.getHeight());
+            copy.setFileSizeByte(old.getFileSizeByte() == null ? 0 : old.getFileSizeByte());
+            copy.setDeletedFlag(0);
+            copy.setCreatedTime(new Date());
+            materialMapper.insertSelective(copy);
+            if (lookRagIndex != null) {
+                lookRagIndex.upsert(copy);
+            }
+            if (primaryPromoted == null || old.getMaterialId().equals(row.getMaterialId())) {
+                primaryPromoted = copy;
+            }
+            if (boundCardId == null && old.getCardId() != null && !old.getCardId().isBlank()) {
+                boundCardId = old.getCardId();
+            }
+            if (boundAssetId == null && old.getAssetId() != null && !old.getAssetId().isBlank()) {
+                boundAssetId = old.getAssetId();
+            }
+        }
+        retire(targets);
+
+        if (boundCardId != null && "FRONT_FACE".equals(angle)) {
+            syncCharacterFrontFaceAsset(userId, boundCardId, primaryPromoted, boundAssetId);
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("material_id", primaryPromoted.getMaterialId());
+        result.put("library_id", primaryPromoted.getLibraryId());
+        result.put("view_angle", angle);
+        result.put("view_name", viewName(angle));
+        result.put("file_url", presign(primaryPromoted.getStorageKey()));
+        return Responses.ok(result);
     }
 
     public ShortLookMaterial requireMaterial(String userId, String materialId) {
@@ -356,14 +458,17 @@ public class LookKnowledgeService {
             return List.of();
         }
         Map<String, ShortLookMaterial> latest = new LinkedHashMap<>();
+        Map<String, List<ShortLookMaterial>> bucketed = new LinkedHashMap<>();
         for (String angle : List.of("FRONT_FACE", "FRONT", "BACK", "SIDE")) {
             latest.put(angle, null);
+            bucketed.put(angle, new ArrayList<>());
         }
         for (ShortLookMaterial row : rows) {
             String angle = shownAngle(row);
-            if (angle == null || !latest.containsKey(angle)) {
+            if (angle == null || !latest.containsKey(angle) || !stillImage(row)) {
                 continue;
             }
+            bucketed.get(angle).add(row);
             ShortLookMaterial current = latest.get(angle);
             if (current == null) {
                 latest.put(angle, row);
@@ -375,12 +480,35 @@ public class LookKnowledgeService {
         }
         List<Map<String, Object>> list = new ArrayList<>();
         for (Map.Entry<String, ShortLookMaterial> entry : latest.entrySet()) {
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("view_angle", entry.getKey());
-            item.put("view_name", viewName(entry.getKey()));
+            String angle = entry.getKey();
             ShortLookMaterial row = entry.getValue();
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("view_angle", angle);
+            item.put("view_name", viewName(angle));
+            item.put("material_id", row == null ? null : row.getMaterialId());
             item.put("asset_id", row == null ? null : row.getAssetId());
             item.put("file_url", row == null ? null : presign(row.getStorageKey()));
+            List<Map<String, Object>> history = new ArrayList<>();
+            Set<String> seenKeys = new LinkedHashSet<>();
+            if (row != null && row.getStorageKey() != null) {
+                seenKeys.add(row.getStorageKey());
+            }
+            for (ShortLookMaterial prev : bucketed.get(angle)) {
+                if (row != null && prev.getMaterialId() != null && prev.getMaterialId().equals(row.getMaterialId())) {
+                    continue;
+                }
+                if (prev.getStorageKey() == null || !seenKeys.add(prev.getStorageKey())) {
+                    continue;
+                }
+                Map<String, Object> h = new LinkedHashMap<>();
+                h.put("material_id", prev.getMaterialId());
+                h.put("asset_id", prev.getAssetId());
+                h.put("view_angle", angle);
+                h.put("view_name", viewName(angle));
+                h.put("file_url", presign(prev.getStorageKey()));
+                history.add(h);
+            }
+            item.put("history_list", history);
             list.add(item);
         }
         return list;
@@ -906,14 +1034,15 @@ public class LookKnowledgeService {
     }
 
     /**
-     * Fill or redraw 前面 / 背面 / 侧面 from the look's 正脸. confirm_cost=1 enqueues the image task.
-     * Without that flag the call only returns the angles and the price.
+     * Generate or redo 正脸 / 前面 / 背面 / 侧面. Does not require a front-face photo:
+     * supports optional reference image (any existing look photo or none when skip_reference=1)
+     * and preserves earlier photos in history so the user can swap back anytime.
      */
     @Transactional
     public ApiResponse completeAngles(LookCompleteReq req) {
         String userId = workAccessService.requireUser();
         if (req == null) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要补的造型");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要生成的造型");
         }
         boolean confirm = req.getConfirmCost() != null && req.getConfirmCost() == 1;
         AngleTarget target = resolveTarget(userId, req, confirm);
@@ -928,6 +1057,7 @@ public class LookKnowledgeService {
         int usage = angles.size();
         int priced = aiModelResolveService.costCent(model, usage);
         int cost = priced > 0 ? priced : TaskPrices.cost("IMAGE") * usage;
+        boolean hasRef = target.storageKey() != null && !target.storageKey().isBlank();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("library_id", target.libraryId());
         result.put("material_name", target.materialName());
@@ -938,7 +1068,8 @@ public class LookKnowledgeService {
         }
         result.put("angle_name_list", names);
         result.put("estimated_cost_cent", cost);
-        result.put("reference_view_name", "正脸");
+        result.put("reference_used", hasRef ? 1 : 0);
+        result.put("reference_view_name", hasRef ? target.referenceViewName() : null);
         if (!confirm) {
             result.put("confirmed", 0);
             return Responses.ok(result);
@@ -951,8 +1082,10 @@ public class LookKnowledgeService {
         request.put("material_name", target.materialName());
         request.put("angles", angles);
         request.put("appearance", target.appearance());
-        request.put("reference_storage_key", target.storageKey());
-        request.put("reference_mime", target.mime());
+        if (hasRef) {
+            request.put("reference_storage_key", target.storageKey());
+            request.put("reference_mime", target.mime());
+        }
         request.put("usage_count", usage);
         if (target.cardId() != null) {
             request.put("card_id", target.cardId());
@@ -985,32 +1118,115 @@ public class LookKnowledgeService {
         String safeMime = mime == null || mime.isBlank() ? "image/png" : mime;
         LookImage.Decoded image = new LookImage.Decoded(bytes, safeMime, Math.max(0, width), Math.max(0, height));
         String title = name == null || name.isBlank() ? "未命名定妆" : name.trim();
-        store(library, userId, "CHARACTER", title, blankToNull(caption), image, null, stored, blankToNull(cardId), null);
+        String normalizedCardId = blankToNull(cardId);
+        ShortLookMaterial saved = store(library, userId, "CHARACTER", title, blankToNull(caption), image, null,
+                stored, normalizedCardId, null);
+        if (normalizedCardId != null && "FRONT_FACE".equals(stored)) {
+            syncCharacterFrontFaceAsset(userId, normalizedCardId, saved, null);
+        }
+    }
+
+    private void syncCharacterFrontFaceAsset(String userId, String characterId, ShortLookMaterial material,
+            String existingAssetId) {
+        if (shortCharacterMapper == null || shortAssetMapper == null || material == null) {
+            return;
+        }
+        ShortCharacterExample cx = new ShortCharacterExample();
+        cx.createCriteria().andCharacterIdEqualTo(characterId).andUserIdEqualTo(userId).andDeletedFlagEqualTo(0);
+        ShortCharacter character = shortCharacterMapper.selectOneByExample(cx);
+        if (character == null) {
+            return;
+        }
+        String assetId = blankToNull(existingAssetId);
+        if (assetId != null) {
+            ShortAsset check = loadAsset(userId, assetId);
+            if (check == null || !characterId.equals(check.getShotId())) {
+                assetId = null;
+            }
+        }
+        if (assetId == null && material.getStorageKey() != null) {
+            ShortAssetExample ax = new ShortAssetExample();
+            ax.createCriteria().andUserIdEqualTo(userId).andShotIdEqualTo(characterId).andDeletedFlagEqualTo(0);
+            List<ShortAsset> cardAssets = shortAssetMapper.selectByExample(ax);
+            if (cardAssets != null) {
+                for (ShortAsset cand : cardAssets) {
+                    if (material.getStorageKey().equals(cand.getStorageKey())) {
+                        assetId = cand.getAssetId();
+                        break;
+                    }
+                }
+            }
+        }
+        if (assetId == null) {
+            ShortAsset created = new ShortAsset();
+            created.setAssetId(ShortIds.id("a-"));
+            created.setUserId(userId);
+            created.setWorkId(character.getWorkId());
+            created.setShotId(characterId);
+            created.setAssetType("IMAGE");
+            created.setMimeType(faceMime(material));
+            created.setStorageKey(material.getStorageKey());
+            created.setFileUrl("/bgssai/user/assets/" + created.getAssetId());
+            created.setFileSizeByte(material.getFileSizeByte() == null ? 0 : material.getFileSizeByte());
+            if (material.getWidth() != null && material.getWidth() > 0) {
+                created.setWidth(material.getWidth());
+            }
+            if (material.getHeight() != null && material.getHeight() > 0) {
+                created.setHeight(material.getHeight());
+            }
+            created.setSelectedFlag(1);
+            created.setDraftFlag(0);
+            created.setDeletedFlag(0);
+            created.setCreatedTime(new Date());
+            shortAssetMapper.insertSelective(created);
+            assetId = created.getAssetId();
+            if (material.getId() != null) {
+                ShortLookMaterial matPatch = new ShortLookMaterial();
+                matPatch.setAssetId(assetId);
+                ShortLookMaterialExample matUp = new ShortLookMaterialExample();
+                matUp.createCriteria().andIdEqualTo(material.getId());
+                materialMapper.updateByExampleSelective(matPatch, matUp);
+                material.setAssetId(assetId);
+            }
+        }
+        ShortCharacter patch = new ShortCharacter();
+        patch.setRefImageAssetId(assetId);
+        patch.setCardStatus("LOCKED");
+        patch.setUpdatedTime(new Date());
+        ShortCharacterExample up = new ShortCharacterExample();
+        up.createCriteria().andIdEqualTo(character.getId());
+        shortCharacterMapper.updateByExampleSelective(patch, up);
+        CardAssetSelection.selectOnly(shortAssetMapper, userId, characterId, assetId);
     }
 
     private AngleTarget resolveTarget(String userId, LookCompleteReq req, boolean createLibrary) {
+        boolean skipRef = req.getSkipReference() != null && req.getSkipReference() == 1;
+        String requestedAngle = LookAngle.canonical(req.getViewAngle());
         if (req.getCharacterId() != null && !req.getCharacterId().isBlank()) {
-            return characterTarget(userId, req.getCharacterId().trim(), createLibrary);
+            return characterTarget(userId, req.getCharacterId().trim(), req, requestedAngle, skipRef, createLibrary);
         }
         String libraryId = req.getLibraryId() == null ? "" : req.getLibraryId().trim();
         String name = req.getMaterialName() == null ? "" : req.getMaterialName().trim();
         if (libraryId.isEmpty() || name.isEmpty()) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要补的造型");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要生成的造型");
         }
         ShortLookLibrary library = requireLibrary(userId, libraryId);
         if (!"ACTIVE".equals(library.getStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "已归档的知识库不能再放素材");
         }
         List<ShortLookMaterial> rows = namedMaterials(materialsOf(libraryId, userId), name);
-        ShortLookMaterial face = pickFace(rows);
-        if (face == null) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "先有一张正脸，才能按这张脸补齐其他面");
+        ShortLookMaterial ref = skipRef ? null : pickReferenceMaterial(rows, req.getReferenceMaterialId(), requestedAngle);
+        String appearance = firstText(req.getCaption(), firstCaptionInRows(rows, name));
+        if (ref != null) {
+            String refAngle = shownAngle(ref);
+            return new AngleTarget(libraryId, name, null, null, ref.getStorageKey(), faceMime(ref),
+                    refAngle == null ? "已有照片" : viewName(refAngle), appearance, filledAngles(rows));
         }
-        return new AngleTarget(libraryId, name, null, null, face.getStorageKey(), faceMime(face),
-                face.getCaption(), filledAngles(rows));
+        return new AngleTarget(libraryId, name, null, null, null, null, null, appearance, filledAngles(rows));
     }
 
-    private AngleTarget characterTarget(String userId, String characterId, boolean createLibrary) {
+    private AngleTarget characterTarget(String userId, String characterId, LookCompleteReq req,
+            String requestedAngle, boolean skipRef, boolean createLibrary) {
         if (shortCharacterMapper == null) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "出图还没准备好，请稍后再试");
         }
@@ -1021,33 +1237,49 @@ public class LookKnowledgeService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "角色不存在");
         }
         List<ShortLookMaterial> rows = cardMaterials(userId, characterId);
-        ShortLookMaterial face = pickFace(rows);
-        String appearance = firstText(character.getAppearancePrompt(), face == null ? null : face.getCaption());
-        if (face != null) {
-            ShortLookLibrary library = requireLibrary(userId, face.getLibraryId());
+        String fallbackName = character.getCharacterName() == null || character.getCharacterName().isBlank()
+                ? "未命名定妆" : character.getCharacterName().trim();
+        String appearance = firstText(req.getCaption(),
+                firstText(character.getAppearancePrompt(), firstCaptionInRows(rows, fallbackName)));
+        ShortLookMaterial ref = skipRef ? null : pickReferenceMaterial(rows, req.getReferenceMaterialId(), requestedAngle);
+        ShortLookMaterial anyRow = rows.isEmpty() ? null : rows.get(0);
+        String libraryId;
+        String materialName = fallbackName;
+        if (anyRow != null && anyRow.getLibraryId() != null && !anyRow.getLibraryId().isBlank()) {
+            ShortLookLibrary library = requireLibrary(userId, anyRow.getLibraryId());
             if (!"ACTIVE".equals(library.getStatus())) {
                 throw new BizException(CommonErrorCode.RULE_REJECT, "已归档的知识库不能再放素材");
             }
-            String materialName = face.getMaterialName();
-            if (materialName == null || materialName.isBlank()) {
-                materialName = character.getCharacterName() == null || character.getCharacterName().isBlank()
-                        ? "未命名定妆" : character.getCharacterName().trim();
+            libraryId = library.getLibraryId();
+            if (anyRow.getMaterialName() != null && !anyRow.getMaterialName().isBlank()) {
+                materialName = anyRow.getMaterialName().trim();
             }
-            return new AngleTarget(face.getLibraryId(), materialName, characterId, character.getWorkId(),
-                    face.getStorageKey(), faceMime(face), appearance, filledAngles(rows));
+        } else {
+            libraryId = personalLibraryId(userId, createLibrary);
         }
-        ShortAsset asset = loadAsset(userId, character.getRefImageAssetId());
-        if (asset == null || !objectKey(asset.getStorageKey())
-                || (asset.getMimeType() != null && asset.getMimeType().startsWith("video/"))) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "先有一张正脸，才能按这张脸补齐其他面");
-        }
-        String libraryId = personalLibraryId(userId, createLibrary);
-        String name = character.getCharacterName() == null || character.getCharacterName().isBlank()
-                ? "未命名定妆" : character.getCharacterName().trim();
+
         Set<String> filled = filledAngles(rows);
-        filled.add("FRONT_FACE");
-        return new AngleTarget(libraryId, name, characterId, character.getWorkId(), asset.getStorageKey(),
-                asset.getMimeType() == null ? "image/jpeg" : asset.getMimeType(), appearance, filled);
+        ShortAsset cardAsset = loadAsset(userId, character.getRefImageAssetId());
+        boolean validCardAsset = cardAsset != null && objectKey(cardAsset.getStorageKey())
+                && (cardAsset.getMimeType() == null || !cardAsset.getMimeType().startsWith("video/"));
+        if (validCardAsset && !filled.contains("FRONT_FACE") && rows.isEmpty()) {
+            filled.add("FRONT_FACE");
+        }
+
+        if (ref != null) {
+            String refAngle = shownAngle(ref);
+            return new AngleTarget(libraryId, materialName, characterId, character.getWorkId(),
+                    ref.getStorageKey(), faceMime(ref), refAngle == null ? "已有照片" : viewName(refAngle),
+                    appearance, filled);
+        }
+        if (!skipRef && validCardAsset) {
+            return new AngleTarget(libraryId, materialName, characterId, character.getWorkId(),
+                    cardAsset.getStorageKey(),
+                    cardAsset.getMimeType() == null ? "image/jpeg" : cardAsset.getMimeType(),
+                    "当前定妆照", appearance, filled);
+        }
+        return new AngleTarget(libraryId, materialName, characterId, character.getWorkId(),
+                null, null, null, appearance, filled);
     }
 
     private String personalLibraryId(String userId, boolean create) {
@@ -1198,8 +1430,65 @@ public class LookKnowledgeService {
         return fallback == null ? "" : fallback.trim();
     }
 
+    private static ShortLookMaterial pickReferenceMaterial(List<ShortLookMaterial> rows,
+            String explicitMaterialId, String requestedAngle) {
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        if (explicitMaterialId != null && !explicitMaterialId.isBlank()) {
+            String wanted = explicitMaterialId.trim();
+            for (ShortLookMaterial row : rows) {
+                if (wanted.equals(row.getMaterialId()) && stillImage(row)) {
+                    return row;
+                }
+            }
+        }
+        ShortLookMaterial face = pickFace(rows);
+        if (face != null && !"FRONT_FACE".equals(requestedAngle)) {
+            return face;
+        }
+        if ("FRONT_FACE".equals(requestedAngle)) {
+            if (face != null) {
+                return face;
+            }
+        }
+        for (String angle : List.of("FRONT_FACE", "FRONT", "SIDE", "BACK")) {
+            for (ShortLookMaterial row : rows) {
+                if (stillImage(row) && angle.equals(shownAngle(row))) {
+                    return row;
+                }
+            }
+        }
+        for (ShortLookMaterial row : rows) {
+            if (stillImage(row)) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    private static String firstCaptionInRows(List<ShortLookMaterial> rows, String fallback) {
+        if (rows != null) {
+            for (ShortLookMaterial row : rows) {
+                if (row != null && row.getCaption() != null && !row.getCaption().isBlank()) {
+                    return row.getCaption().trim();
+                }
+            }
+        }
+        return fallback == null ? "" : fallback.trim();
+    }
+
+    private static String stripPoseWords(String caption) {
+        if (caption == null || caption.isBlank()) {
+            return null;
+        }
+        String cleaned = caption.replace("站姿", "").replace("坐姿", "")
+                .replace("行走", "").replace("走动", "").replaceAll("\\s+", " ").trim();
+        return cleaned.isEmpty() ? null : cleaned;
+    }
+
     private record AngleTarget(String libraryId, String materialName, String cardId, String workId,
-            String storageKey, String mime, String appearance, Set<String> filled) {
+            String storageKey, String mime, String referenceViewName, String appearance, Set<String> filled) {
     }
 
     private static String normalizeKind(String kind) {

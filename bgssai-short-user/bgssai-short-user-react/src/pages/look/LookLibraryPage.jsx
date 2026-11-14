@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Card, Image, Input, Modal, Skeleton, Space, Switch, Typography, message } from 'antd'
+import { Button, Card, Image, Input, Modal, Radio, Skeleton, Space, Switch, Typography, message } from 'antd'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import { safeReturnPath } from '../../lib/safeReturn'
@@ -219,16 +219,16 @@ const KIND_COPY = {
     itemNoun: '造型',
     slotNoun: '面',
     emptySlotText: '还没有照片',
-    otherTitle: '其他照片',
+    otherTitle: '历史与补充照片',
     videoNote: '这是视频，不拿来当定妆照。封面只是其中一帧，点开可以播放。',
     namePlaceholder: '造型名称，例如白纱花瓣',
     descPlaceholder: '外观特征（可选，例如黑长直、珍珠耳环）',
-    emptyText: '这个分组里还没有人物造型。写一个造型名称，再往四面里放照片，也可以在作品角色卡上点「存入定妆库」。',
+    emptyText: '这个分组里还没有人物造型。写一个造型名称，再往四面里放照片或直接生成，也可以在作品角色卡上点「存入定妆库」。',
     noGroupText: '还没有分组也没关系。在作品角色卡上上传照片或点「存入定妆库」，会自动放进「我的定妆」分组。',
     autoMatchLabel: '生成定妆时自动匹配这个分组',
     groupPlaceholder: '例如现代都市剧角色组、古装女主造型组',
     uploadEmpty: '上传这一面',
-    subHint: '每个造型按正脸、前面、背面、侧面排好；先放好正脸，还可以按正脸补齐其他面。点照片可看大图。',
+    subHint: '每个造型按正脸、前面、背面、侧面排好；正脸和其他面都支持随时生成或重做，重做后原来的照片会自动保留，方便一键换回。点照片可看大图。',
     slotWidth: 112,
     slotHeight: 148,
     extraWidth: 84,
@@ -299,6 +299,7 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
   const [drafts, setDrafts] = useState([])
   const [busy, setBusy] = useState(false)
   const [playing, setPlaying] = useState(null)
+  const [redoModal, setRedoModal] = useState(null)
   const fileRef = useRef(null)
   const uploadTarget = useRef(null)
 
@@ -471,23 +472,49 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
     removeIds(ids)
   }
 
-  function faceStill(look) {
-    return arrangeAngle(look.slots.FRONT_FACE).primary
+  function anyStillOfLook(look) {
+    for (const [angle, label] of LOOK_ANGLES) {
+      const primary = arrangeAngle(look.slots[angle]).primary
+      if (primary) return { item: primary, angle, label }
+    }
+    return null
   }
 
-  function missingBody(look) {
-    return LOOK_ANGLES.filter(([angle]) => angle !== 'FRONT_FACE' && !arrangeAngle(look.slots[angle]).primary)
+  function missingAngles(look) {
+    return LOOK_ANGLES.filter(([angle]) => !arrangeAngle(look.slots[angle]).primary)
   }
 
-  async function generateAngles(look, angle, replace) {
+  async function restoreMaterial(item) {
+    if (!item?.material_id || busy) return
+    setBusy(true)
+    try {
+      const { data } = await productionApi.promoteLookMaterial(item.material_id)
+      if (!data?.success) {
+        if (!data?.message) message.error('没有换回成功')
+        return
+      }
+      message.success('已换回原来的照片，替换下来的版本也保留在下方')
+      await load()
+    } catch {
+      message.error('没有换回成功')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function generateAngles(look, angle, replace, defaultCaption = '') {
     if (!libraryId || !look || busy) return
+    const refCandidate = anyStillOfLook(look)
+    const defaultSkipRef = !refCandidate || (angle === 'FRONT_FACE' && replace)
     const body = {
       library_id: libraryId,
       material_name: look.name,
       replace_existing: replace ? 1 : 0,
+      skip_reference: defaultSkipRef ? 1 : 0,
       confirm_cost: 0,
     }
     if (angle) body.view_angle = angle
+    if (defaultCaption) body.caption = defaultCaption
     setBusy(true)
     let quote
     try {
@@ -505,32 +532,52 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
     }
     const names = (quote.angle_name_list || []).join('、') || '这一面'
     const cost = Number(quote.estimated_cost_cent) || 0
-    const price = cost > 0 ? `预计 ${(cost / 100).toFixed(2)} 元。` : '费用按这次出图对账。'
-    Modal.confirm({
-      title: replace ? `按正脸重做${names}` : `按正脸生成${names}`,
-      content: `会把「${look.name}」的正脸交给模型，要求还是同一个人、同一套衣服。${price}模型有时仍会画走样，不满意可以再重做。`,
-      okText: '开始生成',
-      cancelText: '取消',
-      onOk: async () => {
-        setBusy(true)
-        try {
-          const { data } = await productionApi.completeLookAngles({ ...body, confirm_cost: 1 })
-          if (!data?.success || !data.result?.batch_id) {
-            if (!data?.message) message.error('没有排上生成')
-            return
-          }
-          const done = await waitBatch(data.result.batch_id)
-          if (!done) message.info('还在生成，可以到任务中心看结果')
-          else if (done.task_status !== 'SUCCEEDED') message.error(done.fail_reason || '这一面没有生成出来')
-          else message.success('已按正脸画好')
-          await load()
-        } catch {
-          message.error('没有排上生成')
-        } finally {
-          setBusy(false)
-        }
-      },
+    const priceText = cost > 0 ? `预计 ${(cost / 100).toFixed(2)} 元。` : '费用按这次出图对账。'
+    setRedoModal({
+      lookName: look.name,
+      angle: angle || null,
+      replace: !!replace,
+      angleLabel: names,
+      hasRefPhoto: !!refCandidate,
+      refLabel: refCandidate ? refCandidate.label : '',
+      skipRef: defaultSkipRef,
+      caption: defaultCaption || '',
+      priceText,
     })
+  }
+
+  async function confirmRedoModal() {
+    if (!redoModal || !libraryId || busy) return
+    const modalState = redoModal
+    setRedoModal(null)
+    setBusy(true)
+    try {
+      const reqBody = {
+        library_id: libraryId,
+        material_name: modalState.lookName,
+        replace_existing: modalState.replace ? 1 : 0,
+        skip_reference: modalState.skipRef ? 1 : 0,
+        confirm_cost: 1,
+      }
+      if (modalState.angle) reqBody.view_angle = modalState.angle
+      if (modalState.caption && modalState.caption.trim()) {
+        reqBody.caption = modalState.caption.trim()
+      }
+      const { data } = await productionApi.completeLookAngles(reqBody)
+      if (!data?.success || !data.result?.batch_id) {
+        if (!data?.message) message.error('没有排上生成')
+        return
+      }
+      const done = await waitBatch(data.result.batch_id)
+      if (!done) message.info('还在生成，可以到任务中心看结果')
+      else if (done.task_status !== 'SUCCEEDED') message.error(done.fail_reason || '这一面没有生成出来')
+      else message.success(modalState.replace ? '已重做完成，原照片已保留在下方可随时换回' : '已生成完成')
+      await load()
+    } catch {
+      message.error('没有排上生成')
+    } finally {
+      setBusy(false)
+    }
   }
 
   function removeLook(look) {
@@ -556,8 +603,7 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
   function renderLook(look, draft, draftDesc = '') {
     const side = sideMedia(look, activeKind)
     const isCharacter = activeKind === 'CHARACTER'
-    const face = isCharacter ? faceStill(look) : null
-    const missing = isCharacter ? missingBody(look) : []
+    const missing = isCharacter ? missingAngles(look) : []
     const firstCaption = [
       ...activeAngles.flatMap(([angle]) => look.slots[angle] || []),
       ...(look.extra || []),
@@ -624,8 +670,13 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
                       </div>
                     )}
                   </div>
-                  <div style={{ minHeight: 24 }}>
+                  <div style={{ minHeight: 24, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                     {shown ? <Button type="link" size="small" style={{ padding: 0, height: 24 }} onClick={() => removeMaterial(shown)}>移除</Button> : null}
+                    {view.extras.length > 0 ? (
+                      <Button type="link" size="small" disabled={busy} style={{ padding: 0, height: 24 }} onClick={() => restoreMaterial(view.extras[0])}>
+                        换回上一张
+                      </Button>
+                    ) : null}
                   </div>
                   <button
                     type="button"
@@ -635,26 +686,26 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
                   >
                     {shown ? '再传一张' : kindUi.uploadEmpty}
                   </button>
-                  {isCharacter && face && angle !== 'FRONT_FACE' ? (
+                  {isCharacter ? (
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => generateAngles(look, angle, !!shown)}
+                      onClick={() => generateAngles(look, angle, !!shown, firstCaption)}
                       style={{ ...uploadButtonStyle(busy), marginTop: 6 }}
                     >
-                      {shown ? '按正脸重做' : '按正脸生成'}
+                      {shown ? '重做' : '生成这一面'}
                     </button>
                   ) : null}
                 </div>
               )
             })}
           </div>
-          {isCharacter && face ? (
+          {isCharacter ? (
             <div style={{ marginTop: 8 }}>
-              <Text type="secondary">缺的面可以按正脸生成。侧面和背面会跟着这张正脸的人和衣服来画，模型有时仍会走样。</Text>
+              <Text type="secondary">正脸、前面、背面、侧面都可以随时生成或重做；重做不强制绑定正脸，且原来的照片会自动保留在下方，方便随时换回。</Text>
               {missing.length >= 2 ? (
                 <div>
-                  <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => generateAngles(look, null, false)}>一次补齐缺的面</Button>
+                  <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => generateAngles(look, null, false, firstCaption)}>一次补齐空缺面</Button>
                 </div>
               ) : null}
             </div>
@@ -663,13 +714,16 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
           {side.extras.length || side.broken.length ? (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 13, marginBottom: 4 }}>{kindUi.otherTitle}</div>
-              <Text type="secondary">上面是每个{kindUi.slotNoun}最新的一张。更早上传或未分{kindUi.slotNoun}的放在这里，点开可以看大图，不需要就移除。</Text>
+              <Text type="secondary">上面是每个{kindUi.slotNoun}当前使用的那张。重做或新传后，原来的照片会自动保留在这里，点开可看大图，点「换回这张」即可替换回去。</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.extras.map((item) => (
                   <div key={item.material_id} style={{ width: kindUi.extraWidth }}>
                     <div style={{ fontSize: 12, color: '#595959', marginBottom: 4 }}>{item.angleLabel}</div>
                     <PhotoThumb item={item} width={kindUi.extraWidth} height={kindUi.extraHeight} alt={`${look.name} ${item.angleLabel}`} />
-                    <Button type="link" size="small" style={{ padding: 0 }} onClick={() => removeMaterial(item)}>移除</Button>
+                    <Space size={8} wrap>
+                      <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => restoreMaterial(item)}>换回这张</Button>
+                      <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => removeMaterial(item)}>移除</Button>
+                    </Space>
                   </div>
                 ))}
                 {side.broken.map((item) => (
@@ -836,6 +890,46 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
             />
             <div style={{ marginTop: 8 }}><Text type="secondary">封面只是视频里的一帧。发糊或切得很近时，不会和静态参考图摆在一起。</Text></div>
           </div>
+        ) : null}
+      </Modal>
+      <Modal
+        title={redoModal ? `${redoModal.replace ? '重做' : '生成'}「${redoModal.lookName} · ${redoModal.angleLabel}」` : '生成定妆'}
+        open={!!redoModal}
+        okText={redoModal?.replace ? '开始重做' : '开始生成'}
+        cancelText="取消"
+        confirmLoading={busy}
+        onCancel={() => setRedoModal(null)}
+        onOk={confirmRedoModal}
+      >
+        {redoModal ? (
+          <Space direction="vertical" style={{ width: '100%' }} size="small">
+            {redoModal.hasRefPhoto ? (
+              <div>
+                <div style={{ marginBottom: 6, fontWeight: 500 }}>重做方式</div>
+                <Radio.Group
+                  value={redoModal.skipRef ? 'fresh' : 'ref'}
+                  onChange={(e) => setRedoModal((prev) => (prev ? { ...prev, skipRef: e.target.value === 'fresh' } : null))}
+                >
+                  <Space direction="vertical">
+                    <Radio value="fresh">直接重做（不参考已有照片，按造型与外观描述重新生成）</Radio>
+                    <Radio value="ref">参考已有「{redoModal.refLabel}」照片（保持同一个人与同一套衣服）</Radio>
+                  </Space>
+                </Radio.Group>
+              </div>
+            ) : null}
+            <div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>外观特征与重做说明（可选）</div>
+              <Input
+                value={redoModal.caption}
+                placeholder="例如：黑色长直发、正红色礼服长裙、五官清晰面向镜头"
+                onChange={(e) => setRedoModal((prev) => (prev ? { ...prev, caption: e.target.value } : null))}
+              />
+            </div>
+            <Text type="secondary">
+              {redoModal.priceText}
+              {redoModal.replace ? '重做后原来的照片会自动保留在下方「历史与补充照片」中，随时可点「换回这张」替换回去。' : ''}
+            </Text>
+          </Space>
         ) : null}
       </Modal>
       <Modal

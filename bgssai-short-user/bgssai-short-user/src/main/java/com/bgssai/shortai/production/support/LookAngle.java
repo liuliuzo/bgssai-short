@@ -14,6 +14,7 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
  */
 public final class LookAngle {
 
+    public static final List<String> ALL = List.of("FRONT_FACE", "FRONT", "BACK", "SIDE");
     public static final List<String> BODY = List.of("FRONT", "BACK", "SIDE");
 
     private LookAngle() {
@@ -83,29 +84,26 @@ public final class LookAngle {
         return field;
     }
 
-    /** Which body angles to generate. Front face is the reference and is never a target. */
+    /** Which angles to generate or redo. All four angles (including FRONT_FACE) are supported. */
     public static List<String> plan(Set<String> filled, String requested, boolean replace) {
         if (requested != null && !requested.isBlank() && canonical(requested) == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "定妆角度只能是正脸、前面、背面、侧面");
         }
         String one = canonical(requested);
         if (one != null) {
-            if ("FRONT_FACE".equals(one)) {
-                throw new BizException(CommonErrorCode.RULE_REJECT, "正脸用来当参考，不用再生成一张正脸");
-            }
             if (!replace && filled != null && filled.contains(one)) {
-                throw new BizException(CommonErrorCode.RULE_REJECT, "这一面已经有照片。要按正脸重画，请点重做。");
+                throw new BizException(CommonErrorCode.RULE_REJECT, "这一面已经有照片。要重新生成，请点重做。");
             }
             return List.of(one);
         }
         List<String> missing = new ArrayList<>();
-        for (String angle : BODY) {
+        for (String angle : ALL) {
             if (filled == null || !filled.contains(angle)) {
                 missing.add(angle);
             }
         }
         if (missing.isEmpty()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "缺的面都有了。要重画某一面，请点「按正脸重做」。");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "四面都已经有了。要重新生成某一面，请点「重做」。");
         }
         return List.copyOf(missing);
     }

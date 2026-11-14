@@ -1358,21 +1358,22 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "出图还没准备好，请稍后再试");
         }
         String key = ShortJson.text(req.get("reference_storage_key"));
-        if (key.isBlank()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "先有一张正脸，才能按这张脸补齐其他面");
-        }
-        byte[] face;
-        try {
-            face = objectStorage.get(key);
-        } catch (RuntimeException ex) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "正脸照片读不出来，请换一张正脸后再试");
-        }
-        if (face == null || face.length == 0) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "正脸照片读不出来，请换一张正脸后再试");
-        }
+        String encoded = null;
         String mime = ShortJson.text(req.get("reference_mime"));
         if (mime.isBlank()) {
             mime = "image/jpeg";
+        }
+        if (!key.isBlank()) {
+            byte[] face;
+            try {
+                face = objectStorage.get(key);
+            } catch (RuntimeException ex) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "参考照片读不出来，请换一张参考图或选择直接重做");
+            }
+            if (face == null || face.length == 0) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "参考照片读不出来，请换一张参考图或选择直接重做");
+            }
+            encoded = Base64.getEncoder().encodeToString(face);
         }
         String libraryId = ShortJson.text(req.get("library_id"));
         String name = ShortJson.text(req.get("material_name"));
@@ -1389,19 +1390,27 @@ public class ShortAiTaskWorker {
             }
         }
         if (libraryId.isBlank() || name.isBlank() || angles.isEmpty()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "要补的造型已经不在了，请重新选一次");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "要生成的造型已经不在了，请重新选一次");
         }
-        String encoded = Base64.getEncoder().encodeToString(face);
+        String promptBase = appearance.isBlank() ? name : appearance;
+        boolean referenced = encoded != null && !encoded.isBlank();
         for (String angle : angles) {
             AiProviderRequest request = baseRequest(model, "IMAGE", "LOOK_ANGLE");
-            request.setPrompt(LookViewPrompt.compose(appearance, angle, true));
+            request.setPrompt(LookViewPrompt.compose(promptBase, angle, referenced));
             request.getParams().put("title", name);
             request.getParams().put("aspect_ratio", "9:16");
-            request.getParams().put("image_base64", encoded);
-            request.getParams().put("image_mime", mime);
-            request.getParams().put("image_reference", "subject");
-            request.getParams().put("image_fidelity", 0.92);
-            request.getParams().put("human_fidelity", 0.88);
+            if (referenced) {
+                request.getParams().put("image_base64", encoded);
+                request.getParams().put("image_mime", mime);
+                request.getParams().put("image_reference", "subject");
+                if ("FRONT_FACE".equals(angle)) {
+                    request.getParams().put("image_fidelity", 0.80);
+                    request.getParams().put("human_fidelity", 0.82);
+                } else {
+                    request.getParams().put("image_fidelity", 0.92);
+                    request.getParams().put("human_fidelity", 0.88);
+                }
+            }
             AiProviderResult result = execute(model, request);
             if (result == null || result.getBinaryContent() == null || result.getBinaryContent().length == 0) {
                 throw new BizException(CommonErrorCode.UPSTREAM_ERROR, "这一面没有生成出来");
@@ -1409,7 +1418,7 @@ public class ShortAiTaskWorker {
             int width = result.getWidth() == null ? 0 : result.getWidth();
             int height = result.getHeight() == null ? 0 : result.getHeight();
             lookKnowledgeService.saveGenerated(task.getUserId(), libraryId, name,
-                    LookViewPrompt.caption(name, appearance, angle), angle, result.getBinaryContent(),
+                    LookViewPrompt.caption(name, promptBase, angle), angle, result.getBinaryContent(),
                     result.getMimeType(), width, height, cardId.isBlank() ? null : cardId);
         }
     }

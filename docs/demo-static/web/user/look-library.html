@@ -23,7 +23,7 @@
   <main class="app-main">
     <div class="container">
       <h1 class="title">定妆库</h1>
-      <p class="subtitle">这里放可以跨剧集、跨作品反复使用的人物定妆造型。每个造型按正脸、前面、背面、侧面排好；先放好正脸，还可以按正脸补齐其他面。</p>
+      <p class="subtitle">这里放可以跨剧集、跨作品反复使用的人物定妆造型。每个造型按正脸、前面、背面、侧面排好；四个角度都可以直接生成或重做，重做后原来的照片会自动保留在下方，方便随时换回。</p>
       <p><a href="character-bible.html">返回角色与场景</a></p>
       <div class="card">
         <div class="card-hd"><h2>定妆库</h2><button class="btn btn-primary btn-sm">新建分组</button></div>
@@ -46,7 +46,7 @@
               <input placeholder="外观特征（可选，例如黑长直、珍珠耳环）" />
               <button class="btn btn-default btn-sm">添加造型</button>
             </div>
-            <div class="card-hd" style="padding:0 0 12px"><h2>红礼服</h2><button class="btn btn-default btn-sm">删除造型</button></div>
+            <div class="card-hd" style="padding:0 0 12px"><h2>红礼服</h2><button class="btn btn-default btn-sm">一次补齐空缺面</button><button class="btn btn-default btn-sm">删除造型</button></div>
             <div style="display:flex;gap:12px;align-items:flex-start">
               <div style="width:112px">
                 <div class="text-muted">正脸</div>
@@ -54,6 +54,8 @@
                 <div class="phone"><span class="ph-tag">查看</span><div class="ph-body">红礼服</div></div>
                 <button class="btn btn-default btn-sm">移除</button>
                 <div><button class="btn btn-default btn-sm">再传一张</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">重做</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">换回上一张</button></div>
               </div>
               <div style="width:112px">
                 <div class="text-muted">前面</div>
@@ -61,7 +63,7 @@
                 <div class="phone empty"><div class="ph-body">这一面<br>还没有照片</div></div>
                 <div style="height:28px"></div>
                 <div><button class="btn btn-default btn-sm">上传这一面</button></div>
-                <div style="margin-top:6px"><button class="btn btn-default btn-sm">按正脸生成</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">生成这一面</button></div>
               </div>
               <div style="width:112px">
                 <div class="text-muted">背面</div>
@@ -69,6 +71,7 @@
                 <div class="phone"><span class="ph-tag">查看</span><div class="ph-body">红礼服</div></div>
                 <button class="btn btn-default btn-sm">移除</button>
                 <div><button class="btn btn-default btn-sm">再传一张</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">重做</button></div>
               </div>
               <div style="width:112px">
                 <div class="text-muted">侧面</div>
@@ -76,14 +79,16 @@
                 <div class="phone"><span class="ph-tag">查看</span><div class="ph-body">红礼服</div></div>
                 <button class="btn btn-default btn-sm">移除</button>
                 <div><button class="btn btn-default btn-sm">再传一张</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">重做</button></div>
+                <div style="margin-top:6px"><button class="btn btn-default btn-sm">换回上一张</button></div>
               </div>
             </div>
             <div style="margin-top:14px">
-              <div>其他照片</div>
-              <p class="text-muted">上面是每一面最新的一张。更早上传或未分面的放在这里，点开可以看大图，不需要就移除。</p>
+              <div>历史与补充照片</div>
+              <p class="text-muted">上面是每一面当前使用的照片。重做替换下来或更早上传的原照片都会保留在这里，点「换回这张」即可替换回对应角度，不需要再移除。</p>
               <div style="display:flex;gap:12px">
-                <div style="width:84px"><div class="text-muted">正脸</div><div class="phone" style="width:84px"><span class="ph-tag">查看</span><div class="ph-body">特写</div></div><button class="btn btn-default btn-sm">移除</button></div>
-                <div style="width:84px"><div class="text-muted">侧面</div><div class="phone" style="width:84px"><span class="ph-tag">查看</span><div class="ph-body">夜景</div></div><button class="btn btn-default btn-sm">移除</button></div>
+                <div style="width:84px"><div class="text-muted">正脸</div><div class="phone" style="width:84px"><span class="ph-tag">查看</span><div class="ph-body">原正脸</div></div><button class="btn btn-default btn-sm">换回这张</button><button class="btn btn-default btn-sm">移除</button></div>
+                <div style="width:84px"><div class="text-muted">侧面</div><div class="phone" style="width:84px"><span class="ph-tag">查看</span><div class="ph-body">夜景</div></div><button class="btn btn-default btn-sm">换回这张</button><button class="btn btn-default btn-sm">移除</button></div>
               </div>
             </div>
             <div style="margin-top:14px">
@@ -101,8 +106,9 @@
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
         <code>POST /bgssai/user/look-materials/delete</code> ·
+        <code>POST /bgssai/user/look-materials/promote</code> ·
         <code>POST /bgssai/user/look-materials/complete-angles</code>。
-        左侧分组只统计当前页的人物造型数量；分组内同时存在场景或道具时，明确提示自动匹配开关和归档恢复会一起生效。
+        正脸、前面、背面、侧面四个角度均支持直接重做（<code>skip_reference=1</code> 按外观描述重新生成）或参考已有照片重做；重做后原照片自动保留在历史列表中，可通过 <code>promote</code> 一键换回。左侧分组只统计当前页的人物造型数量；分组内同时存在场景或道具时，明确提示自动匹配开关和归档恢复会一起生效。
       </div>
       <div class="footer legal-fanout legal-quiet">
         <p class="legal-quiet-line"><span>© 2026 昆山兵贵神速智能科技有限公司</span><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">用户协议</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/personal-information-inventory/" target="_blank" rel="noopener noreferrer" title="Personal Information Inventory">个人信息收集清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/third-party-sharing/" target="_blank" rel="noopener noreferrer" title="Third-Party Sharing">第三方信息共享清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/app-permissions/" target="_blank" rel="noopener noreferrer" title="App Permissions">应用权限说明</a><span aria-hidden="true"> · </span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></p>

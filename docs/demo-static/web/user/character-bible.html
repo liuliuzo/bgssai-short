@@ -224,11 +224,13 @@
               <div><div class="text-muted">侧面</div><button class="btn btn-default btn-sm">上传</button></div>
             </div>
             <div class="row" style="margin-bottom:10px; align-items:center">
-              <button class="btn btn-default btn-sm">按正脸生成前面</button>
-              <button class="btn btn-default btn-sm">按正脸生成背面</button>
-              <button class="btn btn-default btn-sm">按正脸生成侧面</button>
+              <button class="btn btn-default btn-sm">重做正脸</button>
+              <button class="btn btn-default btn-sm">生成前面</button>
+              <button class="btn btn-default btn-sm">生成背面</button>
+              <button class="btn btn-default btn-sm">生成侧面</button>
+              <button class="btn btn-default btn-sm">一次补齐空缺面</button>
             </div>
-            <p class="text-muted" style="font-size:12px">缺的面按正脸来画，还是同一个人、同一套衣服。确认费用后才出图。</p>
+            <p class="text-muted" style="font-size:12px">正脸、前面、背面、侧面都可以直接按描述重做，或参考已有定妆照保持人衣一致；重做后原来的照片会自动保留在下方，随时点「换回这张」替换回去。确认费用后才出图。</p>
             <div class="row" style="margin-bottom:10px; align-items:center">
               <button class="btn btn-default btn-sm">从定妆库选</button>
               <a href="look-library.html?return=%2Fworks%2Fw-demo%2Fcharacters">管理定妆库</a>
@@ -408,7 +410,7 @@
         <code>card_status</code>（<code>CANDIDATE</code> / <code>DRAFT</code> / <code>GENERATING</code> /
         <code>LOCKED</code>）· <code>appearance_prompt</code> · <code>consistency_seed</code> ·
         <code>ref_image_asset_id</code> · <code>look_reference</code>（<code>source</code> 为 <code>CARD</code> / <code>NAME</code> / <code>NONE</code>，生成前展示将用的库和造型）·
-        有正脸后可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>，<code>confirm_cost=1</code> 才出图）按正脸补前面、背面、侧面 ·
+        可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>、<code>replace_existing</code>、<code>skip_reference</code>，<code>confirm_cost=1</code> 才出图）独立重做或生成正脸、前面、背面、侧面，重做后原照片自动保留在 <code>history_list</code>，并可用 <code>POST /bgssai/user/look-materials/promote</code> 一键换回 ·
         <code>default_outfit_code</code> · <code>outfit_list</code> ·
         <code>voice_id</code> / <code>voice_speed</code> · <code>used_shot_count</code>；
         <code>character_role</code>（<code>FEMALE_LEAD</code> / <code>MALE_LEAD</code> /
