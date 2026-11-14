@@ -16,6 +16,8 @@ import AccountSettingsPage from './pages/account/AccountSettingsPage'
 import UsageBillingPage from './pages/usage/UsageBillingPage'
 import WorksPage from './pages/works/WorksPage'
 import LookLibraryPage from './pages/look/LookLibraryPage'
+import SceneLibraryPage from './pages/look/SceneLibraryPage'
+import PropLibraryPage from './pages/look/PropLibraryPage'
 import WorkStudio from './pages/works/WorkStudio'
 import TasksPage from './pages/tasks/TasksPage'
 
@@ -110,6 +112,8 @@ export default function App() {
         <Route path="/usage" element={<UsageBillingPage />} />
         <Route path="/works" element={<WorksPage />} />
         <Route path="/look-library" element={<LookLibraryPage />} />
+        <Route path="/scene-library" element={<SceneLibraryPage />} />
+        <Route path="/prop-library" element={<PropLibraryPage />} />
         <Route path="/works/:workId" element={<WorkStudio />} />
         <Route path="/works/:workId/:tab" element={<WorkStudio />} />
         <Route path="/tasks" element={<TasksPage />} />

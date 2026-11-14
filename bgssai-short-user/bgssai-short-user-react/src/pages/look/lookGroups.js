@@ -1,4 +1,5 @@
 import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl.js'
+import { safeReturnPath } from '../../lib/safeReturn.js'
 
 export const LOOK_ANGLES = [
   ['FRONT_FACE', '正脸'],
@@ -19,15 +20,30 @@ export const PROP_ANGLES = [
 ]
 
 export const LOOK_KINDS = [
-  { key: 'CHARACTER', label: '人物定妆', itemNoun: '造型', cardNoun: '角色' },
-  { key: 'SCENE', label: '场景参考', itemNoun: '场景', cardNoun: '场景' },
-  { key: 'PROP', label: '道具参考', itemNoun: '道具', cardNoun: '道具' },
+  { key: 'CHARACTER', label: '人物定妆', pageTitle: '定妆库', route: '/look-library', itemNoun: '造型', cardNoun: '角色' },
+  { key: 'SCENE', label: '场景参考', pageTitle: '场景库', route: '/scene-library', itemNoun: '场景', cardNoun: '场景' },
+  { key: 'PROP', label: '道具参考', pageTitle: '道具库', route: '/prop-library', itemNoun: '道具', cardNoun: '道具' },
 ]
 
 export function normalizeLookKind(kind) {
   const upper = String(kind || '').trim().toUpperCase()
   if (upper === 'SCENE' || upper === 'PROP') return upper
   return 'CHARACTER'
+}
+
+export function libraryRouteForKind(kind) {
+  const normalized = normalizeLookKind(kind)
+  if (normalized === 'SCENE') return '/scene-library'
+  if (normalized === 'PROP') return '/prop-library'
+  return '/look-library'
+}
+
+export function legacyKindRedirectTarget(kindParam, returnParam) {
+  const upper = String(kindParam || '').trim().toUpperCase()
+  if (upper !== 'SCENE' && upper !== 'PROP') return null
+  const base = libraryRouteForKind(upper)
+  const back = safeReturnPath(returnParam)
+  return back ? `${base}?return=${encodeURIComponent(back)}` : base
 }
 
 export function anglesForKind(kind) {
@@ -73,6 +89,25 @@ export function librarySummaryText(materials) {
   const parts = [`${characterCount} 个造型`, `${sceneCount} 个场景`]
   if (propCount > 0) parts.push(`${propCount} 个道具`)
   return parts.join(' · ')
+}
+
+export function libraryKindCountText(materials, kind) {
+  const normalized = normalizeLookKind(kind)
+  const { characterCount, sceneCount, propCount } = librarySummaryCounts(materials)
+  if (normalized === 'SCENE') return `${sceneCount} 个场景`
+  if (normalized === 'PROP') return `${propCount} 个道具`
+  return `${characterCount} 个造型`
+}
+
+export function libraryOtherKindsNotice(materials, kind) {
+  const normalized = normalizeLookKind(kind)
+  const { characterCount, sceneCount, propCount } = librarySummaryCounts(materials)
+  const others = []
+  if (normalized !== 'CHARACTER' && characterCount > 0) others.push(`${characterCount} 个造型`)
+  if (normalized !== 'SCENE' && sceneCount > 0) others.push(`${sceneCount} 个场景`)
+  if (normalized !== 'PROP' && propCount > 0) others.push(`${propCount} 个道具`)
+  if (!others.length) return ''
+  return `这个分组里还有 ${others.join('、')}，自动匹配开关和归档恢复会一起生效。`
 }
 
 export function isVideoMaterial(item) {
@@ -181,7 +216,7 @@ export function referenceLine(ref, textOnly) {
   if (!ref || (ref.used !== 1 && ref.used !== true) || ref.source === 'NONE') {
     return '这次没有参考图，只按外观描述生成。'
   }
-  const library = ref.library_name || '定妆知识库'
+  const library = ref.library_name || '我的定妆'
   const look = ref.material_name || '未命名'
   const angle = ref.view_name ? ` · ${ref.view_name}` : ''
   if (ref.source === 'NAME') {

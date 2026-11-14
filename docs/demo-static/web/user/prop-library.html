@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 短剧制作平台原型 — 道具库</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="../assets/short.css" />
+  <link rel="stylesheet" href="../assets/liquid-glass.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="app-side">
+    <div class="side-brand">AI 短剧制作平台<span>创作者工作台</span></div>
+    <div class="side-sec">制作</div>
+    <a class="side-link" href="home.html">首页</a>
+    <a class="side-link" href="works.html">我的作品</a>
+    <a class="side-link" href="look-library.html">定妆库</a>
+    <a class="side-link" href="scene-library.html">场景库</a>
+    <a class="side-link active" href="prop-library.html">道具库</a>
+    <a class="side-link" href="task-center.html">任务中心</a>
+  </aside>
+  <main class="app-main">
+    <div class="container">
+      <h1 class="title">道具库</h1>
+      <p class="subtitle">这里放可以跨剧集、跨作品反复使用的道具参考图。每个道具按主视图、特写细节排好；主视图会在生成道具参考图时优先参考。</p>
+      <p><a href="character-bible.html">返回角色与场景</a></p>
+      <div class="card">
+        <div class="card-hd"><h2>道具库</h2><button class="btn btn-primary btn-sm">新建分组</button></div>
+        <div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
+          <div style="width:196px;flex-shrink:0">
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆<div class="text-muted">1 个道具 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">现代都市剧资产库<div class="text-muted">1 个道具 · 生成时参考</div></div>
+          </div>
+          <div style="flex:1">
+            <div class="row" style="margin-bottom:4px;gap:8px">
+              <strong>现代都市剧资产库</strong>
+              <span class="text-muted">（1 个道具）</span>
+              <span style="margin-left:auto">生成道具图时自动匹配这个分组</span>
+              <input type="checkbox" checked disabled />
+            </div>
+            <div class="text-muted" style="font-size:12px;margin-bottom:12px">这个分组里还有 1 个造型、2 个场景，自动匹配开关和归档恢复会一起生效。</div>
+            <div class="row" style="margin-bottom:12px;gap:8px">
+              <input placeholder="道具名称，例如退婚书、祖传玉佩" />
+              <input placeholder="材质与外观特征（可选，例如烫金红封、青白玉）" />
+              <button class="btn btn-default btn-sm">添加道具</button>
+            </div>
+            <div class="card-hd" style="padding:0 0 12px"><h2>退婚书</h2><button class="btn btn-default btn-sm">删除道具</button></div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:120px">
+                <div class="text-muted">主视图</div>
+                <div class="text-muted" style="color:#d48806">生成时优先用</div>
+                <div class="phone" style="width:120px;height:120px"><span class="ph-tag">查看</span><div class="ph-body">烫金红封退婚书</div></div>
+                <button class="btn btn-default btn-sm">移除</button>
+                <div><button class="btn btn-default btn-sm">再传一张</button></div>
+              </div>
+              <div style="width:120px">
+                <div class="text-muted">特写细节</div>
+                <div class="text-muted">&nbsp;</div>
+                <div class="phone empty" style="width:120px;height:120px"><div class="ph-body">这一视角<br>还没有参考图</div></div>
+                <div style="height:28px"></div>
+                <div><button class="btn btn-default btn-sm">上传参考图</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-t">字段口径</div>
+        路由：<code>/prop-library</code>（仅展示 <code>material_kind=PROP</code> 的道具参考，按 <code>MAIN_PROP</code> 主视图、<code>DETAIL_PROP</code> 特写细节分组）。
+        接口：<code>GET /bgssai/user/look-libraries/list</code> ·
+        <code>POST /bgssai/user/look-libraries/save</code> ·
+        <code>POST /bgssai/user/look-materials/upload</code> ·
+        <code>POST /bgssai/user/look-materials/delete</code>。
+        作品道具卡上的「管理道具库」直达本页并附带 <code>return</code> 返回路径。
+      </div>
+      <div class="footer legal-fanout legal-quiet">
+        <p class="legal-quiet-line"><span>© 2026 昆山兵贵神速智能科技有限公司</span><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">用户协议</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> · </span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></p>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

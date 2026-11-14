@@ -49,6 +49,9 @@ public class SpaFallbackConfig implements WebMvcConfigurer {
             "/account",
             "/usage",
             "/works",
+            "/look-library",
+            "/scene-library",
+            "/prop-library",
             "/tasks"
     );
 

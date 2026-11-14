@@ -5,6 +5,10 @@ import {
   cardGenerationCopy,
   groupLooks,
   groupLooksOfKind,
+  legacyKindRedirectTarget,
+  libraryKindCountText,
+  libraryOtherKindsNotice,
+  libraryRouteForKind,
   librarySummaryCounts,
   librarySummaryText,
   lookCover,
@@ -168,6 +172,18 @@ test('场景参考按全景主图、中景机位、局部陈设分组，封面�
     propCount: 1,
   })
   assert.equal(librarySummaryText(materials), '1 个造型 · 2 个场景 · 1 个道具')
+  assert.equal(libraryKindCountText(materials, 'CHARACTER'), '1 个造型')
+  assert.equal(libraryKindCountText(materials, 'SCENE'), '2 个场景')
+  assert.equal(libraryKindCountText(materials, 'PROP'), '1 个道具')
+  assert.equal(libraryOtherKindsNotice(materials, 'SCENE'), '这个分组里还有 1 个造型、1 个道具，自动匹配开关和归档恢复会一起生效。')
+  assert.equal(libraryOtherKindsNotice([{ material_name: '天台', material_kind: 'SCENE' }], 'SCENE'), '')
+  assert.equal(libraryRouteForKind('CHARACTER'), '/look-library')
+  assert.equal(libraryRouteForKind('SCENE'), '/scene-library')
+  assert.equal(libraryRouteForKind('PROP'), '/prop-library')
+  assert.equal(legacyKindRedirectTarget('SCENE', '/works/w-1/characters'), '/scene-library?return=%2Fworks%2Fw-1%2Fcharacters')
+  assert.equal(legacyKindRedirectTarget('PROP', 'https://evil.example'), '/prop-library')
+  assert.equal(legacyKindRedirectTarget('CHARACTER', '/works/w-1/characters'), null)
+  assert.equal(legacyKindRedirectTarget(null, '/works/w-1/characters'), null)
 })
 
 function solid(width, height, value) {

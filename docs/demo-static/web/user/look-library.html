@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 短剧制作平台原型 — 定妆知识库</title>
+  <title>AI 短剧制作平台原型 — 定妆库</title>
   <link rel="stylesheet" href="../assets/theme.css" />
   <link rel="stylesheet" href="../assets/short.css" />
   <link rel="stylesheet" href="../assets/liquid-glass.css" />
@@ -15,33 +15,35 @@
     <div class="side-sec">制作</div>
     <a class="side-link" href="home.html">首页</a>
     <a class="side-link" href="works.html">我的作品</a>
-    <a class="side-link active" href="look-library.html">定妆与场景库</a>
+    <a class="side-link active" href="look-library.html">定妆库</a>
+    <a class="side-link" href="scene-library.html">场景库</a>
+    <a class="side-link" href="prop-library.html">道具库</a>
     <a class="side-link" href="task-center.html">任务中心</a>
   </aside>
   <main class="app-main">
     <div class="container">
-      <h1 class="title">定妆与场景参考库</h1>
-      <p class="subtitle">这里集中管理跨剧集、跨作品复用的人物定妆、场景参考和道具参考。角色按正脸、前面、背面、侧面排好；场景按全景主图、中景机位、局部陈设排好；道具按主视图、特写细节排好。</p>
+      <h1 class="title">定妆库</h1>
+      <p class="subtitle">这里放可以跨剧集、跨作品反复使用的人物定妆造型。每个造型按正脸、前面、背面、侧面排好；先放好正脸，还可以按正脸补齐其他面。</p>
       <p><a href="character-bible.html">返回角色与场景</a></p>
       <div class="card">
-        <div class="card-hd"><h2>参考库</h2><button class="btn btn-primary btn-sm">新建参考库</button></div>
+        <div class="card-hd"><h2>定妆库</h2><button class="btn btn-primary btn-sm">新建分组</button></div>
         <div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
           <div style="width:196px;flex-shrink:0">
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆<div class="text-muted">2 个造型 · 2 个场景 · 生成时参考</div></div>
-            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">现代都市剧资产库<div class="text-muted">1 个造型 · 2 个场景 · 生成时参考</div></div>
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">古装王府场景库<div class="text-muted">0 个造型 · 3 个场景 · 先放着</div></div>
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆<div class="text-muted">2 个造型 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">现代都市剧资产库<div class="text-muted">1 个造型 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">古装女主造型组<div class="text-muted">3 个造型 · 先放着</div></div>
           </div>
           <div style="flex:1">
-            <div class="row" style="margin-bottom:12px;gap:8px">
-              <button class="btn btn-primary btn-sm">人物定妆（1）</button>
-              <button class="btn btn-default btn-sm">场景参考（2）</button>
-              <button class="btn btn-default btn-sm">道具参考（1）</button>
-              <span style="margin-left:auto">生成参考图时自动匹配这个库</span>
+            <div class="row" style="margin-bottom:4px;gap:8px">
+              <strong>现代都市剧资产库</strong>
+              <span class="text-muted">（1 个造型）</span>
+              <span style="margin-left:auto">生成定妆时自动匹配这个分组</span>
               <input type="checkbox" checked disabled />
             </div>
+            <div class="text-muted" style="font-size:12px;margin-bottom:12px">这个分组里还有 2 个场景、1 个道具，自动匹配开关和归档恢复会一起生效。</div>
             <div class="row" style="margin-bottom:12px;gap:8px">
-              <input placeholder="名称，例如红礼服、总裁办公室" />
-              <input placeholder="外观或布景特征（可选，便于自动匹配）" />
+              <input placeholder="造型名称，例如白纱花瓣" />
+              <input placeholder="外观特征（可选，例如黑长直、珍珠耳环）" />
               <button class="btn btn-default btn-sm">添加造型</button>
             </div>
             <div class="card-hd" style="padding:0 0 12px"><h2>红礼服</h2><button class="btn btn-default btn-sm">删除造型</button></div>
@@ -78,7 +80,7 @@
             </div>
             <div style="margin-top:14px">
               <div>其他照片</div>
-              <p class="text-muted">上面是这一面最新的一张。更早的放在这里，点开可以看大图，不需要就移除。</p>
+              <p class="text-muted">上面是每一面最新的一张。更早上传或未分面的放在这里，点开可以看大图，不需要就移除。</p>
               <div style="display:flex;gap:12px">
                 <div style="width:84px"><div class="text-muted">正脸</div><div class="phone" style="width:84px"><span class="ph-tag">查看</span><div class="ph-body">特写</div></div><button class="btn btn-default btn-sm">移除</button></div>
                 <div style="width:84px"><div class="text-muted">侧面</div><div class="phone" style="width:84px"><span class="ph-tag">查看</span><div class="ph-body">夜景</div></div><button class="btn btn-default btn-sm">移除</button></div>
@@ -86,7 +88,7 @@
             </div>
             <div style="margin-top:14px">
               <div>参考视频</div>
-              <p class="text-muted">这是视频，不拿来当定妆照。封面只是其中一帧，人如果在动，这一帧会发糊或者切得很近。点开可以播放。</p>
+              <p class="text-muted">这是视频，不拿来当定妆照。封面只是其中一帧，点开可以播放。</p>
               <div style="width:84px"><div class="text-muted">正脸</div><div class="phone" style="width:84px"><span class="ph-tag">播放</span><div class="ph-body">参考视频</div></div><button class="btn btn-default btn-sm">移除</button></div>
             </div>
           </div>
@@ -94,12 +96,16 @@
       </div>
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        <code>GET /bgssai/user/look-libraries/list</code> ·
+        路由：<code>/look-library</code>（仅展示 <code>material_kind=CHARACTER</code> 的人物造型；访问旧 <code>/look-library?kind=SCENE</code> 或 <code>?kind=PROP</code> 自动转入 <code>/scene-library</code> 或 <code>/prop-library</code> 并保留 <code>return</code>）。
+        接口：<code>GET /bgssai/user/look-libraries/list</code> ·
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
         <code>POST /bgssai/user/look-materials/delete</code> ·
         <code>POST /bgssai/user/look-materials/complete-angles</code>。
-        多个知识库在左侧列表里点选。一个造型的正脸、前面、背面、侧面同一行对齐。没有照片的那一面写「这一面还没有照片」，可以上传，也可以「按正脸生成」。已有的侧面或背面可以「按正脸重做」。确认费用后才出图，请求带上正脸参考图，并要求同一个人、同一套衣服。站姿这类补充放到「其他照片」，不占主位。点「查看」看大图，同一面的第二张、第三张也一样，放在「其他照片」。参考视频单独小图放在下面，点「播放」，封面发糊也不和定妆照一样大。列表素材带 <code>width</code>、<code>height</code>、<code>file_size_byte</code>，同一张重复照片只显示一次。角色卡上可以上传照片，也可以点选这里的造型，也可以按正脸补面。生成前写明将用哪一张；没有对上就只按文字生成。带 <code>return</code> 时显示「返回角色定妆」。视频用其中一帧交给模型。
+        左侧分组只统计当前页的人物造型数量；分组内同时存在场景或道具时，明确提示自动匹配开关和归档恢复会一起生效。
+      </div>
+      <div class="footer legal-fanout legal-quiet">
+        <p class="legal-quiet-line"><span>© 2026 昆山兵贵神速智能科技有限公司</span><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">用户协议</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> · </span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></p>
       </div>
     </div>
   </main>

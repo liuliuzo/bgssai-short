@@ -87,11 +87,27 @@
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
-              <td><a href="look-library.html">定妆与场景参考库</a></td>
+              <td><a href="look-library.html">定妆库</a></td>
               <td><code>/look-library</code></td>
-              <td>侧栏「制作 - 定妆与场景库」；角色卡、场景卡、道具卡「管理定妆库 / 管理场景库 / 管理道具库」（带 <code>return</code>）</td>
+              <td>侧栏「制作 - 定妆库」；手机与壳内「更多 - 定妆库」；角色卡「管理定妆库」（带 <code>return</code>）</td>
               <td>返回角色与场景（<code>return</code> 指向角色场景页时）· 我的作品</td>
-              <td>定妆与场景库</td>
+              <td>定妆库</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="scene-library.html">场景库</a></td>
+              <td><code>/scene-library</code></td>
+              <td>侧栏「制作 - 场景库」；手机与壳内「更多 - 场景库」；场景卡「管理场景库」（带 <code>return</code>）；旧 <code>/look-library?kind=SCENE</code> 自动转入</td>
+              <td>返回角色与场景（<code>return</code> 指向角色场景页时）· 我的作品</td>
+              <td>场景库</td>
+              <td>需 <code>Jwttoken</code></td>
+            </tr>
+            <tr>
+              <td><a href="prop-library.html">道具库</a></td>
+              <td><code>/prop-library</code></td>
+              <td>侧栏「制作 - 道具库」；手机与壳内「更多 - 道具库」；道具卡「管理道具库」（带 <code>return</code>）；旧 <code>/look-library?kind=PROP</code> 自动转入</td>
+              <td>返回角色与场景（<code>return</code> 指向角色场景页时）· 我的作品</td>
+              <td>道具库</td>
               <td>需 <code>Jwttoken</code></td>
             </tr>
             <tr>
@@ -438,6 +454,9 @@
   <div class="n-route">/en</div>
   <div class="n-route">/en/*</div>
   <div class="n-route">/login-logs</div>
+  <div class="n-route">/look-library</div>
+  <div class="n-route">/scene-library</div>
+  <div class="n-route">/prop-library</div>
   <div class="n-route">/mcp-tokens</div>
   <div class="n-route">/oauth-callback</div>
   <div class="n-route">/subscription</div>
@@ -447,4 +466,5 @@
   <div class="n-route">/works/:workId</div>
   <div class="n-route">/works/:workId/:tab</div>
 </div>
-<
+</body>
+</html>
