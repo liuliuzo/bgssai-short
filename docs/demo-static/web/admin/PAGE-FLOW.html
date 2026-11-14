@@ -50,7 +50,7 @@
               <td><a href="login.html">登录页</a></td>
               <td><code>/login</code></td>
               <td>未登录访问任意受保护路由；头像「退出登录」</td>
-              <td>首页；页脚五条官网法律外链（仅外链，非站内路由）</td>
+              <td>首页；页脚五条官网法律外链与备案号苏ICP备2024070062号-15（仅外链，非站内路由）</td>
               <td class="text-muted">无外壳</td>
               <td>公开（非 <code>PLATFORM_ADMIN</code> 返回 <code>4003</code>）</td>
             </tr>
@@ -231,8 +231,9 @@
           只提供审核结论与平台配置入口。</li>
         <li><strong>必填留痕</strong>：驳回必填原因与风险类别、调整配额必填备注，未填不放行（<code>4006</code>）；
           审核与配额变更记录只增不删。</li>
-        <li><strong>法律页仅外链</strong>：登录页与页脚只链到官网五条中英法律页（基址
-          <code>https://www.bgssai.com</code>），管理端统一跳转官网权威条款页面。</li>
+        <li><strong>法律页仅外链</strong>：登录页与页脚链到官网五条中英法律页（基址
+          <code>https://www.bgssai.com</code>），并展示备案号 <code>苏ICP备2024070062号-15</code>
+          （链接 <code>https://beian.miit.gov.cn/</code>）。管理端不托管条款正文。</li>
         <li><strong>只有中文界面</strong>：<code>/en</code> 与 <code>/en/*</code> 不是英文站，替换进入已有中文登录页
           <code>/login</code>。其它未知路径仍显示「页面不存在」。</li>
       </ol>
@@ -247,6 +248,7 @@
           <span class="legal-fanout-pair"><a href="https://www.bgssai.com/app-permissions/" target="_blank" rel="noopener noreferrer">应用权限</a><span aria-hidden="true"> / </span><a href="https://www.bgssai.com/en/app-permissions/" target="_blank" rel="noopener noreferrer">App Permissions</a></span>
         </nav>
         <div class="legal-fanout-copy">© 2026 昆山兵贵神速智能科技有限公司</div>
+        <div class="legal-fanout-filing"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></div>
       </div>
   </div>
 <div id="page-contract-routes">

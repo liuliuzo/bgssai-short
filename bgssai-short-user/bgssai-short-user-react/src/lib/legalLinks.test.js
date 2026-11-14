@@ -14,6 +14,7 @@ import {
   legalPageUrl,
   COPYRIGHT_LINE,
   ICP_FILING_NUMBER,
+  ICP_FILING_URL,
   LOGIN_CONSENT_PAGES,
 } from './legalLinks.js'
 
@@ -69,20 +70,29 @@ describe('legalLinks', () => {
     assert.deepEqual(LOGIN_CONSENT_PAGES.map((p) => p.slug), ['terms-of-service', 'privacy-policy'])
     assert.equal(COPYRIGHT_LINE, `© ${new Date().getFullYear()} 昆山兵贵神速智能科技有限公司`)
     assert.equal(hasInventedLicenseNumber(COPYRIGHT_LINE), false)
+    assert.equal(ICP_FILING_NUMBER, '苏ICP备2024070062号-15')
+    assert.equal(ICP_FILING_URL, 'https://beian.miit.gov.cn/')
     assert.equal(hasInventedLicenseNumber(ICP_FILING_NUMBER), false)
   })
 
-  it('renders five Chinese footer links and does not render an ICP filing', () => {
+  it('renders five Chinese footer links and the approved ICP filing', () => {
     const footerSrc = readFileSync(resolve(here, '../components/LegalFooter.jsx'), 'utf8')
+    const consentAt = footerSrc.indexOf("variant === 'consent'")
+    const footerAt = footerSrc.indexOf('className="legal-footer"', consentAt)
+    const consentSrc = footerSrc.slice(consentAt, footerAt)
     assert.equal(footerSrc.includes('LEGAL_PAGES'), true)
     assert.equal(footerSrc.includes('legalFooterLabel'), true)
-    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), false)
-    assert.equal(footerSrc.includes('ICP_FILING_URL'), false)
+    assert.equal(footerSrc.includes('ICP_FILING_NUMBER'), true)
+    assert.equal(footerSrc.includes('ICP_FILING_URL'), true)
     assert.equal(footerSrc.includes('beian.miit.gov.cn'), false)
     assert.equal(footerSrc.includes('target="_blank"'), true)
     assert.equal(footerSrc.includes('rel="noopener noreferrer"'), true)
     assert.equal(footerSrc.includes('legal-footer-line'), true)
+    assert.equal(footerSrc.includes('legal-footer-filing-link'), true)
     assert.equal(footerSrc.includes('LOGIN_CONSENT_PAGES'), true)
+    assert.equal(consentSrc.includes('ICP_FILING'), false)
+    assert.equal(consentSrc.includes('LOGIN_CONSENT_PAGES[0]'), true)
+    assert.equal(consentSrc.includes('LOGIN_CONSENT_PAGES[1]'), true)
     const css = readFileSync(resolve(here, '../components/legal-footer.css'), 'utf8')
     const hover = css.match(/\.legal-footer a:hover\s*\{[^}]*\}/)
     assert.ok(hover)
@@ -93,6 +103,8 @@ describe('legalLinks', () => {
   it('rejects invented license numbers and retired legal paths', () => {
     assert.equal(hasInventedLicenseNumber('© 2026 昆山兵贵神速智能科技有限公司'), false)
     assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-15'), false)
+    assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-1'), true)
+    assert.equal(hasInventedLicenseNumber('苏ICP备2024070062号-17'), true)
     assert.equal(hasInventedLicenseNumber('苏ICP备12345678号'), true)
     assert.equal(hasInventedLicenseNumber('增值电信业务经营许可证'), true)
     assert.equal(hasForbiddenLegalPath('https://www.bgssai.cn/legal/user-agreement'), true)

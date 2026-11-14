@@ -1,0 +1,14 @@
+---
+description: 产品页脚必须展示本域名 ICP 备案号
+alwaysApply: true
+---
+
+# ICP 备案号（强制）
+
+已备案并对外开放的网站，必须在产品页脚展示对应 ICP 备案号，并链接 `https://beian.miit.gov.cn/`（`target="_blank"`，`rel="noopener noreferrer"`）。这是华为云 / 工信部备案要求。不得从产品页脚删除备案号。
+
+本仓域名 `bgssai-short.com` 只用 `苏ICP备2024070062号-15`。不得编造、缩写或换成其他后缀。`-1` 至 `-17` 属于其他 BGSSAI 域名。
+
+五条官网法律链接保持在 `https://www.bgssai.com/{slug}/` 与 `/en/{slug}/`。登录同意句仍只有用户协议和隐私政策。展示备案号不代替、也不减少这五条链接。
+
+全表与口径：`docs/feature/icp-filing-footer.md`。

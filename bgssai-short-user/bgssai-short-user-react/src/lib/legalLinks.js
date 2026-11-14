@@ -1,9 +1,10 @@
 /**
  * Official legal pages live only on bgssai-website.
  * Paths match bgssai-website docs/legal/README.md EXACTLY.
- * Product footers list five pages. Chinese is the label; English is the locale fallback.
- * Login consent stays terms + privacy. Product footers do not show an ICP filing number.
- * Do not invent slug paths or resurrect retired /legal/* paths.
+ * Product footers list five pages and the approved ICP filing for bgssai-short.com.
+ * Chinese is the label; English is the locale fallback.
+ * Login consent stays terms + privacy. Do not remove the filing number from LegalFooter.
+ * Do not invent, shorten, or swap ICP suffixes. Do not invent slug paths or resurrect retired /legal/* paths.
  */
 
 

@@ -28,14 +28,24 @@ test.describe('document routes', () => {
     await expect(page.locator('body')).not.toContainText('resource not found')
   })
 
-  test('login page lists five official legal links and no ICP filing', async ({ page }) => {
+  test('login page lists five official legal links and the ICP filing', async ({ page }) => {
     await page.goto('/login')
     for (const slug of LEGAL) {
-      await expect(page.locator(`a[href="https://www.bgssai.com/${slug}/"]`).first()).toBeVisible()
+      await expect(page.locator(`footer a[href="https://www.bgssai.com/${slug}/"]`).first()).toBeVisible()
     }
-    await expect(page.locator('a[href="https://beian.miit.gov.cn/"]')).toHaveCount(0)
+    const filing = page.locator('footer a[href="https://beian.miit.gov.cn/"]')
+    await expect(filing).toHaveCount(1)
+    await expect(filing).toContainText('苏ICP备2024070062号-15')
+    await expect(filing).toHaveAttribute('target', '_blank')
+    await expect(filing).toHaveAttribute('rel', 'noopener noreferrer')
     await expect(page.locator('a[href*="dev.bgssai.com"]')).toHaveCount(0)
     await expect(page.locator('a[href*="/legal/terms"]')).toHaveCount(0)
+    const consent = page.locator('.legal-consent')
+    await expect(consent.locator('a')).toHaveCount(2)
+    await expect(consent).toContainText('用户协议')
+    await expect(consent).toContainText('隐私政策')
+    await expect(consent).not.toContainText('苏ICP')
+    await expect(consent).not.toContainText('个人信息收集清单')
     await expect(page.getByText('个人信息收集清单').first()).toBeVisible()
     await expect(page.getByText('应用权限说明').first()).toBeVisible()
   })

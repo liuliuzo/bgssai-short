@@ -102,6 +102,7 @@ PRD（`docs/feature`）→ 原型（`docs/demo-static`）→ 架构与契约（`
 * **部署通道（强制）**：应用部署、建库/清库、运维派发只走 Jenkins（本仓 `Jenkinsfile` / `jenkins/Jenkinsfile.stop`，仅手动触发；见 `bgssai-workflows/jenkins/README.md`）。不得用 GitHub Actions 做部署或建库；本仓不保留部署类 `.github/workflows`。部署失败不得自动重部署。
 * 一切产出物（代码 / 文档 / 原型 / 提交信息 / PR 描述 / 评审与回信）**全局禁用 emoji 及装饰性图形符号**；语义性符号（→、×、§ 等用于流程示意、表格与条款引用者）不属装饰性符号，允许使用。
 * **AI 成本红线（Standards §12）**：不得创建 PR 后会持续唤醒 AI 的 heartbeat / automation / 后台轮询；PR 状态仅在当前会话单次查询或用户下次交互时再查。
+* **ICP 备案号（强制）**：已备案并对外开放的网站必须在产品页脚展示本域名备案号，并链接 `https://beian.miit.gov.cn/`。本仓域名 `bgssai-short.com` 只用 `苏ICP备2024070062号-15`。不得删除、缩写或换成其他后缀。五条官网法律外链保持不变；登录同意句仍只有用户协议和隐私政策。全表见 `docs/feature/icp-filing-footer.md`。
 * [全局开发规范](https://github.com/liuliuzo/bgssai-skeleton/blob/develop/docs/BGSSAI-Standards.md) 与 `docs/DIRECTORY-LAYOUT.md` 为骨架仓同步副本，**本仓不改本体**；需要改规范时先在骨架仓定稿，再整份同步回本仓。
 
 ## 工程命名与拓扑

@@ -1,4 +1,4 @@
-import { COPYRIGHT_LINE, LEGAL_PAGES, LOGIN_CONSENT_PAGES, legalFooterLabel, legalPageUrl } from '../lib/legalLinks'
+import { COPYRIGHT_LINE, ICP_FILING_NUMBER, ICP_FILING_URL, LEGAL_PAGES, LOGIN_CONSENT_PAGES, legalFooterLabel, legalPageUrl } from '../lib/legalLinks'
 import './legal-footer.css'
 
 export default function LegalFooter({ variant = 'app', checked, onChange, describedBy, invalid }) {
@@ -39,6 +39,10 @@ export default function LegalFooter({ variant = 'app', checked, onChange, descri
             </a>
           </span>
         ))}
+        <span>
+          <span className="legal-footer-dot" aria-hidden="true"> · </span>
+          <a className="legal-footer-filing-link" href={ICP_FILING_URL} target="_blank" rel="noopener noreferrer">{ICP_FILING_NUMBER}</a>
+        </span>
       </p>
     </footer>
   )
