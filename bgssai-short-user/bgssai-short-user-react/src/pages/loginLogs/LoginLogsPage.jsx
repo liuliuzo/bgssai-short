@@ -64,7 +64,7 @@ export default function LoginLogsPage() {
 
   return (
     <div>
-      <Title level={4} style={{ marginTop: 0 }}>我的登录日志</Title>
+      <Title level={4} style={{ marginTop: 0 }}>登录日志</Title>
       <Paragraph type="secondary">最近登录与安全相关操作记录，仅展示本人账号。IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置；未覆盖时显示未知。</Paragraph>
       <Card>
         <Table
