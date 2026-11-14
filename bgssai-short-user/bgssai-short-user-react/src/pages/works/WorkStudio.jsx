@@ -17,6 +17,12 @@ import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
 import ProductionGuide from './ProductionGuide.jsx'
+import {
+  autoTaskOutcomeMemory,
+  hasAnnouncedTaskOutcome,
+  shouldAnnounceTaskOutcome,
+  withoutOutlineTaskId,
+} from './taskOutcome'
 import { shotCardHeading, shotLatestTaskBadge, shotOffersVideoRegenerate } from './shotCardMedia'
 import { runOfficialShotVideo } from './officialVideo'
 import {
@@ -182,6 +188,9 @@ function videoWatchCopy(watch) {
 }
 
 function reportTaskOutcome(task, successText) {
+  if (task?.task_id != null && task.task_id !== '' && !shouldAnnounceTaskOutcome(autoTaskOutcomeMemory, task.task_id)) {
+    return task.task_status === 'SUCCEEDED'
+  }
   if (!task) {
     message.warning('任务仍在执行或已超时，请到任务中心查看最新状态')
     return false
@@ -213,7 +222,8 @@ async function waitBatch(workId, batchId, taskIds) {
   return waitTasks(workId, taskIds)
 }
 
-function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initialOutlineTaskId }) {
+function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initialOutlineTaskId, onOutlineTaskConsumed }) {
+  const workId = work?.work_id
   const [outline, setOutline] = useState([])
   const [script, setScript] = useState(null)
   const [textModels, setTextModels] = useState([])
@@ -222,12 +232,18 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   const [generating, setGenerating] = useState(false)
   const [scriptBusy, setScriptBusy] = useState('')
   const [openScenes, setOpenScenes] = useState([])
+  const navOutlineTaskRef = useRef(null)
+  if (initialOutlineTaskId) {
+    navOutlineTaskRef.current = { workId, taskId: initialOutlineTaskId }
+  } else if (navOutlineTaskRef.current && navOutlineTaskRef.current.workId !== workId) {
+    navOutlineTaskRef.current = null
+  }
 
   const load = useCallback(async () => {
-    if (!work?.work_id) return
+    if (!workId) return
     setLoading(true)
     try {
-      const outlineRes = await productionApi.getOutline(work.work_id)
+      const outlineRes = await productionApi.getOutline(workId)
       setOutline(outlineRes.data?.result?.outline || [])
       if (episodeId) {
         const scriptRes = await productionApi.getScript(episodeId)
@@ -237,7 +253,14 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
     } finally {
       setLoading(false)
     }
-  }, [work, episodeId, onFlowChange])
+  }, [workId, episodeId, onFlowChange])
+
+  const loadRef = useRef(load)
+  const onReloadRef = useRef(onReload)
+  const onOutlineTaskConsumedRef = useRef(onOutlineTaskConsumed)
+  loadRef.current = load
+  onReloadRef.current = onReload
+  onOutlineTaskConsumedRef.current = onOutlineTaskConsumed
 
   useEffect(() => { load() }, [load])
 
@@ -254,68 +277,86 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   }, [])
 
   useEffect(() => {
-    if (!work?.work_id) return undefined
+    if (!workId) return undefined
+    const nav = navOutlineTaskRef.current
+    const taskIdFromNav = nav && nav.workId === workId ? nav.taskId : null
     let cancelled = false
     ;(async () => {
-      let taskId = initialOutlineTaskId
+      let taskId = taskIdFromNav
+      if (taskId && hasAnnouncedTaskOutcome(autoTaskOutcomeMemory, taskId)) {
+        if (taskIdFromNav != null && String(taskIdFromNav) === String(taskId)) {
+          onOutlineTaskConsumedRef.current?.(taskId)
+        }
+        return
+      }
       if (!taskId) {
-        const outlineRes = await productionApi.getOutline(work.work_id)
+        const outlineRes = await productionApi.getOutline(workId)
+        if (cancelled) return
         const existing = outlineRes.data?.result?.outline || []
         if (existing.length) return
         const { data } = await productionApi.listTasks({
-          work_id: work.work_id,
+          work_id: workId,
           task_type: 'TEXT',
           page_num: 1,
           page_size: 50,
         })
+        if (cancelled) return
         const pending = (data?.result || []).find((row) =>
           row.target_type === 'OUTLINE'
           && (row.task_status === 'QUEUED' || row.task_status === 'RUNNING'))
         taskId = pending?.task_id
       }
       if (!taskId || cancelled) return
+      if (hasAnnouncedTaskOutcome(autoTaskOutcomeMemory, taskId)) return
       setGenerating(true)
       try {
-        const done = await waitTask(work.work_id, taskId)
+        const done = await waitTask(workId, taskId)
         if (cancelled) return
         reportTaskOutcome(done, '大纲已生成')
-        await onReload()
-        await load()
+        if (taskIdFromNav != null && String(taskIdFromNav) === String(taskId)) {
+          onOutlineTaskConsumedRef.current?.(taskId)
+        }
+        await onReloadRef.current?.()
+        await loadRef.current?.()
       } finally {
         if (!cancelled) setGenerating(false)
       }
     })()
     return () => { cancelled = true }
-  }, [work?.work_id, initialOutlineTaskId, onReload, load])
+    // `load` and `onReload` change after each studio reload. Depending on them
+    // re-waits a succeeded outline and toasts「大纲已生成」again.
+  }, [workId])
 
   useEffect(() => {
-    if (!work?.work_id || !episodeId || script?.script_status !== 'GENERATING') return undefined
+    if (!workId || !episodeId || script?.script_status !== 'GENERATING') return undefined
     let cancelled = false
     ;(async () => {
       const { data } = await productionApi.listTasks({
-        work_id: work.work_id,
+        work_id: workId,
         task_type: 'TEXT',
         page_num: 1,
         page_size: 50,
       })
+      if (cancelled) return
       const pending = (data?.result || []).find((row) =>
         row.target_type === 'SCRIPT'
         && (!row.episode_id || row.episode_id === episodeId)
         && (row.task_status === 'QUEUED' || row.task_status === 'RUNNING'))
       if (!pending?.task_id || cancelled) return
+      if (hasAnnouncedTaskOutcome(autoTaskOutcomeMemory, pending.task_id)) return
       setScriptBusy('generate')
       try {
-        const done = await waitTask(work.work_id, pending.task_id)
+        const done = await waitTask(workId, pending.task_id)
         if (cancelled) return
         reportTaskOutcome(done, '剧本已生成')
-        await load()
-        await onReload()
+        await loadRef.current?.()
+        await onReloadRef.current?.()
       } finally {
         if (!cancelled) setScriptBusy('')
       }
     })()
     return () => { cancelled = true }
-  }, [work?.work_id, episodeId, script?.script_status, load, onReload])
+  }, [workId, episodeId, script?.script_status])
 
   const runOutline = async () => {
     setGenerating(true)
@@ -2714,7 +2755,37 @@ export default function WorkStudio() {
       return { ...prev, [id]: next }
     })
   }, [])
-  const outlineTaskId = location.state?.outlineTaskId
+  const routedOutlineTaskId = location.state?.outlineTaskId
+  const routedId = routedOutlineTaskId == null || routedOutlineTaskId === '' ? null : String(routedOutlineTaskId)
+  const consumedOutlineTaskRef = useRef(new Set())
+  const [heldOutlineTask, setHeldOutlineTask] = useState(() => (
+    routedId ? { workId, taskId: routedId } : null
+  ))
+  if (
+    routedId
+    && !consumedOutlineTaskRef.current.has(routedId)
+    && (heldOutlineTask?.workId !== workId || heldOutlineTask?.taskId !== routedId)
+  ) {
+    setHeldOutlineTask({ workId, taskId: routedId })
+  }
+  const outlineTaskId = heldOutlineTask?.workId === workId ? heldOutlineTask.taskId : null
+  const consumeOutlineTask = useCallback((taskId) => {
+    if (taskId == null || taskId === '') return
+    const id = String(taskId)
+    consumedOutlineTaskRef.current.add(id)
+    setHeldOutlineTask((current) => (
+      current && current.workId === workId && String(current.taskId) === id ? null : current
+    ))
+  }, [workId])
+
+  useEffect(() => {
+    if (!location.state?.outlineTaskId) return
+    navigate(
+      { pathname: location.pathname, search: location.search, hash: location.hash },
+      { replace: true, state: withoutOutlineTaskId(location.state) },
+    )
+  }, [location, navigate])
+
   const requestedEpisodeId = new URLSearchParams(location.search).get('episode_id')
   const appliedEpisodeQuery = useRef(null)
 
@@ -2846,7 +2917,7 @@ export default function WorkStudio() {
         onChange={(key) => navigate(`/works/${workId}/${key}`)}
         tabBarGutter={12}
         items={[
-          { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} initialOutlineTaskId={outlineTaskId} /> },
+          { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} initialOutlineTaskId={outlineTaskId} onOutlineTaskConsumed={consumeOutlineTask} /> },
           { key: 'characters', label: '角色场景', children: <CharacterPane work={work} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
           { key: 'storyboard', label: '分镜', children: <StoryboardPane work={work} episodeId={episodeId} currentEpisode={current} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
           { key: 'compose', label: '成片', children: (

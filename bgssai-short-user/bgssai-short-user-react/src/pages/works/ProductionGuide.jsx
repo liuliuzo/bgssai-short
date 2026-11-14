@@ -10,6 +10,7 @@ import {
   shotsForFrames,
   shotsForVideo,
 } from './productionGuide'
+import { autoTaskOutcomeMemory, shouldAnnounceTaskOutcome } from './taskOutcome'
 import './video-path.css'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -111,6 +112,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
     [snap],
   )
 
+  // Reloads step data only. It does not call run(), so a waiting outline cannot toast again.
   useEffect(() => {
     if (!step?.waiting) return undefined
     const timer = setInterval(() => {
@@ -125,6 +127,11 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
     await refresh()
   }
 
+  const outcomeText = (taskId, successText) => {
+    if (taskId == null || taskId === '') return successText
+    return shouldAnnounceTaskOutcome(autoTaskOutcomeMemory, taskId) ? successText : undefined
+  }
+
   const run = async (kind) => {
     if (!step || busy || !episode?.episode_id) return
     const actionKind = kind || step.kind
@@ -137,7 +144,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const { data } = await productionApi.generateOutline(work.work_id, models.text?.model_code)
         if (!data?.success) return
         const done = await waitTask(work.work_id, data.result?.task_id)
-        if (done?.task_status === 'SUCCEEDED') await finish('大纲已生成')
+        if (done?.task_status === 'SUCCEEDED') await finish(outcomeText(data.result?.task_id, '大纲已生成'))
         else message.error(friendlyFailReason(done?.fail_reason) || '大纲没有生成成功')
         return
       }
@@ -145,7 +152,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const { data } = await productionApi.generateScript(episode.episode_id, undefined, models.text?.model_code)
         if (!data?.success) return
         const done = await waitTask(work.work_id, data.result?.task_id)
-        if (done?.task_status === 'SUCCEEDED') await finish('剧本已生成')
+        if (done?.task_status === 'SUCCEEDED') await finish(outcomeText(data.result?.task_id, '剧本已生成'))
         else message.error(friendlyFailReason(done?.fail_reason) || '剧本没有生成成功')
         return
       }
