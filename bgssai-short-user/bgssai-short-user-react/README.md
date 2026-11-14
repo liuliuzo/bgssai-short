@@ -33,7 +33,7 @@ npm run build:deploy
 | --- | --- | --- |
 | `/login` | 登录页 | 用户账号密码登录，`role_code=USER` |
 | `/home` | 首页 | 示例首页，展示当前登录身份 |
-| `/login-logs` | 我的登录日志 | 示例分页列表，消费 PageResponse 封装，仅本人记录 |
+| `/login-logs` | 登录日志 | 示例分页列表，消费 PageResponse 封装，仅本人记录 |
 
 ## 接口约定
 

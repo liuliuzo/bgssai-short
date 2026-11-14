@@ -34,7 +34,10 @@ test('user pages render without internal copy', async ({ page, baseURL }) => {
     await expect(page.locator('body')).not.toContainText('额度刷新')
     await expect(page.locator('body')).not.toContainText('TokenHub')
     await expect(page.locator('body')).not.toContainText('resource not found')
+    await expect(page.locator('body')).not.toContainText('我的登录日志')
   }
+  await page.goto('/login-logs')
+  await expect(page.getByRole('heading', { name: '登录日志' })).toBeVisible()
   await page.goto('/subscription')
   await expect(page.getByText('免费档无需支付')).toBeVisible()
   await page.goto('/mcp-tokens')
