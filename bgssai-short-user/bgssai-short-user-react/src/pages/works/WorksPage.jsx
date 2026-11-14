@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Collapse, Form, Input, InputNumber, Modal, Radio, Select, Space, Table, Typography, message } from 'antd'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { workListMeta, workStudioPath } from './worksListUx'
 import productionApi from '../../api/production'
 import { CREATE_WORK_DEFAULTS, createWorkSettingLine } from './workCreateDefaults'
 
@@ -100,7 +101,10 @@ export default function WorksPage() {
       <Paragraph style={{ color: '#334155' }}>
         新建后进入作品，按顶部步骤做：大纲、这一集剧本、定稿、定妆、拆镜、首帧、生成视频，最后合成成片。配音和质量检查不挡住第一条视频。只有剧名和一句话梗概是必填，其余按当前的试做设置。
       </Paragraph>
-      <Card extra={<Button type="primary" onClick={() => setOpen(true)}>新建作品</Button>}>
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <Button type="primary" onClick={() => setOpen(true)}>新建作品</Button>
+        </div>
         <Table
           rowKey="work_id"
           size="small"
@@ -121,7 +125,14 @@ export default function WorksPage() {
               dataIndex: 'work_title',
               width: '28%',
               ellipsis: false,
-              render: (value) => <span style={{ overflowWrap: 'anywhere' }}>{value}</span>,
+              render: (value, row) => (
+                <div>
+                  <div style={{ overflowWrap: 'anywhere' }}>{value}</div>
+                  {workListMeta(row) ? (
+                    <div style={{ color: '#64748b', fontSize: 12, overflowWrap: 'anywhere' }}>{workListMeta(row)}</div>
+                  ) : null}
+                </div>
+              ),
             },
             { title: '类型', dataIndex: 'genre_name', width: '14%' },
             { title: '状态', dataIndex: 'work_status_name', width: '12%', render: (value) => <span style={{ whiteSpace: 'nowrap' }}>{value}</span> },
@@ -139,7 +150,7 @@ export default function WorksPage() {
                 const archived = row.work_status === 'ARCHIVED'
                 return (
                   <Space>
-                    <Button type="link" size="small" onClick={() => navigate(`/works/${row.work_id}/script`)}>进入制作</Button>
+                    <Link to={workStudioPath(row.work_id)}>进入制作</Link>
                     <Button type="link" size="small" onClick={async () => {
                       await productionApi.archiveWork(row.work_id, archived ? 0 : 1)
                       load(pageNum, pageSize)

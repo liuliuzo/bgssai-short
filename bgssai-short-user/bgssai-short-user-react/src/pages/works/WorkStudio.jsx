@@ -29,9 +29,11 @@ import {
   hasPlayableShotVideo,
   hasRealFirstFrame,
   resolveRepairAction,
+  scriptStudioGuide,
   selectPendingVideoShotIds,
   summarizeConsistencyCards,
 } from './productionFlow'
+import { reviewActionState } from './reviewActions'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
 import LookSlot from '../look/LookSlot'
 import LibraryLookPicker, { ReferenceNotice } from '../look/LibraryLookPicker'
@@ -53,6 +55,8 @@ import {
   shotPresetGroups,
   shotVideoDialogProps,
   tokenAmountLabel,
+  canvasSwitchState,
+  taskRowsFromResult,
 } from './studioListUx'
 import DramaAssistantDrawer from '../../components/DramaAssistantDrawer'
 import {
@@ -70,6 +74,7 @@ import {
   episodeComposeTag,
   episodeComposeTagColor,
   episodeSelectLabel,
+  portraitFilmPlayerStyle,
 } from '../../utils/composeStatusSurface'
 
 const { Title, Paragraph, Text } = Typography
@@ -228,10 +233,12 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   const [script, setScript] = useState(null)
   const [textModels, setTextModels] = useState([])
   const [textModelCode, setTextModelCode] = useState()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [settled, setSettled] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [scriptBusy, setScriptBusy] = useState('')
   const [openScenes, setOpenScenes] = useState([])
+  const loadedKey = useRef('')
   const navOutlineTaskRef = useRef(null)
   if (initialOutlineTaskId) {
     navOutlineTaskRef.current = { workId, taskId: initialOutlineTaskId }
@@ -240,7 +247,13 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   }
 
   const load = useCallback(async () => {
-    if (!workId) return
+    if (!workId) {
+      setLoading(false)
+      setSettled(true)
+      return
+    }
+    const key = `${workId}:${episodeId || ''}`
+    if (loadedKey.current !== key) setSettled(false)
     setLoading(true)
     try {
       const outlineRes = await productionApi.getOutline(workId)
@@ -248,10 +261,14 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
       if (episodeId) {
         const scriptRes = await productionApi.getScript(episodeId)
         setScript(scriptRes.data?.result || null)
+      } else {
+        setScript(null)
       }
+      loadedKey.current = key
       onFlowChange?.()
     } finally {
       setLoading(false)
+      setSettled(true)
     }
   }, [workId, episodeId, onFlowChange])
 
@@ -436,6 +453,13 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   const rhythmScore = rhythm.total_score ?? script?.total_score
   const isScriptReady = script?.script_status === 'READY'
   const lowRhythmScore = typeof rhythmScore === 'number' && rhythmScore < 60
+  const episodeRow = work.episode_list?.find((e) => e.episode_id === episodeId)
+  const guide = scriptStudioGuide({
+    scriptStatus: script?.script_status,
+    composeStatus: episodeRow?.compose_status,
+  })
+  const filmed = guide.mode === 'filmed'
+  const doneReason = '这一集已有成片，不必再生成或定稿'
 
   const seenEpisode = useRef(episodeId)
   const scriptAtSwitch = useRef(null)
@@ -464,8 +488,8 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <div>
-        <Title level={5} style={{ margin: 0 }}>第 1 步：剧本与定稿</Title>
-        <Paragraph style={{ marginBottom: 0, color: '#334155' }}>先确认全集大纲，再生成当前这一集的分场剧本并点击「定稿剧本」。定稿后会自动提取角色和场景，进入下一步。</Paragraph>
+        <Title level={5} style={{ margin: 0 }}>{guide.title}</Title>
+        <Paragraph style={{ marginBottom: 0, color: '#334155' }}>{guide.detail}</Paragraph>
       </div>
       <Card loading={loading || generating} title="全集大纲" extra={<Space>
         <Select
@@ -541,12 +565,35 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
           disabled={!!scriptBusy}
           options={textModels.map((m) => ({ value: m.model_code, label: modelPricingCompactLabel(m), title: modelPricingLabel(m) }))}
         />
-        <Button onClick={runScript} loading={scriptBusy === 'generate'} disabled={!!scriptBusy && scriptBusy !== 'generate'}>生成剧本</Button>
+        <Tooltip title={filmed ? doneReason : ''}>
+          <span>
+            <Button onClick={runScript} loading={scriptBusy === 'generate'} disabled={filmed || (!!scriptBusy && scriptBusy !== 'generate')}>生成剧本</Button>
+          </span>
+        </Tooltip>
         <Button onClick={saveScript} loading={scriptBusy === 'save'} disabled={!!scriptBusy || !scenes.length}>保存</Button>
-        <Button type="primary" onClick={() => ready(0)} loading={scriptBusy === 'ready'} disabled={!!scriptBusy || !scenes.length}>定稿剧本</Button>
-        <Button onClick={() => ready(1)} loading={scriptBusy === 'ready'} disabled={!!scriptBusy || !scenes.length}>强制定稿</Button>
+        <Tooltip title={filmed ? doneReason : ''}>
+          <span>
+            <Button type={filmed ? 'default' : 'primary'} onClick={() => ready(0)} loading={scriptBusy === 'ready'} disabled={filmed || !!scriptBusy || !scenes.length}>定稿剧本</Button>
+          </span>
+        </Tooltip>
+        <Tooltip title={filmed ? doneReason : ''}>
+          <span>
+            <Button onClick={() => ready(1)} loading={scriptBusy === 'ready'} disabled={filmed || !!scriptBusy || !scenes.length}>强制定稿</Button>
+          </span>
+        </Tooltip>
       </Space>}>
-        {!outline.length ? (
+        {!settled ? (
+          <div style={{ minHeight: 96 }} />
+        ) : filmed ? (
+          <Alert
+            type="success"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message="这一集已经有成片"
+            description="剧本已定稿，生成、定稿和强制定稿不是下一步。可以去合成页查看或下载成片。"
+            action={<Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>查看成片</Button>}
+          />
+        ) : !outline.length ? (
           <Alert
             type="info"
             showIcon
@@ -611,7 +658,7 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
               </Button>
             ))}
           </Space>
-        ) : <Text type="secondary">这一集还没有场次。</Text>}
+        ) : settled ? <Text type="secondary">这一集还没有场次。</Text> : null}
         <Collapse
           activeKey={openScenes}
           onChange={(keys) => setOpenScenes(Array.isArray(keys) ? keys : [keys])}
@@ -1584,12 +1631,14 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <Alert
-        type="info"
-        showIcon
-        message="按顶部步骤出视频"
-        description="顶部步骤会带到定稿、定妆、拆镜、首帧和生成视频。这一页改人话分镜不花钱；确认无误后可一键出首帧并批量生成镜头视频。有视频的镜头在卡片左边播放；放不了的会直接写明。"
-      />
+      {rows.length === 0 ? (
+        <Alert
+          type="info"
+          showIcon
+          message="按顶部步骤出视频"
+          description="顶部步骤会带到定稿、定妆、拆镜、首帧和生成视频。这一页改人话分镜不花钱；确认无误后可一键出首帧并批量生成镜头视频。有视频的镜头在卡片左边播放；放不了的会直接写明。"
+        />
+      ) : null}
       {actionError ? (
         <Alert
           type="error"
@@ -1640,7 +1689,16 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
         />
       ) : null}
       <Space wrap>
-        <Button onClick={() => setCanvasView(true)} disabled={!rows.length}>切到画布</Button>
+        {(() => {
+          const canvas = canvasSwitchState(rows.length, { ready: shotsLoaded })
+          return (
+            <Tooltip title={canvas.reason}>
+              <span>
+                <Button onClick={() => setCanvasView(true)} disabled={canvas.disabled}>切到画布</Button>
+              </span>
+            </Tooltip>
+          )
+        })()}
         <Button loading={splitting} onClick={handleSplitShots}>从剧本拆镜</Button>
         <Button disabled={!rows.length} onClick={async () => {
           await featuresApi.previzGenerateText({ episode_id: episodeId, shot_id_list: selectedIds })
@@ -1648,6 +1706,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
           load()
         }}>生成人话分镜（免费）</Button>
       </Space>
+      {!shotsLoaded ? <Card loading style={{ minHeight: 140 }} /> : null}
       {shotsLoaded && rows.length === 0 ? (
         <Card>
           <Title level={5} style={{ marginTop: 0 }}>
@@ -2123,7 +2182,8 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
 
 function TasksPane({ workId, episodeId }) {
   const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [settled, setSettled] = useState(false)
   const [taskType, setTaskType] = useState()
   const [taskStatus, setTaskStatus] = useState()
 
@@ -2139,9 +2199,10 @@ function TasksPane({ workId, episodeId }) {
         page_num: 1,
         page_size: 50,
       })
-      setRows(Array.isArray(data?.result) ? data.result : [])
+      setRows(taskRowsFromResult(data?.result))
     } finally {
       setLoading(false)
+      setSettled(true)
     }
   }, [workId, episodeId, taskType, taskStatus])
 
@@ -2163,7 +2224,8 @@ function TasksPane({ workId, episodeId }) {
       <Table
         rowKey="task_id"
         size="small"
-        loading={loading}
+        loading={loading || !settled}
+        locale={{ emptyText: settled ? '这一部还没有任务记录' : ' ' }}
         dataSource={rows}
         pagination={false}
         columns={[
@@ -2329,14 +2391,23 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
       precheck: prev?.precheck ?? null,
     }))
     try {
-      const [p, f, mp] = await Promise.all([
+      const filmPromise = productionApi.filmDetail(requestedId).then((f) => {
+        if (seq !== requestSeq.current) return null
+        const nextFilm = f.data?.result ?? null
+        onComposeEntry(requestedId, (prev) => ({
+          phase: 'loading',
+          film: nextFilm,
+          precheck: prev?.precheck ?? null,
+        }))
+        return nextFilm
+      })
+      const [p, nextFilm, mp] = await Promise.all([
         productionApi.filmPrecheck(requestedId),
-        productionApi.filmDetail(requestedId),
+        filmPromise,
         productionApi.publishFilmToMediaPreflight({ episode_id: requestedId, work_id: work?.work_id }),
       ])
       if (seq !== requestSeq.current) return
       const nextPrecheck = p.data?.result ?? null
-      const nextFilm = f.data?.result ?? null
       onComposeEntry(requestedId, {
         phase: 'settled',
         film: nextFilm,
@@ -2592,18 +2663,36 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
             setComposing(false)
           }
         }}>合成整集成片</Button>
-        <Button onClick={async () => {
-          const { data } = await productionApi.submitReview(episodeId)
-          if (data?.success) {
-            message.success('已提交审核')
-            await onReload()
-          }
-        }}>提交审核</Button>
-        <Button onClick={async () => {
-          await productionApi.withdrawReview(episodeId)
-          message.success('已撤回')
-          await onReload()
-        }}>撤回审核</Button>
+        {(() => {
+          const review = reviewActionState({
+            reviewStatus: work?.episode_list?.find((ep) => ep.episode_id === episodeId)?.review_status,
+            composeReady: film?.compose_status === 'READY' || precheck?.ready === true,
+          })
+          return (
+            <>
+              <Tooltip title={review.submit ? '' : review.submitReason}>
+                <span>
+                  <Button disabled={!review.submit} onClick={async () => {
+                    const { data } = await productionApi.submitReview(episodeId)
+                    if (data?.success) {
+                      message.success('已提交审核')
+                      await onReload()
+                    }
+                  }}>提交审核</Button>
+                </span>
+              </Tooltip>
+              <Tooltip title={review.withdraw ? '' : review.withdrawReason}>
+                <span>
+                  <Button disabled={!review.withdraw} onClick={async () => {
+                    await productionApi.withdrawReview(episodeId)
+                    message.success('已撤回')
+                    await onReload()
+                  }}>撤回审核</Button>
+                </span>
+              </Tooltip>
+            </>
+          )
+        })()}
         <Button
           type="primary"
           loading={publishing}
@@ -2649,7 +2738,7 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
           这一集现在没有可以预览或下载的成片。
         </Paragraph>
       ) : null}
-      {film?.download_url ? (
+      {surface.showFilm && film?.download_url ? (
         <div style={{ marginTop: 12 }}>
           <Paragraph>
             成片预览{' '}
@@ -2660,7 +2749,7 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
             src={film.download_url}
             controls
             playsInline
-            style={{ width: '100%', maxWidth: 360, background: '#111' }}
+            style={portraitFilmPlayerStyle()}
           />
         </div>
       ) : null}
@@ -2938,7 +3027,7 @@ export default function WorkStudio() {
           { key: 'preview', label: '预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
           { key: 'story-map', label: '剧情', children: <StoryMapPage work={work} episodeId={episodeId} /> },
           { key: 'quality', label: '质量', children: <QualityReportPage work={work} episodeId={episodeId} /> },
-          { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} /> },
+          { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} episodeId={episodeId} /> },
           { key: 'tasks', label: '任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
           { key: 'edit-export', label: '剪辑', children: <EditExportPage episodeId={episodeId} /> },
         ]}

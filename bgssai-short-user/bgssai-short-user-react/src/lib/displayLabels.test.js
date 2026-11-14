@@ -64,7 +64,8 @@ test('story-map and continuity enums', () => {
 
 test('softens technical ids for primary copy', () => {
   assert.equal(softenTechId('ch-dm-005-01', 'character'), '角色 1')
-  assert.match(softenTechId('sh-dm-005-01-10', 'shot'), /镜/)
+  assert.equal(softenTechId('sh-dm-005-01-10', 'shot'), '镜 10')
+  assert.equal(softenTechId('sh-a1b2c3d4e5f3', 'shot'), '镜头')
   assert.equal(softenTechId('as-dm-005-01', 'asset'), '素材')
 })
 

@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import productionApi from '../../api/production'
+import { continuityShotLabel } from './continuityShotLabel'
 import {
   labelOf, CONTINUITY_TYPE_LABEL, SEVERITY_LABEL, HANDLE_STATUS_LABEL,
-  FORESHADOW_STATUS_LABEL, softenTechId,
+  FORESHADOW_STATUS_LABEL,
 } from '../../lib/displayLabels'
 
 const { Paragraph } = Typography
 
-export default function ContinuityCenterPage({ work }) {
+export default function ContinuityCenterPage({ work, episodeId }) {
   const [overview, setOverview] = useState(null)
   const [foreshadows, setForeshadows] = useState([])
+  const [episodeShotNos, setEpisodeShotNos] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const load = useCallback(async () => {
@@ -29,6 +32,24 @@ export default function ContinuityCenterPage({ work }) {
   }, [work])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!episodeId) {
+      setEpisodeShotNos(null)
+      return undefined
+    }
+    let cancelled = false
+    setEpisodeShotNos(null)
+    ;(async () => {
+      const { data } = await productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 100 })
+      if (cancelled) return
+      const rows = Array.isArray(data?.result) ? data.result : []
+      setEpisodeShotNos(rows.map((row) => row.shot_no).filter((no) => no != null))
+    })().catch(() => {
+      if (!cancelled) setEpisodeShotNos(null)
+    })
+    return () => { cancelled = true }
+  }, [episodeId])
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
@@ -56,7 +77,7 @@ export default function ContinuityCenterPage({ work }) {
             { title: '类型', dataIndex: 'issue_type', width: 100, render: (v) => labelOf(CONTINUITY_TYPE_LABEL, v, v) },
             { title: '严重度', dataIndex: 'severity', width: 90, render: (v) => labelOf(SEVERITY_LABEL, v, v) },
             { title: '说明', dataIndex: 'issue_desc' },
-            { title: '镜头', dataIndex: 'shot_id', render: (v) => softenTechId(v, 'shot') },
+            { title: '镜头', key: 'shot', render: (_, row) => continuityShotLabel(row, episodeShotNos) },
             { title: '状态', dataIndex: 'handle_status', width: 100, render: (v) => labelOf(HANDLE_STATUS_LABEL, v, v) },
           ]}
         />

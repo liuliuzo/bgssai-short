@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Select, Space, Table, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
-import { labelOf, GATE_STATUS_LABEL, HANDLE_STATUS_LABEL } from '../../lib/displayLabels'
+import { labelOf, HANDLE_STATUS_LABEL } from '../../lib/displayLabels'
+import { qualityHeadline } from './qualitySummary'
 
 const { Paragraph } = Typography
 
@@ -17,7 +18,7 @@ export default function QualityReportPage({ work, episodeId }) {
   const [result, setResult] = useState(null)
   const [profile, setProfile] = useState(null)
   const [logs, setLogs] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     if (!work?.work_id) return
@@ -63,13 +64,14 @@ export default function QualityReportPage({ work, episodeId }) {
         </Space>}
       >
         <Paragraph>
-          作品阈值 {profile?.quality_threshold_score ?? '-'} · 总分 {profile?.overall_quality_score ?? '-'} ·
-          当前门 {labelOf(GATE_STATUS_LABEL, result?.gate_status, result?.gate_status || '-')} / {result?.score ?? '-'}
+          {qualityHeadline({ profile, gateResult: result, gateCode, loading }).text}
         </Paragraph>
         <Table
           rowKey="issue_id"
           size="small"
+          loading={loading}
           pagination={false}
+          locale={{ emptyText: loading ? ' ' : '还没有质检问题' }}
           dataSource={result?.issue_list || []}
           columns={[
             { title: '维度', dataIndex: 'dimension', width: 120 },
