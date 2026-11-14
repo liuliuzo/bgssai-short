@@ -6,5 +6,6 @@ import http from '../utils/http'
 // the result to the current user. Returns the PageResponse envelope:
 // { code, message, success, result, page_num, page_size, total_size }.
 const list = (params) => http.get('/user/login-logs', params)
+const logout = () => http.post('/user/logout', {})
 
-export default { list }
+export default { list, logout }

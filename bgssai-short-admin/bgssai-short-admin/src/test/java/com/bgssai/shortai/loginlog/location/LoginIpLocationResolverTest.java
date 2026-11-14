@@ -49,4 +49,17 @@ class LoginIpLocationResolverTest {
         assertEquals("未知", LoginIpLocationResolver.format("0|0|0|0|0"));
         assertEquals("未知", LoginIpLocationResolver.format("bad data"));
     }
+
+    @Test
+    void ispStaysOutOfThePlaceLabelAndPrivateAddressesHaveNoCity() {
+        IpGeo geo = LoginIpLocationResolver.parts("中国|0|江苏省|南京市|电信");
+        assertEquals("中国 / 江苏省 / 南京市", geo.getDisplay());
+        assertEquals("电信", geo.getIsp());
+        assertEquals("南京市", geo.getCity());
+        assertNull(LoginIpLocationResolver.parts("0|0|0|0|0").getIsp());
+        IpGeo local = resolver.lookup("127.0.0.1");
+        assertEquals("本地", local.getDisplay());
+        assertNull(local.getCity());
+        assertNull(local.getIsp());
+    }
 }

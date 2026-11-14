@@ -94,6 +94,9 @@ public class OtpLoginSupport {
     public RespUserLogin loginSms(String rawPhone, String code) {
         String phone = rawPhone == null ? "" : rawPhone.trim();
         if (!otpStore.consume("sms", phone, code == null ? "" : code.trim())) {
+            SysUser existing = findByPhone(phone);
+            loginAuditService.recordFailure(existing == null ? null : existing.getUserId(),
+                    "LOGIN_FAIL_OTP", "phone_otp", phone, "auto", "验证码错误或已过期");
             throw new BizException("4302", "验证码错误或已过期");
         }
         SysUser user = findByPhone(phone);
@@ -104,12 +107,15 @@ public class OtpLoginSupport {
         } else {
             AccountGuard.rejectIfDeleted(user);
         }
-        return issue(user, isNew);
+        return issue(user, isNew, "phone_otp", phone);
     }
 
     public RespUserLogin loginEmail(String rawEmail, String code) {
         String email = rawEmail == null ? "" : rawEmail.trim().toLowerCase();
         if (!otpStore.consume("email", email, code == null ? "" : code.trim())) {
+            SysUser existing = findByEmail(email);
+            loginAuditService.recordFailure(existing == null ? null : existing.getUserId(),
+                    "LOGIN_FAIL_OTP", "email_otp", email, "auto", "验证码错误或已过期");
             throw new BizException("4302", "验证码错误或已过期");
         }
         SysUser user = findByEmail(email);
@@ -123,7 +129,7 @@ public class OtpLoginSupport {
         } else {
             AccountGuard.rejectIfDeleted(user);
         }
-        return issue(user, isNew);
+        return issue(user, isNew, "email_otp", email);
     }
 
     private SysUser provision(String userName, String phone, String email) {
@@ -153,12 +159,12 @@ public class OtpLoginSupport {
         return row;
     }
 
-    private RespUserLogin issue(SysUser user, boolean isNew) {
+    private RespUserLogin issue(SysUser user, boolean isNew, String method, String identifier) {
         String sessionId = singleSessionGuard.newSessionId();
         singleSessionGuard.bindSession(user.getUserId(), sessionId);
         String token = JwtUtil.generateToken(user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE, sessionId);
         if (loginAuditService != null) {
-            loginAuditService.record(user.getUserId(), "LOGIN_SUCCESS");
+            loginAuditService.recordSuccess(user.getUserId(), method, identifier, "auto", sessionId);
         }
         RespUserLogin resp = new RespUserLogin();
         resp.setJwtToken(token);

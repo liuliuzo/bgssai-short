@@ -42,6 +42,21 @@ public class OAuthLoginService {
     @Autowired(required = false) private BgssaiWebsiteLedgerClient websiteLedgerClient;
 
     public RespUserLogin loginOrRegister(ReqOAuthCallback req) {
+        boolean issued = false;
+        try {
+            RespUserLogin resp = loginOrRegisterVerified(req);
+            issued = true;
+            return resp;
+        } catch (RuntimeException ex) {
+            if (!issued && loginAuditService != null) {
+                String platform = req == null ? null : req.getPlatform();
+                loginAuditService.recordFailure(null, "LOGIN_FAIL_OAUTH", oauthMethod(platform), platform, "oauth", "第三方登录未完成");
+            }
+            throw ex;
+        }
+    }
+
+    private RespUserLogin loginOrRegisterVerified(ReqOAuthCallback req) {
         oauthStateUtil.verify(req.getState(), req.getPlatform());
         OAuthProvider provider = oauthProviderFactory.get(req.getPlatform());
         OAuthUserInfo userInfo = provider.fetchUserInfo(req.getCode());
@@ -56,7 +71,7 @@ public class OAuthLoginService {
             }
             log.info("三方授权登录命中已绑定账号 platform={} userId={}", req.getPlatform(), binding.getUserId());
             linkCentralLedger(req.getPlatform(), binding.getUserId(), userInfo.getOpenId());
-            return withNewUser(issue(user), Boolean.FALSE);
+            return withNewUser(issue(user, req.getPlatform()), Boolean.FALSE);
         }
 
         SysUser user = provision(syntheticUserName(req.getPlatform()), userInfo.getNickname());
@@ -79,12 +94,12 @@ public class OAuthLoginService {
             SysUser existingUser = findUser(existing.getUserId());
             log.warn("三方授权登录并发命中唯一索引 platform={} userId={}", req.getPlatform(), existing.getUserId());
             linkCentralLedger(req.getPlatform(), existing.getUserId(), userInfo.getOpenId());
-            return withNewUser(issue(existingUser), Boolean.FALSE);
+            return withNewUser(issue(existingUser, req.getPlatform()), Boolean.FALSE);
         }
 
         log.info("三方授权登录首次建号 platform={} userId={}", req.getPlatform(), user.getUserId());
         linkCentralLedger(req.getPlatform(), user.getUserId(), userInfo.getOpenId());
-        return withNewUser(issue(user), Boolean.TRUE);
+        return withNewUser(issue(user, req.getPlatform()), Boolean.TRUE);
     }
 
     private void linkCentralLedger(String platform, String localUserId, String websiteUserId) {
@@ -145,12 +160,23 @@ public class OAuthLoginService {
         return row;
     }
 
-    private RespUserLogin issue(SysUser user) {
+    private RespUserLogin issue(SysUser user, String platform) {
         String sessionId = singleSessionGuard.newSessionId();
         singleSessionGuard.bindSession(user.getUserId(), sessionId);
         String token = JwtUtil.generateToken(
                 user.getUserId(), user.getRealName(), "01", null, null, USER_ROLE, sessionId);
-        loginAuditService.record(user.getUserId(), "LOGIN_SUCCESS");
+        if (loginAuditService != null) {
+            loginAuditService.recordSuccess(user.getUserId(), oauthMethod(platform), platform, "oauth", sessionId);
+        }
         return toResp(user, token);
+    }
+
+    private static String oauthMethod(String platform) {
+        if (platform == null) return "oauth";
+        String value = platform.trim().toLowerCase();
+        return switch (value) {
+            case "wechat", "alipay", "douyin", "baidu", "bgssai" -> value;
+            default -> "oauth";
+        };
     }
 }

@@ -25,6 +25,9 @@ public class JwtTokenAspect {
     @Autowired
     private SingleSessionGuard singleSessionGuard;
 
+    @Autowired(required = false)
+    private com.bgssai.shortai.login.service.LoginSessionSeen loginSessionSeen;
+
     @Around("execution(public * com.bgssai.shortai..*(..)) && " + "@within(com.bgssai.shortai.common.aop.NeedAop) || "
             + "@annotation(com.bgssai.shortai.common.aop.NeedAop)")
     public Object validateJwtToken(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -64,6 +67,10 @@ public class JwtTokenAspect {
         UserContext.setUserCompanyCode(companyCode);
         UserContext.setUserCompanyName(companyName);
         UserContext.setUserRole(role);
+        UserContext.setSessionId(sessionId);
+        if (loginSessionSeen != null) {
+            loginSessionSeen.touch(sessionId);
+        }
         MdcSupport.putUserContext(userId, companyCode);
 
         try {

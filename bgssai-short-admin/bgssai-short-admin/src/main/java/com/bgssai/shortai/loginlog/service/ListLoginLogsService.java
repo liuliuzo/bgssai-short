@@ -7,10 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.common.AdminAuthGuard;
-import com.bgssai.shortai.common.ShanghaiClock;
 import com.bgssai.shortai.common.PageResponse;
 import com.bgssai.shortai.common.exception.ForbiddenException;
-import com.bgssai.shortai.loginlog.dto.LoginLogItem;
+import com.bgssai.shortai.loginlog.detail.LoginLogPresenter;
 import com.bgssai.shortai.loginlog.location.LoginIpLocationResolver;
 import com.bgssai.shortai.mapper.LoginLogMapper;
 import com.bgssai.shortai.model.LoginLog;
@@ -48,17 +47,9 @@ public class ListLoginLogsService {
         List<LoginLog> rows = loginLogMapper.selectByExample(example);
         long total = ((com.github.pagehelper.Page<LoginLog>) rows).getTotal();
 
-        List<LoginLogItem> items = new ArrayList<>(rows.size());
+        List<com.bgssai.shortai.loginlog.dto.LoginLogItem> items = new ArrayList<>(rows.size());
         for (LoginLog row : rows) {
-            LoginLogItem item = new LoginLogItem();
-            item.setId(row.getId());
-            item.setUserId(row.getUserId());
-            item.setAction(row.getAction());
-            item.setIpAddress(row.getIpAddress());
-            item.setIpLocation(ipLocationResolver.resolve(row.getIpAddress()));
-            item.setUserAgent(row.getUserAgent());
-            item.setCreateTime(ShanghaiClock.format(row.getCreateTime()));
-            items.add(item);
+            items.add(LoginLogPresenter.toItem(row, ipLocationResolver));
         }
 
         PageResponse response = new PageResponse();

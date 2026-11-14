@@ -25,7 +25,7 @@
 
 | 工具 | 说明 |
 |---|---|
-| `list_login_logs` | 当前用户本人登录日志分页，包含原 IP 与本地数据解析的 `ip_location`（仅地区参考） |
+| `list_login_logs` | 当前用户本人登录日志分页，包含原 IP、离线库 `ip_location`，以及登录结果、方式、脱敏账号、设备和会话等已记录字段 |
 | `get_liveness` | 进程存活探针（不触碰数据库） |
 | `get_readiness` | 就绪探针（critical 组件） |
 | `list_works` | 分页查询当前用户本人的短剧作品列表 |

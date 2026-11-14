@@ -81,4 +81,45 @@ class ListLoginLogsServiceTest {
         assertThrows(ForbiddenException.class, () -> service.list(1, 20));
         verifyNoInteractions(mapper, resolver);
     }
+
+    @Test
+    void exposesStoredDetailOnTheAdminList() throws Exception {
+        UserContext.setUserId("admin");
+        UserContext.setUserRole("PLATFORM_ADMIN");
+        LoginLog row = new LoginLog();
+        row.setId(3);
+        row.setUserId("u-1");
+        row.setAction("LOGIN_SUCCESS");
+        row.setLoginResult("SUCCESS");
+        row.setResultReason("登录成功");
+        row.setLoginMethod("password");
+        row.setIdentifierType("username");
+        row.setIdentifierMasked("admin");
+        row.setClientChannel("admin");
+        row.setBrowserName("Edge 120");
+        row.setOsName("Windows 10");
+        row.setDeviceType("desktop");
+        row.setDeviceLabel("Edge 120 · Windows 10 · 桌面");
+        row.setIpAddress("8.8.8.8");
+        row.setIpCountry("美国");
+        row.setIpIsp("Example");
+        row.setRiskNewDevice(Boolean.FALSE);
+        row.setSessionId("adminsession123456");
+        Page<LoginLog> rows = new Page<>(1, 20);
+        rows.setTotal(1);
+        rows.add(row);
+        when(mapper.selectByExample(any())).thenReturn(rows);
+        when(resolver.resolve("8.8.8.8")).thenReturn("美国");
+
+        LoginLogItem item = (LoginLogItem) ((List<?>) service.list(1, 20).getResult()).get(0);
+        assertEquals("SUCCESS", item.getLoginResult());
+        assertEquals("admin", item.getClientChannel());
+        assertEquals("Edge 120 · Windows 10 · 桌面", item.getDeviceLabel());
+        assertEquals("美国", item.getIpCountry());
+        assertEquals("Example", item.getIpIsp());
+        assertEquals("snapshot", item.getIpGeoSource());
+        assertEquals("曾用设备", item.getRiskSummary());
+        ObjectMapper json = new ObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        assertEquals("adminsession123456", json.readTree(json.writeValueAsString(item)).get("session_id").asText());
+    }
 }

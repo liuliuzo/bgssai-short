@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.bgssai.shortai.common.AdminAuthGuard;
 import com.bgssai.shortai.common.exception.BizException;
@@ -13,10 +15,7 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.session.SingleSessionGuard;
 import com.bgssai.shortai.login.dto.req.ReqAdminLogin;
 import com.bgssai.shortai.login.dto.resp.RespAdminLogin;
-import com.bgssai.shortai.mapper.LoginLogMapper;
-import com.bgssai.shortai.loginlog.location.LoginClientIp;
 import com.bgssai.shortai.mapper.SysUserMapper;
-import com.bgssai.shortai.model.LoginLog;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
 import com.bgssai.shortai.utils.JwtUtil;
@@ -40,7 +39,7 @@ public class AdminLoginService {
     private PasswordService passwordService;
 
     @Autowired
-    private LoginLogMapper loginLogMapper;
+    private LoginAuditService loginAuditService;
 
     @Autowired
     private SingleSessionGuard singleSessionGuard;
@@ -54,6 +53,9 @@ public class AdminLoginService {
      * @throws BizException INVALID_CREDENTIALS (4001) if credentials wrong, FORBIDDEN (4003) if role not admin
      */
     public RespAdminLogin login(ReqAdminLogin req, HttpServletRequest httpReq) {
+        if (httpReq != null && RequestContextHolder.getRequestAttributes() == null) {
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(httpReq));
+        }
         log.info("admin login attempt identifier={}", req.getIdentifier());
 
         // 逻辑删除的账号不是账号：不带 del_flag=0 过滤的话，被删账号仍能通过密码校验拿到 token，
@@ -63,19 +65,20 @@ public class AdminLoginService {
 
         if (user == null) {
             log.warn("admin login failed: user not found identifier={}", req.getIdentifier());
+            loginAuditService.recordFailure(null, "LOGIN_FAIL_PASSWORD", "password", req.getIdentifier(), "auto", "账号或密码不正确");
             throw new BizException(CommonErrorCode.INVALID_CREDENTIALS);
         }
 
         if (!passwordService.matches(user, req.getPassword())) {
             log.warn("admin login failed: wrong password identifier={}", req.getIdentifier());
-            appendLoginLog(user.getUserId(), "LOGIN_FAIL_PASSWORD", httpReq);
+            loginAuditService.recordFailure(user.getUserId(), "LOGIN_FAIL_PASSWORD", "password", req.getIdentifier(), "auto", "账号或密码不正确");
             throw new BizException(CommonErrorCode.INVALID_CREDENTIALS);
         }
 
         if (!AdminAuthGuard.ADMIN_ROLE.equals(user.getOrgCode())) {
             log.warn("admin login denied: not admin identifier={} orgCode={}",
                     req.getIdentifier(), user.getOrgCode());
-            appendLoginLog(user.getUserId(), "LOGIN_FAIL_ROLE", httpReq);
+            loginAuditService.recordFailure(user.getUserId(), "LOGIN_FAIL_ROLE", "password", req.getIdentifier(), "auto", "无管理端权限");
             throw new BizException(CommonErrorCode.FORBIDDEN, "access denied: only admin may use this console");
         }
 
@@ -93,7 +96,7 @@ public class AdminLoginService {
                 AdminAuthGuard.ADMIN_ROLE,
                 sessionId);
 
-        appendLoginLog(user.getUserId(), "LOGIN_SUCCESS", httpReq);
+        loginAuditService.recordSuccess(user.getUserId(), "password", req.getIdentifier(), "auto", sessionId);
         log.info("admin login success userId={}", user.getUserId());
 
         RespAdminLogin resp = new RespAdminLogin();
@@ -124,25 +127,5 @@ public class AdminLoginService {
         SysUserExample byEmail = new SysUserExample();
         byEmail.createCriteria().andEmailEqualTo(id).andDelFlagEqualTo(false);
         return sysUserMapper.selectOneByExample(byEmail);
-    }
-
-    private void appendLoginLog(String userId, String action, HttpServletRequest httpReq) {
-        try {
-            String ip = resolveIp(httpReq);
-            String ua = httpReq != null ? httpReq.getHeader("User-Agent") : null;
-            LoginLog loginLog = new LoginLog();
-            loginLog.setUserId(userId);
-            loginLog.setAction(action);
-            loginLog.setIpAddress(ip);
-            loginLog.setUserAgent(ua);
-            loginLog.setDelFlag(false);
-            loginLogMapper.insertSelective(loginLog);
-        } catch (Exception e) {
-            log.warn("[AdminLoginService] login log insert failed userId={} err={}", userId, e.getMessage());
-        }
-    }
-
-    private static String resolveIp(HttpServletRequest req) {
-        return LoginClientIp.resolve(req);
     }
 }

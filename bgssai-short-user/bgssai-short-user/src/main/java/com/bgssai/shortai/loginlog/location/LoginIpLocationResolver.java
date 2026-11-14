@@ -27,23 +27,27 @@ public class LoginIpLocationResolver {
     }
 
     public String resolve(String value) {
+        return lookup(value).getDisplay();
+    }
+
+    public IpGeo lookup(String value) {
         InetAddress address = IpLiteral.parse(value);
         if (address == null) {
-            return "未知";
+            return classified("未知");
         }
         if (address.isLoopbackAddress()) {
-            return "本地";
+            return classified("本地");
         }
         byte[] bytes = address.getAddress();
         if (address.isSiteLocalAddress() || address.isLinkLocalAddress()
                 || (bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc)) {
-            return "内网";
+            return classified("内网");
         }
         if (address.isAnyLocalAddress() || address.isMulticastAddress()) {
-            return "非公网地址";
+            return classified("非公网地址");
         }
         if (bytes.length != 4) {
-            return "未知（IPv6 暂未覆盖）";
+            return classified("未知（IPv6 暂未覆盖）");
         }
         int first = bytes[0] & 0xff;
         int second = bytes[1] & 0xff;
@@ -54,34 +58,51 @@ public class LoginIpLocationResolver {
                 || (first == 198 && (second == 18 || second == 19))
                 || (first == 198 && second == 51 && third == 100)
                 || (first == 203 && second == 0 && third == 113)) {
-            return "非公网地址";
+            return classified("非公网地址");
         }
         synchronized (searcher) {
             try {
-                return format(searcher.search(address.getHostAddress()));
+                return parts(searcher.search(address.getHostAddress()));
             } catch (Exception exception) {
                 // Neither the raw IP nor resolver data is written to application logs.
                 log.debug("Offline login IP location lookup failed");
-                return "未知";
+                return classified("未知");
             }
         }
     }
 
+    private static IpGeo classified(String display) {
+        return new IpGeo(display, null, null, null, null);
+    }
+
     static String format(String raw) {
+        return parts(raw).getDisplay();
+    }
+
+    static IpGeo parts(String raw) {
         if (raw == null || raw.isBlank()) {
-            return "未知";
+            return new IpGeo("未知", null, null, null, null);
         }
-        String[] parts = raw.split("\\|", -1);
-        if (parts.length != 5) {
-            return "未知";
+        String[] pieces = raw.split("\\|", -1);
+        if (pieces.length != 5) {
+            return new IpGeo("未知", null, null, null, null);
         }
+        String country = place(pieces[0]);
+        String province = place(pieces[2]);
+        String city = place(pieces[3]);
+        String isp = place(pieces[4]);
         Set<String> labels = new LinkedHashSet<>();
-        for (int index : new int[] {0, 2, 3}) {
-            String label = parts[index].trim();
-            if (!label.isEmpty() && !"0".equals(label) && !"内网IP".equals(label)) {
-                labels.add(label);
-            }
-        }
-        return labels.isEmpty() ? "未知" : String.join(" / ", labels);
+        if (country != null) labels.add(country);
+        if (province != null) labels.add(province);
+        if (city != null) labels.add(city);
+        String display = labels.isEmpty() ? "未知" : String.join(" / ", labels);
+        return new IpGeo(display, country, province, city, isp);
+    }
+
+    private static String place(String value) {
+        if (value == null) return null;
+        String label = value.trim();
+        if (label.isEmpty() || "0".equals(label) || "内网IP".equals(label)) return null;
+        return label;
     }
 }

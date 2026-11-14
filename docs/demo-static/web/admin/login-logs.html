@@ -25,17 +25,35 @@
         响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
         鉴权：请求头 Jwttoken（@NeedAop）
       -->
-      <p>IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。未覆盖时显示未知。</p>
-      <div style="overflow-x:auto"><table style="min-width:900px">
+      <p>全库记录。能在登录当时确定的结果、方式、账号、设备和会话会记下来。采集不到的项显示未知。IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。不展示密码、验证码或令牌。</p>
+      <div style="overflow-x:auto"><table style="min-width:1200px">
         <thead>
-          <tr><th>id</th><th>user_id</th><th>action</th><th>登录IP (ip_address)</th><th>IP归属地（参考）(ip_location)</th><th>create_time</th></tr>
+          <tr>
+            <th>时间</th><th>用户</th><th>结果</th><th>原因</th><th>方式</th><th>账号</th><th>设备</th>
+            <th>登录IP</th><th>IP归属地（参考）</th><th>对照</th>
+          </tr>
         </thead>
         <tbody>
-          <tr><td>103</td><td>u-admin-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>203.0.113.7</td><td>非公网地址</td><td>2026-07-19 10:12:03</td></tr>
-          <tr><td>102</td><td>u-admin-0001</td><td class="pill-danger">LOGIN_FAIL_PASSWORD</td><td>203.0.113.7</td><td>非公网地址</td><td>2026-07-19 10:11:40</td></tr>
-          <tr><td>101</td><td>u-admin-0001</td><td class="pill-ok">LOGIN_SUCCESS</td><td>198.51.100.22</td><td>非公网地址</td><td>2026-07-18 21:05:11</td></tr>
+          <tr>
+            <td>2026-07-19 10:12:03</td><td>u-admin-0001</td><td class="pill-ok">成功</td><td>登录成功</td><td>密码</td>
+            <td>admin</td><td>Edge 120 · Windows 10 · 桌面</td><td>203.0.113.7</td><td>非公网地址</td><td>曾用设备</td>
+          </tr>
+          <tr>
+            <td>2026-07-19 10:11:40</td><td>u-admin-0001</td><td class="pill-danger">失败</td><td>账号或密码不正确</td><td>密码</td>
+            <td>admin</td><td>Edge 120 · Windows 10 · 桌面</td><td>203.0.113.7</td><td>非公网地址</td><td>未知</td>
+          </tr>
+          <tr>
+            <td>2026-07-18 21:05:11</td><td>u-admin-0001</td><td class="pill-ok">成功</td><td>登录成功</td><td>密码</td>
+            <td>a***@example.com</td><td>未知</td><td>198.51.100.22</td><td>非公网地址</td><td>未知</td>
+          </tr>
         </tbody>
       </table></div>
+      <h2>记录详情（点一行打开）</h2>
+      <ul>
+        <li>登录编号 103 · 客户端 管理端 · 会话 9c2e88ab · 签发 2026-07-19 10:12:03 · 过期 2026-07-20 10:12:03 · 最近活跃 2026-07-19 10:40:00 · 退出 尚未记录</li>
+        <li>协议 https · TLS 未知 · 来源主机 未知 · 入口路径 /bgssai/admin/login · 请求号 未知 · 语言 zh-CN · 时区 未知</li>
+        <li>国家 / 省区 / 城市 / 运营商：未知（示例地址不是公网定位）</li>
+      </ul>
 
       <div class="pager">
         <button class="btn">上一页</button>

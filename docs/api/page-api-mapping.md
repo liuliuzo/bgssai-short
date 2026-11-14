@@ -11,7 +11,7 @@
 | `login.html` | `/login` | - | 与该页一致 | - |
 | `login.html` | `/en` | - | 与该页一致 | - |
 | `login.html` | `/en/*` | - | 与该页一致 | - |
-| `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
+| `login-logs.html` | `/login-logs` | `GET /bgssai/admin/login-logs?page_num&page_size` · `POST /bgssai/admin/logout` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`auth-login.md`](./auth-login.md) |
 | `pay-merchants.html` | `/pay-merchants` | - | 与该页一致 | - |
 | `quality-templates.html` | `/quality-templates` | - | 与该页一致 | - |
 | `reviews.html` | `/reviews` | - | 与该页一致 | - |
@@ -29,7 +29,7 @@
 | `login.html` | `/login` | - | 与该页一致 | - |
 | `login.html` | `/en` | - | 与该页一致 | - |
 | `login.html` | `/en/*` | - | 与该页一致 | - |
-| `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
+| `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size` · `POST /bgssai/user/logout` | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
 | `look-library.html` | `/look-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` · `POST /bgssai/user/look-materials/complete-angles` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
 | `scene-library.html` | `/scene-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
 | `prop-library.html` | `/prop-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
@@ -65,7 +65,7 @@
 | `login.html` | `/en` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `login.html` | `/en/*` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `home.html` | `/home` | -（消费登录响应缓存的身份字段） | 需 `Jwttoken` | - |
-| `login-logs.html` | `/login-logs` | `GET /bgssai/admin/login-logs?page_num&page_size` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`auth-login.md`](./auth-login.md) |
+| `login-logs.html` | `/login-logs` | `GET /bgssai/admin/login-logs?page_num&page_size` · `POST /bgssai/admin/logout` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`auth-login.md`](./auth-login.md) |
 | `content-review.html` | `/reviews` | `GET /bgssai/admin/reviews/list?page_num&page_size&review_status&risk_level&keyword` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `review-detail.html` | `/reviews/:review_id` | `GET /bgssai/admin/reviews/detail?review_id` · `POST /bgssai/admin/reviews/approve` · `POST /bgssai/admin/reviews/reject`（驳回参数为结构化 `reject_item_list`，替代自由文本 `reject_reason` + `risk_category` + `reject_shot_no`） | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `ai-models.html` | `/ai-models` | `GET /bgssai/admin/ai-models/list?ability_type`（含 ASR / MUSIC）· `POST /bgssai/admin/ai-models/create` · `/update` · `/set-default` · `/toggle-enabled` | 需 `Jwttoken` + `PLATFORM_ADMIN` | [`../feature/ai-model-integration.md`](../feature/ai-model-integration.md) |
@@ -89,7 +89,7 @@
 | `login.html` | `/en/*` | 无新接口 | 公开 | [`../feature/chinese-only-en-alias.md`](../feature/chinese-only-en-alias.md) |
 | `support-chat.html`（悬浮组件） | 登录页 + 主壳全局 | `POST /bgssai/user/support/sessions/create` · `/mine` · `/detail` · `POST /bgssai/user/support/messages/send` · `POST /bgssai/user/support/tickets/create` | 公开（IP 限流；可选 `Jwttoken` 绑定 user_id；访客凭 `guest_token`） | [`in-app-support.md`](./in-app-support.md) |
 | `home.html` | `/home` | `GET /bgssai/user/short-works/list` · `GET /bgssai/user/short-works/detail` · `GET /bgssai/user/ai-tasks/list`（`task_status=FAILED`，可带 `work_id`）。点「看示例流程」且最近作品里没有样例时，再用 `list?keyword=悬疑法医手记` 找本账号的 `w-dm-005`；找不到就留在首页。不新增字段；无 `cover_url` 时首页不显示封面 | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
-| `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
+| `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录，含结果、方式、脱敏账号、设备、会话与离线库地区快照）· `POST /bgssai/user/logout` | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
 | `mcp-tokens.html`（MCP Connectors） | `/mcp-tokens` | `POST /api/mcp/tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT；页内引导 Claude / Codex / Cursor / Grok Bot / Bgssai Bot | [`MCP.md`](./MCP.md) |
 | `works.html` | `/works` | `GET /bgssai/user/short-works/list?page_num&page_size&work_status&genre&keyword` | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `look-library.html` | `/look-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` · `POST /bgssai/user/look-materials/complete-angles` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |

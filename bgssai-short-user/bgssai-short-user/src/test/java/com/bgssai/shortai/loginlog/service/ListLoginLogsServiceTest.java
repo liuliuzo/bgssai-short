@@ -80,4 +80,42 @@ class ListLoginLogsServiceTest {
         assertThrows(UnauthorizedException.class, () -> service.list(1, 20));
         verifyNoInteractions(mapper, resolver);
     }
+
+    @Test
+    void exposesStoredDetailAndDerivesOlderRowsFromActionAndUserAgent() throws Exception {
+        UserContext.setUserId("current-user");
+        UserContext.setUserRole("USER");
+        LoginLog row = new LoginLog();
+        row.setId(9);
+        row.setUserId("current-user");
+        row.setAction("LOGIN_FAIL_PASSWORD");
+        row.setIpAddress("203.0.113.7");
+        row.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36");
+        row.setLoginMethod("password");
+        row.setIdentifierMasked("d***@example.com");
+        row.setClientChannel("web");
+        row.setSessionId("abc123sessionvalue");
+        Page<LoginLog> rows = new Page<>(1, 20);
+        rows.setTotal(1);
+        rows.add(row);
+        when(mapper.selectByExample(any())).thenReturn(rows);
+        when(resolver.resolve("203.0.113.7")).thenReturn("非公网地址");
+        when(resolver.lookup("203.0.113.7")).thenReturn(null);
+
+        LoginLogItem item = (LoginLogItem) ((List<?>) service.list(1, 20).getResult()).get(0);
+        assertEquals("FAILURE", item.getLoginResult());
+        assertEquals("账号或密码不正确", item.getResultReason());
+        assertEquals("password", item.getLoginMethod());
+        assertEquals("d***@example.com", item.getIdentifierMasked());
+        assertEquals("web", item.getClientChannel());
+        assertEquals("Chrome 120", item.getBrowserName());
+        assertEquals("Windows 10", item.getOsName());
+        assertEquals("abc123sessionvalue", item.getSessionId());
+        assertEquals("none", item.getIpGeoSource());
+        ObjectMapper json = new ObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        var tree = json.readTree(json.writeValueAsString(item));
+        assertEquals("d***@example.com", tree.get("identifier_masked").asText());
+        assertEquals("password", tree.get("login_method").asText());
+        assertTrue(tree.get("logout_time").isNull());
+    }
 }

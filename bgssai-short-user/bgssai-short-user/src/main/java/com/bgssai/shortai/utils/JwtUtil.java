@@ -119,6 +119,10 @@ public class JwtUtil {
 
     public static String getSessionIdFromToken(String token) { return getClaims(token).get("sid", String.class); }
 
+    public static long expirationMillis() {
+        return EXPIRATION_TIME_MS;
+    }
+
     private static Claims getClaims(String token) {
         return Jwts.parser()
                    .verifyWith(key())
