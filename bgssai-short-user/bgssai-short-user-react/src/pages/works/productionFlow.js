@@ -262,7 +262,7 @@ export function buildProductionFlow({
         : `第 2 步：请先为 ${cardSummary.unlockedCards.length} 张角色/场景卡锁定参考图`,
       description: hasCandidates
         ? `待锁定：${names}。生成参考图后必须点击某张图下方的「选定」变为「已锁定」，后续分镜才能生成画面和视频。`
-        : `待定妆：${names}。可生成参考图后点「选定」，或直接上传照片、从定妆知识库选用。`,
+        : `待定妆：${names}。可生成参考图后点「选定」，或直接上传照片、从定妆库或场景库选用。`,
       primaryLabel: hasCandidates ? '去选定并锁定定妆' : '去完成角色定妆',
       primaryTab: 'characters',
       secondaryLabel: '先去拆解分镜',

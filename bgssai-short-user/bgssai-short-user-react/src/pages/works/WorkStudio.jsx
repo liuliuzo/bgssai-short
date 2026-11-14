@@ -648,8 +648,8 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   const [textOnly, setTextOnly] = useState(false)
   const returnParam = encodeURIComponent(`/works/${work.work_id}/characters`)
   const characterLibraryHref = `/look-library?return=${returnParam}`
-  const sceneLibraryHref = `/look-library?kind=SCENE&return=${returnParam}`
-  const propLibraryHref = `/look-library?kind=PROP&return=${returnParam}`
+  const sceneLibraryHref = `/scene-library?return=${returnParam}`
+  const propLibraryHref = `/prop-library?return=${returnParam}`
   const [busyIds, setBusyIds] = useState(() => new Set())
   const busyRef = useRef(new Set())
   const ownImageRef = useRef(null)
@@ -722,7 +722,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   const saveCardToLibrary = async (materialKind, id, cardName, prompt, assetId) => {
     if (!assetId || busyRef.current.has(id)) return
     markBusy(id, true)
-    const storeName = materialKind === 'PROP' ? '道具参考' : materialKind === 'SCENE' ? '场景参考' : '人物定妆'
+    const storeName = materialKind === 'PROP' ? '道具库' : materialKind === 'SCENE' ? '场景库' : '定妆库'
     try {
       const caption = [cardName, prompt].filter(Boolean).join(' ')
       const { data } = await productionApi.uploadLookMaterial({
@@ -732,13 +732,13 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         caption,
       })
       if (!data?.success) {
-        if (!data?.message) message.error('没有存进参考库')
+        if (!data?.message) message.error(`没有存进${storeName}`)
         return
       }
-      message.success(`已存入「我的定妆 · ${storeName}」，后续剧集和作品可直接选用`)
+      message.success(`已存入${storeName}（「我的定妆」分组），后续剧集和作品可直接选用`)
       await load()
     } catch {
-      message.error('没有存进参考库')
+      message.error(`没有存进${storeName}`)
     } finally {
       markBusy(id, false)
     }
@@ -953,7 +953,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           message={`还有 ${cardSummary.unlockedCards.length} 张资产卡未锁定（已锁定 ${cardSummary.lockedCount}/${cardSummary.totalCards}）`}
           description={cardSummary.pendingSelectionCards.length > 0
             ? `${cardSummary.pendingSelectionCards.map((c) => `${c.kind}「${c.name}」`).join('、')} 已有候选图，可点右侧「一键锁定已有候选图」，或点卡片下方某张图旁边的「选定」完成锁定；未锁定的卡片会导致引用它的分镜无法出图和生成视频。`
-            : `待锁定：${cardSummary.unlockedCards.slice(0, 6).map((c) => `${c.kind}「${c.name}」`).join('、')}。可生成参考图后点「选定」，或直接上传照片、从知识库选用。`}
+            : `待锁定：${cardSummary.unlockedCards.slice(0, 6).map((c) => `${c.kind}「${c.name}」`).join('、')}。可生成参考图后点「选定」，或直接上传照片、从定妆库或场景库选用。`}
           action={(
             <Space>
               {cardSummary.pendingSelectionCards.length > 0 ? (
@@ -988,7 +988,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         </Form>
         <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
         <div style={{ marginBottom: 12 }}>
-          <Text type="secondary">先选定一张参考图，再生成定妆。可以上传照片，也可以从定妆知识库里选，不用离开这个作品。</Text>
+          <Text type="secondary">先选定一张参考图，再生成定妆。可以上传照片，也可以从定妆库里选，不用离开这个作品。</Text>
         </div>
         {!cardsReady ? <LibrarySkeleton /> : null}
         {cardsReady && !chars.length ? <Text type="secondary">还没有角色。先在上面写下角色名，再来定妆。</Text> : null}
@@ -1109,7 +1109,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady && !scenes.length ? <Text type="secondary">还没有场景。先在上面写下场景名，再上传或从知识库选一张参考图。</Text> : null}
+        {cardsReady && !scenes.length ? <Text type="secondary">还没有场景。先在上面写下场景名，再上传或从场景库选一张参考图。</Text> : null}
         {cardsReady ? scenes.map((row) => {
           const realSceneCandidates = (row.candidate_list || []).filter((item) => isRealPhotoUrl(item.file_url))
           const isLocked = row.card_status === 'LOCKED'
@@ -1174,7 +1174,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady && !props.length ? <Text type="secondary">还没有道具。先在上面写下道具名，再上传或从知识库选一张参考图。</Text> : null}
+        {cardsReady && !props.length ? <Text type="secondary">还没有道具。先在上面写下道具名，再上传或从道具库选一张参考图。</Text> : null}
         {cardsReady ? props.map((row) => {
           const realPropCandidates = (row.candidate_list || []).filter((item) => isRealPhotoUrl(item.file_url))
           const isLocked = row.card_status === 'LOCKED'

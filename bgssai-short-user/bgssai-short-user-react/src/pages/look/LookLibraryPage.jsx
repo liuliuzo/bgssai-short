@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Card, Image, Input, Modal, Skeleton, Space, Switch, Typography, message } from 'antd'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import productionApi from '../../api/production'
 import { safeReturnPath } from '../../lib/safeReturn'
 import {
   LOOK_ANGLES,
-  LOOK_KINDS,
   anglesForKind,
   arrangeAngle,
   emptySlotsForKind,
   groupLooksOfKind,
-  librarySummaryCounts,
-  librarySummaryText,
+  legacyKindRedirectTarget,
+  libraryKindCountText,
+  libraryOtherKindsNotice,
   normalizeLookKind,
   primaryAngleForKind,
 } from './lookGroups'
@@ -214,11 +214,19 @@ function sideMedia(look, kind) {
 
 const KIND_COPY = {
   CHARACTER: {
+    pageTitle: '定妆库',
+    intro: '这里放可以跨剧集、跨作品反复使用的人物定妆造型。在作品的角色卡上可以直接选用，也可以把已锁定的定妆照一键存回定妆库。',
     itemNoun: '造型',
     slotNoun: '面',
+    emptySlotText: '还没有照片',
+    otherTitle: '其他照片',
+    videoNote: '这是视频，不拿来当定妆照。封面只是其中一帧，点开可以播放。',
     namePlaceholder: '造型名称，例如白纱花瓣',
     descPlaceholder: '外观特征（可选，例如黑长直、珍珠耳环）',
-    emptyText: '这个库里还没有人物造型。写一个造型名称，再往四面里放照片。',
+    emptyText: '这个分组里还没有人物造型。写一个造型名称，再往四面里放照片，也可以在作品角色卡上点「存入定妆库」。',
+    noGroupText: '还没有分组也没关系。在作品角色卡上上传照片或点「存入定妆库」，会自动放进「我的定妆」分组。',
+    autoMatchLabel: '生成定妆时自动匹配这个分组',
+    groupPlaceholder: '例如现代都市剧角色组、古装女主造型组',
     uploadEmpty: '上传这一面',
     subHint: '每个造型按正脸、前面、背面、侧面排好；先放好正脸，还可以按正脸补齐其他面。点照片可看大图。',
     slotWidth: 112,
@@ -227,11 +235,19 @@ const KIND_COPY = {
     extraHeight: 112,
   },
   SCENE: {
+    pageTitle: '场景库',
+    intro: '这里放可以跨剧集、跨作品反复使用的场景参考图。在作品的场景卡上可以直接选用，也可以把已锁定的场景图一键存回场景库。',
     itemNoun: '场景',
     slotNoun: '机位',
+    emptySlotText: '还没有参考图',
+    otherTitle: '其他参考图',
+    videoNote: '这是视频，不拿来当静态参考图。封面只是其中一帧，点开可以播放。',
     namePlaceholder: '场景名称，例如总裁办公室、雨夜便利店',
     descPlaceholder: '布景与光影特征（可选，例如落地窗夜景、暖光吧台）',
-    emptyText: '这个库里还没有场景参考。可以先添加一个场景名称上传全景主图，也可以在作品场景卡上点「存入场景库」。',
+    emptyText: '这个分组里还没有场景参考。可以先添加一个场景名称上传全景主图，也可以在作品场景卡上点「存入场景库」。',
+    noGroupText: '还没有分组也没关系。在作品场景卡上上传照片或点「存入场景库」，会自动放进「我的定妆」分组。',
+    autoMatchLabel: '生成场景图时自动匹配这个分组',
+    groupPlaceholder: '例如现代都市剧场景组、古装王府场景组',
     uploadEmpty: '上传参考图',
     subHint: '每个场景按全景主图、中景机位、局部陈设排好；全景主图会在生成场景与空镜时优先参考。点照片可看大图。',
     slotWidth: 164,
@@ -240,11 +256,19 @@ const KIND_COPY = {
     extraHeight: 74,
   },
   PROP: {
+    pageTitle: '道具库',
+    intro: '这里放可以跨剧集、跨作品反复使用的道具参考图。在作品的道具卡上可以直接选用，也可以把已锁定的道具图一键存回道具库。',
     itemNoun: '道具',
     slotNoun: '视角',
+    emptySlotText: '还没有参考图',
+    otherTitle: '其他参考图',
+    videoNote: '这是视频，不拿来当静态参考图。封面只是其中一帧，点开可以播放。',
     namePlaceholder: '道具名称，例如退婚书、祖传玉佩',
     descPlaceholder: '材质与外观特征（可选，例如烫金红封、青白玉）',
-    emptyText: '这个库里还没有道具参考。可以先添加一个道具名称上传主视图，也可以在作品道具卡上点「存入道具库」。',
+    emptyText: '这个分组里还没有道具参考。可以先添加一个道具名称上传主视图，也可以在作品道具卡上点「存入道具库」。',
+    noGroupText: '还没有分组也没关系。在作品道具卡上上传照片或点「存入道具库」，会自动放进「我的定妆」分组。',
+    autoMatchLabel: '生成道具图时自动匹配这个分组',
+    groupPlaceholder: '例如现代都市剧道具组、古装信物道具组',
     uploadEmpty: '上传参考图',
     subHint: '每个道具按主视图、特写细节排好；主视图会在生成道具参考图时优先参考。点照片可看大图。',
     slotWidth: 120,
@@ -254,9 +278,12 @@ const KIND_COPY = {
   },
 }
 
-export default function LookLibraryPage() {
-  const [params, setParams] = useSearchParams()
-  const activeKind = normalizeLookKind(params.get('kind'))
+export default function LookLibraryPage({ kind = 'CHARACTER' }) {
+  const [params] = useSearchParams()
+  const activeKind = normalizeLookKind(kind)
+  const redirectTarget = activeKind === 'CHARACTER'
+    ? legacyKindRedirectTarget(params.get('kind'), params.get('return'))
+    : null
   const kindUi = KIND_COPY[activeKind] || KIND_COPY.CHARACTER
   const activeAngles = anglesForKind(activeKind)
   const primaryAngle = primaryAngleForKind(activeKind)
@@ -275,32 +302,33 @@ export default function LookLibraryPage() {
   const fileRef = useRef(null)
   const uploadTarget = useRef(null)
 
-  const switchKind = (nextKind) => {
-    const normalized = normalizeLookKind(nextKind)
-    const next = new URLSearchParams(params)
-    if (normalized === 'CHARACTER') next.delete('kind')
-    else next.set('kind', normalized)
-    setParams(next, { replace: true })
-    setLookName('')
-    setLookDesc('')
-  }
-
   const load = useCallback(async () => {
     try {
       const { data } = await productionApi.listLookLibraries()
       const list = data?.result?.library_list || []
       setLibraries(list)
-      setLibraryId((current) => current || (list[0] && list[0].library_id))
+      setLibraryId((current) => {
+        if (current && list.some((item) => item.library_id === current)) return current
+        const withKind = list.find((item) => groupLooksOfKind(item.material_list, activeKind).length > 0)
+        const preferred = withKind || list.find((item) => item.library_name === '我的定妆') || list[0]
+        return preferred && preferred.library_id
+      })
       return list
     } finally {
       setLibrariesReady(true)
     }
-  }, [])
+  }, [activeKind])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    if (!redirectTarget) load()
+  }, [load, redirectTarget])
+
+  if (redirectTarget) {
+    return <Navigate to={redirectTarget} replace />
+  }
 
   const current = libraries.find((item) => item.library_id === libraryId)
-  const currentCounts = librarySummaryCounts(current?.material_list)
+  const otherKindsNotice = current ? libraryOtherKindsNotice(current.material_list, activeKind) : ''
   const looks = groupLooksOfKind(current?.material_list, activeKind)
   const named = new Set(looks.map((look) => look.name))
   const visibleDrafts = drafts.filter((draft) => draft.kind === activeKind && !named.has(draft.name))
@@ -308,7 +336,7 @@ export default function LookLibraryPage() {
   async function createLibrary() {
     const name = libraryName.trim()
     if (!name) {
-      message.error('先写知识库名称')
+      message.error('先写分组名称')
       return
     }
     setBusy(true)
@@ -325,7 +353,7 @@ export default function LookLibraryPage() {
       if (id) setLibraryId(id)
       await load()
     } catch {
-      message.error('知识库没有建成')
+      message.error('分组没有建成')
     } finally {
       setBusy(false)
     }
@@ -590,7 +618,7 @@ export default function LookLibraryPage() {
                         ) : (
                           <>
                             <div>这一{kindUi.slotNoun}</div>
-                            <div>还没有参考图</div>
+                            <div>{kindUi.emptySlotText}</div>
                           </>
                         )}
                       </div>
@@ -634,7 +662,7 @@ export default function LookLibraryPage() {
           {side.duplicated ? <div style={{ marginTop: 8 }}><Text type="secondary">有的照片在多个卡片上是同一张，这里只显示一次。</Text></div> : null}
           {side.extras.length || side.broken.length ? (
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 13, marginBottom: 4 }}>其他参考图</div>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>{kindUi.otherTitle}</div>
               <Text type="secondary">上面是每个{kindUi.slotNoun}最新的一张。更早上传或未分{kindUi.slotNoun}的放在这里，点开可以看大图，不需要就移除。</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.extras.map((item) => (
@@ -660,7 +688,7 @@ export default function LookLibraryPage() {
           {side.videos.length ? (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 13, marginBottom: 4 }}>参考视频</div>
-              <Text type="secondary">这是视频，不拿来当静态参考图。封面只是其中一帧，点开可以播放。</Text>
+              <Text type="secondary">{kindUi.videoNote}</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.videos.map((item) => (
                   <div key={item.material_id} data-video="true" style={{ width: kindUi.extraWidth }}>
@@ -688,24 +716,18 @@ export default function LookLibraryPage() {
     )
   }
 
-  const kindCountOf = (kindKey) => {
-    if (kindKey === 'SCENE') return currentCounts.sceneCount
-    if (kindKey === 'PROP') return currentCounts.propCount
-    return currentCounts.characterCount
-  }
-
   return (
     <Card
-      title="定妆与场景参考库"
+      title={kindUi.pageTitle}
       extra={(
         <Space>
           {back ? <Link to={back}>{backLabel}</Link> : <Link to="/works">去我的作品</Link>}
-          <Button type="primary" onClick={() => setCreating(true)}>新建参考库</Button>
+          <Button type="primary" onClick={() => setCreating(true)}>新建分组</Button>
         </Space>
       )}
     >
       <Paragraph style={{ marginBottom: 8, color: '#334155', lineHeight: 1.7 }}>
-        这里放可以跨剧集、跨作品反复使用的人物造型、场景参考和道具参考。在作品的角色与场景卡上可以直接选用，也可以把已锁定的参考图一键存回库里。
+        {kindUi.intro}
       </Paragraph>
       <Paragraph style={{ marginBottom: 0, color: '#334155', lineHeight: 1.7 }}>
         {kindUi.subHint}
@@ -732,39 +754,39 @@ export default function LookLibraryPage() {
             >
               <div style={{ fontWeight: item.library_id === libraryId ? 600 : 400 }}>{item.library_name}</div>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {librarySummaryText(item.material_list)}
-                {item.mount_portrait === 1 ? ' · 生成时参考' : ' · 先放着'}
+                {libraryKindCountText(item.material_list, activeKind)}
+                {item.status === 'ARCHIVED' ? ' · 已归档' : item.mount_portrait === 1 ? ' · 生成时参考' : ' · 先放着'}
               </Text>
             </button>
           ))}
-          {librariesReady && !libraries.length ? <Text>还没有参考库也没关系。在角色卡、场景卡或道具卡上上传照片，会自动放进「我的定妆」。</Text> : null}
+          {librariesReady && !libraries.length ? <Text>{kindUi.noGroupText}</Text> : null}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           {current ? (
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                <Space wrap>
-                  {LOOK_KINDS.map((kindItem) => (
-                    <Button
-                      key={kindItem.key}
-                      type={kindItem.key === activeKind ? 'primary' : 'default'}
-                      onClick={() => switchKind(kindItem.key)}
-                    >
-                      {kindItem.label}（{kindCountOf(kindItem.key)}）
-                    </Button>
-                  ))}
-                </Space>
-                {current.status === 'ARCHIVED' ? (
-                  <Space wrap>
-                    <Text>这个库已归档，生成时不会自动匹配。</Text>
-                    <Button size="small" disabled={busy} onClick={restoreLibrary}>恢复</Button>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                  <Space wrap size={6}>
+                    <Text strong>{current.library_name}</Text>
+                    <Text type="secondary">（{libraryKindCountText(current.material_list, activeKind)}）</Text>
                   </Space>
-                ) : (
-                  <Space wrap>
-                    <Text>生成参考图时自动匹配这个库</Text>
-                    <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
-                  </Space>
-                )}
+                  {current.status === 'ARCHIVED' ? (
+                    <Space wrap>
+                      <Text>这个分组已归档，生成时不会自动匹配。</Text>
+                      <Button size="small" disabled={busy} onClick={restoreLibrary}>恢复</Button>
+                    </Space>
+                  ) : (
+                    <Space wrap>
+                      <Text>{kindUi.autoMatchLabel}</Text>
+                      <Switch checked={current.mount_portrait === 1} disabled={busy} onChange={toggleMount} />
+                    </Space>
+                  )}
+                </div>
+                {otherKindsNotice ? (
+                  <div style={{ marginTop: 4 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{otherKindsNotice}</Text>
+                  </div>
+                ) : null}
               </div>
               <Space wrap>
                 <Input
@@ -788,7 +810,7 @@ export default function LookLibraryPage() {
               {!looks.length && !visibleDrafts.length ? <Text type="secondary">{kindUi.emptyText}</Text> : null}
             </Space>
           ) : librariesReady ? (
-            <Text>还没有打开参考库。左边列出库之后会自动打开第一个；也可以点「新建参考库」。</Text>
+            <Text>还没有打开分组。左侧列出分组后会自动打开第一个；也可以点右上角「新建分组」。</Text>
           ) : <Skeleton active paragraph={{ rows: 6 }} />}
         </div>
       </div>
@@ -817,7 +839,7 @@ export default function LookLibraryPage() {
         ) : null}
       </Modal>
       <Modal
-        title="新建参考库"
+        title="新建分组"
         open={creating}
         okText="创建"
         cancelText="取消"
@@ -827,11 +849,11 @@ export default function LookLibraryPage() {
       >
         <Input
           value={libraryName}
-          placeholder="例如现代都市剧资产库、古装王府场景库"
+          placeholder={kindUi.groupPlaceholder}
           onChange={(event) => setLibraryName(event.target.value)}
           onPressEnter={createLibrary}
         />
-        <div style={{ marginTop: 8 }}><Text type="secondary">同一个参考库里可以分类存放人物定妆、场景参考和道具参考，整部剧集可直接共用。</Text></div>
+        <div style={{ marginTop: 8 }}><Text type="secondary">分组用来整理跨剧集、跨作品复用的{kindUi.itemNoun}素材；如果其他素材库也使用同一分组，自动匹配开关会一起生效。</Text></div>
       </Modal>
     </Card>
   )

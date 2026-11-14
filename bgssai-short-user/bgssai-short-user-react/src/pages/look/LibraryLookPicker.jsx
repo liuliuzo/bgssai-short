@@ -78,9 +78,9 @@ export default function LibraryLookPicker({ kind, libraryHref, busy, onUse }) {
           <div style={{ marginBottom: 8 }}>
             选一个已有{isProp ? '道具参考' : isScene ? '场景参考' : '造型'}，用到这个{noun}。参考图会留在库里，后续剧集和作品也能直接复用。
           </div>
-          {loading ? <Text type="secondary">正在读取参考库…</Text> : null}
+          {loading ? <Text type="secondary">正在读取{storeLabel}…</Text> : null}
           {!loading && !libraries.length ? (
-            <Text type="secondary">还没有参考库。直接在卡片上上传照片或点「存入{storeLabel}」，会自动放进「我的定妆」。</Text>
+            <Text type="secondary">还没有{storeLabel}内容。直接在卡片上上传照片或点「存入{storeLabel}」，会自动放进「我的定妆」分组。</Text>
           ) : null}
           {libraries.length ? (
             <Space wrap style={{ marginBottom: 10 }}>
@@ -100,7 +100,7 @@ export default function LibraryLookPicker({ kind, libraryHref, busy, onUse }) {
             </Space>
           ) : null}
           {current && current.status === 'ARCHIVED' ? (
-            <div style={{ marginBottom: 8 }}>这个库已归档，生成时不会自动匹配。点「{actionLabel}」仍会用到这张卡上。要恢复自动参考，去上面的「管理{storeLabel}」点恢复。</div>
+            <div style={{ marginBottom: 8 }}>这个分组已归档，生成时不会自动匹配。点「{actionLabel}」仍会用到这张卡上。要恢复自动参考，去上面的「管理{storeLabel}」点恢复。</div>
           ) : null}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             {looks.map((look) => {
@@ -127,7 +127,7 @@ export default function LibraryLookPicker({ kind, libraryHref, busy, onUse }) {
             })}
           </div>
           {!loading && current && !looks.length ? (
-            <Text type="secondary">这个库里还没有{noun}参考图。在卡片上上传参考图、锁定后点「存入{storeLabel}」，或去「管理{storeLabel}」上传即可。</Text>
+            <Text type="secondary">这个分组里还没有{noun}参考图。在卡片上上传参考图、锁定后点「存入{storeLabel}」，或去「管理{storeLabel}」上传即可。</Text>
           ) : null}
         </div>
       ) : null}

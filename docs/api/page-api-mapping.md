@@ -31,6 +31,8 @@
 | `login.html` | `/en/*` | - | 与该页一致 | - |
 | `login-logs.html` | `/login-logs` | - | 与该页一致 | - |
 | `look-library.html` | `/look-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` · `POST /bgssai/user/look-materials/complete-angles` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
+| `scene-library.html` | `/scene-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
+| `prop-library.html` | `/prop-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
 | `mcp-tokens.html` | `/mcp-tokens` | - | 与该页一致 | - |
 | `oauth-callback.html` | `/oauth-callback` | - | 与该页一致 | - |
 | `subscription.html` | `/subscription` | - | 与该页一致 | - |
@@ -90,6 +92,9 @@
 | `login-logs.html` | `/login-logs` | `GET /bgssai/user/login-logs?page_num&page_size`（仅本人记录） | 需 `Jwttoken` | [`auth-login.md`](./auth-login.md) |
 | `mcp-tokens.html`（MCP Connectors） | `/mcp-tokens` | `POST /api/mcp/tokens/create` · `/list` · `/revoke`；MCP 调用走 `POST /api/mcp`（Bearer PAT，无 JWT） | 令牌 CRUD 需 `Jwttoken`；`/api/mcp` 自校验 PAT；页内引导 Claude / Codex / Cursor / Grok Bot / Bgssai Bot | [`MCP.md`](./MCP.md) |
 | `works.html` | `/works` | `GET /bgssai/user/short-works/list?page_num&page_size&work_status&genre&keyword` | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
+| `look-library.html` | `/look-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` · `POST /bgssai/user/look-materials/complete-angles` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
+| `scene-library.html` | `/scene-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
+| `prop-library.html` | `/prop-library` | `GET /bgssai/user/look-libraries/list` · `POST /bgssai/user/look-libraries/save` · `POST /bgssai/user/look-materials/upload` · `POST /bgssai/user/look-materials/delete` | 需 `Jwttoken` | [`../feature/look-knowledge.md`](../feature/look-knowledge.md) |
 | `work-create.html` | `/works/create` | `POST /bgssai/user/short-works/create`（必填仅 `work_title` + `one_line_pitch`，其余走默认；不再含 `cost_budget_cent` / `quality_threshold_score`）· `GET /bgssai/user/quality/templates?genre`（本切片返回空列表） | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `work-detail.html` | `/works/:work_id` | `GET /bgssai/user/short-works/detail?work_id` · `POST /bgssai/user/short-works/update` · `/archive` · `POST /bgssai/user/episodes/create` · `/update` · `/delete` · `POST /bgssai/user/episodes/batch`（`action` 必填：归档 / 删除 / 重置合成 / 标记就绪；需求中的批量生成剧本等动作未实现） | 需 `Jwttoken` | [`SHORT-PRODUCTION.md`](./SHORT-PRODUCTION.md) |
 | `video-path-guide.html`（作品页顶部步骤，不新增路由） | `/works/:work_id` 与 `/works/:work_id/:tab` | 不新增接口。步骤依次调用已有大纲 / 剧本 / 定稿、一致性面板、定妆生成与锁定、拆镜、人话分镜、镜头估费与提交、任务列表 | 需 `Jwttoken` | [`../feature/video-path-guide.md`](../feature/video-path-guide.md) |

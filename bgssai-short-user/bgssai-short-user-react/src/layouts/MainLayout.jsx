@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { Dropdown, Drawer, message } from 'antd'
-import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined , DownloadOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons'
+import { DashboardOutlined, ProfileOutlined, ApiOutlined, AccountBookOutlined, WalletOutlined, VideoCameraOutlined, ThunderboltOutlined, LogoutOutlined, DownOutlined, DownloadOutlined, AppstoreOutlined, SettingOutlined, UserOutlined, PictureOutlined, GoldOutlined } from '@ant-design/icons'
 import { useUserStore } from '../store/user'
 import { useBgssaiShell } from '../hooks/useBgssaiShell'
 import SupportWidget from '../components/SupportWidget'
@@ -11,7 +11,9 @@ import './main-layout.css'
 const NAV_ITEMS = [
   { key: '/home', label: '首页', icon: <DashboardOutlined /> },
   { key: '/works', label: '我的作品', icon: <VideoCameraOutlined /> },
-  { key: '/look-library', label: '定妆与场景库', icon: <AppstoreOutlined /> },
+  { key: '/look-library', label: '定妆库', icon: <UserOutlined /> },
+  { key: '/scene-library', label: '场景库', icon: <PictureOutlined /> },
+  { key: '/prop-library', label: '道具库', icon: <GoldOutlined /> },
   { key: '/tasks', label: '任务中心', icon: <ThunderboltOutlined /> },
   { key: '/usage', label: '用量与账单', icon: <WalletOutlined /> },
   { key: '/subscription', label: '套餐与加量', icon: <AccountBookOutlined /> },
@@ -30,7 +32,7 @@ const SHELL_PRIMARY = [
 ]
 
 const SHELL_MORE = NAV_ITEMS.filter((item) => !SHELL_PRIMARY.some((primary) => primary.key === item.key))
-const MAKE_KEYS = ['/home', '/works', '/look-library', '/tasks']
+const MAKE_KEYS = ['/home', '/works', '/look-library', '/scene-library', '/prop-library', '/tasks']
 const MAKE_NAV = NAV_ITEMS.filter((item) => MAKE_KEYS.includes(item.key))
 const ACCOUNT_NAV = NAV_ITEMS.filter((item) => !MAKE_KEYS.includes(item.key))
 
