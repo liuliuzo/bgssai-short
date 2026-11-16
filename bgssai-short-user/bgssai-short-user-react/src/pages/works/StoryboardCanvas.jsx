@@ -48,6 +48,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   const [draft, setDraft] = useState('')
   const [batchTaskType, setBatchTaskType] = useState('IMAGE')
   const [submittingSingle, setSubmittingSingle] = useState(false)
+  const [submittingBatch, setSubmittingBatch] = useState(false)
 
   const load = useCallback(async () => {
     if (!episodeId) {
@@ -63,6 +64,8 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   }, [episodeId])
 
   useEffect(() => { load() }, [load])
+  // An estimate only prices the selection it was computed for; any change voids it.
+  useEffect(() => { setCost(null) }, [selected, batchTaskType, episodeId])
 
   // 行 = 场次，列 = 镜号。位置全部由数据算出来，不存任何坐标
   const lanes = useMemo(() => {
@@ -126,25 +129,31 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   }
 
   const submit = async () => {
-    if (batchTaskType === 'VIDEO') {
-      const ok = await submitOfficial(selected.length ? selected : undefined, false)
-      if (ok) {
-        message.success('视频已提交')
+    if (submittingBatch) return
+    setSubmittingBatch(true)
+    try {
+      if (batchTaskType === 'VIDEO') {
+        const ok = await submitOfficial(selected.length ? selected : undefined, false)
+        if (ok) {
+          message.success('视频已提交')
+          setCost(null)
+          load()
+        }
+        return
+      }
+      const { data } = await productionApi.submitTasks({
+        episode_id: episodeId,
+        shot_ids: selected.length ? selected : undefined,
+        task_type: batchTaskType,
+        auto_next_flag: 0,
+      })
+      if (data?.success) {
+        message.success(`已提交 ${batchTaskType} 批量生成任务`)
         setCost(null)
         load()
       }
-      return
-    }
-    const { data } = await productionApi.submitTasks({
-      episode_id: episodeId,
-      shot_ids: selected.length ? selected : undefined,
-      task_type: batchTaskType,
-      auto_next_flag: 0,
-    })
-    if (data?.success) {
-      message.success(`已提交 ${batchTaskType} 批量生成任务`)
-      setCost(null)
-      load()
+    } finally {
+      setSubmittingBatch(false)
     }
   }
 
@@ -277,7 +286,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
               ]}
             />
             <Button size="small" onClick={estimate}>估费用</Button>
-            <Button size="small" type="primary" disabled={!cost} onClick={submit}>批量生成</Button>
+            <Button size="small" type="primary" disabled={!cost || submittingBatch} loading={submittingBatch} onClick={submit}>批量生成</Button>
           </Space>
         )}
       >

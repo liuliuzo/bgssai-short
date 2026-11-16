@@ -1,6 +1,7 @@
 package com.bgssai.shortai.common.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -51,5 +52,19 @@ class ErrorCodeContractTest {
     @Test
     void unauthorizedExceptionDefaultsToUnauthorizedCode() {
         assertEquals("2002", new UnauthorizedException("no user in context").getCode());
+    }
+
+    @Test
+    void defaultMessagesAreUserFacingChinese() {
+        for (CommonErrorCode code : CommonErrorCode.values()) {
+            if (code == CommonErrorCode.SUCCESS) {
+                continue;
+            }
+            String message = code.message();
+            assertTrue(message != null && !message.isBlank(), code.name());
+            assertTrue(message.chars().anyMatch(ch -> ch >= 0x4E00 && ch <= 0x9FFF),
+                    code.name() + " default message must be Chinese: " + message);
+        }
+        assertEquals("登录状态已失效，请重新登录", new UnauthorizedException().getMessage());
     }
 }

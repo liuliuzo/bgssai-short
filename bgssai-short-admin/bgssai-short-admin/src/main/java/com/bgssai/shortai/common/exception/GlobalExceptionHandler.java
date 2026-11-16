@@ -71,7 +71,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleBizException(BizException ex, HttpServletRequest request) {
         log.warn("[GlobalException] biz path={} code={} msg={}",
                 request.getRequestURI(), ex.getCode(), ex.getMessage());
-        return json("2003".equals(String.valueOf(ex.getCode())) ? HttpStatus.UNAUTHORIZED : HttpStatus.OK, envelope(ex.getCode(), ex.getMessage()));
+        String raw = ex.getMessage() == null ? "" : ex.getMessage();
+        String msg;
+        if (CommonErrorCode.SYSTEM_ERROR.code().equals(String.valueOf(ex.getCode()))) {
+            // System-fault details (table names, internal operation names) stay in the log above.
+            msg = CommonErrorCode.SYSTEM_ERROR.message();
+        } else if (raw.isBlank()) {
+            msg = CommonErrorCode.BIZ_ERROR.message();
+        } else {
+            msg = raw.length() > 240 ? raw.substring(0, 240) : raw;
+        }
+        return json("2003".equals(String.valueOf(ex.getCode())) ? HttpStatus.UNAUTHORIZED : HttpStatus.OK, envelope(ex.getCode(), msg));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -111,7 +121,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse> handleMissingParam(MissingServletRequestParameterException ex,
             HttpServletRequest request) {
-        String detail = "missing required parameter: " + ex.getParameterName();
+        String detail = "缺少必填参数: " + ex.getParameterName();
         log.warn("[GlobalException] missing_param path={} detail={}", request.getRequestURI(), detail);
         return json(HttpStatus.OK, envelope(CommonErrorCode.INVALID_PARAM.code(), detail));
     }
@@ -119,7 +129,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
             HttpServletRequest request) {
-        String detail = "parameter type mismatch: " + ex.getName();
+        String requiredType = ex.getRequiredType() == null ? "" : " (" + ex.getRequiredType().getSimpleName() + ")";
+        String detail = "参数类型不正确: " + ex.getName() + requiredType;
         log.warn("[GlobalException] type_mismatch path={} detail={}", request.getRequestURI(), detail);
         return json(HttpStatus.OK, envelope(CommonErrorCode.INVALID_PARAM.code(), detail));
     }
@@ -128,7 +139,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleNotReadable(HttpMessageNotReadableException ex,
             HttpServletRequest request) {
         log.warn("[GlobalException] body_unreadable path={} msg={}", request.getRequestURI(), ex.getMessage());
-        return json(HttpStatus.OK, envelope(CommonErrorCode.INVALID_PARAM.code(), "request body format error"));
+        return json(HttpStatus.OK, envelope(CommonErrorCode.INVALID_PARAM.code(), "请求内容格式不正确"));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -138,7 +149,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(), request.getMethod());
         return json(HttpStatus.METHOD_NOT_ALLOWED,
                 envelope(CommonErrorCode.RESOURCE_NOT_FOUND.code(),
-                        "unsupported method: " + request.getMethod()));
+                        "不支持的请求方法: " + request.getMethod()));
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
@@ -147,7 +158,7 @@ public class GlobalExceptionHandler {
         log.warn("[GlobalException] media_type_unsupported path={} msg={}",
                 request.getRequestURI(), ex.getMessage());
         return json(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                envelope(CommonErrorCode.INVALID_PARAM.code(), "unsupported media type"));
+                envelope(CommonErrorCode.INVALID_PARAM.code(), "不支持的内容类型"));
     }
 
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
@@ -157,7 +168,7 @@ public class GlobalExceptionHandler {
         log.warn("[GlobalException] media_type_unacceptable path={} msg={}",
                 request.getRequestURI(), ex.getMessage());
         return json(HttpStatus.NOT_ACCEPTABLE,
-                envelope(CommonErrorCode.INVALID_PARAM.code(), "unacceptable media type"));
+                envelope(CommonErrorCode.INVALID_PARAM.code(), "不可接受的内容类型"));
     }
 
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
@@ -172,17 +183,19 @@ public class GlobalExceptionHandler {
         log.warn("[GlobalException] no_resource path={}", request.getRequestURI());
         return json(HttpStatus.NOT_FOUND,
                 envelope(CommonErrorCode.RESOURCE_NOT_FOUND.code(),
-                        "resource not found: " + request.getRequestURI()));
+                        "资源不存在: " + request.getRequestURI()));
     }
 
     @ExceptionHandler(RateLimitExceededException.class)
     public ResponseEntity<ApiResponse> handleRateLimit(RateLimitExceededException ex, HttpServletRequest request) {
         log.warn("[GlobalException] rate_limit path={} retryAfterSec={}",
                 request.getRequestURI(), ex.getRetryAfterSeconds());
+        String message = CommonErrorCode.RATE_LIMIT_EXCEEDED.message()
+                + "（" + ex.getRetryAfterSeconds() + " 秒后可重试）";
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
-                .body(envelope(ex.getCode(), ex.getMessage()));
+                .body(envelope(ex.getCode(), message));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -190,16 +203,24 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         log.warn("[GlobalException] upload_too_large path={} maxBytes={}",
                 request.getRequestURI(), ex.getMaxUploadSize());
+        long maxBytes = ex.getMaxUploadSize();
+        String limit = maxBytes >= 1024 * 1024
+                ? "（上限 " + (maxBytes / (1024 * 1024)) + " MB）"
+                : maxBytes > 0 ? "（上限 " + maxBytes + " B）" : "";
         return json(HttpStatus.PAYLOAD_TOO_LARGE,
                 envelope(CommonErrorCode.REQUEST_TOO_LARGE.code(),
-                        CommonErrorCode.REQUEST_TOO_LARGE.message()));
+                        CommonErrorCode.REQUEST_TOO_LARGE.message() + limit));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse> handleIllegalArgument(IllegalArgumentException ex,
             HttpServletRequest request) {
         log.warn("[GlobalException] invalid_argument path={} msg={}", request.getRequestURI(), ex.getMessage());
-        return json(HttpStatus.BAD_REQUEST, envelope(CommonErrorCode.INVALID_PARAM.code(), ex.getMessage()));
+        String raw = ex.getMessage();
+        String message = (raw == null || raw.isBlank())
+                ? CommonErrorCode.INVALID_PARAM.message()
+                : raw.length() > 240 ? raw.substring(0, 240) : raw;
+        return json(HttpStatus.BAD_REQUEST, envelope(CommonErrorCode.INVALID_PARAM.code(), message));
     }
 
     /**

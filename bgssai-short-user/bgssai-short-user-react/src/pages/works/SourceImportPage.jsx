@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Card, Checkbox, Input, InputNumber, Select, Space, Table, Tag, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import { canMergeChapterWithNext, mergeChapterWithNext, updateChapterTitle } from './sourceChapters'
 
 const { Paragraph, Text } = Typography
 const { TextArea } = Input
@@ -23,6 +24,7 @@ export default function SourceImportPage({ work }) {
   const [chapterTo, setChapterTo] = useState(1)
   const [targetCount, setTargetCount] = useState(6)
   const [estimate, setEstimate] = useState(null)
+  const [adapting, setAdapting] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fileLabel, setFileLabel] = useState('暂未选择本地文件')
   const fileRef = useRef(null)
@@ -60,6 +62,8 @@ export default function SourceImportPage({ work }) {
 
   useEffect(() => { loadSources() }, [loadSources])
   useEffect(() => { loadChapters() }, [loadChapters])
+  // An estimate only prices the range it was computed for; any change voids it.
+  useEffect(() => { setEstimate(null) }, [activeSourceId, chapterFrom, chapterTo, targetCount])
 
   const doImport = async () => {
     if (!rightsConfirm) {
@@ -119,19 +123,6 @@ export default function SourceImportPage({ work }) {
     }
   }
 
-  const mergeWithNext = (index) => {
-    if (index >= chapters.length - 1) return
-    const next = chapters[index + 1]
-    const merged = chapters.slice()
-    merged[index] = {
-      ...merged[index],
-      chapter_text: `${merged[index].chapter_text || ''}\n\n${next.chapter_text || ''}`,
-      char_count: (merged[index].char_count || 0) + (next.char_count || 0),
-    }
-    merged.splice(index + 1, 1)
-    setChapters(merged)
-  }
-
   const runEstimate = async () => {
     const { data } = await featuresApi.sourceAdaptEstimate({
       source_id: activeSourceId,
@@ -143,14 +134,21 @@ export default function SourceImportPage({ work }) {
   }
 
   const runAdapt = async () => {
-    const { data } = await featuresApi.sourceAdapt({
-      source_id: activeSourceId,
-      chapter_no_from: chapterFrom,
-      chapter_no_to: chapterTo,
-      target_episode_count: targetCount,
-    })
-    if (data?.success) {
-      message.success('改编任务已提交')
+    if (adapting) return
+    setAdapting(true)
+    try {
+      const { data } = await featuresApi.sourceAdapt({
+        source_id: activeSourceId,
+        chapter_no_from: chapterFrom,
+        chapter_no_to: chapterTo,
+        target_episode_count: targetCount,
+      })
+      if (data?.success) {
+        message.success('改编任务已提交')
+        setEstimate(null)
+      }
+    } finally {
+      setAdapting(false)
     }
   }
 
@@ -261,15 +259,11 @@ export default function SourceImportPage({ work }) {
                 {
                   title: '章节标题',
                   width: 240,
-                  render: (_, r, index) => (
+                  render: (_, r) => (
                     <Input
                       size="small"
                       value={r.chapter_title}
-                      onChange={(e) => {
-                        const next = chapters.slice()
-                        next[index] = { ...next[index], chapter_title: e.target.value }
-                        setChapters(next)
-                      }}
+                      onChange={(e) => setChapters((cur) => updateChapterTitle(cur, r, e.target.value))}
                     />
                   ),
                 },
@@ -285,12 +279,12 @@ export default function SourceImportPage({ work }) {
                 {
                   title: '操作',
                   width: 110,
-                  render: (_, r, index) => (
+                  render: (_, r) => (
                     <Button
                       type="link"
                       size="small"
-                      disabled={index >= chapters.length - 1}
-                      onClick={() => mergeWithNext(index)}
+                      disabled={!canMergeChapterWithNext(chapters, r)}
+                      onClick={() => setChapters((cur) => mergeChapterWithNext(cur, r))}
                     >与下章合并</Button>
                   ),
                 },
@@ -315,7 +309,7 @@ export default function SourceImportPage({ work }) {
                 message={`涉及 ${estimate.char_count} 字（${estimate.chapter_count} 章），改编 ${targetCount} 集，预计 ${(estimate.estimated_cost_cent / 100).toFixed(2)} 元`}
               />
             ) : null}
-            <Button type="primary" disabled={!estimate} onClick={runAdapt}>确认改编</Button>
+            <Button type="primary" disabled={!estimate || adapting} loading={adapting} onClick={runAdapt}>确认改编</Button>
           </Card>
         </>
       ) : null}

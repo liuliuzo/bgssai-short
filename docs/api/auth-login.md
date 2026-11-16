@@ -190,7 +190,7 @@
 token 缺失或失效时切面直接返回（HTTP 200）：
 
 ```json
-{ "code": "2002", "message": "token validation failed", "success": false }
+{ "code": "2002", "message": "登录状态已失效，请重新登录", "success": false }
 ```
 
 token 有效但身份不符时同样是 HTTP 200 + 封装内 code：

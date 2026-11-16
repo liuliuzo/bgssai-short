@@ -258,7 +258,7 @@
 按通用错误码返回：
 
 ```json
-{ "code": "999999", "message": "system error", "success": false }
+{ "code": "999999", "message": "系统异常，请稍后重试", "success": false }
 ```
 
 ## 5. 组件清单与指标（基线）

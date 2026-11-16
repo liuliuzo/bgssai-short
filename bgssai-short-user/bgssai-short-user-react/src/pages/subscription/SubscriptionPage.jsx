@@ -4,6 +4,7 @@ import subscriptionApi from '../../api/subscription'
 import NativePayQrModal from './NativePayQrModal'
 import {
   PAY_ORDER_POLL_INTERVAL_MS,
+  isPollWindowExceeded,
   resolvePollOutcome,
 } from './payOrderPoll'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
@@ -33,6 +34,7 @@ export default function SubscriptionPage() {
   const [payOrder, setPayOrder] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [polling, setPolling] = useState(false)
+  const [buyKey, setBuyKey] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -66,15 +68,11 @@ export default function SubscriptionPage() {
     if (!modalOpen || !polling || !payOrder?.order_no) return undefined
 
     let cancelled = false
+    let inFlight = false
+    const startedAt = Date.now()
     const tick = async () => {
-      const outcomeFromExpiry = resolvePollOutcome('created', payOrder.expires_at)
-      if (outcomeFromExpiry === 'timeout') {
-        if (!cancelled) {
-          message.warning('订单已超时，请重新下单')
-          closePayModal()
-        }
-        return
-      }
+      if (inFlight) return
+      inFlight = true
       try {
         const { data } = await subscriptionApi.orderStatus(payOrder.order_no)
         if (cancelled) return
@@ -89,14 +87,19 @@ export default function SubscriptionPage() {
         if (outcome === 'closed') {
           message.warning('订单已关闭')
           closePayModal()
+          load()
           return
         }
-        if (outcome === 'timeout') {
+        if (outcome === 'timeout'
+          || (!payOrder.expires_at && isPollWindowExceeded(startedAt))) {
           message.warning('订单已超时，请重新下单')
           closePayModal()
+          load()
         }
       } catch {
         // keep polling
+      } finally {
+        inFlight = false
       }
     }
 
@@ -108,7 +111,9 @@ export default function SubscriptionPage() {
     }
   }, [modalOpen, polling, payOrder, closePayModal, load])
 
-  const buy = async (fn) => {
+  const buy = async (fn, key) => {
+    if (buyKey) return
+    setBuyKey(key)
     try {
       const { data } = await fn()
       if (!data?.success || !data.result) return
@@ -136,6 +141,8 @@ export default function SubscriptionPage() {
       message.info('请扫码支付')
     } catch (e) {
       message.error(e?.message || '下单失败，请稍后重试')
+    } finally {
+      setBuyKey(null)
     }
   }
 
@@ -178,8 +185,8 @@ export default function SubscriptionPage() {
               render: (_, row) => (
                 Number(row.price_cent) === 0 ? <Text type="secondary">免费档无需支付</Text> : (
                 <Space>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'WECHAT'))}>微信开通/续费</Button>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'ALIPAY'))}>支付宝开通/续费</Button>
+                  <Button size="small" disabled={buyKey != null} loading={buyKey === `plan-${row.plan_code}-WECHAT`} onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'WECHAT'), `plan-${row.plan_code}-WECHAT`)}>微信开通/续费</Button>
+                  <Button size="small" disabled={buyKey != null} loading={buyKey === `plan-${row.plan_code}-ALIPAY`} onClick={() => buy(() => subscriptionApi.createPlanOrder(row.plan_code, 'ALIPAY'), `plan-${row.plan_code}-ALIPAY`)}>支付宝开通/续费</Button>
                 </Space>
                 )
               ),
@@ -205,8 +212,8 @@ export default function SubscriptionPage() {
               title: '操作',
               render: (_, row) => (
                 <Space>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'WECHAT'))}>微信加量</Button>
-                  <Button size="small" onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'ALIPAY'))}>支付宝加量</Button>
+                  <Button size="small" disabled={buyKey != null} loading={buyKey === `pack-${row.pack_code}-WECHAT`} onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'WECHAT'), `pack-${row.pack_code}-WECHAT`)}>微信加量</Button>
+                  <Button size="small" disabled={buyKey != null} loading={buyKey === `pack-${row.pack_code}-ALIPAY`} onClick={() => buy(() => subscriptionApi.createPackOrder(row.pack_code, 'ALIPAY'), `pack-${row.pack_code}-ALIPAY`)}>支付宝加量</Button>
                 </Space>
               ),
             },
