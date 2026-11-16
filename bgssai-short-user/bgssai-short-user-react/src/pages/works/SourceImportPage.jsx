@@ -150,20 +150,12 @@ export default function SourceImportPage({ work }) {
       target_episode_count: targetCount,
     })
     if (data?.success) {
-      message.success('剧本拆解与改编任务已提交，完成后可在「总剧本」查看分集大纲')
+      message.success('改编任务已提交')
     }
   }
 
   return (
     <div>
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 12 }}
-        message="手里已有原著时，不必再从一句话梗概重编一遍"
-        description="小说全文、成品剧本、分集大纲都能直接导入，自动分章后按章改编，每一集都标着取自原文哪几章。改编稿与原创稿走同一套节奏体检——有原著不是节奏合格的理由。"
-      />
-
       <Card title="导入原文" style={{ marginBottom: 12 }}>
         <Space wrap style={{ marginBottom: 12 }}>
           <Select
@@ -190,21 +182,16 @@ export default function SourceImportPage({ work }) {
           rows={8}
           value={sourceContent}
           onChange={(e) => setSourceContent(e.target.value)}
-          placeholder="粘贴原文，或用左边的按钮选择 txt / md 文件"
+          placeholder="粘贴原文或选择 txt / md 文件"
           style={{ marginBottom: 8 }}
         />
         <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
-          已输入 {sourceContent.length} 字符，上限 1 000 000 字符。
+          已输入 {sourceContent.length} / 1,000,000 字符
         </Paragraph>
         <div style={{ marginBottom: 12 }}>
           <Checkbox checked={rightsConfirm} onChange={(e) => setRightsConfirm(e.target.checked)}>
             我确认对本内容拥有合法使用权或已获授权
           </Checkbox>
-          <div>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              不勾选无法导入。导入他人作品改编再发行是本产品最现实的法律风险，勾选动作与时间会一并留痕。
-            </Text>
-          </div>
         </div>
         <Button type="primary" onClick={doImport}>导入并自动分章</Button>
       </Card>
@@ -243,7 +230,7 @@ export default function SourceImportPage({ work }) {
                     danger
                     onClick={async () => {
                       await featuresApi.sourceDelete(r.source_id)
-                      message.success('已删除，已生成的剧集不受影响')
+                      message.success('已删除')
                       if (activeSourceId === r.source_id) setActiveSourceId(undefined)
                       await loadSources()
                     }}
@@ -263,10 +250,6 @@ export default function SourceImportPage({ work }) {
             style={{ marginBottom: 12 }}
             extra={<Button type="primary" size="small" onClick={saveChapters}>保存分章</Button>}
           >
-            <Paragraph type="secondary" style={{ fontSize: 12 }}>
-              自动分章在网文里出错是常态——有人用「第一章」，有人只用空行。所以这张表是可改的：
-              标题能改、相邻章能合并。不给纠正入口，等于逼你回去改原文再传一遍。
-            </Paragraph>
             <Table
               rowKey="chapter_id"
               size="small"
@@ -329,16 +312,10 @@ export default function SourceImportPage({ work }) {
               <Alert
                 type="warning"
                 style={{ marginBottom: 12 }}
-                message={`本次涉及 ${estimate.char_count} 字（${estimate.chapter_count} 章），改成 ${targetCount} 集，预计花费 ${(estimate.estimated_cost_cent / 100).toFixed(2)} 元`}
-                description="已定稿的集正文不会被覆盖，只更新大纲层。"
+                message={`涉及 ${estimate.char_count} 字（${estimate.chapter_count} 章），改编 ${targetCount} 集，预计 ${(estimate.estimated_cost_cent / 100).toFixed(2)} 元`}
               />
             ) : null}
             <Button type="primary" disabled={!estimate} onClick={runAdapt}>确认改编</Button>
-            {!estimate ? (
-              <Text type="secondary" style={{ fontSize: 12, marginLeft: 10 }}>
-                先算一下费用再提交，消耗额度的操作不做静默执行
-              </Text>
-            ) : null}
           </Card>
         </>
       ) : null}

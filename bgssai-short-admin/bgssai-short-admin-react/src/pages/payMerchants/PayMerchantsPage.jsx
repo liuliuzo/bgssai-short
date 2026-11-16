@@ -3,7 +3,7 @@ import { Button, Card, Form, Input, Modal, Switch, Table, Tabs, Typography, mess
 import { deployEnvLabel } from '../../lib/formatTime'
 import payMerchantsApi from '../../api/payMerchants'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 function ChannelTable({ rows, loading, onEdit, onActive, nameKey, extraKey }) {
   return (
@@ -72,7 +72,6 @@ export default function PayMerchantsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>支付商户</Title>
-      <Paragraph type="secondary">管理支付宝与微信支付收款商户配置。敏感密钥仅展示掩码，编辑时留空即保留原有配置。</Paragraph>
       <Card extra={<Button type="primary" onClick={() => { form.resetFields(); setOpen(true) }}>新建</Button>}>
         <Tabs
           onChange={setChannel}
@@ -117,22 +116,22 @@ export default function PayMerchantsPage() {
           {channel === 'alipay' ? (
             <>
               <Form.Item name="app_id" label="AppId" rules={[{ required: true }]}><Input /></Form.Item>
-              <Form.Item name="app_private_key" label="应用私钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
-              <Form.Item name="alipay_public_key" label="支付宝公钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
+              <Form.Item name="app_private_key" label="应用私钥"><Input.TextArea rows={3} placeholder="留空不改" /></Form.Item>
+              <Form.Item name="alipay_public_key" label="支付宝公钥"><Input.TextArea rows={3} placeholder="留空不改" /></Form.Item>
             </>
           ) : (
             <>
               <Form.Item name="mch_id" label="商户号" rules={[{ required: true }]}><Input /></Form.Item>
               <Form.Item name="app_id" label="AppId" rules={[{ required: true }]}><Input /></Form.Item>
-              <Form.Item name="merchant_serial_no" label="商户证书序列号" rules={[{ required: true }]}><Input placeholder="API 证书序列号，生产下单必填" /></Form.Item>
-              <Form.Item name="api_v3_key" label="APIv3 Key"><Input placeholder="留空表示保持库中原值" /></Form.Item>
-              <Form.Item name="mch_private_key" label="商户私钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
+              <Form.Item name="merchant_serial_no" label="商户证书序列号" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item name="api_v3_key" label="APIv3 Key"><Input placeholder="留空不改" /></Form.Item>
+              <Form.Item name="mch_private_key" label="商户私钥"><Input.TextArea rows={3} placeholder="留空不改" /></Form.Item>
               <Form.Item name="wechat_public_key_id" label="微信支付公钥 ID"><Input /></Form.Item>
-              <Form.Item name="wechat_public_key" label="微信支付公钥"><Input.TextArea rows={3} placeholder="留空表示保持库中原值" /></Form.Item>
+              <Form.Item name="wechat_public_key" label="微信支付公钥"><Input.TextArea rows={3} placeholder="留空不改" /></Form.Item>
             </>
           )}
-          <Form.Item name="notify_url" label="回调 URL" rules={[{ required: true }]}><Input placeholder="https://…/bgssai/user/payment/{wechat|alipay}/notify" /></Form.Item>
-          <Form.Item name="env_mode" label="支付网关模式（PRODUCTION 正式 / SANDBOX 沙箱）" initialValue="PRODUCTION"><Input /></Form.Item>
+          <Form.Item name="notify_url" label="回调 URL" rules={[{ required: true }]}><Input placeholder="https://" /></Form.Item>
+          <Form.Item name="env_mode" label="支付网关模式" initialValue="PRODUCTION"><Input placeholder="PRODUCTION / SANDBOX" /></Form.Item>
           <Form.Item name="is_enabled" label="启用" valuePropName="checked"><Switch /></Form.Item>
         </Form>
       </Modal>

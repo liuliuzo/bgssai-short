@@ -33,20 +33,10 @@
       <h1 class="title" style="margin:0">在线客服处理台</h1>
       <span class="badge">PLATFORM_ADMIN</span>
     </div>
-    <p class="subtitle">
-      导航：<a href="home.html">首页</a> · <a href="support-inbox.html">在线客服</a> ·
+    <p>
+      <a href="home.html">首页</a> · <a href="support-inbox.html">在线客服</a> ·
       <a href="login-logs.html">登录日志</a>
     </p>
-
-    <div class="card">
-      <h2 class="card-title">契约摘要</h2>
-      <p>列表：<code>POST /bgssai/admin/support/sessions/list</code>
-        body <code>{status?, keyword?, page_num, page_size}</code>（含 <code>ticket_status</code>）</p>
-      <p>详情：<code>POST /bgssai/admin/support/sessions/detail</code> ·
-        回复：<code>POST /bgssai/admin/support/messages/reply</code> ·
-        关闭：<code>POST /bgssai/admin/support/sessions/close</code> ·
-        工单状态：<code>POST /bgssai/admin/support/tickets/update_status</code></p>
-    </div>
 
     <div class="inbox">
       <div class="inbox-list">

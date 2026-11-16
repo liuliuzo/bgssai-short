@@ -147,7 +147,6 @@ test('asset binder shows that cards exist when nothing is selected yet', () => {
   })
   assert.match(line, /沈知微/)
   assert.match(line, /宴会厅/)
-  assert.match(line, /下拉框/)
   assert.equal(assetBinderPlaceholder('角色', 0, false), '正在读取角色')
   assert.match(assetLibrarySummary({ ready: false }), /正在读取/)
   assert.equal(assetLibrarySummary({ ready: false }).includes('还没有'), false)

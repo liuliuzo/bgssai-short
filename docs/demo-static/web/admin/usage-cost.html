@@ -131,12 +131,6 @@
                 </tbody>
               </table>
             </div>
-            <div class="card-body" style="padding-top:10px">
-              <div class="note note-warn" style="margin:0">
-                COMPOSE 成功率 89.3%，明显低于其它能力，建议排查合成服务失败原因
-                （常见为素材缺失或时长越界）· <a href="ai-models.html">去配置</a>
-              </div>
-            </div>
           </div>
 
           <div class="card card-flush" style="margin-top:14px">
@@ -202,36 +196,17 @@
           </div>
 
           <div class="card">
-            <div class="card-hd"><h2>对账口径</h2></div>
-            <div class="kv" style="grid-template-columns:84px 1fr">
-              <div class="k">计费时机</div><div>任务 <code>SUCCEEDED</code> 时按单价快照记一条流水</div>
-              <div class="k">不计费</div><div><code>FAILED</code> / <code>CANCELED</code> / 平台侧自动重试</div>
-              <div class="k">单价快照</div><div>历史流水不随调价变化</div>
-              <div class="k">三处同源</div><div>本页 = 创作者账单页 = 作品成本条，逐分相等</div>
-            </div>
-          </div>
-
-          <div class="card">
             <div class="card-hd"><h2>异常提示</h2></div>
             <div class="issue">
               <div class="i-h"><span class="badge badge-warn">关注</span><span>小林余额仅剩 86.40 元</span></div>
-              <div class="i-f">余额不足会导致新任务被拒（4007）· <a href="creators.html">去调整</a></div>
+              <div class="i-f"><a href="creators.html">去调整</a></div>
             </div>
             <div class="issue min" style="margin-bottom:0">
               <div class="i-h"><span class="badge">提示</span><span>vid-fast-v3 成功率 94.1%</span></div>
-              <div class="i-f">失败多为模型超时，可上调 <code>timeout_sec</code> · <a href="ai-models.html">去配置</a></div>
+              <div class="i-f"><a href="ai-models.html">去配置</a></div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        接口：<code>GET /bgssai/admin/usage/summary?start_date&amp;end_date&amp;ability_type</code> ·
-        <code>GET /bgssai/admin/usage/by-creator?page_num&amp;page_size&amp;start_date&amp;end_date</code>。
-        汇总字段：<code>total_cost_cent</code> · <code>task_count</code> ·
-        <code>success_rate_percent</code> · <code>avg_duration_sec</code>，按能力与按日分组。
-        需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>。
       </div>
 
       <div class="footer legal-fanout">

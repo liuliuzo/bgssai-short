@@ -6,7 +6,7 @@ import reviewsApi from '../../api/reviews'
 import creatorsApi from '../../api/creators'
 import usageApi from '../../api/usage'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
@@ -38,7 +38,6 @@ export default function Home() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>首页</Title>
-      <Paragraph type="secondary">待审内容、创作者和近 31 天用量。</Paragraph>
       <Space style={{ marginBottom: 16 }} wrap>
         <Card><Statistic title="待审核" value={stats.pending ?? '-'} /></Card>
         <Card><Statistic title="创作者" value={stats.creators ?? '-'} /></Card>

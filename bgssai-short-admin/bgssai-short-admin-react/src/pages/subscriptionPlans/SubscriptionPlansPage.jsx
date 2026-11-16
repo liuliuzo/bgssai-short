@@ -3,7 +3,7 @@ import { Button, Card, Form, Input, InputNumber, Modal, Switch, Table, Typograph
 import subscriptionPlansApi from '../../api/subscriptionPlans'
 import { centToYuanNumber, yuanToCent } from '../../lib/money'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
@@ -30,7 +30,6 @@ export default function SubscriptionPlansPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>订阅套餐</Title>
-      <Paragraph type="secondary">售价和月度额度按元填写。</Paragraph>
       <Card extra={<Button type="primary" onClick={() => { form.resetFields(); setOpen(true) }}>新建 / 更新</Button>}>
         <Table
           rowKey="plan_code"

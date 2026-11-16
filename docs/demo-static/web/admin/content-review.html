@@ -39,7 +39,6 @@
       <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
       <span class="top-title">内容审核</span>
       <span class="spacer"></span>
-      <span class="text-muted" style="font-size:12px">按提交时间正序 · 对创作内容只读</span>
       <a class="btn btn-primary" href="review-detail.html">审核最早一条</a>
     </header>
 
@@ -59,12 +58,10 @@
         <div class="stat">
           <div class="stat-label">含 BLOCK 命中</div>
           <div class="stat-value text-ok">0</div>
-          <div class="stat-sub">BLOCK 在生成前已被硬拦截，走不到这里</div>
         </div>
         <div class="stat">
           <div class="stat-label">含 WARN 命中</div>
           <div class="stat-value text-warn">9</div>
-          <div class="stat-sub">需人工判断</div>
         </div>
       </div>
 
@@ -164,19 +161,6 @@
             page_num=1 · page_size=20 · total_size=37
           </span>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        接口 <code>GET /bgssai/admin/reviews/list?page_num&amp;page_size&amp;review_status&amp;risk_level&amp;keyword</code>，
-        需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>（角色取自 JWT，不取自请求参数）。
-        列表字段：<code>review_id</code> · <code>work_title</code> · <code>episode_no</code> ·
-        <code>creator_user_id</code> / <code>creator_name</code> · <code>genre</code> ·
-        <code>review_status</code>（<code>NOT_SUBMITTED</code> / <code>PENDING</code> /
-        <code>APPROVED</code> / <code>REJECTED</code>）· <code>risk_level</code> ·
-        <code>warn_count</code> / <code>block_count</code> · <code>film_duration_sec</code> ·
-        <code>submitted_time</code> · <code>submit_seq</code>。
-        审核动作全部落 <code>short_review_record</code>，只增不删、可追溯。
       </div>
 
       <div class="footer legal-fanout">

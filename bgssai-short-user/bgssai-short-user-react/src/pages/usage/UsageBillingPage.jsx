@@ -6,7 +6,7 @@ import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 import { yuanToCent } from '../../lib/money'
 import { publicModelText } from '../../publicModel'
 
-const { Title, Paragraph, Text } = Typography
+const { Title, Text } = Typography
 const { RangePicker } = DatePicker
 
 function yuan(cent) {
@@ -70,10 +70,6 @@ export default function UsageBillingPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>用量与账单</Title>
-      <Paragraph type="secondary">
-        失败任务不计费。余额低于近一集均价的 3 倍时会提示余额偏低。
-        下方流水按所选日期内的扣费记录汇总；作品列表的「已花费」是作品累计，可能早于当前筛选区间。
-      </Paragraph>
       <Space style={{ marginBottom: 12 }} wrap>
         <RangePicker value={range} onChange={setRange} />
         <Input placeholder="作品 ID" value={workId} onChange={(e) => setWorkId(e.target.value || undefined)} style={{ width: 160 }} allowClear />
@@ -118,7 +114,7 @@ export default function UsageBillingPage() {
           rowKey="work_id"
           size="small"
           pagination={false}
-          locale={{ emptyText: '所选日期内暂无扣费记录。作品累计花费请到「我的作品」查看。' }}
+          locale={{ emptyText: '暂无记录' }}
           dataSource={summary?.by_work_list || []}
           columns={[
             { title: '作品', dataIndex: 'work_title' },
@@ -132,7 +128,7 @@ export default function UsageBillingPage() {
           rowKey="ability_type"
           size="small"
           pagination={false}
-          locale={{ emptyText: '所选日期内暂无按能力汇总。' }}
+          locale={{ emptyText: '暂无数据' }}
           dataSource={summary?.by_ability_list || []}
           columns={[
             { title: '能力', dataIndex: 'ability_type_name' },
@@ -150,7 +146,7 @@ export default function UsageBillingPage() {
           rowKey="record_id"
           size="small"
           loading={loading}
-          locale={{ emptyText: '所选日期内暂无用量流水。' }}
+          locale={{ emptyText: '暂无用量流水' }}
           dataSource={records}
           pagination={{
             current: pageNum,
@@ -183,7 +179,7 @@ export default function UsageBillingPage() {
         <Table
           rowKey="apply_id"
           size="small"
-          locale={{ emptyText: '暂无充值申请。' }}
+          locale={{ emptyText: '暂无充值申请' }}
           dataSource={applies}
           pagination={false}
           columns={[

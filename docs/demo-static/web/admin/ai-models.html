@@ -39,33 +39,10 @@
       <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
       <span class="top-title">AI 能力与模型配置</span>
       <span class="spacer"></span>
-      <span class="text-muted" style="font-size:12px">业务只认能力类型，不认供应商</span>
       <button class="btn btn-primary">新增模型</button>
     </header>
 
     <div class="app-page">
-
-      <div class="card" style="border-color:#fde68a; background:#fffbeb; margin-bottom:14px">
-        <div class="row">
-          <span class="badge badge-warn">调价规则</span>
-          <div style="font-size:13px">
-            单价变更只对<strong>变更后</strong>创建的任务生效；历史任务按
-            <code>ai_usage_record</code> 里的单价快照核算，不追溯——否则一次调价会让历史账单集体变脸。
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="border-color:#bfdbfe; background:#eff6ff; margin-bottom:14px">
-        <div class="row">
-          <span class="badge badge-info">生产目录</span>
-          <div style="font-size:13px">
-            首批文本、视频、语音、ASR 与音乐模型统一接入境内模型服务通道。密钥引用为
-            <code>ai.tokenhub_cn.api_key</code>。境外模型行保持停用，不作为回退。
-            配置页只保存 <code>hub</code> / <code>secret_ref</code>，不保存密钥明文。
-            真实密钥在 <a href="ai-secrets.html">AI 密钥</a> 页写入 <code>sys_secret</code>。
-          </div>
-        </div>
-      </div>
 
       <div class="card card-flush">
         <div class="card-hd">
@@ -74,8 +51,6 @@
           <span class="chip">TEXT</span><span class="chip">IMAGE</span>
           <span class="chip">VIDEO</span><span class="chip">VOICE</span><span class="chip">ASR</span>
           <span class="chip">MUSIC</span><span class="chip">COMPOSE</span>
-          <span class="spacer"></span>
-          <span class="text-muted" style="font-size:12px">每个能力类型有且仅有一个默认模型</span>
         </div>
 
         <div class="table-wrap">
@@ -224,13 +199,11 @@
             <div class="field"><label>超时（秒）</label><input value="600" /></div>
             <div class="field">
               <label>最大重试</label><input value="2" />
-              <div class="hint">平台侧自动重试不额外计费</div>
             </div>
           </div>
           <div class="field">
             <label>供应商端点与参数</label>
             <textarea rows="3">{"hub":"cn","base_url":"https://www.bgssai-tokenhub.cn","secret_ref":"ai.tokenhub_cn.api_key","submit_path":"/v1/wand/minimax-video-v2/generation","task_path":"/v1/wand/minimax-video-v2/tasks/{task_id}"}</textarea>
-            <div class="hint">密钥不入库明文，只写 secret_ref（如 ai.kling.api_key），按 docs/security 的密钥保管口径处理</div>
           </div>
           <div class="toolbar">
             <button class="btn btn-primary">保存</button>
@@ -240,23 +213,7 @@
 
         <div>
           <div class="card">
-            <div class="card-hd"><h2>停用规则</h2></div>
-            <div class="text-sub" style="font-size:13px; line-height:1.9">
-              1. 在途任务照常跑完，不中断；<br />
-              2. 新任务不再落到该模型；<br />
-              3. 若停用的是默认模型且组内无其它启用模型，该能力对用户端整体不可用，
-              提交时返回 <code>4014</code> 并给出可读提示。
-            </div>
-            <div class="note note-danger" style="margin:10px 0 0">
-              当前 ASR 与 MUSIC 各只有一个启用模型。停用前必须明确知晓对应的字幕校准或 AI 音乐功能会立即不可用。
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-hd"><h2>四级阶梯的单价来源</h2></div>
-            <div class="text-sub" style="font-size:12px; line-height:1.8; margin-bottom:8px">
-              创作者侧的「文字稿 → 草图 → 首帧 → 视频」四级预演，成本梯度由这里的配置决定：
-            </div>
+            <div class="card-hd"><h2>阶梯单价</h2></div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>级别</th><th>模型</th><th>单价</th></tr></thead>
@@ -268,35 +225,8 @@
                 </tbody>
               </table>
             </div>
-            <div class="note" style="margin-top:10px">
-              梯度必须拉开：草图与视频的价差是创作者敢于反复试构图的前提。
-            </div>
           </div>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        接口：<code>GET /bgssai/admin/ai-models/list?ability_type</code> ·
-        <code>POST /bgssai/admin/ai-models/create</code> · <code>/update</code> ·
-        <code>/set-default</code> · <code>/toggle-enabled</code>。
-        字段：<code>model_id</code> · <code>ability_type</code> · <code>provider_code</code> ·
-        <code>model_code</code> / <code>model_name</code> · <code>quality_level</code>
-        （<code>FAST</code> / <code>STANDARD</code> / <code>HIGH</code>）· <code>price_unit</code> ·
-        <code>unit_price_cent</code> · <code>default_flag</code> · <code>enabled_flag</code> ·
-        <code>timeout_sec</code> · <code>max_retry</code> · <code>config_json</code>。
-        需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>。
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">公司视频选型</div>
-        <code>VIDEO / bgssai-video</code> 优先匹配境内模型服务通道的标准视频生成配置。
-        历史公司种子仅在供应商、国内区域和公开别名均相符时兼容；保持该行价格、超时与凭据引用。
-        用户目录、估价与提交使用同一配置；缺少公司配置时不展示，不以第三方默认或零价临时模型替代。
-        自定义别名与显式第三方编号保持原义；目录存在不代表上游已成功生成。
-        表中 MiniMax 行是共享种子与生产库的 VIDEO 默认。开发库把启用的 <code>bgssai-video</code>
-        （境内网关通道、<code>timeout_sec=900</code>）设为唯一 VIDEO 默认，并取消 MiniMax 与 <code>cogvideox</code> 的默认。
-        生产默认不改。
       </div>
 
       <div class="footer legal-fanout">

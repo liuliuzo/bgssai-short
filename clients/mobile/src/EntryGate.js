@@ -6,11 +6,10 @@ import {
   View,
 } from 'react-native';
 
-export default function EntryGate({ profile, entries, onSelect }) {
+export default function EntryGate({ entries, onSelect }) {
   return (
     <View style={styles.gate}>
       <Text style={styles.name}>BGSSAI Short</Text>
-      <Text style={styles.sub}>选择登录入口</Text>
       <View style={styles.list}>
         {entries.map((entry) => (
           <Pressable
@@ -27,9 +26,6 @@ export default function EntryGate({ profile, entries, onSelect }) {
           </Pressable>
         ))}
       </View>
-      <Text style={styles.meta}>
-        profile={profile} · installable=single-app dual-entry
-      </Text>
     </View>
   );
 }

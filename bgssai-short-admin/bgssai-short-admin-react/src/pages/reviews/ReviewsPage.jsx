@@ -56,7 +56,6 @@ export default function ReviewsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>内容审核</Title>
-      <Paragraph type="secondary">通过后该集进入已通过；全部剧集通过后作品完成。驳回必须填写驳回项。</Paragraph>
       <Card>
         <Space style={{ marginBottom: 12 }}>
           <Select

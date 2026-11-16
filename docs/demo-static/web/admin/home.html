@@ -74,19 +74,16 @@
 
             <div class="issue crit">
               <div class="i-h"><span class="badge badge-danger">审核</span><span>37 集待审，最久已等待 4 小时 12 分</span></div>
-              <div class="i-d">队列按提交时间正序。含 WARN 预检命中 9 集，需人工判断。</div>
               <div class="i-f"><a href="content-review.html">进入审核队列</a></div>
             </div>
 
             <div class="issue">
               <div class="i-h"><span class="badge badge-warn">配额</span><span>小林（u-0021）余额仅剩 86.40 元</span></div>
-              <div class="i-d">余额不足会导致其新任务被拒（4007），在途任务不受影响。</div>
               <div class="i-f"><a href="creators.html">去调整配额</a></div>
             </div>
 
             <div class="issue min" style="margin-bottom:0">
               <div class="i-h"><span class="badge">能力</span><span>COMPOSE 成功率 89.3%，低于平台均值</span></div>
-              <div class="i-d">失败多为素材缺失或时长越界，建议排查合成服务。</div>
               <div class="i-f"><a href="ai-models.html">去查看模型配置</a></div>
             </div>
           </div>
@@ -126,21 +123,6 @@
               <div class="k">role_name</div><div>管理员</div>
               <div class="k">user_id</div><div>u-admin-0001</div>
             </div>
-            <div class="text-muted" style="font-size:11px; margin-top:10px">
-              零信任：角色取自 JWT，不取自请求参数；非 <code>PLATFORM_ADMIN</code> 登录本端返回
-              <code>4003</code>。
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-hd"><h2>管理端职责边界</h2></div>
-            <div class="kv" style="grid-template-columns:84px 1fr">
-              <div class="k">内容审核</div><div>以剧集为单位给结论；驳回必填原因与风险类别，可定位到镜头</div>
-              <div class="k">AI 能力</div><div>供应商 / 模型 / 单价 / 开关 / 质量档，改配置即生效</div>
-              <div class="k">结构模板</div><div>爆款节拍模板与四道门阈值，决定平台内容质量下限</div>
-              <div class="k">运营</div><div>用量成本、创作者账号与配额（调整必填备注并留痕）</div>
-              <div class="k">不做</div><div>不修改创作者的剧本 / 镜头 / 素材；不做线上支付</div>
-            </div>
           </div>
 
           <div class="card">
@@ -156,13 +138,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        本页消费登录响应缓存的身份字段与各模块概览接口。全部管理端接口需
-        <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>。跳转真值见
-        <a href="PAGE-FLOW.html">PAGE-FLOW.html</a>。
       </div>
 
       <div class="footer legal-fanout">

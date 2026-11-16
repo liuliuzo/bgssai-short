@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, message } from 'antd'
 import creatorsApi from '../../api/creators'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
@@ -42,10 +42,9 @@ export default function CreatorsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>创作者</Title>
-      <Paragraph type="secondary">可按用户名或姓名查找，冻结后该创作者无法继续制作，也可以调整额度。</Paragraph>
       <Card>
         <Space style={{ marginBottom: 12 }}>
-          <Input placeholder="用户名 / 姓名 / user_id" value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: 220 }} />
+          <Input placeholder="用户名 / 姓名 / 用户 ID" value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: 220 }} />
           <Select allowClear placeholder="全部" style={{ width: 140 }} value={enabledFlag} onChange={setEnabledFlag}
             options={[{ value: 1, label: '正常' }, { value: 0, label: '冻结' }]} />
           <Button onClick={() => load(1, pageSize, keyword, enabledFlag)}>查询</Button>

@@ -153,9 +153,7 @@ export default function QualityReportPage({ work, episodeId }) {
         if (data?.success) {
           message.success(`生成 ${data.result?.variant_list?.length || 0} 个方案`)
         }
-      }}>生成开场方案</Button>}>
-        <Paragraph type="secondary">针对开场黄金三秒与集尾钩子生成多套候选分镜方案，辅助导演对比择优。</Paragraph>
-      </Card>
+      }}>生成开场方案</Button>} />
     </Space>
   )
 }

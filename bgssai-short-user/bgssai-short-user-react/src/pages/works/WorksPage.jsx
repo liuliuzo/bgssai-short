@@ -86,7 +86,7 @@ export default function WorksPage() {
     const values = await form.validateFields()
     const { data } = await productionApi.createWork({ ...DEFAULTS, ...values })
     if (data?.success) {
-      message.success('已创建，正在生成大纲')
+      message.success('已创建')
       setOpen(false)
       form.resetFields()
       navigate(`/works/${data.result.work_id}/script`, {
@@ -98,9 +98,6 @@ export default function WorksPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>我的作品</Title>
-      <Paragraph style={{ color: '#334155' }}>
-        新建后进入作品，按顶部步骤做：大纲、这一集剧本、定稿、定妆、拆镜、首帧、生成视频，最后合成成片。配音和质量检查不挡住第一条视频。只有剧名和一句话梗概是必填，其余按当前的试做设置。
-      </Paragraph>
       <Card>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
           <Button type="primary" onClick={() => setOpen(true)}>新建作品</Button>
@@ -109,7 +106,7 @@ export default function WorksPage() {
           rowKey="work_id"
           size="small"
           loading={loading}
-          locale={{ emptyText: loading ? ' ' : '还没有作品，点击右上角「新建作品」开始' }}
+          locale={{ emptyText: loading ? ' ' : '暂无作品' }}
           dataSource={rows}
           pagination={{
             current: pageNum,
@@ -173,22 +170,21 @@ export default function WorksPage() {
       >
         <Form form={form} layout="vertical" initialValues={DEFAULTS}>
           <Form.Item name="work_title" label="作品标题" rules={[{ required: true, message: '请输入作品标题' }]}>
-            <Input placeholder="例如：女帝归来" />
+            <Input placeholder="作品标题" />
           </Form.Item>
           <Form.Item
             name="one_line_pitch"
             label="一句话梗概"
             rules={[{ required: true, message: '请输入一句话梗概' }]}
-            extra="灰字只是例子，不是已经填好的内容。提交后立刻按这句话生成全剧分集大纲。"
           >
-            <Input.TextArea rows={3} placeholder="例如：落魄千金三年后带着资本回来" />
+            <Input.TextArea rows={3} placeholder="一句话梗概" />
           </Form.Item>
           <CreateWorkSettingLine />
           <Collapse
             ghost
             items={[{
               key: 'advanced',
-              label: '高级设置（不打开也会按上面这句话创建）',
+              label: '高级设置',
               children: (
                 <>
                   <Space size="large" style={{ display: 'flex' }}>
@@ -205,7 +201,6 @@ export default function WorksPage() {
                       label="集数"
                       style={{ flex: 1 }}
                       rules={[{ type: 'number', min: 1, max: 80, message: '集数需在 1-80 之间' }]}
-                      extra="创建后生成等量剧集占位"
                     >
                       <InputNumber min={1} max={80} style={{ width: '100%' }} />
                     </Form.Item>
@@ -213,7 +208,6 @@ export default function WorksPage() {
                       name="episode_duration_sec"
                       label="单集时长"
                       style={{ flex: 1 }}
-                      extra="时长决定节奏，剧本体检按此校验"
                     >
                       <Radio.Group
                         optionType="button"
@@ -222,7 +216,7 @@ export default function WorksPage() {
                     </Form.Item>
                   </Space>
                   <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: 12 }}>
-                    画幅固定竖屏 9:16（1080x1920 / 30fps）。预算与质量阈值不在这里填，创建后在作品设置里调整。
+                    画幅：9:16（1080x1920 / 30fps）
                   </Paragraph>
                 </>
               ),

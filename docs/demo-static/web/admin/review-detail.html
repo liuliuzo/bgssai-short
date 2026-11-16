@@ -77,9 +77,6 @@
                   <div class="k">强制放行</div><div class="text-muted">无</div>
                   <div class="k">结构模板</div><div>复仇逆袭 · 当众打脸型</div>
                 </div>
-                <div class="note" style="margin:12px 0 0">
-                  创作者侧质量分仅供参考，不构成审核依据。审核只看内容合规。
-                </div>
               </div>
             </div>
           </div>
@@ -87,7 +84,6 @@
           <div class="card">
             <div class="card-hd">
               <h2>合规预检命中</h2>
-              <span class="text-muted" style="font-size:12px">创作者提交前已知晓</span>
             </div>
             <div class="issue">
               <div class="i-h">
@@ -97,14 +93,11 @@
               <div class="i-d">
                 命中位置：场 4 · 第 9 句 · 镜 17<br />
                 命中片段：「一刀捅进去」<br />
-                系统建议：改为不展示器械接触的冲突表达
+                建议修改：改为不展示器械接触的冲突表达
               </div>
               <div class="i-f">
-                创作者处理：未修改，确认知晓后提交 · <a href="#">跳转镜 17 画面</a>
+                <a href="#">跳转镜 17 画面</a>
               </div>
-            </div>
-            <div class="text-muted" style="font-size:12px">
-              BLOCK 级风险在生成任务提交前即被硬拦截，走不到审核环节；此处只会出现 WARN 与 PASS。
             </div>
           </div>
 
@@ -165,13 +158,9 @@
             </div>
             <div class="field">
               <label>意见 / 驳回原因（驳回必填）</label>
-              <textarea rows="4" placeholder="写清楚哪一处、为什么、怎么改能过——创作者据此定点修改"></textarea>
+              <textarea rows="4" placeholder="请输入意见或驳回原因"></textarea>
             </div>
             <button class="btn btn-primary">提交结论</button>
-            <div class="note note-warn" style="margin:12px 0 0">
-              驳回未填原因返回 <code>4006</code>。驳回后创作者可修改重提，次数不限但每次留痕
-              （<code>submit_seq</code>）。
-            </div>
           </div>
 
           <div class="card">
@@ -194,24 +183,8 @@
               <div class="row"><span class="st doing">第 1 次</span> 08-13 09:40 创作者提交</div>
               <div class="text-muted">当前待处置</div>
             </div>
-            <hr class="divider" />
-            <div class="text-muted" style="font-size:11px; line-height:1.7">
-              成片过期时（创作者改了上游素材），已有审核结论自动回落
-              <code>NOT_SUBMITTED</code>，避免「审的是旧版、发的是新版」。
-              管理端对创作内容只读，不提供任何编辑入口。
-            </div>
           </div>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        接口：<code>GET /bgssai/admin/reviews/detail?review_id</code> ·
-        <code>POST /bgssai/admin/reviews/approve</code>（<code>review_id</code> + <code>review_comment</code>）·
-        <code>POST /bgssai/admin/reviews/reject</code>（<code>review_id</code> + <code>reject_reason</code> +
-        <code>risk_category</code> + 可选 <code>reject_shot_no</code>）。
-        需 <code>Jwttoken</code> + <code>PLATFORM_ADMIN</code>。
-        全部剧集 <code>APPROVED</code> 后，作品 <code>work_status</code> 自动推进为 <code>COMPLETED</code>。
       </div>
 
       <div class="footer legal-fanout">

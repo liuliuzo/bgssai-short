@@ -166,17 +166,17 @@ export function attentionItems({ works, episodesById, failedByWorkId }) {
 }
 
 export function nextStepText({ loadError, works, attention }) {
-  if (loadError) return '作品列表暂时读不到，刷新后再看下一步。'
+  if (loadError) return '作品列表加载失败'
   const list = Array.isArray(works) ? works : []
-  if (!list.length) return '先新建一部作品。剧名和一句话梗概就够了。'
+  if (!list.length) return '暂无作品'
   const items = Array.isArray(attention) ? attention : []
   const failed = items.find((item) => item.kind === 'generate_failed')
-  if (failed) return `先处理《${failed.workTitle}》的生成失败，再继续。`
+  if (failed) return `《${failed.workTitle}》生成失败`
   const rejected = items.find((item) => item.kind === 'review_rejected')
-  if (rejected) return `《${rejected.workTitle}》有审核驳回，先去改。`
+  if (rejected) return `《${rejected.workTitle}》审核驳回`
   const pending = items.find((item) => item.kind === 'review_pending')
-  if (pending) return `《${pending.workTitle}》有剧集在等审核，先去看结果。`
-  return `接着做《${list[0].work_title || '最近的作品'}》。打开作品后，按顶部步骤做到生成视频。`
+  if (pending) return `《${pending.workTitle}》待审核`
+  return `最近作品：《${list[0].work_title || '未命名作品'}》`
 }
 
 export function continueLabel(work, episodes) {

@@ -12,7 +12,7 @@ import {
   planDisplayName,
 } from '../../lib/displayLabels'
 
-const { Title, Paragraph, Text } = Typography
+const { Title, Text } = Typography
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
@@ -81,7 +81,7 @@ export default function SubscriptionPage() {
         const status = data?.result?.status
         const outcome = resolvePollOutcome(status, payOrder.expires_at)
         if (outcome === 'paid') {
-          message.success('支付成功，额度已按回调入账')
+          message.success('支付成功')
           closePayModal()
           load()
           return
@@ -133,7 +133,7 @@ export default function SubscriptionPage() {
       })
       setModalOpen(true)
       setPolling(true)
-      message.info('请使用手机扫码完成支付；额度以支付回调入账为准')
+      message.info('请扫码支付')
     } catch (e) {
       message.error(e?.message || '下单失败，请稍后重试')
     }
@@ -142,9 +142,6 @@ export default function SubscriptionPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>套餐与加量</Title>
-      <Paragraph type="secondary">
-        查看 BGSSAI 额度套餐、剩余额度与到期时间；开通、续费或加量后，额度以支付成功回调入账（重复回调只入账一次）。
-      </Paragraph>
       <Card loading={loading} style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
           <Text>当前套餐 {planDisplayName(me?.plan_code, me?.plan_name)}</Text>

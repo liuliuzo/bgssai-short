@@ -114,14 +114,9 @@ export default function VoiceStudioPage({ work, episodeId, onJumpTab }) {
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <div>
-          <Title level={5} style={{ margin: 0 }}>第 4 步：配音与字幕（可选）</Title>
-          <Paragraph style={{ marginBottom: 0, color: '#334155' }}>
-            可为有台词的镜头生成人声配音并对齐时长；如暂不配音，可直接跳过本步去合成成片（默认按镜头对白自动烧录字幕）。
-          </Paragraph>
-        </div>
+        <Title level={5} style={{ margin: 0 }}>配音与字幕</Title>
         {onJumpTab ? (
-          <Button type="primary" onClick={() => onJumpTab('compose')}>去第 5 步：合成成片</Button>
+          <Button type="primary" onClick={() => onJumpTab('compose')}>去合成成片</Button>
         ) : null}
       </div>
       <Card
@@ -257,27 +252,24 @@ export default function VoiceStudioPage({ work, episodeId, onJumpTab }) {
           <Button onClick={() => {
             Modal.confirm({
               title: '按对白重新整理字幕',
-              content: '这会按现有对白重新整理这一集的字幕，不会新建一部作品，也不会重新配音。',
+              content: '确认按当前对白重新生成字幕？',
               okText: '开始整理',
               cancelText: '取消',
               onOk: async () => {
                 await featuresApi.subtitleRegen(episodeId)
-                message.success('字幕已按对白整理')
+                message.success('字幕已整理')
                 await load()
               },
             })
           }}>按对白重新整理字幕</Button>
         </Space>}
       >
-        {!subtitles.length ? (
-          <Paragraph style={{ color: '#334155' }}>还没有字幕。配音完成后，点「语音识别生成字幕」。</Paragraph>
-        ) : null}
         <Table
           rowKey="subtitle_id"
           size="small"
           pagination={false}
           tableLayout="fixed"
-          locale={{ emptyText: '还没有字幕。配音完成后，点「语音识别生成字幕」。' }}
+          locale={{ emptyText: '暂无字幕' }}
           dataSource={subtitles}
           columns={[
             { title: '序号', dataIndex: 'subtitle_no', width: 72 },
@@ -314,10 +306,9 @@ export default function VoiceStudioPage({ work, episodeId, onJumpTab }) {
             message.success('样式已保存')
           }}
         >
-          <Paragraph style={{ width: '100%', color: '#334155' }}>留空时用白字、黑边、底部。</Paragraph>
-          <Form.Item name="font_size" label="字号"><InputNumber placeholder="例如 28" /></Form.Item>
-          <Form.Item name="font_color" label="颜色"><Input style={{ width: 140 }} placeholder="例如 #ffffff" /></Form.Item>
-          <Form.Item name="stroke_color" label="描边"><Input style={{ width: 140 }} placeholder="例如 #000000" /></Form.Item>
+          <Form.Item name="font_size" label="字号"><InputNumber placeholder="28" /></Form.Item>
+          <Form.Item name="font_color" label="颜色"><Input style={{ width: 140 }} placeholder="#ffffff" /></Form.Item>
+          <Form.Item name="stroke_color" label="描边"><Input style={{ width: 140 }} placeholder="#000000" /></Form.Item>
           <Form.Item name="position" label="位置">
             <Select style={{ width: 120 }} options={[
               { value: 'BOTTOM', label: '底部' },

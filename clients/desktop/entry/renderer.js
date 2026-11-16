@@ -9,7 +9,6 @@
   }
 
   const bootstrap = await window.bgssaiClients.getBootstrap();
-  meta.textContent = 'profile=' + bootstrap.profile + ' · installable=single-app dual-entry';
 
   bootstrap.entries.forEach((entry) => {
     const btn = document.createElement('button');

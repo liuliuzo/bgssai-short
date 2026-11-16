@@ -174,13 +174,11 @@ export default function SupportWidget() {
           <div className="cs-panel-header">
             <div>
               <strong>在线客服</strong>
-              <span className="cs-panel-sub">
-                {status === 'CLOSED'
-                  ? '会话已关闭，发送将开启新会话'
-                  : status
-                    ? `状态 · ${status}`
-                    : '直接留言，客服会尽快回复'}
-              </span>
+              {status ? (
+                <span className="cs-panel-sub">
+                  {status === 'CLOSED' ? '会话已关闭' : `状态 · ${status}`}
+                </span>
+              ) : null}
             </div>
             <button type="button" aria-label="关闭" onClick={() => setOpen(false)}>
               ×
@@ -190,7 +188,7 @@ export default function SupportWidget() {
             <span className="cs-ticket-label">
               {ticket
                 ? `工单 · ${ticket.status}${ticket.subject ? ` · ${ticket.subject}` : ''}`
-                : '需要正式跟进时可提工单'}
+                : '工单'}
             </span>
             <button
               type="button"
@@ -203,7 +201,7 @@ export default function SupportWidget() {
           </div>
           <div className="cs-msgs" ref={listRef}>
             {messages.length === 0 ? (
-              <div className="cs-empty">发送一条留言开始会话</div>
+              <div className="cs-empty">暂无留言</div>
             ) : (
               messages.map((m) => (
                 <div

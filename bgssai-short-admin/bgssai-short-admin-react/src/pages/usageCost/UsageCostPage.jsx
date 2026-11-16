@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 import usageApi from '../../api/usage'
 import rechargeApi from '../../api/recharge'
 
-const { Title, Paragraph, Text } = Typography
+const { Title, Text } = Typography
 const { RangePicker } = DatePicker
 
 function yuan(cent) {
@@ -58,7 +58,6 @@ export default function UsageCostPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>平台用量与成本</Title>
-      <Paragraph type="secondary">汇总近一段时间内已成功任务的成本，并可按创作者查看。充值申请可在此通过或驳回。</Paragraph>
       <Space style={{ marginBottom: 12 }}>
         <RangePicker value={range} onChange={setRange} />
         <Select
@@ -130,7 +129,7 @@ export default function UsageCostPage() {
           columns={[
             { title: '用户', dataIndex: 'user_name' },
             { title: '姓名', dataIndex: 'real_name' },
-            { title: 'user_id', dataIndex: 'user_id' },
+            { title: '用户 ID', dataIndex: 'user_id' },
             { title: '成本(元)', dataIndex: 'cost_cent', render: yuan },
             { title: '任务数', dataIndex: 'task_count' },
           ]}

@@ -3,7 +3,7 @@ import { Button, Input, Select, Space, Typography, message } from 'antd'
 import supportApi from '../../api/support'
 import './support-inbox.css'
 
-const { Title, Text, Paragraph } = Typography
+const { Title, Text } = Typography
 const CODE_OK = new Set([0, 200, '0', '200'])
 
 const TICKET_STATUS_OPTIONS = [
@@ -132,9 +132,6 @@ export default function SupportInboxPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>在线客服</Title>
-      <Paragraph type="secondary">
-        处理用户留言会话与工单：列表、详情、回复、关闭、更新工单状态。
-      </Paragraph>
 
       <Space wrap style={{ marginBottom: 12 }}>
         <Select
@@ -190,7 +187,7 @@ export default function SupportInboxPage() {
 
         <div className="si-detail">
           {!session ? (
-            <div className="si-empty">选择左侧会话查看详情</div>
+            <div className="si-empty">未选择会话</div>
           ) : (
             <>
               <div className="si-detail-header">
@@ -200,7 +197,7 @@ export default function SupportInboxPage() {
                     {[session.contact_name, session.contact_phone, session.contact_email]
                       .filter(Boolean)
                       .join(' / ') || '无联系方式'}
-                    {session.user_id ? ` · user_id=${session.user_id}` : ''}
+                    {session.user_id ? ` · 用户 ${session.user_id}` : ''}
                   </div>
                 </div>
                 <Button
