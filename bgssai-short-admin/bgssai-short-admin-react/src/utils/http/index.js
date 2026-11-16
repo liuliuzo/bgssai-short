@@ -1,8 +1,10 @@
 import { instance } from './axios'
 
-const post = (url, data) => instance.post(url, data)
-const get = (url, data) => instance.get(url, { params: data })
-const put = (url, data) => instance.put(url, data)
-const del = (url, data) => instance.delete(url, { params: data })
+// Optional config (timeout, signal, onUploadProgress, headers) is forwarded
+// to axios untouched; existing two-argument calls keep the instance defaults.
+const post = (url, data, config) => instance.post(url, data, config)
+const get = (url, data, config) => instance.get(url, { params: data, ...config })
+const put = (url, data, config) => instance.put(url, data, config)
+const del = (url, data, config) => instance.delete(url, { params: data, ...config })
 
 export default { post, get, put, del }

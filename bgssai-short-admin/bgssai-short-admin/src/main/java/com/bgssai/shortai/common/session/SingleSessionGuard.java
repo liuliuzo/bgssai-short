@@ -36,7 +36,7 @@ public class SingleSessionGuard {
     public static final String SESSION_EXPIRED_CODE = "2002";
 
     /** 与 SESSION_EXPIRED_CODE 配对的既有文案。 */
-    public static final String SESSION_EXPIRED_MESSAGE = "token validation failed";
+    public static final String SESSION_EXPIRED_MESSAGE = "登录状态已失效，请重新登录";
 
     private static final Logger log = LoggerFactory.getLogger(SingleSessionGuard.class);
 

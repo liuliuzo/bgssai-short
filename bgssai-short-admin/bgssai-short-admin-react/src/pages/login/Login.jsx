@@ -43,7 +43,11 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(() => (
+    new URLSearchParams(window.location.search).get('reason') === 'session_kicked'
+      ? '账号已在其他设备登录'
+      : null
+  ))
 
   const loginSucceed = (result) => {
     if (!isAllowedRole(result)) {

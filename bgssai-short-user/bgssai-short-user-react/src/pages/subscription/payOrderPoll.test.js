@@ -2,7 +2,9 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   isPayOrderExpired,
+  isPollWindowExceeded,
   isTerminalPayStatus,
+  PAY_ORDER_POLL_MAX_MS,
   parseExpiresAtMs,
   resolvePollOutcome,
 } from './payOrderPoll.js'
@@ -18,6 +20,30 @@ describe('payOrderPoll', () => {
     const ms = parseExpiresAtMs('2026-08-14 12:30:00')
     assert.ok(ms != null)
     assert.equal(new Date(ms).getUTCFullYear(), 2026)
+  })
+
+  it('parses naive wall-clock expires_at as Asia/Shanghai regardless of browser zone', () => {
+    const ms = parseExpiresAtMs('2026-08-14 12:30:00')
+    assert.equal(ms, Date.UTC(2026, 7, 14, 4, 30, 0))
+    assert.equal(parseExpiresAtMs('2026-08-14T12:30:00'), Date.UTC(2026, 7, 14, 4, 30, 0))
+  })
+
+  it('keeps explicit zone offsets as given', () => {
+    assert.equal(
+      parseExpiresAtMs('2026-08-14T12:30:00+09:00'),
+      Date.UTC(2026, 7, 14, 3, 30, 0),
+    )
+    assert.equal(
+      parseExpiresAtMs('2026-08-14T12:30:00Z'),
+      Date.UTC(2026, 7, 14, 12, 30, 0),
+    )
+  })
+
+  it('bounds the local poll window when expires_at is missing', () => {
+    const start = Date.UTC(2026, 7, 14, 0, 0, 0)
+    assert.equal(isPollWindowExceeded(start, start + PAY_ORDER_POLL_MAX_MS - 1), false)
+    assert.equal(isPollWindowExceeded(start, start + PAY_ORDER_POLL_MAX_MS), true)
+    assert.equal(isPollWindowExceeded(null, start + PAY_ORDER_POLL_MAX_MS), false)
   })
 
   it('flags expired orders', () => {

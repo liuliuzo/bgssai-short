@@ -14,7 +14,7 @@ public class RateLimitExceededException extends BizException {
     private final long nanosToWaitForRefill;
 
     public RateLimitExceededException(long nanosToWaitForRefill) {
-        super(CommonErrorCode.RATE_LIMIT_EXCEEDED, "too many requests");
+        super(CommonErrorCode.RATE_LIMIT_EXCEEDED, CommonErrorCode.RATE_LIMIT_EXCEEDED.message());
         this.nanosToWaitForRefill = nanosToWaitForRefill;
     }
 

@@ -55,6 +55,7 @@ export default function WorksPage() {
   const [pageSize, setPageSize] = useState(20)
   const [total, setTotal] = useState(0)
   const [open, setOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
   const [form] = Form.useForm()
 
   const load = useCallback(async (num, size) => {
@@ -83,15 +84,21 @@ export default function WorksPage() {
   }, [searchParams, setSearchParams])
 
   const create = async () => {
+    if (creating) return
     const values = await form.validateFields()
-    const { data } = await productionApi.createWork({ ...DEFAULTS, ...values })
-    if (data?.success) {
-      message.success('已创建')
-      setOpen(false)
-      form.resetFields()
-      navigate(`/works/${data.result.work_id}/script`, {
-        state: { outlineTaskId: data.result.task_id },
-      })
+    setCreating(true)
+    try {
+      const { data } = await productionApi.createWork({ ...DEFAULTS, ...values })
+      if (data?.success) {
+        message.success('已创建')
+        setOpen(false)
+        form.resetFields()
+        navigate(`/works/${data.result.work_id}/script`, {
+          state: { outlineTaskId: data.result.task_id },
+        })
+      }
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -163,7 +170,8 @@ export default function WorksPage() {
         title="新建作品"
         open={open}
         onOk={create}
-        onCancel={() => setOpen(false)}
+        confirmLoading={creating}
+        onCancel={() => { if (!creating) setOpen(false) }}
         destroyOnClose
         width={620}
         okText="创建并生成大纲"

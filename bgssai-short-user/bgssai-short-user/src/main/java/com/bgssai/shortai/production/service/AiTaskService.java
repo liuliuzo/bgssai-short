@@ -453,7 +453,7 @@ public class AiTaskService {
     public ApiResponse retry(AiTaskReq req) {
         ShortAiTask task = requireTask(req == null ? null : req.getTaskId());
         if (!GenerationTaskStatus.recoverable(task.getTaskStatus())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "only failed/canceled can retry");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "仅失败或已取消的任务可重试");
         }
         boolean useFallback = req != null && req.getFallbackModelFlag() != null
                 && req.getFallbackModelFlag() == 1;
@@ -491,7 +491,7 @@ public class AiTaskService {
     public ApiResponse cancel(AiTaskReq req) {
         ShortAiTask task = requireTask(req == null ? null : req.getTaskId());
         if (!GenerationTaskStatus.cancellable(task.getTaskStatus())) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "only queued/running/paused can cancel");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "仅排队、执行或暂停中的任务可取消");
         }
         ImageToVideoPolicy.assertCanCancel(task);
         ShortAiTask patch = new ShortAiTask();

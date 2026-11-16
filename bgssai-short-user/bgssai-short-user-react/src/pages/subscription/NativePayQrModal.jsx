@@ -30,6 +30,8 @@ export default function NativePayQrModal({
       open={open}
       title={title}
       onCancel={onClose}
+      maskClosable={!polling}
+      keyboard={!polling}
       footer={[
         <Button key="close" onClick={onClose}>关闭</Button>,
       ]}
