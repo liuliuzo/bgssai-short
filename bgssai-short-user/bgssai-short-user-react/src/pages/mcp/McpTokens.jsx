@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Card, Empty, Input, Modal, Select, Table, Typography, message } from 'antd'
+import { Button, Card, Empty, Input, Modal, Select, Table, Typography, message } from 'antd'
 import { CopyOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import mcpTokensApi from '../../api/mcpTokens'
@@ -15,8 +15,7 @@ function agent(key, group, label, hint, snippet) {
 function manual(key, group, label, hint) {
   return agent(key, group, label, hint, (endpoint) => `名称：bgssai-short
 MCP URL：${endpoint}
-请求头：Authorization: Bearer ${TOKEN}
-本站只接受 Streamable HTTP 的 POST。该客户端没有公开的固定配置文件，上面三项填进它的自定义连接器。若它只支持本地命令或 OAuth，这段不能直接连上。`)
+请求头：Authorization: Bearer ${TOKEN}`)
 }
 
 function httpJson(endpoint, extra) {
@@ -273,7 +272,7 @@ export default function McpTokens() {
         <Button type="link" size="small" danger icon={<DeleteOutlined />} aria-label="吊销令牌"
           onClick={() => Modal.confirm({
             title: '吊销令牌',
-            content: `确认吊销「${row.token_name}」？AI 客户端将立即无法调用。`,
+            content: `确认吊销「${row.token_name}」？`,
             okText: '吊销',
             okType: 'danger',
             cancelText: '取消',
@@ -289,19 +288,10 @@ export default function McpTokens() {
   return (
     <div style={{ padding: 24, maxWidth: 960 }}>
       <div style={{ marginBottom: 20 }}>
-        <Title level={3} style={{ marginBottom: 4 }}>MCP 连接器</Title>
-        <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: 15 }}>
-          把 AI 工具连接到本应用，用个人访问令牌调用开放能力
-        </Paragraph>
+        <Title level={3} style={{ marginBottom: 0 }}>MCP 连接器</Title>
       </div>
 
-      <Card title="连接 AI 工具" style={{ marginBottom: 16 }}>
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-          message="连接器分成国外、国内和 BGSSAI Bot 三类，使用同一 MCP 端点。先创建令牌，再按工具粘贴下方片段。支持作品与原创剧本、正式分镜和参考图定妆、模型与声音目录、角色声音设置、图像/视频/配音/音乐/合成（需费用确认）、任务状态及真实成片下载；对外发布另需确认。"
-        />
+      <Card title="连接配置" style={{ marginBottom: 16 }}>
         <Paragraph style={{ marginBottom: 12 }}>
           端点：<Text code copyable>{endpoint}</Text>
         </Paragraph>
@@ -312,9 +302,8 @@ export default function McpTokens() {
           onChange={setAgentKey}
           options={agentOptions}
           style={{ width: '100%', maxWidth: 420, marginBottom: 16 }}
-          aria-label="选择 AI 工具"
+          aria-label="选择客户端"
         />
-        <Paragraph type="secondary" style={{ marginBottom: 12 }}>{activeAgent.hint}</Paragraph>
         <pre style={{
           fontSize: 12,
           background: 'var(--ant-color-fill-quaternary, #f5f5f5)',
@@ -331,20 +320,14 @@ export default function McpTokens() {
         title="个人访问令牌"
         extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>创建令牌</Button>}
       >
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 16 }}
-          message="令牌明文只在创建时显示一次。建议按工具命名（Claude Code / Codex / Cursor / BGSSAI Bot）。每人最多 5 枚。"
-        />
         <Table rowKey="id" loading={loading} columns={columns} dataSource={rows}
-          pagination={false} locale={{ emptyText: <Empty description="还没有 MCP 令牌" /> }} />
+          pagination={false} locale={{ emptyText: <Empty description="暂无令牌" /> }} />
       </Card>
 
       <Modal title="创建 MCP 令牌" open={modalOpen} onOk={create} confirmLoading={creating}
         onCancel={() => setModalOpen(false)} okText="创建" cancelText="取消">
         <Input
-          placeholder="备注名，例如 Cursor / Claude Code / BGSSAI Bot"
+          placeholder="令牌名称"
           value={tokenName}
           maxLength={64}
           onChange={(e) => setTokenName(e.target.value)}

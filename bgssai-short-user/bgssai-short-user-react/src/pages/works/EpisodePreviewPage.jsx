@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, Button, Card, List, Space, Typography } from 'antd'
+import { Button, Card, List, Space, Typography } from 'antd'
 import featuresApi from '../../api/features'
 import { labelOf, PREVIZ_LEVEL_LABEL } from '../../lib/displayLabels'
 
@@ -29,12 +29,6 @@ export default function EpisodePreviewPage({ work, episodeId }) {
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <Alert
-        type="info"
-        showIcon
-        message="这就是成片未来的样子（还不花视频钱）"
-        description="用文字和已出的图，按真实镜头时长把这一集过一遍。构图不对就回创作台改人话，不要直接重抽视频。"
-      />
       <Card loading={loading} title={`${summary?.episode_title || '看样片'} · ${summary?.shot_count || 0} 镜 · ${summary?.total_sec || 0} 秒`} extra={<Button onClick={load}>刷新</Button>}>
         <List
           size="small"
@@ -68,7 +62,7 @@ export default function EpisodePreviewPage({ work, episodeId }) {
                 <Button disabled={cur >= frames.length - 1} onClick={() => setCur((n) => n + 1)}>下一镜</Button>
               </Space>
             </div>
-          ) : <Paragraph type="secondary">先去创作台拆镜，这里才能连着看。</Paragraph>}
+          ) : <Paragraph type="secondary">暂无分镜</Paragraph>}
         </Card>
         <Card title="整集缩略" style={{ flex: 1, minWidth: 280 }}>
           <Space wrap>

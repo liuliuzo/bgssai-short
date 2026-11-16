@@ -39,7 +39,6 @@
       <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
       <span class="top-title">结构模板与质量阈值</span>
       <span class="spacer"></span>
-      <span class="text-muted" style="font-size:12px">平台质量的源头</span>
       <button class="btn btn-primary">新增模板</button>
     </header>
 
@@ -54,17 +53,15 @@
         <div class="stat">
           <div class="stat-label">一次过线率</div>
           <div class="stat-value">58%</div>
-          <div class="stat-sub">首次评审即达标的剧集占比</div>
         </div>
         <div class="stat">
           <div class="stat-label">强制放行占比</div>
           <div class="stat-value text-warn">6.2%</div>
-          <div class="stat-sub">越低说明质量越靠自觉达标</div>
         </div>
         <div class="stat">
           <div class="stat-label">最常见失分项</div>
           <div class="stat-value" style="font-size:15px">连续同景别</div>
-          <div class="stat-sub">分镜门，占全部失分 31%</div>
+          <div class="stat-sub">分镜门 31%</div>
         </div>
       </div>
 
@@ -74,8 +71,6 @@
           <span class="chip active">全部 12</span>
           <span class="chip">复仇逆袭 4</span><span class="chip">豪门总裁 3</span>
           <span class="chip">穿越重生 2</span><span class="chip">甜宠 2</span><span class="chip">悬疑 1</span>
-          <span class="spacer"></span>
-          <span class="text-muted" style="font-size:12px">按采用次数与平均质量分排序</span>
         </div>
 
         <div class="table-wrap">
@@ -136,11 +131,6 @@
             </tbody>
           </table>
         </div>
-        <div class="card-body" style="padding-top:10px">
-          <div class="text-muted" style="font-size:11px">
-            平均质量分来自采用该模板的作品的 <code>overall_quality_score</code>，是判断模板好坏的唯一依据。
-          </div>
-        </div>
       </div>
 
       <div class="split" style="margin-top:14px">
@@ -158,7 +148,6 @@
               <span class="chip active">当众羞辱</span><span class="chip active">身份反差</span>
               <span class="chip">死而复生</span><span class="chip">误会顶点</span><span class="chip">添加</span>
             </div>
-            <div class="hint">生成时作为硬约束注入；也是剧本门 hook_score 的判定基准</div>
           </div>
 
           <div class="field">
@@ -175,13 +164,11 @@
                 </tbody>
               </table>
             </div>
-            <div class="hint">节拍覆盖率是剧本门 G1 的评分维度之一，缺拍会被定位到具体秒数</div>
           </div>
 
           <div class="field">
             <label>全剧反转位</label>
             <input value="3, 8, 15, 24" />
-            <div class="hint">标记为反转集的剧集，关键镜头默认启用多方案择优</div>
           </div>
 
           <div class="field">
@@ -189,7 +176,6 @@
             <textarea rows="3">爽点前置过早导致后段无牌可打
 反派智商掉线
 女主开挂但动机不明</textarea>
-            <div class="hint">作为剧本门的扣分项与改写建议来源</div>
           </div>
 
           <div class="toolbar">
@@ -206,30 +192,25 @@
             </div>
             <div class="field">
               <label>常规剧集阈值</label><input value="75" />
-              <div class="hint">四道门统一阈值，作品级可上调不可下调</div>
             </div>
             <div class="field">
               <label>第 1 集阈值</label><input value="85" />
-              <div class="hint">首集决定完播与追更，标准更高</div>
             </div>
             <div class="field">
               <label>多方案默认版本数</label><input value="3" />
-              <div class="hint">上限 5；只在关键节点启用，避免全片 N 倍成本</div>
+              <div class="hint">上限 5</div>
             </div>
             <div class="field">
               <label>三视角分歧告警线</label><input value="20" />
-              <div class="hint">分差超过该值标 divergent_flag=1 并高亮</div>
             </div>
             <div class="field">
               <label>评审结果缓存（秒）</label><input value="300" />
-              <div class="hint">同一对象重复评审返回缓存，避免连点烧钱</div>
             </div>
             <div class="field">
               <label>视频跳级约束</label>
               <div class="opts">
-                <span class="chip active">默认开启（未出首帧不许直接生成视频）</span>
+                <span class="chip active">默认开启</span>
               </div>
-              <div class="hint">作品级可关闭，关闭时向创作者提示成本风险</div>
             </div>
             <button class="btn btn-primary btn-sm">保存阈值</button>
           </div>
@@ -247,23 +228,8 @@
                 </tbody>
               </table>
             </div>
-            <div class="note" style="margin-top:10px">
-              剧本权重最高：短剧的生死在剧本，画面再好也救不回一个没钩子的故事。
-            </div>
           </div>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        接口：<code>GET /bgssai/admin/quality/templates/list</code> ·
-        <code>POST /bgssai/admin/quality/templates/create</code> · <code>/update</code> ·
-        <code>/toggle-enabled</code> · <code>POST /bgssai/admin/quality/threshold-save</code>。
-        模板字段：<code>template_id</code> · <code>template_name</code> · <code>genre</code> ·
-        <code>hook_type_json</code> · <code>beat_sheet_json</code>[<code>beat_no</code> ·
-        <code>start_sec</code> · <code>end_sec</code> · <code>beat_name</code> ·
-        <code>beat_purpose</code>] · <code>turning_point_json</code> · <code>taboo_json</code> ·
-        <code>enabled_flag</code>。创作者端只读选用（<code>GET /bgssai/user/quality/templates?genre</code>）。
       </div>
 
       <div class="footer legal-fanout">

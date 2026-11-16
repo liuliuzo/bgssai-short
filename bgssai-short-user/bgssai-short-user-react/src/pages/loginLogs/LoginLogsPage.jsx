@@ -3,7 +3,7 @@ import { Card, Descriptions, Drawer, Table, Tag, Typography } from 'antd'
 import { formatDateTime } from '../../lib/formatTime'
 import loginLogsApi from '../../api/loginLogs'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 const METHODS = {
   password: '密码',
@@ -87,9 +87,6 @@ export default function LoginLogsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>登录日志</Title>
-      <Paragraph type="secondary">
-        最近登录记录，仅展示本人账号。能在登录当时确定的结果、方式、设备和会话会记下来；采集不到的项显示为未知。IP归属地来自离线库，仅供参考，不代表精确位置。
-      </Paragraph>
       <Card>
         <Table
           rowKey="id"
@@ -98,7 +95,7 @@ export default function LoginLogsPage() {
           columns={columns}
           dataSource={rows}
           scroll={{ x: 1500 }}
-          locale={{ emptyText: '还没有登录记录。' }}
+          locale={{ emptyText: '暂无登录记录' }}
           onRow={(row) => ({ onClick: () => setCurrent(row), style: { cursor: 'pointer' } })}
           pagination={{
             current: pageNum,
@@ -122,46 +119,37 @@ export default function LoginLogsPage() {
 }
 
 function Detail({ row }) {
-  const geoNote = row.ip_geo_source === 'snapshot'
-    ? '国家、省区和城市是登录当时从离线库记下的。'
-    : row.ip_geo_source === 'lookup'
-      ? '这条旧记录没有地区快照，国家、省区和城市按当前离线库补全。'
-      : '离线库没有给出国家、省区、城市或运营商。'
   return (
-    <>
-      <Paragraph type="secondary">没有采集到的项显示为未知。这里不展示密码、验证码或令牌。</Paragraph>
-      <Descriptions column={1} size="small" bordered>
-        <Descriptions.Item label="结果">{resultTag(row)} {show(row.result_reason)}</Descriptions.Item>
-        <Descriptions.Item label="方式">{row.login_method ? METHODS[row.login_method] || row.login_method : '未知'}</Descriptions.Item>
-        <Descriptions.Item label="账号">{show(row.identifier_masked)}</Descriptions.Item>
-        <Descriptions.Item label="账号类型">{show(row.identifier_type)}</Descriptions.Item>
-        <Descriptions.Item label="客户端">{row.client_channel ? CHANNELS[row.client_channel] || row.client_channel : '未知'}</Descriptions.Item>
-        <Descriptions.Item label="浏览器">{show(row.browser_name)}</Descriptions.Item>
-        <Descriptions.Item label="系统">{show(row.os_name)}</Descriptions.Item>
-        <Descriptions.Item label="设备">{show(row.device_label)}</Descriptions.Item>
-        <Descriptions.Item label="登录 IP">{show(row.ip_address)}</Descriptions.Item>
-        <Descriptions.Item label="IP归属地（参考）">{row.ip_location || '未知'}</Descriptions.Item>
-        <Descriptions.Item label="国家">{show(row.ip_country)}</Descriptions.Item>
-        <Descriptions.Item label="省区">{show(row.ip_province)}</Descriptions.Item>
-        <Descriptions.Item label="城市">{show(row.ip_city)}</Descriptions.Item>
-        <Descriptions.Item label="运营商">{show(row.ip_isp)}</Descriptions.Item>
-        <Descriptions.Item label="协议">{show(row.request_scheme)}</Descriptions.Item>
-        <Descriptions.Item label="TLS">{show(row.tls_protocol)}</Descriptions.Item>
-        <Descriptions.Item label="来源主机">{show(row.referer_host)}</Descriptions.Item>
-        <Descriptions.Item label="入口路径">{show(row.entry_path)}</Descriptions.Item>
-        <Descriptions.Item label="请求号">{show(row.request_id)}</Descriptions.Item>
-        <Descriptions.Item label="语言">{show(row.accept_language)}</Descriptions.Item>
-        <Descriptions.Item label="时区">{show(row.client_timezone)}</Descriptions.Item>
-        <Descriptions.Item label="客户端提示">{show(row.client_hints)}</Descriptions.Item>
-        <Descriptions.Item label="登录编号">{show(row.id)}</Descriptions.Item>
-        <Descriptions.Item label="会话">{show(row.session_id)}</Descriptions.Item>
-        <Descriptions.Item label="签发">{showTime(row.session_issued_at)}</Descriptions.Item>
-        <Descriptions.Item label="过期">{showTime(row.session_expires_at)}</Descriptions.Item>
-        <Descriptions.Item label="最近活跃">{showTime(row.session_last_seen_at)}</Descriptions.Item>
-        <Descriptions.Item label="退出">{row.logout_time ? formatDateTime(row.logout_time) : '尚未记录'}</Descriptions.Item>
-        <Descriptions.Item label="对照">{riskText(row)}</Descriptions.Item>
-      </Descriptions>
-      <Paragraph type="secondary" style={{ marginTop: 12 }}>{geoNote}</Paragraph>
-    </>
+    <Descriptions column={1} size="small" bordered>
+      <Descriptions.Item label="结果">{resultTag(row)} {show(row.result_reason)}</Descriptions.Item>
+      <Descriptions.Item label="方式">{row.login_method ? METHODS[row.login_method] || row.login_method : '未知'}</Descriptions.Item>
+      <Descriptions.Item label="账号">{show(row.identifier_masked)}</Descriptions.Item>
+      <Descriptions.Item label="账号类型">{show(row.identifier_type)}</Descriptions.Item>
+      <Descriptions.Item label="客户端">{row.client_channel ? CHANNELS[row.client_channel] || row.client_channel : '未知'}</Descriptions.Item>
+      <Descriptions.Item label="浏览器">{show(row.browser_name)}</Descriptions.Item>
+      <Descriptions.Item label="系统">{show(row.os_name)}</Descriptions.Item>
+      <Descriptions.Item label="设备">{show(row.device_label)}</Descriptions.Item>
+      <Descriptions.Item label="登录 IP">{show(row.ip_address)}</Descriptions.Item>
+      <Descriptions.Item label="IP归属地（参考）">{row.ip_location || '未知'}</Descriptions.Item>
+      <Descriptions.Item label="国家">{show(row.ip_country)}</Descriptions.Item>
+      <Descriptions.Item label="省区">{show(row.ip_province)}</Descriptions.Item>
+      <Descriptions.Item label="城市">{show(row.ip_city)}</Descriptions.Item>
+      <Descriptions.Item label="运营商">{show(row.ip_isp)}</Descriptions.Item>
+      <Descriptions.Item label="协议">{show(row.request_scheme)}</Descriptions.Item>
+      <Descriptions.Item label="TLS">{show(row.tls_protocol)}</Descriptions.Item>
+      <Descriptions.Item label="来源主机">{show(row.referer_host)}</Descriptions.Item>
+      <Descriptions.Item label="入口路径">{show(row.entry_path)}</Descriptions.Item>
+      <Descriptions.Item label="请求号">{show(row.request_id)}</Descriptions.Item>
+      <Descriptions.Item label="语言">{show(row.accept_language)}</Descriptions.Item>
+      <Descriptions.Item label="时区">{show(row.client_timezone)}</Descriptions.Item>
+      <Descriptions.Item label="客户端提示">{show(row.client_hints)}</Descriptions.Item>
+      <Descriptions.Item label="登录编号">{show(row.id)}</Descriptions.Item>
+      <Descriptions.Item label="会话">{show(row.session_id)}</Descriptions.Item>
+      <Descriptions.Item label="签发">{showTime(row.session_issued_at)}</Descriptions.Item>
+      <Descriptions.Item label="过期">{showTime(row.session_expires_at)}</Descriptions.Item>
+      <Descriptions.Item label="最近活跃">{showTime(row.session_last_seen_at)}</Descriptions.Item>
+      <Descriptions.Item label="退出">{row.logout_time ? formatDateTime(row.logout_time) : '尚未记录'}</Descriptions.Item>
+      <Descriptions.Item label="对照">{riskText(row)}</Descriptions.Item>
+    </Descriptions>
   )
 }

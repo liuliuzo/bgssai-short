@@ -3,7 +3,7 @@ import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table, Ty
 import aiModelsApi from '../../api/aiModels'
 import { yuanToCent } from '../../lib/money'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 function yuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
@@ -47,7 +47,6 @@ export default function AiModelsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>AI 能力与模型</Title>
-      <Paragraph type="secondary">单价按元填写。调用密钥在「AI 密钥」页维护，本页只保存密钥引用。</Paragraph>
       <Card
         extra={
           <Button type="primary" onClick={() => {
@@ -185,7 +184,7 @@ export default function AiModelsPage() {
             <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
           <Form.Item name="config_json" label="网关扩展配置 (JSON)">
-            <Input.TextArea rows={3} placeholder='{"base_url":"...","secret_ref":"ai.openai_compat.api_key"}' />
+            <Input.TextArea rows={3} placeholder="{}" />
           </Form.Item>
           <Form.Item name="default_flag" label="设为默认">
             <Select options={[{ value: 1, label: '是' }, { value: 0, label: '否' }]} />

@@ -13,24 +13,17 @@
       <h1 class="title" style="margin:0">登录日志</h1>
       <span class="badge">ADMIN</span>
     </div>
-    <p class="subtitle">
-      导航：<a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
+    <p>
+      <a href="home.html">首页</a> · <a href="login-logs.html">登录日志</a> ·
       <a href="login.html">退出登录</a>
     </p>
 
     <div class="card">
-      <!--
-        对应接口：GET /bgssai/admin/login-logs?page_num=1&page_size=20（管理端返回全量记录）
-        用户端原型见 ../user/login-logs.html（仅返回本人记录）
-        响应为 PageResponse：{ code, success, result:[...], page_num, page_size, total_size }
-        鉴权：请求头 Jwttoken（@NeedAop）
-      -->
-      <p>全库记录。能在登录当时确定的结果、方式、账号、设备和会话会记下来。采集不到的项显示未知。IP归属地显示离线库可识别的国家/地区/城市，仅供参考，不代表精确位置。不展示密码、验证码或令牌。</p>
       <div style="overflow-x:auto"><table style="min-width:1200px">
         <thead>
           <tr>
             <th>时间</th><th>用户</th><th>结果</th><th>原因</th><th>方式</th><th>账号</th><th>设备</th>
-            <th>登录IP</th><th>IP归属地（参考）</th><th>对照</th>
+            <th>登录IP</th><th>IP归属地</th><th>对照</th>
           </tr>
         </thead>
         <tbody>
@@ -48,11 +41,11 @@
           </tr>
         </tbody>
       </table></div>
-      <h2>记录详情（点一行打开）</h2>
+      <h2>记录详情</h2>
       <ul>
         <li>登录编号 103 · 客户端 管理端 · 会话 9c2e88ab · 签发 2026-07-19 10:12:03 · 过期 2026-07-20 10:12:03 · 最近活跃 2026-07-19 10:40:00 · 退出 尚未记录</li>
         <li>协议 https · TLS 未知 · 来源主机 未知 · 入口路径 /bgssai/admin/login · 请求号 未知 · 语言 zh-CN · 时区 未知</li>
-        <li>国家 / 省区 / 城市 / 运营商：未知（示例地址不是公网定位）</li>
+        <li>国家 / 省区 / 城市 / 运营商：未知</li>
       </ul>
 
       <div class="pager">

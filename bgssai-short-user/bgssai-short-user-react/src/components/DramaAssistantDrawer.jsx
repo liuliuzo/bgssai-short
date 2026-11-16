@@ -1,36 +1,32 @@
 import React, { useState } from 'react'
-import { Drawer, Radio, Input, Button, Space, Tag, Typography, Divider, message, Spin, Alert, Modal } from 'antd'
+import { Drawer, Radio, Input, Button, Space, Tag, Typography, Divider, message, Spin, Modal } from 'antd'
 import productionApi from '../api/production'
 
-const { Paragraph, Text } = Typography
+const { Text } = Typography
 const { TextArea } = Input
 
 const AGENT_ROLES = [
   {
     key: 'SCRIPT',
     name: '编剧专家',
-    desc: '对白张力、反转与集尾钩子；可确认后写回镜头对白',
     tag: '爽点与对白',
     color: 'magenta',
   },
   {
     key: 'DIRECTOR',
     name: '分镜导演',
-    desc: '景别节奏、机位与镜头衔接；可确认后写回镜头描述',
     tag: '分镜语言',
     color: 'blue',
   },
   {
     key: 'VISUAL',
     name: '视觉专家',
-    desc: '光影构图与提示词参数；可确认后写回额外提示',
     tag: '光影构图',
     color: 'geekblue',
   },
   {
     key: 'EDITOR',
     name: '剪辑顾问',
-    desc: '时长卡点、音效与导出建议；默认不直接改镜头字段',
     tag: '剪辑与声音',
     color: 'cyan',
   },
@@ -76,13 +72,7 @@ export default function DramaAssistantDrawer({
   const [activeRole, setActiveRole] = useState('DIRECTOR')
   const [inputVal, setInputVal] = useState('')
   const [sending, setSending] = useState(false)
-  const [messages, setMessages] = useState([
-    {
-      sender: 'assistant',
-      role: 'DIRECTOR',
-      text: '请选择编剧、分镜导演、视觉或剪辑专家角色后提问。所有写回分镜字段的操作均需您二次确认后才会生效。',
-    },
-  ])
+  const [messages, setMessages] = useState([])
 
   const currentRoleObj = AGENT_ROLES.find((r) => r.key === activeRole)
 
@@ -161,9 +151,7 @@ export default function DramaAssistantDrawer({
     }
     Modal.confirm({
       title: `确认写回镜头 ${targetShot.shot_no || ''}？`,
-      content: currentShot?.shot_id
-        ? '只会更新你确认的字段，不会自动生成画面或视频。'
-        : '未显式选中镜头，将写回本集第一个镜头；只会更新确认字段。',
+      content: currentShot?.shot_id ? undefined : '未选中镜头，将写回第 1 镜。',
       okText: '确认写回',
       cancelText: '取消',
       onOk: async () => {
@@ -192,20 +180,8 @@ export default function DramaAssistantDrawer({
       onClose={onClose}
       extra={<Tag color={currentRoleObj?.color}>{currentRoleObj?.tag}</Tag>}
     >
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 12 }}
-        message="结合剧集与分镜上下文协同创作"
-        description={
-          currentShot?.shot_id
-            ? `已关联当前作品与第 ${currentShot.shot_no || ''} 镜；采纳建议写回字段前需经您二次确认。`
-            : '已关联当前作品；未选中具体分镜时仅提供创作建议，不会直接修改分镜。'
-        }
-      />
-
       <div style={{ marginBottom: 16 }}>
-        <Text strong>切换专家协同角色：</Text>
+        <Text strong>角色</Text>
         <Radio.Group
           value={activeRole}
           onChange={(e) => setActiveRole(e.target.value)}
@@ -219,15 +195,12 @@ export default function DramaAssistantDrawer({
             </Radio.Button>
           ))}
         </Radio.Group>
-        <Paragraph type="secondary" style={{ marginTop: 6, fontSize: 12 }}>
-          {currentRoleObj?.desc}
-        </Paragraph>
       </div>
 
       <Divider style={{ margin: '12px 0' }} />
 
       <div style={{ marginBottom: 12 }}>
-        <Text strong style={{ fontSize: 12 }}>常用快捷指令：</Text>
+        <Text strong style={{ fontSize: 12 }}>快捷指令</Text>
         <Space wrap style={{ marginTop: 6 }}>
           {(QUICK_ACTIONS[activeRole] || []).map((qa, idx) => (
             <Button key={idx} size="small" type="dashed" onClick={() => handleQuickAction(qa)}>

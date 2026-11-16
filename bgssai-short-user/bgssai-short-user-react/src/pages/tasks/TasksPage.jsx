@@ -5,7 +5,7 @@ import productionApi from '../../api/production'
 import { labelOf, TARGET_TYPE_LABEL, visibleFailReason } from '../../lib/displayLabels'
 import { formatDateTime } from '../../lib/formatTime'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 function taskTime(value) {
   const text = formatDateTime(value)
@@ -49,7 +49,6 @@ export default function TasksPage() {
     <div>
       <UsageReceipts />
       <Title level={4} style={{ marginTop: 0 }}>任务中心</Title>
-      <Paragraph type="secondary">文本 / 图片 / 视频同一套状态机。失败或取消可恢复排队，排队中可取消。成片播放在 Tube。</Paragraph>
       <Card>
         <Space wrap style={{ marginBottom: 12 }}>
           <Select allowClear placeholder="类型" style={{ width: 120 }} value={taskType} onChange={(v) => { setTaskType(v); load(1, pageSize) }}

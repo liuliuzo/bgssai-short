@@ -17,7 +17,7 @@ import {
 } from './lookGroups'
 import { laplacianScore, posterTimes } from './lookPoster'
 
-const { Paragraph, Text } = Typography
+const { Text } = Typography
 
 function readFile(file) {
   return new Promise((resolve, reject) => {
@@ -215,20 +215,17 @@ function sideMedia(look, kind) {
 const KIND_COPY = {
   CHARACTER: {
     pageTitle: '定妆库',
-    intro: '这里放可以跨剧集、跨作品反复使用的人物定妆造型。在作品的角色卡上可以直接选用，也可以把已锁定的定妆照一键存回定妆库。',
     itemNoun: '造型',
     slotNoun: '面',
     emptySlotText: '还没有照片',
     otherTitle: '历史与补充照片',
-    videoNote: '这是视频，不拿来当定妆照。封面只是其中一帧，点开可以播放。',
-    namePlaceholder: '造型名称，例如白纱花瓣',
-    descPlaceholder: '外观特征（可选，例如黑长直、珍珠耳环）',
-    emptyText: '这个分组里还没有人物造型。写一个造型名称，再往四面里放照片或直接生成，也可以在作品角色卡上点「存入定妆库」。',
-    noGroupText: '还没有分组也没关系。在作品角色卡上上传照片或点「存入定妆库」，会自动放进「我的定妆」分组。',
-    autoMatchLabel: '生成定妆时自动匹配这个分组',
-    groupPlaceholder: '例如现代都市剧角色组、古装女主造型组',
+    namePlaceholder: '造型名称',
+    descPlaceholder: '外观特征（可选）',
+    emptyText: '暂无造型',
+    noGroupText: '暂无分组',
+    autoMatchLabel: '自动匹配',
+    groupPlaceholder: '分组名称',
     uploadEmpty: '上传这一面',
-    subHint: '每个造型按正脸、前面、背面、侧面排好；正脸和其他面都支持随时生成或重做，重做后原来的照片会自动保留，方便一键换回。点照片可看大图。',
     slotWidth: 112,
     slotHeight: 148,
     extraWidth: 84,
@@ -236,20 +233,17 @@ const KIND_COPY = {
   },
   SCENE: {
     pageTitle: '场景库',
-    intro: '这里放可以跨剧集、跨作品反复使用的场景参考图。在作品的场景卡上可以直接选用，也可以把已锁定的场景图一键存回场景库。',
     itemNoun: '场景',
     slotNoun: '机位',
     emptySlotText: '还没有参考图',
     otherTitle: '其他参考图',
-    videoNote: '这是视频，不拿来当静态参考图。封面只是其中一帧，点开可以播放。',
-    namePlaceholder: '场景名称，例如总裁办公室、雨夜便利店',
-    descPlaceholder: '布景与光影特征（可选，例如落地窗夜景、暖光吧台）',
-    emptyText: '这个分组里还没有场景参考。可以先添加一个场景名称上传全景主图，也可以在作品场景卡上点「存入场景库」。',
-    noGroupText: '还没有分组也没关系。在作品场景卡上上传照片或点「存入场景库」，会自动放进「我的定妆」分组。',
-    autoMatchLabel: '生成场景图时自动匹配这个分组',
-    groupPlaceholder: '例如现代都市剧场景组、古装王府场景组',
+    namePlaceholder: '场景名称',
+    descPlaceholder: '布景与光影特征（可选）',
+    emptyText: '暂无场景',
+    noGroupText: '暂无分组',
+    autoMatchLabel: '自动匹配',
+    groupPlaceholder: '分组名称',
     uploadEmpty: '上传参考图',
-    subHint: '每个场景按全景主图、中景机位、局部陈设排好；全景主图会在生成场景与空镜时优先参考。点照片可看大图。',
     slotWidth: 164,
     slotHeight: 108,
     extraWidth: 112,
@@ -257,20 +251,17 @@ const KIND_COPY = {
   },
   PROP: {
     pageTitle: '道具库',
-    intro: '这里放可以跨剧集、跨作品反复使用的道具参考图。在作品的道具卡上可以直接选用，也可以把已锁定的道具图一键存回道具库。',
     itemNoun: '道具',
     slotNoun: '视角',
     emptySlotText: '还没有参考图',
     otherTitle: '其他参考图',
-    videoNote: '这是视频，不拿来当静态参考图。封面只是其中一帧，点开可以播放。',
-    namePlaceholder: '道具名称，例如退婚书、祖传玉佩',
-    descPlaceholder: '材质与外观特征（可选，例如烫金红封、青白玉）',
-    emptyText: '这个分组里还没有道具参考。可以先添加一个道具名称上传主视图，也可以在作品道具卡上点「存入道具库」。',
-    noGroupText: '还没有分组也没关系。在作品道具卡上上传照片或点「存入道具库」，会自动放进「我的定妆」分组。',
-    autoMatchLabel: '生成道具图时自动匹配这个分组',
-    groupPlaceholder: '例如现代都市剧道具组、古装信物道具组',
+    namePlaceholder: '道具名称',
+    descPlaceholder: '材质与外观特征（可选）',
+    emptyText: '暂无道具',
+    noGroupText: '暂无分组',
+    autoMatchLabel: '自动匹配',
+    groupPlaceholder: '分组名称',
     uploadEmpty: '上传参考图',
-    subHint: '每个道具按主视图、特写细节排好；主视图会在生成道具参考图时优先参考。点照片可看大图。',
     slotWidth: 120,
     slotHeight: 120,
     extraWidth: 84,
@@ -493,7 +484,7 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
         if (!data?.message) message.error('没有换回成功')
         return
       }
-      message.success('已换回原来的照片，替换下来的版本也保留在下方')
+      message.success('已换回')
       await load()
     } catch {
       message.error('没有换回成功')
@@ -571,7 +562,7 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
       const done = await waitBatch(data.result.batch_id)
       if (!done) message.info('还在生成，可以到任务中心看结果')
       else if (done.task_status !== 'SUCCEEDED') message.error(done.fail_reason || '这一面没有生成出来')
-      else message.success(modalState.replace ? '已重做完成，原照片已保留在下方可随时换回' : '已生成完成')
+      else message.success(modalState.replace ? '已重做' : '已生成')
       await load()
     } catch {
       message.error('没有排上生成')
@@ -700,21 +691,14 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
               )
             })}
           </div>
-          {isCharacter ? (
+          {isCharacter && missing.length >= 2 ? (
             <div style={{ marginTop: 8 }}>
-              <Text type="secondary">正脸、前面、背面、侧面都可以随时生成或重做；重做不强制绑定正脸，且原来的照片会自动保留在下方，方便随时换回。</Text>
-              {missing.length >= 2 ? (
-                <div>
-                  <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => generateAngles(look, null, false, firstCaption)}>一次补齐空缺面</Button>
-                </div>
-              ) : null}
+              <Button type="link" size="small" disabled={busy} style={{ padding: 0 }} onClick={() => generateAngles(look, null, false, firstCaption)}>一次补齐空缺面</Button>
             </div>
           ) : null}
-          {side.duplicated ? <div style={{ marginTop: 8 }}><Text type="secondary">有的照片在多个卡片上是同一张，这里只显示一次。</Text></div> : null}
           {side.extras.length || side.broken.length ? (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 13, marginBottom: 4 }}>{kindUi.otherTitle}</div>
-              <Text type="secondary">上面是每个{kindUi.slotNoun}当前使用的那张。重做或新传后，原来的照片会自动保留在这里，点开可看大图，点「换回这张」即可替换回去。</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.extras.map((item) => (
                   <div key={item.material_id} style={{ width: kindUi.extraWidth }}>
@@ -742,7 +726,6 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
           {side.videos.length ? (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 13, marginBottom: 4 }}>参考视频</div>
-              <Text type="secondary">{kindUi.videoNote}</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
                 {side.videos.map((item) => (
                   <div key={item.material_id} data-video="true" style={{ width: kindUi.extraWidth }}>
@@ -780,13 +763,7 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
         </Space>
       )}
     >
-      <Paragraph style={{ marginBottom: 8, color: '#334155', lineHeight: 1.7 }}>
-        {kindUi.intro}
-      </Paragraph>
-      <Paragraph style={{ marginBottom: 0, color: '#334155', lineHeight: 1.7 }}>
-        {kindUi.subHint}
-      </Paragraph>
-      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <div style={{ width: 236, flexShrink: 0 }}>
           {!librariesReady ? <Skeleton active title={false} paragraph={{ rows: 4 }} /> : null}
           {libraries.map((item) => (
@@ -863,8 +840,8 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
               {looks.map((look) => renderLook(look, false))}
               {!looks.length && !visibleDrafts.length ? <Text type="secondary">{kindUi.emptyText}</Text> : null}
             </Space>
-          ) : librariesReady ? (
-            <Text>还没有打开分组。左侧列出分组后会自动打开第一个；也可以点右上角「新建分组」。</Text>
+              ) : librariesReady ? (
+            <Text type="secondary">未选择分组</Text>
           ) : <Skeleton active paragraph={{ rows: 6 }} />}
         </div>
       </div>
@@ -888,7 +865,6 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
               playsInline
               style={{ width: '100%', maxHeight: 520, background: '#111', borderRadius: 8 }}
             />
-            <div style={{ marginTop: 8 }}><Text type="secondary">封面只是视频里的一帧。发糊或切得很近时，不会和静态参考图摆在一起。</Text></div>
           </div>
         ) : null}
       </Modal>
@@ -911,23 +887,22 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
                   onChange={(e) => setRedoModal((prev) => (prev ? { ...prev, skipRef: e.target.value === 'fresh' } : null))}
                 >
                   <Space direction="vertical">
-                    <Radio value="fresh">直接重做（不参考已有照片，按造型与外观描述重新生成）</Radio>
-                    <Radio value="ref">参考已有「{redoModal.refLabel}」照片（保持同一个人与同一套衣服）</Radio>
+                    <Radio value="fresh">直接重做</Radio>
+                    <Radio value="ref">参考已有「{redoModal.refLabel}」照片</Radio>
                   </Space>
                 </Radio.Group>
               </div>
             ) : null}
             <div>
-              <div style={{ marginBottom: 6, fontWeight: 500 }}>外观特征与重做说明（可选）</div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>外观特征（可选）</div>
               <Input
                 value={redoModal.caption}
-                placeholder="例如：黑色长直发、正红色礼服长裙、五官清晰面向镜头"
+                placeholder="外观特征描述"
                 onChange={(e) => setRedoModal((prev) => (prev ? { ...prev, caption: e.target.value } : null))}
               />
             </div>
             <Text type="secondary">
               {redoModal.priceText}
-              {redoModal.replace ? '重做后原来的照片会自动保留在下方「历史与补充照片」中，随时可点「换回这张」替换回去。' : ''}
             </Text>
           </Space>
         ) : null}
@@ -947,7 +922,6 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
           onChange={(event) => setLibraryName(event.target.value)}
           onPressEnter={createLibrary}
         />
-        <div style={{ marginTop: 8 }}><Text type="secondary">分组用来整理跨剧集、跨作品复用的{kindUi.itemNoun}素材；如果其他素材库也使用同一分组，自动匹配开关会一起生效。</Text></div>
       </Modal>
     </Card>
   )

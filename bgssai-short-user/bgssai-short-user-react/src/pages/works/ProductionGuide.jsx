@@ -177,8 +177,8 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const unit = Number(models.image?.unit_price_cent ?? models.image?.image_fen_per_unit ?? 0)
         const price = Number.isFinite(unit) && unit > 0 ? `预计 ${(unit * 2 / 100).toFixed(2)} 元。` : '按实际出图计费。'
         const ok = await confirmBox(
-          `给「${look.name}」出定妆`,
-          `生成 2 张，成功后锁定第一张。${price}后面的卡会一张一张做。`,
+          `生成「${look.name}」定妆`,
+          `生成 2 张并锁定首张。${price}`,
         )
         if (!ok) return
         const call = look.kind === 'character'
@@ -248,7 +248,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         if (!ok) return
         const { data } = await productionApi.submitTasks(body)
         if (data?.success) {
-          await finish(actionKind === 'frame' ? '首帧已提交' : '视频已提交，生成通常要几分钟')
+          await finish(actionKind === 'frame' ? '首帧已提交' : '视频已提交')
         }
       }
     } finally {
@@ -270,16 +270,14 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
       </ol>
       {loadError ? (
         <div>
-          <p className="video-path-title">步骤暂时读不到</p>
-          <p className="video-path-detail">刷新后再看下一步。生成视频仍按大纲、剧本、定稿、定妆、拆镜、首帧这个顺序。</p>
+          <p className="video-path-title">读取失败</p>
           <Button onClick={() => refresh().catch(() => setLoadError(true))}>重试</Button>
         </div>
       ) : null}
-      {!loadError && !step ? <p className="video-path-detail">正在看这一集做到哪一步。</p> : null}
+      {!loadError && !step ? <p className="video-path-detail">读取中</p> : null}
       {!loadError && step ? (
         <div>
           <p className="video-path-title">{step.title}</p>
-          <p className="video-path-detail">{step.detail}</p>
           <div className="video-path-actions">
             {step.action ? (
               <Button type="primary" loading={busy} disabled={step.waiting} onClick={() => run(step.kind)}>

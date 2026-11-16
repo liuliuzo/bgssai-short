@@ -82,7 +82,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
       draft_dir: draftDir.trim(),
     })
     if (data?.success) {
-      message.success('导出任务已提交，打包完成后可在下方下载')
+      message.success('导出任务已提交')
       await load()
     }
   }
@@ -104,18 +104,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
 
   return (
     <div>
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 12 }}
-        message="支持随时导出剪辑工程草稿"
-        description="只要本集至少包含一个已生成视频的分镜即可导出工程包；暂未出片的分镜将在下方清单中标注并在时间轴上自动跳过。导出工程不消耗模型额度，也不会变更成片与审核状态。"
-      />
-
       <Card title="导出基准" size="small" style={{ marginBottom: 12 }}>
-        <Paragraph type="secondary" style={{ marginTop: 0 }}>
-          已锁定的角色和分镜时间轴才是这次导出对照的版本。已作废的角色版本不会标成与现行时间轴一致。
-        </Paragraph>
         {!settled ? (
           <div style={{ minHeight: 72 }} />
         ) : baseline.characters.length ? baseline.characters.map((row) => (
@@ -130,7 +119,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
             <div>{row.version_text}</div>
           </Card>
         )) : (
-          <Paragraph type="secondary">还没有已锁定的角色版本。</Paragraph>
+          <Paragraph type="secondary">暂无已锁定的角色版本</Paragraph>
         )}
         {settled && baseline.timeline ? (
           <Card
@@ -158,7 +147,7 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
             ) : null}
           </Card>
         ) : settled ? (
-          <Paragraph type="secondary">时间轴尚未锁定，不显示时间轴版本。</Paragraph>
+          <Paragraph type="secondary">时间轴未锁定</Paragraph>
         ) : null}
         {baseline.voided.map((row) => (
           <Alert
@@ -223,11 +212,8 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
               addonBefore="本机剪映草稿目录"
               value={draftDir}
               onChange={(e) => { draftDirTouched.current = true; setDraftDir(e.target.value) }}
-              placeholder="C:\Users\你的用户名\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft"
+              placeholder="本机草稿绝对路径"
             />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              剪映按草稿里写死的绝对路径找素材，这一栏必须是你本机的真实路径；填错了草稿能打开但素材全是离线的。
-            </Text>
           </div>
         ) : null}
         <Space>
@@ -235,16 +221,12 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
             导出{FORMAT_LABEL[projectFormat]}
           </Button>
           <Button onClick={load} loading={loading}>刷新</Button>
-          {!exportable && precheck ? <Text type="warning">本集尚无已生成的镜头视频，先去创作台补生成</Text> : null}
+          {!exportable && precheck ? <Text type="warning">暂无已生成的镜头视频</Text> : null}
         </Space>
       </Card>
 
       {missing.length ? (
         <Card title="缺片镜头" size="small" style={{ marginBottom: 12 }}>
-          <Paragraph type="secondary" style={{ fontSize: 12 }}>
-            这些镜头没有可用视频，导出包里不会有它们，后续镜头依次前移。不插黑场是有意的：
-            在剪辑软件里看到一段黑，你会以为是转场坏了，还得回平台查一遍。
-          </Paragraph>
           <Table
             rowKey={(r) => r.shot_no}
             size="small"
@@ -293,13 +275,6 @@ export default function EditExportPage({ episodeId, initialPrecheck = null }) {
             },
           ]}
         />
-        <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-          下载链接 30 分钟有效，过期再点一次「下载」即可重新取链接，不用重新导出。
-          每集每格式保留最近 10 条记录。
-          {projectFormat === 'JIANYING'
-            ? ' 剪映导入：把包内文件夹整个解压到上面填的草稿目录下（不要多套一层），重启剪映即可在草稿列表看到。'
-            : ''}
-        </Paragraph>
       </Card>
     </div>
   )

@@ -321,7 +321,7 @@ export function tokenAmountLabel(tokens) {
 
 export function selectionFeeLine(selectedCount, billedTokens) {
   const count = Math.max(0, Math.trunc(Number(selectedCount) || 0))
-  return `勾选镜头后估费用（当前勾选 ${count} 镜 · 预计 ${tokenAmountLabel(billedTokens)}）。生成前会再弹窗确认预计费用与余额。`
+  return `当前勾选 ${count} 镜 · 预计 ${tokenAmountLabel(billedTokens)}`
 }
 
 export function modelSelectProps(label) {
@@ -455,8 +455,8 @@ export function assetLibrarySummary({ characters, scenes, props, ready = true } 
   if (characterNames.length) parts.push(`角色 ${characterNames.join('、')}`)
   if (sceneNames.length) parts.push(`场景 ${sceneNames.join('、')}`)
   if (propNames.length) parts.push(`道具 ${propNames.join('、')}`)
-  if (!parts.length) return '还没有可绑定的角色、场景或道具。'
-  return `本剧可绑定：${parts.join(' · ')}。下拉框用来勾选镜头后写入，空白表示还没选要绑定的卡。`
+  if (!parts.length) return '暂无可绑定资产'
+  return `本剧可绑定：${parts.join(' · ')}`
 }
 
 function namesOf(list) {

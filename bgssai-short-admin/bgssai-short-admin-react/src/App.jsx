@@ -59,7 +59,6 @@ function NotFoundPage() {
   return (
     <div style={{ maxWidth: 520, margin: '80px auto', padding: 24, textAlign: 'center' }}>
       <h2 style={{ marginTop: 0 }}>页面不存在</h2>
-      <p style={{ color: '#666' }}>你访问的地址无效或已被移除。</p>
       <a href={authed ? '/home' : '/login'}>{authed ? '返回首页' : '去登录'}</a>
     </div>
   )

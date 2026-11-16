@@ -405,7 +405,7 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
         if (data?.message) message.warning(data.message)
         return
       }
-      message.success('剧本任务已提交，正在编写分场对白')
+      message.success('剧本任务已提交')
       const done = await waitTask(work.work_id, data.result.task_id)
       reportTaskOutcome(done, '剧本已生成')
       await load()
@@ -437,7 +437,7 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
     try {
       const { data } = await productionApi.readyScript(episodeId, force)
       if (data?.success) {
-        message.success('剧本已定稿，已自动提取本集角色与场景')
+        message.success('剧本已定稿')
         await load()
         await onReload()
       } else if (data?.message) {
@@ -489,7 +489,6 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <div>
         <Title level={5} style={{ margin: 0 }}>{guide.title}</Title>
-        <Paragraph style={{ marginBottom: 0, color: '#334155' }}>{guide.detail}</Paragraph>
       </div>
       <Card loading={loading || generating} title="全集大纲" extra={<Space>
         <Select
@@ -589,8 +588,7 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
             type="success"
             showIcon
             style={{ marginBottom: 12 }}
-            message="这一集已经有成片"
-            description="剧本已定稿，生成、定稿和强制定稿不是下一步。可以去合成页查看或下载成片。"
+            message="本集已有成片"
             action={<Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>查看成片</Button>}
           />
         ) : !outline.length ? (
@@ -599,7 +597,6 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
             showIcon
             style={{ marginBottom: 12 }}
             message="请先生成全集大纲"
-            description="本集剧本需要依据全集大纲生成。请点击上方「生成大纲」或下方按钮一键生成。"
             action={<Button size="small" type="primary" loading={generating} onClick={runOutline}>立即生成大纲</Button>}
           />
         ) : !scenes.length ? (
@@ -607,8 +604,7 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
             type="info"
             showIcon
             style={{ marginBottom: 12 }}
-            message={scriptBusy === 'generate' ? '正在生成本集分场剧本，请稍候' : '大纲已就绪，点击「生成本集剧本」编写分场与台词'}
-            description="生成完成后，点击「定稿剧本」即可自动提取出场角色与场景卡。"
+            message={scriptBusy === 'generate' ? '正在生成本集分场剧本' : '大纲已就绪，待生成本集剧本'}
             action={<Button size="small" type="primary" loading={scriptBusy === 'generate'} onClick={runScript}>生成本集剧本</Button>}
           />
         ) : !isScriptReady ? (
@@ -617,17 +613,14 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
             showIcon
             style={{ marginBottom: 12 }}
             message={lowRhythmScore
-              ? `本集剧本草稿已生成（当前节奏评分 ${rhythmScore} 分，未满 60 分）`
-              : '本集剧本草稿已生成，请点击「定稿剧本」进入下一步'}
-            description={lowRhythmScore
-              ? '可直接修改下方台词后保存，也可直接点击「强制定稿并继续」自动提取角色并解锁分镜拆解。'
-              : '定稿后系统会自动建立本集角色卡与场景卡，并解锁第 3 步分镜拆解。'}
+              ? `剧本草稿待定稿（节奏评分 ${rhythmScore} 分）`
+              : '剧本草稿待定稿'}
             action={(
               <Space>
                 {lowRhythmScore ? (
-                  <Button size="small" type="primary" loading={scriptBusy === 'ready'} onClick={() => ready(1)}>强制定稿并继续</Button>
+                  <Button size="small" type="primary" loading={scriptBusy === 'ready'} onClick={() => ready(1)}>强制定稿</Button>
                 ) : (
-                  <Button size="small" type="primary" loading={scriptBusy === 'ready'} onClick={() => ready(0)}>定稿剧本并提取角色</Button>
+                  <Button size="small" type="primary" loading={scriptBusy === 'ready'} onClick={() => ready(0)}>定稿剧本</Button>
                 )}
               </Space>
             )}
@@ -638,11 +631,10 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
             showIcon
             style={{ marginBottom: 12 }}
             message="本集剧本已定稿"
-            description="出场角色与场景已自动提取。下一步请去「2. 角色定妆」选定参考图锁定造型，再去「3. 分镜与视频」拆镜并生成视频。"
             action={(
               <Space>
-                <Button size="small" type="primary" onClick={() => onJumpTab?.('characters')}>下一步：去角色定妆</Button>
-                <Button size="small" onClick={() => onJumpTab?.('storyboard')}>直接去分镜与视频</Button>
+                <Button size="small" type="primary" onClick={() => onJumpTab?.('characters')}>去角色定妆</Button>
+                <Button size="small" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>
               </Space>
             )}
           />
@@ -824,7 +816,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         if (!data?.message) message.error(`没有存进${storeName}`)
         return
       }
-      message.success(`已存入${storeName}（「我的定妆」分组），后续剧集和作品可直接选用`)
+      message.success(`已存入${storeName}`)
       await load()
     } catch {
       message.error(`没有存进${storeName}`)
@@ -842,7 +834,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         if (!data?.message) message.error('没有换回成功')
         return
       }
-      message.success('已换回原来的照片，替换下来的版本也继续保留')
+      message.success('已换回')
       await load()
     } catch {
       message.error('没有换回成功')
@@ -922,7 +914,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
       if (done && done.task_status !== 'SUCCEEDED') {
         message.error(done.fail_reason || '这一面没有生成出来')
       } else if (done) {
-        message.success(modalState.replace ? '已重做完成，原照片已自动保留可随时换回' : '已生成完成')
+        message.success(modalState.replace ? '已重做' : '已生成')
       } else {
         message.info('还在生成，可以到任务中心看结果')
       }
@@ -996,11 +988,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         if (!data?.message) message.error('图片没有上传成功')
         return
       }
-      message.success(target.kind === 'character'
-        ? (target.angle === 'FRONT_FACE'
-          ? '正脸已锁定为定妆照，照片也放进了「我的定妆」'
-          : '已保存这一面，照片放进了「我的定妆」')
-        : '已锁定为参考图，照片也放进了「我的定妆」')
+      message.success('已上传并保存')
       load()
     } catch {
       message.error('图片没有上传成功')
@@ -1059,17 +1047,13 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <div>
-        <Title level={5} style={{ margin: 0 }}>第 2 步：角色定妆与场景参考图</Title>
-        <Paragraph style={{ marginBottom: 0, color: '#334155' }}>
-          为出场角色、场景或道具确定参考图并变为「已锁定」。注意：点「生成定妆」出候选图后，必须再点图片下方的「选定」才算锁定。
-        </Paragraph>
+        <Title level={5} style={{ margin: 0 }}>角色定妆与场景参考图</Title>
       </div>
       {cardsReady && cardSummary.totalCards === 0 ? (
         <Alert
           type="info"
           showIcon
-          message="当前还没有角色或场景资产卡"
-          description="先在「1. 剧本与定稿」完成剧本定稿可自动提取出场角色与场景；也可在下方手动新增，或直接去第 3 步拆解分镜。"
+          message="暂无角色或场景资产卡"
           action={(
             <Space>
               <Button size="small" type="primary" onClick={() => onJumpTab?.('script')}>去剧本与定稿</Button>
@@ -1082,10 +1066,8 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         <Alert
           type="warning"
           showIcon
-          message={`还有 ${cardSummary.unlockedCards.length} 张资产卡未锁定（已锁定 ${cardSummary.lockedCount}/${cardSummary.totalCards}）`}
-          description={cardSummary.pendingSelectionCards.length > 0
-            ? `${cardSummary.pendingSelectionCards.map((c) => `${c.kind}「${c.name}」`).join('、')} 已有候选图，可点右侧「一键锁定已有候选图」，或点卡片下方某张图旁边的「选定」完成锁定；未锁定的卡片会导致引用它的分镜无法出图和生成视频。`
-            : `待锁定：${cardSummary.unlockedCards.slice(0, 6).map((c) => `${c.kind}「${c.name}」`).join('、')}。可生成参考图后点「选定」，或直接上传照片、从定妆库或场景库选用。`}
+          message={`待锁定资产卡 ${cardSummary.unlockedCards.length} 张（已锁定 ${cardSummary.lockedCount}/${cardSummary.totalCards}）`}
+          description={cardSummary.unlockedCards.slice(0, 6).map((c) => `${c.kind}「${c.name}」`).join('、')}
           action={(
             <Space>
               {cardSummary.pendingSelectionCards.length > 0 ? (
@@ -1093,7 +1075,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
                   一键锁定已有候选图
                 </Button>
               ) : null}
-              <Button size="small" onClick={() => onJumpTab?.('storyboard')}>先去分镜与视频</Button>
+              <Button size="small" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>
             </Space>
           )}
         />
@@ -1102,9 +1084,8 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         <Alert
           type="success"
           showIcon
-          message={`全部 ${cardSummary.totalCards} 张角色、场景与道具卡均已锁定`}
-          description="造型与场景参考图已就绪，现在可以进入「3. 分镜与视频」一键拆解分镜并生成视频。"
-          action={<Button size="small" type="primary" onClick={() => onJumpTab?.('storyboard')}>下一步：去分镜与视频</Button>}
+          message={`全部 ${cardSummary.totalCards} 张资产卡已锁定`}
+          action={<Button size="small" type="primary" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>}
         />
       ) : null}
       <Card title="角色卡" extra={<Space>{modelSelect}<Button onClick={load}>刷新</Button></Space>}>
@@ -1119,11 +1100,8 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
-        <div style={{ marginBottom: 12 }}>
-          <Text type="secondary">先选定一张参考图，再生成定妆。可以上传照片，也可以从定妆库里选，不用离开这个作品。</Text>
-        </div>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady && !chars.length ? <Text type="secondary">还没有角色。先在上面写下角色名，再来定妆。</Text> : null}
+        {cardsReady && !chars.length ? <Text type="secondary">暂无角色</Text> : null}
         {cardsReady ? chars.map((row) => {
           const views = row.look_view_list || []
           const viewOf = (angle) => views.find((view) => view.view_angle === angle && isRealPhotoUrl(view.file_url))
@@ -1170,7 +1148,6 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
               })}
             </div>
             <div style={{ marginTop: 8 }}>
-              <Text type="secondary">正脸、前面、背面、侧面均可随时生成或重做；重做不强制绑定正脸，原照片会自动保留方便随时换回。</Text>
               <Space wrap style={{ marginTop: 4 }}>
                 {LOOK_ANGLES.map(([angle, label]) => (
                   <Button
@@ -1189,7 +1166,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             </div>
             {views.some((v) => Array.isArray(v.history_list) && v.history_list.some((h) => isRealPhotoUrl(h.file_url))) ? (
               <div style={{ marginTop: 10 }}>
-                <Text type="secondary">已保留的历史照片（点「换回这张」可替换回对应角度）：</Text>
+                <Text type="secondary">历史照片：</Text>
                 <Space wrap style={{ marginTop: 6 }}>
                   {views.flatMap((v) => (v.history_list || []).filter((h) => isRealPhotoUrl(h.file_url))).map((h) => (
                     <div key={h.material_id} style={{ textAlign: 'center', width: 84 }}>
@@ -1231,15 +1208,14 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             />
             {hasRealCandidates ? (
               <div style={{ marginTop: 12 }}>
-                <Text type="secondary">这些是已经生成或上传的图。点击某张图下方的「选定」即可锁定定妆。</Text>
-                <Space wrap style={{ marginTop: 8 }}>
+                <Space wrap>
                   {candidates.filter((item) => isRealPhotoUrl(item.file_url)).map((c) => (
                     <div key={c.asset_id} style={{ textAlign: 'center' }}>
                       <ClickThumb alt="定妆候选" src={c.file_url} width={72} height={128} />
                       <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
                         const { data } = await productionApi.lockCharacter(row.character_id, c.asset_id)
                         if (!data?.success) return
-                        message.success(`已锁定「${row.character_name}」的定妆照`)
+                        message.success('已锁定定妆')
                         load()
                       }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
                     </div>
@@ -1261,7 +1237,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady && !scenes.length ? <Text type="secondary">还没有场景。先在上面写下场景名，再上传或从场景库选一张参考图。</Text> : null}
+        {cardsReady && !scenes.length ? <Text type="secondary">暂无场景</Text> : null}
         {cardsReady ? scenes.map((row) => {
           const realSceneCandidates = (row.candidate_list || []).filter((item) => isRealPhotoUrl(item.file_url))
           const isLocked = row.card_status === 'LOCKED'
@@ -1282,7 +1258,6 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
-            <Text type="secondary">可以上传一张照片，也可以从场景库里选用已有场景，或把选定的生成图一键存入场景库。</Text>
             <LibraryLookPicker
               kind="SCENE"
               libraryHref={sceneLibraryHref}
@@ -1297,7 +1272,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
                   <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
                     const { data } = await productionApi.lockScene(row.scene_card_id, c.asset_id)
                     if (!data?.success) return
-                    message.success(`已锁定场景「${row.card_name}」的参考图`)
+                    message.success('已锁定参考图')
                     load()
                   }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
                 </div>
@@ -1321,12 +1296,12 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           propForm.resetFields()
           load()
         }}>
-          <Form.Item name="card_name" rules={[{ required: true }]}><Input placeholder="道具名，如退婚书" /></Form.Item>
+          <Form.Item name="card_name" rules={[{ required: true }]}><Input placeholder="道具名" /></Form.Item>
           <Form.Item name="appearance_prompt"><Input placeholder="外观描述" /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady && !props.length ? <Text type="secondary">还没有道具。先在上面写下道具名，再上传或从道具库选一张参考图。</Text> : null}
+        {cardsReady && !props.length ? <Text type="secondary">暂无道具</Text> : null}
         {cardsReady ? props.map((row) => {
           const realPropCandidates = (row.candidate_list || []).filter((item) => isRealPhotoUrl(item.file_url))
           const isLocked = row.card_status === 'LOCKED'
@@ -1347,7 +1322,6 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             <Button size="small" disabled={busyIds.has(row.scene_card_id)} onClick={() => { ownImageTarget.current = { kind: 'scene', id: row.scene_card_id }; ownImageRef.current?.click() }}>上传参考图</Button>
             </Space>
           }>
-            <Text type="secondary">可以上传一张照片，也可以从道具库里选用已有道具，或把选定的生成图一键存入道具库。</Text>
             <LibraryLookPicker
               kind="PROP"
               libraryHref={propLibraryHref}
@@ -1362,7 +1336,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
                   <Button size="small" type={row.ref_image_asset_id === c.asset_id ? 'primary' : 'default'} onClick={async () => {
                     const { data } = await productionApi.lockScene(row.scene_card_id, c.asset_id)
                     if (!data?.success) return
-                    message.success(`已锁定道具「${row.card_name}」的参考图`)
+                    message.success('已锁定参考图')
                     load()
                   }}>{row.ref_image_asset_id === c.asset_id ? '已选定' : '选定'}</Button>
                 </div>
@@ -1400,7 +1374,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           {portrait && portrait.reference && (portrait.reference.used === 1 || portrait.reference.used === true) ? (
             <Checkbox checked={textOnly} onChange={(event) => setTextOnly(event.target.checked)}>这次不用参考图，只按文字生成</Checkbox>
           ) : null}
-          <span>{portraitPrice}。只有生成成功才会计入用量。</span>
+          <span>{portraitPrice}</span>
         </Space>
       </Modal>
       <Modal
@@ -1422,23 +1396,22 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
                   onChange={(e) => setAngleRedoModal((prev) => (prev ? { ...prev, skipRef: e.target.value === 'fresh' } : null))}
                 >
                   <Space direction="vertical">
-                    <Radio value="fresh">直接重做（不参考已有照片，按角色与外观描述重新生成）</Radio>
-                    <Radio value="ref">参考已有定妆照（保持同一个人与同一套衣服）</Radio>
+                    <Radio value="fresh">直接重做</Radio>
+                    <Radio value="ref">参考已有定妆照</Radio>
                   </Space>
                 </Radio.Group>
               </div>
             ) : null}
             <div>
-              <div style={{ marginBottom: 6, fontWeight: 500 }}>外观特征与重做说明（可选）</div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>外观特征（可选）</div>
               <Input
                 value={angleRedoModal.caption}
-                placeholder="例如：黑色长直发、正红色礼服长裙、五官清晰面向镜头"
+                placeholder="外观特征描述"
                 onChange={(e) => setAngleRedoModal((prev) => (prev ? { ...prev, caption: e.target.value } : null))}
               />
             </div>
             <Text type="secondary">
               {angleRedoModal.priceText}
-              {angleRedoModal.replace ? '重做后原来的照片会自动保留在角色卡与定妆库中，随时可点「换回这张」替换回去。' : ''}
             </Text>
           </Space>
         ) : null}
@@ -1596,7 +1569,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
         return
       }
       await featuresApi.previzGenerateText({ episode_id: episodeId })
-      message.success('已从剧本拆解分镜，并写好每一镜的人话描述')
+      message.success('已拆解分镜')
       await load()
       await onReload?.()
     } catch (err) {
@@ -1623,7 +1596,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
         return
       }
       await featuresApi.previzGenerateText({ episode_id: episodeId })
-      message.success('已完成剧本定稿并自动拆解分镜')
+      message.success('已定稿并拆解分镜')
       await load()
       await onReload?.()
     } catch (err) {
@@ -1671,7 +1644,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
     if (!outcome.submitted) return
     const batchId = outcome.result && outcome.result.batch_id
     const notes = ((outcome.result && outcome.result.shot_list) || []).map((shot) => shot.size_note).filter(Boolean)
-    message.success(regenerate ? '已重新提交这一镜视频，当前成片会保留到新视频成功' : '视频已提交，生成通常要几分钟')
+    message.success(regenerate ? '已重新提交视频' : '视频已提交')
     if (notes[0]) message.info(notes[0])
     if (batchId) {
       setVideoWatch({ batchId, progress: null, done: false, lingering: false, error: '' })
@@ -1715,14 +1688,14 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
     }
     if (taskType === 'VIDEO') {
       const batchId = data.result && data.result.batch_id
-      message.success(batchId ? '视频已提交，生成通常要几分钟' : '视频已提交，请到任务中心查看')
+      message.success('视频已提交')
       if (batchId) {
         setVideoWatch({ batchId, progress: null, done: false, lingering: false, error: '' })
       }
       load()
       return
     }
-    message.success('草图已提交，出图后先看构图对不对')
+    message.success('草图已提交')
     await waitBatch(work.work_id, data.result.batch_id, data.result.task_id_list)
     load()
   }
@@ -1735,14 +1708,6 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      {rows.length === 0 ? (
-        <Alert
-          type="info"
-          showIcon
-          message="按顶部步骤出视频"
-          description="顶部步骤会带到定稿、定妆、拆镜、首帧和生成视频。这一页改人话分镜不花钱；确认无误后可一键出首帧并批量生成镜头视频。有视频的镜头在卡片左边播放；放不了的会直接写明。"
-        />
-      ) : null}
       {actionError ? (
         <Alert
           type="error"
@@ -1768,12 +1733,11 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
         <Alert
           type="success"
           showIcon
-          message={`本集全部 ${rows.length} 个镜头视频已就绪，可以合成成片`}
-          description="可直接进入合成成片把所有镜头拼接为完整 MP4 并烧录台词字幕；如需人声配音，也可先去配音字幕。"
+          message={`本集全部 ${rows.length} 个镜头视频已就绪`}
           action={(
             <Space>
-              <Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>下一步：去合成成片</Button>
-              <Button size="small" onClick={() => onJumpTab?.('voice')}>去配音字幕（可选）</Button>
+              <Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>去合成成片</Button>
+              <Button size="small" onClick={() => onJumpTab?.('voice')}>去配音字幕</Button>
             </Space>
           )}
         />
@@ -1814,20 +1778,15 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
       {shotsLoaded && rows.length === 0 ? (
         <Card>
           <Title level={5} style={{ marginTop: 0 }}>
-            {scriptReady ? '本集剧本已定稿，请一键拆解分镜' : '本集还没有分镜（需先完成第 1 步剧本定稿）'}
+            {scriptReady ? '本集暂无分镜' : '本集暂无分镜（待定稿剧本）'}
           </Title>
-          <Paragraph style={{ color: '#334155' }}>
-            {scriptReady
-              ? '点击下方「一键从剧本拆解分镜」，系统会自动生成本集镜头表、出场角色绑定和人话画面描述，随后即可生成草图与镜头视频。'
-              : '分镜需要从已定稿的分场剧本自动拆解。请先前往「1. 剧本与定稿」生成本集剧本并点击「定稿剧本」，再回到本页一键拆镜。'}
-          </Paragraph>
           <Space wrap>
             {scriptReady ? (
-              <Button type="primary" loading={splitting} onClick={handleSplitShots}>一键从剧本拆解分镜</Button>
+              <Button type="primary" loading={splitting} onClick={handleSplitShots}>从剧本拆解分镜</Button>
             ) : (
               <>
-                <Button type="primary" loading={splitting} onClick={handleReadyAndSplitShots}>一键定稿本集并拆解分镜</Button>
-                <Button onClick={() => onJumpTab?.('script')}>去第 1 步完成剧本定稿</Button>
+                <Button type="primary" loading={splitting} onClick={handleReadyAndSplitShots}>定稿并拆解分镜</Button>
+                <Button onClick={() => onJumpTab?.('script')}>去剧本定稿</Button>
               </>
             )}
             <Button onClick={() => onJumpTab?.('characters')}>查看角色定妆</Button>
@@ -2178,7 +2137,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
                   </Space>
                 </div>
               ) : null}
-              <Text type="secondary">人话分镜（改这里免费，不用写提示词）</Text>
+              <Text type="secondary">分镜描述</Text>
               <TextArea
                 className="shot-spoken"
                 rows={4}
@@ -2197,8 +2156,8 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
                     image_prompt: saved.image_prompt,
                     prompt_score: saved.prompt_score,
                   })
-                  message.success('已按人话更新这一镜')
-                }}>保存人话</Button>
+                  message.success('已保存')
+                }}>保存</Button>
                 <Button size="small" onClick={async () => {
                   const { data } = await featuresApi.previzPromptCheck({ shot_id: row.shot_id })
                   const check = data?.result || {}
@@ -2207,7 +2166,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
                     prompt_score: check.prompt_score,
                     prompt_issues: check.issue_list,
                   })
-                }}>提示词会拍出什么</Button>
+                }}>检查提示词</Button>
                 <Button size="small" disabled={row.shot_status === 'LOCKED'} onClick={async () => {
                   setActionError(null)
                   const body = {
@@ -2229,18 +2188,15 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
                     showActionError(data?.message || '出图任务提交失败，请稍后重试')
                     return
                   }
-                  message.success('正在出图确认构图')
+                  message.success('出图已提交')
                   await waitTask(work.work_id, data.result.task_id_list?.[0])
                   load()
-                }}>出一张图看看</Button>
+                }}>生成首帧</Button>
                 <Button size="small" type="primary" disabled={row.shot_status === 'LOCKED'} onClick={() => runOfficial([row.shot_id], { regenerate: false })}>生成视频</Button>
                 {shotOffersVideoRegenerate(row, playback) ? (
                   <Button size="small" type="primary" onClick={() => runOfficial([row.shot_id], { regenerate: true })}>重新生成</Button>
                 ) : null}
               </Space>
-              <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
-                有真实首帧或定妆照时走图生视频：384×256，约 3 秒，不是竖屏 9:16。没有真实照片时改走文生视频：约 720×480，约 6 秒。
-              </Paragraph>
               {(row.prompt_issues || []).length ? (
                 <div style={{ marginTop: 8 }}>
                   {(row.prompt_issues || []).slice(0, 3).map((it, i) => (
@@ -2625,24 +2581,17 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
   }
 
   return (
-    <Card title="第 5 步：合成成片与提审">
+    <Card title="合成成片与提审">
       <Paragraph style={{ marginBottom: 4 }}>
         <Text strong>{surface.headline}</Text>
       </Paragraph>
-      <Paragraph style={{ color: '#334155' }}>{surface.nextStep}</Paragraph>
-      {work?.work_status_name ? (
-        <Paragraph type="secondary">
-          作品阶段是「{work.work_status_name}」。上面说的是当前这一集，两处可以不一样。
-        </Paragraph>
-      ) : null}
       <Paragraph type="secondary" style={{ fontSize: 13 }}>{surface.paneText}</Paragraph>
       {statusSettled && film?.expired_flag === 1 ? (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message="成片已过期"
-          description="镜头重抽或配音重配后，旧成片不能下载，也不能再回放上次的 Tube 目录。请重新合成并通过审核后再发布。"
+          message="成片已过期，请重新合成"
         />
       ) : null}
       {statusSettled && (precheck?.blocker_list || []).length ? (
@@ -2755,7 +2704,7 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
             if (!ok) return
             const { data } = await productionApi.composeFilm(episodeId)
             if (data?.success) {
-              message.success('合成任务已提交（有配音会混入成片）')
+              message.success('合成任务已提交')
               const done = await waitTask(work.work_id, data.result.task_id)
               reportTaskOutcome(done, '本集成片已合成完毕')
               await load()

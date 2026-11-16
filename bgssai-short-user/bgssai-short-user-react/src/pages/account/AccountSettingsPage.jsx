@@ -8,7 +8,7 @@ import { useUserStore } from '../../store/user'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 import { labelOf, LOGIN_METHOD_LABEL } from '../../lib/displayLabels'
 
-const { Title, Paragraph, Text } = Typography
+const { Title, Text } = Typography
 
 export default function AccountSettingsPage() {
   const navigate = useNavigate()
@@ -95,9 +95,6 @@ export default function AccountSettingsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>账号设置</Title>
-      <Paragraph type="secondary">
-        管理登录方式与账号注销。至少保留一种可用登录方式。
-      </Paragraph>
 
       <Card loading={loading} title="额度概览" style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
@@ -129,17 +126,10 @@ export default function AccountSettingsPage() {
             },
           ]}
         />
-        <Paragraph type="secondary" style={{ marginTop: 12 }}>
-          绑定微信 / 抖音 / 百度 / 支付宝 / Chat：先走授权页获取 code，再调用绑定接口。
-          绑定手机或邮箱：在下方发送验证码后提交。
-        </Paragraph>
         <BindContactForm onDone={load} sendCode={sendCode} />
       </Card>
 
       <Card title="账号注销" type="inner">
-        <Paragraph>
-          注销后不能再用任何方式登录原账号；个人资料将匿名化；注销前凭证全部失效。
-        </Paragraph>
         {preview && (
           <ul>
             {(preview.consequences || []).map((c) => (

@@ -39,7 +39,6 @@
       <span class="crumb"><a href="home.html">首页</a><span class="sep">/</span></span>
       <span class="top-title">创作者账号与配额</span>
       <span class="spacer"></span>
-      <span class="text-muted" style="font-size:12px">调整必填备注并留痕</span>
       <input style="width:180px" placeholder="搜索账号 / 姓名" />
     </header>
 
@@ -142,23 +141,17 @@
 
           <div class="field">
             <label>备注（必填）</label>
-            <textarea rows="2" placeholder="写清楚为什么调整，这条会永久留痕"></textarea>
+            <textarea rows="2" placeholder="调整原因"></textarea>
           </div>
 
           <div class="toolbar">
             <button class="btn btn-primary">提交调整</button>
             <button class="btn btn-danger">停用账号</button>
           </div>
-
-          <div class="note note-warn" style="margin:12px 0 0">
-            备注为空返回 <code>4006</code>。余额不足时该创作者新任务被拒（<code>4007</code>），
-            在途任务不受影响；月度上限触顶返回 <code>4015</code>。
-          </div>
         </div>
 
         <div class="card card-flush">
           <div class="card-hd"><h2>配额变更记录</h2>
-            <span class="text-muted" style="font-size:12px">只增不删</span>
           </div>
           <div class="table-wrap">
             <table>
@@ -190,24 +183,7 @@
               </tbody>
             </table>
           </div>
-          <div class="card-body" style="padding-top:10px">
-            <div class="text-muted" style="font-size:11px">
-              供财务对账与事后追溯。本轮不做线上支付，充值一律由运营手工调整。
-            </div>
-          </div>
         </div>
-      </div>
-
-      <div class="spec">
-        <div class="spec-t">字段口径</div>
-        接口：<code>GET /bgssai/admin/creators/list?page_num&amp;page_size&amp;keyword&amp;enabled_flag</code> ·
-        <code>POST /bgssai/admin/creators/adjust-quota</code>（<code>user_id</code> +
-        <code>balance_delta_cent</code> + <code>monthly_limit_cent</code> + <code>remark</code>，
-        <code>remark</code> 必填）· <code>POST /bgssai/admin/creators/toggle-enabled</code>。
-        配额表 <code>user_quota</code>：<code>balance_cent</code> · <code>monthly_limit_cent</code> ·
-        <code>month_spent_cent</code> · <code>month_reset_date</code>；
-        变更记录 <code>quota_change_log</code>：<code>operator_user_id</code> ·
-        <code>balance_delta_cent</code> · <code>balance_after_cent</code> · <code>remark</code>。
       </div>
 
       <div class="footer legal-fanout">

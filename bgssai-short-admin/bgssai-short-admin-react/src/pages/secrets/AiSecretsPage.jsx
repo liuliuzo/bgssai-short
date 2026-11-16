@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Form, Input, Modal, Space, Switch, Table, Typography, message } from 'antd'
 import secretsApi from '../../api/secrets'
 
-const { Title, Paragraph } = Typography
+const { Title } = Typography
 
 export default function AiSecretsPage() {
   const [rows, setRows] = useState([])
@@ -26,9 +26,6 @@ export default function AiSecretsPage() {
   return (
     <div>
       <Title level={4} style={{ marginTop: 0 }}>AI 密钥</Title>
-      <Paragraph type="secondary">
-        在这里维护模型调用所需的业务密钥。密钥只显示掩码，保存后立即生效。
-      </Paragraph>
       <Card>
         <Table
           rowKey="secret_key"
@@ -115,9 +112,9 @@ export default function AiSecretsPage() {
           <Form.Item
             name="secret_value"
             label="密钥值"
-            extra={editing?.configured_flag === 1 ? `当前掩码 ${editing.secret_value_masked}；留空表示不改值` : '当前为空'}
+            extra={editing?.configured_flag === 1 ? editing.secret_value_masked : undefined}
           >
-            <Input.Password placeholder="粘贴 API Key（留空不改）" />
+            <Input.Password placeholder="留空不改" />
           </Form.Item>
           <Form.Item name="description" label="说明">
             <Input />

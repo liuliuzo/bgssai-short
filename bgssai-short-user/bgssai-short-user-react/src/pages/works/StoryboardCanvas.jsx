@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Card, Drawer, Image, Input, Modal, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { Button, Card, Drawer, Image, Input, Modal, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
@@ -129,7 +129,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
     if (batchTaskType === 'VIDEO') {
       const ok = await submitOfficial(selected.length ? selected : undefined, false)
       if (ok) {
-        message.success('视频已提交，去任务中心看进度')
+        message.success('视频已提交')
         setCost(null)
         load()
       }
@@ -142,7 +142,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
       auto_next_flag: 0,
     })
     if (data?.success) {
-      message.success(`已提交 ${batchTaskType} 批量生成任务，去任务中心看进度`)
+      message.success(`已提交 ${batchTaskType} 批量生成任务`)
       setCost(null)
       load()
     }
@@ -204,7 +204,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   const drop = async (lane, targetShot) => {
     if (!dragging || dragging.shot_id === targetShot.shot_id) return
     if ((dragging.scene_no ?? 0) !== (targetShot.scene_no ?? 0)) {
-      message.warning('跨场拖不动：换场是剧本层的事，请回剧本改场次划分')
+      message.warning('不支持跨场拖动')
       setDragging(null)
       return
     }
@@ -219,9 +219,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
     })
     if (data?.success) {
       const stale = data.result?.stale_shot_no_list || []
-      message.success(stale.length
-        ? `顺序已改；镜 ${stale.join('、')} 的上一镜变了，可能接不上（未替你重抽）`
-        : '顺序已改')
+      message.success(stale.length ? `顺序已更新（关联镜头：${stale.join('、')}）` : '顺序已更新')
       load()
     }
   }
@@ -259,21 +257,13 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
 
   return (
     <div>
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 12 }}
-        message="画布是第二视图，不是替代"
-        description="改一镜的文字还是列表顺手；看整集到哪了、把一整场一起重跑，画布顺手。两个视图读写同一份数据、同一组接口，批量操作走的也是同一道费用预估。"
-        action={<Button size="small" onClick={onSwitchToList}>切回列表</Button>}
-      />
-
       <Card
         size="small"
         style={{ marginBottom: 12 }}
         title={`已选 ${selected.length} 镜`}
         extra={(
           <Space>
+            <Button size="small" onClick={onSwitchToList}>切回列表</Button>
             <Button size="small" onClick={() => setSelected([])}>清空选择</Button>
             <Select
               size="small"
@@ -294,13 +284,9 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
-            （{publicModelText(cost.display_name || cost.model_code, batchTaskType) || '-'} · {batchTaskType}）。确认后提交，与列表视图走同一道预算闸门。
+            （{publicModelText(cost.display_name || cost.model_code, batchTaskType) || '-'} · {batchTaskType}）
           </Paragraph>
-        ) : (
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            点节点加选，或点左侧场次名选中整场。选完选择任务类型先估费用再提交。
-          </Paragraph>
-        )}
+        ) : null}
       </Card>
 
       <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
@@ -384,21 +370,16 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
           </div>
         ))}
         {!shotsReady ? <Skeleton active title={false} paragraph={{ rows: 3 }} /> : null}
-        {showSettledEmpty(shotsReady, lanes.length) ? <Text type="secondary">本集还没有镜头，先去列表视图从剧本拆镜。</Text> : null}
+        {showSettledEmpty(shotsReady, lanes.length) ? <Text type="secondary">暂无分镜</Text> : null}
         <Space wrap style={{ marginTop: 8, fontSize: 11 }}>
           {Object.entries(STATUS_STYLE).map(([key, value]) => (
             <Tag key={key} style={{ background: value.background, borderColor: value.borderColor }}>
               {value.label}
             </Tag>
           ))}
-          <Tag style={{ background: '#dcfce7', borderColor: '#d97706', borderWidth: 2 }}>上游变了可能接不上</Tag>
+          <Tag style={{ background: '#dcfce7', borderColor: '#d97706', borderWidth: 2 }}>上游已变更</Tag>
         </Space>
       </div>
-
-      <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10 }}>
-        单击选中、双击改文字与视听生成、拖动改顺序。<Text strong>拖动只改顺序</Text>——不删素材、不改状态、不触发重抽。
-        跨场拖不动：那意味着这一镜换了场景，属于剧本层的事。
-      </Paragraph>
 
       <Drawer
         {...shotDrawerProps()}
@@ -529,7 +510,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
                     try {
                       const ok = await submitOfficial([editing.shot_id], true)
                       if (ok) {
-                        message.success('已重新提交这一镜视频，当前成片会保留到新视频成功')
+                        message.success('已重新提交视频')
                         await load()
                       }
                     } finally {

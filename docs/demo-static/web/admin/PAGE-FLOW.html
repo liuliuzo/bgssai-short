@@ -21,15 +21,8 @@
 </head>
 <body>
   <div class="container">
-    <h1 class="title">页面跳转真值（PAGE-FLOW）· web 管理端</h1>
-    <p class="subtitle">
-      本文件是 web <strong>管理端</strong>（bgssai-short-admin，前端 3001，
-      <code>role_code=PLATFORM_ADMIN</code>）页面跳转的<strong>唯一真值</strong>：
-      路由矩阵 + 核心用户旅程 + 导航不变量。新增页面或调整跳转关系时，先改本文件（评审后）再写实现代码，
-      并同步刷 <code>docs/api/page-api-mapping.md</code>。前端路由表落在
-      <code>bgssai-short-admin-react/src/App.jsx</code>。用户端跳转真值见
-      <a href="../user/PAGE-FLOW.html">../user/PAGE-FLOW.html</a>。
-    </p>
+    <h1 class="title">页面跳转（PAGE-FLOW）· Web 管理端</h1>
+    <p><a href="index.html">管理端索引</a> · <a href="../user/PAGE-FLOW.html">用户端 PAGE-FLOW</a></p>
 
     <div class="card">
       <h2 class="card-title">一、路由矩阵</h2>
@@ -164,59 +157,51 @@
     </div>
 
     <div class="card">
-      <h2 class="card-title">二、核心用户旅程</h2>
+      <h2 class="card-title">二、页面流转路径</h2>
 
-      <p class="subtitle" style="margin-bottom:4px"><strong>旅程一：审核一集内容（主线）</strong></p>
       <div class="flow">
         <div class="node"><div class="n-title">首页</div><div>/home</div></div>
         <div class="arrow">→<small>待审 37</small></div>
         <div class="node"><div class="n-title">审核队列</div><div>/reviews</div></div>
         <div class="arrow">→<small>点任一行</small></div>
         <div class="node"><div class="n-title">审核详情</div><div>/reviews/:id</div></div>
-        <div class="arrow">→<small>通过 / 驳回（必填原因）</small></div>
+        <div class="arrow">→<small>通过 / 驳回</small></div>
         <div class="node"><div class="n-title">审核队列</div><div>/reviews</div></div>
       </div>
-      <div class="text-muted" style="font-size:12px">
-        处置后该条从待审队列移除并进入已处理列表；驳回后创作者修改重提，回到队列（<code>submit_seq</code> +1）。
-      </div>
 
-      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程二：换模型 / 调价（业务零改动）</strong></p>
       <div class="flow">
         <div class="node"><div class="n-title">AI 能力</div><div>/ai-models</div></div>
         <div class="arrow">→<small>新增模型或改单价</small></div>
         <div class="node"><div class="n-title">设为默认</div><div>-</div></div>
-        <div class="arrow">→<small>即刻生效</small></div>
+        <div class="arrow">→<small>生效</small></div>
         <div class="node"><div class="n-title">用量与成本</div><div>/usage-cost</div></div>
       </div>
 
-      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程三：质量运营（提升平台内容下限）</strong></p>
       <div class="flow">
         <div class="node"><div class="n-title">首页</div><div>平均质量分</div></div>
-        <div class="arrow">→<small>看模板表现</small></div>
+        <div class="arrow">→<small>查看模板</small></div>
         <div class="node"><div class="n-title">结构模板</div><div>/quality-templates</div></div>
-        <div class="arrow">→<small>改节拍 / 阈值 / 停用低分模板</small></div>
-        <div class="node"><div class="n-title">保存生效</div><div>-</div></div>
+        <div class="arrow">→<small>调整节拍 / 阈值</small></div>
+        <div class="node"><div class="n-title">保存</div><div>-</div></div>
       </div>
 
-      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程四：处理创作者余额不足</strong></p>
       <div class="flow">
         <div class="node"><div class="n-title">用量与成本</div><div>异常提示</div></div>
-        <div class="arrow">→<small>点「去调整」</small></div>
+        <div class="arrow">→<small>去调整</small></div>
         <div class="node"><div class="n-title">创作者</div><div>/creators</div></div>
-        <div class="arrow">→<small>调整配额（备注必填）</small></div>
+        <div class="arrow">→<small>调整配额</small></div>
         <div class="node"><div class="n-title">变更记录</div><div>留痕</div></div>
       </div>
 
-      <p class="subtitle" style="margin:16px 0 4px"><strong>旅程五：鉴权失败回落</strong></p>
       <div class="flow">
         <div class="node"><div class="n-title">任意受保护路由</div><div>-</div></div>
-        <div class="arrow">→<small>未登录 / <code>2002</code> token 失效 / <code>4003</code> 角色不符</small></div>
+        <div class="arrow">→<small>未登录 / <code>2002</code> / <code>4003</code></small></div>
         <div class="node"><div class="n-title">登录页</div><div>/login</div></div>
       </div>
     </div>
 
     <div class="card">
-      <h2 class="card-title">三、导航不变量（逐条强制，CR 核对）</h2>
+      <h2 class="card-title">三、导航不变量</h2>
       <ol style="font-size:13px; line-height:1.9">
         <li><strong>列表必达详情</strong>：审核队列每一行可进审核详情；用量分创作者列表每行可进创作者管理；
           模型列表每行可编辑。严禁假可点。</li>

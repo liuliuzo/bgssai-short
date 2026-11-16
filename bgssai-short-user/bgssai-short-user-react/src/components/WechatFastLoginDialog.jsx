@@ -40,9 +40,6 @@ export function WechatFastLoginDialog({ open, authorizeUrl, onClose }) {
             ×
           </button>
         </div>
-        <p className="wx-fast-login-hint">
-          若本机已打开并登录微信 PC 版，将自动识别，请在微信客户端确认；也可继续用手机扫码。首次授权会自动创建本站账号，无需再注册。
-        </p>
         <div className="wx-fast-login-box" id={containerId} />
         <div className="wx-fast-login-actions">
           <button type="button" className="wx-fast-login-link" onClick={() => window.location.assign(authorizeUrl)}>

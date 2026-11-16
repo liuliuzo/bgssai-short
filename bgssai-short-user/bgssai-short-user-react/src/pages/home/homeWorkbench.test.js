@@ -125,12 +125,12 @@ test('attention list is capped', () => {
 })
 
 test('next step answers what to do, including the empty and failed cases', () => {
-  assert.equal(nextStepText({ loadError: true, works: [], attention: [] }), '作品列表暂时读不到，刷新后再看下一步。')
-  assert.match(nextStepText({ works: [], attention: [] }), /新建一部作品/)
+  assert.equal(nextStepText({ loadError: true, works: [], attention: [] }), '作品列表加载失败')
+  assert.equal(nextStepText({ works: [], attention: [] }), '暂无作品')
   assert.equal(nextStepText({
     works: [work('w1', '悬疑法医手记')],
     attention: [],
-  }), '接着做《悬疑法医手记》。打开作品后，按顶部步骤做到生成视频。')
+  }), '最近作品：《悬疑法医手记》')
   assert.match(nextStepText({
     works: [work('w1', '悬疑法医手记')],
     attention: [{ kind: 'generate_failed', workTitle: '悬疑法医手记' }],
@@ -138,5 +138,5 @@ test('next step answers what to do, including the empty and failed cases', () =>
   assert.match(nextStepText({
     works: [work('w1', '甲')],
     attention: [{ kind: 'review_pending', workTitle: '甲' }],
-  }), /等审核/)
+  }), /待审核/)
 })
