@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "repo": "bgssai-short",
+  "repo": "bgssai-short-rebase",
   "entrypoints": {
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
