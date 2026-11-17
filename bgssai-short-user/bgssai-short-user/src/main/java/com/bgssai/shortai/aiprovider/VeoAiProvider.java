@@ -4,6 +4,7 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,10 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 /**
  * provider_code=VEO — Google Gemini API 的 Veo 视频（predictLongRunning）。
@@ -30,6 +35,13 @@ public class VeoAiProvider implements AiProvider {
     private final SysSecretReader secretReader;
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
+
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
 
     @Autowired
     public VeoAiProvider(SysSecretReader secretReader) {
@@ -53,8 +65,35 @@ public class VeoAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        // Direct Google Generative Language calls are disabled (REQ-SHORT-COMMON-010).
-        throw DirectVendorGuard.rejected(CODE);
+        if (request == null || request.getModel() == null) {
+            throw DirectVendorGuard.rejected(CODE);
+        }
+        Optional<ResolvedProviderKey> byok = DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        if (byok.isEmpty() || byok.get().apiKey() == null || byok.get().apiKey().isBlank()) {
+            throw DirectVendorGuard.rejected(CODE);
+        }
+        if (!"VIDEO".equalsIgnoreCase(request.getAbilityType())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "VEO unsupported ability: " + request.getAbilityType());
+        }
+        ResolvedProviderKey key = byok.get();
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String effective = UserAiProviderCatalog.resolveEffectiveBaseUrl(key.baseUrl(), "GOOGLE");
+        String apiRoot = UserAiModelSupport.stripTrailingPath(
+                UserAiModelSupport.stripTrailingPath(effective, "/v1beta"), "/v1");
+        String base = apiRoot + "/v1beta";
+        int timeoutSec = ProviderHttp.timeoutSec(request, 600);
+        try {
+            return video(base, key.apiKey(), cfg, request, timeoutSec);
+        } catch (BizException ex) {
+            throw ex;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "veo interrupted");
+        } catch (Exception ex) {
+            log.warn("VEO BYOK call failed", ex);
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, safe(ex));
+        }
     }
 
     private AiProviderResult video(String base, String apiKey, Map<String, Object> cfg,

@@ -23,7 +23,7 @@
 
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
-| `account-settings.html` | `/account` | `GET /bgssai/user/account/login-methods` · `POST /bgssai/user/account/login-methods/bind-oauth` · `/bind-contact` · `/unbind` · `GET /bgssai/user/account/deletion/preview` · `POST /bgssai/user/account/deletion` · `GET /bgssai/user/ai-model-keys/list` · `POST /bgssai/user/ai-model-keys/create` · `POST /bgssai/user/ai-model-keys/update` · `POST /bgssai/user/ai-model-keys/toggle` · `POST /bgssai/user/ai-model-keys/set-default` · `POST /bgssai/user/ai-model-keys/delete` · `POST /bgssai/user/ai-model-keys/test` · `POST /bgssai/user/ai-model-keys/mode` | 需 `Jwttoken` | [`account-settings.md`](./account-settings.md) |
+| `account-settings.html` | `/account` | `GET /bgssai/user/account/login-methods` · `POST /bgssai/user/account/login-methods/bind-oauth` · `/bind-contact` · `/unbind` · `GET /bgssai/user/account/deletion/preview` · `POST /bgssai/user/account/deletion` · `GET /bgssai/user/ai-keys` · `POST /bgssai/user/ai-keys` · `DELETE /bgssai/user/ai-keys/{providerCode}` · `GET /api/user/ai-keys` · `POST /api/user/ai-keys` · `DELETE /api/user/ai-keys/{providerCode}` · `GET /bgssai/user/ai-model-keys/list` · `POST /bgssai/user/ai-model-keys/create` · `POST /bgssai/user/ai-model-keys/update` · `POST /bgssai/user/ai-model-keys/toggle` · `POST /bgssai/user/ai-model-keys/set-default` · `POST /bgssai/user/ai-model-keys/delete` · `POST /bgssai/user/ai-model-keys/test` · `POST /bgssai/user/ai-model-keys/mode` | 需 `Jwttoken` | [`account-settings.md`](./account-settings.md) |
 | `bot-download-entry.html` | `/download/bot` | - | 与该页一致 | - |
 | `home.html` | `/home` | - | 与该页一致 | - |
 | `login.html` | `/login` | - | 与该页一致 | - |
@@ -167,3 +167,9 @@
 | 删除自有模型密钥 | POST | `/bgssai/user/ai-model-keys/delete` |
 | 测试自有模型连通性 | POST | `/bgssai/user/ai-model-keys/test` |
 | 切换仅使用自有密钥模式 | POST | `/bgssai/user/ai-model-keys/mode` |
+| 厂商 API Key 列表 | GET | `/bgssai/user/ai-keys` |
+| 保存或更新厂商 API Key | POST | `/bgssai/user/ai-keys` |
+| 删除厂商 API Key | DELETE | `/bgssai/user/ai-keys/{providerCode}` |
+| 厂商 API Key 列表（兼容路径） | GET | `/api/user/ai-keys` |
+| 保存或更新厂商 API Key（兼容路径） | POST | `/api/user/ai-keys` |
+| 删除厂商 API Key（兼容路径） | DELETE | `/api/user/ai-keys/{providerCode}` |

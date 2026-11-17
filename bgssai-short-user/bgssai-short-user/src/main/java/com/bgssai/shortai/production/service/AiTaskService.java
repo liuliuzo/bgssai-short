@@ -769,6 +769,15 @@ public class AiTaskService {
         if (UserAiModelSupport.isUserKeyCode(storedCode)) {
             String name = userAiModelKeyService == null ? null
                     : userAiModelKeyService.displayNameOfKeyId(userId, storedCode);
+            if ((name == null || name.isBlank()) && storedCode != null
+                    && storedCode.toLowerCase(java.util.Locale.ROOT).startsWith(UserAiModelSupport.PROVIDER_KEY_PREFIX)) {
+                com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog.ProviderSpec spec =
+                        com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog.get(
+                                storedCode.substring(UserAiModelSupport.PROVIDER_KEY_PREFIX.length()));
+                if (spec != null) {
+                    name = spec.providerName();
+                }
+            }
             String display = name == null || name.isBlank() ? storedCode : name;
             item.put("model_code", storedCode);
             item.put("display_name", display);

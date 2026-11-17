@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,9 @@ import com.bgssai.shortai.useraimodel.service.KlingJwtSupport;
 import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService.UserKeyCredentials;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 /**
  * provider_code=KLING — 可灵官方异步任务（文生图 / 图生图 / 文生视频 / 图生视频 / 语音合成）。
@@ -55,7 +59,23 @@ public class KlingAiProvider implements AiProvider {
     private UserAiModelKeyService userAiModelKeyService;
 
     @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
+    @Autowired(required = false)
     private ShortAiTaskMapper shortAiTaskMapper;
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
+
+    private record KlingAuth(String apiKey, String accessKey, String secretKey, boolean providerKeyMode) {
+        String resolveBearerToken(String apiRoot) {
+            if (providerKeyMode) {
+                return UserAiProviderCatalog.resolveKlingBearerToken(apiKey, accessKey, secretKey);
+            }
+            return KlingJwtSupport.resolveBearerToken(apiKey, secretKey, apiRoot);
+        }
+    }
 
     @Autowired
     public KlingAiProvider(SysSecretReader secretReader) {
@@ -85,10 +105,28 @@ public class KlingAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        if (request == null || request.getModel() == null || !UserAiModelSupport.isUserKeyModel(request.getModel())) {
+        if (request == null || request.getModel() == null) {
+            throw DirectVendorGuard.rejected(CODE);
+        }
+        Optional<ResolvedProviderKey> providerByok = DirectVendorGuard.isExplicitUserModelKey(request.getModel())
+                ? Optional.empty()
+                : DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        if (providerByok.isPresent()) {
+            return executeProviderByok(request, providerByok.get());
+        }
+        if (!UserAiModelSupport.isUserKeyModel(request.getModel())) {
             throw DirectVendorGuard.rejected(CODE);
         }
         return executeUserKey(request);
+    }
+
+    private AiProviderResult executeProviderByok(AiProviderRequest request, ResolvedProviderKey key) {
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String effectiveUrl = UserAiProviderCatalog.resolveEffectiveBaseUrl(key.baseUrl(), CODE);
+        String apiRoot = UserAiModelSupport.stripTrailingPath(effectiveUrl, "/v1");
+        KlingAuth auth = new KlingAuth(key.apiKey(), key.accessKey(), key.secretKey(), true);
+        return dispatchUserAbility(request, cfg, key.userId(),
+                UserAiModelSupport.PROVIDER_KEY_PREFIX + "kling", apiRoot, auth);
     }
 
     private AiProviderResult executeUserKey(AiProviderRequest request) {
@@ -98,7 +136,13 @@ public class KlingAiProvider implements AiProvider {
                 request.getModel().getModelId());
         String baseUrl = UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE);
         String apiRoot = UserAiModelSupport.stripTrailingPath(baseUrl, "/v1");
-        UserKeyCredentials creds = userAiModelKeyService.requirePlainCredentials(userId, keyId);
+        UserKeyCredentials rawCreds = userAiModelKeyService.requirePlainCredentials(userId, keyId);
+        KlingAuth creds = new KlingAuth(rawCreds.apiKey(), null, rawCreds.secretKey(), false);
+        return dispatchUserAbility(request, cfg, userId, keyId, apiRoot, creds);
+    }
+
+    private AiProviderResult dispatchUserAbility(AiProviderRequest request, Map<String, Object> cfg,
+            String userId, String keyId, String apiRoot, KlingAuth creds) {
         String ability = request.getAbilityType() == null ? ""
                 : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
         String modelCode = ProviderHttp.firstNonBlank(request.getModel().getModelCode(), "kling-v3");
@@ -128,7 +172,7 @@ public class KlingAiProvider implements AiProvider {
         }
     }
 
-    private AiProviderResult userImage(String apiRoot, UserKeyCredentials creds, String modelCode,
+    private AiProviderResult userImage(String apiRoot, KlingAuth creds, String modelCode,
             Map<String, Object> cfg, AiProviderRequest request, int timeoutSec) throws Exception {
         String path = DEFAULT_IMAGE_PATH;
         String aspect = aspectRatio(cfg, request);
@@ -187,7 +231,7 @@ public class KlingAiProvider implements AiProvider {
         return result;
     }
 
-    private AiProviderResult userVideo(String apiRoot, UserKeyCredentials creds, String modelCode,
+    private AiProviderResult userVideo(String apiRoot, KlingAuth creds, String modelCode,
             Map<String, Object> cfg, AiProviderRequest request, int timeoutSec) throws Exception {
         String taskId = UserProviderMediaSupport.findTaskParam(shortAiTaskMapper, "kling_video_task_id");
         String kind = UserProviderMediaSupport.findTaskParam(shortAiTaskMapper, "kling_video_kind");
@@ -244,7 +288,7 @@ public class KlingAiProvider implements AiProvider {
         return result;
     }
 
-    private AiProviderResult userVoice(String apiRoot, UserKeyCredentials creds, Map<String, Object> cfg,
+    private AiProviderResult userVoice(String apiRoot, KlingAuth creds, Map<String, Object> cfg,
             AiProviderRequest request, int timeoutSec) throws Exception {
         String voiceId = firstNonBlank(ShortJson.text(request.param("voice_id")),
                 ShortJson.text(request.param("voice")), ShortJson.text(cfg.get("default_voice_id")));
@@ -277,12 +321,12 @@ public class KlingAiProvider implements AiProvider {
         return result;
     }
 
-    private Map<String, Object> pollUserTask(String queryUrl, UserKeyCredentials creds, String apiRoot,
+    private Map<String, Object> pollUserTask(String queryUrl, KlingAuth creds, String apiRoot,
             int timeoutSec, Map<String, Object> cfg, long defaultIntervalMs) throws Exception {
         return pollUserTaskMs(queryUrl, creds, apiRoot, Math.max(60, timeoutSec) * 1000L, cfg, defaultIntervalMs);
     }
 
-    private Map<String, Object> pollUserTaskMs(String queryUrl, UserKeyCredentials creds, String apiRoot,
+    private Map<String, Object> pollUserTaskMs(String queryUrl, KlingAuth creds, String apiRoot,
             long budgetMs, Map<String, Object> cfg, long defaultIntervalMs) throws Exception {
         long intervalMs = Math.max(100L, ShortJson.integer(cfg.get("poll_interval_ms"), (int) defaultIntervalMs));
         long deadline = System.currentTimeMillis() + budgetMs;
@@ -312,15 +356,15 @@ public class KlingAiProvider implements AiProvider {
         throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "可灵任务超时，请稍后重试");
     }
 
-    private String postUserJson(String url, UserKeyCredentials creds, String apiRoot,
+    private String postUserJson(String url, KlingAuth creds, String apiRoot,
             String body, int timeoutSec) throws Exception {
-        String token = KlingJwtSupport.resolveBearerToken(creds.apiKey(), creds.secretKey(), apiRoot);
+        String token = creds.resolveBearerToken(apiRoot);
         return userHttp.postJson(url, Map.of("Authorization", "Bearer " + token), body, timeoutSec);
     }
 
-    private String getUserJson(String url, UserKeyCredentials creds, String apiRoot, int timeoutSec)
+    private String getUserJson(String url, KlingAuth creds, String apiRoot, int timeoutSec)
             throws Exception {
-        String token = KlingJwtSupport.resolveBearerToken(creds.apiKey(), creds.secretKey(), apiRoot);
+        String token = creds.resolveBearerToken(apiRoot);
         return userHttp.getJson(url, Map.of("Authorization", "Bearer " + token), timeoutSec);
     }
 

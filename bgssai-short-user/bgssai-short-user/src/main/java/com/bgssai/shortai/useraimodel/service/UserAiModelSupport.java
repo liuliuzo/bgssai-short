@@ -21,6 +21,7 @@ import com.bgssai.shortai.useraimodel.dto.ProviderPresetItem;
 public final class UserAiModelSupport {
 
     public static final String USER_KEY_PREFIX = "umk-";
+    public static final String PROVIDER_KEY_PREFIX = "bpk-";
     public static final String CREDENTIAL_SOURCE_USER = "USER_KEY";
 
     public static final String PROVIDER_MINIMAX = "MINIMAX";
@@ -56,7 +57,47 @@ public final class UserAiModelSupport {
     }
 
     public static boolean isUserKeyCode(String code) {
-        return code != null && code.trim().toLowerCase(Locale.ROOT).startsWith(USER_KEY_PREFIX);
+        if (code == null) {
+            return false;
+        }
+        String lower = code.trim().toLowerCase(Locale.ROOT);
+        return lower.startsWith(USER_KEY_PREFIX) || lower.startsWith(PROVIDER_KEY_PREFIX);
+    }
+
+    public static AiModelConfig withProviderByokContext(AiModelConfig source, String userId,
+            String providerCode, String customBaseUrl) {
+        if (source == null || userId == null || userId.isBlank()) {
+            return source;
+        }
+        AiModelConfig copy = new AiModelConfig();
+        copy.setId(source.getId());
+        copy.setModelId(source.getModelId());
+        copy.setAbilityType(source.getAbilityType());
+        copy.setProviderCode(source.getProviderCode());
+        copy.setModelCode(source.getModelCode());
+        copy.setModelName(source.getModelName());
+        copy.setEnabledFlag(source.getEnabledFlag());
+        copy.setDefaultFlag(source.getDefaultFlag());
+        copy.setUnitPriceCent(0);
+        copy.setPriceUnit(source.getPriceUnit());
+        copy.setDeletedFlag(source.getDeletedFlag());
+        copy.setCreatedTime(source.getCreatedTime());
+        copy.setUpdatedTime(source.getUpdatedTime());
+
+        Map<String, Object> cfg = new java.util.LinkedHashMap<>(ShortJson.map(source.getConfigJson()));
+        String canonicalProvider = UserAiProviderCatalog.normalizeRuntimeProviderCode(providerCode);
+        cfg.put("credential_source", CREDENTIAL_SOURCE_USER);
+        cfg.put("byok_source", "PROVIDER_KEY");
+        cfg.put("byok_user_id", userId.trim());
+        cfg.put("user_id", userId.trim());
+        cfg.put("byok_provider_code", canonicalProvider);
+        cfg.put("user_key_id", PROVIDER_KEY_PREFIX + canonicalProvider.toLowerCase(Locale.ROOT));
+        String resolvedUrl = UserAiProviderCatalog.resolveEffectiveBaseUrl(customBaseUrl, canonicalProvider);
+        if (!resolvedUrl.isBlank()) {
+            cfg.put("base_url", resolvedUrl);
+        }
+        copy.setConfigJson(ShortJson.toJson(cfg));
+        return copy;
     }
 
     public static boolean isUserKeyModel(AiModelConfig model) {

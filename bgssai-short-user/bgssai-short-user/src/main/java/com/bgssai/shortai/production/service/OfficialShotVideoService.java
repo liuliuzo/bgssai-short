@@ -42,10 +42,12 @@ import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.TaskPrices;
+import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
 
 /**
  * Official shot video. A real PNG or JPEG (first frame, or a locked look / scene / prop)
@@ -83,6 +85,8 @@ public class OfficialShotVideoService {
     private WorkAccessService workAccessService;
     @Autowired(required = false)
     private UserAiModelKeyService userAiModelKeyService;
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
 
     public ApiResponse preview(AiTaskReq req) {
         String userId = workAccessService.requireUser();
@@ -251,7 +255,19 @@ public class OfficialShotVideoService {
         if (UserAiModelSupport.isUserKeyCode(code)) {
             return true;
         }
-        return userAiModelKeyService != null && userAiModelKeyService.isOnlyUserKeyMode(userId);
+        if (userAiModelKeyService != null && userAiModelKeyService.isOnlyUserKeyMode(userId)) {
+            return true;
+        }
+        if (userAiProviderKeyService != null && aiModelResolveService != null
+                && code != null && !code.isBlank()) {
+            try {
+                AiModelConfig resolved = aiModelResolveService.resolveForUser("VIDEO", code, userId);
+                return UserAiModelSupport.isUserKeyModel(resolved);
+            } catch (RuntimeException ignored) {
+                return false;
+            }
+        }
+        return false;
     }
 
     private Map<String, Object> emptyOrWallet(String userId) {

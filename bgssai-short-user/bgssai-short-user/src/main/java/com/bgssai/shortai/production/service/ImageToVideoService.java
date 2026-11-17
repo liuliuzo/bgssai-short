@@ -216,8 +216,9 @@ public class ImageToVideoService {
         if (activeCount() > 0) {
             throw new BizException(CommonErrorCode.RATE_LIMIT_EXCEEDED, ImageConditionedVideoProtocol.BUSY);
         }
-        int cost = costOf(model, params);
-        if (quotaConsumeService != null) {
+        boolean userKeyModel = com.bgssai.shortai.useraimodel.service.UserAiModelSupport.isUserKeyModel(model);
+        int cost = userKeyModel ? 0 : costOf(model, params);
+        if (quotaConsumeService != null && !userKeyModel) {
             quotaConsumeService.assertAffordable(userId, cost);
         }
         ShortAiTask task = new ShortAiTask();

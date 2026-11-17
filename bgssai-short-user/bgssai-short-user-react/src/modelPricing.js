@@ -36,6 +36,7 @@ export function isUserKeyModelRow(row = {}) {
   return row.credential_source === 'USER_KEY'
     || Number(row.user_key_flag) === 1
     || String(row.model_code || '').toLowerCase().startsWith('umk-')
+    || String(row.model_code || '').toLowerCase().startsWith('bpk-')
 }
 
 export function isValidBillingMultiplier(multiplier) {

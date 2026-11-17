@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,9 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 /**
  * provider_code=OPENAI_COMPAT. Runs only against the company host
@@ -34,6 +38,13 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
     private final SysSecretReader secretReader;
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
+
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
 
     @Autowired
     public OpenAiCompatibleAiProvider(SysSecretReader secretReader) {
@@ -58,19 +69,32 @@ public class OpenAiCompatibleAiProvider implements AiProvider {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        String baseUrl = ProviderHttp.trimSlash(ShortJson.text(cfg.get("base_url")));
-        if (!CompanyCompatGateway.allows(baseUrl)) {
-            throw DirectVendorGuard.rejected(CODE);
-        }
-        String secretRef = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
-                SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
-        String apiKey = secretReader.get(secretRef);
-        if (apiKey.isBlank() && SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(secretRef)) {
-            apiKey = secretReader.get(SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY);
-        }
-        if (apiKey.isBlank()) {
-            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
-                    TokenHubClientSupport.userFacingMessage("AI api key missing for " + secretRef));
+        String baseUrl;
+        String apiKey;
+        Optional<ResolvedProviderKey> providerByok = DirectVendorGuard.isExplicitUserModelKey(request.getModel())
+                ? Optional.empty()
+                : DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        if (providerByok.isPresent() && providerByok.get().apiKey() != null
+                && !providerByok.get().apiKey().isBlank()) {
+            ResolvedProviderKey key = providerByok.get();
+            apiKey = key.apiKey();
+            baseUrl = ProviderHttp.trimSlash(UserAiProviderCatalog.resolveEffectiveBaseUrl(
+                    key.baseUrl(), ProviderHttp.firstNonBlank(request.getModel().getProviderCode(), key.providerCode())));
+        } else {
+            baseUrl = ProviderHttp.trimSlash(ShortJson.text(cfg.get("base_url")));
+            if (!CompanyCompatGateway.allows(baseUrl)) {
+                throw DirectVendorGuard.rejected(CODE);
+            }
+            String secretRef = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("secret_ref")),
+                    SysSecretReader.AI_OPENAI_COMPAT_API_KEY);
+            apiKey = secretReader.get(secretRef);
+            if (apiKey.isBlank() && SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(secretRef)) {
+                apiKey = secretReader.get(SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY);
+            }
+            if (apiKey.isBlank()) {
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                        TokenHubClientSupport.userFacingMessage("AI api key missing for " + secretRef));
+            }
         }
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
         String ability = request.getAbilityType() == null ? "" : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
