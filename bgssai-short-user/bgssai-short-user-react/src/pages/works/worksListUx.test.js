@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { formatWorkTime, workListMeta, workStudioPath } from './worksListUx.js'
 
 test('works list shows the work id and updated time, and enters via a path', () => {
-  assert.equal(workStudioPath('w-abc123def456'), '/works/w-abc123def456/script')
+  assert.equal(workStudioPath('w-abc123def456'), '/works/w-abc123def456')
   const meta = workListMeta({
     work_id: 'w-abc123def456',
     work_title: '全链路验收短剧',

@@ -3,26 +3,30 @@
 const OPEN = new Set(['QUEUED', 'RUNNING'])
 
 export const VIDEO_PATH_STEPS = [
-  { key: 'outline', label: '大纲' },
-  { key: 'script', label: '剧本' },
-  { key: 'ready', label: '定稿' },
-  { key: 'looks', label: '定妆' },
-  { key: 'shots', label: '拆镜' },
-  { key: 'frame', label: '首帧' },
-  { key: 'video', label: '视频' },
-  { key: 'film', label: '成片' },
+  { key: 'outline', stepNo: 1, label: '大纲', tab: 'script' },
+  { key: 'script', stepNo: 2, label: '剧本', tab: 'script' },
+  { key: 'ready', stepNo: 3, label: '定稿', tab: 'script' },
+  { key: 'looks', stepNo: 4, label: '定妆', tab: 'characters' },
+  { key: 'shots', stepNo: 5, label: '拆镜', tab: 'storyboard' },
+  { key: 'frame', stepNo: 6, label: '首帧', tab: 'storyboard' },
+  { key: 'video', stepNo: 7, label: '视频', tab: 'storyboard' },
+  { key: 'film', stepNo: 8, label: '成片', tab: 'compose' },
 ]
 
-const STEP_TAB = {
-  outline: 'script',
-  script: 'script',
-  ready: 'script',
-  looks: 'characters',
-  shots: 'storyboard',
-  frame: 'storyboard',
-  video: 'storyboard',
-  film: 'compose',
-}
+export const CORE_STUDIO_TABS = new Set(['script', 'characters', 'storyboard', 'compose'])
+
+export const AUX_STUDIO_TOOLS = [
+  { key: 'source', label: '原著导入' },
+  { key: 'voice', label: '配音字幕' },
+  { key: 'preview', label: '样片预览' },
+  { key: 'story-map', label: '剧情图谱' },
+  { key: 'quality', label: '质量报告' },
+  { key: 'continuity', label: '连贯性检查' },
+  { key: 'tasks', label: '本剧任务' },
+  { key: 'edit-export', label: '导出剪辑工程' },
+]
+
+const STEP_BY_KEY = Object.fromEntries(VIDEO_PATH_STEPS.map((item) => [item.key, item]))
 
 function text(value) {
   if (value == null) return ''
@@ -134,10 +138,15 @@ function episodeTitle(no, title) {
 }
 
 function step(input, key, extra) {
+  const meta = STEP_BY_KEY[key]
+  const doneKeys = extra.doneKeys || doneBefore(key)
   return {
     key,
-    tab: STEP_TAB[key],
-    doneKeys: extra.doneKeys || doneBefore(key),
+    stepNo: meta?.stepNo || 1,
+    stepLabel: meta?.label || '',
+    tab: meta?.tab || 'script',
+    doneKeys,
+    allDone: doneKeys.length === VIDEO_PATH_STEPS.length,
     waiting: !!extra.waiting,
     action: extra.action || '',
     secondary: extra.secondary || null,
@@ -146,6 +155,48 @@ function step(input, key, extra) {
     detail: extra.detail || '',
     look: extra.look || null,
   }
+}
+
+export function resolveViewingStageKey({ activeTab, requestedStage, currentStep, outlineCount = 0 } = {}) {
+  if (AUX_STUDIO_TOOLS.some((item) => item.key === activeTab)) return null
+  const requested = STEP_BY_KEY[requestedStage]
+  if (requested && requested.tab === activeTab) return requested.key
+  if (currentStep?.tab === activeTab) return currentStep.key
+  if (activeTab === 'script') return outlineCount > 0 ? 'script' : 'outline'
+  if (activeTab === 'characters') return 'looks'
+  if (activeTab === 'storyboard') return 'shots'
+  if (activeTab === 'compose') return 'film'
+  return null
+}
+
+export function buildStepItems(currentStep, viewingStageKey) {
+  const allDone = Boolean(currentStep?.allDone)
+  const doneSet = new Set(currentStep?.doneKeys || [])
+  return VIDEO_PATH_STEPS.map((item) => {
+    let state = 'todo'
+    let statusLabel = '未开始'
+    if (allDone) {
+      state = 'done'
+      statusLabel = '已完成'
+    } else if (item.key === currentStep?.key) {
+      if (currentStep?.waiting) {
+        state = 'running'
+        statusLabel = '生成中'
+      } else {
+        state = 'current'
+        statusLabel = '当前环节'
+      }
+    } else if (doneSet.has(item.key)) {
+      state = 'done'
+      statusLabel = '已完成'
+    }
+    return {
+      ...item,
+      state,
+      statusLabel,
+      isViewing: viewingStageKey === item.key,
+    }
+  })
 }
 
 export function resolveVideoPath(input) {
