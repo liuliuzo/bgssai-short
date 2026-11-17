@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   arrangeAngle,
+  buildLibraryLookOptions,
   cardGenerationCopy,
   groupLooks,
   groupLooksOfKind,
@@ -15,6 +16,7 @@ import {
   librarySummaryCounts,
   librarySummaryText,
   lookCover,
+  matchSelectedLookValue,
   referenceLine,
 } from './lookGroups.js'
 import { laplacianScore, posterTimes } from './lookPoster.js'
@@ -222,6 +224,95 @@ test('页面文案不再使用资产卡或参考卡概念', () => {
     assert.doesNotMatch(content, /资产卡/)
     assert.doesNotMatch(content, /参考卡/)
   }
+})
+
+test('直接选择人物定妆与场景道具参考：聚合选项并移除跳转管理链接', () => {
+  const libraries = [
+    {
+      library_id: 'lk-arch',
+      library_name: '归档库',
+      status: 'ARCHIVED',
+      material_list: [
+        {
+          material_id: 'lm-arch-1',
+          material_name: '旧造型',
+          material_kind: 'CHARACTER',
+          view_angle: 'FRONT_FACE',
+          file_url: 'https://cdn.example/old.jpg',
+        },
+      ],
+    },
+    {
+      library_id: 'lk-1',
+      library_name: '我的定妆',
+      status: 'ACTIVE',
+      material_list: [
+        {
+          material_id: 'lm-side',
+          material_name: '小明',
+          material_kind: 'CHARACTER',
+          view_angle: 'SIDE',
+          file_url: 'https://cdn.example/side.jpg',
+        },
+        {
+          material_id: 'lm-face',
+          material_name: '小明',
+          material_kind: 'CHARACTER',
+          view_angle: 'FRONT_FACE',
+          file_url: 'https://cdn.example/face.jpg',
+        },
+        {
+          material_id: 'lm-scene',
+          material_name: '办公室',
+          material_kind: 'SCENE',
+          view_angle: 'ESTABLISHING',
+          file_url: 'https://cdn.example/office.jpg',
+        },
+      ],
+    },
+  ]
+
+  const charOpts = buildLibraryLookOptions(libraries, 'CHARACTER')
+  assert.equal(charOpts.length, 2)
+  assert.equal(charOpts[0].value, 'lm-face')
+  assert.equal(charOpts[0].label, '小明（我的定妆）')
+  assert.equal(charOpts[0].angleSummary, '正脸 / 侧面')
+  assert.deepEqual(charOpts[0].materialIds, ['lm-face', 'lm-side'])
+  assert.equal(charOpts[1].archived, true)
+
+  assert.equal(matchSelectedLookValue(charOpts, {
+    used: 1,
+    source: 'CARD',
+    material_id: 'lm-side',
+    material_name: '小明',
+    library_name: '我的定妆',
+  }), 'lm-face')
+  assert.equal(matchSelectedLookValue(charOpts, {
+    used: 1,
+    source: 'CARD',
+    material_name: '小明',
+    library_name: '我的定妆',
+  }), 'lm-face')
+  assert.equal(matchSelectedLookValue(charOpts, {
+    used: 1,
+    source: 'NAME',
+    material_name: '小明',
+    library_name: '我的定妆',
+  }), undefined)
+
+  const dir = path.dirname(fileURLToPath(import.meta.url))
+  const pickerSource = fs.readFileSync(path.join(dir, 'LibraryLookPicker.jsx'), 'utf8')
+  const studioSource = fs.readFileSync(path.join(dir, '..', 'works', 'WorkStudio.jsx'), 'utf8')
+
+  assert.doesNotMatch(pickerSource, /管理定妆库|管理场景库|管理道具库|管理\{storeLabel\}|libraryHref/)
+  assert.match(pickerSource, /<Select/)
+  assert.match(pickerSource, /optionRender=/)
+  assert.match(pickerSource, /onSelect=\{[\s\S]*onUse\(materialId\)/)
+  assert.match(pickerSource, /大图点选/)
+
+  assert.doesNotMatch(studioSource, /管理定妆库|管理场景库|管理道具库|libraryHref/)
+  assert.match(studioSource, /listLookLibraries/)
+  assert.match(studioSource, /libraries=\{lookLibraries\}/)
 })
 
 function solid(width, height, value) {

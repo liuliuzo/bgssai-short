@@ -775,6 +775,8 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   const [scenes, setScenes] = useState([])
   const [props, setProps] = useState([])
   const [cardsReady, setCardsReady] = useState(false)
+  const [lookLibraries, setLookLibraries] = useState([])
+  const [lookLibrariesReady, setLookLibrariesReady] = useState(false)
   const [imageModels, setImageModels] = useState([])
   const [imageModelCode, setImageModelCode] = useState()
   const [form] = Form.useForm()
@@ -783,10 +785,6 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   const [portraitCount, setPortraitCount] = useState(4)
   const [textOnly, setTextOnly] = useState(false)
   const [angleRedoModal, setAngleRedoModal] = useState(null)
-  const returnParam = encodeURIComponent(`/works/${work.work_id}/characters`)
-  const characterLibraryHref = `/look-library?return=${returnParam}`
-  const sceneLibraryHref = `/scene-library?return=${returnParam}`
-  const propLibraryHref = `/prop-library?return=${returnParam}`
   const [busyIds, setBusyIds] = useState(() => new Set())
   const busyRef = useRef(new Set())
   const ownImageRef = useRef(null)
@@ -799,13 +797,23 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
 
   const load = useCallback(async () => {
     try {
-      const { data } = await productionApi.consistencyPanel(work.work_id)
-      setChars(data?.result?.character_list || [])
-      setScenes(data?.result?.scene_list || [])
-      setProps(data?.result?.prop_list || [])
+      const [panelRes, librariesRes] = await Promise.allSettled([
+        productionApi.consistencyPanel(work.work_id),
+        productionApi.listLookLibraries(),
+      ])
+      if (panelRes.status === 'fulfilled') {
+        const panel = panelRes.value?.data?.result || {}
+        setChars(panel.character_list || [])
+        setScenes(panel.scene_list || [])
+        setProps(panel.prop_list || [])
+      }
+      if (librariesRes.status === 'fulfilled') {
+        setLookLibraries(librariesRes.value?.data?.result?.library_list || [])
+      }
       onFlowChange?.()
     } finally {
       setCardsReady(true)
+      setLookLibrariesReady(true)
     }
   }, [work, onFlowChange])
 
@@ -1244,7 +1252,9 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             ) : null}
             <LibraryLookPicker
               kind="CHARACTER"
-              libraryHref={characterLibraryHref}
+              libraries={lookLibraries}
+              librariesLoading={!lookLibrariesReady}
+              currentReference={row.look_reference}
               busy={busyIds.has(row.character_id)}
               onUse={(materialId) => useLook('character', row.character_id, materialId)}
             />
@@ -1316,7 +1326,9 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           }>
             <LibraryLookPicker
               kind="SCENE"
-              libraryHref={sceneLibraryHref}
+              libraries={lookLibraries}
+              librariesLoading={!lookLibrariesReady}
+              currentReference={row.look_reference}
               busy={busyIds.has(row.scene_card_id)}
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
@@ -1380,7 +1392,9 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           }>
             <LibraryLookPicker
               kind="PROP"
-              libraryHref={propLibraryHref}
+              libraries={lookLibraries}
+              librariesLoading={!lookLibrariesReady}
+              currentReference={row.look_reference}
               busy={busyIds.has(row.scene_card_id)}
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
