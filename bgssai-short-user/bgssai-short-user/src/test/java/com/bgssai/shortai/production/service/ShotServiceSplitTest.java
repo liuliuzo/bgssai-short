@@ -241,4 +241,14 @@ class ShotServiceSplitTest {
                 inserted.stream().map(com.bgssai.shortai.model.ShortShot::getFrameLinkMode).toList());
     }
 
+    @Test
+    void splitExpiresExistingFilmWhenLifecyclePresent() {
+        FinishedFilmLifecycle lifecycle = org.mockito.Mockito.mock(FinishedFilmLifecycle.class);
+        ReflectionTestUtils.setField(service, "finishedFilmLifecycle", lifecycle);
+        ShotReq req = new ShotReq();
+        req.setEpisodeId("e-1");
+        service.split(req);
+        verify(lifecycle).expireAfterUpstreamChange("e-1");
+    }
+
 }

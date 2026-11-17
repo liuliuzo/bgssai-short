@@ -24,6 +24,23 @@ const STAGE_FAILURES = [
   { field: 'compose_status', tab: 'compose', label: '成片生成失败' },
 ]
 
+const FAIL_ACTION_BY_TAB = {
+  script: '去写剧本',
+  storyboard: '去生成视频',
+  voice: '去配音',
+  compose: '去合成成片',
+}
+
+const STAGE_ACTION_BY_KEY = {
+  pending_script: '去写剧本',
+  script: '去写剧本',
+  looks: '去定妆',
+  shots: '去拆分镜',
+  frame: '去出首帧',
+  video: '去生成视频',
+  compose: '去合成成片',
+}
+
 export function coverUrl(record) {
   if (!record || typeof record !== 'object') return null
   for (const key of COVER_KEYS) {
@@ -33,22 +50,6 @@ export function coverUrl(record) {
     if (/^(https?:|data:image\/)/i.test(url)) return url
   }
   return null
-}
-
-export function episodeProgress(work, episodes) {
-  const listed = Array.isArray(episodes) ? episodes : null
-  const declared = Number(work?.episode_count)
-  const total = Number.isFinite(declared) && declared > 0 ? declared : (listed?.length || 0)
-  if (!listed || listed.length === 0) {
-    return { total, percent: null, label: total ? `${total} 集` : '' }
-  }
-  const count = total || listed.length
-  const filmed = listed.filter((ep) => ep.compose_status === 'READY' || ep.review_status === 'APPROVED').length
-  const scripted = listed.filter((ep) => ep.script_status && ep.script_status !== 'NONE').length
-  const done = filmed > 0 ? filmed : scripted
-  const percent = Math.max(0, Math.min(100, Math.round((done / count) * 100)))
-  const label = filmed > 0 ? `成片 ${filmed}/${count}` : `剧本 ${scripted}/${count}`
-  return { total: count, percent, label }
 }
 
 function withEpisode(path, episodeId) {
@@ -64,29 +65,312 @@ function latestFailedStage(episode) {
   return found
 }
 
-export function continuePath(work, episodes) {
-  const workId = work?.work_id
-  if (!workId) return '/works'
+/**
+ * Resolve a single episode along the unified 6-stage video production chain:
+ * 剧本(1) -> 定妆(2) -> 分镜(3) -> 首帧(4) -> 视频(5) -> 成片(6).
+ */
+export function resolveEpisodeStage(episode, detail) {
+  const outlineReady = Number(detail?.outline_count) > 0
+  const lookTotal = Number(detail?.look_total) || 0
+  const lookLocked = Math.min(lookTotal, Math.max(0, Number(detail?.look_locked) || 0))
+  const hasShotStats = episode?.shot_total != null
+  const shotTotal = Math.max(0, Number(episode?.shot_total) || 0)
+  const shotFrameReady = Math.min(shotTotal, Math.max(0, Number(episode?.shot_frame_ready) || 0))
+  const shotReady = Math.min(shotTotal, Math.max(0, Number(episode?.shot_ready) || 0))
+  const shotSpokenReady = episode?.shot_spoken_ready != null
+    ? Math.max(0, Number(episode.shot_spoken_ready) || 0)
+    : shotTotal
+  const filmExpired = Number(episode?.film_expired_flag) === 1
+  const scriptStatus = episode?.script_status || 'NONE'
+  const scriptReady = scriptStatus === 'READY' || scriptStatus === 'LOCKED'
+
+  if (!scriptReady) {
+    if (!scriptStatus || scriptStatus === 'NONE') {
+      return {
+        key: 'pending_script',
+        stageLabel: '待写剧本',
+        tab: 'script',
+        units: outlineReady ? 0.25 : 0,
+        done: false,
+      }
+    }
+    return {
+      key: 'script',
+      stageLabel: '剧本',
+      tab: 'script',
+      units: scriptStatus === 'DRAFT' ? 0.7 : 0.5,
+      done: false,
+    }
+  }
+
+  if (lookTotal > 0 && lookLocked < lookTotal) {
+    return {
+      key: 'looks',
+      stageLabel: `定妆 ${lookLocked}/${lookTotal}`,
+      tab: 'characters',
+      units: 1 + (lookLocked / lookTotal),
+      done: false,
+    }
+  }
+
+  if (hasShotStats) {
+    if (shotTotal === 0) {
+      return { key: 'shots', stageLabel: '分镜', tab: 'storyboard', units: 2.2, done: false }
+    }
+    if (shotFrameReady < shotTotal && shotSpokenReady === 0) {
+      return { key: 'shots', stageLabel: '分镜', tab: 'storyboard', units: 2.6, done: false }
+    }
+    if (shotFrameReady < shotTotal) {
+      return {
+        key: 'frame',
+        stageLabel: `首帧 ${shotFrameReady}/${shotTotal}`,
+        tab: 'storyboard',
+        units: 3 + (shotFrameReady / shotTotal),
+        done: false,
+      }
+    }
+    if (shotReady < shotTotal) {
+      return {
+        key: 'video',
+        stageLabel: `视频 ${shotReady}/${shotTotal}`,
+        tab: 'storyboard',
+        units: 4 + (shotReady / shotTotal),
+        done: false,
+      }
+    }
+    if ((episode?.compose_status === 'READY' || episode?.review_status === 'APPROVED') && !filmExpired) {
+      return { key: 'done', stageLabel: '已成片', tab: 'compose', units: 6, done: true }
+    }
+    if (episode?.compose_status === 'COMPOSING') {
+      return { key: 'compose', stageLabel: '合成中', tab: 'compose', units: 5.5, done: false }
+    }
+    return { key: 'compose', stageLabel: '待合成', tab: 'compose', units: 5, done: false }
+  }
+
+  if (
+    (episode?.compose_status === 'READY' || episode?.review_status === 'APPROVED')
+    && !filmExpired
+    && episode?.storyboard_status !== 'FAILED'
+  ) {
+    return { key: 'done', stageLabel: '已成片', tab: 'compose', units: 6, done: true }
+  }
+  if (episode?.compose_status === 'COMPOSING') {
+    return { key: 'compose', stageLabel: '合成中', tab: 'compose', units: 5.5, done: false }
+  }
+  if (episode?.storyboard_status === 'READY') {
+    return { key: 'compose', stageLabel: '待合成', tab: 'compose', units: 5, done: false }
+  }
+  if (episode?.storyboard_status && episode.storyboard_status !== 'NONE') {
+    return { key: 'video', stageLabel: '视频', tab: 'storyboard', units: 4, done: false }
+  }
+  return { key: 'shots', stageLabel: '分镜', tab: 'storyboard', units: 2.2, done: false }
+}
+
+export function episodeStageItems(work, episodes, detail) {
   const list = Array.isArray(episodes) ? episodes : []
-  if (!list.length) return `/works/${workId}/script`
-  const episode = list.find((ep) => ep.review_status !== 'APPROVED') || list[0]
-  const episodeId = episode.episode_id
-  if (episode.review_status === 'PENDING' || episode.review_status === 'REJECTED') {
-    return withEpisode(`/works/${workId}/compose`, episodeId)
+  if (!list.length) return []
+  const workId = work?.work_id
+  const rawItems = list.map((episode, idx) => {
+    const no = episode?.episode_no != null && episode.episode_no !== '' ? episode.episode_no : (idx + 1)
+    const stage = resolveEpisodeStage(episode, detail)
+    const tone = stage.done ? 'done' : (stage.key === 'pending_script' ? 'todo' : 'active')
+    const to = workId ? withEpisode(`/works/${workId}/${stage.tab}`, episode?.episode_id) : '/works'
+    return {
+      key: `ep-${episode?.episode_id || no}`,
+      no,
+      stageKey: stage.key,
+      stageLabel: stage.stageLabel,
+      tone,
+      to,
+    }
+  })
+
+  if (rawItems.length <= 4) {
+    return rawItems.map((item) => ({
+      key: item.key,
+      text: `第${item.no}集：${item.stageLabel}`,
+      tone: item.tone,
+      to: item.to,
+    }))
   }
-  const failed = latestFailedStage(episode)
-  if (failed) return withEpisode(`/works/${workId}/${failed.tab}`, episodeId)
-  const script = episode.script_status
-  if (!script || script === 'NONE' || script === 'DRAFT' || script === 'GENERATING') {
-    return withEpisode(`/works/${workId}/script`, episodeId)
+
+  const merged = []
+  for (const item of rawItems) {
+    const prev = merged[merged.length - 1]
+    if (
+      prev
+      && prev.stageKey === item.stageKey
+      && (item.stageKey === 'done' || item.stageKey === 'pending_script')
+      && Number.isFinite(Number(prev.endNo))
+      && Number.isFinite(Number(item.no))
+    ) {
+      prev.endNo = item.no
+      prev.count += 1
+    } else {
+      merged.push({
+        ...item,
+        startNo: item.no,
+        endNo: item.no,
+        count: 1,
+      })
+    }
   }
-  if (episode.storyboard_status !== 'READY') {
-    return withEpisode(`/works/${workId}/storyboard`, episodeId)
+
+  const visible = merged.length > 5 ? merged.slice(0, 4) : merged
+  const items = visible.map((group) => {
+    const prefix = group.startNo === group.endNo
+      ? `第${group.startNo}集`
+      : `第${group.startNo}-${group.endNo}集`
+    return {
+      key: `ep-${group.startNo}-${group.endNo}-${group.stageKey}`,
+      text: `${prefix}：${group.stageLabel}`,
+      tone: group.tone,
+      to: group.to,
+    }
+  })
+
+  if (merged.length > 5) {
+    const tail = merged.slice(4)
+    const remaining = tail.reduce((sum, group) => sum + group.count, 0)
+    items.push({
+      key: 'ep-rest',
+      text: `其余 ${remaining} 集`,
+      tone: 'todo',
+      to: tail[0].to,
+    })
   }
-  if (episode.dubbing_status !== 'READY') {
-    return withEpisode(`/works/${workId}/voice`, episodeId)
+  return items
+}
+
+export function episodeProgress(work, episodes, detail) {
+  const listed = Array.isArray(episodes) ? episodes : null
+  const declared = Number(work?.episode_count)
+  const total = Number.isFinite(declared) && declared > 0 ? declared : (listed?.length || 0)
+  if (!listed) {
+    return { total, filmed: 0, percent: null, label: total ? `共 ${total} 集` : '', episodeItems: [] }
   }
-  return withEpisode(`/works/${workId}/compose`, episodeId)
+  if (listed.length === 0) {
+    return {
+      total,
+      filmed: 0,
+      percent: total ? 0 : null,
+      label: total ? `总进度 0% · 已成片 0/${total} 集` : '',
+      episodeItems: [],
+    }
+  }
+  const count = Math.max(total || 0, listed.length)
+  const stages = listed.map((ep) => resolveEpisodeStage(ep, detail))
+  const filmed = stages.filter((stage) => stage.done).length
+  const padCount = Math.max(0, count - listed.length)
+  const padUnits = padCount * (Number(detail?.outline_count) > 0 ? 0.25 : 0)
+  const totalUnits = stages.reduce((sum, stage) => sum + stage.units, 0) + padUnits
+  const raw = Math.round((totalUnits / (count * 6)) * 100)
+  const percent = filmed >= count ? 100 : (totalUnits > 0 ? Math.max(1, Math.min(99, raw)) : 0)
+  const label = `总进度 ${percent}% · 已成片 ${filmed}/${count} 集`
+  return {
+    total: count,
+    filmed,
+    percent,
+    label,
+    episodeItems: episodeStageItems(work, listed, detail),
+  }
+}
+
+export function workCardStatus(work, episodes, detail) {
+  if (work?.work_status === 'ARCHIVED') return '已归档'
+  if (work?.work_status === 'COMPLETED') return '已完成'
+  if (!Array.isArray(episodes) || episodes.length === 0) {
+    return work?.work_status_name || ''
+  }
+  const count = Math.max(Number(work?.episode_count) || 0, episodes.length)
+  const stages = episodes.map((ep) => resolveEpisodeStage(ep, detail))
+  if (stages.length >= count && stages.every((stage) => stage.done)) {
+    if (episodes.every((ep) => ep?.review_status === 'APPROVED')) return '已完成'
+    if (episodes.some((ep) => ep?.review_status === 'PENDING')) return '审核中'
+    return '已成片'
+  }
+  if (episodes.some((ep) => ep?.compose_status === 'COMPOSING')) return '合成中'
+  if (episodes.some((ep) => ep?.review_status === 'PENDING')) return '审核中'
+  if (stages.every((stage) => stage.key === 'pending_script') && !(Number(detail?.outline_count) > 0)) {
+    return '草稿'
+  }
+  if (stages.every((stage) => stage.key === 'pending_script' || stage.key === 'script')) {
+    return stages.every((stage) => stage.key === 'pending_script') && work?.work_status === 'DRAFT'
+      ? '草稿'
+      : '剧本中'
+  }
+  return '制作中'
+}
+
+function resolveContinueTarget(work, episodes, detail) {
+  const workId = work?.work_id
+  if (!workId) {
+    return { path: '/works', actionLabel: '继续创作', episode: null, allDone: false }
+  }
+  const list = Array.isArray(episodes) ? episodes : []
+  if (!list.length) {
+    return { path: `/works/${workId}/script`, actionLabel: '去写剧本', episode: null, allDone: false }
+  }
+  const entries = list.map((ep) => ({
+    ep,
+    stage: resolveEpisodeStage(ep, detail),
+    failed: latestFailedStage(ep),
+  }))
+  const declared = Number(work?.episode_count)
+  const expectedCount = Number.isFinite(declared) && declared > 0 ? Math.max(declared, list.length) : list.length
+  const allDone = entries.every((entry) => entry.stage.done) && list.length >= expectedCount
+
+  const rejected = entries.find((entry) => entry.ep?.review_status === 'REJECTED')
+  if (rejected) {
+    return {
+      path: withEpisode(`/works/${workId}/compose`, rejected.ep?.episode_id),
+      actionLabel: '去修改成片',
+      episode: rejected.ep,
+      allDone,
+    }
+  }
+
+  const failedEntry = entries.find((entry) => entry.failed && !entry.stage.done)
+  if (failedEntry) {
+    return {
+      path: withEpisode(`/works/${workId}/${failedEntry.failed.tab}`, failedEntry.ep?.episode_id),
+      actionLabel: FAIL_ACTION_BY_TAB[failedEntry.failed.tab] || '继续创作',
+      episode: failedEntry.ep,
+      allDone,
+    }
+  }
+
+  const pendingEntry = entries.find((entry) => !entry.stage.done)
+  if (pendingEntry) {
+    return {
+      path: withEpisode(`/works/${workId}/${pendingEntry.stage.tab}`, pendingEntry.ep?.episode_id),
+      actionLabel: STAGE_ACTION_BY_KEY[pendingEntry.stage.key] || '继续创作',
+      episode: pendingEntry.ep,
+      allDone,
+    }
+  }
+
+  const pendingReview = entries.find((entry) => entry.ep?.review_status === 'PENDING')
+  if (pendingReview) {
+    return {
+      path: withEpisode(`/works/${workId}/compose`, pendingReview.ep?.episode_id),
+      actionLabel: '去看成片',
+      episode: pendingReview.ep,
+      allDone,
+    }
+  }
+
+  const first = entries[0]
+  return {
+    path: withEpisode(`/works/${workId}/compose`, first?.ep?.episode_id),
+    actionLabel: '去看成片',
+    episode: first?.ep || null,
+    allDone,
+  }
+}
+
+export function continuePath(work, episodes, detail) {
+  return resolveContinueTarget(work, episodes, detail).path
 }
 
 function taskDetail(task) {
@@ -179,11 +463,14 @@ export function nextStepText({ loadError, works, attention }) {
   return `最近作品：《${list[0].work_title || '未命名作品'}》`
 }
 
-export function continueLabel(work, episodes) {
-  const path = continuePath(work, episodes)
-  if (path.includes('/storyboard')) return '去生成视频'
-  if (path.includes('/script')) return '去写剧本'
-  if (path.includes('/voice')) return '去配音'
-  if (path.includes('/compose')) return '去看成片'
-  return '继续创作'
+export function continueLabel(work, episodes, detail) {
+  const target = resolveContinueTarget(work, episodes, detail)
+  const list = Array.isArray(episodes) ? episodes : []
+  const declared = Number(work?.episode_count)
+  const totalCount = Math.max(Number.isFinite(declared) && declared > 0 ? declared : 0, list.length)
+  const epNo = target.episode?.episode_no
+  if (totalCount > 1 && !target.allDone && epNo != null && epNo !== '') {
+    return `第${epNo}集 · ${target.actionLabel}`
+  }
+  return target.actionLabel
 }

@@ -65,7 +65,7 @@ query：`page_num` `page_size` `work_status` `genre` `keyword`
 
 ### GET /bgssai/user/short-works/detail?work_id=
 
-含 `episode_list`（六阶段状态，附 `script_status_name` / `storyboard_status_name` / `dubbing_status_name` / `compose_status_name` / `review_status_name` 中文名）。
+含作品级 `outline_count`、`character_count`、`scene_card_count`、`look_total`、`look_locked`，以及 `episode_list`（六阶段状态，附 `script_status_name` / `storyboard_status_name` / `dubbing_status_name` / `compose_status_name` / `review_status_name` 中文名，以及 `shot_total`、`shot_frame_ready`、`shot_ready`、`shot_spoken_ready`、`film_expired_flag`）。
 
 ### POST /bgssai/user/short-works/update
 

@@ -19,12 +19,24 @@ import com.bgssai.shortai.common.Responses;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.ForbiddenException;
+import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortEpisodeMapper;
+import com.bgssai.shortai.mapper.ShortFilmMapper;
+import com.bgssai.shortai.mapper.ShortSceneCardMapper;
+import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.mapper.ShortWorkMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
+import com.bgssai.shortai.model.ShortCharacter;
+import com.bgssai.shortai.model.ShortCharacterExample;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortEpisodeExample;
+import com.bgssai.shortai.model.ShortFilm;
+import com.bgssai.shortai.model.ShortFilmExample;
+import com.bgssai.shortai.model.ShortSceneCard;
+import com.bgssai.shortai.model.ShortSceneCardExample;
+import com.bgssai.shortai.model.ShortShot;
+import com.bgssai.shortai.model.ShortShotExample;
 import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.dto.ProductionDtos.EpisodeReq;
@@ -32,6 +44,7 @@ import com.bgssai.shortai.production.dto.ProductionDtos.WorkArchiveReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.WorkCreateReq;
 import com.bgssai.shortai.production.dto.ProductionDtos.WorkUpdateReq;
 import com.bgssai.shortai.production.support.ShortIds;
+import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.ShortLabels;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
@@ -46,6 +59,14 @@ public class WorkService {
     private ShortWorkMapper shortWorkMapper;
     @Autowired
     private ShortEpisodeMapper shortEpisodeMapper;
+    @Autowired(required = false)
+    private ShortCharacterMapper shortCharacterMapper;
+    @Autowired(required = false)
+    private ShortSceneCardMapper shortSceneCardMapper;
+    @Autowired(required = false)
+    private ShortShotMapper shortShotMapper;
+    @Autowired(required = false)
+    private ShortFilmMapper shortFilmMapper;
     @Autowired
     private WorkAccessService workAccessService;
     @Autowired
@@ -173,8 +194,98 @@ public class WorkService {
         ex.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
         ex.setOrderByClause("episode_no asc");
         List<ShortEpisode> episodes = shortEpisodeMapper.selectByExample(ex);
+        int outlineCount = ShortJson.list(work.getOutlineJson()).size();
+        int characterCount = 0;
+        int sceneCardCount = 0;
+        int lookLocked = 0;
+        if (shortCharacterMapper != null) {
+            ShortCharacterExample cx = new ShortCharacterExample();
+            cx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+            List<ShortCharacter> chars = shortCharacterMapper.selectByExample(cx);
+            if (chars != null) {
+                characterCount = chars.size();
+                for (ShortCharacter ch : chars) {
+                    if ("LOCKED".equals(ch.getCardStatus())
+                            && ch.getRefImageAssetId() != null && !ch.getRefImageAssetId().isBlank()) {
+                        lookLocked++;
+                    }
+                }
+            }
+        }
+        if (shortSceneCardMapper != null) {
+            ShortSceneCardExample scx = new ShortSceneCardExample();
+            scx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+            List<ShortSceneCard> sceneCards = shortSceneCardMapper.selectByExample(scx);
+            if (sceneCards != null) {
+                sceneCardCount = sceneCards.size();
+                for (ShortSceneCard sc : sceneCards) {
+                    if ("LOCKED".equals(sc.getCardStatus())
+                            && sc.getRefImageAssetId() != null && !sc.getRefImageAssetId().isBlank()) {
+                        lookLocked++;
+                    }
+                }
+            }
+        }
+        int lookTotal = characterCount + sceneCardCount;
+        Map<String, List<ShortShot>> shotsByEpisode = new LinkedHashMap<>();
+        if (shortShotMapper != null) {
+            ShortShotExample sx = new ShortShotExample();
+            sx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+            sx.setOrderByClause("shot_no asc");
+            List<ShortShot> allShots = shortShotMapper.selectByExample(sx);
+            if (allShots != null) {
+                for (ShortShot shot : allShots) {
+                    if (shot.getEpisodeId() == null) {
+                        continue;
+                    }
+                    shotsByEpisode.computeIfAbsent(shot.getEpisodeId(), k -> new ArrayList<>()).add(shot);
+                }
+            }
+        }
+        Map<String, ShortFilm> latestFilmByEpisode = new LinkedHashMap<>();
+        if (shortFilmMapper != null) {
+            ShortFilmExample fx = new ShortFilmExample();
+            fx.createCriteria().andWorkIdEqualTo(work.getWorkId()).andDeletedFlagEqualTo(0);
+            fx.setOrderByClause("id desc");
+            List<ShortFilm> allFilms = shortFilmMapper.selectByExample(fx);
+            if (allFilms != null) {
+                for (ShortFilm film : allFilms) {
+                    if (film.getEpisodeId() == null) {
+                        continue;
+                    }
+                    latestFilmByEpisode.putIfAbsent(film.getEpisodeId(), film);
+                }
+            }
+        }
         List<Map<String, Object>> episodeList = new ArrayList<>();
         for (ShortEpisode ep : episodes) {
+            List<ShortShot> epShots = shotsByEpisode.getOrDefault(ep.getEpisodeId(), List.of());
+            int shotFrameReady = 0;
+            int shotReady = 0;
+            int shotSpokenReady = 0;
+            for (ShortShot shot : epShots) {
+                boolean hasVideo = (shot.getVideoAssetId() != null && !shot.getVideoAssetId().isBlank())
+                        || "VIDEO_READY".equals(shot.getShotStatus())
+                        || "LOCKED".equals(shot.getShotStatus());
+                boolean hasFrame = hasVideo
+                        || (shot.getFirstFrameAssetId() != null && !shot.getFirstFrameAssetId().isBlank())
+                        || "IMAGE_READY".equals(shot.getShotStatus())
+                        || "VIDEO_GENERATING".equals(shot.getShotStatus());
+                String previz = shot.getPrevizText() == null ? "" : shot.getPrevizText().trim();
+                String imgPrompt = shot.getImagePrompt() == null ? "" : shot.getImagePrompt().trim();
+                String desc = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
+                if ((previz + imgPrompt + desc).trim().length() >= 6) {
+                    shotSpokenReady++;
+                }
+                if (hasFrame) {
+                    shotFrameReady++;
+                }
+                if (hasVideo) {
+                    shotReady++;
+                }
+            }
+            ShortFilm latestFilm = latestFilmByEpisode.get(ep.getEpisodeId());
+            int filmExpiredFlag = latestFilm != null && Integer.valueOf(1).equals(latestFilm.getExpiredFlag()) ? 1 : 0;
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("episode_id", ep.getEpisodeId());
             item.put("episode_no", ep.getEpisodeNo());
@@ -192,6 +303,11 @@ public class WorkService {
             item.put("review_status", ep.getReviewStatus());
             item.put("review_status_name", ShortLabels.reviewStatusName(ep.getReviewStatus()));
             item.put("film_duration_sec", ep.getFilmDurationSec());
+            item.put("shot_total", epShots.size());
+            item.put("shot_frame_ready", shotFrameReady);
+            item.put("shot_ready", shotReady);
+            item.put("shot_spoken_ready", shotSpokenReady);
+            item.put("film_expired_flag", filmExpiredFlag);
             episodeList.add(item);
         }
         Map<String, Object> result = summary(work);
@@ -202,6 +318,11 @@ public class WorkService {
         result.put("cost_budget_cent", work.getCostBudgetCent());
         result.put("skip_level_check_flag", work.getSkipLevelCheckFlag());
         result.put("quality_threshold_score", work.getQualityThresholdScore());
+        result.put("outline_count", outlineCount);
+        result.put("character_count", characterCount);
+        result.put("scene_card_count", sceneCardCount);
+        result.put("look_total", lookTotal);
+        result.put("look_locked", lookLocked);
         result.put("episode_list", episodeList);
         return Responses.ok(result);
     }

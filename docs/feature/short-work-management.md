@@ -58,7 +58,10 @@
 4. 已合成成片的剧集执行删除时返回业务错误码 `4006` 并给出可读原因，数据未被删除。
 5. 任意用户携带他人 `work_id` 调用详情 / 更新 / 删除接口，一律返回 `4003`，且不泄漏该作品是否存在。
 6. 用户端首页是工作台：顶行回答下一步，旁边只有一个小字链接「看示例流程」（本账号拥有样例作品 `w-dm-005` 时打开它；没有则留在首页并说明当前账号没有示例作品，避免越权打开他人作品触发 `4003` 退出登录）；
-   最近作品带集进度和「继续创作」，剧名、状态、进度各占一行，不把「成片 2/3」截成半截；
+   最近作品卡片统一按单集六环节链路（`剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片`）折算全剧总进度，剧名、状态、进度各占一行，展示 `总进度 X% · 已成片 M/N 集` 与单调进度条（不在「剧本 X/Y」与「成片 X/Y」两套口径间切换）；
+   进度条下方按剧集展示当前所处环节标签（如 `第1集：已成片`、`第2集：首帧 2/6`、`第3集：待写剧本`；总集数超过 4 集时将连续处于 `已成片` 或 `待写剧本` 的剧集合并为区间如 `第1-6集：已成片`、`第9-24集：待写剧本`，超出 5 组时尾部收折为 `其余 K 集`），点击任一标签直达该集对应工作区；
+   主操作按钮指向优先待处理或首个未成片剧集的当前环节（`去写剧本` / `去定妆` / `去拆分镜` / `去出首帧` / `去生成视频` / `去合成成片` / `去看成片`；多集作品未全部成片时冠以 `第N集 · ` 前缀）；
+   卡片作品状态按各集实时进度展示：仅在存在 `compose_status=COMPOSING` 剧集时显示「合成中」；全部剧集成片有效就绪且未进入审核时显示「已成片」；若镜头未齐备（`shot_ready < shot_total`）或成片已过期（`film_expired_flag=1`），回落至对应前置环节，不按历史 `compose_status=READY` 计入已成片；
    有作品时首页仍放「新建作品」，链到 `/works?create=1`。
    生成失败、待审核、审核驳回以小卡片深链到该剧任务或成片，作品名和状态分行，不把「生成失败」从中间拆开；
    失败原因用创作者能读的中文（例如同时记账冲突不展示 `quota concurrent update`）。
@@ -92,7 +95,9 @@
       "work_status": "PRODUCING", "work_status_name": "制作中",
       "episode_count": 30, "episode_duration_sec": 90,
       "visual_style": "MODERN_URBAN", "aspect_ratio": "VERTICAL_9_16",
+      "outline_count": 30,
       "character_count": 6, "scene_card_count": 9,
+      "look_total": 15, "look_locked": 14,
       "template_id": "tpl-001", "template_name": "复仇逆袭 · 当众打脸型",
       "overall_quality_score": 82,
       "cost_spent_cent": 128650, "cost_budget_cent": 300000,
@@ -100,8 +105,8 @@
       "episode_list": [
         { "episode_id": "e-20001", "episode_no": 1, "episode_title": "退婚",
           "script_status": "READY", "storyboard_status": "READY",
-          "shot_total": 42, "shot_ready": 42,
-          "dubbing_status": "READY", "compose_status": "READY",
+          "shot_total": 42, "shot_frame_ready": 42, "shot_ready": 42, "shot_spoken_ready": 42,
+          "dubbing_status": "READY", "compose_status": "READY", "film_expired_flag": 0,
           "review_status": "APPROVED", "film_duration_sec": 88,
           "gate_status_map": { "G1_SCRIPT": "PASSED", "G2_STORYBOARD": "PASSED",
                                "G3_VISUAL": "FORCE_PASSED", "G4_FILM": "PASSED" },

@@ -67,9 +67,16 @@
         .home-next a { margin-left: 12px; }
         .wb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
         .wb-card h3 { margin: 0; font-size: 14px; }
+        .wb-status { margin-top: 4px; font-size: 13px; color: var(--sub); }
+        .wb-progress-text { margin: 4px 0 6px; font-size: 13px; color: var(--sub); }
         .wb-meta { margin: 6px 0 8px; font-size: 12px; color: var(--sub); }
-        .wb-bar { height: 6px; background: var(--border, #e4e7ed); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+        .wb-bar { height: 6px; background: var(--border, #e4e7ed); border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
         .wb-bar > span { display: block; height: 100%; background: var(--brand, #1677ff); }
+        .wb-episodes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .wb-ep { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; line-height: 1.4; text-decoration: none; border: 1px solid var(--border, #e4e7ed); background: #f8fafc; color: #334155; }
+        .wb-ep.done { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+        .wb-ep.active { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+        .wb-ep.todo { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
         .wb-label { margin: 16px 0 8px; font-size: 13px; color: var(--sub); }
         @media (max-width: 640px) {
           .wb-grid { grid-template-columns: 1fr; }
@@ -80,21 +87,39 @@
       <div class="wb-grid">
         <div class="card">
           <h3>退婚三年后她成了首富</h3>
-          <div class="wb-meta">制作中 · 成片 6/30</div>
-          <div class="wb-bar" aria-hidden="true"><span style="width:20%"></span></div>
-          <a class="btn btn-primary btn-sm" href="storyboard.html">继续创作</a>
+          <div class="wb-status">制作中</div>
+          <div class="wb-progress-text">总进度 23% · 已成片 6/30 集</div>
+          <div class="wb-bar" aria-hidden="true"><span style="width:23%"></span></div>
+          <div class="wb-episodes">
+            <a class="wb-ep done" href="compose-export.html">第1-6集：已成片</a>
+            <a class="wb-ep active" href="storyboard.html">第7集：视频 3/8</a>
+            <a class="wb-ep active" href="script-studio.html">第8集：剧本</a>
+            <a class="wb-ep todo" href="script-studio.html">第9-30集：待写剧本</a>
+          </div>
+          <a class="btn btn-primary btn-sm" href="storyboard.html">第7集 · 去生成视频</a>
         </div>
         <div class="card">
           <h3>总裁的隐婚小娇妻</h3>
-          <div class="wb-meta">剧本中 · 剧本 0/24</div>
+          <div class="wb-status">草稿</div>
+          <div class="wb-progress-text">总进度 0% · 已成片 0/3 集</div>
           <div class="wb-bar" aria-hidden="true"><span style="width:0%"></span></div>
-          <a class="btn btn-primary btn-sm" href="script-studio.html">继续创作</a>
+          <div class="wb-episodes">
+            <a class="wb-ep todo" href="script-studio.html">第1集：待写剧本</a>
+            <a class="wb-ep todo" href="script-studio.html">第2集：待写剧本</a>
+            <a class="wb-ep todo" href="script-studio.html">第3集：待写剧本</a>
+          </div>
+          <a class="btn btn-primary btn-sm" href="script-studio.html">第1集 · 去写剧本</a>
         </div>
         <div class="card">
           <h3>悬疑法医手记</h3>
-          <div class="wb-meta">审核中 · 成片 2/2</div>
+          <div class="wb-status">审核中</div>
+          <div class="wb-progress-text">总进度 100% · 已成片 2/2 集</div>
           <div class="wb-bar" aria-hidden="true"><span style="width:100%"></span></div>
-          <a class="btn btn-primary btn-sm" href="compose-export.html">继续创作</a>
+          <div class="wb-episodes">
+            <a class="wb-ep done" href="compose-export.html">第1集：已成片</a>
+            <a class="wb-ep done" href="compose-export.html">第2集：已成片</a>
+          </div>
+          <a class="btn btn-primary btn-sm" href="compose-export.html">去看成片</a>
         </div>
       </div>
 
@@ -114,12 +139,15 @@
 
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        本页用已有接口，不新增字段：<code>GET /bgssai/user/short-works/list</code>、
-        <code>GET /bgssai/user/short-works/detail</code>（集进度取 <code>episode_list</code>）、
+        本页使用已有接口：<code>GET /bgssai/user/short-works/list</code>、
+        <code>GET /bgssai/user/short-works/detail</code>（返回作品级 <code>outline_count</code>、
+        <code>look_total</code>、<code>look_locked</code> 与 <code>episode_list</code> 中每集
+        <code>shot_total</code>、<code>shot_frame_ready</code>、<code>shot_ready</code>、
+        <code>shot_spoken_ready</code>、<code>film_expired_flag</code>）、
         <code>GET /bgssai/user/ai-tasks/list?task_status=FAILED&amp;work_id=</code>。
         没有 <code>cover_url</code> 时不画封面。有作品时也放「新建作品」，链到
         <a href="work-create.html">work-create.html</a>（应用内为 <code>/works?create=1</code>）。
-        剧名、状态、进度分行，不把进度截成「成片 2/」。需要处理的卡片把作品名和状态分开，失败原因用中文。
+        剧名、状态、总进度与分集环节标签分行展示；总进度按单集六环节链路（剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片）统一折算并附带「已成片 M/N 集」，超过 4 集时连续已完成或待写剧本区间折叠展示。需要处理的卡片把作品名和状态分开，失败原因用中文。
         没有待处理项时不显示「需要处理」。身份只在顶栏，不在本页再放登录身份。
         「看示例流程」：本账号作品里有样例《悬疑法医手记》（<code>w-dm-005</code>）时打开该作品；
         没有时留在首页并提示当前账号没有示例作品。越权打开他人作品会返回 <code>4003</code> 并退出登录，

@@ -67,13 +67,58 @@
 }
 
 .home-work-status,
-.home-work-progress-label,
 .home-attention-status {
   margin-top: 4px;
   color: #334155;
   font-size: 13px;
   line-height: 1.4;
   white-space: nowrap;
+}
+
+.home-work-progress-label {
+  margin-top: 4px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.home-episode-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.home-episode-chip {
+  appearance: none;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.home-episode-chip.is-done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.home-episode-chip.is-active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.home-episode-chip.is-todo {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #64748b;
 }
 
 .home-work-actions {
