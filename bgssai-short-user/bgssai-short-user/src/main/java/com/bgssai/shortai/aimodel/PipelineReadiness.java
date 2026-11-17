@@ -29,6 +29,7 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
 
 /**
  * Before a generation is queued, checks the text, image and voice models the
@@ -56,6 +57,8 @@ public class PipelineReadiness {
     private final ConcurrentHashMap<String, Cached> cache = new ConcurrentHashMap<>();
     @Autowired(required = false)
     private UserAiModelKeyService userAiModelKeyService;
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
 
     @Autowired
     public PipelineReadiness(AiModelResolveService models, SysSecretReader secrets,
@@ -84,19 +87,45 @@ public class PipelineReadiness {
             return;
         }
         String normalizedAbility = taskType.trim().toUpperCase(Locale.ROOT);
+        String resolvedUserId = userAiModelKeyService != null
+                ? userAiModelKeyService.currentUserOrScopeUserId()
+                : com.bgssai.shortai.common.aop.UserContext.getUserId();
+        if (userAiProviderKeyService != null && resolvedUserId != null && !resolvedUserId.isBlank()) {
+            if (selectedModel != null && !selectedModel.isBlank()) {
+                try {
+                    AiModelConfig resolved = models.resolveForUser(normalizedAbility, selectedModel, resolvedUserId);
+                    if (UserAiModelSupport.isUserKeyModel(resolved)) {
+                        return;
+                    }
+                } catch (BizException ignored) {
+                    // Fall through to standard checks
+                }
+            }
+        }
         if (userAiModelKeyService != null) {
             String userId = userAiModelKeyService.currentUserOrScopeUserId();
             boolean userKeyRequested = UserAiModelSupport.isUserKeyCode(selectedModel);
             boolean onlyUserKey = userId != null && userAiModelKeyService.isOnlyUserKeyMode(userId);
             if (userKeyRequested || onlyUserKey) {
-                userAiModelKeyService.assertAbilityReady(userId, normalizedAbility, selectedModel);
-                return;
+                try {
+                    userAiModelKeyService.assertAbilityReady(userId, normalizedAbility, selectedModel);
+                    return;
+                } catch (BizException ex) {
+                    if (userAiProviderKeyService != null && userAiProviderKeyService.hasAnyActiveProviderKey(userId)) {
+                        return;
+                    }
+                    throw ex;
+                }
             }
         }
         String key = TokenHubClientSupport.resolveApiKey(secrets, TokenHubClientSupport.HUB_CN, null);
         if (key.isBlank()) {
             if (secrets != null && secrets.has(SysSecretReader.AI_OPENAI_COMPAT_API_KEY)) {
                 assertCompany(taskType.trim().toUpperCase(Locale.ROOT));
+                return;
+            }
+            if (userAiProviderKeyService != null && resolvedUserId != null && !resolvedUserId.isBlank()
+                    && userAiProviderKeyService.hasAnyActiveProviderKey(resolvedUserId)) {
                 return;
             }
             throw blocked("模型网关未配置，大纲、剧本、分镜、定妆、图片和配音现在都不能开始，请稍后重试");

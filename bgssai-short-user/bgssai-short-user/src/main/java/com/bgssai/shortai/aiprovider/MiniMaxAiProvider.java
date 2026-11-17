@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,9 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
 import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 /**
  * provider_code=MINIMAX — 海螺视频 / 图像 / 文本 / 语音 / 识别 / 音乐。
@@ -35,6 +39,13 @@ public class MiniMaxAiProvider implements AiProvider {
     private static final Logger log = LoggerFactory.getLogger(MiniMaxAiProvider.class);
 
     private final SysSecretReader secretReader;
+
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
 
@@ -66,10 +77,28 @@ public class MiniMaxAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        if (request == null || request.getModel() == null || !UserAiModelSupport.isUserKeyModel(request.getModel())) {
+        if (request == null || request.getModel() == null) {
+            throw DirectVendorGuard.rejected(CODE);
+        }
+        Optional<ResolvedProviderKey> providerByok = DirectVendorGuard.isExplicitUserModelKey(request.getModel())
+                ? Optional.empty()
+                : DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        if (providerByok.isPresent() && providerByok.get().apiKey() != null
+                && !providerByok.get().apiKey().isBlank()) {
+            return executeWithCredentials(request, providerByok.get());
+        }
+        if (!UserAiModelSupport.isUserKeyModel(request.getModel())) {
             throw DirectVendorGuard.rejected(CODE);
         }
         return executeUserKey(request);
+    }
+
+    private AiProviderResult executeWithCredentials(AiProviderRequest request, ResolvedProviderKey key) {
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String effectiveUrl = UserAiProviderCatalog.resolveEffectiveBaseUrl(key.baseUrl(), CODE);
+        String apiRoot = UserAiModelSupport.stripTrailingPath(effectiveUrl, "/v1");
+        return dispatchUserKey(request, cfg, key.userId(),
+                UserAiModelSupport.PROVIDER_KEY_PREFIX + "minimax", apiRoot, key.apiKey());
     }
 
     private AiProviderResult executeUserKey(AiProviderRequest request) {
@@ -80,6 +109,11 @@ public class MiniMaxAiProvider implements AiProvider {
         String baseUrl = UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE);
         String apiRoot = UserAiModelSupport.stripTrailingPath(baseUrl, "/v1");
         String apiKey = userAiModelKeyService.requirePlainApiKey(userId, keyId);
+        return dispatchUserKey(request, cfg, userId, keyId, apiRoot, apiKey);
+    }
+
+    private AiProviderResult dispatchUserKey(AiProviderRequest request, Map<String, Object> cfg,
+            String userId, String keyId, String apiRoot, String apiKey) {
         String ability = request.getAbilityType() == null ? ""
                 : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
         String modelCode = ProviderHttp.firstNonBlank(request.getModel().getModelCode(), defaultModel(ability));

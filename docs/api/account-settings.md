@@ -208,3 +208,47 @@
 
 返回 `{ "result": { "only_user_key": 1 } }`。
 
+## GET /bgssai/user/ai-keys（兼容 GET /api/user/ai-keys）
+
+返回当前用户对 11 个受支持厂商（`DEEPSEEK`、`MINIMAX`、`KLING`、`DASHSCOPE`、`ZHIPU`、`MOONSHOT`、`VOLCENGINE`、`HUNYUAN`、`OPENAI`、`ANTHROPIC`、`GOOGLE`）的脱敏密钥状态，不返回明文密钥：
+
+```json
+{
+  "result": {
+    "items": [
+      {
+        "provider_code": "MINIMAX",
+        "provider_name": "MiniMax",
+        "default_base_url": "https://api.minimaxi.com",
+        "supports_ak_sk": false,
+        "auth_mode": "API_KEY",
+        "configured": true,
+        "enabled": true,
+        "masked_key": "mm-k****7890",
+        "has_secret_key": false,
+        "base_url": "https://api.minimax.io",
+        "updated_at": "2026-11-17T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+## POST /bgssai/user/ai-keys（兼容 POST /api/user/ai-keys）
+
+保存或更新指定厂商的 BYOK 凭据。`provider_code` 支持 `KLINGAI` 别名自动归一化为 `KLING`，可灵支持单 `api_key`（Bearer）及 `access_key` + `secret_key`（HS256 JWT）两种模式；会校验空白裁剪、拒绝脱敏占位符（`****`）并校验 `base_url`（公网 HTTPS）。启用后运行时直连对应厂商并跳过 BGSSAI 平台额度检查与扣费。
+
+```json
+{
+  "provider_code": "KLINGAI",
+  "access_key": "ak-xxx",
+  "secret_key": "sk-xxx",
+  "base_url": "https://api.klingai.com",
+  "enabled": true
+}
+```
+
+## DELETE /bgssai/user/ai-keys/{providerCode}（兼容 DELETE /api/user/ai-keys/{providerCode}）
+
+删除当前用户的指定厂商密钥配置（`providerCode` 自动归一化 `KLINGAI` -> `KLING`），返回 `{ "result": { "provider_code": "KLING", "deleted": true, "configured": false } }`。
+

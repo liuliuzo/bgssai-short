@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,9 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 /**
  * provider_code=DEEPSEEK (DeepSeek API) for user-configured API keys.
@@ -30,7 +34,14 @@ public class DeepSeekAiProvider implements AiProvider {
     @Autowired(required = false)
     private UserAiModelKeyService userAiModelKeyService;
 
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
     private final ProviderHttp.Client http;
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
 
     public DeepSeekAiProvider() {
         this.http = new ProviderHttp.JdkClient();
@@ -51,7 +62,11 @@ public class DeepSeekAiProvider implements AiProvider {
         if (request == null || request.getModel() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }
-        if (!UserAiModelSupport.isUserKeyModel(request.getModel())) {
+        Optional<ResolvedProviderKey> providerByok = DirectVendorGuard.isExplicitUserModelKey(request.getModel())
+                ? Optional.empty()
+                : DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        boolean allowLegacyModelKey = UserAiModelSupport.isUserKeyModel(request.getModel());
+        if (providerByok.isEmpty() && !allowLegacyModelKey) {
             throw DirectVendorGuard.rejected(CODE);
         }
         String ability = request.getAbilityType() == null ? ""
@@ -61,11 +76,24 @@ public class DeepSeekAiProvider implements AiProvider {
                     "DeepSeek 仅支持文本模型，请为当前能力配置其他供应商密钥或切换混合模式");
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        String userId = ShortJson.text(cfg.get("user_id"));
-        String keyId = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("user_key_id")),
-                request.getModel().getModelId());
-        String baseUrl = UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE);
-        String apiKey = userAiModelKeyService.requirePlainApiKey(userId, keyId);
+        String userId;
+        String keyId;
+        String baseUrl;
+        String apiKey;
+        if (providerByok.isPresent() && providerByok.get().apiKey() != null
+                && !providerByok.get().apiKey().isBlank()) {
+            ResolvedProviderKey key = providerByok.get();
+            userId = key.userId();
+            keyId = UserAiModelSupport.PROVIDER_KEY_PREFIX + "deepseek";
+            baseUrl = ProviderHttp.trimSlash(UserAiProviderCatalog.resolveEffectiveBaseUrl(key.baseUrl(), CODE));
+            apiKey = key.apiKey();
+        } else {
+            userId = ShortJson.text(cfg.get("user_id"));
+            keyId = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("user_key_id")),
+                    request.getModel().getModelId());
+            baseUrl = UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE);
+            apiKey = userAiModelKeyService.requirePlainApiKey(userId, keyId);
+        }
         String modelCode = ProviderHttp.firstNonBlank(request.getModel().getModelCode(), "deepseek-chat");
         int timeoutSec = ProviderHttp.timeoutSec(request, 180);
 

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,9 +180,19 @@ public class UsageUserService {
             item.put("ability_type", row.getAbilityType());
             item.put("ability_type_name", ABILITY_NAME.getOrDefault(row.getAbilityType(), row.getAbilityType()));
             if (UserAiModelSupport.isUserKeyCode(row.getModelCode())) {
+                String code = row.getModelCode();
                 String name = userAiModelKeyService == null ? null
-                        : userAiModelKeyService.displayNameOfKeyId(userId, row.getModelCode());
-                String display = name == null || name.isBlank() ? row.getModelCode() : name;
+                        : userAiModelKeyService.displayNameOfKeyId(userId, code);
+                if ((name == null || name.isBlank()) && code != null
+                        && code.toLowerCase(Locale.ROOT).startsWith(UserAiModelSupport.PROVIDER_KEY_PREFIX)) {
+                    com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog.ProviderSpec spec =
+                            com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog.get(
+                                    code.substring(UserAiModelSupport.PROVIDER_KEY_PREFIX.length()));
+                    if (spec != null) {
+                        name = spec.providerName();
+                    }
+                }
+                String display = name == null || name.isBlank() ? code : name;
                 item.put("model_code", row.getModelCode());
                 item.put("display_name", display);
                 item.put("model_name", display);

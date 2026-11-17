@@ -81,3 +81,9 @@
 3. 可灵配置支持 Access Key + Secret Key 双密钥录入与掩码展示（`ak**** / sk****`），运行时动态签发 HS256 JWT 完成连通测试与图片/视频/配音生成。
 4. `MINIMAX` 覆盖 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 六种能力；`PIXVERSE` 覆盖 `VIDEO`（含图生/首尾帧过渡）；`DEEPSEEK` 覆盖 `TEXT`（含 `deepseek-chat` 与 `deepseek-reasoner`）。
 5. 多供应商混用（如 DeepSeek 文本 + 可灵或 PixVerse 视频 + MiniMax 配音与 BGM）在同一作品全流程可执行通过，任务与对账费用 `cost_cent = 0`。
+
+## 5. 厂商级 API Key（`user_ai_provider_key`）
+
+- 接口：`GET /bgssai/user/ai-keys`、`POST /bgssai/user/ai-keys`、`DELETE /bgssai/user/ai-keys/{providerCode}`（及 `/api/user/ai-keys` 兼容路径）。
+- 支持厂商：`DEEPSEEK`、`MINIMAX`、`KLING`（接受别名 `KLINGAI`，支持单 Bearer `api_key` 及 `access_key` + `secret_key` HS256 JWT）、`DASHSCOPE`、`ZHIPU`、`MOONSHOT`、`VOLCENGINE`、`HUNYUAN`、`OPENAI`、`ANTHROPIC`、`GOOGLE`。
+- 运行时与计费：匹配到已启用的厂商密钥时直连用户配置凭据（含可选 `base_url`），并跳过平台额度校验与扣费。

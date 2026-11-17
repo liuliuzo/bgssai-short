@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bgssai.shortai.common.exception.BizException;
@@ -16,6 +18,9 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 @Component
 public class AiProviderRegistry {
@@ -32,12 +37,25 @@ public class AiProviderRegistry {
 
     private final Map<String, AiProvider> byCode = new HashMap<>();
 
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
+    @Autowired
     public AiProviderRegistry(List<AiProvider> providers) {
         if (providers != null) {
             for (AiProvider provider : providers) {
                 byCode.put(provider.providerCode(), provider);
             }
         }
+    }
+
+    public AiProviderRegistry(List<AiProvider> providers, UserAiProviderKeyService userAiProviderKeyService) {
+        this(providers);
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
     }
 
     public boolean supports(String providerCode) {
@@ -69,9 +87,32 @@ public class AiProviderRegistry {
         Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
         AiProvider direct = byCode.get(code);
 
-        if (UserAiModelSupport.isUserKeyModel(model)) {
+        if (DirectVendorGuard.isExplicitUserModelKey(model)) {
             if (direct != null) {
                 return direct;
+            }
+            AiProvider byokDirect = resolveDirectByokProvider(code, model.getAbilityType());
+            if (byokDirect != null) {
+                return byokDirect;
+            }
+            throw new BizException(CommonErrorCode.RULE_REJECT, "unknown user provider_code: " + code);
+        }
+
+        Optional<ResolvedProviderKey> providerByok = DirectVendorGuard.resolveProviderByok(
+                model, Map.of(), userAiProviderKeyService);
+        if (providerByok.isPresent()) {
+            AiProvider byokDirect = resolveDirectByokProvider(
+                    providerByok.get().providerCode(), code, model.getAbilityType());
+            if (byokDirect != null) {
+                return byokDirect;
+            }
+            throw new BizException(CommonErrorCode.RULE_REJECT, "unknown user provider_code: " + code);
+        }
+
+        if (UserAiModelSupport.isUserKeyModel(model)) {
+            AiProvider byokDirect = resolveDirectByokProvider(code, model.getAbilityType());
+            if (byokDirect != null) {
+                return byokDirect;
             }
             throw new BizException(CommonErrorCode.RULE_REJECT, "unknown user provider_code: " + code);
         }
@@ -117,6 +158,53 @@ public class AiProviderRegistry {
         } catch (BizException ex) {
             return false;
         }
+    }
+
+    private AiProvider resolveDirectByokProvider(String rawCode, String abilityType) {
+        return resolveDirectByokProvider(
+                UserAiProviderCatalog.normalizeRuntimeProviderCode(rawCode), rawCode, abilityType);
+    }
+
+    private AiProvider resolveDirectByokProvider(String canonicalCode, String rawCode, String abilityType) {
+        String raw = rawCode == null ? "" : rawCode.trim().toUpperCase(Locale.ROOT);
+        String canonical = canonicalCode == null ? "" : canonicalCode.trim().toUpperCase(Locale.ROOT);
+        String ability = abilityType == null ? "" : abilityType.trim().toUpperCase(Locale.ROOT);
+        if ("KLING".equals(canonical) || "KLINGAI".equals(raw)) {
+            return byCode.get(KlingAiProvider.CODE);
+        }
+        if ("MINIMAX".equals(canonical)) {
+            return byCode.get(MiniMaxAiProvider.CODE);
+        }
+        if ("DEEPSEEK".equals(canonical)) {
+            return byCode.get(DeepSeekAiProvider.CODE);
+        }
+        if ("VOLCENGINE".equals(canonical)) {
+            if ("VIDEO".equals(ability) || "SEEDANCE".equals(raw)) {
+                AiProvider seedance = byCode.get(SeedanceAiProvider.CODE);
+                if (seedance != null) {
+                    return seedance;
+                }
+            }
+            return byCode.get(OpenAiCompatibleAiProvider.CODE);
+        }
+        if ("GOOGLE".equals(canonical)) {
+            if ("VIDEO".equals(ability) || "VEO".equals(raw)) {
+                AiProvider veo = byCode.get(VeoAiProvider.CODE);
+                if (veo != null) {
+                    return veo;
+                }
+            }
+            return byCode.get(GoogleGeminiAiProvider.CODE);
+        }
+        if ("ANTHROPIC".equals(canonical)) {
+            return byCode.get(AnthropicAiProvider.CODE);
+        }
+        if ("DASHSCOPE".equals(canonical) || "ZHIPU".equals(canonical)
+                || "MOONSHOT".equals(canonical) || "HUNYUAN".equals(canonical)
+                || "OPENAI".equals(canonical)) {
+            return byCode.get(OpenAiCompatibleAiProvider.CODE);
+        }
+        return byCode.get(raw);
     }
 
     private static boolean isAllowDirect(Map<String, Object> cfg) {

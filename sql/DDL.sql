@@ -1464,6 +1464,7 @@ CREATE TABLE `short_look_material` (
   KEY `idx_short_look_material_card` (`card_id`, `view_angle`, `deleted_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定妆知识库素材';
 
+DROP TABLE IF EXISTS `user_ai_provider_key`;
 DROP TABLE IF EXISTS `user_ai_model_key`;
 DROP TABLE IF EXISTS `user_ai_setting`;
 
@@ -1505,3 +1506,18 @@ CREATE TABLE `user_ai_model_key` (
   UNIQUE KEY `uk_user_ai_model_key_id` (`key_id`),
   KEY `idx_user_ai_model_key_user_ability` (`user_id`, `ability_type`, `is_enabled`, `del_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户自定义模型密钥表';
+
+CREATE TABLE IF NOT EXISTS `user_ai_provider_key` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '用户标识（对应 sys_user.user_id）',
+  `provider_code` VARCHAR(64) NOT NULL COMMENT '厂商编码（DEEPSEEK/MINIMAX/KLING/DASHSCOPE/ZHIPU/MOONSHOT/VOLCENGINE/HUNYUAN/OPENAI/ANTHROPIC/GOOGLE）',
+  `api_key` VARCHAR(1024) DEFAULT NULL COMMENT 'API Key（单 Key 或 Bearer Token）',
+  `access_key` VARCHAR(512) DEFAULT NULL COMMENT 'Access Key（如可灵 AK/SK 模式）',
+  `secret_key` VARCHAR(1024) DEFAULT NULL COMMENT 'Secret Key（如可灵 AK/SK 模式）',
+  `base_url` VARCHAR(512) DEFAULT NULL COMMENT '可选自定义接口根地址',
+  `enabled` TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用：0-停用，1-启用',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_provider` (`user_id`, `provider_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户自有厂商 API Key 配置表';

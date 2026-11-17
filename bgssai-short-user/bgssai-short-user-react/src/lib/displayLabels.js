@@ -235,6 +235,7 @@ export function visibleFailReason(row) {
   const code = row.fail_reason_code
   if (code == null || String(code).trim() === '') return ''
   const isUserKey = String(row.model_code || '').trim().toLowerCase().startsWith('umk-')
+    || String(row.model_code || '').trim().toLowerCase().startsWith('bpk-')
     || row.credential_source === 'USER_KEY'
   return friendlyFailReason(row.fail_reason, { preserveVendor: isUserKey })
 }

@@ -23,7 +23,7 @@ public class CorsConfig {
     @Value("${bgssai.cors.allowed-origins:https://app.example.com}")
     private String allowedOrigins;
 
-    private static final List<String> METHODS = Arrays.asList("GET", "POST", "OPTIONS");
+    private static final List<String> METHODS = Arrays.asList("GET", "POST", "DELETE", "OPTIONS");
 
     private static final List<String> HEADERS = Arrays.asList(
         "Content-Type",

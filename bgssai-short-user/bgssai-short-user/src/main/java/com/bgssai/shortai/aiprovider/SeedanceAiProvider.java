@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,9 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedProviderKey;
 
 /**
  * provider_code=SEEDANCE — 火山方舟 Seedance 视频（文生 / 图生）。
@@ -30,6 +34,13 @@ public class SeedanceAiProvider implements AiProvider {
     private final SysSecretReader secretReader;
     private final ProviderHttp.Client http;
     private final ProviderHttp.Sleeper sleeper;
+
+    @Autowired(required = false)
+    private UserAiProviderKeyService userAiProviderKeyService;
+
+    void setUserAiProviderKeyService(UserAiProviderKeyService userAiProviderKeyService) {
+        this.userAiProviderKeyService = userAiProviderKeyService;
+    }
 
     @Autowired
     public SeedanceAiProvider(SysSecretReader secretReader) {
@@ -53,7 +64,33 @@ public class SeedanceAiProvider implements AiProvider {
 
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        throw DirectVendorGuard.rejected(CODE);
+        if (request == null || request.getModel() == null) {
+            throw DirectVendorGuard.rejected(CODE);
+        }
+        Optional<ResolvedProviderKey> byok = DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        if (byok.isEmpty() || byok.get().apiKey() == null || byok.get().apiKey().isBlank()) {
+            throw DirectVendorGuard.rejected(CODE);
+        }
+        if (!"VIDEO".equalsIgnoreCase(request.getAbilityType())) {
+            throw new BizException(CommonErrorCode.RULE_REJECT,
+                    "SEEDANCE unsupported ability: " + request.getAbilityType());
+        }
+        ResolvedProviderKey key = byok.get();
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String base = ProviderHttp.trimSlash(
+                UserAiProviderCatalog.resolveEffectiveBaseUrl(key.baseUrl(), "VOLCENGINE"));
+        int timeoutSec = ProviderHttp.timeoutSec(request, 600);
+        try {
+            return video(base, key.apiKey(), cfg, request, timeoutSec);
+        } catch (BizException ex) {
+            throw ex;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT, "seedance interrupted");
+        } catch (Exception ex) {
+            log.warn("SEEDANCE BYOK call failed", ex);
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, safe(ex));
+        }
     }
 
     AiProviderResult executeLegacy(AiProviderRequest request) {

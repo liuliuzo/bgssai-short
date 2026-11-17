@@ -361,6 +361,12 @@ public class ShortAiTaskWorker {
             return ImageConditionedVideoProtocol.DEADLINE_SEC;
         }
         int base;
+        boolean scopedTemp = false;
+        if (com.bgssai.shortai.billing.UsageScope.current() == null
+                && task.getUserId() != null && !task.getUserId().isBlank()) {
+            com.bgssai.shortai.billing.UsageScope.set(task.getUserId(), task.getWorkId(), task.getTaskId());
+            scopedTemp = true;
+        }
         try {
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
             Integer t = model.getTimeoutSec();
@@ -368,6 +374,10 @@ public class ShortAiTaskWorker {
         } catch (RuntimeException ex) {
             // 模型行被停用 / 删除时仍要能回收，走兜底上限。
             base = DEFAULT_TIMEOUT_SEC;
+        } finally {
+            if (scopedTemp) {
+                com.bgssai.shortai.billing.UsageScope.clear();
+            }
         }
         if ("VIDEO".equals(task.getTaskType())) {
             return Math.max(base, 900) * 2 + 120;
