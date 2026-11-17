@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "c902ed17b62f8ddd9fa8236a0f598606a32cea7af66b6bb309c2b315cfcfa0f6",
-  "code_contract_digest": "d16d72fb1c1722e675922d8f3b0f3d71f309dd90f4fbb6a58bbb9d1d033a4685",
+  "prototype_bundle_digest": "1a2a22584e3191fcd300ee3fb7592db5d105a97aaeb95257cd0d251842d9f351",
+  "code_contract_digest": "8b2e199e4001e9c68b540f1b2e21185001f267dc3d0c820325ab259e49750d91",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -573,7 +573,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/LibraryLookPicker.jsx",
-      "sha256": "cea23a4062629fd485856b2882db4f07c06e0dd218c2884b401e3058339d0973"
+      "sha256": "6b286e8c569cfc84a158f3e734124b4753be3de494d9a925f7407664a00e4fa2"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/LookLibraryPage.jsx",
@@ -597,7 +597,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookGroups.test.js",
-      "sha256": "bbd702894f06e60e16a4138d03e86e0de481540b307500f84049f8c4a2970621"
+      "sha256": "c13b206d2a4f159a1bbb7cce26479158173f2c151a4045180d62a4fdd1b591f8"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookPoster.js",
@@ -681,7 +681,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "f55b6110909534d3d463d0e9b3ad132f61d9d0aa2eb8ee5d17688ff852bf560c"
+      "sha256": "0a1e98d695de7196a5c0720aad14f30cce906392f2469c5dad39c2bf34f9b664"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -2199,7 +2199,7 @@
     },
     {
       "path": "docs/demo-static/web/user/character-bible.html",
-      "sha256": "2aa297e75d37e4275c41da03c20f9dad0e06d1b76713a6d8f15c3c349e442fa4",
+      "sha256": "3cf5ea619933bdb6b495f6dac8c469a8666c57f9ca3125b374892092f3591890",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
