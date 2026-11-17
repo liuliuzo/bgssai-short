@@ -326,7 +326,7 @@ export function buildProductionFlow({
       stepNo: 3,
       tone: 'info',
       title: `第 3 步：生成本集镜头视频（还差 ${remaining} 镜，已完成 ${videoReadyCount}/${totalShots} 镜）`,
-      description: '在「分镜与视频」页可先点「出草图确认构图」，或直接点「一键生成待出视频镜头」批量产出视频。',
+      description: '在「分镜与视频」页可直接点击「生成首帧」或「生成视频」批量产出。',
       primaryLabel: '去分镜生成视频',
       primaryTab: 'storyboard',
     }

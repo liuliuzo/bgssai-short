@@ -33,6 +33,9 @@ import {
   shotTimingLabel,
   shotVideoDialogProps,
   canvasSwitchState,
+  selectPendingFrameShotIds,
+  storyboardPrimaryPlan,
+  buildAssetBindPayload,
   showSettledEmpty,
   taskRowsFromResult,
   FIRST_FRAME_CAPTION,
@@ -138,7 +141,7 @@ test('known scene replaces 未写清场景 and does not invent one', () => {
 })
 
 test('asset binder shows that cards exist when nothing is selected yet', () => {
-  assert.equal(assetBinderPlaceholder('角色', 4), '绑定角色（4）')
+  assert.equal(assetBinderPlaceholder('角色', 4), '选择角色（共 4 项）')
   assert.equal(assetBinderPlaceholder('场景', 0), '还没有场景')
   const line = assetLibrarySummary({
     characters: ['沈知微', '顾景深'],
@@ -238,4 +241,57 @@ test('voice summary does not call pending rows 未对齐 0, and subtitle times a
   assert.doesNotMatch(summary, /未对齐 0/)
   assert.equal(subtitleClock(1500), '1.5 秒')
   assert.equal(subtitleClock(null), '—')
+})
+
+test('pending frame selection and primary plan auto-target and collapse cleanly', () => {
+  const shots = [
+    { shot_id: 's1', shot_status: 'VIDEO_READY', video_url: 'https://cdn.example/1.mp4', first_frame_url: 'https://cdn.example/1.png' },
+    { shot_id: 's2', shot_status: 'IMAGE_READY', first_frame_url: 'https://cdn.example/2.png' },
+    { shot_id: 's3', shot_status: 'PENDING', blocked_flag: 0 },
+    { shot_id: 's4', shot_status: 'PENDING', blocked_flag: 1 },
+    { shot_id: 's5', shot_status: 'IMAGE_GENERATING', blocked_flag: 0 },
+    { shot_id: 's6', shot_status: 'VIDEO_GENERATING', blocked_flag: 0 },
+  ]
+  assert.deepEqual(selectPendingFrameShotIds(shots), ['s3'])
+
+  const activePlan = storyboardPrimaryPlan({ rows: shots, selected: [] })
+  assert.equal(activePlan.allVideosReady, false)
+  assert.equal(activePlan.compactDoneMode, false)
+  assert.deepEqual(activePlan.frameTargetIds, ['s3'])
+  assert.deepEqual(activePlan.videoTargetIds, ['s2', 's3', 's5'])
+  assert.equal(activePlan.frameLabel, '生成首帧（待出 1 镜）')
+  assert.equal(activePlan.videoLabel, '生成视频（待出 3 镜）')
+
+  const pickedPlan = storyboardPrimaryPlan({ rows: shots, selected: ['s1', 's2'] })
+  assert.deepEqual(pickedPlan.frameTargetIds, ['s1', 's2'])
+  assert.deepEqual(pickedPlan.videoTargetIds, ['s1', 's2'])
+  assert.equal(pickedPlan.frameLabel, '生成首帧（已选 2 镜）')
+  assert.equal(pickedPlan.videoLabel, '生成视频（已选 2 镜）')
+
+  const doneShots = [
+    { shot_id: 'd1', shot_status: 'VIDEO_READY', video_url: 'https://cdn.example/1.mp4', first_frame_url: 'https://cdn.example/1.png' },
+    { shot_id: 'd2', shot_status: 'LOCKED', video_url: 'https://cdn.example/2.mp4', first_frame_url: 'https://cdn.example/2.png' },
+  ]
+  const donePlan = storyboardPrimaryPlan({ rows: doneShots, selected: [] })
+  assert.equal(donePlan.allVideosReady, true)
+  assert.equal(donePlan.compactDoneMode, true)
+  assert.equal(donePlan.progressText, '全部 2 镜视频已就绪')
+
+  const expandedOnSelection = storyboardPrimaryPlan({ rows: doneShots, selected: ['d1'] })
+  assert.equal(expandedOnSelection.compactDoneMode, false)
+})
+
+test('buildAssetBindPayload omits empty dimensions so partial rebinding does not wipe existing assets', () => {
+  assert.deepEqual(
+    buildAssetBindPayload({ shotId: 'sh-1', bindChars: [], bindScene: 'sc-2', bindProps: [] }),
+    { shot_id: 'sh-1', scene_card_id: 'sc-2' },
+  )
+  assert.deepEqual(
+    buildAssetBindPayload({ shotId: 'sh-2', bindChars: ['ch-1'], bindScene: undefined, bindProps: ['pr-1'] }),
+    { shot_id: 'sh-2', character_id_list: ['ch-1'], prop_id_list: ['pr-1'] },
+  )
+  assert.deepEqual(
+    buildAssetBindPayload({ shotId: 'sh-3', bindChars: [], bindScene: '', bindProps: [] }),
+    { shot_id: 'sh-3' },
+  )
 })

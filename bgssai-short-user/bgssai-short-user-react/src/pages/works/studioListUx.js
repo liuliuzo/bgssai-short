@@ -1,4 +1,5 @@
 import { formatTokenAmount } from '../../utils/formatToken.js'
+import { hasPlayableShotVideo, hasRealFirstFrame, isShotVideoActive, selectPendingVideoShotIds } from './productionFlow.js'
 import {
   CAMERA_MOVEMENTS,
   CONTINUITY_PRESETS,
@@ -246,7 +247,7 @@ export function canvasSwitchState(shotCount, { ready = true } = {}) {
   if (count > 0) {
     return { disabled: false, reason: '按场次查看这一集的镜头' }
   }
-  return { disabled: true, reason: '这一集还没有镜头，拆镜后才能切到画布' }
+  return { disabled: true, reason: '这一集还没有镜头，拆镜后可按场次排列' }
 }
 
 export function taskRowsFromResult(result) {
@@ -443,7 +444,84 @@ export function assetBinderPlaceholder(kind, count, ready = true) {
   if (!ready) return `正在读取${kind}`
   const n = Math.max(0, Math.trunc(Number(count) || 0))
   if (!n) return `还没有${kind}`
-  return `绑定${kind}（${n}）`
+  return `选择${kind}（共 ${n} 项）`
+}
+
+function isShotImageActive(shot) {
+  if (!shot) return false
+  if (shot.shot_status === 'IMAGE_GENERATING') return true
+  const latest = shot.latest_task
+  if (!latest || latest.task_type !== 'IMAGE') return false
+  return latest.task_status === 'QUEUED' || latest.task_status === 'RUNNING'
+}
+
+export function selectPendingFrameShotIds(shots) {
+  if (!Array.isArray(shots)) return []
+  return shots
+    .filter((shot) => shot && shot.shot_id)
+    .filter((shot) => shot.shot_status !== 'LOCKED')
+    .filter((shot) => Number(shot.blocked_flag) !== 1)
+    .filter((shot) => !hasRealFirstFrame(shot))
+    .filter((shot) => !hasPlayableShotVideo(shot))
+    .filter((shot) => !isShotImageActive(shot))
+    .filter((shot) => !isShotVideoActive(shot))
+    .map((shot) => shot.shot_id)
+}
+
+export function storyboardPrimaryPlan({ rows = [], selected = [], blockedCount } = {}) {
+  const list = Array.isArray(rows) ? rows : []
+  const chosen = Array.isArray(selected) ? selected.filter(Boolean) : []
+  const totalCount = list.length
+  const firstFrameCount = list.filter(hasRealFirstFrame).length
+  const videoReadyCount = list.filter(hasPlayableShotVideo).length
+  const blocked = blockedCount != null
+    ? (Number(blockedCount) || 0)
+    : list.filter((row) => Number(row?.blocked_flag) === 1).length
+  const allVideosReady = totalCount > 0 && videoReadyCount === totalCount
+  const compactDoneMode = allVideosReady && chosen.length === 0
+  const pendingFrameIds = selectPendingFrameShotIds(list)
+  const pendingVideoIds = selectPendingVideoShotIds(list)
+  const frameTargetIds = chosen.length ? chosen : pendingFrameIds
+  const videoTargetIds = chosen.length ? chosen : pendingVideoIds
+  return {
+    totalCount,
+    firstFrameCount,
+    videoReadyCount,
+    blockedCount: blocked,
+    allVideosReady,
+    compactDoneMode,
+    pendingFrameIds,
+    pendingVideoIds,
+    frameTargetIds,
+    videoTargetIds,
+    progressText: compactDoneMode
+      ? `全部 ${totalCount} 镜视频已就绪`
+      : `共 ${totalCount} 镜 · 首帧 ${firstFrameCount}/${totalCount} · 视频 ${videoReadyCount}/${totalCount}`,
+    frameLabel: chosen.length
+      ? `生成首帧（已选 ${chosen.length} 镜）`
+      : pendingFrameIds.length
+        ? `生成首帧（待出 ${pendingFrameIds.length} 镜）`
+        : '生成首帧',
+    videoLabel: chosen.length
+      ? `生成视频（已选 ${chosen.length} 镜）`
+      : pendingVideoIds.length
+        ? `生成视频（待出 ${pendingVideoIds.length} 镜）`
+        : '生成视频',
+  }
+}
+
+export function buildAssetBindPayload({ shotId, bindChars = [], bindScene, bindProps = [] } = {}) {
+  const body = { shot_id: shotId }
+  if (Array.isArray(bindChars) && bindChars.length > 0) {
+    body.character_id_list = bindChars
+  }
+  if (bindScene !== undefined && bindScene !== null && String(bindScene).trim() !== '') {
+    body.scene_card_id = String(bindScene).trim()
+  }
+  if (Array.isArray(bindProps) && bindProps.length > 0) {
+    body.prop_id_list = bindProps
+  }
+  return body
 }
 
 export function assetLibrarySummary({ characters, scenes, props, ready = true } = {}) {

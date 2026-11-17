@@ -330,9 +330,9 @@ export function resolveVideoPath(input) {
   if (unframed.length && unframed.every(shotNeedsSpoken)) {
     return step(data, 'shots', {
       kind: 'previz',
-      title: '先写好人话分镜',
+      title: '补齐镜头画面描述',
       detail: '有镜头还没有画面描述，出图会被拦住。这一步不花钱。',
-      action: '写好人话分镜',
+      action: '补齐画面描述',
     })
   }
   if (unframed.length) {

@@ -100,25 +100,19 @@
     <header class="app-top">
       <span class="top-title">分镜</span>
       <select style="width:150px"><option>第 14 集 对峙</option><option>第 13 集 收购</option><option>第 15 集 反转</option></select>
-      <span class="text-muted" style="font-size:12px">44 镜 · 先看懂这一镜，再出图，最后才生成视频</span>
-      <span class="st done" title="G1_SCRIPT">剧本门 81</span>
-      <span class="st warn">预检 1 条提示</span>
+      <span class="opts" style="margin-left:8px">
+        <span class="chip active">上下列表</span>
+        <a class="chip" href="storyboard-canvas.html">按场次排</a>
+      </span>
+      <span class="text-muted" style="font-size:12px">共 44 镜 · 首帧 12/44 · 视频 4/44</span>
+      <button class="btn btn-default btn-sm" type="button">待定妆 1 镜 · 去锁定</button>
       <span class="spacer"></span>
-      <a class="btn btn-default" href="episode-preview.html">连起来看</a>
-      <select style="width:280px" title="BGSSAI Image · 按任务实际对账">
-        <option value="bgssai-image" selected>BGSSAI Image · 按任务实际对账</option>
-      </select>
-      <select style="width:280px" title="BGSSAI Video · 按任务实际对账">
-        <option value="bgssai-video" selected>BGSSAI Video · 按任务实际对账</option>
-      </select>
-      <select style="width:170px" title="全部生成的目标级别">
-        <option value="DRAFT_IMAGE" selected>目标级别：草图 0.10 / 镜</option>
-        <option value="IMAGE">目标级别：首帧 0.80 / 镜</option>
-        <option value="VIDEO">目标级别：视频 1.60 / 镜</option>
-      </select>
-      <label class="text-muted" style="font-size:12px"><input type="checkbox" /> 首帧完成后自动接视频</label>
-      <label class="text-muted" style="font-size:12px"><input type="checkbox" checked /> 同场次镜头首尾帧衔接</label>
-      <button class="btn btn-primary">全部生成 约 4.40 元</button>
+      <button class="btn btn-default btn-sm" type="button">生成首帧</button>
+      <button class="btn btn-primary btn-sm" type="button">生成视频</button>
+      <details style="display:inline-block">
+        <summary class="btn btn-default btn-sm" style="cursor:pointer;list-style:none">更多操作</summary>
+        <div style="font-size:12px;margin-top:4px">全选本集 · 勾选待出视频 · 同场画面自动衔接 · 重写画面描述 · 重新拆镜</div>
+      </details>
     </header>
 
     <div class="stepline">
@@ -140,16 +134,26 @@
               <span class="text-sub">：锁定定妆照后即可批量勾选待生视频镜头，一键提交生成视频。</span>
             </div>
             <span class="spacer"></span>
-            <button class="btn btn-default btn-sm" type="button">勾选待生视频镜头</button>
+            <button class="btn btn-default btn-sm" type="button">勾选待出视频</button>
             <a class="btn btn-primary btn-sm" href="character-bible.html">去角色定妆</a>
           </div>
         </div>
 
         <div class="shot-row">
-          <div class="no">1<small>成片 6秒 · 计划 4秒</small></div>
+          <div class="no"><label><input type="checkbox" /> 1</label><small>成片 6秒 · 计划 4秒</small></div>
           <div class="words">
-            <div class="text-muted" style="font-size:12px;margin-bottom:6px">这一镜会拍成：观众会看到中景，沈知微推门而入，众人回头。镜头从背后推进，冷蓝顶光。字幕：「这份收购案，谁批准的？」</div>
-            <textarea rows="2">谁：沈知微。在哪：会议室。做什么：推门而入，众人回头。怎么拍：中景，从背后推进。什么感觉：冷蓝顶光，冷静。台词：这份收购案，谁批准的？</textarea>
+            <div style="margin-bottom:6px;font-size:12px">
+              <span class="chip">沈知微</span>
+              <span class="chip">会议室</span>
+              <span class="chip">接着上一镜拍</span>
+            </div>
+            <div class="text-muted" style="font-size:12px;margin-bottom:6px">台词：这份收购案，谁批准的？</div>
+            <textarea rows="3" aria-label="画面内容描述">谁：沈知微。在哪：会议室。做什么：推门而入，众人回头。怎么拍：中景，从背后推进。什么感觉：冷蓝顶光，冷静。台词：这份收购案，谁批准的？</textarea>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-default btn-sm" type="button">重出首帧</button>
+              <button class="btn btn-primary btn-sm" type="button">重新生成视频</button>
+              <button class="btn btn-default btn-sm" type="button">镜头微调</button>
+            </div>
           </div>
           <div class="pic" style="width:168px">
             <div class="phone" title="点击画面播放或暂停" style="width:168px;aspect-ratio:3/2;min-height:0;background:#0f172a;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:8px">
@@ -162,8 +166,6 @@
               <div class="phone" title="点击查看首帧" style="width:72px;height:72px;cursor:zoom-in"><span class="ph-tag">首帧</span></div>
               <button type="button" class="frame-caption">查看首帧</button>
             </div>
-            <button class="btn btn-primary btn-sm">重新生成</button>
-            <div class="text-muted" style="font-size:11px;margin-top:4px">有真实照片时走图生视频：384×256，约 3 秒，不是竖屏。确认后才计费，当前成片保留到新视频成功。</div>
           </div>
         </div>
 
@@ -255,115 +257,34 @@
           <div style="margin-top:8px"><button class="btn btn-default btn-sm">展开全部</button></div>
         </div>
 
-        <div class="card" style="max-width:780px; margin:14px auto 0">
-          <div class="card-hd">
-            <h2>图生视频</h2>
-            <span class="text-muted" style="font-size:12px">AI生成 · BGSSAI Video</span>
+        <details class="card" style="max-width:780px; margin:14px auto 0">
+          <summary class="card-hd" style="cursor:pointer">更多工具</summary>
+          <div style="padding:10px 14px">
+            <div class="row" style="gap:8px; flex-wrap:wrap; margin-bottom:10px">
+              <select style="width:220px" aria-label="出图模型">
+                <option value="bgssai-image" selected>BGSSAI Image · 按任务实际对账</option>
+              </select>
+              <select style="width:220px" aria-label="视频模型">
+                <option value="bgssai-video" selected>BGSSAI Video · 按任务实际对账</option>
+              </select>
+            </div>
+            <div class="row" style="gap:8px; flex-wrap:wrap; font-size:12px; margin-bottom:10px">
+              <select style="min-width:160px"><option value="">选择角色（共 2 项）</option></select>
+              <select style="min-width:160px"><option value="">选择场景（共 1 项）</option></select>
+              <select style="min-width:160px"><option value="">选择道具（共 1 项）</option></select>
+              <button class="btn btn-primary btn-sm" type="button" disabled>应用到已选镜头</button>
+            </div>
+            <div class="row" style="gap:8px; flex-wrap:wrap; font-size:12px">
+              <span class="chip">图生视频小样（非成片）</span>
+            </div>
           </div>
-          <div class="row" style="padding:10px 14px; gap:8px; flex-wrap:wrap; font-size:12px">
-            <span class="chip">暂不可用。文生视频不受影响。</span>
-            <span class="text-muted">上传 PNG 或 JPEG，或选用本镜首帧。提示词 1-2000 字。宽 128-384、高 128-256，32 的倍数；帧数 9/17/25/33。超出不改成默认值。同类成片大约二十多分钟，页面继续查询，不要再次提交。</span>
-          </div>
-          <div class="text-muted" style="font-size:12px; padding:0 14px 12px; line-height:1.7">
-            查询 <code>GET /bgssai/user/video/image-to-video/capability</code>。
-            上传 <code>POST /bgssai/user/assets/images</code>。
-            提交 <code>POST /bgssai/user/video/image-to-video</code>。
-            状态 <code>GET /bgssai/user/video/image-to-video/{task_id}</code>。
-            原图仍可预览。完成前不取成片。没有供应商取消、过期或幂等键；结果不确定时不要自动再提交。
-            「构图OK，生成视频」仍是原来的文生视频，不把图片拼进提示词。
-          </div>
-        </div>
-
-        <div class="card" style="max-width:780px; margin:14px auto 0">
-          <div class="card-hd">
-            <h2>这一集用到的角色和场景</h2>
-            <span class="text-muted" style="font-size:12px">角色 / 场景 / 道具绑到勾选镜头</span>
-            <span class="spacer"></span>
-            <a class="btn btn-default btn-sm" href="character-bible.html">角色与场景定妆</a>
-            <button class="btn btn-primary btn-sm">绑定到已勾选镜头</button>
-          </div>
-          <div class="row" style="padding:10px 14px; gap:8px; flex-wrap:wrap; font-size:12px">
-            <span class="chip active">沈知微 LOCKED</span>
-            <span class="chip">宴会厅 LOCKED</span>
-            <span class="chip">退婚书 PROP</span>
-            <span class="text-muted">未锁定引用会拦截生成 · latest_task 显示在每镜标题旁</span>
-          </div>
-          <div class="text-muted" style="padding:0 14px 10px;font-size:12px">本剧可绑定：角色 沈知微 · 场景 宴会厅 · 道具 退婚书。下拉框空白表示还没选要绑到勾选镜头上的卡，不是这一镜没有引用。未勾选时费用写「预计 0 额度」。</div>
-        </div>
-
-        <div class="note" style="max-width:780px; margin:14px auto 0">
-          <strong>首尾帧衔接</strong>：勾上「同场次镜头首尾帧衔接」后，每一镜拿上一镜的最后一帧当开头依据，
-          人物位置、姿态、光线不再镜镜突变。<strong>跨场次自动不接</strong>——上一场是雨夜车里、
-          下一场是白天办公室，硬接比不接更糟；换场本来就该跳，这是剪辑语言，不是缺陷。
-          尾帧默认在视频出完后由本机 ffmpeg 免费抽取；想先定「这一镜往哪收」也可以单独出一张尾帧图（按出图价）。
-          上一镜重抽后，下一镜会被标成「上一镜尾帧已变，本镜可能接不上」，但<strong>不会自动替你重抽</strong>——重抽要花钱。
-        </div>
-
-        <div class="text-muted" style="font-size:12px; text-align:center; margin-top:14px; line-height:1.8">
-          就一件事：<strong>左边文字写的是什么，右边生成的就是什么。</strong><br />
-          文字随便改（免费）；每个按钮生成一步：草图 0.1 元看构图 → 首帧 0.8 元定画面 → 视频 1.6 元。<br />
-          「全部生成」按顶部目标级别（草图 / 首帧 / 视频）批量提交，先给费用预估再扣钱；
-          勾选「首帧完成后自动接视频」可一次到片。<br />
-          全部镜头都是视频后，点侧栏「更多」里的「合成与导出」自动配音加字幕合成，完事。
-        </div>
+        </details>
 
       </div>
 
       <div class="spec" style="max-width:780px; margin:22px auto 0">
         <div class="spec-t">字段口径</div>
-        每行文字即 <code>previz_text</code>（可编辑，保存走 <code>POST /bgssai/user/previz/update</code>，
-        系统自动派生提示词并保证角色一致性）；右侧画面为该镜 <code>previz_level</code> 当前级素材，
-        按钮指向下一级（<code>/previz/draft-generate</code> · <code>/promote</code> ·
-        <code>/ai-tasks/submit</code>）。「全部生成」走
-        <code>POST /bgssai/user/previz/draft-generate</code>（<code>target_level</code> 取
-        <code>DRAFT_IMAGE</code> / <code>IMAGE</code> / <code>VIDEO</code> +
-        可选 <code>auto_continue_video_flag</code>），提交前返回费用预估。
-        右侧资产一致性面板走 <code>GET /bgssai/user/assets/consistency-panel</code>，
-        勾选镜头后 <code>POST /bgssai/user/shots/bind-assets</code> 写入
-        <code>character_ref_json</code> / <code>scene_card_id</code> / <code>prop_ref_json</code>。
-        列表另回 <code>latest_task</code>（统一任务状态机）以及 <code>video_url</code>、
-        <code>first_frame_url</code>、<code>last_frame_url</code>。
-        已有 <code>video_url</code> 的镜头在列表左侧直接播放，点击画面即可播放或暂停，播放框尺寸固定；
-        「放大播放」是按钮，放大层盖住工具条。没有视频时首帧、尾帧点击放大。
-        成片时长和 <code>shot_duration_sec</code> 不一致时标题写「成片 N秒 · 计划 M秒」，不把计划秒数说成成片长度，也不回写成片时长。
-        出图、视频模型展示完整名称（含「按任务实际对账」），可悬停读取。未勾选镜头的费用行带「额度」。
-        运镜 / 风格 / 视角 / 衔接写法分行；和上一镜只使用 <code>frame_link_mode</code>，<code>link_hint</code> 仍显示。
-        人话「在哪」：叙事里已有地点就用该地点，否则用已绑定场景卡名；不得在场景已知时仍写「在哪：未写清场景」。
-        画布、抽屉和配音表使用同一套场景、台词和成片/计划时长。
-        绑定下拉只显示人名、场景名和卡状态，选项文字不含角色编号或场景编号。
-        每一镜的操作和人话框随该卡片滚走，不粘在页面顶部。
-        页脚和在线客服不挡住首帧、人话或抽屉按钮。已有成片时首帧缩略图保持 72 宽，下方文案为「查看首帧」，单行排下，点击仍打开同一张图。
-        剧集芯片在非成片页与选择器同为剧本状态/审核状态，不因合成尚未开始而显示「未开始」。
-        顶部绑定下拉打开时为空，旁边列出本剧已有卡，不表示当前镜头没有引用。
-        镜头已是 <code>VIDEO_READY</code> 或 <code>LOCKED</code>，且 <code>video_asset_id</code> / <code>video_url</code> 仍在时，
-        不再把历史失败或取消的视频任务当成这一镜的常驻标签，不得显示「已有视频，本次重生成失败」，也不得显示成没有视频。
-        进行中的视频任务仍显示进度。状态尚未回到 <code>VIDEO_READY</code> 时，已有成片的刚失败尝试仍可提示。
-        任务中心仍保留失败记录，不删除、不解绑成片。画布不是唯一播放入口。
-        行内提示来自连贯性检查、角色定妆状态与合规预检
-        （<code>/previz/continuity-check</code>、<code>card_status</code>、
-        <code>POST /bgssai/user/compliance/precheck</code> <code>check_scope=SHOT</code>：
-        命中片段高亮 + <code>risk_category</code> 中文 + 改写建议 + 「采纳改写」），仅在有问题时出现。
-        连贯性提示不阻塞生成（该镜生成按钮不禁用），可「忽略这条」——忽略留痕并计入分镜门
-        <code>G2_STORYBOARD</code> 评分；未定妆角色 / 场景 / 道具的镜头仍禁用生成（<code>blocked_flag=1</code>，并由 <code>shots/list</code> 返回可读中文 <code>block_reason</code> 与「去角色定妆」直达入口）。
-        出草图与生成视频主工具条直接展开在分镜列表上方（含「勾选待生视频镜头」快捷勾选），手动改绑资产与独立单图试做收在辅助折叠区；官方视频 <code>POST /bgssai/user/ai-tasks/official-video/submit</code> 无论走图生视频还是文生视频均保持同一 <code>batch_id</code>，由 <code>batch-progress</code> 统一追踪并在完成后自动刷新列表。
-        顶部画面模型来自 <code>GET /bgssai/user/ai-models/list?ability_type=IMAGE</code>，未点选时默认
-        <code>bgssai-image</code>（BGSSAI Image）。VIDEO 模型来自
-        <code>GET /bgssai/user/ai-models/list?ability_type=VIDEO</code>，所选
-        <code>model_code</code> 为 <code>bgssai-video</code>，随单镜或批量任务提交，走原来的文生视频。图生视频是本页独立面板，不因存在首帧而改道。
-        未传 <code>model_code</code> 时，开发库解析到已启用的 <code>bgssai-video</code>（境内模型服务通道，超时 900 秒），保障视频生成链路稳定一致。
-        公司文生视频一次只生成一条。画面提示词先写已锁定角色的外貌、服装、场景和道具。占位首帧或占位定妆图不会当作参考，也不会当作图生视频的原图。「生成视频」和「重新生成」在有真实 PNG 或 JPEG 时走图生视频，成片是 384×256、约 3 秒，不是 9:16；没有真实照片时改走文生视频，约 720×480、约 6 秒。重新生成先确认会计费，取消不提交、不删除当前成片。这一镜已在排队或执行中时不再开第二笔。图生视频不占文生视频的 GPU 车道。任务中心对还在后面的镜头显示排队中和前面还有几条，对正在生成的显示已等待时间。
-        页面与接口不展示网关编号。
-        首尾帧衔接：镜头 <code>frame_link_mode</code>（<code>NONE</code> / <code>INHERIT_PREV</code> / <code>BOOKEND</code>）经
-        <code>POST /bgssai/user/shots/frame-link-save</code> 与 <code>/frame-link-batch</code> 维护，
-        列表返回 <code>last_frame_asset_id</code> · <code>last_frame_url</code> · <code>link_effective_flag</code> · <code>link_hint</code>；
-        跨场次自动降级（<code>downgrade_reason=CROSS_SCENE</code>）；单独出尾帧走
-        <code>POST /bgssai/user/shots/last-frame-generate</code>（<code>target_type=LAST_FRAME</code>）；
-        模型是否支持首尾帧取 <code>ai_model_config.config_json.support_last_frame</code>，不支持却设 <code>BOOKEND</code> 返回 <code>4006</code>。
-        需求见 frame-continuity.md。
-        顶部展示剧本门（<code>G1_SCRIPT</code>）与预检状态徽标（中文）。
-        列表 <code>GET /bgssai/user/shots/list?episode_id</code>。
-        进阶能力（剧本工作台 / 图谱 / 质量门 / 走位等）全部收在侧栏「更多」，
-        需求见 <code>docs/feature/storyboard-workbench.md</code> 与 <code>previz-text-storyboard.md</code>。
+        从剧本拆镜自动使同场次相邻镜头置 <code>frame_link_mode=INHERIT_PREV</code>（首镜与跨场保留 <code>NONE</code>）。进入分镜页自动为缺少画面描述的镜头补齐描述；编辑框支持失焦自动保存与提交前保存，仅传非空改绑维度至 <code>POST /bgssai/user/shots/bind-assets</code>。顶部「生成首帧」与「生成视频」按未选镜头自动汇总待生成范围、先估算确认再提交；全部视频就绪且无勾选时收起为「去合成成片」「配音字幕」「批量重做」。
       </div>
 
       <div class="footer legal-fanout legal-quiet">

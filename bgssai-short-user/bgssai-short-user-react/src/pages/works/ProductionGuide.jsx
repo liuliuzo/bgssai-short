@@ -269,7 +269,7 @@ export default function ProductionGuide({
       }
       if (actionKind === 'previz') {
         const { data } = await featuresApi.previzGenerateText({ episode_id: episode.episode_id })
-        if (data?.success) await finish('已写好人话分镜', prevKey)
+        if (data?.success) await finish('已补齐画面描述', prevKey)
         return
       }
       if (actionKind === 'frame' || actionKind === 'video') {

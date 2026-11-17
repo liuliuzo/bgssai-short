@@ -1,9 +1,9 @@
-import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
-import { creatorToolLabel, publicModelText } from '../../publicModel'
-import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
+import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
+import { creatorToolLabel } from '../../publicModel'
+import { isPlaceholderMediaUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button, Card, Checkbox, Collapse, Dropdown, Form, Input, Modal, Radio, Select, Skeleton, Space, Table, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Checkbox, Collapse, Dropdown, Form, Input, Modal, Radio, Segmented, Select, Skeleton, Space, Table, Tag, Tooltip, Typography, message } from 'antd'
 import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
@@ -23,6 +23,7 @@ import {
   resolveScriptRhythmScore,
   resolveViewingStageKey,
   scriptReadyDecision,
+  shotNeedsSpoken,
 } from './productionGuide'
 import {
   autoTaskOutcomeMemory,
@@ -37,7 +38,6 @@ import {
   hasRealFirstFrame,
   resolveRepairAction,
   scriptStudioGuide,
-  selectPendingVideoShotIds,
   summarizeConsistencyCards,
 } from './productionFlow'
 import { formatTubePublishHint, reviewActionState } from './reviewActions'
@@ -51,17 +51,18 @@ import {
   assetLibrarySummary,
   bindOptionLabel,
   bindSelectProps,
+  buildAssetBindPayload,
   frameLinkOptions,
   knownSceneName,
   modelSelectProps,
   outlineLongTextProps,
   presetIsActive,
   reconcileEmptyScene,
-  selectionFeeLine,
   shotCardContainment,
+  shotDialogueLine,
   shotPresetGroups,
   shotVideoDialogProps,
-  tokenAmountLabel,
+  storyboardPrimaryPlan,
   canvasSwitchState,
   taskRowsFromResult,
 } from './studioListUx'
@@ -1496,11 +1497,15 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
   const [canvasView, setCanvasView] = useState(false)
   const [rows, setRows] = useState([])
   const [shotsLoaded, setShotsLoaded] = useState(false)
+  const [loadedEpisodeId, setLoadedEpisodeId] = useState(null)
   const [splitting, setSplitting] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [selected, setSelected] = useState([])
-  const [cost, setCost] = useState(null)
+  const [batchExpanded, setBatchExpanded] = useState(false)
+  const [expandedShotTools, setExpandedShotTools] = useState({})
   const [drafts, setDrafts] = useState({})
+  const autoFilledEpisodeRef = useRef(null)
+  const savingDraftsRef = useRef(new Map())
   const [imageModels, setImageModels] = useState([])
   const [videoModels, setVideoModels] = useState([])
   const [imageModelCode, setImageModelCode] = useState()
@@ -1519,6 +1524,12 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
     setSelected([])
     setActionError(null)
     setShotsLoaded(false)
+    setLoadedEpisodeId(null)
+    setBatchExpanded(false)
+    setExpandedShotTools({})
+    setDrafts({})
+    autoFilledEpisodeRef.current = null
+    savingDraftsRef.current = new Map()
   }, [episodeId])
 
   useEffect(() => {
@@ -1535,6 +1546,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
     try {
       const { data } = await productionApi.listShots({ episode_id: episodeId, page_num: 1, page_size: 100 })
       setRows(Array.isArray(data?.result) ? data.result : [])
+      setLoadedEpisodeId(episodeId)
       if (work?.work_id) {
         try {
           const panelRes = await productionApi.consistencyPanel(work.work_id)
@@ -1552,6 +1564,18 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
   }, [episodeId, work, onFlowChange])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!shotsLoaded || loadedEpisodeId !== episodeId || !episodeId || !rows.length) return
+    if (autoFilledEpisodeRef.current === episodeId) return
+    if (!rows.some((row) => shotNeedsSpoken(row))) return
+    autoFilledEpisodeRef.current = episodeId
+    let cancelled = false
+    featuresApi.previzGenerateText({ episode_id: episodeId })
+      .then(() => { if (!cancelled) load() })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [shotsLoaded, loadedEpisodeId, episodeId, rows, load])
 
   useEffect(() => {
     let cancelled = false
@@ -1624,11 +1648,92 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
     setRows((cur) => cur.map((r) => (r.shot_id === shotId ? { ...r, ...fields } : r)))
   }
 
-  const pendingVideoIds = useMemo(() => selectPendingVideoShotIds(rows), [rows])
-  const videoReadyCount = useMemo(() => rows.filter(hasPlayableShotVideo).length, [rows])
-  const firstFrameCount = useMemo(() => rows.filter(hasRealFirstFrame).length, [rows])
-  const blockedCount = useMemo(() => rows.filter((r) => Number(r.blocked_flag) === 1).length, [rows])
-  const allVideosReady = rows.length > 0 && videoReadyCount === rows.length
+  const sceneNameByCardId = useMemo(() => {
+    const map = new Map()
+    for (const card of panel.scene_list || []) {
+      if (card?.scene_card_id) map.set(card.scene_card_id, card.card_name || '')
+    }
+    return map
+  }, [panel.scene_list])
+
+  const spokenOfRow = (row, draftMap = drafts) => {
+    const sceneCardName = sceneNameByCardId.get(row.scene_card_id) || ''
+    const sceneKnown = knownSceneName({
+      sceneName: sceneCardName,
+      shotDesc: row.shot_desc,
+      lookPlain: row.look_plain,
+    })
+    return reconcileEmptyScene(draftMap[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
+  }
+
+  const isRowDirty = (row) => {
+    if (!row?.shot_id || !Object.prototype.hasOwnProperty.call(drafts, row.shot_id)) return false
+    return spokenOfRow(row) !== (row.previz_text ?? '')
+  }
+
+  const saveShotDraft = (row, { silent = true } = {}) => {
+    if (!row?.shot_id) return Promise.resolve()
+    const inFlight = savingDraftsRef.current.get(row.shot_id)
+    if (!isRowDirty(row)) {
+      if (Object.prototype.hasOwnProperty.call(drafts, row.shot_id)) {
+        setDrafts((cur) => {
+          if (!Object.prototype.hasOwnProperty.call(cur, row.shot_id)) return cur
+          const next = { ...cur }
+          delete next[row.shot_id]
+          return next
+        })
+      }
+      return inFlight ? inFlight.promise : Promise.resolve()
+    }
+    const text = spokenOfRow(row)
+    if (inFlight && inFlight.text === text) return inFlight.promise
+    const basePromise = inFlight ? inFlight.promise.catch(() => {}) : Promise.resolve()
+    const entry = { text, promise: null }
+    entry.promise = basePromise.then(async () => {
+      try {
+        const { data } = await featuresApi.previzSave({ shot_id: row.shot_id, previz_text: text })
+        const saved = data?.result || {}
+        const savedText = saved.previz_text || text
+        patchRow(row.shot_id, {
+          previz_text: savedText,
+          look_plain: saved.look_plain,
+          image_prompt: saved.image_prompt,
+          prompt_score: saved.prompt_score,
+        })
+        setDrafts((cur) => {
+          if (!Object.prototype.hasOwnProperty.call(cur, row.shot_id)) return cur
+          if (spokenOfRow(row, cur) !== text) return cur
+          const next = { ...cur }
+          delete next[row.shot_id]
+          return next
+        })
+        if (!silent) message.success('已保存')
+      } finally {
+        if (savingDraftsRef.current.get(row.shot_id) === entry) {
+          savingDraftsRef.current.delete(row.shot_id)
+        }
+      }
+    })
+    savingDraftsRef.current.set(row.shot_id, entry)
+    return entry.promise
+  }
+
+  const flushDirtyDrafts = async (targetShotIds) => {
+    const idSet = Array.isArray(targetShotIds) && targetShotIds.length ? new Set(targetShotIds) : null
+    const tasks = []
+    for (const row of rows) {
+      if (idSet && !idSet.has(row.shot_id)) continue
+      const inFlight = savingDraftsRef.current.get(row.shot_id)
+      if (isRowDirty(row)) {
+        tasks.push(saveShotDraft(row, { silent: true }))
+      } else if (inFlight) {
+        tasks.push(inFlight.promise)
+      }
+    }
+    if (tasks.length) await Promise.all(tasks)
+  }
+
+  const plan = useMemo(() => storyboardPrimaryPlan({ rows, selected }), [rows, selected])
   const selectedIds = selected.length ? selected : undefined
 
   const showActionError = (rawMessage) => {
@@ -1702,7 +1807,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
         episodeId={episodeId}
         initialRows={rows}
         sceneCards={panel.scene_list || []}
-        onSwitchToList={() => setCanvasView(false)}
+        onSwitchToList={() => { setCanvasView(false); load() }}
       />
     )
   }
@@ -1741,20 +1846,31 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
     load()
   }
 
-  const submitLevel = async (taskType, autoNext) => {
+  const submitLevel = async (taskType) => {
     setActionError(null)
     if (taskType === 'VIDEO') {
-      const targetShotIds = selected.length ? selected : (pendingVideoIds.length ? pendingVideoIds : undefined)
-      await runOfficial(targetShotIds, { regenerate: false })
+      const targetShotIds = plan.videoTargetIds
+      if (!targetShotIds.length) {
+        message.warning('当前没有可生成视频的镜头')
+        return
+      }
+      await flushDirtyDrafts(targetShotIds)
+      const hasAnyVideo = targetShotIds.some((id) => hasPlayableShotVideo(rows.find((r) => r.shot_id === id)))
+      await runOfficial(targetShotIds, { regenerate: hasAnyVideo })
       return
     }
+    const targetShotIds = plan.frameTargetIds
+    if (!targetShotIds.length) {
+      message.warning('当前没有待出首帧的镜头，可先勾选需要重出的镜头')
+      return
+    }
+    await flushDirtyDrafts(targetShotIds)
     const estimateBody = {
       episode_id: episodeId,
-      shot_ids: selectedIds,
+      shot_ids: targetShotIds,
       task_type: taskType,
-      auto_next_flag: autoNext ? 1 : 0,
-      model_code: taskType === 'VIDEO' ? videoModelCode : imageModelCode,
-      next_model_code: autoNext ? videoModelCode : undefined,
+      auto_next_flag: 0,
+      model_code: imageModelCode,
     }
     let estRes
     try {
@@ -1767,21 +1883,11 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
       showActionError(estRes?.message || '费用预估未通过，请先锁定引用的角色与场景参考图')
       return
     }
-    setCost(estRes.result)
-    const ok = await confirmEstimate(estRes.result, taskType === 'VIDEO' ? '确认视频费用' : '确认出图费用')
+    const ok = await confirmEstimate(estRes.result, '确认出图费用')
     if (!ok) return
     const { data } = await productionApi.submitTasks(estimateBody)
     if (!data?.success) {
       showActionError(data?.message || '出图任务提交失败，请稍后重试')
-      return
-    }
-    if (taskType === 'VIDEO') {
-      const batchId = data.result && data.result.batch_id
-      message.success('视频已提交')
-      if (batchId) {
-        setVideoWatch({ batchId, progress: null, done: false, lingering: false, error: '' })
-      }
-      load()
       return
     }
     message.success('首帧已提交')
@@ -1794,6 +1900,66 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
   const imageSelect = modelSelectProps(imageModelLabel)
   const videoSelect = modelSelectProps(videoModelLabel)
   const scriptReady = currentEpisode?.script_status === 'READY'
+  const canvas = canvasSwitchState(rows.length, { ready: shotsLoaded })
+  const showCompactDoneBar = plan.compactDoneMode && !batchExpanded
+  const hasAssetSelection = bindChars.length > 0 || Boolean(bindScene) || bindProps.length > 0
+
+  const moreMenuItems = [
+    { key: 'select-all', label: `全选本集（${rows.length}）`, disabled: !rows.length },
+    { key: 'select-pending-video', label: `勾选待出视频（${plan.pendingVideoIds.length}）`, disabled: !plan.pendingVideoIds.length },
+    { type: 'divider' },
+    { key: 'frame-link-batch', label: '同场画面自动衔接', disabled: !rows.length },
+    { key: 'rewrite-previz', label: '重写画面描述', disabled: !rows.length },
+    { key: 'resplit', label: '重新拆镜', danger: true },
+  ]
+
+  const handleMoreMenu = async ({ key }) => {
+    if (key === 'select-all') {
+      setSelected(rows.map((r) => r.shot_id))
+      return
+    }
+    if (key === 'select-pending-video') {
+      setSelected(plan.pendingVideoIds)
+      return
+    }
+    if (key === 'frame-link-batch') {
+      const { data } = await featuresApi.frameLinkBatch({
+        episode_id: episodeId,
+        frame_link_mode: 'INHERIT_PREV',
+      })
+      if (data?.success) {
+        message.success(`已衔接 ${data.result.linked_count} 处`)
+        load()
+      }
+      return
+    }
+    if (key === 'rewrite-previz') {
+      Modal.confirm({
+        title: '确认重写画面描述',
+        content: selected.length
+          ? `将根据剧本与设定重写已选 ${selected.length} 个镜头的画面描述，并覆盖当前文字修改。`
+          : '将根据剧本与设定重写本集全部镜头的画面描述，并覆盖当前文字修改。',
+        okText: '确认重写',
+        cancelText: '取消',
+        onOk: async () => {
+          await featuresApi.previzGenerateText({ episode_id: episodeId, shot_id_list: selectedIds })
+          setDrafts({})
+          message.success('已重写画面描述')
+          load()
+        },
+      })
+      return
+    }
+    if (key === 'resplit') {
+      Modal.confirm({
+        title: '确认重新拆镜',
+        content: '将按当前定稿剧本重新拆分未锁定镜头，已锁定镜头会保留。',
+        okText: '确认重新拆镜',
+        cancelText: '取消',
+        onOk: handleSplitShots,
+      })
+    }
+  }
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
@@ -1818,19 +1984,6 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
           ) : null}
         />
       ) : null}
-      {allVideosReady ? (
-        <Alert
-          type="success"
-          showIcon
-          message={`本集全部 ${rows.length} 个镜头视频已就绪`}
-          action={(
-            <Space>
-              <Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>去合成成片</Button>
-              <Button size="small" onClick={() => onJumpTab?.('voice')}>去配音字幕</Button>
-            </Space>
-          )}
-        />
-      ) : null}
       {videoWatch ? (
         <Alert
           type={videoWatchCopy(videoWatch).type}
@@ -1845,24 +1998,64 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
           )}
         />
       ) : null}
-      <Space id="storyboard-split-bar" wrap>
-        {(() => {
-          const canvas = canvasSwitchState(rows.length, { ready: shotsLoaded })
-          return (
-            <Tooltip title={canvas.reason}>
+      <Card id="storyboard-media-card" size="small">
+        <div
+          id="storyboard-split-bar"
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}
+        >
+          <Space wrap align="center">
+            <Tooltip title={canvas.disabled ? canvas.reason : ''}>
               <span>
-                <Button onClick={() => setCanvasView(true)} disabled={canvas.disabled}>切到画布</Button>
+                <Segmented
+                  size="small"
+                  value="list"
+                  onChange={(val) => {
+                    if (val === 'canvas' && !canvas.disabled) setCanvasView(true)
+                  }}
+                  options={[
+                    { label: '上下列表', value: 'list' },
+                    { label: '按场次排', value: 'canvas', disabled: canvas.disabled },
+                  ]}
+                />
               </span>
             </Tooltip>
-          )
-        })()}
-        <Button loading={splitting} onClick={handleSplitShots}>从剧本拆镜</Button>
-        <Button disabled={!rows.length} onClick={async () => {
-          await featuresApi.previzGenerateText({ episode_id: episodeId, shot_id_list: selectedIds })
-          message.success('已用人话写清每一镜')
-          load()
-        }}>生成人话分镜（免费）</Button>
-      </Space>
+            {rows.length > 0 ? <Text type="secondary">{plan.progressText}</Text> : null}
+            {plan.blockedCount > 0 ? (
+              <Button type="link" size="small" style={{ paddingInline: 0 }} onClick={() => onJumpTab?.('characters')}>
+                待定妆 {plan.blockedCount} 镜 · 去锁定
+              </Button>
+            ) : null}
+          </Space>
+          {rows.length > 0 ? (
+            <Space wrap align="center">
+              {showCompactDoneBar ? (
+                <>
+                  <Button size="small" type="primary" onClick={() => onJumpTab?.('compose')}>去合成成片</Button>
+                  <Button size="small" onClick={() => onJumpTab?.('voice')}>配音字幕</Button>
+                  <Button size="small" onClick={() => setBatchExpanded(true)}>批量重做</Button>
+                </>
+              ) : (
+                <>
+                  {selected.length > 0 ? (
+                    <Button size="small" onClick={() => setSelected([])}>取消勾选（{selected.length}）</Button>
+                  ) : (plan.allVideosReady && batchExpanded ? (
+                    <Button size="small" onClick={() => setBatchExpanded(false)}>收起</Button>
+                  ) : null)}
+                  <Button size="small" disabled={!plan.frameTargetIds.length} onClick={() => submitLevel('IMAGE')}>
+                    {plan.frameLabel}
+                  </Button>
+                  <Button size="small" type="primary" disabled={!plan.videoTargetIds.length} onClick={() => submitLevel('VIDEO')}>
+                    {plan.videoLabel}
+                  </Button>
+                </>
+              )}
+              <Dropdown menu={{ items: moreMenuItems, onClick: handleMoreMenu }} trigger={['click']}>
+                <Button size="small">更多操作</Button>
+              </Dropdown>
+            </Space>
+          ) : null}
+        </div>
+      </Card>
       {!shotsLoaded ? <Card loading style={{ minHeight: 140 }} /> : null}
       {shotsLoaded && rows.length === 0 ? (
         <Card>
@@ -1882,222 +2075,149 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
           </Space>
         </Card>
       ) : null}
-      {rows.length > 0 ? (
-        <Card
-          id="storyboard-media-card"
-          size="small"
-          title="本集出图与生成视频"
-          extra={(
-            <Text type="secondary">
-              共 {rows.length} 镜 · 首帧 {firstFrameCount}/{rows.length} · 视频 {videoReadyCount}/{rows.length}
-              {blockedCount > 0 ? ` · 待定妆解锁 ${blockedCount} 镜` : ''}
-            </Text>
-          )}
-        >
-          <Space direction="vertical" style={{ width: '100%' }} size="small">
-            <Space wrap>
-              <Button
-                size="small"
-                disabled={!pendingVideoIds.length}
-                onClick={() => setSelected(pendingVideoIds)}
-              >
-                勾选待出视频镜头（{pendingVideoIds.length}）
-              </Button>
-              <Button
-                size="small"
-                onClick={() => setSelected(rows.map((r) => r.shot_id))}
-              >
-                全选本集（{rows.length}）
-              </Button>
-              <Button
-                size="small"
-                disabled={!selected.length}
-                onClick={() => setSelected([])}
-              >
-                清空勾选
-              </Button>
-              <Tooltip title={imageSelect.title || '出图模型'}>
-                <span>
-                  <Select
-                    aria-label="出图模型"
-                    placeholder="出图模型"
-                    value={imageModelCode}
-                    onChange={setImageModelCode}
-                    title={imageSelect.title}
-                    popupMatchSelectWidth={imageSelect.popupMatchSelectWidth}
-                    style={imageSelect.style}
-                    dropdownStyle={imageSelect.dropdownStyle}
-                    options={imageModels.map((m) => ({
-                      value: m.model_code,
-                      label: modelPricingCompactLabel(m),
-                      title: modelPricingLabel(m),
-                    }))}
-                  />
-                </span>
-              </Tooltip>
-              <Tooltip title={videoSelect.title || '视频模型'}>
-                <span>
-                  <Select
-                    aria-label="视频模型"
-                    placeholder="视频模型"
-                    value={videoModelCode}
-                    onChange={setVideoModelCode}
-                    title={videoSelect.title}
-                    popupMatchSelectWidth={videoSelect.popupMatchSelectWidth}
-                    style={videoSelect.style}
-                    dropdownStyle={videoSelect.dropdownStyle}
-                    options={videoModels.map((m) => ({
-                      value: m.model_code,
-                      label: modelPricingCompactLabel(m),
-                      title: modelPricingLabel(m),
-                    }))}
-                  />
-                </span>
-              </Tooltip>
-            </Space>
-            <Space wrap>
-              <Button onClick={async () => {
-                setActionError(null)
-                const { data } = await productionApi.estimateTasks({
-                  episode_id: episodeId,
-                  shot_ids: selectedIds,
-                  task_type: 'IMAGE',
-                  auto_next_flag: 0,
-                  model_code: imageModelCode,
-                })
-                if (!data?.success) {
-                  showActionError(data?.message || '首帧费用预估未通过，请先锁定角色或场景参考图')
-                  return
-                }
-                setCost(data?.result)
-              }}>估首帧费用</Button>
-              <Button onClick={() => submitLevel('IMAGE', 0)}>生成首帧</Button>
-              <Button onClick={async () => {
-                const { data } = await featuresApi.frameLinkBatch({
-                  episode_id: episodeId,
-                  frame_link_mode: 'INHERIT_PREV',
-                })
-                if (data?.success) {
-                  message.success(`已衔接 ${data.result.linked_count} 处，跨场 ${data.result.cross_scene_count} 处按剪辑语言保持不接`)
-                  load()
-                }
-              }}>同场次首尾帧衔接</Button>
-              <Button type="primary" onClick={() => submitLevel('VIDEO', 0)}>
-                {selected.length
-                  ? `生成已勾选镜头视频（${selected.length} 镜）`
-                  : pendingVideoIds.length
-                    ? `一键生成待出视频镜头（${pendingVideoIds.length} 镜）`
-                    : '生成本集视频'}
-              </Button>
-            </Space>
-            {cost ? (
-              <Paragraph style={{ marginBottom: 0 }}>
-                约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
-                （预计 {tokenAmountLabel(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {(isUserKeyModelRow(cost)
-                  ? (cost.display_name || cost.model_name || cost.model_code)
-                  : publicModelText(cost.display_name || cost.model_code, cost.task_type)) || '-'}）
-                {(cost.shot_cost_list || []).length > 0
-                  ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
-                  : ''}
-              </Paragraph>
-            ) : (
-              <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                {selectionFeeLine(selected.length, estimateShotBatchTokens(selected, 1000).billed_tokens)}
-              </Paragraph>
-            )}
-          </Space>
-        </Card>
-      ) : null}
-      <Collapse
-        items={[{
-          key: 'advanced-tools',
-          label: '高级工具：手动改绑镜头角色场景 / 单张图片试做图生视频',
-          children: (
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              <Card size="small" title="这一集用到的角色和场景" extra={<Text type="secondary">勾选镜头后再绑定</Text>}>
-                <Space wrap>
-                  <Select
-                    mode="multiple"
-                    allowClear
-                    {...bindSelectProps()}
-                    placeholder={assetBinderPlaceholder('角色', (panel.character_list || []).length, panelReady)}
-                    style={{ minWidth: 180 }}
-                    value={bindChars}
-                    onChange={setBindChars}
-                    options={(panel.character_list || []).map((c) => ({
-                      value: c.character_id,
-                      label: bindOptionLabel(c.character_name, cardStatusName(c.card_status)),
-                    }))}
-                  />
-                  <Select
-                    allowClear
-                    {...bindSelectProps()}
-                    placeholder={assetBinderPlaceholder('场景', (panel.scene_list || []).length, panelReady)}
-                    style={{ minWidth: 160 }}
-                    value={bindScene}
-                    onChange={setBindScene}
-                    options={(panel.scene_list || []).map((c) => ({
-                      value: c.scene_card_id,
-                      label: bindOptionLabel(c.card_name, cardStatusName(c.card_status)),
-                    }))}
-                  />
-                  <Select
-                    mode="multiple"
-                    allowClear
-                    {...bindSelectProps()}
-                    placeholder={assetBinderPlaceholder('道具', (panel.prop_list || []).length, panelReady)}
-                    style={{ minWidth: 160 }}
-                    value={bindProps}
-                    onChange={setBindProps}
-                    options={(panel.prop_list || []).map((c) => ({
-                      value: c.scene_card_id,
-                      label: bindOptionLabel(c.card_name, cardStatusName(c.card_status)),
-                    }))}
-                  />
-                  <Button
-                    type="primary"
-                    disabled={!selected.length}
-                    onClick={async () => {
-                      for (const shotId of selected) {
-                        const body = {
-                          shot_id: shotId,
-                          character_id_list: bindChars,
-                          prop_id_list: bindProps,
+      {shotsLoaded ? (
+        <Collapse
+          defaultActiveKey={[]}
+          items={[{
+            key: 'advanced-tools',
+            label: '更多工具',
+            children: (
+              <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                <Card size="small" title="生成模型">
+                  <Space wrap>
+                    <Tooltip title={imageSelect.title || '出图模型'}>
+                      <span>
+                        <Select
+                          aria-label="出图模型"
+                          placeholder="出图模型"
+                          value={imageModelCode}
+                          onChange={setImageModelCode}
+                          title={imageSelect.title}
+                          popupMatchSelectWidth={imageSelect.popupMatchSelectWidth}
+                          style={imageSelect.style}
+                          dropdownStyle={imageSelect.dropdownStyle}
+                          options={imageModels.map((m) => ({
+                            value: m.model_code,
+                            label: modelPricingCompactLabel(m),
+                            title: modelPricingLabel(m),
+                          }))}
+                        />
+                      </span>
+                    </Tooltip>
+                    <Tooltip title={videoSelect.title || '视频模型'}>
+                      <span>
+                        <Select
+                          aria-label="视频模型"
+                          placeholder="视频模型"
+                          value={videoModelCode}
+                          onChange={setVideoModelCode}
+                          title={videoSelect.title}
+                          popupMatchSelectWidth={videoSelect.popupMatchSelectWidth}
+                          style={videoSelect.style}
+                          dropdownStyle={videoSelect.dropdownStyle}
+                          options={videoModels.map((m) => ({
+                            value: m.model_code,
+                            label: modelPricingCompactLabel(m),
+                            title: modelPricingLabel(m),
+                          }))}
+                        />
+                      </span>
+                    </Tooltip>
+                  </Space>
+                </Card>
+                <Card
+                  size="small"
+                  title="修改勾选镜头的角色与场景"
+                  extra={<Text type="secondary">{selected.length ? `已选 ${selected.length} 镜` : '请先在下方勾选镜头'}</Text>}
+                >
+                  <Space wrap>
+                    <Select
+                      mode="multiple"
+                      allowClear
+                      {...bindSelectProps()}
+                      placeholder={assetBinderPlaceholder('角色', (panel.character_list || []).length, panelReady)}
+                      style={{ minWidth: 180 }}
+                      value={bindChars}
+                      onChange={setBindChars}
+                      options={(panel.character_list || []).map((c) => ({
+                        value: c.character_id,
+                        label: bindOptionLabel(c.character_name, cardStatusName(c.card_status)),
+                      }))}
+                    />
+                    <Select
+                      allowClear
+                      {...bindSelectProps()}
+                      placeholder={assetBinderPlaceholder('场景', (panel.scene_list || []).length, panelReady)}
+                      style={{ minWidth: 160 }}
+                      value={bindScene}
+                      onChange={setBindScene}
+                      options={(panel.scene_list || []).map((c) => ({
+                        value: c.scene_card_id,
+                        label: bindOptionLabel(c.card_name, cardStatusName(c.card_status)),
+                      }))}
+                    />
+                    <Select
+                      mode="multiple"
+                      allowClear
+                      {...bindSelectProps()}
+                      placeholder={assetBinderPlaceholder('道具', (panel.prop_list || []).length, panelReady)}
+                      style={{ minWidth: 160 }}
+                      value={bindProps}
+                      onChange={setBindProps}
+                      options={(panel.prop_list || []).map((c) => ({
+                        value: c.scene_card_id,
+                        label: bindOptionLabel(c.card_name, cardStatusName(c.card_status)),
+                      }))}
+                    />
+                    <Button
+                      type="primary"
+                      disabled={!selected.length || !hasAssetSelection}
+                      onClick={async () => {
+                        for (const shotId of selected) {
+                          const body = buildAssetBindPayload({ shotId, bindChars, bindScene, bindProps })
+                          await productionApi.bindShotAssets(body)
                         }
-                        if (bindScene !== undefined) body.scene_card_id = bindScene || ''
-                        await productionApi.bindShotAssets(body)
-                      }
-                      message.success(`已绑定 ${selected.length} 镜`)
-                      load()
-                    }}
-                  >绑定到已勾选镜头</Button>
-                </Space>
-                <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
-                  {assetLibrarySummary({
-                    ready: panelReady,
-                    characters: (panel.character_list || []).map((item) => item.character_name),
-                    scenes: (panel.scene_list || []).map((item) => item.card_name),
-                    props: (panel.prop_list || []).map((item) => item.card_name),
-                  })}
-                </Paragraph>
-              </Card>
-              <ImageToVideoPanel workId={work?.work_id} episodeId={episodeId} shots={rows} />
-            </Space>
-          ),
-        }]}
-      />
+                        message.success(`已应用到 ${selected.length} 镜`)
+                        setBindChars([])
+                        setBindScene(undefined)
+                        setBindProps([])
+                        load()
+                      }}
+                    >应用到已选镜头</Button>
+                  </Space>
+                  <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
+                    {assetLibrarySummary({
+                      ready: panelReady,
+                      characters: (panel.character_list || []).map((item) => item.character_name),
+                      scenes: (panel.scene_list || []).map((item) => item.card_name),
+                      props: (panel.prop_list || []).map((item) => item.card_name),
+                    })}
+                  </Paragraph>
+                </Card>
+                <ImageToVideoPanel workId={work?.work_id} episodeId={episodeId} shots={rows} />
+              </Space>
+            ),
+          }]}
+        />
+      ) : null}
       {rows.map((row) => {
         const readiness = evaluateShotReadiness(row, panel)
         const taskBadge = shotLatestTaskBadge(row)
         const playback = playbackKind[row.shot_id]
         const showTaskBadge = taskBadge && playback !== 'broken'
-        const sceneCardName = (panel.scene_list || []).find((c) => c.scene_card_id === row.scene_card_id)?.card_name || ''
+        const sceneCardName = sceneNameByCardId.get(row.scene_card_id) || ''
         const sceneKnown = knownSceneName({
           sceneName: sceneCardName,
           shotDesc: row.shot_desc,
           lookPlain: row.look_plain,
         })
-        const spoken = reconcileEmptyScene(drafts[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
+        const spoken = spokenOfRow(row)
+        const dirty = isRowDirty(row)
+        const isSelected = selected.includes(row.shot_id)
+        const hasFrame = hasRealFirstFrame(row)
+        const canRegenVideo = shotOffersVideoRegenerate(row, playback)
+        const dialogue = shotDialogueLine(row)
+        const toolsExpanded = Boolean(expandedShotTools[row.shot_id])
         return (
         <Card
           key={row.shot_id}
@@ -2109,15 +2229,19 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
             {showTaskBadge ? (
               <Tag color={taskBadge.color}>{taskBadge.text}</Tag>
             ) : null}
-            <Tag color={readiness.ready ? 'cyan' : 'default'}>
-              {readiness.ready ? '锚点就绪' : '待定妆绑定'}
-            </Tag>
-            {row.stale_flag === 1 ? <Tag color="orange">定妆已变，建议重抽</Tag> : null}
+            {!readiness.ready ? <Tag>待定妆</Tag> : null}
+            {row.stale_flag === 1 ? <Tag color="orange">定妆已变，建议重做</Tag> : null}
             {row.blocked_flag === 1 ? <Tag color="red">待定妆解锁</Tag> : null}
-            <Tag color={(row.prompt_score || 0) >= 70 ? 'green' : 'orange'}>提示词 {row.prompt_score ?? '-'} 分</Tag>
-            <Button size="small" onClick={() => {
-              setSelected((cur) => cur.includes(row.shot_id) ? cur.filter((id) => id !== row.shot_id) : cur.concat(row.shot_id))
-            }}>{selected.includes(row.shot_id) ? '取消勾选' : '勾选'}</Button>
+            <Checkbox
+              checked={isSelected}
+              onChange={(e) => {
+                setSelected((cur) => (
+                  e.target.checked
+                    ? (cur.includes(row.shot_id) ? cur : cur.concat(row.shot_id))
+                    : cur.filter((id) => id !== row.shot_id)
+                ))
+              }}
+            >选择</Checkbox>
             {row.shot_status === 'LOCKED'
               ? <Button size="small" onClick={async () => { await productionApi.unlockShot(row.shot_id); load() }}>解锁</Button>
               : <Button size="small" onClick={async () => { await productionApi.lockShot(row.shot_id); load() }}>锁定</Button>}
@@ -2126,7 +2250,10 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
           <Space align="start" size="large" style={{ width: '100%' }}>
             <ShotMediaColumn
               row={row}
-              onRegenerate={shotOffersVideoRegenerate(row, playback) ? () => runOfficial([row.shot_id], { regenerate: true }) : null}
+              onRegenerate={canRegenVideo ? async () => {
+                await flushDirtyDrafts([row.shot_id])
+                await runOfficial([row.shot_id], { regenerate: true })
+              } : null}
               onEnlarge={setVideoPreview}
               onDuration={(seconds) => setClipSeconds((cur) => (
                 cur[row.shot_id] === seconds ? cur : { ...cur, [row.shot_id]: seconds }
@@ -2149,10 +2276,6 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
                   )}
                 />
               ) : null}
-              <Paragraph style={{ marginBottom: 8 }}>
-                <Text strong>这一镜会拍成：</Text>
-                {row.look_plain || '先写人话分镜，系统会告诉你观众将看到什么。'}
-              </Paragraph>
               <Space wrap size={[4, 4]} style={{ marginBottom: 8 }}>
                 {(row.character_ref_json || []).map((id) => {
                   const card = (panel.character_list || []).find((c) => c.character_id === id)
@@ -2168,99 +2291,32 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
                   if (!card?.card_name) return null
                   return <Tag key={id} color="gold">{card.card_name}</Tag>
                 })}
+                {row.link_effective_flag === 1 ? (
+                  <Tag color="blue">接着上一镜拍</Tag>
+                ) : (row.link_hint ? <Tag color="orange">{row.link_hint}</Tag> : null)}
               </Space>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12 }}>和上一镜</Text>
-                <Select
-                  size="small"
-                  style={{ width: 120 }}
-                  value={row.frame_link_mode || 'NONE'}
-                  aria-label="和上一镜怎么接"
-                  onChange={async (mode) => {
-                    await featuresApi.frameLinkSave({
-                      shot_id: row.shot_id,
-                      frame_link_mode: mode,
-                      model_code: videoModelCode,
-                    })
-                    load()
-                  }}
-                  options={frameLinkOptions()}
-                />
-                {row.link_hint
-                  ? <Tag color={row.link_effective_flag === 1 ? 'blue' : 'orange'}>{row.link_hint}</Tag>
-                  : null}
-              </div>
-              <div style={{ marginBottom: 8 }}>
-                {shotPresetGroups().map((group) => (
-                  <div key={group.key} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginBottom: 6 }}>
-                    <Text type="secondary" style={{ fontSize: 12, minWidth: 64 }}>{group.label}</Text>
-                    {group.items.map((item) => {
-                      const active = presetIsActive(spoken, item.marker)
-                      return (
-                        <Button
-                          key={item.key}
-                          size="small"
-                          type={active ? 'primary' : 'default'}
-                          onClick={() => {
-                            setDrafts((cur) => {
-                              const old = reconcileEmptyScene(cur[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
-                              return { ...cur, [row.shot_id]: appendPreset(old, item.marker) }
-                            })
-                          }}
-                        >
-                          {item.label}
-                        </Button>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
-              {row.reference_note ? (
-                <Paragraph type="secondary" style={{ marginBottom: 8 }}>{row.reference_note}</Paragraph>
+              {dialogue ? (
+                <Paragraph type="secondary" style={{ marginBottom: 6 }}>台词：{dialogue}</Paragraph>
               ) : null}
-              {row.image_prompt ? (
-                <div style={{ marginBottom: 8 }}>
-                  <Text type="secondary">画面提示词</Text>
-                  <div>{localizePromptShotSize(row.image_prompt)}</div>
-                  <Space wrap size={4}>
-                    {(row.prompt_segments || []).map((seg) => (
-                      <Tag key={seg.source}>{seg.label}</Tag>
-                    ))}
-                  </Space>
-                </div>
-              ) : null}
-              <Text type="secondary">分镜描述</Text>
+              <Text type="secondary">画面内容描述</Text>
               <TextArea
                 className="shot-spoken"
-                rows={4}
+                rows={3}
                 style={{ marginTop: 6 }}
                 value={spoken}
                 onChange={(e) => setDrafts((cur) => ({ ...cur, [row.shot_id]: e.target.value }))}
+                onBlur={() => { saveShotDraft(row, { silent: true }) }}
               />
+              {row.reference_note ? (
+                <Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 0 }}>{row.reference_note}</Paragraph>
+              ) : null}
               <Space className="shot-actions" style={{ marginTop: 8 }} wrap>
-                <Button size="small" onClick={async () => {
-                  const text = spoken
-                  const { data } = await featuresApi.previzSave({ shot_id: row.shot_id, previz_text: text })
-                  const saved = data?.result || {}
-                  patchRow(row.shot_id, {
-                    previz_text: saved.previz_text || text,
-                    look_plain: saved.look_plain,
-                    image_prompt: saved.image_prompt,
-                    prompt_score: saved.prompt_score,
-                  })
-                  message.success('已保存')
-                }}>保存</Button>
-                <Button size="small" onClick={async () => {
-                  const { data } = await featuresApi.previzPromptCheck({ shot_id: row.shot_id })
-                  const check = data?.result || {}
-                  patchRow(row.shot_id, {
-                    look_plain: check.look_plain,
-                    prompt_score: check.prompt_score,
-                    prompt_issues: check.issue_list,
-                  })
-                }}>检查提示词</Button>
+                {dirty ? (
+                  <Button size="small" onClick={() => saveShotDraft(row, { silent: false })}>保存修改</Button>
+                ) : null}
                 <Button size="small" disabled={row.shot_status === 'LOCKED'} onClick={async () => {
                   setActionError(null)
+                  await flushDirtyDrafts([row.shot_id])
                   const body = {
                     episode_id: episodeId,
                     shot_ids: [row.shot_id],
@@ -2283,19 +2339,96 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
                   message.success('出图已提交')
                   await waitTask(work.work_id, data.result.task_id_list?.[0])
                   load()
-                }}>生成首帧</Button>
-                <Button size="small" type="primary" disabled={row.shot_status === 'LOCKED'} onClick={() => runOfficial([row.shot_id], { regenerate: false })}>生成视频</Button>
-                {shotOffersVideoRegenerate(row, playback) ? (
-                  <Button size="small" type="primary" onClick={() => runOfficial([row.shot_id], { regenerate: true })}>重新生成</Button>
-                ) : null}
+                }}>{hasFrame ? '重出首帧' : '生成首帧'}</Button>
+                <Button
+                  size="small"
+                  type="primary"
+                  disabled={!canRegenVideo && row.shot_status === 'LOCKED'}
+                  onClick={async () => {
+                    await flushDirtyDrafts([row.shot_id])
+                    await runOfficial([row.shot_id], { regenerate: canRegenVideo })
+                  }}
+                >{canRegenVideo ? '重新生成视频' : '生成视频'}</Button>
+                <Button
+                  size="small"
+                  onClick={() => setExpandedShotTools((cur) => ({ ...cur, [row.shot_id]: !cur[row.shot_id] }))}
+                >{toolsExpanded ? '收起微调' : '镜头微调'}</Button>
               </Space>
-              {(row.prompt_issues || []).length ? (
-                <div style={{ marginTop: 8 }}>
-                  {(row.prompt_issues || []).slice(0, 3).map((it, i) => (
-                    <Paragraph key={i} type="secondary" style={{ marginBottom: 2 }}>
-                      {it.issue_desc}{it.suggestion ? ` → ${it.suggestion}` : ''}
-                    </Paragraph>
-                  ))}
+              {toolsExpanded ? (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eef2f7' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>和上一镜</Text>
+                    <Select
+                      size="small"
+                      style={{ width: 120 }}
+                      value={row.frame_link_mode || 'NONE'}
+                      aria-label="和上一镜"
+                      onChange={async (mode) => {
+                        await featuresApi.frameLinkSave({
+                          shot_id: row.shot_id,
+                          frame_link_mode: mode,
+                          model_code: videoModelCode,
+                        })
+                        load()
+                      }}
+                      options={frameLinkOptions()}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    {shotPresetGroups().map((group) => (
+                      <div key={group.key} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                        <Text type="secondary" style={{ fontSize: 12, minWidth: 64 }}>{group.label}</Text>
+                        {group.items.map((item) => {
+                          const active = presetIsActive(spoken, item.marker)
+                          return (
+                            <Button
+                              key={item.key}
+                              size="small"
+                              type={active ? 'primary' : 'default'}
+                              onClick={() => {
+                                setDrafts((cur) => {
+                                  const old = reconcileEmptyScene(cur[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
+                                  return { ...cur, [row.shot_id]: appendPreset(old, item.marker) }
+                                })
+                              }}
+                            >
+                              {item.label}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                  {row.image_prompt ? (
+                    <div style={{ marginBottom: 8 }}>
+                      <Text type="secondary">画面提示词</Text>
+                      <div>{localizePromptShotSize(row.image_prompt)}</div>
+                      <Space wrap size={4}>
+                        {(row.prompt_segments || []).map((seg) => (
+                          <Tag key={seg.source}>{seg.label}</Tag>
+                        ))}
+                      </Space>
+                    </div>
+                  ) : null}
+                  <Button size="small" onClick={async () => {
+                    await flushDirtyDrafts([row.shot_id])
+                    const { data } = await featuresApi.previzPromptCheck({ shot_id: row.shot_id })
+                    const check = data?.result || {}
+                    patchRow(row.shot_id, {
+                      look_plain: check.look_plain,
+                      prompt_score: check.prompt_score,
+                      prompt_issues: check.issue_list,
+                    })
+                  }}>检查画面描述</Button>
+                  {(row.prompt_issues || []).length ? (
+                    <div style={{ marginTop: 8 }}>
+                      {(row.prompt_issues || []).slice(0, 3).map((it, i) => (
+                        <Paragraph key={i} type="secondary" style={{ marginBottom: 2 }}>
+                          {it.issue_desc}{it.suggestion ? ` → ${it.suggestion}` : ''}
+                        </Paragraph>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

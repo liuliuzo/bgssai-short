@@ -67,12 +67,11 @@
       </span>
       <span class="top-title">分镜 · 第 1 集</span>
       <span class="opts" style="margin-left:10px">
-        <a class="chip" href="storyboard.html">列表</a>
-        <span class="chip active">画布</span>
+        <a class="chip" href="storyboard.html">上下列表</a>
+        <span class="chip active">按场次排</span>
       </span>
       <span class="spacer"></span>
-      <button class="btn btn-default btn-sm">已选 8 镜 · 估费用</button>
-      <button class="btn btn-primary btn-sm">批量生成 约 6.40 元</button>
+      <button class="btn btn-primary btn-sm" type="button">批量生成（已选 8 镜）</button>
     </header>
 
     <div class="app-page">
@@ -146,10 +145,10 @@
         </div>
 
         <div class="card">
-          <div class="card-hd"><h2>框选批量，费用照旧先算</h2></div>
+          <div class="card-hd"><h2>框选批量，费用确认后再提交</h2></div>
           <div style="font-size:12px; line-height:1.9">
-            拖拽框住一整场，或点节点加选。批量估费用、批量提交走的是
-            <strong>和列表视图完全相同的接口与预算闸门</strong>，结果逐字一致。
+            拖拽框住一整场，或点节点加选；点「批量生成」先调用预估并在确认弹窗展示合计费用，
+            <strong>与列表视图使用同一组接口与预算闸门</strong>，确认后提交。
             <div style="margin-top:8px">画布不是绕过费用确认的后门——两个视图只是看法不同，
             不是两套逻辑。</div>
             <div class="note note-warn" style="margin:10px 0 0">
