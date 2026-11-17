@@ -211,6 +211,19 @@ test('定妆库与角色卡支持正脸及全部四面独立重做、原照片�
   assert.match(productionApi, /\/user\/look-materials\/promote/)
 })
 
+test('页面文案不再使用资产卡或参考卡概念', () => {
+  const dir = path.dirname(fileURLToPath(import.meta.url))
+  const studioPage = fs.readFileSync(path.join(dir, '..', 'works', 'WorkStudio.jsx'), 'utf8')
+  const flowFile = fs.readFileSync(path.join(dir, '..', 'works', 'productionFlow.js'), 'utf8')
+  const listUxFile = fs.readFileSync(path.join(dir, '..', 'works', 'studioListUx.js'), 'utf8')
+  const cinemaFile = fs.readFileSync(path.join(dir, '..', '..', 'utils', 'CinematographyHelper.js'), 'utf8')
+
+  for (const content of [studioPage, flowFile, listUxFile, cinemaFile]) {
+    assert.doesNotMatch(content, /资产卡/)
+    assert.doesNotMatch(content, /参考卡/)
+  }
+})
+
 function solid(width, height, value) {
   const data = new Uint8ClampedArray(width * height * 4)
   for (let i = 0; i < data.length; i += 4) {

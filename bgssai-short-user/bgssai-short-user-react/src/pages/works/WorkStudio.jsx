@@ -1032,7 +1032,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         }
       }
       if (locked > 0) {
-        message.success(`已一键锁定 ${locked} 张参考卡`)
+        message.success(`已一键锁定 ${locked} 项`)
         await load()
       }
     } finally {
@@ -1065,7 +1065,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         <Alert
           type="info"
           showIcon
-          message="暂无角色或场景资产卡"
+          message="暂无角色、场景或道具"
           action={(
             <Space>
               <Button size="small" type="primary" onClick={() => onJumpTab?.('script')}>去剧本与定稿</Button>
@@ -1078,7 +1078,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         <Alert
           type="warning"
           showIcon
-          message={`待锁定资产卡 ${cardSummary.unlockedCards.length} 张（已锁定 ${cardSummary.lockedCount}/${cardSummary.totalCards}）`}
+          message={`待锁定 ${cardSummary.unlockedCards.length} 项（已锁定 ${cardSummary.lockedCount}/${cardSummary.totalCards}）`}
           description={cardSummary.unlockedCards.slice(0, 6).map((c) => `${c.kind}「${c.name}」`).join('、')}
           action={(
             <Space>
@@ -1096,7 +1096,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
         <Alert
           type="success"
           showIcon
-          message={`全部 ${cardSummary.totalCards} 张资产卡已锁定`}
+          message={`全部 ${cardSummary.totalCards} 项已锁定`}
           action={<Button size="small" type="primary" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>}
         />
       ) : null}

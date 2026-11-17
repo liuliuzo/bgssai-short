@@ -188,9 +188,9 @@ export function buildProductionFlow({
     summary: looksBlocked
       ? `有 ${blockedShots.length || cardSummary.unlockedRefCount} 镜待锁定定妆`
       : looksNeedInitialLock
-        ? `${cardSummary.unlockedCards.length} 张卡片待选图锁定`
+        ? `${cardSummary.unlockedCards.length} 项待选图锁定`
         : cardSummary.totalCards > 0
-          ? `已锁定 ${cardSummary.lockedCount} 张资产卡`
+          ? `已锁定 ${cardSummary.lockedCount} 项`
           : '定稿后自动提取角色与场景',
   }
 

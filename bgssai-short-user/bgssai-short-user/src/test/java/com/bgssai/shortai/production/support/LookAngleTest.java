@@ -41,6 +41,8 @@ class LookAngleTest {
 
     @Test
     void planSupportsAllFourAnglesIncludingFrontFaceRedo() {
+        assertEquals(java.util.List.of("FRONT_FACE", "FRONT", "BACK", "SIDE"), LookAngle.plan(Set.of(), null, false));
+        assertEquals(LookAngle.ALL, LookAngle.plan(Set.of("FRONT_FACE", "FRONT", "BACK", "SIDE"), null, true));
         assertEquals(java.util.List.of("FRONT"), LookAngle.plan(Set.of("FRONT_FACE", "BACK", "SIDE"), null, false));
         assertEquals(java.util.List.of("BACK"), LookAngle.plan(Set.of("FRONT_FACE", "FRONT", "SIDE"), null, false));
         assertEquals(java.util.List.of("FRONT_FACE"), LookAngle.plan(Set.of("FRONT", "BACK", "SIDE"), null, false));

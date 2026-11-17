@@ -113,6 +113,47 @@ class LookAngleWorkerTest {
     }
 
     @Test
+    void batchWithoutInitialReferenceGeneratesFrontFaceFirstAndAnchorsRemainingAngles() throws Exception {
+        ShortAiTaskWorker worker = new ShortAiTaskWorker();
+        AiProviderRegistry registry = mock(AiProviderRegistry.class);
+        AiProvider provider = mock(AiProvider.class);
+        ObjectStorage storage = mock(ObjectStorage.class);
+        LookKnowledgeService looks = mock(LookKnowledgeService.class);
+        ReflectionTestUtils.setField(worker, "aiProviderRegistry", registry);
+        ReflectionTestUtils.setField(worker, "objectStorage", storage);
+        ReflectionTestUtils.setField(worker, "lookKnowledgeService", looks);
+        when(registry.resolve(any())).thenReturn(provider);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(8, 12, BufferedImage.TYPE_INT_RGB), "png", out);
+        byte[] png = out.toByteArray();
+        when(provider.execute(any())).thenReturn(AiProviderResult.binary(png, "image/png"));
+
+        Map<String, Object> req = new LinkedHashMap<>();
+        req.put("library_id", "lk-1");
+        req.put("material_name", "小明");
+        req.put("appearance", "黑色西装，干练短发");
+        req.put("card_id", "c-1");
+        req.put("angles", List.of("FRONT_FACE", "FRONT", "BACK", "SIDE"));
+        ShortAiTask task = new ShortAiTask();
+        task.setUserId("u-1");
+        ReflectionTestUtils.invokeMethod(worker, "finishLookAngles", task, req, new AiModelConfig());
+
+        ArgumentCaptor<AiProviderRequest> requests = ArgumentCaptor.forClass(AiProviderRequest.class);
+        verify(provider, times(4)).execute(requests.capture());
+        List<AiProviderRequest> sent = requests.getAllValues();
+        assertEquals(null, sent.get(0).param("image_base64"));
+        assertTrue(sent.get(0).getPrompt().contains("正脸定妆"));
+        for (int i = 1; i < 4; i++) {
+            assertTrue(sent.get(i).param("image_base64") instanceof String encoded && !encoded.isBlank());
+            assertEquals("subject", sent.get(i).param("image_reference"));
+        }
+        ArgumentCaptor<String> angles = ArgumentCaptor.forClass(String.class);
+        verify(looks, times(4)).saveGenerated(eq("u-1"), eq("lk-1"), eq("小明"), any(), angles.capture(),
+                any(), eq("image/png"), anyInt(), anyInt(), eq("c-1"));
+        assertEquals(List.of("FRONT_FACE", "FRONT", "BACK", "SIDE"), angles.getAllValues());
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void promoteMaterialSwapsOldPhotoBackWhilePreservingRedonePhoto() {
         LookKnowledgeService service = new LookKnowledgeService();

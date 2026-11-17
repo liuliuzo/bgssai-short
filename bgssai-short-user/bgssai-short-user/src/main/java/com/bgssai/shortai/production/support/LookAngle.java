@@ -96,6 +96,9 @@ public final class LookAngle {
             }
             return List.of(one);
         }
+        if (replace) {
+            return ALL;
+        }
         List<String> missing = new ArrayList<>();
         for (String angle : ALL) {
             if (filled == null || !filled.contains(angle)) {

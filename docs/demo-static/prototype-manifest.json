@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "79d5a2fc7eb3c5b6603c3103b04165e4b1b11c011e0731d69fd3a2b8468c6d71",
-  "code_contract_digest": "7e0c61a2efdd3b81f4d5f5a0e9685d210667c4fe0b2dcdaa156868456b7c0607",
+  "prototype_bundle_digest": "0c0442e30b6345bb1eabe395d2a26731807be39e6173c252057955b88ee235d3",
+  "code_contract_digest": "6611e3ddc7abd4f48d2e7e1579363bab123d113f630a31d1535b1a9c1c4384cc",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -581,7 +581,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookGroups.test.js",
-      "sha256": "fd402193432edc43f7483765914857aa9b9082556753c5fce24f2e0bbfcf00e3"
+      "sha256": "e2ed6cc1c91caae1e83ba5079ef56762eef22f3145a90aa6a7f03a49eda08dc0"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookPoster.js",
@@ -665,7 +665,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "b7c1a0e5bb6ba765047ace142345cec2614bed915d5fb051a53c040a4e412c1c"
+      "sha256": "2698f3f8ef1a8171598caddbe4593548f246eb44f25872e7f9f7169cba3431f2"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -689,11 +689,11 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionFlow.js",
-      "sha256": "687fcef0c7099b99519f9579e624e1f97a0ae493e48e51a566b00cd3ea088c67"
+      "sha256": "ec41c965eca446b58f45a0279b9ca5ee5c5f8608568279258d37d2070b7b0e1d"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionFlow.test.js",
-      "sha256": "72068c30a29a9f7685523cfa386899e1e630a4b74d9dbb0533e3391a9cad9449"
+      "sha256": "e56925c2f020f8e0a5ccccf0464bc9a8d581d557b2f6de1ac78638246071bd04"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionGuide.js",
@@ -741,7 +741,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/studioListUx.js",
-      "sha256": "f01a023a8fad14f178e4d9f357c12ae7878f8ee2ae9aaeae529f6c311fe7caca"
+      "sha256": "6714c3f99de71f5bcdad4086135df25d18b420df5ec841d359ee01280e91060e"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/studioListUx.test.js",
@@ -1013,7 +1013,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/LookKnowledgeService.java",
-      "sha256": "089740d5d07d162a26b20b8413661cf68fd0f018ae078e1c2591d184f0cc593f"
+      "sha256": "df6ed9df04fdf4354b4c40bccaf4aff216affb718d1885e5f1fff98c0cbe2c00"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/OfficialShotVideoService.java",
@@ -2066,7 +2066,7 @@
     },
     {
       "path": "docs/demo-static/web/user/PAGE-FLOW.html",
-      "sha256": "17291579199fb26e728adb6fcd9cfb0630703b883f58b30c859f52dcfb2523f8",
+      "sha256": "915df1200329317dfc3d122a4f41752714c85011cba9f30a6113c424e07eda42",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2171,7 +2171,7 @@
     },
     {
       "path": "docs/demo-static/web/user/character-bible.html",
-      "sha256": "191a68547544b7aa8cfd3972b250c91c0430e572a4f3e0acd70625e5bc66a1ac",
+      "sha256": "69cbdb54589e31dd482f8317472176fb9bd6309048934488d548d98269115357",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2738,7 +2738,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard.html",
-      "sha256": "a6fc6f6626ad4aafe7db16fd59e18ed4d5a20481058337cc68441bdaaa4e8e24",
+      "sha256": "fd6f0b0c20f76ad204b3fdd2c977ca67462d4f73c614e22c4fbc077e3483af9e",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
