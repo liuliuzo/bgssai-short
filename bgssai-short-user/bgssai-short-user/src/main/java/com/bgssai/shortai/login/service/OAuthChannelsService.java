@@ -21,7 +21,7 @@ public class OAuthChannelsService {
     public RespOAuthChannels list() {
         List<String> open = new ArrayList<>();
         if (filled(secrets.wechatAppId(), secrets.wechatAppSecret())) open.add("wechat");
-        if (filled(secrets.alipayAppId(), secrets.alipayAppPrivateKey())) open.add("alipay");
+        if (filled(secrets.alipayAppId(), secrets.alipayAppPrivateKey(), secrets.alipayPublicKey())) open.add("alipay");
         if (filled(secrets.douyinClientKey(), secrets.douyinClientSecret())) open.add("douyin");
         if (filled(secrets.baiduClientId(), secrets.baiduClientSecret())) open.add("baidu");
         if (filled(secrets.bgssaiClientId(), secrets.bgssaiClientSecret())) open.add("bgssai");
@@ -30,7 +30,12 @@ public class OAuthChannelsService {
         return resp;
     }
 
-    private static boolean filled(String a, String b) {
-        return a != null && !a.isBlank() && b != null && !b.isBlank();
+    private static boolean filled(String... values) {
+        for (String v : values) {
+            if (v == null || v.isBlank()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

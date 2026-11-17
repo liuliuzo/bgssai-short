@@ -1,12 +1,8 @@
 package com.bgssai.shortai.login.sms;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
-
-import com.bgssai.shortai.common.exception.BizException;
 
 class SmsTemplateParamsTest {
 
@@ -18,9 +14,9 @@ class SmsTemplateParamsTest {
     }
 
     @Test
-    void count3JoinsProductAndSeq() {
+    void count3IsProductCodeAndMinutes() {
         assertArrayEquals(
-                new String[] { "Short#42", "839201", "5" },
+                new String[] { "Short", "839201", "5" },
                 SmsTemplateParams.build(3, "Short", 42L, "839201", 5));
     }
 
@@ -32,10 +28,9 @@ class SmsTemplateParamsTest {
     }
 
     @Test
-    void invalidCountFails() {
-        BizException ex = assertThrows(
-                BizException.class,
-                () -> SmsTemplateParams.build(5, "Short", 1L, "123456", 5));
-        assertEquals("5203", ex.getCode());
+    void invalidCountFallsBackTo2() {
+        assertArrayEquals(
+                new String[] { "123456", "5" },
+                SmsTemplateParams.build(5, "Short", 1L, "123456", 5));
     }
 }

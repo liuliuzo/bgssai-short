@@ -14,6 +14,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.login.dto.req.ReqUserLogin;
 import com.bgssai.shortai.login.dto.resp.RespUserLogin;
+import com.bgssai.shortai.login.sms.TencentSmsPhoneRoute;
 import com.bgssai.shortai.mapper.SysUserMapper;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
@@ -115,11 +116,26 @@ public class UserLoginService {
         if (user != null) {
             return user;
         }
-        if (!id.contains("@")) {
-            return null;
+        if (id.contains("@")) {
+            SysUserExample byEmail = new SysUserExample();
+            byEmail.createCriteria().andEmailEqualTo(id);
+            return sysUserMapper.selectOneByExample(byEmail);
         }
-        SysUserExample byEmail = new SysUserExample();
-        byEmail.createCriteria().andEmailEqualTo(id);
-        return sysUserMapper.selectOneByExample(byEmail);
+        String normalizedPhone = TencentSmsPhoneRoute.normalizeForStorage(id);
+        if (normalizedPhone != null) {
+            SysUserExample byPhone = new SysUserExample();
+            byPhone.createCriteria().andPhoneEqualTo(normalizedPhone);
+            user = sysUserMapper.selectOneByExample(byPhone);
+            if (user != null) {
+                return user;
+            }
+            String mainland = TencentSmsPhoneRoute.normalizeMainland(normalizedPhone);
+            if (mainland != null) {
+                SysUserExample legacyPhone = new SysUserExample();
+                legacyPhone.createCriteria().andPhoneEqualTo("+86" + mainland);
+                return sysUserMapper.selectOneByExample(legacyPhone);
+            }
+        }
+        return null;
     }
 }

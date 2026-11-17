@@ -43,6 +43,14 @@
             <tr><td>oauth / wechat</td><td>微信用户</td><td><button type="button" class="btn btn-sm">解绑</button></td></tr>
           </tbody>
         </table>
+        <form onsubmit="return false" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+          <select aria-label="绑定方式"><option value="phone">手机</option><option value="email">邮箱</option></select>
+          <select aria-label="国家区号"><option value="+86">+86 中国大陆</option><option value="+852">+852 中国香港</option><option value="+1">+1 美国/加拿大</option></select>
+          <input type="tel" placeholder="请输入手机号" />
+          <input type="text" placeholder="验证码" />
+          <button type="button" class="btn btn-sm">发送验证码</button>
+          <button type="submit" class="btn btn-sm btn-primary">绑定</button>
+        </form>
         <p class="text-muted">至少保留一种登录方式；冲突绑定拒绝且不合并账号；解绑需重新验证。</p>
       </div>
       <div class="card" style="margin-top:14px">
@@ -52,6 +60,13 @@
           <li>个人资料匿名化；注销前凭证全部失效</li>
           <li>未结订单与进行中任务需先处理</li>
         </ul>
+        <form onsubmit="return false" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <select aria-label="身份验证"><option value="password">密码</option><option value="sms">手机验证码</option><option value="email">邮箱验证码</option></select>
+          <select aria-label="国家区号"><option value="+86">+86 中国大陆</option><option value="+852">+852 中国香港</option><option value="+1">+1 美国/加拿大</option></select>
+          <input type="tel" placeholder="请输入手机号" />
+          <input type="text" placeholder="验证码" />
+          <button type="button" class="btn btn-sm">获取验证码</button>
+        </form>
         <button type="button" class="btn btn-danger">注销账号</button>
         <p class="text-muted">iOS / Android 客户端顶栏「账号」进入同一路由 <code>/account</code>。</p>
       </div>

@@ -157,6 +157,7 @@ export const LOGIN_METHOD_LABEL = {
   douyin: '抖音',
   baidu: '百度',
   alipay: '支付宝',
+  bgssai: 'Chat',
   chat: 'Chat',
   oauth: '第三方',
 }

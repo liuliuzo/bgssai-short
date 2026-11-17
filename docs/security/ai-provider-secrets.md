@@ -41,9 +41,9 @@ properties 只允许写中枢 base URL，禁止写 TokenHub API Key。
 
 ## 4. Admin 接口
 
-- `GET /bgssai/admin/secrets/list?key_prefix=ai.` → `secret_list`（掩码，不回显明文）
-- `POST /bgssai/admin/secrets/update` → `{ secret_key, secret_value?, enabled?, description? }`
-- `POST /bgssai/admin/secrets/test` → `{ secret_key }` → `{ ok, configured_flag, message }`
+- `GET /bgssai/admin/secrets/list?key_prefix=ai.|bgssai.sms.|sms.` → `secret_list`（敏感密钥掩码，不回显明文；非敏配置键带 `config_value`）
+- `POST /bgssai/admin/secrets/update` → `{ secret_key, secret_value?, enabled?, description? }`（校验允许前缀与 SMS `endpoint` / `region` / `template_param_count` / `enabled` 合规性）
+- `POST /bgssai/admin/secrets/test` → `{ secret_key }` → `{ ok, configured_flag, message }`（支持单键或 `sms.`/`sms.intl.`/`bgssai.sms.` 通道就绪校验）
 
 ## 4. 日志与审计
 

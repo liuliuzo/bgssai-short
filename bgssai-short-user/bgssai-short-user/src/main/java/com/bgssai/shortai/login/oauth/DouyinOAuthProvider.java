@@ -2,13 +2,17 @@ package com.bgssai.shortai.login.oauth;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.bgssai.shortai.login.oauth.OAuthIds;
@@ -57,20 +61,27 @@ public class DouyinOAuthProvider implements OAuthProvider {
         String clientSecret = loginOAuthSecrets.douyinClientSecret();
         requireCredentials(clientKey, clientSecret);
         try {
-            Map<String, String> tokenForm = new HashMap<>();
-            tokenForm.put("client_key", clientKey);
-            tokenForm.put("client_secret", clientSecret);
-            tokenForm.put("code", code);
-            tokenForm.put("grant_type", "authorization_code");
-            Map<String, Object> tokenResp = restTemplate.postForObject(TOKEN_URL, tokenForm, Map.class);
+            MultiValueMap<String, String> tokenForm = new LinkedMultiValueMap<>();
+            tokenForm.add("client_key", clientKey);
+            tokenForm.add("client_secret", clientSecret);
+            tokenForm.add("code", code);
+            tokenForm.add("grant_type", "authorization_code");
+            HttpHeaders formHeaders = new HttpHeaders();
+            formHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            Map<String, Object> tokenResp = restTemplate.postForObject(
+                    TOKEN_URL, new HttpEntity<>(tokenForm, formHeaders), Map.class);
             Map<String, Object> tokenData = unwrapData(tokenResp);
-            if (tokenData == null || tokenData.get("open_id") == null) {
+            if (tokenData == null || hasNonZeroError(tokenData)
+                    || tokenData.get("open_id") == null || tokenData.get("access_token") == null) {
                 log.warn("抖音授权换取 access_token 失败");
                 throw new BizException("4404", "授权失败，请重试");
             }
             String openId = String.valueOf(tokenData.get("open_id"));
             String unionId = tokenData.get("union_id") == null ? null : String.valueOf(tokenData.get("union_id"));
             String accessToken = String.valueOf(tokenData.get("access_token"));
+            if (OAuthIds.blank(openId) || OAuthIds.blank(accessToken)) {
+                throw new BizException("4404", "授权失败，请重试");
+            }
 
             String userInfoUrl = USERINFO_URL + "?access_token=" + encode(accessToken) + "&open_id=" + encode(openId);
             Map<String, Object> userResp = restTemplate.getForObject(userInfoUrl, Map.class);
@@ -91,6 +102,11 @@ public class DouyinOAuthProvider implements OAuthProvider {
         if (resp == null) return null;
         Object data = resp.get("data");
         return data instanceof Map ? (Map<String, Object>) data : resp;
+    }
+
+    private static boolean hasNonZeroError(Map<String, Object> data) {
+        Object err = data.get("error_code");
+        return err != null && !"0".equals(String.valueOf(err));
     }
 
     private static void requireCredentials(String clientKey, String clientSecret) {

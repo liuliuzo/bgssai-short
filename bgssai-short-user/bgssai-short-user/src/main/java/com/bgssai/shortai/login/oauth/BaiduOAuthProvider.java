@@ -71,7 +71,8 @@ public class BaiduOAuthProvider implements OAuthProvider {
 
             String userInfoUrl = USERINFO_URL + "?access_token=" + encode(accessToken) + "&get_unionid=1";
             Map<String, Object> userResp = restTemplate.getForObject(userInfoUrl, Map.class);
-            if (userResp == null || (userResp.containsKey("error_code") && !Integer.valueOf(0).equals(userResp.get("error_code")))) {
+            if (userResp == null || (userResp.containsKey("error_code")
+                    && !"0".equals(String.valueOf(userResp.get("error_code"))))) {
                 log.warn("百度拉取用户资料失败");
                 throw new BizException("4404", "授权失败，请重试");
             }

@@ -28,7 +28,7 @@
 { "method_type": "phone", "phone": "13800138000", "code": "123456" }
 ```
 
-或 `method_type=email` + `email`。
+或 `method_type=email` + `email`。手机号支持大陆 11 位 / `+86` / `0086`（存库归一为 11 位）及非 `+86` 标准 `+E.164`（存库保留 `+E.164`）。
 
 ## POST /bgssai/user/account/login-methods/unbind
 

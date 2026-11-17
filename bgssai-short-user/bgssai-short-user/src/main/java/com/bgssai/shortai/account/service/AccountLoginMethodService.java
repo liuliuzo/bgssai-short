@@ -28,6 +28,7 @@ import com.bgssai.shortai.login.oauth.OAuthStateUtil;
 import com.bgssai.shortai.login.oauth.OAuthUserInfo;
 import com.bgssai.shortai.login.otp.InMemoryOtpStore;
 import com.bgssai.shortai.login.service.PasswordService;
+import com.bgssai.shortai.login.sms.TencentSmsPhoneRoute;
 import com.bgssai.shortai.mapper.OauthBindingMapper;
 import com.bgssai.shortai.mapper.SysUserMapper;
 import com.bgssai.shortai.model.OauthBinding;
@@ -113,13 +114,24 @@ public class AccountLoginMethodService {
         SysUser user = requireUser();
         String type = req.getMethodType().trim().toLowerCase(Locale.ROOT);
         if ("phone".equals(type)) {
-            String phone = req.getPhone() == null ? "" : req.getPhone().trim();
+            String phone = TencentSmsPhoneRoute.normalizeForStorage(req.getPhone());
+            if (phone == null) {
+                throw new BizException("4301", "手机号格式不正确");
+            }
             if (!otpStore.consume("sms", phone, req.getCode() == null ? "" : req.getCode().trim())) {
                 throw new BizException("4302", "验证码错误或已过期");
             }
             SysUserExample clash = new SysUserExample();
             clash.createCriteria().andPhoneEqualTo(phone).andDelFlagEqualTo(false);
             SysUser other = sysUserMapper.selectOneByExample(clash);
+            if (other == null) {
+                String mainland = TencentSmsPhoneRoute.normalizeMainland(phone);
+                if (mainland != null) {
+                    SysUserExample legacyClash = new SysUserExample();
+                    legacyClash.createCriteria().andPhoneEqualTo("+86" + mainland).andDelFlagEqualTo(false);
+                    other = sysUserMapper.selectOneByExample(legacyClash);
+                }
+            }
             if (other != null && !other.getUserId().equals(user.getUserId())) {
                 throw new BizException(CommonErrorCode.BINDING_CONFLICT, "手机号已绑定其他账号");
             }
@@ -210,7 +222,9 @@ public class AccountLoginMethodService {
             return;
         }
         if ("sms".equals(method)) {
-            if (user.getPhone() == null || !otpStore.consume("sms", user.getPhone(),
+            String storedPhone = TencentSmsPhoneRoute.normalizeForStorage(user.getPhone());
+            String otpKey = storedPhone != null ? storedPhone : (user.getPhone() == null ? "" : user.getPhone().trim());
+            if (otpKey.isEmpty() || !otpStore.consume("sms", otpKey,
                     req.getCode() == null ? "" : req.getCode().trim())) {
                 throw new BizException("4302", "验证码错误或已过期");
             }

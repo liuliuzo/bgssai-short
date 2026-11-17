@@ -39,32 +39,37 @@
 
 ## 1.1 验证码登录即注册（仅用户端）
 
-公开接口（无需 token，无 `@NeedAop`）。未注册标识符现场建号。
+公开接口（无需 token，无 `@NeedAop`）。未注册标识符现场建号；管理端仅支持账号密码登录，不含第三方授权与自助注册。
 
-- `POST /bgssai/user/sms/send` `{ "phone": "13800138000" }` → `{ expires_in: 300, product: "Short", seq: 42 }`；凭据缺失 `5203`。
-  - `product` / `seq`：本次写入短信模板的产品名与递增序号（客服对照）；邮箱发码不含这两项。
-  - 模板参数个数由 `bgssai.sms.template-param-count`（`2|3|4`，**默认 2**）决定：
-    - `2` → `[code, minutes]`（生产已审批模板 `2677885` 双参；待审 `2734311` 通过前勿切 3/4）
-    - `3` → `[product#seq, code, minutes]`
-    - `4` → `[product, seq, code, minutes]`
-  - 产品名配置：`bgssai.sms.product-label`（默认 `Short`），写在 `application.properties`，非 `sys_secret`。
-- `POST /bgssai/user/login/sms` `{ "phone": "13800138000", "code": "123456" }`，成功形状与密码登录一致，可带 `is_new_user`。
-- `POST /bgssai/user/email/send` `{ "email": "buyer@example.com" }` → `{ expires_in: 300 }`；凭据缺失 `5204`。
+- `POST /bgssai/user/sms/send` `{ "phone": "13800138000" }`（支持大陆 11 位 / `+86` / `0086` 及非 `+86` 标准 E.164 如 `+85291234567`、`+14155550100`）→ `{ "expires_in": 300 }`；格式非法 `4301`，通道未就绪或投递失败 `5203`。
+  - 响应 JSON 不返回验证码、内部 `product` 或 `seq`。
+  - 真实投递（SMS / SMTP）失败时不留存有效 OTP，也不写入冷却限流锁。
+  - 模板参数个数由 `sys_secret`（`sms.template_param_count` / `sms.intl.template_param_count`，`2|3|4`，默认 `2`）决定，空时回落 `application.properties`：
+    - `2` → `[code, minutes]`（存量两参模板 `2677885`）
+    - `3` → `[product_label, code, minutes]`
+    - `4` → `[product_label, seq, code, minutes]`（`seq` 由 `SecureRandom` 现场生成 4 位数字）
+- `POST /bgssai/user/login/sms` `{ "phone": "13800138000", "code": "123456" }`，大陆号归一为 11 位、国际/港澳台归一为 `+E.164`；成功形状与密码登录一致，可带 `is_new_user`。
+- `POST /bgssai/user/email/send` `{ "email": "buyer@example.com" }` → `{ "expires_in": 300 }`；凭据缺失或发送失败 `5204`。
 - `POST /bgssai/user/login/email` `{ "email": "buyer@example.com", "email_code": "123456" }`。
 
-短信 / SMTP 凭据读 `sys_secret`（DML STEP SMS-1 / SMTP-1），不新增 Admin 页。
+短信配置与国内/国际分流凭据读 `sys_secret`（管理端「密钥管理 / 短信通道」可维护）：
 
-腾讯云短信对齐 BGSSAI 共享控制台应用（`TencentSmsSender` / `SmsSecrets`）：
+| secret_key | 默认 / 开发 | 生产 | 说明 |
+| --- | --- | --- | --- |
+| `bgssai.sms.secret-id` / `bgssai.sms.secret-key` | 共享控制台凭证 | 同左 | 国内（及国际未单独覆盖时）腾讯云密钥 |
+| `bgssai.sms.sdk-app-id` | `1401156379`（`sql/dev/DML.sql`） | `1401191076`（`sql/prod/DML.sql`） | 国内短信 `SmsSdkAppId` |
+| `bgssai.sms.sign-name` | `昆山兵贵神速智能科技` | 同左 | 国内短信签名（必填） |
+| `bgssai.sms.template-id` | `2677885` | 同左 | 国内登录 OTP 模板 ID |
+| `sms.endpoint` / `sms.region` | `sms.tencentcloudapi.com` / `ap-guangzhou` | 同左 | 国内接入域名与地域 |
+| `sms.product_label` / `sms.template_param_count` | `Short` / `2` | 同左 | 国内产品标签与模板槽位数（`2\|3\|4`） |
+| `sms.intl.enabled` | `0` | `0` | 国际/港澳台通道开关（`1`/`true` 开启，未开 fail-closed 不回落国内） |
+| `sms.intl.secret_id` / `sms.intl.secret_key` | 空 | 空 | 国际通道独立密钥（全空复用国内；仅填一侧失败） |
+| `sms.intl.endpoint` / `sms.intl.region` | `sms.tencentcloudapi.com` / `ap-guangzhou` | 同左 | 国际接入域名与地域 |
+| `sms.intl.sdk_app_id` / `sms.intl.template_id` | 空 | 空 | 国际通道 `SmsSdkAppId` 与模板 ID（启用时必填） |
+| `sms.intl.sign_name` / `sms.intl.sender_id` | 空 | 空 | 国际签名与 SenderId（均可选） |
+| `sms.intl.product_label` / `sms.intl.template_param_count` | `Short` / `2` | 同左 | 国际产品标签与模板槽位数（`2\|3\|4`） |
 
-| 项 | 开发 | 生产 |
-| --- | --- | --- |
-| `bgssai.sms.sdk-app-id` | `1401156379`（`sql/dev/DML.sql`） | `1401191076`（`sql/prod/DML.sql`） |
-| `bgssai.sms.sign-name` | `昆山兵贵神速智能科技`（共享 `sql/DML.sql`） | 同左 |
-| `bgssai.sms.template-id` | `2677885`（登录 OTP，已审批双参；勿用待审 `2734311`） | 同左 |
-| `bgssai.sms.product-label` | `Short`（`application.properties`） | 同左 |
-| `bgssai.sms.template-param-count` | `2`（默认；与 `2677885` 对齐） | 同左 |
-
-`SecretId` / `SecretKey` 仍走 `sys_secret`；示例占位见 `sms/credentials.example.env`。
+`SecretId` / `SecretKey` 示例占位见 `sms/credentials.example.env`。用户端第三方登录仅开放境内渠道 `wechat` / `douyin` / `baidu` / `alipay` / `bgssai`（生产 Chat 基址 `https://chat.bgssai.cn`）。
 
 ### 成功响应
 
