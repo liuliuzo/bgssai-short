@@ -82,7 +82,7 @@ public class XaiGrokAiProvider implements AiProvider {
         String userId = ShortJson.text(cfg.get("user_id"));
         String keyId = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("user_key_id")),
                 request.getModel().getModelId());
-        String baseUrl = UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE);
+        String baseUrl = xaiApiBase(UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE));
         String apiKey = userAiModelKeyService.requirePlainApiKey(userId, keyId);
         String modelCode = ProviderHttp.firstNonBlank(request.getModel().getModelCode(), "grok-4.7");
         String ability = request.getAbilityType() == null ? ""
@@ -522,5 +522,13 @@ public class XaiGrokAiProvider implements AiProvider {
     private static boolean isTransientFailure(BizException ex) {
         String msg = ex.getMessage() == null ? "" : ex.getMessage();
         return msg.contains("暂时不可用") || msg.contains("502") || msg.contains("503") || msg.contains("504");
+    }
+
+    private static String xaiApiBase(String normalizedBaseUrl) {
+        String path = java.net.URI.create(normalizedBaseUrl).getPath();
+        if (path == null || path.isBlank() || "/".equals(path)) {
+            return normalizedBaseUrl + "/v1";
+        }
+        return normalizedBaseUrl;
     }
 }

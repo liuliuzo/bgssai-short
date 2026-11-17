@@ -13,6 +13,7 @@ public class UserAiModelKey {
     private String modelName;
     private String baseUrl;
     private String apiKey;
+    private String secretKey;
     private Integer enabled;
     private Integer defaultModel;
     private String lastCheckStatus;
@@ -101,6 +102,14 @@ public class UserAiModelKey {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey == null ? null : apiKey.trim();
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey == null ? null : secretKey.trim();
     }
 
     public Integer getEnabled() {

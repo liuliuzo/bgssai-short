@@ -5,6 +5,7 @@ import usageApi from '../../api/usage'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 import { yuanToCent } from '../../lib/money'
 import { publicModelText } from '../../publicModel'
+import { isUserKeyModelRow } from '../../modelPricing'
 
 const { Title, Text } = Typography
 const { RangePicker } = DatePicker
@@ -162,7 +163,9 @@ export default function UsageBillingPage() {
               title: '模型',
               dataIndex: 'display_name',
               width: 140,
-              render: (_, row) => publicModelText(row.display_name || row.model_code, row.ability_type),
+              render: (_, row) => (isUserKeyModelRow(row)
+                ? (row.display_name || row.model_name || row.model_code || '-')
+                : publicModelText(row.display_name || row.model_code, row.ability_type)),
             },
             { title: '档位', dataIndex: 'quality_level_name', width: 80 },
             {

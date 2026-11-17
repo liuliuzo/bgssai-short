@@ -26,6 +26,8 @@ public class AiProviderRegistry {
             VeoAiProvider.CODE,
             MiniMaxAiProvider.CODE,
             SeedanceAiProvider.CODE,
+            PixVerseAiProvider.CODE,
+            DeepSeekAiProvider.CODE,
             OpenAiCompatibleAiProvider.CODE);
 
     private final Map<String, AiProvider> byCode = new HashMap<>();

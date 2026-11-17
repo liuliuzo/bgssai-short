@@ -5,6 +5,7 @@ public class TestUserAiModelKeyRequest {
     private String providerCode;
     private String baseUrl;
     private String apiKey;
+    private String secretKey;
     private String modelCode;
 
     public String getKeyId() {
@@ -37,6 +38,14 @@ public class TestUserAiModelKeyRequest {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 
     public String getModelCode() {

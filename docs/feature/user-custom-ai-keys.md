@@ -6,11 +6,12 @@
 - 支持模态与能力映射：
   - 文本模型：`modality_type=TEXT` -> `ability_type=TEXT`（大纲、剧本、改写、原著改编、AI 协同专家）。
   - 图片模型：`modality_type=IMAGE` -> `ability_type=IMAGE`（角色/场景/道具定妆、多视角补全、分镜首帧、尾帧）。
-  - 视频模型：`modality_type=VIDEO` -> `ability_type=VIDEO`（分镜文生视频、分镜图生视频）。
+  - 视频模型：`modality_type=VIDEO` -> `ability_type=VIDEO`（分镜文生视频、分镜图生视频、首尾帧过渡）。
   - 音频模型：`modality_type=AUDIO` -> 细分 `ability_type` 为 `VOICE`（配音合成）、`ASR`（语音转文字字幕校准）、`MUSIC`（背景音乐）。
 - 支持操作：
-  - 单条新增、一键批量创建 Grok 多模态配置、编辑（留空密钥则保留原值）、启停、设为同能力默认、删除、连通性测试。
+  - 单条新增、一键按供应商批量创建多模态配置、编辑（留空密钥则保留原值）、启停、设为同能力默认、删除、连通性测试。
   - 全局开关「仅使用自有密钥模型」（`only_user_key`）。
+  - 多供应商混用：用户可按能力自由组合不同供应商（如 `DEEPSEEK` 文本 + `KLING` 或 `PIXVERSE` 视频 + `MINIMAX` 图片/配音/识别/背景音乐），系统按各能力默认（或前端指定）自有密钥路由。
 
 ## 2. 业务规则
 
@@ -25,22 +26,41 @@
 4. **零平台额度扣减**：
    - 凡解析为自有密钥模型（`credential_source = "USER_KEY"`），预估费用 `estimated_cost_cent = 0`、单价 `unit_price_cent = 0`、实扣 `cost_cent = 0`。
    - 跳过平台中央账本与本地额度钱包的余额预检及扣费（不要求绑定 `bgssai-chat` 账号）；`ai_usage_record` 正常记录调用次数，金额列记 `0`。
-5. **首发接入供应商：Grok（`provider_code = XAI`）**：
-   - 默认根地址：`https://api.x.ai/v1`，允许用户输入自定义 `https://` 地址与自定义上游模型编码。
-   - 各能力预设模型与官方接口覆盖：
+5. **支持供应商与能力矩阵**：
+   - `MINIMAX`（`MiniMax (海螺)`，`auth_type=BEARER`，默认 `https://api.minimaxi.com`）：
+     - `TEXT`：`MiniMax-M2.5`（默认）、`MiniMax-M2.5-highspeed`、`abab6.5s-chat`（`POST /v1/chat/completions`）。
+     - `IMAGE`：`image-01`（默认）、`image-01-live`（`POST /v1/image_generation`，存在参考图时自动传 `subject_reference` 并支持不支持时降级重试）。
+     - `VIDEO`：`MiniMax-Hailuo-02`（默认）、`MiniMax-Hailuo-2.3`、`T2V-01-Director`、`I2V-01-Director`（`POST /v1/video_generation` + `GET /v1/query/video_generation` + `GET /v1/files/retrieve`）。
+     - `VOICE`：`speech-2.8-hd`（默认）、`speech-2.8-turbo`、`speech-02-hd`（`POST /v1/t2a_v2`）。
+     - `ASR`：`asr-1.0`（默认）（`POST /v1/speech_to_text` multipart，`response_format=verbose_json`）。
+     - `MUSIC`：`music-2.5`（默认）、`music-2.0`（`POST /v1/music_generation`）。
+   - `KLING`（`可灵 (Kling AI)`，`auth_type=AK_SK`，`api_key` 存 Access Key、`secret_key` 存 Secret Key 并即时签发 HS256 JWT，默认 `https://api-beijing.klingai.com`）：
+     - `VIDEO`：`kling-v3`（默认）、`kling-v2-6`、`kling-v2-5-turbo`、`kling-v2-1-master`、`kling-v1-6`（`POST /v1/videos/text2video` 或 `POST /v1/videos/image2video` + `GET /v1/videos/{kind}/{task_id}`）。
+     - `IMAGE`：`kling-v3`（默认）、`kling-v2-1`、`kling-v1-5`（`POST /v1/images/generations` + `GET /v1/images/generations/{task_id}`）。
+     - `VOICE`：`kling-tts`（默认）（`POST /v1/audio/tts` + `GET /v1/audio/tts/{task_id}`）。
+   - `PIXVERSE`（`PixVerse`，`auth_type=API_KEY_HEADER`，请求头携带 `API-KEY` 与 `Ai-trace-id`，默认 `https://app-api.pixverse.ai`）：
+     - `VIDEO`：`v6`（默认）、`v6-max`、`v5.6`、`v5`、`v4.5`（参考图先走 `POST /openapi/v2/image/upload`，文本/图生/首尾帧分别走 `POST /openapi/v2/video/text|img|transition/generate`，轮询 `GET /openapi/v2/video/result/{video_id}`）。
+   - `DEEPSEEK`（`DeepSeek`，`auth_type=BEARER`，默认 `https://api.deepseek.com`）：
+     - `TEXT`：`deepseek-chat`（默认）、`deepseek-reasoner`（`POST /chat/completions`）。
+   - `XAI`（`Grok (xAI)`，`auth_type=BEARER`，默认 `https://api.x.ai/v1`）：
      - `TEXT`：`grok-4.7`（默认）、`grok-4`、`grok-3`、`grok-3-mini`（`POST /chat/completions`）。
-     - `IMAGE`：`grok-imagine-image-2.0`（默认）、`grok-2-image`（文生图 `POST /images/generations`，含参考图/图生图走 `POST /images/edits`）。
-     - `VIDEO`：`grok-imagine-video-1.5`（默认）、`grok-imagine-video-1.5-lite`（异步提交 `POST /videos/generations` + 轮询 `GET /videos/{request_id}`，存在首帧或锁定定妆图时自动传 `image.url` 走图生视频）。
+     - `IMAGE`：`grok-imagine-image-2.0`（默认）、`grok-2-image`（`POST /images/generations` 或 `/images/edits`）。
+     - `VIDEO`：`grok-imagine-video-1.5`（默认）、`grok-imagine-video-1.5-lite`（`POST /videos/generations` + `GET /videos/{request_id}`）。
      - `VOICE`：`grok-tts`（`POST /tts`）。
      - `ASR`：`grok-voice-transcribe-2.0`（`POST /stt`）。
-     - `MUSIC`：xAI 官方当前未开放音乐生成接口，`XAI` 预设不包含 `MUSIC`；开启 `only_user_key = 1` 且未配置其他 `MUSIC` 模型时，BGM 生成返回 `4014`，成片合成支持无 BGM 正常合成。
-6. **默认模型唯一性与删改联动**：
+   - 允许用户输入自定义公网 `https://` 地址与自定义上游模型编码。
+6. **连通性检测（零计费探活）**：
+   - `MINIMAX`：`POST /v1/get_voice`（`{"voice_type":"system"}`），HTTP 2xx 且 `base_resp.status_code == 0` 判定通过。
+   - `KLING`：生成短期 HS256 JWT 请求 `GET /v1/videos/text2video?pageNum=1&pageSize=1`，HTTP 2xx 且 `code == 0` 判定通过。
+   - `PIXVERSE`：`GET /openapi/v2/account/balance`（带 `API-KEY` 与 `Ai-trace-id`），HTTP 2xx 且 `ErrCode == 0` 判定通过。
+   - `DEEPSEEK` / `XAI`：`GET /models`，HTTP 2xx 判定通过并匹配已返回模型目录。
+7. **默认模型唯一性与删改联动**：
    - 同一用户、同一 `ability_type` 下最多一条 `is_default_model = 1`。
    - 新增同能力首条启用模型时自动设为默认；停用或删除当前默认模型时，自动将该能力下其余首条已启用模型升为默认。
-7. **密钥安全与传输约束**：
-   - `api_key` 明文入库（符合开发期存储规范），接口列表仅回传掩码 `api_key_masked`，禁止回显完整明文；日志与异常消息严禁打印 `api_key`。
-   - `base_url` 与上游媒体下载地址强制要求公网 `https://`，拒绝内网/环回/元数据地址（SSRF 防护）。
-   - `short_ai_task.model_code` 存储自有配置业务标识 `umk-...`（长度不超过 64 字符），`request_json` 不保存 `api_key`。
+8. **密钥安全与传输约束**：
+   - `api_key` 与 `secret_key` 明文入库（符合开发期存储规范），接口列表仅回传掩码 `api_key_masked` 与 `secret_key_masked`，禁止回显完整明文；日志与异常消息严禁打印任何密钥。
+   - `base_url` 与上游媒体下载地址强制执行公网 `https://` 与 DNS 解析 IP 校验，拒绝内网/环回/元数据地址（SSRF 防护）。
+   - `short_ai_task.model_code` 存储自有配置业务标识 `umk-...`（长度不超过 64 字符），`request_json` 不保存 `api_key` 或 `secret_key`。
 
 ## 3. 字段与枚举
 
@@ -48,15 +68,16 @@
 | --- | --- |
 | `modality_type` | `TEXT`（文本模型）/ `IMAGE`（图片模型）/ `VIDEO`（视频模型）/ `AUDIO`（音频模型） |
 | `ability_type` | `TEXT` / `IMAGE` / `VIDEO` / `VOICE`（配音）/ `ASR`（字幕识别）/ `MUSIC`（背景音乐） |
-| `provider_code` | `XAI`（展示名 `Grok (xAI)`） |
+| `provider_code` | `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `XAI` |
+| `auth_type` | `BEARER` / `AK_SK` / `API_KEY_HEADER` |
 | `credential_source` | `USER_KEY`（自有密钥）/ `PLATFORM`（平台默认） |
 | `only_user_key` | `0`（混合模式）/ `1`（仅使用自有密钥模型，停用默认 BGSSAI 模型） |
 | `last_check_status` | `OK` / `FAILED` / `null` |
 
 ## 4. 验收条目
 
-1. 用户在 `/account` 添加 Grok API Key 后，首次自动启用 `only_user_key = 1`。
-2. `only_user_key = 1` 时，`GET /bgssai/user/ai-models/list` 与制作工作台各模态选择器均只显示自有模型，不出现 `BGSSAI Chat / Image / Video / TTS / ASR / Music`。
-3. `only_user_key = 1` 且某能力未配置启用密钥时，触发该能力任务返回 `4014`，不会调用平台 TokenHub。
-4. 选定 Grok 文本/图片/视频/音频模型提交创作任务后，任务经 `XaiGrokAiProvider` 调用 `https://api.x.ai/v1` 完成生成并落库资产，费用 `cost_cent = 0`，平台钱包余额不变。
-5. 列表与页面展示掩码密钥（如 `xai-****9k2a`），支持单条测试连接、一键接入 Grok、修改模型、启停、切换默认和删除。
+1. 用户在 `/account` 添加任意已支持供应商的 API Key 后，首次自动启用 `only_user_key = 1`。
+2. `only_user_key = 1` 时，`GET /bgssai/user/ai-models/list` 与制作工作台各模态选择器均只显示自有模型，保留用户设置展示名与供应商真实名称，不显示平台默认模型。
+3. 可灵配置支持 Access Key + Secret Key 双密钥录入与掩码展示（`ak**** / sk****`），运行时动态签发 HS256 JWT 完成连通测试与图片/视频/配音生成。
+4. `MINIMAX` 覆盖 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 六种能力；`PIXVERSE` 覆盖 `VIDEO`（含图生/首尾帧过渡）；`DEEPSEEK` 覆盖 `TEXT`（含 `deepseek-chat` 与 `deepseek-reasoner`）。
+5. 多供应商混用（如 DeepSeek 文本 + 可灵或 PixVerse 视频 + MiniMax 配音与 BGM）在同一作品全流程可执行通过，任务与对账费用 `cost_cent = 0`。

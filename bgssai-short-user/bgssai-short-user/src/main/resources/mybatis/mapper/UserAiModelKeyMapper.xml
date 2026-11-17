@@ -12,6 +12,7 @@
     <result column="model_name" jdbcType="VARCHAR" property="modelName" />
     <result column="base_url" jdbcType="VARCHAR" property="baseUrl" />
     <result column="api_key" jdbcType="LONGVARCHAR" property="apiKey" />
+    <result column="secret_key" jdbcType="LONGVARCHAR" property="secretKey" />
     <result column="is_enabled" jdbcType="TINYINT" property="enabled" />
     <result column="is_default_model" jdbcType="TINYINT" property="defaultModel" />
     <result column="last_check_status" jdbcType="VARCHAR" property="lastCheckStatus" />
@@ -66,7 +67,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, key_id, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified
+    id, key_id, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, secret_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.UserAiModelKeyExample" resultMap="BaseResultMap">
     select
@@ -106,8 +107,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.UserAiModelKey" useGeneratedKeys="true" keyProperty="id">
-    insert into user_ai_model_key (id, key_id, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{keyId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{modalityType,jdbcType=VARCHAR}, #{abilityType,jdbcType=VARCHAR}, #{providerCode,jdbcType=VARCHAR}, #{modelCode,jdbcType=VARCHAR}, #{modelName,jdbcType=VARCHAR}, #{baseUrl,jdbcType=VARCHAR}, #{apiKey,jdbcType=LONGVARCHAR}, #{enabled,jdbcType=TINYINT}, #{defaultModel,jdbcType=TINYINT}, #{lastCheckStatus,jdbcType=VARCHAR}, #{lastCheckTime,jdbcType=TIMESTAMP}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into user_ai_model_key (id, key_id, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, secret_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{keyId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{modalityType,jdbcType=VARCHAR}, #{abilityType,jdbcType=VARCHAR}, #{providerCode,jdbcType=VARCHAR}, #{modelCode,jdbcType=VARCHAR}, #{modelName,jdbcType=VARCHAR}, #{baseUrl,jdbcType=VARCHAR}, #{apiKey,jdbcType=LONGVARCHAR}, #{secretKey,jdbcType=LONGVARCHAR}, #{enabled,jdbcType=TINYINT}, #{defaultModel,jdbcType=TINYINT}, #{lastCheckStatus,jdbcType=VARCHAR}, #{lastCheckTime,jdbcType=TIMESTAMP}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.UserAiModelKey" useGeneratedKeys="true" keyProperty="id">
     insert into user_ai_model_key
@@ -122,6 +123,7 @@
       <if test="modelName != null">model_name,</if>
       <if test="baseUrl != null">base_url,</if>
       <if test="apiKey != null">api_key,</if>
+      <if test="secretKey != null">secret_key,</if>
       <if test="enabled != null">is_enabled,</if>
       <if test="defaultModel != null">is_default_model,</if>
       <if test="lastCheckStatus != null">last_check_status,</if>
@@ -143,6 +145,7 @@
       <if test="modelName != null">#{modelName,jdbcType=VARCHAR},</if>
       <if test="baseUrl != null">#{baseUrl,jdbcType=VARCHAR},</if>
       <if test="apiKey != null">#{apiKey,jdbcType=LONGVARCHAR},</if>
+      <if test="secretKey != null">#{secretKey,jdbcType=LONGVARCHAR},</if>
       <if test="enabled != null">#{enabled,jdbcType=TINYINT},</if>
       <if test="defaultModel != null">#{defaultModel,jdbcType=TINYINT},</if>
       <if test="lastCheckStatus != null">#{lastCheckStatus,jdbcType=VARCHAR},</if>
@@ -171,6 +174,7 @@
       <if test="row.modelName != null">model_name = #{row.modelName,jdbcType=VARCHAR},</if>
       <if test="row.baseUrl != null">base_url = #{row.baseUrl,jdbcType=VARCHAR},</if>
       <if test="row.apiKey != null">api_key = #{row.apiKey,jdbcType=LONGVARCHAR},</if>
+      <if test="row.secretKey != null">secret_key = #{row.secretKey,jdbcType=LONGVARCHAR},</if>
       <if test="row.enabled != null">is_enabled = #{row.enabled,jdbcType=TINYINT},</if>
       <if test="row.defaultModel != null">is_default_model = #{row.defaultModel,jdbcType=TINYINT},</if>
       <if test="row.lastCheckStatus != null">last_check_status = #{row.lastCheckStatus,jdbcType=VARCHAR},</if>
@@ -196,6 +200,7 @@
       model_name = #{row.modelName,jdbcType=VARCHAR},
       base_url = #{row.baseUrl,jdbcType=VARCHAR},
       api_key = #{row.apiKey,jdbcType=LONGVARCHAR},
+      secret_key = #{row.secretKey,jdbcType=LONGVARCHAR},
       is_enabled = #{row.enabled,jdbcType=TINYINT},
       is_default_model = #{row.defaultModel,jdbcType=TINYINT},
       last_check_status = #{row.lastCheckStatus,jdbcType=VARCHAR},
@@ -219,6 +224,7 @@
       <if test="modelName != null">model_name = #{modelName,jdbcType=VARCHAR},</if>
       <if test="baseUrl != null">base_url = #{baseUrl,jdbcType=VARCHAR},</if>
       <if test="apiKey != null">api_key = #{apiKey,jdbcType=LONGVARCHAR},</if>
+      <if test="secretKey != null">secret_key = #{secretKey,jdbcType=LONGVARCHAR},</if>
       <if test="enabled != null">is_enabled = #{enabled,jdbcType=TINYINT},</if>
       <if test="defaultModel != null">is_default_model = #{defaultModel,jdbcType=TINYINT},</if>
       <if test="lastCheckStatus != null">last_check_status = #{lastCheckStatus,jdbcType=VARCHAR},</if>
@@ -243,6 +249,7 @@
       model_name = #{modelName,jdbcType=VARCHAR},
       base_url = #{baseUrl,jdbcType=VARCHAR},
       api_key = #{apiKey,jdbcType=LONGVARCHAR},
+      secret_key = #{secretKey,jdbcType=LONGVARCHAR},
       is_enabled = #{enabled,jdbcType=TINYINT},
       is_default_model = #{defaultModel,jdbcType=TINYINT},
       last_check_status = #{lastCheckStatus,jdbcType=VARCHAR},

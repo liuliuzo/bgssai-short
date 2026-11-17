@@ -12,6 +12,7 @@ public class UserAiModelKeyItem {
     private String modelName;
     private String baseUrl;
     private String apiKeyMasked;
+    private String secretKeyMasked;
     private Integer enabled;
     private Integer defaultModel;
     private String lastCheckStatus;
@@ -87,6 +88,14 @@ public class UserAiModelKeyItem {
 
     public void setApiKeyMasked(String apiKeyMasked) {
         this.apiKeyMasked = apiKeyMasked;
+    }
+
+    public String getSecretKeyMasked() {
+        return secretKeyMasked;
+    }
+
+    public void setSecretKeyMasked(String secretKeyMasked) {
+        this.secretKeyMasked = secretKeyMasked;
     }
 
     public Integer getEnabled() {

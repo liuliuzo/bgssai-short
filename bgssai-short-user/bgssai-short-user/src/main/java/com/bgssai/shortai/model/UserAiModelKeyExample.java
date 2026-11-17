@@ -128,6 +128,9 @@ public class UserAiModelKeyExample {
         public Criteria andBaseUrlIsNotNull() { addCriterion("base_url is not null"); return (Criteria) this; }
         public Criteria andBaseUrlEqualTo(String value) { addCriterion("base_url =", value, "baseUrl"); return (Criteria) this; }
 
+        public Criteria andSecretKeyIsNull() { addCriterion("secret_key is null"); return (Criteria) this; }
+        public Criteria andSecretKeyIsNotNull() { addCriterion("secret_key is not null"); return (Criteria) this; }
+
         public Criteria andEnabledIsNull() { addCriterion("is_enabled is null"); return (Criteria) this; }
         public Criteria andEnabledIsNotNull() { addCriterion("is_enabled is not null"); return (Criteria) this; }
         public Criteria andEnabledEqualTo(Integer value) { addCriterion("is_enabled =", value, "enabled"); return (Criteria) this; }

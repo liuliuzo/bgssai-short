@@ -4,7 +4,7 @@ import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 import { publicModelText } from '../../publicModel'
-import { modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
+import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { shotCanvasStatusKey, shotOffersVideoRegenerate } from './shotCardMedia'
 import { runOfficialShotVideo } from './officialVideo'
 import {
@@ -346,7 +346,9 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
         {cost ? (
           <Paragraph style={{ marginBottom: 0 }}>
             约 {cost.task_count} 镜 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
-            （{publicModelText(cost.display_name || cost.model_code, batchTaskType) || '-'} · {batchTaskType}）
+            （{(isUserKeyModelRow(cost)
+              ? (cost.display_name || cost.model_name || cost.model_code)
+              : publicModelText(cost.display_name || cost.model_code, batchTaskType)) || '-'} · {batchTaskType}）
           </Paragraph>
         ) : null}
       </Card>

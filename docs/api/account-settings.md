@@ -73,6 +73,7 @@
         "model_name": "Grok 4.7",
         "base_url": "https://api.x.ai/v1",
         "api_key_masked": "xai-****9k2a",
+        "secret_key_masked": "",
         "enabled": 1,
         "default_model": 1,
         "last_check_status": "OK",
@@ -81,16 +82,17 @@
     ],
     "provider_preset_list": [
       {
-        "provider_code": "XAI",
-        "provider_name": "Grok (xAI)",
-        "default_base_url": "https://api.x.ai/v1",
+        "provider_code": "MINIMAX",
+        "provider_name": "MiniMax (海螺)",
+        "auth_type": "BEARER",
+        "default_base_url": "https://api.minimaxi.com",
         "abilities": [
           {
             "modality_type": "TEXT",
             "ability_type": "TEXT",
             "ability_label": "文本模型",
             "models": [
-              { "model_code": "grok-4.7", "model_name": "Grok 4.7", "recommended": true }
+              { "model_code": "MiniMax-M2.5", "model_name": "MiniMax M2.5", "recommended": true }
             ]
           }
         ]
@@ -100,44 +102,47 @@
 }
 ```
 
+`auth_type` 取值：`BEARER`（单 API Key）、`AK_SK`（可灵双密钥 `api_key` + `secret_key`）、`API_KEY_HEADER`（PixVerse `API-KEY`）。
+
 ## POST /bgssai/user/ai-model-keys/create
 
 支持单条创建或通过 `items` 一键批量创建多模态配置：
 
 ```json
 {
-  "provider_code": "XAI",
-  "base_url": "https://api.x.ai/v1",
-  "api_key": "xai-...",
-  "modality_type": "TEXT",
-  "ability_type": "TEXT",
-  "model_code": "grok-4.7",
-  "model_name": "Grok 4.7",
+  "provider_code": "KLING",
+  "base_url": "https://api-beijing.klingai.com",
+  "api_key": "ak_...",
+  "secret_key": "sk_...",
+  "modality_type": "VIDEO",
+  "ability_type": "VIDEO",
+  "model_code": "kling-v3",
+  "model_name": "Kling V3",
   "only_user_key": 1,
   "items": [
-    { "modality_type": "TEXT", "ability_type": "TEXT", "model_code": "grok-4.7", "model_name": "Grok 4.7" },
-    { "modality_type": "IMAGE", "ability_type": "IMAGE", "model_code": "grok-imagine-image-2.0", "model_name": "Grok Imagine Image 2.0" },
-    { "modality_type": "VIDEO", "ability_type": "VIDEO", "model_code": "grok-imagine-video-1.5", "model_name": "Grok Imagine Video 1.5" }
+    { "modality_type": "VIDEO", "ability_type": "VIDEO", "model_code": "kling-v3", "model_name": "Kling V3" },
+    { "modality_type": "IMAGE", "ability_type": "IMAGE", "model_code": "kling-v3", "model_name": "Kling Image V3" }
   ]
 }
 ```
 
-返回 `{ "result": { "only_user_key": 1, "created_count": 3, "key_list": [ ... ] } }`。
+返回 `{ "result": { "only_user_key": 1, "created_count": 2, "key_list": [ ... ] } }`。
 
 ## POST /bgssai/user/ai-model-keys/update
 
-`api_key` 可选，留空时保留已存密钥：
+`api_key` 与 `secret_key` 可选，留空时保留已存密钥：
 
 ```json
 {
   "key_id": "umk-1001",
   "modality_type": "TEXT",
   "ability_type": "TEXT",
-  "provider_code": "XAI",
-  "model_code": "grok-4.7",
-  "model_name": "Grok 4.7",
-  "base_url": "https://api.x.ai/v1",
-  "api_key": ""
+  "provider_code": "DEEPSEEK",
+  "model_code": "deepseek-chat",
+  "model_name": "DeepSeek Chat",
+  "base_url": "https://api.deepseek.com",
+  "api_key": "",
+  "secret_key": ""
 }
 ```
 
@@ -169,13 +174,19 @@
 
 ## POST /bgssai/user/ai-model-keys/test
 
-支持传已保存的 `key_id`，或新建前直传 `provider_code`、`base_url`、`api_key`、`model_code`：
+支持传已保存的 `key_id`，或新建前直传 `provider_code`、`base_url`、`api_key`、`secret_key`、`model_code`：
 
 ```json
-{ "key_id": "umk-1001" }
+{
+  "provider_code": "MINIMAX",
+  "base_url": "https://api.minimaxi.com",
+  "api_key": "eyJ...",
+  "secret_key": "",
+  "model_code": "MiniMax-M2.5"
+}
 ```
 
-向 `{base_url}/models` 发起零计费连通检测，返回：
+按供应商执行零计费探活（`MINIMAX` 调 `POST /v1/get_voice`；`KLING` 签发短期 JWT 调 `GET /v1/videos/text2video?pageNum=1&pageSize=1`；`PIXVERSE` 调 `GET /openapi/v2/account/balance`；`DEEPSEEK` / `XAI` 调 `GET /models`），返回：
 
 ```json
 {

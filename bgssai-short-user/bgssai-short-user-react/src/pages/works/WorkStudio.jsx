@@ -1,4 +1,4 @@
-import { modelPricingCompactLabel, modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
+import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel, estimateShotBatchTokens } from '../../modelPricing'
 import { creatorToolLabel, publicModelText } from '../../publicModel'
 import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
@@ -89,6 +89,9 @@ function formatYuan(cent) {
 function confirmEstimate(est, title) {
   const breakdown = (est.shot_cost_list || []).slice(0, 8).map((s) =>
     `镜${s.shot_no} ${s.task_type} ${formatYuan(s.estimated_cost_cent)}元`).join('；')
+  const modelText = isUserKeyModelRow(est)
+    ? (est.display_name || est.model_name || est.model_code || '-')
+    : (creatorToolLabel(est.display_name || est.model_code, est.task_type) || '-')
   return new Promise((resolve) => {
     Modal.confirm({
       title: title || '确认费用后提交',
@@ -96,7 +99,7 @@ function confirmEstimate(est, title) {
         <div>
           <p>预计费用 {formatYuan(est.estimated_cost_cent)} 元</p>
           <p>余额可用 {formatYuan(est.available_cent)} 元</p>
-          <p>共 {est.task_count || 0} 项（{creatorToolLabel(est.display_name || est.model_code, est.task_type) || '-'}）</p>
+          <p>共 {est.task_count || 0} 项（{modelText}）</p>
           {breakdown ? <p>{breakdown}{(est.shot_cost_list || []).length > 8 ? '…' : ''}</p> : null}
         </div>
       ),
@@ -1912,7 +1915,9 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
             {cost ? (
               <Paragraph style={{ marginBottom: 0 }}>
                 约 {cost.task_count} 镜 / {formatYuan(cost.estimated_cost_cent)} 元
-                （预计 {tokenAmountLabel(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {publicModelText(cost.display_name || cost.model_code, cost.task_type) || '-'}）
+                （预计 {tokenAmountLabel(estimateShotBatchTokens(selected.length ? selected : rows, 1000).billed_tokens)} · 余额 {formatYuan(cost.available_cent)} 元 · {(isUserKeyModelRow(cost)
+                  ? (cost.display_name || cost.model_name || cost.model_code)
+                  : publicModelText(cost.display_name || cost.model_code, cost.task_type)) || '-'}）
                 {(cost.shot_cost_list || []).length > 0
                   ? ` · 明细 ${(cost.shot_cost_list || []).slice(0, 5).map((s) => `镜${s.shot_no}:${formatYuan(s.estimated_cost_cent)}`).join('、')}`
                   : ''}

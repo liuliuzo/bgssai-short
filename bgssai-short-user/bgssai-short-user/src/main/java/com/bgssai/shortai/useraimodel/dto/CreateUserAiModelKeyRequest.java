@@ -9,6 +9,7 @@ public class CreateUserAiModelKeyRequest {
     private String baseUrl;
     @NotBlank(message = "api_key required")
     private String apiKey;
+    private String secretKey;
     private String modalityType;
     private String abilityType;
     private String modelCode;
@@ -38,6 +39,14 @@ public class CreateUserAiModelKeyRequest {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 
     public String getModalityType() {

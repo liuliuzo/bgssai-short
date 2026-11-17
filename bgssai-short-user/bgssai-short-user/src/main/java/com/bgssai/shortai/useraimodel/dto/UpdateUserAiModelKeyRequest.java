@@ -12,6 +12,7 @@ public class UpdateUserAiModelKeyRequest {
     private String modelName;
     private String baseUrl;
     private String apiKey;
+    private String secretKey;
 
     public String getKeyId() {
         return keyId;
@@ -75,5 +76,13 @@ public class UpdateUserAiModelKeyRequest {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 }

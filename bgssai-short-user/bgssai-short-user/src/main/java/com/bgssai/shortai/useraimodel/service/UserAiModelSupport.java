@@ -22,10 +22,33 @@ public final class UserAiModelSupport {
 
     public static final String USER_KEY_PREFIX = "umk-";
     public static final String CREDENTIAL_SOURCE_USER = "USER_KEY";
+
+    public static final String PROVIDER_MINIMAX = "MINIMAX";
+    public static final String PROVIDER_MINIMAX_NAME = "MiniMax (海螺)";
+    public static final String DEFAULT_MINIMAX_BASE_URL = "https://api.minimaxi.com";
+
+    public static final String PROVIDER_KLING = "KLING";
+    public static final String PROVIDER_KLING_NAME = "可灵 (Kling AI)";
+    public static final String DEFAULT_KLING_BASE_URL = "https://api-beijing.klingai.com";
+
+    public static final String PROVIDER_PIXVERSE = "PIXVERSE";
+    public static final String PROVIDER_PIXVERSE_NAME = "PixVerse";
+    public static final String DEFAULT_PIXVERSE_BASE_URL = "https://app-api.pixverse.ai";
+
+    public static final String PROVIDER_DEEPSEEK = "DEEPSEEK";
+    public static final String PROVIDER_DEEPSEEK_NAME = "DeepSeek";
+    public static final String DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+
     public static final String PROVIDER_XAI = "XAI";
     public static final String PROVIDER_XAI_NAME = "Grok (xAI)";
     public static final String DEFAULT_XAI_BASE_URL = "https://api.x.ai/v1";
 
+    public static final String AUTH_BEARER = "BEARER";
+    public static final String AUTH_AK_SK = "AK_SK";
+    public static final String AUTH_API_KEY_HEADER = "API_KEY_HEADER";
+
+    public static final Set<String> SUPPORTED_PROVIDERS = Set.of(
+            PROVIDER_MINIMAX, PROVIDER_KLING, PROVIDER_PIXVERSE, PROVIDER_DEEPSEEK, PROVIDER_XAI);
     public static final Set<String> MODALITIES = Set.of("TEXT", "IMAGE", "VIDEO", "AUDIO");
     public static final Set<String> ABILITIES = Set.of("TEXT", "IMAGE", "VIDEO", "VOICE", "ASR", "MUSIC");
 
@@ -63,17 +86,43 @@ public final class UserAiModelSupport {
         if (code.isBlank()) {
             return PROVIDER_XAI;
         }
-        if (!PROVIDER_XAI.equals(code)) {
+        if ("GROK".equals(code) || "X.AI".equals(code)) {
+            return PROVIDER_XAI;
+        }
+        if ("KLINGAI".equals(code)) {
+            return PROVIDER_KLING;
+        }
+        if ("HAILUO".equals(code) || "MINIMAXI".equals(code)) {
+            return PROVIDER_MINIMAX;
+        }
+        if (!SUPPORTED_PROVIDERS.contains(code)) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "unsupported provider_code: " + code);
         }
         return code;
     }
 
     public static String providerName(String providerCode) {
-        if (PROVIDER_XAI.equalsIgnoreCase(providerCode)) {
-            return PROVIDER_XAI_NAME;
+        if (providerCode == null) {
+            return "";
         }
-        return providerCode == null ? "" : providerCode;
+        return switch (providerCode.trim().toUpperCase(Locale.ROOT)) {
+            case PROVIDER_MINIMAX -> PROVIDER_MINIMAX_NAME;
+            case PROVIDER_KLING -> PROVIDER_KLING_NAME;
+            case PROVIDER_PIXVERSE -> PROVIDER_PIXVERSE_NAME;
+            case PROVIDER_DEEPSEEK -> PROVIDER_DEEPSEEK_NAME;
+            case PROVIDER_XAI -> PROVIDER_XAI_NAME;
+            default -> providerCode;
+        };
+    }
+
+    public static String authType(String providerCode) {
+        if (PROVIDER_KLING.equalsIgnoreCase(providerCode)) {
+            return AUTH_AK_SK;
+        }
+        if (PROVIDER_PIXVERSE.equalsIgnoreCase(providerCode)) {
+            return AUTH_API_KEY_HEADER;
+        }
+        return AUTH_BEARER;
     }
 
     public static String normalizeAbility(String modalityType, String abilityType) {
@@ -134,10 +183,27 @@ public final class UserAiModelSupport {
     }
 
     public static String defaultBaseUrl(String providerCode) {
-        if (PROVIDER_XAI.equalsIgnoreCase(providerCode)) {
+        if (providerCode == null) {
             return DEFAULT_XAI_BASE_URL;
         }
-        return DEFAULT_XAI_BASE_URL;
+        return switch (providerCode.trim().toUpperCase(Locale.ROOT)) {
+            case PROVIDER_MINIMAX -> DEFAULT_MINIMAX_BASE_URL;
+            case PROVIDER_KLING -> DEFAULT_KLING_BASE_URL;
+            case PROVIDER_PIXVERSE -> DEFAULT_PIXVERSE_BASE_URL;
+            case PROVIDER_DEEPSEEK -> DEFAULT_DEEPSEEK_BASE_URL;
+            default -> DEFAULT_XAI_BASE_URL;
+        };
+    }
+
+    public static String stripTrailingPath(String baseUrl, String suffix) {
+        String trimmed = baseUrl == null ? "" : baseUrl.trim();
+        while (trimmed.endsWith("/")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        if (suffix != null && !suffix.isBlank() && trimmed.toLowerCase(Locale.ROOT).endsWith(suffix.toLowerCase(Locale.ROOT))) {
+            return trimmed.substring(0, trimmed.length() - suffix.length());
+        }
+        return trimmed;
     }
 
     public static void validatePublicHttpsUrl(String rawUrl, String fieldName) {
@@ -279,9 +345,80 @@ public final class UserAiModelSupport {
     }
 
     public static List<ProviderPresetItem> buildProviderPresets() {
+        ProviderPresetItem minimax = new ProviderPresetItem(
+                PROVIDER_MINIMAX,
+                PROVIDER_MINIMAX_NAME,
+                AUTH_BEARER,
+                DEFAULT_MINIMAX_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("MiniMax-M2.5", "MiniMax M2.5", true),
+                                new ModelPresetOption("MiniMax-M2.5-highspeed", "MiniMax M2.5 Highspeed", false),
+                                new ModelPresetOption("abab6.5s-chat", "MiniMax abab6.5s", false))),
+                        new ProviderAbilityPreset("IMAGE", "IMAGE", "图片模型", List.of(
+                                new ModelPresetOption("image-01", "MiniMax Image-01", true),
+                                new ModelPresetOption("image-01-live", "MiniMax Image-01 Live", false))),
+                        new ProviderAbilityPreset("VIDEO", "VIDEO", "视频模型", List.of(
+                                new ModelPresetOption("MiniMax-Hailuo-02", "MiniMax Hailuo 02", true),
+                                new ModelPresetOption("MiniMax-Hailuo-2.3", "MiniMax Hailuo 2.3", false),
+                                new ModelPresetOption("T2V-01-Director", "MiniMax T2V-01 Director", false),
+                                new ModelPresetOption("I2V-01-Director", "MiniMax I2V-01 Director", false))),
+                        new ProviderAbilityPreset("AUDIO", "VOICE", "音频模型（配音合成）", List.of(
+                                new ModelPresetOption("speech-2.8-hd", "MiniMax Speech 2.8 HD", true),
+                                new ModelPresetOption("speech-2.8-turbo", "MiniMax Speech 2.8 Turbo", false),
+                                new ModelPresetOption("speech-02-hd", "MiniMax Speech 02 HD", false))),
+                        new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
+                                new ModelPresetOption("asr-1.0", "MiniMax ASR 1.0", true))),
+                        new ProviderAbilityPreset("AUDIO", "MUSIC", "音频模型（背景音乐）", List.of(
+                                new ModelPresetOption("music-2.5", "MiniMax Music 2.5", true),
+                                new ModelPresetOption("music-2.0", "MiniMax Music 2.0", false)))
+                ));
+        ProviderPresetItem kling = new ProviderPresetItem(
+                PROVIDER_KLING,
+                PROVIDER_KLING_NAME,
+                AUTH_AK_SK,
+                DEFAULT_KLING_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("VIDEO", "VIDEO", "视频模型", List.of(
+                                new ModelPresetOption("kling-v3", "Kling V3", true),
+                                new ModelPresetOption("kling-v2-6", "Kling V2.6", false),
+                                new ModelPresetOption("kling-v2-5-turbo", "Kling V2.5 Turbo", false),
+                                new ModelPresetOption("kling-v2-1-master", "Kling V2.1 Master", false),
+                                new ModelPresetOption("kling-v1-6", "Kling V1.6", false))),
+                        new ProviderAbilityPreset("IMAGE", "IMAGE", "图片模型", List.of(
+                                new ModelPresetOption("kling-v3", "Kling Image V3", true),
+                                new ModelPresetOption("kling-v2-1", "Kling Image V2.1", false),
+                                new ModelPresetOption("kling-v1-5", "Kling Image V1.5", false))),
+                        new ProviderAbilityPreset("AUDIO", "VOICE", "音频模型（配音合成）", List.of(
+                                new ModelPresetOption("kling-tts", "Kling TTS", true)))
+                ));
+        ProviderPresetItem pixverse = new ProviderPresetItem(
+                PROVIDER_PIXVERSE,
+                PROVIDER_PIXVERSE_NAME,
+                AUTH_API_KEY_HEADER,
+                DEFAULT_PIXVERSE_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("VIDEO", "VIDEO", "视频模型", List.of(
+                                new ModelPresetOption("v6", "PixVerse v6", true),
+                                new ModelPresetOption("v6-max", "PixVerse v6 Max", false),
+                                new ModelPresetOption("v5.6", "PixVerse v5.6", false),
+                                new ModelPresetOption("v5", "PixVerse v5", false),
+                                new ModelPresetOption("v4.5", "PixVerse v4.5", false)))
+                ));
+        ProviderPresetItem deepseek = new ProviderPresetItem(
+                PROVIDER_DEEPSEEK,
+                PROVIDER_DEEPSEEK_NAME,
+                AUTH_BEARER,
+                DEFAULT_DEEPSEEK_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("deepseek-chat", "DeepSeek Chat", true),
+                                new ModelPresetOption("deepseek-reasoner", "DeepSeek Reasoner", false)))
+                ));
         ProviderPresetItem xai = new ProviderPresetItem(
                 PROVIDER_XAI,
                 PROVIDER_XAI_NAME,
+                AUTH_BEARER,
                 DEFAULT_XAI_BASE_URL,
                 List.of(
                         new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
@@ -300,6 +437,6 @@ public final class UserAiModelSupport {
                         new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
                                 new ModelPresetOption("grok-voice-transcribe-2.0", "Grok Voice Transcribe 2.0", true)))
                 ));
-        return List.of(xai);
+        return List.of(minimax, kling, pixverse, deepseek, xai);
     }
 }

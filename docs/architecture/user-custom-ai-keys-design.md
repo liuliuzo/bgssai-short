@@ -1,4 +1,4 @@
-# 用户自定义模型 API Key 与 Grok 接入详设
+# 用户自定义模型 API Key 多供应商接入详设
 
 对齐：`docs/feature/user-custom-ai-keys.md`、`docs/api/account-settings.md`、`docs/security/ai-provider-secrets.md`。
 
@@ -22,11 +22,12 @@
 | `user_id` | `VARCHAR(64)` | `NOT NULL` | 用户标识 |
 | `modality_type` | `VARCHAR(16)` | `NOT NULL` | `TEXT` / `IMAGE` / `VIDEO` / `AUDIO` |
 | `ability_type` | `VARCHAR(16)` | `NOT NULL` | `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` |
-| `provider_code` | `VARCHAR(32)` | `NOT NULL` | `XAI` |
-| `model_code` | `VARCHAR(128)` | `NOT NULL` | 上游模型编码（如 `grok-4.7`） |
+| `provider_code` | `VARCHAR(32)` | `NOT NULL` | `XAI` / `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` |
+| `model_code` | `VARCHAR(128)` | `NOT NULL` | 上游模型编码 |
 | `model_name` | `VARCHAR(128)` | `NOT NULL` | 用户展示名称 |
 | `base_url` | `VARCHAR(255)` | `NOT NULL DEFAULT 'https://api.x.ai/v1'` | 上游公网 `https://` 根地址 |
-| `api_key` | `TEXT` | `NOT NULL` | 明文 API Key（开发期策略） |
+| `api_key` | `TEXT` | `NOT NULL` | 明文 API Key 或 Access Key |
+| `secret_key` | `TEXT` | `NULL` | 辅助密钥（可灵 Secret Key；其余供应商留空） |
 | `is_enabled` | `TINYINT(1)` | `NOT NULL DEFAULT 1` | `0=停用`，`1=启用` |
 | `is_default_model` | `TINYINT(1)` | `NOT NULL DEFAULT 0` | 同用户同能力默认标记 |
 | `last_check_status` | `VARCHAR(16)` | `NULL` | `OK` / `FAILED` |
@@ -48,30 +49,88 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
   -> AiTaskQueue / OfficialShotVideoService / DramaAssistService / AiTaskService：
      -> credential_source=USER_KEY 时 estimated_cost_cent = 0，跳过 QuotaConsumeService.assertAffordable
   -> ShortAiTaskWorker / DramaAssistService
-     -> AiProviderRegistry.resolve：USER_KEY 直接分派 provider_code 对应 Bean（XaiGrokAiProvider）
-     -> XaiGrokAiProvider.execute：按 (user_id, user_key_id) 按需读取明文 api_key 并执行 HTTPS 调用
+     -> AiProviderRegistry.resolve：USER_KEY 直接分派 provider_code 对应 Bean：
+        MINIMAX -> MiniMaxAiProvider
+        KLING -> KlingAiProvider（即时调用 KlingJwtSupport.resolveBearerToken 签发 HS256 JWT）
+        PIXVERSE -> PixVerseAiProvider（携带 API-KEY + 每次独立 Ai-trace-id）
+        DEEPSEEK -> DeepSeekAiProvider
+        XAI -> XaiGrokAiProvider
      -> ShortTaskSettlementService.settle：cost = 0，跳过 QuotaConsumeService.consume，写 ai_usage_record(cost_cent=0)
 ```
 
-- **异步重试与视频任务防重提交**：`XaiGrokAiProvider.video` 在提交 `POST /v1/videos/generations` 取得 `request_id` 后立即将 `xai_video_request_id` 写入 `short_ai_task.request_json`（不写入 `api_key`）。工作线程如重新执行同一任务且已存在 `xai_video_request_id`，直接轮询 `GET /v1/videos/{request_id}`。
+- **异步重试与视频/图片任务防重提交**：各异步供应商在提交取得任务标识后立即写入 `short_ai_task.request_json`（不写入 `api_key` 或 `secret_key`），Worker 重跑同一任务时直接续查原任务：
+  - `XAI`：`xai_video_request_id`
+  - `MINIMAX`：`minimax_video_task_id`
+  - `KLING`：`kling_video_task_id`、`kling_video_kind`（`image2video` / `text2video`）、`kling_image_task_id`
+  - `PIXVERSE`：`pixverse_video_id`
 - **表缺失容错**：`UserAiModelKeyService` 在只读模型解析与网关就绪路径捕获缺表类 `DataAccessException` 并按未开启处理，写操作接口正常抛出异常。
 
-## 3. Grok（xAI）第三方 API 能力核对（Standards §7）
+## 3. 第三方 API 七维度核对（Standards §7）
 
-官方文档出处：`https://docs.x.ai`（2026-11 核对）。
+### 3.1 MiniMax（`provider_code = MINIMAX`，`https://api.minimaxi.com`）
 
 | 核对维度 | 文本 (`TEXT`) | 图片 (`IMAGE`) | 视频 (`VIDEO`) | 语音 (`VOICE`) | 识别 (`ASR`) | 音乐 (`MUSIC`) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 端点是否存在 | `POST /v1/chat/completions` | 文生 `POST /v1/images/generations`；图生/参考 `POST /v1/images/edits` | 提交 `POST /v1/videos/generations`；轮询 `GET /v1/videos/{request_id}` | `POST /v1/tts` | `POST /v1/stt`（multipart） | 无官方生成端点 |
-| 请求 / 响应字段 | `{model, messages, stream:false}` -> `choices[0].message.content`, `usage.total_tokens` | `{model, prompt, aspect_ratio, response_format:"b64_json", n:1}`；edits 加 `image:{url,type:"image_url"}` -> `data[0].b64_json` / `url` | `{model, prompt, duration(1..15), aspect_ratio, resolution, image:{url}}` -> `request_id` -> `status: done` + `video.url` + `video.duration` | `{text, voice_id, language:"zh"}` -> 原始音频字节（MP3/WAV） | `file`, `model`, `format=true`, `language=zh` -> `text`, `duration`, `words[{start,end,text}]` | 不支持 |
-| 异步 / 回调机制 | 同步 JSON | 同步 JSON（`response_format=b64_json`） | 异步轮询（4s 间隔，最长 `max(900, timeout_sec)` 秒，容错 502/503/504） | 同步二进制流 | 同步 JSON | 无 |
-| 配额与限流 | 按账户历史消费 Tier 限流（RPS/TPM），超限 HTTP 429 | 按秒级并发限制，超限 HTTP 429 | 按秒级并发限制，超限 HTTP 429 | 标准 API 限流 | 标准 API 限流 | 无 |
-| 鉴权方式 | `Authorization: Bearer <XAI_API_KEY>` | 同左 | 同左 | 同左 | 同左 | 无 |
-| 模型与版本 | `grok-4.7`、`grok-4`、`grok-3`、`grok-3-mini` | `grok-imagine-image-2.0`、`grok-2-image`（400 自动降级去除不支持字段） | `grok-imagine-video-1.5`、`grok-imagine-video-1.5-lite` | `grok-tts`（音色映射 `eve/ara/rex/leo/sal`） | `grok-voice-transcribe-2.0` | 无 |
-| 合规与降级 | `GET /v1/models` 零计费探测 | 参考图支持 HTTPS URL 与 data URI | 下载 `video.url` 后转存对象存储 | 时长由 `MediaMetadata` 实测 | `words` 按标点/停顿归并为 `sentences` | `XAI` 不注册 `MUSIC` 预设；开启 `only_user_key=1` 时返回 `4014`，合成支持无 BGM 导出 |
+| 端点是否存在 | `POST /v1/chat/completions` | `POST /v1/image_generation` | 提交 `POST /v1/video_generation`；轮询 `GET /v1/query/video_generation`；取档 `GET /v1/files/retrieve` | `POST /v1/t2a_v2` | `POST /v1/speech_to_text`（multipart） | `POST /v1/music_generation` |
+| 请求 / 响应字段 | `{model, messages, stream:false}` -> `choices[0].message.content`, `usage.total_tokens` | `{model, prompt, aspect_ratio, n:1, response_format:"base64"}`；参考图传 `subject_reference` -> `data.image_base64[0]` / `image_urls[0]` | `{model, prompt, duration(6\|10), resolution:"768P", first_frame_image, last_frame_image}` -> `task_id` -> `status=Success` + `file_id` -> `file.download_url` | `{model, text, stream:false, output_format:"hex", voice_setting, audio_setting}` -> `data.audio`(hex) / `extra_info.audio_length` | `file`, `model`, `response_format=verbose_json`, `timestamp_level=word` -> `text`, `duration`, `segments` | `{model, prompt, is_instrumental, lyrics, output_format:"hex", audio_setting}` -> `data.audio`(hex) / `extra_info.music_duration` |
+| 异步 / 回调机制 | 同步 JSON | 同步 JSON | 异步轮询（4s 间隔，最长 `max(900, timeout_sec)` 秒，容错 502/503/504） | 同步 JSON | 同步 JSON | 同步 JSON |
+| 配额与限流 | 按账户并发/RPM 限流，超限 HTTP 429 或 `base_resp.status_code` | 同左 | 同左 | 同左 | 同左 | 同左 |
+| 鉴权方式 | `Authorization: Bearer <MINIMAX_API_KEY>` | 同左 | 同左 | 同左 | 同左 | 同左 |
+| 模型与版本 | `MiniMax-M2.5`、`MiniMax-M2.5-highspeed`、`abab6.5s-chat` | `image-01`、`image-01-live` | `MiniMax-Hailuo-02`、`MiniMax-Hailuo-2.3`、`T2V-01-Director`、`I2V-01-Director` | `speech-2.8-hd`、`speech-2.8-turbo`、`speech-02-hd` | `asr-1.0` | `music-2.5`、`music-2.0` |
+| 合规与降级 | `POST /v1/get_voice` 零计费探活 | 不支持 `subject_reference` 时自动降级重试 | 下载 URL 校验公网 HTTPS | 预设音色映射官方系统音色 ID | `segments` 规范为 `sentences[{begin_ms, end_ms, text}]` | `music-2.0` 无词时自动补 `[Instrumental]` |
+
+### 3.2 可灵（`provider_code = KLING`，`https://api-beijing.klingai.com`）
+
+| 核对维度 | 图片 (`IMAGE`) | 视频 (`VIDEO`) | 语音 (`VOICE`) | 文本 / 识别 / 音乐 |
+| --- | --- | --- | --- | --- |
+| 端点是否存在 | 提交 `POST /v1/images/generations`；轮询 `GET /v1/images/generations/{task_id}` | 文生 `POST /v1/videos/text2video`；图生 `POST /v1/videos/image2video`；轮询 `GET /v1/videos/{kind}/{task_id}` | 提交 `POST /v1/audio/tts`；轮询 `GET /v1/audio/tts/{task_id}` | 无官方对等生成端点 |
+| 请求 / 响应字段 | `{model_name, prompt, n:1, aspect_ratio, image, image_reference, image_fidelity}` -> `data.task_id` -> `task_result.images[0].url` | `{model_name, prompt, mode, duration(5\|10), image, image_tail, aspect_ratio}` -> `data.task_id` -> `task_result.videos[0].url` | `{text, voice_id, voice_language:"zh", voice_speed:1}` -> `data.task_id` -> `task_result.audios[0].url` | 不支持（返回 `4014`） |
+| 异步 / 回调机制 | 异步轮询（3s 间隔） | 异步轮询（4s 间隔，最长 `max(900, timeout_sec)` 秒） | 异步轮询 | 无 |
+| 配额与限流 | 按账户资源包与并发数限制，失败见 `code` / `task_status_msg` | 同左 | 同左 | 无 |
+| 鉴权方式 | Access Key (`api_key`) + Secret Key (`secret_key`) 签名 HS256 JWT，头部 `Authorization: Bearer <JWT>`（`iss=ak, nbf=now-5, exp=now+1800`） | 同左 | 同左 | 无 |
+| 模型与版本 | `kling-v3`、`kling-v2-1`、`kling-v1-5` | `kling-v3`、`kling-v2-6`、`kling-v2-5-turbo`、`kling-v2-1-master`、`kling-v1-6` | `kling-tts` | 无 |
+| 合规与降级 | `image_reference` 报错时自动剥离并重试 | 持久化 `kling_video_task_id` 与 `kling_video_kind` | 预设音色映射可灵官方中文音色 | 需在混合模式或配用其他供应商 |
+
+- 连通性探活：`GET /v1/videos/text2video?pageNum=1&pageSize=1`（HS256 JWT，不产生计费任务）。
+
+### 3.3 PixVerse（`provider_code = PIXVERSE`，`https://app-api.pixverse.ai`）
+
+| 核对维度 | 视频 (`VIDEO`) | 文本 / 图片 / 音频 |
+| --- | --- | --- |
+| 端点是否存在 | 传图 `POST /openapi/v2/image/upload`（multipart `image`）；文生 `POST /openapi/v2/video/text/generate`；图生 `POST /openapi/v2/video/img/generate`；首尾帧 `POST /openapi/v2/video/transition/generate`；轮询 `GET /openapi/v2/video/result/{video_id}` | 无对等端点 |
+| 请求 / 响应字段 | 上传返回 `Resp.img_id`；生成返回 `ErrCode=0, Resp.video_id`；轮询返回 `Resp.status`（`1=完成`, `5=生成中`, `7=审核拒绝`, `8=失败`）与 `Resp.url` | 不支持（返回 `4014`） |
+| 异步 / 回调机制 | 异步轮询（4s 间隔，最长 `max(900, timeout_sec)` 秒） | 无 |
+| 配额与限流 | 按积分扣除，支持 `GET /openapi/v2/account/balance` 零计费查询余额探活 | 无 |
+| 鉴权方式 | 请求头 `API-KEY: <key>` + 每次独立 UUID `Ai-trace-id` | 无 |
+| 模型与版本 | `v6`、`v6-max`、`v5.6`、`v5`、`v4.5` | 无 |
+| 合规与降级 | 持久化 `pixverse_video_id`；输出 URL 校验公网 HTTPS 后下载落库 | 需在混合模式或配用其他供应商 |
+
+### 3.4 DeepSeek（`provider_code = DEEPSEEK`，`https://api.deepseek.com`）
+
+| 核对维度 | 文本 (`TEXT`) | 图片 / 视频 / 音频 |
+| --- | --- | --- |
+| 端点是否存在 | `POST /chat/completions`（兼容 `https://api.deepseek.com/chat/completions`） | 无对等端点 |
+| 请求 / 响应字段 | `{model, messages, stream:false}` -> `choices[0].message.content`, `usage.total_tokens`（不强传 `temperature` 以兼容 `deepseek-reasoner`） | 不支持（返回 `4014`） |
+| 异步 / 回调机制 | 同步 JSON | 无 |
+| 配额与限流 | 按账户余额与并发限制；`GET /models` 零计费探活 | 无 |
+| 鉴权方式 | `Authorization: Bearer <DEEPSEEK_API_KEY>` | 无 |
+| 模型与版本 | `deepseek-chat`、`deepseek-reasoner` | 无 |
+| 合规与降级 | 直接提取终态答复文本 | 需在混合模式或配用其他供应商 |
+
+### 3.5 Grok（`provider_code = XAI`，`https://api.x.ai/v1`）
+
+| 核对维度 | 文本 (`TEXT`) | 图片 (`IMAGE`) | 视频 (`VIDEO`) | 语音 (`VOICE`) | 识别 (`ASR`) |
+| --- | --- | --- | --- | --- | --- |
+| 端点是否存在 | `POST /v1/chat/completions` | 文生 `POST /v1/images/generations`；图生 `POST /v1/images/edits` | 提交 `POST /v1/videos/generations`；轮询 `GET /v1/videos/{request_id}` | `POST /v1/tts` | `POST /v1/stt`（multipart） |
+| 请求 / 响应字段 | `{model, messages, stream:false}` -> `choices[0].message.content` | `response_format:"b64_json"` -> `data[0].b64_json` / `url` | `{model, prompt, duration, aspect_ratio, resolution, image:{url}}` -> `status:done` + `video.url` | `{text, voice_id, language:"zh"}` -> 音频字节 | `file`, `model`, `format=true`, `language=zh` -> `text`, `words` |
+| 异步 / 回调机制 | 同步 JSON | 同步 JSON | 异步轮询（4s，最长 `max(900, timeout_sec)` 秒） | 同步流 | 同步 JSON |
+| 配额与限流 | `GET /v1/models` 零计费探活；超限 HTTP 429 | 同左 | 同左 | 同左 | 同左 |
+| 鉴权方式 | `Authorization: Bearer <XAI_API_KEY>` | 同左 | 同左 | 同左 | 同左 |
+| 模型与版本 | `grok-4.7`、`grok-4`、`grok-3`、`grok-3-mini` | `grok-imagine-image-2.0`、`grok-2-image` | `grok-imagine-video-1.5`、`grok-imagine-video-1.5-lite` | `grok-tts` | `grok-voice-transcribe-2.0` |
+| 合规与降级 | 规范化根路径 `https://api.x.ai` -> `/v1` | 不支持字段 400 自动降级重试 | 持久化 `xai_video_request_id` | 时长由 `MediaMetadata` 实测 | 按标点/停顿归并为 `sentences` |
 
 ## 4. SSRF 与凭证边界
 
 1. `base_url` 仅接受 `https://`，禁止 userinfo、`?`、`#`；通过 `InetAddress.getAllByName` 拒绝环回（`127.0.0.0/8` / `::1` / `localhost`）、私网（`10.0.0.0/8` / `172.16.0.0/12` / `192.168.0.0/16`）、链路本地（`169.254.0.0/16`）、`100.64.0.0/10`、多播及通配地址。
-2. 上游媒体下载 URL（`data[0].url`、`video.url`）执行同一公网 `https://` 校验。
-3. 列表与错误文本仅使用 `api_key_masked` 与用户配置 `model_name`，不回显 `api_key` 明文。
+2. 上游媒体下载 URL（`data[0].url`、`video.url`、`file.download_url`、`Resp.url` 等）执行同一公网 `https://` 校验。
+3. 列表与错误文本仅使用 `api_key_masked`、`secret_key_masked` 与用户配置 `model_name`，不回显任何明文密钥。

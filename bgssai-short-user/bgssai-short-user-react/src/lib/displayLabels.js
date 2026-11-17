@@ -234,14 +234,16 @@ export function visibleFailReason(row) {
   }
   const code = row.fail_reason_code
   if (code == null || String(code).trim() === '') return ''
-  return friendlyFailReason(row.fail_reason)
+  const isUserKey = String(row.model_code || '').trim().toLowerCase().startsWith('umk-')
+    || row.credential_source === 'USER_KEY'
+  return friendlyFailReason(row.fail_reason, { preserveVendor: isUserKey })
 }
 
 /**
  * Scrub raw TLS / gateway English from historical fail_reason cells.
  * New failures should already be Chinese from the backend scrubber.
  */
-export function friendlyFailReason(raw) {
+export function friendlyFailReason(raw, options = {}) {
   if (raw == null || raw === '') return ''
   const msg = String(raw).trim()
   const lower = msg.toLowerCase()
@@ -264,7 +266,8 @@ export function friendlyFailReason(raw) {
   if (/quota concurrent update/i.test(msg)) {
     return '刚才同时有别的操作在记账，请稍后重试'
   }
-  return scrubVendorText(msg.replace(/media_id/gi, '作品号'))
+  const normalized = msg.replace(/media_id/gi, '作品号')
+  return options?.preserveVendor ? normalized : scrubVendorText(normalized)
 }
 
 /** Mask config-key leaks in Tube preflight warnings shown to users. */

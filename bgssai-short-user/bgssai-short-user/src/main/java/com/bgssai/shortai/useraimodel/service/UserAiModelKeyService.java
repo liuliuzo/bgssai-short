@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +124,16 @@ public class UserAiModelKeyService {
         if (plainKey.length() > 512) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key too long");
         }
+        String plainSecret = req.getSecretKey() == null ? null : req.getSecretKey().trim();
+        if (plainSecret != null && plainSecret.length() > 512) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "secret_key too long");
+        }
+        if (plainSecret != null && plainSecret.isBlank()) {
+            plainSecret = null;
+        }
+        if (UserAiModelSupport.PROVIDER_KLING.equals(providerCode)) {
+            KlingJwtSupport.resolveBearerToken(plainKey, plainSecret, baseUrl);
+        }
 
         List<CreateUserAiModelKeyItem> pending = new ArrayList<>();
         if (req.getItems() != null && !req.getItems().isEmpty()) {
@@ -169,6 +181,7 @@ public class UserAiModelKeyService {
             row.setModelName(modelName);
             row.setBaseUrl(baseUrl);
             row.setApiKey(plainKey);
+            row.setSecretKey(plainSecret);
             row.setEnabled(1);
             row.setDefaultModel(hasDefault ? 0 : 1);
             row.setDelFlag(0);
@@ -238,6 +251,18 @@ public class UserAiModelKeyService {
                 throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key too long");
             }
             patch.setApiKey(plainKey);
+        }
+        if (req.getSecretKey() != null && !req.getSecretKey().isBlank()) {
+            String plainSecret = req.getSecretKey().trim();
+            if (plainSecret.length() > 512) {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "secret_key too long");
+            }
+            patch.setSecretKey(plainSecret);
+        }
+        if (UserAiModelSupport.PROVIDER_KLING.equals(providerCode)) {
+            String effectiveAk = patch.getApiKey() != null ? patch.getApiKey() : existing.getApiKey();
+            String effectiveSk = patch.getSecretKey() != null ? patch.getSecretKey() : existing.getSecretKey();
+            KlingJwtSupport.resolveBearerToken(effectiveAk, effectiveSk, baseUrl);
         }
         patch.setModifier(userId);
         patch.setGmtModified(new Date());
@@ -349,16 +374,22 @@ public class UserAiModelKeyService {
         String providerCode;
         String baseUrl;
         String plainKey;
+        String plainSecret;
         String modelCode;
         if (req.getKeyId() != null && !req.getKeyId().isBlank()) {
             saved = requireOwnedRow(userId, req.getKeyId());
-            providerCode = saved.getProviderCode();
+            providerCode = req.getProviderCode() != null && !req.getProviderCode().isBlank()
+                    ? UserAiModelSupport.normalizeProvider(req.getProviderCode())
+                    : saved.getProviderCode();
             baseUrl = req.getBaseUrl() != null && !req.getBaseUrl().isBlank()
                     ? UserAiModelSupport.normalizeBaseUrl(req.getBaseUrl(), providerCode)
                     : saved.getBaseUrl();
             plainKey = req.getApiKey() != null && !req.getApiKey().isBlank()
                     ? req.getApiKey().trim()
                     : saved.getApiKey();
+            plainSecret = req.getSecretKey() != null && !req.getSecretKey().isBlank()
+                    ? req.getSecretKey().trim()
+                    : saved.getSecretKey();
             modelCode = req.getModelCode() != null && !req.getModelCode().isBlank()
                     ? req.getModelCode().trim()
                     : saved.getModelCode();
@@ -369,12 +400,14 @@ public class UserAiModelKeyService {
             providerCode = UserAiModelSupport.normalizeProvider(req.getProviderCode());
             baseUrl = UserAiModelSupport.normalizeBaseUrl(req.getBaseUrl(), providerCode);
             plainKey = req.getApiKey().trim();
+            plainSecret = req.getSecretKey() == null ? null : req.getSecretKey().trim();
             modelCode = req.getModelCode() == null ? "" : req.getModelCode().trim();
         }
         log.info("检测用户模型密钥连通性 userId={} keyId={} providerCode={} modelCode={}",
                 userId, saved == null ? "-" : saved.getKeyId(), providerCode, modelCode);
 
-        TestUserAiModelKeyResponse result = probeModelsEndpoint(baseUrl, plainKey, modelCode);
+        TestUserAiModelKeyResponse result = probeProviderConnectivity(
+                providerCode, baseUrl, plainKey, plainSecret, modelCode);
         if (saved != null) {
             UserAiModelKey patch = new UserAiModelKey();
             patch.setId(saved.getId());
@@ -488,7 +521,14 @@ public class UserAiModelKeyService {
         }
     }
 
+    public record UserKeyCredentials(String apiKey, String secretKey) {
+    }
+
     public String requirePlainApiKey(String userId, String keyId) {
+        return requirePlainCredentials(userId, keyId).apiKey();
+    }
+
+    public UserKeyCredentials requirePlainCredentials(String userId, String keyId) {
         if (userId == null || userId.isBlank() || keyId == null || keyId.isBlank()) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "自有模型密钥配置缺失");
         }
@@ -498,12 +538,13 @@ public class UserAiModelKeyService {
                 .andKeyIdEqualTo(keyId.trim())
                 .andEnabledEqualTo(1)
                 .andDelFlagEqualTo(0);
-        ex.selectColumns("id", "key_id", "api_key", "is_enabled", "del_flag");
+        ex.selectColumns("id", "key_id", "api_key", "secret_key", "is_enabled", "del_flag");
         UserAiModelKey row = userAiModelKeyMapper.selectOneByExample(ex);
         if (row == null || row.getApiKey() == null || row.getApiKey().isBlank()) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "自有模型密钥已停用或不存在，请检查账号设置");
         }
-        return row.getApiKey().trim();
+        String sk = row.getSecretKey() == null ? "" : row.getSecretKey().trim();
+        return new UserKeyCredentials(row.getApiKey().trim(), sk);
     }
 
     public String displayNameOfKeyId(String userId, String keyId) {
@@ -619,52 +660,162 @@ public class UserAiModelKeyService {
         return row;
     }
 
-    private TestUserAiModelKeyResponse probeModelsEndpoint(String baseUrl, String plainKey, String modelCode) {
-        TestUserAiModelKeyResponse resp = new TestUserAiModelKeyResponse();
+    private TestUserAiModelKeyResponse probeProviderConnectivity(String providerCode, String baseUrl,
+            String plainKey, String plainSecret, String modelCode) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/models"))
-                    .timeout(Duration.ofSeconds(10))
-                    .header("Authorization", "Bearer " + plainKey)
-                    .GET()
-                    .build();
-            HttpResponse<String> httpResp = probeHttp.send(request, HttpResponse.BodyHandlers.ofString());
-            int status = httpResp.statusCode();
-            if (status >= 200 && status < 300) {
-                List<String> discovered = extractDiscoveredModels(httpResp.body());
-                boolean matched = modelCode.isBlank() || discovered.isEmpty() || discovered.contains(modelCode);
-                resp.setOk(true);
-                resp.setStatus("OK");
-                resp.setModelMatched(matched);
-                resp.setDiscoveredModels(discovered);
-                resp.setMessage(matched ? "连接成功" : "密钥验证通过，返回目录中未包含 " + modelCode + "，可按实际模型编码调整");
-                return resp;
+            if (UserAiModelSupport.PROVIDER_MINIMAX.equals(providerCode)) {
+                return probeMiniMax(baseUrl, plainKey);
             }
-            resp.setOk(false);
-            resp.setStatus("FAILED");
-            resp.setModelMatched(false);
-            resp.setDiscoveredModels(Collections.emptyList());
-            if (status == 401 || status == 403) {
-                resp.setMessage("API Key 无效或无访问权限（HTTP " + status + "）");
-            } else if (status == 429) {
-                resp.setMessage("请求过于频繁或账号额度受限（HTTP 429）");
-            } else {
-                resp.setMessage("上游网关返回 HTTP " + status);
+            if (UserAiModelSupport.PROVIDER_KLING.equals(providerCode)) {
+                return probeKling(baseUrl, plainKey, plainSecret);
             }
-            return resp;
+            if (UserAiModelSupport.PROVIDER_PIXVERSE.equals(providerCode)) {
+                return probePixVerse(baseUrl, plainKey);
+            }
+            String url = resolveModelsUrl(providerCode, baseUrl);
+            return probeBearerModels(url, plainKey, modelCode);
+        } catch (BizException ex) {
+            return failedProbe(ex.getMessage());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            resp.setOk(false);
-            resp.setStatus("FAILED");
-            resp.setDiscoveredModels(Collections.emptyList());
-            resp.setMessage("连通检测已中断");
-            return resp;
+            return failedProbe("连通检测已中断");
         } catch (Exception ex) {
-            resp.setOk(false);
-            resp.setStatus("FAILED");
-            resp.setDiscoveredModels(Collections.emptyList());
-            resp.setMessage("无法连接到模型接口地址，请检查网络或地址");
-            return resp;
+            return failedProbe("无法连接到模型接口地址，请检查网络或地址");
         }
+    }
+
+    private static String resolveModelsUrl(String providerCode, String baseUrl) {
+        if (UserAiModelSupport.PROVIDER_XAI.equals(providerCode)) {
+            String path = URI.create(baseUrl).getPath();
+            if (path == null || path.isBlank() || "/".equals(path)) {
+                return baseUrl + "/v1/models";
+            }
+        }
+        return baseUrl + "/models";
+    }
+
+    private TestUserAiModelKeyResponse probeBearerModels(String url, String plainKey, String modelCode)
+            throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Bearer " + plainKey)
+                .GET()
+                .build();
+        HttpResponse<String> httpResp = probeHttp.send(request, HttpResponse.BodyHandlers.ofString());
+        int status = httpResp.statusCode();
+        if (status < 200 || status >= 300) {
+            return failedHttpProbe(status, "");
+        }
+        List<String> discovered = extractDiscoveredModels(httpResp.body());
+        boolean matched = modelCode.isBlank() || discovered.isEmpty() || discovered.contains(modelCode);
+        return okProbe(
+                matched ? "连接成功" : "密钥验证通过，返回目录中未包含 " + modelCode + "，可按实际模型编码调整",
+                matched, discovered);
+    }
+
+    private TestUserAiModelKeyResponse probeMiniMax(String baseUrl, String plainKey) throws Exception {
+        String root = UserAiModelSupport.stripTrailingPath(baseUrl, "/v1");
+        HttpRequest request = HttpRequest.newBuilder(URI.create(root + "/v1/get_voice"))
+                .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Bearer " + plainKey)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"voice_type\":\"system\"}", StandardCharsets.UTF_8))
+                .build();
+        HttpResponse<String> httpResp = probeHttp.send(request, HttpResponse.BodyHandlers.ofString());
+        int status = httpResp.statusCode();
+        Map<String, Object> parsed = ShortJson.map(httpResp.body());
+        if (status >= 200 && status < 300 && isMiniMaxRespOk(parsed)) {
+            return okProbe("连接成功", true, Collections.emptyList());
+        }
+        String errMsg = nestedString(parsed, "base_resp", "status_msg");
+        return failedHttpProbe(status, errMsg);
+    }
+
+    private TestUserAiModelKeyResponse probeKling(String baseUrl, String plainKey, String plainSecret)
+            throws Exception {
+        String root = UserAiModelSupport.stripTrailingPath(baseUrl, "/v1");
+        String jwt = KlingJwtSupport.resolveBearerToken(plainKey, plainSecret, root);
+        HttpRequest request = HttpRequest.newBuilder(URI.create(root + "/v1/videos/text2video?pageNum=1&pageSize=1"))
+                .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Bearer " + jwt)
+                .GET()
+                .build();
+        HttpResponse<String> httpResp = probeHttp.send(request, HttpResponse.BodyHandlers.ofString());
+        int status = httpResp.statusCode();
+        Map<String, Object> parsed = ShortJson.map(httpResp.body());
+        Object code = parsed.get("code");
+        if (status >= 200 && status < 300 && (code == null || ShortJson.integer(code, -1) == 0)) {
+            return okProbe("连接成功", true, Collections.emptyList());
+        }
+        return failedHttpProbe(status, ShortJson.text(parsed.get("message")));
+    }
+
+    private TestUserAiModelKeyResponse probePixVerse(String baseUrl, String plainKey) throws Exception {
+        String root = UserAiModelSupport.stripTrailingPath(baseUrl, "/openapi/v2");
+        HttpRequest request = HttpRequest.newBuilder(URI.create(root + "/openapi/v2/account/balance"))
+                .timeout(Duration.ofSeconds(10))
+                .header("API-KEY", plainKey)
+                .header("Ai-trace-id", UUID.randomUUID().toString())
+                .GET()
+                .build();
+        HttpResponse<String> httpResp = probeHttp.send(request, HttpResponse.BodyHandlers.ofString());
+        int status = httpResp.statusCode();
+        Map<String, Object> parsed = ShortJson.map(httpResp.body());
+        Object errCode = parsed.get("ErrCode");
+        if (status >= 200 && status < 300 && (errCode == null || ShortJson.integer(errCode, -1) == 0)) {
+            return okProbe("连接成功", true, Collections.emptyList());
+        }
+        return failedHttpProbe(status, ShortJson.text(parsed.get("ErrMsg")));
+    }
+
+    private static boolean isMiniMaxRespOk(Map<String, Object> parsed) {
+        Object raw = parsed.get("base_resp");
+        if (!(raw instanceof Map<?, ?> base)) {
+            return true;
+        }
+        Object code = base.get("status_code");
+        return code == null || ShortJson.integer(code, -1) == 0;
+    }
+
+    private static String nestedString(Map<String, Object> parsed, String outer, String inner) {
+        Object raw = parsed.get(outer);
+        if (raw instanceof Map<?, ?> map) {
+            return ShortJson.text(map.get(inner));
+        }
+        return "";
+    }
+
+    private static TestUserAiModelKeyResponse okProbe(String message, boolean matched, List<String> discovered) {
+        TestUserAiModelKeyResponse resp = new TestUserAiModelKeyResponse();
+        resp.setOk(true);
+        resp.setStatus("OK");
+        resp.setModelMatched(matched);
+        resp.setDiscoveredModels(discovered);
+        resp.setMessage(message);
+        return resp;
+    }
+
+    private static TestUserAiModelKeyResponse failedHttpProbe(int status, String upstreamMsg) {
+        if (status == 401 || status == 403) {
+            return failedProbe("API Key 无效或无访问权限（HTTP " + status + "）");
+        }
+        if (status == 429) {
+            return failedProbe("请求过于频繁或账号额度受限（HTTP 429）");
+        }
+        if (upstreamMsg != null && !upstreamMsg.isBlank()) {
+            return failedProbe("上游认证未通过：" + upstreamMsg);
+        }
+        return failedProbe("上游网关返回 HTTP " + status);
+    }
+
+    private static TestUserAiModelKeyResponse failedProbe(String message) {
+        TestUserAiModelKeyResponse resp = new TestUserAiModelKeyResponse();
+        resp.setOk(false);
+        resp.setStatus("FAILED");
+        resp.setModelMatched(false);
+        resp.setDiscoveredModels(Collections.emptyList());
+        resp.setMessage(message);
+        return resp;
     }
 
     private static List<String> extractDiscoveredModels(String jsonBody) {
@@ -710,6 +861,7 @@ public class UserAiModelKeyService {
         item.setModelName(row.getModelName());
         item.setBaseUrl(row.getBaseUrl());
         item.setApiKeyMasked(UserAiModelSupport.maskApiKey(row.getApiKey()));
+        item.setSecretKeyMasked(UserAiModelSupport.maskApiKey(row.getSecretKey()));
         item.setEnabled(row.getEnabled());
         item.setDefaultModel(row.getDefaultModel());
         item.setLastCheckStatus(row.getLastCheckStatus());
