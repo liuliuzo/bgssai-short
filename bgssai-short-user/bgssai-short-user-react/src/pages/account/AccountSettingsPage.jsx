@@ -7,6 +7,8 @@ import http from '../../utils/http'
 import { useUserStore } from '../../store/user'
 import { formatTokenAmount, formatTokenExact } from '../../utils/formatToken'
 import { labelOf, LOGIN_METHOD_LABEL } from '../../lib/displayLabels'
+import PhoneDialField from '../../components/PhoneDialField'
+import { composeApiPhone, DEFAULT_DIAL_CODE, validatePhoneParts } from '../../lib/phoneDial'
 
 const { Title, Text } = Typography
 
@@ -19,6 +21,10 @@ export default function AccountSettingsPage() {
   const [loading, setLoading] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [unbindRow, setUnbindRow] = useState(null)
+  const [deleteForm] = Form.useForm()
+  const deleteVerifyMethod = Form.useWatch('verify_method', deleteForm) || 'password'
+  const [delDial, setDelDial] = useState(DEFAULT_DIAL_CODE)
+  const [delPhone, setDelPhone] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -40,6 +46,19 @@ export default function AccountSettingsPage() {
     load()
   }, [load])
 
+  const sendCode = async (channel, target) => {
+    try {
+      if (channel === 'sms') {
+        await http.post('/user/sms/send', { phone: target })
+      } else {
+        await http.post('/user/email/send', { email: target })
+      }
+      message.success('验证码已发送')
+    } catch (e) {
+      message.error(e?.message || '发送失败，请稍后重试')
+    }
+  }
+
   const onUnbind = async (values) => {
     try {
       const { data } = await accountApi.unbind({
@@ -59,11 +78,20 @@ export default function AccountSettingsPage() {
   }
 
   const onDelete = async (values) => {
+    let resolvedPhone = values.phone
+    if (values.verify_method === 'sms' && delPhone) {
+      const err = validatePhoneParts(delDial, delPhone)
+      if (err) {
+        message.error(err)
+        return
+      }
+      resolvedPhone = composeApiPhone(delDial, delPhone)
+    }
     try {
       const { data } = await accountApi.deleteAccount({
         verify_method: values.verify_method,
         password: values.password,
-        phone: values.phone,
+        phone: resolvedPhone,
         email: values.email,
         code: values.code,
         acknowledge_consequences: true,
@@ -79,17 +107,13 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const sendCode = async (channel, target) => {
-    try {
-      if (channel === 'sms') {
-        await http.post('/user/sms/send', { phone: target })
-      } else {
-        await http.post('/user/email/send', { email: target })
-      }
-      message.success('验证码已发送')
-    } catch (e) {
-      message.error(e?.message || '发送失败，请稍后重试')
+  const sendDeleteSms = () => {
+    const err = validatePhoneParts(delDial, delPhone)
+    if (err) {
+      message.error(err)
+      return
     }
+    sendCode('sms', composeApiPhone(delDial, delPhone))
   }
 
   return (
@@ -174,7 +198,7 @@ export default function AccountSettingsPage() {
         footer={null}
         destroyOnClose
       >
-        <Form layout="vertical" onFinish={onDelete}>
+        <Form form={deleteForm} layout="vertical" onFinish={onDelete}>
           <Form.Item name="verify_method" label="身份验证" rules={[{ required: true }]} initialValue="password">
             <Select options={[
               { value: 'password', label: '密码' },
@@ -182,18 +206,41 @@ export default function AccountSettingsPage() {
               { value: 'email', label: '邮箱验证码' },
             ]} />
           </Form.Item>
-          <Form.Item name="password" label="密码">
-            <Input.Password />
-          </Form.Item>
-          <Form.Item name="phone" label="手机号">
-            <Input />
-          </Form.Item>
-          <Form.Item name="email" label="邮箱">
-            <Input />
-          </Form.Item>
-          <Form.Item name="code" label="验证码">
-            <Input />
-          </Form.Item>
+          {deleteVerifyMethod === 'password' && (
+            <Form.Item name="password" label="密码">
+              <Input.Password />
+            </Form.Item>
+          )}
+          {deleteVerifyMethod === 'sms' && (
+            <Form.Item label="手机号">
+              <Space>
+                <PhoneDialField
+                  id="account-delete-phone"
+                  dialCode={delDial}
+                  nationalNumber={delPhone}
+                  onDialCodeChange={setDelDial}
+                  onNationalNumberChange={setDelPhone}
+                  wrapperClassName="phone-dial-field phone-dial-field--compact"
+                />
+                <Button onClick={sendDeleteSms}>获取验证码</Button>
+              </Space>
+            </Form.Item>
+          )}
+          {deleteVerifyMethod === 'email' && (
+            <Form.Item label="邮箱">
+              <Space>
+                <Form.Item name="email" noStyle>
+                  <Input placeholder="请输入邮箱" />
+                </Form.Item>
+                <Button onClick={() => sendCode('email', deleteForm.getFieldValue('email'))}>获取验证码</Button>
+              </Space>
+            </Form.Item>
+          )}
+          {(deleteVerifyMethod === 'sms' || deleteVerifyMethod === 'email') && (
+            <Form.Item name="code" label="验证码" rules={[{ required: true, message: '请输入验证码' }]}>
+              <Input placeholder="6 位验证码" />
+            </Form.Item>
+          )}
           <Form.Item name="reason" label="原因（可选）">
             <Input.TextArea rows={2} />
           </Form.Item>
@@ -212,31 +259,68 @@ export default function AccountSettingsPage() {
 
 function BindContactForm({ onDone, sendCode }) {
   const [form] = Form.useForm()
+  const methodType = Form.useWatch('method_type', form) || 'phone'
+  const [dial, setDial] = useState(DEFAULT_DIAL_CODE)
+  const [national, setNational] = useState('')
+
   const submit = async (values) => {
+    const payload = { ...values }
+    if (methodType === 'phone') {
+      const err = validatePhoneParts(dial, national)
+      if (err) {
+        message.error(err)
+        return
+      }
+      payload.phone = composeApiPhone(dial, national)
+    }
     try {
-      const { data } = await accountApi.bindContact(values)
+      const { data } = await accountApi.bindContact(payload)
       if (!data?.success) return
       message.success('绑定成功')
       form.resetFields()
+      setNational('')
       onDone()
     } catch (e) {
       message.error(e?.message || '绑定失败，请稍后重试')
     }
   }
+
   return (
-    <Form form={form} layout="inline" onFinish={submit} style={{ marginTop: 8 }}>
+    <Form form={form} layout="inline" onFinish={submit} style={{ marginTop: 8, gap: 8 }}>
       <Form.Item name="method_type" initialValue="phone" rules={[{ required: true }]}>
         <Select style={{ width: 100 }} options={[
           { value: 'phone', label: '手机' },
           { value: 'email', label: '邮箱' },
         ]} />
       </Form.Item>
-      <Form.Item name="phone"><Input placeholder="手机号" /></Form.Item>
-      <Form.Item name="email"><Input placeholder="邮箱" /></Form.Item>
-      <Form.Item name="code" rules={[{ required: true }]}><Input placeholder="验证码" /></Form.Item>
+      {methodType === 'phone' ? (
+        <Form.Item>
+          <PhoneDialField
+            id="account-bind-phone"
+            dialCode={dial}
+            nationalNumber={national}
+            onDialCodeChange={setDial}
+            onNationalNumberChange={setNational}
+            wrapperClassName="phone-dial-field phone-dial-field--compact"
+          />
+        </Form.Item>
+      ) : (
+        <Form.Item name="email"><Input placeholder="邮箱" /></Form.Item>
+      )}
+      <Form.Item name="code" rules={[{ required: true, message: '请输入验证码' }]}>
+        <Input placeholder="验证码" />
+      </Form.Item>
       <Button onClick={() => {
-        const v = form.getFieldsValue()
-        sendCode(v.method_type === 'email' ? 'email' : 'sms', v.method_type === 'email' ? v.email : v.phone)
+        if (methodType === 'email') {
+          sendCode('email', form.getFieldValue('email'))
+          return
+        }
+        const err = validatePhoneParts(dial, national)
+        if (err) {
+          message.error(err)
+          return
+        }
+        sendCode('sms', composeApiPhone(dial, national))
       }}>发送验证码</Button>
       <Button type="primary" htmlType="submit">绑定</Button>
     </Form>

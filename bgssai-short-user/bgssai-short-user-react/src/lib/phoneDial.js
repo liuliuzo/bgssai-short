@@ -58,7 +58,8 @@ export function validatePhoneParts(dialCode, nationalNumber) {
   if (cc === '86') {
     return /^1[3-9]\d{9}$/.test(national) ? null : '请输入正确的 11 位手机号'
   }
-  if (national.length < 4 || national.length > 15) return '请输入正确的电话号码'
+  const totalDigits = cc.length + national.length
+  if (national.length < 4 || totalDigits < 7 || totalDigits > 15) return '请输入正确的电话号码'
   return null
 }
 

@@ -10,27 +10,25 @@ import org.springframework.stereotype.Service;
 
 import com.bgssai.shortai.account.service.AccountGuard;
 import com.bgssai.shortai.common.exception.BizException;
+import com.bgssai.shortai.common.session.SingleSessionGuard;
 import com.bgssai.shortai.login.dto.resp.RespCodeSend;
 import com.bgssai.shortai.login.dto.resp.RespUserLogin;
 import com.bgssai.shortai.login.mail.SmtpMailSender;
 import com.bgssai.shortai.login.oauth.OAuthIds;
 import com.bgssai.shortai.login.otp.InMemoryOtpStore;
-import com.bgssai.shortai.login.sms.SmsSendResult;
+import com.bgssai.shortai.login.sms.TencentSmsPhoneRoute;
 import com.bgssai.shortai.login.sms.TencentSmsSender;
 import com.bgssai.shortai.mapper.SysUserMapper;
 import com.bgssai.shortai.model.SysUser;
 import com.bgssai.shortai.model.SysUserExample;
 import com.bgssai.shortai.utils.JwtUtil;
-import com.bgssai.shortai.common.session.SingleSessionGuard;
 
 @Service
 public class OtpLoginSupport {
     @org.springframework.beans.factory.annotation.Autowired
     private SingleSessionGuard singleSessionGuard;
 
-
     private static final String USER_ROLE = "USER";
-    private static final Pattern PHONE = Pattern.compile("^1[3-9]\\d{9}$");
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final long COOLDOWN_MS = 60_000L;
@@ -40,6 +38,7 @@ public class OtpLoginSupport {
     private final SmtpMailSender smtpMailSender;
     private final SysUserMapper sysUserMapper;
     private final ConcurrentHashMap<String, Long> cooldown = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Boolean> inFlight = new ConcurrentHashMap<>();
 
     @org.springframework.beans.factory.annotation.Autowired
     private LoginAuditService loginAuditService;
@@ -55,22 +54,22 @@ public class OtpLoginSupport {
     }
 
     public RespCodeSend sendSms(String rawPhone) {
-        String phone = rawPhone == null ? "" : rawPhone.trim();
-        if (!PHONE.matcher(phone).matches() && !phone.startsWith("+")) {
+        TencentSmsPhoneRoute.Route route = TencentSmsPhoneRoute.routeOf(rawPhone);
+        String phone = TencentSmsPhoneRoute.normalizeForStorage(rawPhone);
+        if (route == null || phone == null) {
             throw new BizException("4301", "手机号格式不正确");
         }
-        acquireCooldown("sms:" + phone);
-        String code = nextCode();
-        otpStore.save("sms", phone, code);
-        SmsSendResult sent;
+        String key = "sms:" + phone;
+        reserveSendSlot(key);
         try {
-            sent = tencentSmsSender.send(phone, code);
-        } catch (RuntimeException e) {
-            otpStore.delete("sms", phone);
-            cooldown.remove("sms:" + phone);
-            throw e;
+            String code = nextCode();
+            tencentSmsSender.send(rawPhone, code);
+            otpStore.save("sms", phone, code);
+            cooldown.put(key, System.currentTimeMillis());
+            return expires();
+        } finally {
+            inFlight.remove(key);
         }
-        return expires(sent.getProduct(), sent.getSeq());
     }
 
     public RespCodeSend sendEmail(String rawEmail) {
@@ -78,25 +77,29 @@ public class OtpLoginSupport {
         if (!EMAIL.matcher(email).matches()) {
             throw new BizException("4307", "邮箱格式不正确");
         }
-        acquireCooldown("email:" + email);
-        String code = nextCode();
-        otpStore.save("email", email, code);
+        String key = "email:" + email;
+        reserveSendSlot(key);
         try {
+            String code = nextCode();
             smtpMailSender.sendLoginCode(email, code);
-        } catch (RuntimeException e) {
-            otpStore.delete("email", email);
-            cooldown.remove("email:" + email);
-            throw e;
+            otpStore.save("email", email, code);
+            cooldown.put(key, System.currentTimeMillis());
+            return expires();
+        } finally {
+            inFlight.remove(key);
         }
-        return expires();
     }
 
     public RespUserLogin loginSms(String rawPhone, String code) {
-        String phone = rawPhone == null ? "" : rawPhone.trim();
-        if (!otpStore.consume("sms", phone, code == null ? "" : code.trim())) {
+        String phone = TencentSmsPhoneRoute.normalizeForStorage(rawPhone);
+        String trimmedCode = code == null ? "" : code.trim();
+        if (phone == null) {
+            recordLoginFailure(null, "phone_otp", rawPhone == null ? "" : rawPhone.trim());
+            throw new BizException("4301", "手机号格式不正确");
+        }
+        if (trimmedCode.isEmpty() || !otpStore.consume("sms", phone, trimmedCode)) {
             SysUser existing = findByPhone(phone);
-            loginAuditService.recordFailure(existing == null ? null : existing.getUserId(),
-                    "LOGIN_FAIL_OTP", "phone_otp", phone, "auto", "验证码错误或已过期");
+            recordLoginFailure(existing == null ? null : existing.getUserId(), "phone_otp", phone);
             throw new BizException("4302", "验证码错误或已过期");
         }
         SysUser user = findByPhone(phone);
@@ -112,10 +115,14 @@ public class OtpLoginSupport {
 
     public RespUserLogin loginEmail(String rawEmail, String code) {
         String email = rawEmail == null ? "" : rawEmail.trim().toLowerCase();
-        if (!otpStore.consume("email", email, code == null ? "" : code.trim())) {
+        String trimmedCode = code == null ? "" : code.trim();
+        if (email.isEmpty() || !EMAIL.matcher(email).matches()) {
+            recordLoginFailure(null, "email_otp", email);
+            throw new BizException("4307", "邮箱格式不正确");
+        }
+        if (trimmedCode.isEmpty() || !otpStore.consume("email", email, trimmedCode)) {
             SysUser existing = findByEmail(email);
-            loginAuditService.recordFailure(existing == null ? null : existing.getUserId(),
-                    "LOGIN_FAIL_OTP", "email_otp", email, "auto", "验证码错误或已过期");
+            recordLoginFailure(existing == null ? null : existing.getUserId(), "email_otp", email);
             throw new BizException("4302", "验证码错误或已过期");
         }
         SysUser user = findByEmail(email);
@@ -130,6 +137,12 @@ public class OtpLoginSupport {
             AccountGuard.rejectIfDeleted(user);
         }
         return issue(user, isNew, "email_otp", email);
+    }
+
+    private void recordLoginFailure(String userId, String method, String identifier) {
+        if (loginAuditService != null) {
+            loginAuditService.recordFailure(userId, "LOGIN_FAIL_OTP", method, identifier, "auto", "验证码错误或已过期");
+        }
     }
 
     private SysUser provision(String userName, String phone, String email) {
@@ -177,10 +190,20 @@ public class OtpLoginSupport {
         return resp;
     }
 
-    private SysUser findByPhone(String phone) {
+    private SysUser findByPhone(String normalizedPhone) {
         SysUserExample ex = new SysUserExample();
-        ex.createCriteria().andPhoneEqualTo(phone).andDelFlagEqualTo(false);
-        return sysUserMapper.selectOneByExample(ex);
+        ex.createCriteria().andPhoneEqualTo(normalizedPhone).andDelFlagEqualTo(false);
+        SysUser user = sysUserMapper.selectOneByExample(ex);
+        if (user != null) {
+            return user;
+        }
+        String mainland = TencentSmsPhoneRoute.normalizeMainland(normalizedPhone);
+        if (mainland != null) {
+            SysUserExample legacyEx = new SysUserExample();
+            legacyEx.createCriteria().andPhoneEqualTo("+86" + mainland).andDelFlagEqualTo(false);
+            return sysUserMapper.selectOneByExample(legacyEx);
+        }
+        return null;
     }
 
     private SysUser findByEmail(String email) {
@@ -189,13 +212,15 @@ public class OtpLoginSupport {
         return sysUserMapper.selectOneByExample(ex);
     }
 
-    private void acquireCooldown(String key) {
+    private void reserveSendSlot(String key) {
         Long last = cooldown.get(key);
         long now = System.currentTimeMillis();
         if (last != null && now - last < COOLDOWN_MS) {
             throw new BizException("4304", "发送过于频繁，请稍后再试");
         }
-        cooldown.put(key, now);
+        if (inFlight.putIfAbsent(key, Boolean.TRUE) != null) {
+            throw new BizException("4304", "发送过于频繁，请稍后再试");
+        }
     }
 
     private static String nextCode() {
@@ -203,14 +228,8 @@ public class OtpLoginSupport {
     }
 
     private static RespCodeSend expires() {
-        return expires(null, null);
-    }
-
-    private static RespCodeSend expires(String product, Long seq) {
         RespCodeSend resp = new RespCodeSend();
         resp.setExpiresIn(300);
-        resp.setProduct(product);
-        resp.setSeq(seq);
         return resp;
     }
 }

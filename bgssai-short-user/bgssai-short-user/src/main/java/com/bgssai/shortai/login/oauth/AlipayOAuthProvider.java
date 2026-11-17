@@ -16,6 +16,7 @@ import com.alipay.api.response.AlipaySystemOauthTokenResponse;
 import com.alipay.api.response.AlipayUserInfoShareResponse;
 import com.bgssai.shortai.login.oauth.OAuthIds;
 import com.bgssai.shortai.common.exception.BizException;
+import com.bgssai.shortai.payment.util.PemSupport;
 
 /**
  * 支付宝开放平台 · 网页授权登录（scope=auth_user）。接口名确认（{@code alipay.system.oauth.token}
@@ -34,6 +35,18 @@ public class AlipayOAuthProvider implements OAuthProvider {
 
     @Autowired private OAuthProperties oauthProperties;
     @Autowired private LoginOAuthSecrets loginOAuthSecrets;
+    private final java.util.function.Function<ClientParams, AlipayClient> clientFactory;
+
+    public AlipayOAuthProvider() {
+        this(p -> new DefaultAlipayClient(GATEWAY_URL, p.appId, p.appPrivateKey, "json", "UTF-8", p.alipayPublicKey, "RSA2"));
+    }
+
+    AlipayOAuthProvider(java.util.function.Function<ClientParams, AlipayClient> clientFactory) {
+        this.clientFactory = clientFactory;
+    }
+
+    record ClientParams(String appId, String appPrivateKey, String alipayPublicKey) {
+    }
 
     @Override
     public String platformCode() {
@@ -44,9 +57,10 @@ public class AlipayOAuthProvider implements OAuthProvider {
     public String buildAuthorizeUrl(String state) {
         OAuthProperties.Alipay cfg = oauthProperties.getAlipay();
         String appId = loginOAuthSecrets.alipayAppId();
-        String appPrivateKey = loginOAuthSecrets.alipayAppPrivateKey();
-        requireCredentials(appId, appPrivateKey);
-        return AUTHORIZE_URL + "?app_id=" + appId
+        String appPrivateKey = PemSupport.toAlipayKey(loginOAuthSecrets.alipayAppPrivateKey());
+        String alipayPublicKey = PemSupport.toAlipayKey(loginOAuthSecrets.alipayPublicKey());
+        requireCredentials(appId, appPrivateKey, alipayPublicKey);
+        return AUTHORIZE_URL + "?app_id=" + encode(appId)
                 + "&scope=auth_user&redirect_uri=" + encode(cfg.getRedirectUri())
                 + "&state=" + encode(state);
     }
@@ -54,29 +68,32 @@ public class AlipayOAuthProvider implements OAuthProvider {
     @Override
     public OAuthUserInfo fetchUserInfo(String code) {
         String appId = loginOAuthSecrets.alipayAppId();
-        String appPrivateKey = loginOAuthSecrets.alipayAppPrivateKey();
-        String alipayPublicKey = loginOAuthSecrets.alipayPublicKey();
-        requireCredentials(appId, appPrivateKey);
+        String appPrivateKey = PemSupport.toAlipayKey(loginOAuthSecrets.alipayAppPrivateKey());
+        String alipayPublicKey = PemSupport.toAlipayKey(loginOAuthSecrets.alipayPublicKey());
+        requireCredentials(appId, appPrivateKey, alipayPublicKey);
         try {
-            AlipayClient client = new DefaultAlipayClient(GATEWAY_URL, appId,
-                    appPrivateKey, "json", "UTF-8", alipayPublicKey, "RSA2");
+            AlipayClient client = clientFactory.apply(new ClientParams(appId, appPrivateKey, alipayPublicKey));
 
             AlipaySystemOauthTokenRequest tokenRequest = new AlipaySystemOauthTokenRequest();
             tokenRequest.setGrantType("authorization_code");
             tokenRequest.setCode(code);
             AlipaySystemOauthTokenResponse tokenResponse = client.execute(tokenRequest);
-            if (!tokenResponse.isSuccess()) {
-                log.warn("支付宝授权换取 access_token 失败 subCode={}", tokenResponse.getSubCode());
+            if (tokenResponse == null || !tokenResponse.isSuccess()) {
+                log.warn("支付宝授权换取 access_token 失败 subCode={}", tokenResponse == null ? null : tokenResponse.getSubCode());
                 throw new BizException("4404", "授权失败，请重试");
             }
             String accessToken = tokenResponse.getAccessToken();
-            String userId = tokenResponse.getUserId();
+            String externalId = firstNonBlank(tokenResponse.getUserId(), tokenResponse.getOpenId());
+            if (OAuthIds.blank(accessToken) || OAuthIds.blank(externalId)) {
+                log.warn("支付宝授权缺少 user_id/open_id 或 access_token");
+                throw new BizException("4404", "授权失败，请重试");
+            }
 
             AlipayUserInfoShareRequest userInfoRequest = new AlipayUserInfoShareRequest();
             AlipayUserInfoShareResponse userInfoResponse = client.execute(userInfoRequest, accessToken);
-            String nickname = userInfoResponse.isSuccess() ? userInfoResponse.getNickName() : null;
-            String avatarUrl = userInfoResponse.isSuccess() ? userInfoResponse.getAvatar() : null;
-            return new OAuthUserInfo(userId, null, nickname, avatarUrl);
+            String nickname = userInfoResponse != null && userInfoResponse.isSuccess() ? userInfoResponse.getNickName() : null;
+            String avatarUrl = userInfoResponse != null && userInfoResponse.isSuccess() ? userInfoResponse.getAvatar() : null;
+            return new OAuthUserInfo(externalId, null, nickname, avatarUrl);
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
@@ -85,9 +102,15 @@ public class AlipayOAuthProvider implements OAuthProvider {
         }
     }
 
+    private static String firstNonBlank(String a, String b) {
+        if (!OAuthIds.blank(a)) {
+            return a.trim();
+        }
+        return OAuthIds.blank(b) ? null : b.trim();
+    }
 
-    private static void requireCredentials(String appId, String appPrivateKey) {
-        if (OAuthIds.blank(appId) || OAuthIds.blank(appPrivateKey)) {
+    private static void requireCredentials(String appId, String appPrivateKey, String alipayPublicKey) {
+        if (OAuthIds.blank(appId) || OAuthIds.blank(appPrivateKey) || OAuthIds.blank(alipayPublicKey)) {
             throw new BizException("4403", "该登录方式暂不可用");
         }
     }

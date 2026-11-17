@@ -33,20 +33,20 @@ mysql -h <host> -u <user> -p bgssai_short < sql/dev/DML.sql
 
 ## 腾讯云短信（共享控制台）
 
-用户端登录 OTP 走腾讯云短信（`sys_secret` · STEP SMS-1）。对齐 BGSSAI 共享控制台：
+用户端登录 OTP 走腾讯云短信（`sys_secret` · STEP SMS-1），按号码区号自动路由至国内或国际/港澳台通道：
 
 | key | 共享 DML | 开发 `sql/dev/DML.sql` | 生产 `sql/prod/DML.sql` |
 | --- | --- | --- | --- |
 | `bgssai.sms.sdk-app-id` | 空（由环境 DML 回填） | `1401156379` | `1401191076` |
 | `bgssai.sms.sign-name` | `昆山兵贵神速智能科技` | — | — |
-| `bgssai.sms.template-id` | `2677885`（已审批登录 OTP 双参；勿用待审 `2734311`） | — | — |
+| `bgssai.sms.template-id` | `2677885`（已审批登录 OTP 双参） | — | — |
+| `sms.endpoint` / `sms.region` | `sms.tencentcloudapi.com` / `ap-guangzhou` | — | — |
+| `sms.product_label` / `sms.template_param_count` | `Short` / `2` | — | — |
+| `sms.intl.enabled` | `0`（默认关闭，fail-closed 不回落国内） | — | — |
+| `sms.intl.endpoint` / `sms.intl.region` | `sms.tencentcloudapi.com` / `ap-guangzhou` | — | — |
+| `sms.intl.product_label` / `sms.intl.template_param_count` | `Short` / `2` | — | — |
 
-短信正文产品名 / 模板参数个数不进 `sys_secret`，写在用户端 `application.properties`：
-
-| key | 默认 | 说明 |
-| --- | --- | --- |
-| `bgssai.sms.product-label` | `Short` | 写入模板的产品名；发码 API 回显 `product` |
-| `bgssai.sms.template-param-count` | `2` | `2\|3\|4`；默认 2 对齐生产模板 `2677885`；待审 `2734311` 通过后再切 3/4 |
+`sms.intl.secret_id` / `sms.intl.secret_key`（全空时复用国内）、`sms.intl.sdk_app_id`、`sms.intl.sign_name`（可选）、`sms.intl.sender_id`（可选）、`sms.intl.template_id` 在共享 `DML.sql` 置空占位，由管理端按需写入。用户端 `application.properties` 的 `bgssai.sms.product-label` / `bgssai.sms.template-param-count` 仅作库值为空时的默认回落。
 
 SecretId / SecretKey 占位示例见仓库根 `sms/credentials.example.env`（勿提交真实密钥到新字段）。
 

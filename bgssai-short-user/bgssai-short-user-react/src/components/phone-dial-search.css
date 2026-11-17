@@ -177,3 +177,31 @@
   white-space: nowrap;
   border: 0;
 }
+
+.phone-dial-field {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.phone-dial-field--compact {
+  min-height: 32px;
+  padding: 0 8px 0 4px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.phone-dial-field--compact .phone-dial-combo {
+  flex: 0 0 82px;
+}
+
+.phone-dial-field--compact .phone-dial-divider {
+  margin: 6px;
+}
+
+.phone-dial-field--compact .phone-dial-number {
+  min-width: 150px;
+  padding: 4px 6px;
+  font-size: 14px;
+}

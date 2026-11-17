@@ -21,6 +21,7 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.common.exception.UnauthorizedException;
 import com.bgssai.shortai.login.otp.InMemoryOtpStore;
 import com.bgssai.shortai.login.service.PasswordService;
+import com.bgssai.shortai.login.sms.TencentSmsPhoneRoute;
 import com.bgssai.shortai.mapper.OauthBindingMapper;
 import com.bgssai.shortai.mapper.PaymentOrderMapper;
 import com.bgssai.shortai.mapper.SysUserMapper;
@@ -129,8 +130,12 @@ public class AccountDeletionService {
             return;
         }
         if ("sms".equals(method)) {
-            String phone = req.getPhone() == null ? user.getPhone() : req.getPhone().trim();
-            if (phone == null || phone.isBlank() || !phone.equals(user.getPhone())) {
+            String rawPhone = (req.getPhone() == null || req.getPhone().isBlank()) ? user.getPhone() : req.getPhone();
+            String reqNorm = TencentSmsPhoneRoute.normalizeForStorage(rawPhone);
+            String userNorm = TencentSmsPhoneRoute.normalizeForStorage(user.getPhone());
+            String phone = reqNorm != null ? reqNorm : (rawPhone == null ? "" : rawPhone.trim());
+            String bound = userNorm != null ? userNorm : (user.getPhone() == null ? "" : user.getPhone().trim());
+            if (phone.isBlank() || bound.isBlank() || !phone.equals(bound)) {
                 throw new BizException(CommonErrorCode.INVALID_PARAM, "手机号与账号不一致");
             }
             if (!otpStore.consume("sms", phone, req.getCode() == null ? "" : req.getCode().trim())) {

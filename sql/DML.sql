@@ -76,12 +76,28 @@ INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`
 -- 对齐 BGSSAI 共享控制台应用：SignName / 登录 OTP TemplateId 跨环境共享；
 -- SdkAppId 环境差异见 sql/dev/DML.sql（1401156379）与 sql/prod/DML.sql（1401191076）。
 -- 登录 OTP 使用已审批双参模板 2677885；待审多参模板 2734311 通过前禁止改用。
--- 产品名 / 模板参数个数见用户端 application.properties（bgssai.sms.product-label / template-param-count，默认 count=2）。
+-- 通道扩展配置（sms.endpoint / sms.region / sms.product_label / sms.template_param_count 与 sms.intl.*）同步落库；
+-- 仅在空值时补齐默认值，绝不覆盖已有密钥与配置；application.properties 中的 product-label / template-param-count 仅作库值为空时的回落。
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.secret-id', 'AKID674pMgojQUSHuLafaJUUYXKvNekeP0pd', '腾讯云短信 SecretId', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.secret-key', 'kKjQuBE5lEUFuOgrrfGtARfnnhU8nMxZ', '腾讯云短信 SecretKey', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sdk-app-id', '', '腾讯云短信 SdkAppId（环境差异见 sql/dev 与 sql/prod）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sign-name', '昆山兵贵神速智能科技', '腾讯云短信签名（共享控制台）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.template-id', '2677885', '腾讯云短信登录 OTP 模板 ID（已审批双参；勿用待审 2734311）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.endpoint', 'sms.tencentcloudapi.com', '国内短信接入域名（默认 sms.tencentcloudapi.com）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.region', 'ap-guangzhou', '国内腾讯云短信地域（默认 ap-guangzhou）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.product_label', 'Short', '国内短信正文产品名称参数', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.template_param_count', '2', '国内短信模板参数数量 2/3/4', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.enabled', '0', '国际及港澳台短信开关 0/1', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.secret_id', '', '国际短信 SecretId（留空复用国内）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.secret_key', '', '国际短信 SecretKey（留空复用国内）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.endpoint', 'sms.tencentcloudapi.com', '国际短信接入域名（默认 sms.tencentcloudapi.com）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.region', 'ap-guangzhou', '国际腾讯云短信地域（默认 ap-guangzhou）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.sdk_app_id', '', '国际腾讯云短信 SdkAppId', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.sign_name', '', '国际短信签名（可选）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.sender_id', '', '国际短信 SenderId（可选）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.template_id', '', '国际短信模板 ID', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.template_param_count', '2', '国际短信模板参数数量 2/3/4', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('sms.intl.product_label', 'Short', '国际短信正文产品名称参数', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 -- STEP SMS-1 END
 
 -- STEP SMTP-1: 平台发件邮箱（邮箱验证码登录）
@@ -330,7 +346,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0002', 'douyin', 'openid_sd_0002', 'u-sd-0002', '孙娜', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0002', 'sd-mcp-2', 'mcp_sd_plain_0002', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0003', 'seeduser003', '李敏', 'demo123', 'seedsd003@example.com', '12980000003', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0003', 'weibo', 'openid_sd_0003', 'u-sd-0003', '李敏', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0003', 'bgssai', 'openid_sd_0003', 'u-sd-0003', '李敏', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0003', 'sd-mcp-3', 'mcp_sd_plain_0003', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0004', 'seeduser004', '周静', 'demo123', 'seedsd004@example.com', '12980000004', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0004', 'wechat', 'openid_sd_0004', 'u-sd-0004', '周静', 0, 'seed');
@@ -342,7 +358,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0006', 'douyin', 'openid_sd_0006', 'u-sd-0006', '郑磊', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0006', 'sd-mcp-6', 'mcp_sd_plain_0006', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0007', 'seeduser007', '王洋', 'demo123', 'seedsd007@example.com', '12980000007', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0007', 'weibo', 'openid_sd_0007', 'u-sd-0007', '王洋', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0007', 'bgssai', 'openid_sd_0007', 'u-sd-0007', '王洋', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0007', 'sd-mcp-7', 'mcp_sd_plain_0007', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0008', 'seeduser008', '冯艳', 'demo123', 'seedsd008@example.com', '12980000008', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0008', 'wechat', 'openid_sd_0008', 'u-sd-0008', '冯艳', 0, 'seed');
@@ -354,7 +370,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0010', 'douyin', 'openid_sd_0010', 'u-sd-0010', '褚军', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0010', 'sd-mcp-10', 'mcp_sd_plain_0010', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0011', 'seeduser011', '卫杰', 'demo123', 'seedsd011@example.com', '12980000011', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0011', 'weibo', 'openid_sd_0011', 'u-sd-0011', '卫杰', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0011', 'bgssai', 'openid_sd_0011', 'u-sd-0011', '卫杰', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0011', 'sd-mcp-11', 'mcp_sd_plain_0011', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0012', 'seeduser012', '蒋娟', 'demo123', 'seedsd012@example.com', '12980000012', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0012', 'wechat', 'openid_sd_0012', 'u-sd-0012', '蒋娟', 0, 'seed');
@@ -366,7 +382,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0014', 'douyin', 'openid_sd_0014', 'u-sd-0014', '韩明', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0014', 'sd-mcp-14', 'mcp_sd_plain_0014', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0015', 'seeduser015', '杨超', 'demo123', 'seedsd015@example.com', '12980000015', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0015', 'weibo', 'openid_sd_0015', 'u-sd-0015', '杨超', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0015', 'bgssai', 'openid_sd_0015', 'u-sd-0015', '杨超', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0015', 'sd-mcp-15', 'mcp_sd_plain_0015', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0016', 'seeduser016', '朱秀英', 'demo123', 'seedsd016@example.com', '12980000016', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0016', 'wechat', 'openid_sd_0016', 'u-sd-0016', '朱秀英', 0, 'seed');
@@ -378,7 +394,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0018', 'douyin', 'openid_sd_0018', 'u-sd-0018', '尤平', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0018', 'sd-mcp-18', 'mcp_sd_plain_0018', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0019', 'seeduser019', '许刚', 'demo123', 'seedsd019@example.com', '12980000019', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0019', 'weibo', 'openid_sd_0019', 'u-sd-0019', '许刚', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0019', 'bgssai', 'openid_sd_0019', 'u-sd-0019', '许刚', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0019', 'sd-mcp-19', 'mcp_sd_plain_0019', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0020', 'seeduser020', '何伟', 'demo123', 'seedsd020@example.com', '12980000020', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0020', 'wechat', 'openid_sd_0020', 'u-sd-0020', '何伟', 0, 'seed');
@@ -390,7 +406,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0022', 'douyin', 'openid_sd_0022', 'u-sd-0022', '施娜', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0022', 'sd-mcp-22', 'mcp_sd_plain_0022', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0023', 'seeduser023', '张敏', 'demo123', 'seedsd023@example.com', '12980000023', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0023', 'weibo', 'openid_sd_0023', 'u-sd-0023', '张敏', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0023', 'bgssai', 'openid_sd_0023', 'u-sd-0023', '张敏', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0023', 'sd-mcp-23', 'mcp_sd_plain_0023', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0024', 'seeduser024', '孔静', 'demo123', 'seedsd024@example.com', '12980000024', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0024', 'wechat', 'openid_sd_0024', 'u-sd-0024', '孔静', 0, 'seed');
@@ -402,7 +418,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0026', 'douyin', 'openid_sd_0026', 'u-sd-0026', '严磊', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0026', 'sd-mcp-26', 'mcp_sd_plain_0026', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0027', 'seeduser027', '华洋', 'demo123', 'seedsd027@example.com', '12980000027', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0027', 'weibo', 'openid_sd_0027', 'u-sd-0027', '华洋', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0027', 'bgssai', 'openid_sd_0027', 'u-sd-0027', '华洋', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0027', 'sd-mcp-27', 'mcp_sd_plain_0027', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0028', 'seeduser028', '金艳', 'demo123', 'seedsd028@example.com', '12980000028', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0028', 'wechat', 'openid_sd_0028', 'u-sd-0028', '金艳', 0, 'seed');
@@ -414,7 +430,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0030', 'douyin', 'openid_sd_0030', 'u-sd-0030', '陶军', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0030', 'sd-mcp-30', 'mcp_sd_plain_0030', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0031', 'seeduser031', '姜杰', 'demo123', 'seedsd031@example.com', '12980000031', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0031', 'weibo', 'openid_sd_0031', 'u-sd-0031', '姜杰', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0031', 'bgssai', 'openid_sd_0031', 'u-sd-0031', '姜杰', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0031', 'sd-mcp-31', 'mcp_sd_plain_0031', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0032', 'seeduser032', '赵娟', 'demo123', 'seedsd032@example.com', '12980000032', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0032', 'wechat', 'openid_sd_0032', 'u-sd-0032', '赵娟', 0, 'seed');
@@ -426,7 +442,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0034', 'douyin', 'openid_sd_0034', 'u-sd-0034', '孙明', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0034', 'sd-mcp-34', 'mcp_sd_plain_0034', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0035', 'seeduser035', '李超', 'demo123', 'seedsd035@example.com', '12980000035', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0035', 'weibo', 'openid_sd_0035', 'u-sd-0035', '李超', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0035', 'bgssai', 'openid_sd_0035', 'u-sd-0035', '李超', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0035', 'sd-mcp-35', 'mcp_sd_plain_0035', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0036', 'seeduser036', '周秀英', 'demo123', 'seedsd036@example.com', '12980000036', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0036', 'wechat', 'openid_sd_0036', 'u-sd-0036', '周秀英', 0, 'seed');
@@ -438,7 +454,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0038', 'douyin', 'openid_sd_0038', 'u-sd-0038', '郑平', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0038', 'sd-mcp-38', 'mcp_sd_plain_0038', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0039', 'seeduser039', '王刚', 'demo123', 'seedsd039@example.com', '12980000039', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0039', 'weibo', 'openid_sd_0039', 'u-sd-0039', '王刚', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0039', 'bgssai', 'openid_sd_0039', 'u-sd-0039', '王刚', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0039', 'sd-mcp-39', 'mcp_sd_plain_0039', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0040', 'seeduser040', '冯伟', 'demo123', 'seedsd040@example.com', '12980000040', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0040', 'wechat', 'openid_sd_0040', 'u-sd-0040', '冯伟', 0, 'seed');
@@ -450,7 +466,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0042', 'douyin', 'openid_sd_0042', 'u-sd-0042', '褚娜', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0042', 'sd-mcp-42', 'mcp_sd_plain_0042', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0043', 'seeduser043', '卫敏', 'demo123', 'seedsd043@example.com', '12980000043', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0043', 'weibo', 'openid_sd_0043', 'u-sd-0043', '卫敏', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0043', 'bgssai', 'openid_sd_0043', 'u-sd-0043', '卫敏', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0043', 'sd-mcp-43', 'mcp_sd_plain_0043', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0044', 'seeduser044', '蒋静', 'demo123', 'seedsd044@example.com', '12980000044', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0044', 'wechat', 'openid_sd_0044', 'u-sd-0044', '蒋静', 0, 'seed');
@@ -462,7 +478,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0046', 'douyin', 'openid_sd_0046', 'u-sd-0046', '韩磊', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0046', 'sd-mcp-46', 'mcp_sd_plain_0046', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0047', 'seeduser047', '杨洋', 'demo123', 'seedsd047@example.com', '12980000047', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0047', 'weibo', 'openid_sd_0047', 'u-sd-0047', '杨洋', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0047', 'bgssai', 'openid_sd_0047', 'u-sd-0047', '杨洋', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0047', 'sd-mcp-47', 'mcp_sd_plain_0047', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0048', 'seeduser048', '朱艳', 'demo123', 'seedsd048@example.com', '12980000048', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0048', 'wechat', 'openid_sd_0048', 'u-sd-0048', '朱艳', 0, 'seed');
@@ -474,7 +490,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0050', 'douyin', 'openid_sd_0050', 'u-sd-0050', '尤军', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0050', 'sd-mcp-50', 'mcp_sd_plain_0050', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0051', 'seeduser051', '许杰', 'demo123', 'seedsd051@example.com', '12980000051', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0051', 'weibo', 'openid_sd_0051', 'u-sd-0051', '许杰', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0051', 'bgssai', 'openid_sd_0051', 'u-sd-0051', '许杰', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0051', 'sd-mcp-51', 'mcp_sd_plain_0051', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0052', 'seeduser052', '何娟', 'demo123', 'seedsd052@example.com', '12980000052', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0052', 'wechat', 'openid_sd_0052', 'u-sd-0052', '何娟', 0, 'seed');
@@ -486,7 +502,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0054', 'douyin', 'openid_sd_0054', 'u-sd-0054', '施明', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0054', 'sd-mcp-54', 'mcp_sd_plain_0054', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0055', 'seeduser055', '张超', 'demo123', 'seedsd055@example.com', '12980000055', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0055', 'weibo', 'openid_sd_0055', 'u-sd-0055', '张超', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0055', 'bgssai', 'openid_sd_0055', 'u-sd-0055', '张超', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0055', 'sd-mcp-55', 'mcp_sd_plain_0055', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0056', 'seeduser056', '孔秀英', 'demo123', 'seedsd056@example.com', '12980000056', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0056', 'wechat', 'openid_sd_0056', 'u-sd-0056', '孔秀英', 0, 'seed');
@@ -498,7 +514,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0058', 'douyin', 'openid_sd_0058', 'u-sd-0058', '严平', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0058', 'sd-mcp-58', 'mcp_sd_plain_0058', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0059', 'seeduser059', '华刚', 'demo123', 'seedsd059@example.com', '12980000059', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0059', 'weibo', 'openid_sd_0059', 'u-sd-0059', '华刚', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0059', 'bgssai', 'openid_sd_0059', 'u-sd-0059', '华刚', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0059', 'sd-mcp-59', 'mcp_sd_plain_0059', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0060', 'seeduser060', '金伟', 'demo123', 'seedsd060@example.com', '12980000060', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0060', 'wechat', 'openid_sd_0060', 'u-sd-0060', '金伟', 0, 'seed');
@@ -510,7 +526,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0062', 'douyin', 'openid_sd_0062', 'u-sd-0062', '陶娜', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0062', 'sd-mcp-62', 'mcp_sd_plain_0062', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0063', 'seeduser063', '姜敏', 'demo123', 'seedsd063@example.com', '12980000063', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0063', 'weibo', 'openid_sd_0063', 'u-sd-0063', '姜敏', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0063', 'bgssai', 'openid_sd_0063', 'u-sd-0063', '姜敏', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0063', 'sd-mcp-63', 'mcp_sd_plain_0063', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0064', 'seeduser064', '赵静', 'demo123', 'seedsd064@example.com', '12980000064', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0064', 'wechat', 'openid_sd_0064', 'u-sd-0064', '赵静', 0, 'seed');
@@ -522,7 +538,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0066', 'douyin', 'openid_sd_0066', 'u-sd-0066', '孙磊', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0066', 'sd-mcp-66', 'mcp_sd_plain_0066', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0067', 'seeduser067', '李洋', 'demo123', 'seedsd067@example.com', '12980000067', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0067', 'weibo', 'openid_sd_0067', 'u-sd-0067', '李洋', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0067', 'bgssai', 'openid_sd_0067', 'u-sd-0067', '李洋', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0067', 'sd-mcp-67', 'mcp_sd_plain_0067', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0068', 'seeduser068', '周艳', 'demo123', 'seedsd068@example.com', '12980000068', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0068', 'wechat', 'openid_sd_0068', 'u-sd-0068', '周艳', 0, 'seed');
@@ -534,7 +550,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0070', 'douyin', 'openid_sd_0070', 'u-sd-0070', '郑军', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0070', 'sd-mcp-70', 'mcp_sd_plain_0070', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0071', 'seeduser071', '王杰', 'demo123', 'seedsd071@example.com', '12980000071', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0071', 'weibo', 'openid_sd_0071', 'u-sd-0071', '王杰', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0071', 'bgssai', 'openid_sd_0071', 'u-sd-0071', '王杰', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0071', 'sd-mcp-71', 'mcp_sd_plain_0071', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0072', 'seeduser072', '冯娟', 'demo123', 'seedsd072@example.com', '12980000072', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0072', 'wechat', 'openid_sd_0072', 'u-sd-0072', '冯娟', 0, 'seed');
@@ -546,7 +562,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0074', 'douyin', 'openid_sd_0074', 'u-sd-0074', '褚明', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0074', 'sd-mcp-74', 'mcp_sd_plain_0074', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0075', 'seeduser075', '卫超', 'demo123', 'seedsd075@example.com', '12980000075', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0075', 'weibo', 'openid_sd_0075', 'u-sd-0075', '卫超', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0075', 'bgssai', 'openid_sd_0075', 'u-sd-0075', '卫超', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0075', 'sd-mcp-75', 'mcp_sd_plain_0075', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0076', 'seeduser076', '蒋秀英', 'demo123', 'seedsd076@example.com', '12980000076', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0076', 'wechat', 'openid_sd_0076', 'u-sd-0076', '蒋秀英', 0, 'seed');
@@ -558,7 +574,7 @@ INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0078', 'douyin', 'openid_sd_0078', 'u-sd-0078', '韩平', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0078', 'sd-mcp-78', 'mcp_sd_plain_0078', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0079', 'seeduser079', '杨刚', 'demo123', 'seedsd079@example.com', '12980000079', 'USER', 1, 0, 'seed');
-INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0079', 'weibo', 'openid_sd_0079', 'u-sd-0079', '杨刚', 0, 'seed');
+INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0079', 'bgssai', 'openid_sd_0079', 'u-sd-0079', '杨刚', 0, 'seed');
 INSERT INTO `mcp_access_token` (`user_id`, `token_name`, `token_hash`, `del_flag`, `create_by`) VALUES ('u-sd-0079', 'sd-mcp-79', 'mcp_sd_plain_0079', 0, 'seed');
 INSERT INTO `sys_user` (`user_id`, `user_name`, `real_name`, `password`, `email`, `phone`, `org_code`, `status`, `del_flag`, `create_by`) VALUES ('u-sd-0080', 'seeduser080', '朱伟', 'demo123', 'seedsd080@example.com', '12980000080', 'USER', 1, 0, 'seed');
 INSERT INTO `oauth_binding` (`binding_id`, `platform`, `open_id`, `user_id`, `nickname`, `del_flag`, `creator`) VALUES ('ob-sd-0080', 'wechat', 'openid_sd_0080', 'u-sd-0080', '朱伟', 0, 'seed');

@@ -5,7 +5,7 @@
 
 | 文件 | 改动 |
 | --- | --- |
-| `bgssai-short-user/bgssai-short-user-react/src/pages/login/Login.jsx` | 删左侧 `aside.login-hero` 与副标题；`LOGIN_METHODS` = password / email / sms 平铺（role=tab，默认 sms）；label 加 `sr-only`；`countdowns = { sms, email }`，`countdown` 取当前方式；主按钮按方式显示「登录」或「登录 / 注册」；发码提示去掉 `product#seq`；OAuth 按钮去掉 `title` |
+| `bgssai-short-user/bgssai-short-user-react/src/pages/login/Login.jsx` | 删左侧 `aside.login-hero` 与副标题；`LOGIN_METHODS` = password / email / sms 平铺（role=tab，默认 sms）；label 加 `sr-only`；`countdowns = { sms, email }`，`countdown` 取当前方式；主按钮按方式显示「登录」或「登录 / 注册」；发码响应与提示不返回/不带 `product`/`seq`；OAuth 按钮去掉 `title` 且仅保留 `wechat`/`douyin`/`baidu`/`alipay`/`bgssai`（生产 IdP 为 `https://chat.bgssai.cn`） |
 | `login.css` | `.login-shell` 单列；`.login-panel-brand` 常显；删 `.login-hero*`、`.login-sub`、`.login-note` / `.login-field-note`；新增 `.sr-only` |
 
 登录接口无改动。`/en` 的 302 在用户端与管理端的 `EnglishEntryRedirectFilter`。
