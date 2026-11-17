@@ -13,6 +13,7 @@ import {
   coverUrl,
   episodeProgress,
   nextStepText,
+  workCardStatus,
 } from './homeWorkbench'
 import './home.css'
 
@@ -142,7 +143,8 @@ export default function Home() {
           {works.map((work) => {
             const detail = detailsById[work.work_id]
             const episodes = episodesById[work.work_id] || []
-            const progress = episodeProgress(work, detail ? episodes : null)
+            const progress = episodeProgress(work, detail ? episodes : null, detail)
+            const statusText = workCardStatus(work, detail ? episodes : null, detail)
             const cover = coverUrl(detail) || coverUrl(work)
             return (
               <Card key={work.work_id} size="small">
@@ -150,18 +152,32 @@ export default function Home() {
                   {cover ? <img className="home-cover" alt="" src={cover} /> : null}
                   <div className="home-work-main">
                     <div className="home-work-title">{work.work_title || '未命名作品'}</div>
-                    {work.work_status_name ? <div className="home-work-status">{work.work_status_name}</div> : null}
+                    {statusText ? <div className="home-work-status">{statusText}</div> : null}
                     {progress.label ? <div className="home-work-progress-label">{progress.label}</div> : null}
                     {progress.percent == null ? null : (
                       <Progress percent={progress.percent} size="small" showInfo={false} />
                     )}
+                    {progress.episodeItems?.length ? (
+                      <div className="home-episode-stages">
+                        {progress.episodeItems.map((epItem) => (
+                          <button
+                            key={epItem.key}
+                            type="button"
+                            className={`home-episode-chip is-${epItem.tone}`}
+                            onClick={() => navigate(epItem.to)}
+                          >
+                            {epItem.text}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="home-work-actions">
                       <Button
                         type="primary"
                         size="small"
-                        onClick={() => navigate(continuePath(work, episodes))}
+                        onClick={() => navigate(continuePath(work, episodes, detail))}
                       >
-                        {continueLabel(work, episodes)}
+                        {continueLabel(work, episodes, detail)}
                       </Button>
                     </div>
                   </div>

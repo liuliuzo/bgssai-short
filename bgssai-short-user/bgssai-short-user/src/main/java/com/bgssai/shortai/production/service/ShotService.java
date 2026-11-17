@@ -72,6 +72,8 @@ public class ShotService {
     @Autowired
     private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired(required = false)
+    private FinishedFilmLifecycle finishedFilmLifecycle;
+    @Autowired(required = false)
     private OfficialVideoQueue officialVideoQueue;
 
     @Transactional
@@ -128,6 +130,9 @@ public class ShotService {
                 insertShot(ep, shotNo, sceneNo, scene, line, style, characters, sceneCards, inheritPrev);
                 prevSceneNo = sceneNo;
             }
+        }
+        if (finishedFilmLifecycle != null) {
+            finishedFilmLifecycle.expireAfterUpstreamChange(ep.getEpisodeId());
         }
         patchStoryboard(ep, "DRAFT");
         workStatusService.refresh(ep.getWorkId());
