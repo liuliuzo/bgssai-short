@@ -305,14 +305,17 @@ test('直接选择人物定妆与场景道具参考：聚合选项并移除跳�
   const studioSource = fs.readFileSync(path.join(dir, '..', 'works', 'WorkStudio.jsx'), 'utf8')
 
   assert.doesNotMatch(pickerSource, /管理定妆库|管理场景库|管理道具库|管理\{storeLabel\}|libraryHref/)
-  assert.match(pickerSource, /<Select/)
-  assert.match(pickerSource, /optionRender=/)
-  assert.match(pickerSource, /onSelect=\{[\s\S]*onUse\(materialId\)/)
-  assert.match(pickerSource, /大图点选/)
+  assert.doesNotMatch(pickerSource, /<Select|大图点选|收起大图/)
+  assert.equal((pickerSource.match(/onUse\(/g) || []).length, 1)
+  assert.match(pickerSource, /onUse\(option\.materialId\)/)
+  assert.match(pickerSource, /使用中/)
+  assert.match(pickerSource, /selectedOption\?\.libraryId/)
+  assert.match(pickerSource, /搜索/)
 
   assert.doesNotMatch(studioSource, /管理定妆库|管理场景库|管理道具库|libraryHref/)
   assert.match(studioSource, /listLookLibraries/)
   assert.match(studioSource, /libraries=\{lookLibraries\}/)
+  assert.match(studioSource, /定妆候选：/)
 })
 
 function solid(width, height, value) {

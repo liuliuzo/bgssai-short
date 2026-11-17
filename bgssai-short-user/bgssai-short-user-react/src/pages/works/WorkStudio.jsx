@@ -1275,6 +1275,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
             />
             {hasRealCandidates ? (
               <div style={{ marginTop: 12 }}>
+                <div style={{ marginBottom: 6 }}><Text type="secondary">定妆候选：</Text></div>
                 <Space wrap>
                   {candidates.filter((item) => isRealPhotoUrl(item.file_url)).map((c) => (
                     <div key={c.asset_id} style={{ textAlign: 'center' }}>
@@ -1334,7 +1335,12 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
             <Space wrap style={{ marginTop: 8 }}>
-              {isRealPhotoUrl(row.ref_image_url) ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={96} height={64} /> : null}
+              {isRealPhotoUrl(row.ref_image_url) ? (
+                <div style={{ textAlign: 'center' }}>
+                  <ClickThumb alt="当前参考图" src={row.ref_image_url} width={96} height={64} />
+                  <div style={{ fontSize: 12, color: '#595959' }}>当前</div>
+                </div>
+              ) : null}
               {realSceneCandidates.map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="场景参考" src={c.file_url} width={96} height={64} />
@@ -1400,7 +1406,12 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
               onUse={(materialId) => useLook('scene', row.scene_card_id, materialId)}
             />
             <Space wrap style={{ marginTop: 8 }}>
-              {isRealPhotoUrl(row.ref_image_url) ? <ClickThumb alt="当前参考图" src={row.ref_image_url} width={72} height={72} /> : null}
+              {isRealPhotoUrl(row.ref_image_url) ? (
+                <div style={{ textAlign: 'center' }}>
+                  <ClickThumb alt="当前参考图" src={row.ref_image_url} width={72} height={72} />
+                  <div style={{ fontSize: 12, color: '#595959' }}>当前</div>
+                </div>
+              ) : null}
               {realPropCandidates.map((c) => (
                 <div key={c.asset_id} style={{ textAlign: 'center' }}>
                   <ClickThumb alt="道具参考" src={c.file_url} width={72} height={72} />

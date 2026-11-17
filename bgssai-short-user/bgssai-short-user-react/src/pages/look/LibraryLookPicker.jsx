@@ -1,22 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Button, Select, Space, Typography } from 'antd'
+import { Button, Input, Space, Typography } from 'antd'
 import productionApi from '../../api/production'
 import {
   buildLibraryLookOptions,
-  groupLooksOfKind,
-  lookCover,
   matchSelectedLookValue,
   referenceImage,
   referenceLine,
 } from './lookGroups'
 
 const { Text } = Typography
-
-function shotUrl(item) {
-  if (!item) return ''
-  if (item.mime_type && item.mime_type.startsWith('video/')) return item.poster_url || ''
-  return item.file_url || item.poster_url || ''
-}
 
 export function ReferenceNotice({ reference, textOnly }) {
   const image = textOnly ? null : referenceImage(reference)
@@ -43,6 +35,7 @@ export default function LibraryLookPicker({
   onUse,
 }) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
   const [internalLibraries, setInternalLibraries] = useState([])
   const [internalLoading, setInternalLoading] = useState(false)
   const [libraryId, setLibraryId] = useState()
@@ -50,9 +43,8 @@ export default function LibraryLookPicker({
   const isProp = kind === 'PROP'
   const noun = isProp ? '道具' : isScene ? '场景' : '角色'
   const pickLabel = isProp ? '道具参考' : isScene ? '场景参考' : '人物定妆'
+  const itemNoun = isProp ? '道具' : isScene ? '场景' : '造型'
   const actionLabel = isProp ? '用这个道具' : isScene ? '用这个场景' : '用这个造型'
-  const optThumbWidth = isScene ? 52 : isProp ? 40 : 36
-  const optThumbHeight = isScene ? 36 : isProp ? 40 : 48
   const thumbWidth = isScene ? 136 : isProp ? 100 : 104
   const thumbHeight = isScene ? 90 : isProp ? 100 : 140
   const cardWidth = isScene ? 148 : isProp ? 112 : 120
@@ -76,88 +68,53 @@ export default function LibraryLookPicker({
   const loading = externalLibraries !== undefined ? !!librariesLoading : internalLoading
   const options = buildLibraryLookOptions(libraries, kind)
   const selectedValue = matchSelectedLookValue(options, currentReference)
+  const selectedOption = options.find((option) => option.value === selectedValue)
 
-  const librariesWithKind = libraries.filter((item) => groupLooksOfKind(item.material_list, kind).length > 0)
+  const librariesWithKind = libraries.filter((item) => options.some((option) => option.libraryId === item.library_id))
   const effectiveLibraryId = librariesWithKind.some((item) => item.library_id === libraryId)
     ? libraryId
-    : librariesWithKind[0]?.library_id
+    : (librariesWithKind.some((item) => item.library_id === selectedOption?.libraryId)
+      ? selectedOption.libraryId
+      : librariesWithKind[0]?.library_id)
   const current = librariesWithKind.find((item) => item.library_id === effectiveLibraryId)
-  const looks = groupLooksOfKind(current?.material_list, kind)
+  const trimmedQuery = query.trim().toLowerCase()
+  const visibleOptions = trimmedQuery
+    ? options.filter((option) => option.searchText.toLowerCase().includes(trimmedQuery))
+    : options.filter((option) => option.libraryId === effectiveLibraryId)
 
   return (
     <div style={{ marginTop: 8 }}>
       <Space wrap align="center">
         <Text type="secondary" style={{ fontSize: 13 }}>{pickLabel}：</Text>
-        <Select
-          aria-label={pickLabel}
-          style={{ minWidth: 240, maxWidth: 340 }}
-          value={selectedValue}
-          placeholder={loading ? `正在读取${pickLabel}…` : (options.length ? `直接选择${pickLabel}` : `暂无可选${pickLabel}`)}
-          loading={loading}
-          disabled={busy || loading || !options.length}
-          showSearch
-          filterOption={(input, option) => !input || String(option?.searchText || '').toLowerCase().includes(input.trim().toLowerCase())}
-          popupMatchSelectWidth={false}
-          dropdownStyle={{ minWidth: 280 }}
-          listHeight={320}
-          options={options}
-          onSelect={(materialId) => {
-            setOpen(false)
-            onUse(materialId)
-          }}
-          optionRender={(oriOption) => {
-            const d = oriOption.data
-            return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 0' }}>
-                {d.coverUrl ? (
-                  <img
-                    alt={d.lookName}
-                    src={d.coverUrl}
-                    style={{
-                      width: optThumbWidth,
-                      height: optThumbHeight,
-                      objectFit: 'cover',
-                      borderRadius: 4,
-                      flexShrink: 0,
-                      display: 'block',
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: optThumbWidth,
-                      height: optThumbHeight,
-                      borderRadius: 4,
-                      background: '#f6f7f9',
-                      border: '1px dashed #d9d9d9',
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#1f1f1f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {d.lookName}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#8c8c8c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {d.libraryName}{d.archived ? ' · 已归档' : ''}{d.angleSummary ? ` · ${d.angleSummary}` : ''}
-                  </div>
-                </div>
-              </div>
-            )
-          }}
-        />
+        {loading ? (
+          <Text type="secondary">正在读取{pickLabel}…</Text>
+        ) : selectedOption ? (
+          <Text>{selectedOption.label}</Text>
+        ) : (
+          <Text type="secondary">{options.length ? '未从库中选择' : `暂无可选${itemNoun}`}</Text>
+        )}
         {options.length > 0 ? (
           <Button size="small" disabled={busy} onClick={() => setOpen((value) => !value)}>
-            {open ? '收起大图' : '大图点选'}
+            {open ? '收起' : (selectedOption ? `更换${itemNoun}` : `选择${itemNoun}`)}
           </Button>
         ) : null}
       </Space>
       {open && options.length > 0 ? (
         <div style={{ marginTop: 10, padding: 12, border: '1px solid #e4e7ed', borderRadius: 8, background: '#fff' }}>
-          {librariesWithKind.length > 1 ? (
+          <div style={{ marginBottom: 10 }}>
+            <Input
+              size="small"
+              allowClear
+              style={{ width: 260, maxWidth: '100%' }}
+              placeholder={`搜索${itemNoun}或分组名`}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          {!trimmedQuery && librariesWithKind.length > 1 ? (
             <Space wrap style={{ marginBottom: 10 }}>
               {librariesWithKind.map((item) => {
-                const count = groupLooksOfKind(item.material_list, kind).length
+                const count = options.filter((option) => option.libraryId === item.library_id).length
                 return (
                   <Button
                     key={item.library_id}
@@ -171,54 +128,57 @@ export default function LibraryLookPicker({
               })}
             </Space>
           ) : null}
-          {current && current.status === 'ARCHIVED' ? (
+          {!trimmedQuery && current && current.status === 'ARCHIVED' ? (
             <div style={{ marginBottom: 8 }}><Text type="secondary">分组已归档</Text></div>
           ) : null}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            {looks.map((look) => {
-              const cover = lookCover(look)
-              const url = shotUrl(cover)
+            {visibleOptions.map((option) => {
+              const inUse = option.value === selectedValue
+              const detail = [
+                trimmedQuery ? option.libraryName : null,
+                trimmedQuery && option.archived ? '已归档' : null,
+                option.angleSummary || null,
+              ].filter(Boolean).join(' · ')
               return (
-                <div key={look.name} style={{ width: cardWidth }}>
-                  {url ? (
+                <div key={`${option.libraryId || ''}:${option.value}`} style={{ width: cardWidth }}>
+                  {option.coverUrl ? (
                     <img
-                      alt={look.name}
-                      src={url}
-                      onClick={() => {
-                        if (!busy && cover) {
-                          setOpen(false)
-                          onUse(cover.material_id)
-                        }
-                      }}
-                      style={{
-                        width: thumbWidth,
-                        height: thumbHeight,
-                        objectFit: 'cover',
-                        borderRadius: 8,
-                        display: 'block',
-                        cursor: busy ? 'not-allowed' : 'pointer',
-                      }}
+                      alt={option.lookName}
+                      src={option.coverUrl}
+                      style={{ width: thumbWidth, height: thumbHeight, objectFit: 'cover', borderRadius: 8, display: 'block' }}
                     />
                   ) : (
                     <div style={{ width: thumbWidth, height: thumbHeight, borderRadius: 8, background: '#f6f7f9', border: '1px dashed #d9d9d9' }} />
                   )}
-                  <div style={{ margin: '6px 0', fontSize: 13 }}>{look.name}</div>
-                  <Button
-                    size="small"
-                    type="primary"
-                    disabled={busy || !cover}
-                    onClick={() => {
-                      setOpen(false)
-                      onUse(cover.material_id)
-                    }}
-                  >
-                    {actionLabel}
-                  </Button>
+                  <div style={{ marginTop: 6, fontSize: 13 }}>{option.lookName}</div>
+                  {detail ? (
+                    <div style={{ marginBottom: 6, fontSize: 12, color: '#8c8c8c' }}>{detail}</div>
+                  ) : (
+                    <div style={{ marginBottom: 6 }} />
+                  )}
+                  {inUse ? (
+                    <Button size="small" disabled>使用中</Button>
+                  ) : (
+                    <Button
+                      size="small"
+                      type="primary"
+                      disabled={busy}
+                      onClick={() => {
+                        setOpen(false)
+                        onUse(option.materialId)
+                      }}
+                    >
+                      {actionLabel}
+                    </Button>
+                  )}
                 </div>
               )
             })}
           </div>
-          {!loading && current && !looks.length ? (
+          {trimmedQuery && !visibleOptions.length ? (
+            <Text type="secondary">没有找到「{query.trim()}」</Text>
+          ) : null}
+          {!trimmedQuery && current && !visibleOptions.length ? (
             <Text type="secondary">暂无{noun}参考图</Text>
           ) : null}
         </div>
