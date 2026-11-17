@@ -410,7 +410,7 @@
         <code>card_status</code>（<code>CANDIDATE</code> / <code>DRAFT</code> / <code>GENERATING</code> /
         <code>LOCKED</code>）· <code>appearance_prompt</code> · <code>consistency_seed</code> ·
         <code>ref_image_asset_id</code> · <code>look_reference</code>（<code>source</code> 为 <code>CARD</code> / <code>NAME</code> / <code>NONE</code>，生成前展示将用的库和造型）·
-        可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>、<code>replace_existing</code>、<code>skip_reference</code>，<code>confirm_cost=1</code> 才出图）独立重做或生成正脸、前面、背面、侧面，重做后原照片自动保留在 <code>history_list</code>，并可用 <code>POST /bgssai/user/look-materials/promote</code> 一键换回 ·
+        可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>、<code>replace_existing</code>、<code>skip_reference</code>，<code>confirm_cost=1</code> 才出图）独立重做或生成正脸、前面、背面、侧面；不传 <code>view_angle</code> 时按四面实际格位判空，正脸为空时与其余空缺面一起生成（无初始参考图时先生成正脸并作为后续三面参考）；重做后原照片自动保留在 <code>history_list</code>，并可用 <code>POST /bgssai/user/look-materials/promote</code> 一键换回；顶部锁定汇总直接展示「全部 N 项已锁定 / 待锁定 N 项 / 暂无角色、场景或道具」 ·
         <code>default_outfit_code</code> · <code>outfit_list</code> ·
         <code>voice_id</code> / <code>voice_speed</code> · <code>used_shot_count</code>；
         <code>character_role</code>（<code>FEMALE_LEAD</code> / <code>MALE_LEAD</code> /

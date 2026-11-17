@@ -159,7 +159,7 @@ export function evaluateShotReadiness(shot = {}, consistencyPanel = {}) {
   }
 
   if (shot.stale_flag === 1) {
-    warnings.push('关联资产定妆已变更，建议重抽以保持跨镜一致')
+    warnings.push('角色或场景定妆已变更，建议重抽以保持跨镜一致')
   }
   if (shot.blocked_flag === 1) {
     blockers.push('镜头处于阻塞状态，请先解除前置依赖')

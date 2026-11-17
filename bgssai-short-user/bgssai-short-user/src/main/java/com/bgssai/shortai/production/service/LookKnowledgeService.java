@@ -1266,9 +1266,6 @@ public class LookKnowledgeService {
         ShortAsset cardAsset = loadAsset(userId, character.getRefImageAssetId());
         boolean validCardAsset = cardAsset != null && objectKey(cardAsset.getStorageKey())
                 && (cardAsset.getMimeType() == null || !cardAsset.getMimeType().startsWith("video/"));
-        if (validCardAsset && !filled.contains("FRONT_FACE") && rows.isEmpty()) {
-            filled.add("FRONT_FACE");
-        }
 
         if (ref != null) {
             String refAngle = shownAngle(ref);

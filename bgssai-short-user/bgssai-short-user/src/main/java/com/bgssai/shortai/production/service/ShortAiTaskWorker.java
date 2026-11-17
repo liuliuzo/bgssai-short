@@ -1425,6 +1425,12 @@ public class ShortAiTaskWorker {
             lookKnowledgeService.saveGenerated(task.getUserId(), libraryId, name,
                     LookViewPrompt.caption(name, promptBase, angle), angle, result.getBinaryContent(),
                     result.getMimeType(), width, height, cardId.isBlank() ? null : cardId);
+            if (!referenced && "FRONT_FACE".equals(angle)) {
+                encoded = Base64.getEncoder().encodeToString(result.getBinaryContent());
+                mime = result.getMimeType() == null || result.getMimeType().isBlank()
+                        ? "image/png" : result.getMimeType();
+                referenced = true;
+            }
         }
     }
 

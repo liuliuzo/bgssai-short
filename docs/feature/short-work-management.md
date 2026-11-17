@@ -207,7 +207,7 @@
 | `variant_node` 多方案节点 | `EPISODE_OPENING` 单集开场 / `EPISODE_HOOK` 集末钩子 / `KEY_SHOT` 关键反转镜头 / `WORK_COVER` 作品封面 |
 | `align_status` 音画对齐 | `PENDING` 待处理 / `ALIGNED` 已对齐 / `MISALIGNED` 未对齐 |
 | `align_action` 对齐解法 | `ADJUST_SPEED` 提高语速 / `EXTEND_SHOT` 延长镜头 / `PAD_SILENCE` 尾部补静音 |
-| `card_status` 资产卡状态 | `CANDIDATE` 待建卡 / `DRAFT` 草稿 / `GENERATING` 候选生成中 / `LOCKED` 已定妆 |
+| `card_status` 定妆锁定状态 | `CANDIDATE` 待建卡 / `DRAFT` 草稿 / `GENERATING` 候选生成中 / `LOCKED` 已定妆 |
 | `asset_type` 素材类型 | `IMAGE` 图片 / `VIDEO` 视频 / `AUDIO` 音频 / `SUBTITLE` 字幕 / `FILM` 成片 |
 | `quality_level` 模型质量档 | `FAST` 快速 / `STANDARD` 标准 / `HIGH` 高质 |
 | `price_unit` 计费单位 | `PER_CALL` 按次 / `PER_SECOND` 按视频秒 / `PER_KILO_TOKEN` 按千 token / `PER_MINUTE` 按音频分钟 |

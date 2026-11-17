@@ -172,4 +172,67 @@ class LookKnowledgeMatchTest {
         assertEquals("全景主图", items.get(0).get("view_name"));
         assertEquals("正脸", items.get(1).get("view_name"));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void completeAnglesIncludesFrontFaceWhenCharacterOnlyHasSelectedCandidateAsset() {
+        LookKnowledgeService service = new LookKnowledgeService();
+        WorkAccessService access = org.mockito.Mockito.mock(WorkAccessService.class);
+        com.bgssai.shortai.mapper.ShortLookLibraryMapper libraries = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortLookLibraryMapper.class);
+        com.bgssai.shortai.mapper.ShortLookMaterialMapper materials = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortLookMaterialMapper.class);
+        com.bgssai.shortai.mapper.ShortCharacterMapper characters = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortCharacterMapper.class);
+        com.bgssai.shortai.mapper.ShortAssetMapper assets = org.mockito.Mockito.mock(com.bgssai.shortai.mapper.ShortAssetMapper.class);
+        AiTaskQueue taskQueue = org.mockito.Mockito.mock(AiTaskQueue.class);
+        com.bgssai.shortai.aimodel.AiModelResolveService models = org.mockito.Mockito.mock(com.bgssai.shortai.aimodel.AiModelResolveService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "workAccessService", access);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "libraryMapper", libraries);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "materialMapper", materials);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "shortCharacterMapper", characters);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "shortAssetMapper", assets);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "aiTaskQueue", taskQueue);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "aiModelResolveService", models);
+
+        org.mockito.Mockito.when(access.requireUser()).thenReturn("u-1");
+        com.bgssai.shortai.model.ShortLookLibrary lib = new com.bgssai.shortai.model.ShortLookLibrary();
+        lib.setId(1L);
+        lib.setLibraryId("lk-1");
+        lib.setUserId("u-1");
+        lib.setLibraryName(LookKnowledgeService.DEFAULT_NAME);
+        lib.setStatus("ACTIVE");
+        org.mockito.Mockito.when(libraries.selectByExample(org.mockito.ArgumentMatchers.any())).thenReturn(List.of(lib));
+
+        com.bgssai.shortai.model.ShortCharacter ch = new com.bgssai.shortai.model.ShortCharacter();
+        ch.setCharacterId("c-1");
+        ch.setWorkId("w-1");
+        ch.setUserId("u-1");
+        ch.setCharacterName("小明");
+        ch.setAppearancePrompt("黑色西装");
+        ch.setRefImageAssetId("as-selected-1");
+        org.mockito.Mockito.when(characters.selectOneByExample(org.mockito.ArgumentMatchers.any())).thenReturn(ch);
+        org.mockito.Mockito.when(materials.selectByExample(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
+
+        com.bgssai.shortai.model.ShortAsset selected = new com.bgssai.shortai.model.ShortAsset();
+        selected.setAssetId("as-selected-1");
+        selected.setUserId("u-1");
+        selected.setAssetType("IMAGE");
+        selected.setMimeType("image/jpeg");
+        selected.setStorageKey("short/dev/u-1/w-1/as-selected-1.jpg");
+        org.mockito.Mockito.when(assets.selectOneByExample(org.mockito.ArgumentMatchers.any())).thenReturn(selected);
+
+        com.bgssai.shortai.model.AiModelConfig model = new com.bgssai.shortai.model.AiModelConfig();
+        model.setModelCode("grok-imagine-image");
+        org.mockito.Mockito.when(models.resolve("IMAGE", "grok-imagine-image")).thenReturn(model);
+        org.mockito.Mockito.when(models.costCent(model, 4)).thenReturn(80);
+
+        com.bgssai.shortai.production.dto.LookDtos.LookCompleteReq req = new com.bgssai.shortai.production.dto.LookDtos.LookCompleteReq();
+        req.setCharacterId("c-1");
+        req.setModelCode("grok-imagine-image");
+        req.setReplaceExisting(0);
+        req.setConfirmCost(0);
+        java.util.Map<String, Object> result = (java.util.Map<String, Object>) service.completeAngles(req).getResult();
+        assertEquals(List.of("FRONT_FACE", "FRONT", "BACK", "SIDE"), result.get("angle_list"));
+        assertEquals(List.of("正脸", "前面", "背面", "侧面"), result.get("angle_name_list"));
+        assertEquals(1, result.get("reference_used"));
+        assertEquals("当前定妆照", result.get("reference_view_name"));
+    }
 }

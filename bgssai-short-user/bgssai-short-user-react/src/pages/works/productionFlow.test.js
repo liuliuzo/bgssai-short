@@ -69,6 +69,8 @@ test('guides creator step-by-step from empty work to finalized script, look lock
   })
   assert.equal(stepSplit.nextAction.primaryTab, 'storyboard')
   assert.equal(stepSplit.nextAction.primaryLabel, '去拆解分镜')
+  assert.equal(stepSplit.steps[1].summary, '已锁定 1 项')
+  assert.equal(stepSplit.steps[1].summary.includes('资产卡'), false)
 
   const stepBlockedShot = buildProductionFlow({
     episode: { script_status: 'READY' },

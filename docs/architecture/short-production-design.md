@@ -28,7 +28,7 @@
 | `short_work` | 作品容器，含 `outline_json` |
 | `short_episode` | 剧集占位与六阶段状态 |
 | `short_script` / `short_script_version` | 单集剧本与最近 20 版 |
-| `short_character` / `short_scene_card` | 作品级资产卡；`card_type` 取 `SCENE` / `PROP` |
+| `short_character` / `short_scene_card` | 作品级角色、场景与道具设定；`card_type` 取 `SCENE` / `PROP` |
 | `short_shot` | 镜头；`image_prompt` 为派生字段；`prop_ref_json` 引用道具卡 |
 | `short_ai_task` | 统一异步任务：TEXT / IMAGE / VIDEO / VOICE / COMPOSE，状态 QUEUED → RUNNING → SUCCEEDED / FAILED / CANCELED |
 | `short_asset` | 素材元数据；`storage_key` 为 OBS object key（本地回退可为文件路径） |
@@ -148,7 +148,8 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 ## 定妆四面生成、全角度独立重做与历史照片无损换回（2026-11-14）
 
 `LookAngle.ALL` 覆盖 `FRONT_FACE`（正脸）、`FRONT`（前面）、`BACK`（背面）、`SIDE`（侧面）全部四面。`POST /bgssai/user/look-materials/complete-angles` 支持任一角度单面生成或重做（`replace_existing=1`），也支持一次补齐空缺面，不再拒绝 `FRONT_FACE`，也不再强制要求先上传正脸或必须按正脸重做：
-- 当 `skip_reference=1` 或当前造型尚无任何静态定妆照时，`ShortAiTaskWorker.finishLookAngles` 直接按造型名、外观描述与补充说明执行纯文生图，不塞参考图。
+- `LookKnowledgeService.characterTarget` 仅按 `ShortLookMaterial` 四面实际静态照片计算 `filled`，不再因 `refImageAssetId` 存在而把空的 `FRONT_FACE` 标为已填充，确保「一次补齐空缺面」把正脸与前面、背面、侧面一起生成（未勾选跳过参考图时仍沿用 `refImageAssetId` 作为主体参考）。
+- 当 `skip_reference=1` 或当前造型尚无任何静态定妆照时，`ShortAiTaskWorker.finishLookAngles` 直接按造型名、外观描述与补充说明执行纯文生图，不塞参考图；当无初始参考图一次生成包含 `FRONT_FACE` 的多个角度时，先生成 `FRONT_FACE`，随后将新生成的正脸字节作为同任务后续角度（`FRONT`、`BACK`、`SIDE`）的主体参考图，保持四面同人同衣。
 - 当用户选择参考已有定妆照时，优先采用 `reference_material_id` 指定的照片（未指定时默认取正脸或该造型任意已有静态照片）写入 `image` 主体参考字段；重做 `FRONT_FACE` 采用适度主体权重（`0.80/0.82`）允许更新神态与细节，生成其他角度采用高一致性权重（`0.92/0.88`）。
 
 角度以格子为准。说明里只出现一个角度词、又没指定格子时，按正脸 / 前面 / 背面 / 侧面归位。站姿、坐姿、行走仍算那一面的补充，这一面已有普通照片时排到「历史与补充照片」，不拿补充去填另一个空格。
