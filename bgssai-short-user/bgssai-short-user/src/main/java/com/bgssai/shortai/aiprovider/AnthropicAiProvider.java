@@ -3,6 +3,7 @@ package com.bgssai.shortai.aiprovider;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 import com.bgssai.shortai.useraimodel.service.UserAiProviderCatalog;
 import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
@@ -24,12 +26,16 @@ import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedP
 public class AnthropicAiProvider implements AiProvider {
 
     public static final String CODE = "ANTHROPIC";
+    public static final String DEFAULT_TEXT_MODEL = "claude-opus-5-5";
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     private final ProviderHttp.Client http;
 
     @Autowired(required = false)
     private UserAiProviderKeyService userAiProviderKeyService;
+
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     public AnthropicAiProvider() {
         this(new ProviderHttp.JdkClient());
@@ -54,16 +60,36 @@ public class AnthropicAiProvider implements AiProvider {
         if (request == null || request.getModel() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
         }
-        Optional<ResolvedProviderKey> byok = DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
-        if (byok.isEmpty() || !UserProviderMediaSupportHasText(byok.get().apiKey())) {
+        String ability = request.getAbilityType() == null ? ""
+                : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
+        if (!"TEXT".equals(ability)) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "Claude 当前仅支持文本");
+        }
+        Optional<ResolvedProviderKey> byok = DirectVendorGuard.isExplicitUserModelKey(request.getModel())
+                ? Optional.empty()
+                : DirectVendorGuard.resolveProviderByok(request, userAiProviderKeyService);
+        boolean modelKey = UserAiModelSupport.isUserKeyModel(request.getModel());
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String apiKey;
+        String baseUrl;
+        if (byok.isPresent() && hasText(byok.get().apiKey())) {
+            apiKey = byok.get().apiKey();
+            baseUrl = UserAiProviderCatalog.resolveEffectiveBaseUrl(byok.get().baseUrl(), CODE);
+        } else if (modelKey) {
+            String userId = ShortJson.text(cfg.get("user_id"));
+            String keyId = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("user_key_id")),
+                    request.getModel().getModelId());
+            if (userAiModelKeyService == null) {
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "自有模型密钥配置缺失");
+            }
+            apiKey = userAiModelKeyService.requirePlainApiKey(userId, keyId);
+            baseUrl = UserAiModelSupport.normalizeBaseUrl(ShortJson.text(cfg.get("base_url")), CODE);
+        } else {
             throw DirectVendorGuard.rejected(CODE);
         }
-        ResolvedProviderKey key = byok.get();
-        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
-        String baseUrl = UserAiProviderCatalog.resolveEffectiveBaseUrl(key.baseUrl(), CODE);
         String apiRoot = UserAiModelSupport.stripTrailingPath(baseUrl, "/v1");
         String url = apiRoot + "/v1/messages";
-        String modelCode = ProviderHttp.firstNonBlank(request.getModel().getModelCode(), "claude-3-5-sonnet-latest");
+        String modelCode = ProviderHttp.firstNonBlank(request.getModel().getModelCode(), DEFAULT_TEXT_MODEL);
         int maxTokens = ShortJson.integer(request.param("max_tokens"),
                 ShortJson.integer(cfg.get("max_tokens"), 4096));
         int timeoutSec = Math.max(30, ShortJson.integer(cfg.get("timeout_sec"), 120));
@@ -97,7 +123,7 @@ public class AnthropicAiProvider implements AiProvider {
         body.put("messages", List.of(Map.of("role", "user", "content", parts)));
 
         Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("x-api-key", key.apiKey());
+        headers.put("x-api-key", apiKey);
         headers.put("anthropic-version", ANTHROPIC_VERSION);
 
         try {
@@ -156,7 +182,7 @@ public class AnthropicAiProvider implements AiProvider {
         return v.startsWith("data:") && idx >= 0 ? v.substring(idx + 1) : v;
     }
 
-    private static boolean UserProviderMediaSupportHasText(String v) {
+    private static boolean hasText(String v) {
         return v != null && !v.isBlank();
     }
 }

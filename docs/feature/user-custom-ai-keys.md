@@ -48,12 +48,32 @@
      - `VIDEO`：`grok-imagine-video-1.5`（默认）、`grok-imagine-video-1.5-lite`（`POST /videos/generations` + `GET /videos/{request_id}`）。
      - `VOICE`：`grok-tts`（`POST /tts`）。
      - `ASR`：`grok-voice-transcribe-2.0`（`POST /stt`）。
+   - `OPENAI`（`OpenAI`，`auth_type=BEARER`，默认 `https://api.openai.com/v1`）：
+     - `TEXT`：`gpt-6-luna`（默认）、`gpt-5.4`、`gpt-4o`（`POST /v1/chat/completions`）。
+     - `IMAGE`：`gpt-image-2.6-sunburst`（默认）、`gpt-image-2.6-flare`（无参考图 `POST /v1/images/generations`；有参考图 `POST /v1/images/edits`）。
+     - `ASR`：`gpt-transcribe`（默认）、`whisper-1`（`POST /v1/audio/transcriptions`）。
+     - 不提供 `VIDEO` / `VOICE` / `MUSIC`。
+   - `ANTHROPIC`（展示名 `Claude`，接受别名 `CLAUDE`，`auth_type=BEARER`，默认 `https://api.anthropic.com`）：
+     - `TEXT`：`claude-opus-5-5`（默认）、`claude-sonnet-5-5`、`claude-haiku-5-5`（`POST /v1/messages`，头 `x-api-key` 与 `anthropic-version: 2023-06-01`）。
+   - `TENCENT_TOKENHUB`（展示名 `TokenHub`，接受别名 `TOKENHUB` / `TENCENT-TOKENHUB`，`auth_type=BEARER`，默认 `https://www.bgssai-tokenhub.cn`）：
+     - 使用用户自己的 TokenHub Key 调用境内中枢，`credential_source=USER_KEY`，`cost_cent=0`，不写平台用量回执、不扣平台钱包。
+     - 境外主机（`https://www.bgssai-tokenhub.com` 及 `tokenhub-global`）拒绝。
+     - `TEXT`：`deepseek-chat`（默认）、`hy4-preview`、`kimi-k3`（`POST /v1/chat/completions`）。
+     - `IMAGE`：`kling-v3`（`POST /v1/images/generations`）。
+     - `VIDEO`：`minimax-video-h3`（默认）、`kling-video-v3`、`pixverse-video-v6.0`（`POST /v1/videos/generations`）。
+     - `VOICE`：`minimax-speech-2.8-hd`（`POST /v1/audio/speech`）。
+     - `ASR`：`hy-asr-3.0-preview`（`POST /v1/wand/asrproxy/async_create`）。
+     - `MUSIC`：`minimax-music-v2.6`（`POST /v1/native`）。
    - 允许用户输入自定义公网 `https://` 地址与自定义上游模型编码。
 6. **连通性检测（零计费探活）**：
    - `MINIMAX`：`POST /v1/get_voice`（`{"voice_type":"system"}`），HTTP 2xx 且 `base_resp.status_code == 0` 判定通过。
    - `KLING`：生成短期 HS256 JWT 请求 `GET /v1/videos/text2video?pageNum=1&pageSize=1`，HTTP 2xx 且 `code == 0` 判定通过。
    - `PIXVERSE`：`GET /openapi/v2/account/balance`（带 `API-KEY` 与 `Ai-trace-id`），HTTP 2xx 且 `ErrCode == 0` 判定通过。
-   - `DEEPSEEK` / `XAI`：`GET /models`，HTTP 2xx 判定通过并匹配已返回模型目录。
+   - `DEEPSEEK` / `XAI`：`GET /models`（xAI 默认根为 `https://api.x.ai/v1/models`），HTTP 2xx 判定通过并匹配已返回模型目录。
+   - `OPENAI`：`GET /v1/models`。
+   - `ANTHROPIC`：`GET /v1/models`，请求头 `x-api-key`、`Authorization: Bearer` 与 `anthropic-version: 2023-06-01`。
+   - `TENCENT_TOKENHUB`：`GET /v1/models`。
+   - 以上供应商均无单独的账户余额探活接口接入；连通性只走模型目录或既有零计费查询。
 7. **默认模型唯一性与删改联动**：
    - 同一用户、同一 `ability_type` 下最多一条 `is_default_model = 1`。
    - 新增同能力首条启用模型时自动设为默认；停用或删除当前默认模型时，自动将该能力下其余首条已启用模型升为默认。
@@ -68,7 +88,7 @@
 | --- | --- |
 | `modality_type` | `TEXT`（文本模型）/ `IMAGE`（图片模型）/ `VIDEO`（视频模型）/ `AUDIO`（音频模型） |
 | `ability_type` | `TEXT` / `IMAGE` / `VIDEO` / `VOICE`（配音）/ `ASR`（字幕识别）/ `MUSIC`（背景音乐） |
-| `provider_code` | `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `XAI` |
+| `provider_code` | `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `XAI` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` |
 | `auth_type` | `BEARER` / `AK_SK` / `API_KEY_HEADER` |
 | `credential_source` | `USER_KEY`（自有密钥）/ `PLATFORM`（平台默认） |
 | `only_user_key` | `0`（混合模式）/ `1`（仅使用自有密钥模型，停用默认 BGSSAI 模型） |
@@ -81,9 +101,12 @@
 3. 可灵配置支持 Access Key + Secret Key 双密钥录入与掩码展示（`ak**** / sk****`），运行时动态签发 HS256 JWT 完成连通测试与图片/视频/配音生成。
 4. `MINIMAX` 覆盖 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 六种能力；`PIXVERSE` 覆盖 `VIDEO`（含图生/首尾帧过渡）；`DEEPSEEK` 覆盖 `TEXT`（含 `deepseek-chat` 与 `deepseek-reasoner`）。
 5. 多供应商混用（如 DeepSeek 文本 + 可灵或 PixVerse 视频 + MiniMax 配音与 BGM）在同一作品全流程可执行通过，任务与对账费用 `cost_cent = 0`。
+6. `OPENAI` 覆盖 `TEXT` / `IMAGE` / `ASR`；`ANTHROPIC` 覆盖 `TEXT`；`TENCENT_TOKENHUB` 覆盖六种能力，且调用使用用户 Key、不扣平台额度。
 
 ## 5. 厂商级 API Key（`user_ai_provider_key`）
 
 - 接口：`GET /bgssai/user/ai-keys`、`POST /bgssai/user/ai-keys`、`DELETE /bgssai/user/ai-keys/{providerCode}`（及 `/api/user/ai-keys` 兼容路径）。
-- 支持厂商：`DEEPSEEK`、`MINIMAX`、`KLING`（接受别名 `KLINGAI`，支持单 Bearer `api_key` 及 `access_key` + `secret_key` HS256 JWT）、`DASHSCOPE`、`ZHIPU`、`MOONSHOT`、`VOLCENGINE`、`HUNYUAN`、`OPENAI`、`ANTHROPIC`、`GOOGLE`。
+- 支持厂商：`DEEPSEEK`、`MINIMAX`、`KLING`（接受别名 `KLINGAI`，支持单 Bearer `api_key` 及 `access_key` + `secret_key` HS256 JWT）、`DASHSCOPE`、`ZHIPU`、`MOONSHOT`、`VOLCENGINE`、`HUNYUAN`、`OPENAI`、`ANTHROPIC`（接受别名 `CLAUDE`）、`GOOGLE`。
+- `OPENAI` / `ANTHROPIC` 不是空登记：厂商密钥已能直连官方文本接口。账号「模型密钥」另按能力保存 `umk-` 配置，`OPENAI` 再覆盖图片与语音识别。
 - 运行时与计费：匹配到已启用的厂商密钥时直连用户配置凭据（含可选 `base_url`），并跳过平台额度校验与扣费。
+- 不在本表新增 `TENCENT_TOKENHUB`。用户自有中枢 Key 走第 2 节的模型密钥，不与这 11 个厂商密钥重复占一行。

@@ -61,6 +61,9 @@
             <button type="button" class="btn btn-sm" id="quick-pixverse-btn">接入 PixVerse</button>
             <button type="button" class="btn btn-sm" id="quick-deepseek-btn">接入 DeepSeek</button>
             <button type="button" class="btn btn-sm" id="quick-grok-btn">接入 Grok</button>
+            <button type="button" class="btn btn-sm" id="quick-openai-btn">接入 OpenAI</button>
+            <button type="button" class="btn btn-sm" id="quick-claude-btn">接入 Claude</button>
+            <button type="button" class="btn btn-sm" id="quick-tokenhub-btn">接入 TokenHub</button>
             <button type="button" class="btn btn-sm btn-primary" id="add-model-key-btn">新增密钥</button>
           </div>
         </div>
@@ -176,6 +179,51 @@
                 <button type="button" class="btn btn-sm">删除</button>
               </td>
             </tr>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>OpenAI</td>
+              <td>GPT-6 Luna</td>
+              <td>gpt-6-luna</td>
+              <td>sk-o****1a2b</td>
+              <td>启用</td>
+              <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>Claude</td>
+              <td>Claude Opus 5.5</td>
+              <td>claude-opus-5-5</td>
+              <td>sk-a****3c4d</td>
+              <td>启用</td>
+              <td>-</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>TokenHub</td>
+              <td>DeepSeek Chat</td>
+              <td>deepseek-chat</td>
+              <td>th-k****5e6f</td>
+              <td>启用</td>
+              <td>-</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
           </tbody>
         </table>
         <form onsubmit="return false" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
@@ -185,6 +233,9 @@
             <option value="PIXVERSE">PixVerse</option>
             <option value="DEEPSEEK">DeepSeek</option>
             <option value="XAI">Grok (xAI)</option>
+            <option value="OPENAI">OpenAI</option>
+            <option value="ANTHROPIC">Claude</option>
+            <option value="TENCENT_TOKENHUB">TokenHub</option>
           </select>
           <select aria-label="模态类型" id="key-modality-select">
             <option value="TEXT">文本模型 (TEXT)</option>

@@ -672,7 +672,10 @@ public class UserAiModelKeyService {
             if (UserAiModelSupport.PROVIDER_PIXVERSE.equals(providerCode)) {
                 return probePixVerse(baseUrl, plainKey);
             }
-            String url = resolveModelsUrl(providerCode, baseUrl);
+            String url = UserAiModelSupport.connectivityProbeUrl(providerCode, baseUrl);
+            if (UserAiModelSupport.PROVIDER_ANTHROPIC.equals(providerCode)) {
+                return probeAnthropicModels(url, plainKey, modelCode);
+            }
             return probeBearerModels(url, plainKey, modelCode);
         } catch (BizException ex) {
             return failedProbe(ex.getMessage());
@@ -684,14 +687,16 @@ public class UserAiModelKeyService {
         }
     }
 
-    private static String resolveModelsUrl(String providerCode, String baseUrl) {
-        if (UserAiModelSupport.PROVIDER_XAI.equals(providerCode)) {
-            String path = URI.create(baseUrl).getPath();
-            if (path == null || path.isBlank() || "/".equals(path)) {
-                return baseUrl + "/v1/models";
-            }
-        }
-        return baseUrl + "/models";
+    private TestUserAiModelKeyResponse probeAnthropicModels(String url, String plainKey, String modelCode)
+            throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                .timeout(Duration.ofSeconds(10))
+                .header("x-api-key", plainKey)
+                .header("Authorization", "Bearer " + plainKey)
+                .header("anthropic-version", "2023-06-01")
+                .GET()
+                .build();
+        return readModelsProbe(request, modelCode);
     }
 
     private TestUserAiModelKeyResponse probeBearerModels(String url, String plainKey, String modelCode)
@@ -701,13 +706,18 @@ public class UserAiModelKeyService {
                 .header("Authorization", "Bearer " + plainKey)
                 .GET()
                 .build();
+        return readModelsProbe(request, modelCode);
+    }
+
+    private TestUserAiModelKeyResponse readModelsProbe(HttpRequest request, String modelCode) throws Exception {
         HttpResponse<String> httpResp = probeHttp.send(request, HttpResponse.BodyHandlers.ofString());
         int status = httpResp.statusCode();
         if (status < 200 || status >= 300) {
             return failedHttpProbe(status, "");
         }
         List<String> discovered = extractDiscoveredModels(httpResp.body());
-        boolean matched = modelCode.isBlank() || discovered.isEmpty() || discovered.contains(modelCode);
+        boolean matched = modelCode == null || modelCode.isBlank() || discovered.isEmpty()
+                || discovered.contains(modelCode);
         return okProbe(
                 matched ? "连接成功" : "密钥验证通过，返回目录中未包含 " + modelCode + "，可按实际模型编码调整",
                 matched, discovered);
