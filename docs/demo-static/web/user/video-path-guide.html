@@ -7,39 +7,68 @@
   <link rel="stylesheet" href="../assets/theme.css" />
   <link rel="stylesheet" href="../assets/short.css" />
   <style>
-    .path { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
-    .path ol { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 0 0 12px; padding: 0; list-style: none; }
-    .path li { display: flex; align-items: center; color: #6b7280; font-size: 13px; }
-    .path li::after { content: "→"; margin: 0 8px; color: #d1d5db; }
+    .studio-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .studio-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .tag-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; background: #eff6ff; border: 1px solid #93c5fd; color: #1d4ed8; font-weight: 600; }
+    .path { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+    .path-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .path-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eff6ff; border: 1px solid #93c5fd; color: #1d4ed8; font-size: 13px; font-weight: 700; }
+    .path-count { font-size: 12px; color: #64748b; font-weight: 600; }
+    .path ol { display: flex; flex-wrap: wrap; gap: 8px 4px; margin: 0 0 14px; padding: 0; list-style: none; }
+    .path li { display: flex; align-items: center; }
+    .path li::after { content: "→"; margin: 0 6px; color: #cbd5e1; }
     .path li:last-child::after { content: ""; margin: 0; }
-    .path .now { color: #0d6efd; font-weight: 700; }
-    .path h2 { margin: 0 0 4px; font-size: 16px; }
-    .path p { margin: 0 0 12px; }
+    .step-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; font-size: 13px; text-decoration: none; }
+    .step-btn.is-done { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .step-btn.is-current { background: #eff6ff; border: 2px solid #1677ff; color: #1d4ed8; font-weight: 700; }
+    .step-no { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #e2e8f0; color: #475569; }
+    .step-btn.is-done .step-no { background: #16a34a; color: #fff; }
+    .step-btn.is-current .step-no { background: #1677ff; color: #fff; }
+    .step-tag { font-size: 11px; opacity: 0.9; }
+    .path-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .path h2 { margin: 0; font-size: 16px; }
   </style>
 </head>
 <body>
 <div class="app">
   <main class="app-main">
-    <header class="app-top"><span class="top-title">作品</span></header>
+    <header class="app-top">
+      <span class="top-title">作品</span>
+      <span class="spacer"></span>
+      <a class="btn btn-default btn-sm" href="source-import.html">辅助工具</a>
+      <a class="btn btn-default btn-sm" href="drama-assistant.html">AI 协同专家</a>
+    </header>
     <div class="app-page">
+      <div class="studio-top">
+        <div class="studio-meta">
+          <span>复仇的程序员</span>
+          <span class="text-muted">全剧：制作中</span>
+          <span>当前剧集：第 1 集</span>
+          <span class="tag-chip">本集环节：4/8 定妆</span>
+        </div>
+      </div>
       <section class="path" aria-label="出视频步骤">
+        <div class="path-head">
+          <span class="path-badge">当前环节：第 4/8 步 · 定妆</span>
+          <span class="path-count">已完成 3/8 步</span>
+        </div>
         <ol>
-          <li>大纲</li>
-          <li>剧本</li>
-          <li>定稿</li>
-          <li class="now">定妆</li>
-          <li>拆镜</li>
-          <li>首帧</li>
-          <li>视频</li>
-          <li>成片</li>
+          <li><a class="step-btn is-done" href="script-studio.html?stage=outline"><span class="step-no">1</span><span>大纲</span><span class="step-tag">已完成</span></a></li>
+          <li><a class="step-btn is-done" href="script-studio.html?stage=script"><span class="step-no">2</span><span>剧本</span><span class="step-tag">已完成</span></a></li>
+          <li><a class="step-btn is-done" href="script-studio.html?stage=ready"><span class="step-no">3</span><span>定稿</span><span class="step-tag">已完成</span></a></li>
+          <li><a class="step-btn is-current" aria-current="step" href="character-bible.html?stage=looks"><span class="step-no">4</span><span>定妆</span><span class="step-tag">当前环节</span></a></li>
+          <li><a class="step-btn" href="storyboard.html?stage=shots"><span class="step-no">5</span><span>拆镜</span><span class="step-tag">未开始</span></a></li>
+          <li><a class="step-btn" href="storyboard.html?stage=frame"><span class="step-no">6</span><span>首帧</span><span class="step-tag">未开始</span></a></li>
+          <li><a class="step-btn" href="storyboard.html?stage=video"><span class="step-no">7</span><span>视频</span><span class="step-tag">未开始</span></a></li>
+          <li><a class="step-btn" href="compose-export.html?stage=film"><span class="step-no">8</span><span>成片</span><span class="step-tag">未开始</span></a></li>
         </ol>
-        <h2>第 1 集：先给「苏曼」定妆</h2>
-        <p>还没定妆的有苏曼、客厅。会出 2 张并锁定第一张。没锁定的卡，后面的出图和出视频都会失败。</p>
-        <p>
-          <a class="btn btn-primary" href="character-bible.html">给「苏曼」出定妆</a>
-        </p>
+        <div class="path-bar">
+          <h2>第1集：先给「苏曼」定妆</h2>
+          <div>
+            <a class="btn btn-primary" href="character-bible.html">给「苏曼」出定妆</a>
+          </div>
+        </div>
       </section>
-      <p class="text-muted">步骤条贴在作品页顶部，不另开路由。主按钮跳到已有页面：<a href="script-studio.html">剧本</a>、<a href="character-bible.html">角色场景</a>、<a href="storyboard.html">分镜</a>、<a href="compose-export.html">成片</a>。</p>
     </div>
   </main>
 </div>

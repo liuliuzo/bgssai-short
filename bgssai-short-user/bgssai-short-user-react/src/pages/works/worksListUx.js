@@ -1,5 +1,5 @@
 export function workStudioPath(workId) {
-  return `/works/${workId}/script`
+  return `/works/${workId}`
 }
 
 export function formatWorkTime(value) {

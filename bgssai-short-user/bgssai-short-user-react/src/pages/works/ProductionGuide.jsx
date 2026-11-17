@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Modal, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { friendlyFailReason } from '../../lib/displayLabels'
 import {
-  VIDEO_PATH_STEPS,
+  buildStepItems,
   buildVideoPathInput,
   resolveVideoPath,
   shotsForFrames,
@@ -53,21 +53,41 @@ function defaultModel(list) {
   return models.find((item) => item.default_flag === 1) || models[0] || null
 }
 
-export default function ProductionGuide({ work, episode, onOpenTab, onChanged }) {
+export default function ProductionGuide({
+  work,
+  episode,
+  refreshKey = 0,
+  activeTab,
+  viewingStageKey,
+  onSelectStage,
+  onOpenTab,
+  onStepChange,
+  onStepLoadError,
+  onChanged,
+}) {
   const [snap, setSnap] = useState(null)
   const [loadError, setLoadError] = useState(false)
   const [busy, setBusy] = useState(false)
   const [models, setModels] = useState({ text: null, image: null, video: null })
+  const refreshSeqRef = useRef(0)
+  const onStepChangeRef = useRef(onStepChange)
+  const onStepLoadErrorRef = useRef(onStepLoadError)
+  onStepChangeRef.current = onStepChange
+  onStepLoadErrorRef.current = onStepLoadError
 
   const refresh = useCallback(async () => {
     if (!work?.work_id || !episode?.episode_id) return null
+    const seq = refreshSeqRef.current + 1
+    refreshSeqRef.current = seq
+    const targetEpisodeId = episode.episode_id
     const [outlineRes, scriptRes, panelRes, shotRes, taskRes] = await Promise.all([
       productionApi.getOutline(work.work_id),
-      productionApi.getScript(episode.episode_id),
+      productionApi.getScript(targetEpisodeId),
       productionApi.consistencyPanel(work.work_id),
-      productionApi.listShots({ episode_id: episode.episode_id, page_num: 1, page_size: 100 }),
+      productionApi.listShots({ episode_id: targetEpisodeId, page_num: 1, page_size: 100 }),
       productionApi.listTasks({ work_id: work.work_id, page_num: 1, page_size: 100 }),
     ])
+    if (seq !== refreshSeqRef.current) return null
     const next = {
       outline: outlineRes.data?.result,
       script: scriptRes.data?.result,
@@ -76,18 +96,24 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
       tasks: Array.isArray(taskRes.data?.result) ? taskRes.data.result : [],
       episode,
     }
+    const nextStep = resolveVideoPath(buildVideoPathInput(next))
     setSnap(next)
     setLoadError(false)
-    return next
+    onStepChangeRef.current?.(nextStep, targetEpisodeId)
+    return { snap: next, step: nextStep }
   }, [work?.work_id, episode])
 
   useEffect(() => {
     let cancelled = false
+    const targetEpisodeId = episode?.episode_id
     refresh().catch(() => {
-      if (!cancelled) setLoadError(true)
+      if (!cancelled) {
+        setLoadError(true)
+        onStepLoadErrorRef.current?.(targetEpisodeId)
+      }
     })
     return () => { cancelled = true }
-  }, [refresh])
+  }, [refresh, refreshKey, episode?.episode_id])
 
   useEffect(() => {
     let cancelled = false
@@ -111,6 +137,10 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
     () => (snap ? resolveVideoPath(buildVideoPathInput(snap)) : null),
     [snap],
   )
+  const items = useMemo(
+    () => buildStepItems(step, viewingStageKey),
+    [step, viewingStageKey],
+  )
 
   // Reloads step data only. It does not call run(), so a waiting outline cannot toast again.
   useEffect(() => {
@@ -121,10 +151,14 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
     return () => clearInterval(timer)
   }, [step?.waiting, step?.key, refresh])
 
-  const finish = async (successText) => {
+  const finish = async (successText, prevKey) => {
     if (successText) message.success(successText)
     await onChanged?.()
-    await refresh()
+    const refreshed = await refresh()
+    const nextStep = refreshed?.step
+    if (nextStep && prevKey && nextStep.key !== prevKey) {
+      onSelectStage?.({ key: nextStep.key, tab: nextStep.tab })
+    }
   }
 
   const outcomeText = (taskId, successText) => {
@@ -136,7 +170,14 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
     if (!step || busy || !episode?.episode_id) return
     const actionKind = kind || step.kind
     if (actionKind === 'wait') return
-    if (step.tab) onOpenTab?.(step.tab)
+    const prevKey = step.key
+    if (onSelectStage) {
+      if (actionKind === 'open' || viewingStageKey !== step.key || activeTab !== step.tab) {
+        onSelectStage({ key: step.key, tab: step.tab })
+      }
+    } else if (step.tab) {
+      onOpenTab?.(step.tab)
+    }
     if (actionKind === 'open') return
     setBusy(true)
     try {
@@ -144,7 +185,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const { data } = await productionApi.generateOutline(work.work_id, models.text?.model_code)
         if (!data?.success) return
         const done = await waitTask(work.work_id, data.result?.task_id)
-        if (done?.task_status === 'SUCCEEDED') await finish(outcomeText(data.result?.task_id, '大纲已生成'))
+        if (done?.task_status === 'SUCCEEDED') await finish(outcomeText(data.result?.task_id, '大纲已生成'), prevKey)
         else message.error(friendlyFailReason(done?.fail_reason) || '大纲没有生成成功')
         return
       }
@@ -152,13 +193,13 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const { data } = await productionApi.generateScript(episode.episode_id, undefined, models.text?.model_code)
         if (!data?.success) return
         const done = await waitTask(work.work_id, data.result?.task_id)
-        if (done?.task_status === 'SUCCEEDED') await finish(outcomeText(data.result?.task_id, '剧本已生成'))
+        if (done?.task_status === 'SUCCEEDED') await finish(outcomeText(data.result?.task_id, '剧本已生成'), prevKey)
         else message.error(friendlyFailReason(done?.fail_reason) || '剧本没有生成成功')
         return
       }
       if (actionKind === 'ready' || actionKind === 'ready-force') {
         const { data } = await productionApi.readyScript(episode.episode_id, actionKind === 'ready-force' ? 1 : 0)
-        if (data?.success) await finish('这一集已定稿')
+        if (data?.success) await finish('这一集已定稿', prevKey)
         return
       }
       if (actionKind === 'lock') {
@@ -168,7 +209,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
           ? productionApi.lockCharacter(look.id, look.candidateId)
           : productionApi.lockScene(look.id, look.candidateId)
         const { data } = await call
-        if (data?.success) await finish(`已锁定「${look.name}」`)
+        if (data?.success) await finish(`已锁定「${look.name}」`, prevKey)
         return
       }
       if (actionKind === 'portrait') {
@@ -198,15 +239,15 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const card = cards.find((row) => (row.character_id || row.scene_card_id) === look.id)
         const assetId = card?.candidate_list?.[0]?.asset_id
         if (!assetId) {
-          message.warning('定妆图还没回到这张卡上，请在角色场景里点选定')
-          await finish()
+          message.warning('定妆图还没回到当前定妆项上，请在定妆区点击选定')
+          await finish(undefined, prevKey)
           return
         }
         const lock = look.kind === 'character'
           ? productionApi.lockCharacter(look.id, assetId)
           : productionApi.lockScene(look.id, assetId)
         const locked = await lock
-        if (locked.data?.success) await finish(`已锁定「${look.name}」`)
+        if (locked.data?.success) await finish(`已锁定「${look.name}」`, prevKey)
         else await refresh()
         return
       }
@@ -214,12 +255,12 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         const { data } = await productionApi.splitShots(episode.episode_id)
         if (!data?.success) return
         await featuresApi.previzGenerateText({ episode_id: episode.episode_id })
-        await finish('已拆成镜头')
+        await finish('已拆成镜头', prevKey)
         return
       }
       if (actionKind === 'previz') {
         const { data } = await featuresApi.previzGenerateText({ episode_id: episode.episode_id })
-        if (data?.success) await finish('已写好人话分镜')
+        if (data?.success) await finish('已写好人话分镜', prevKey)
         return
       }
       if (actionKind === 'frame' || actionKind === 'video') {
@@ -248,7 +289,7 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
         if (!ok) return
         const { data } = await productionApi.submitTasks(body)
         if (data?.success) {
-          await finish(actionKind === 'frame' ? '首帧已提交' : '视频已提交')
+          await finish(actionKind === 'frame' ? '首帧已提交' : '视频已提交', prevKey)
         }
       }
     } finally {
@@ -258,25 +299,61 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
 
   if (!episode?.episode_id) return null
 
+  const badgeClass = step
+    ? (step.allDone ? 'video-path-badge is-done' : (step.waiting ? 'video-path-badge is-running' : 'video-path-badge is-current'))
+    : 'video-path-badge'
+  const badgeText = step
+    ? (step.allDone
+      ? '全流程已完成（8/8）'
+      : step.waiting
+        ? `当前环节：第 ${step.stepNo}/8 步 · ${step.stepLabel}（生成中）`
+        : `当前环节：第 ${step.stepNo}/8 步 · ${step.stepLabel}`)
+    : '当前环节：读取中'
+
   return (
     <section className="video-path" aria-label="出视频步骤">
+      <div className="video-path-head">
+        <span className={badgeClass}>{badgeText}</span>
+        {step ? <span className="video-path-count">{`已完成 ${step.doneKeys.length}/8 步`}</span> : null}
+      </div>
       <ol className="video-path-steps">
-        {VIDEO_PATH_STEPS.map((item) => {
-          const done = step?.doneKeys?.includes(item.key)
-          const current = step?.key === item.key
-          const className = current ? 'is-current' : (done ? 'is-done' : '')
-          return <li key={item.key} className={className}>{item.label}</li>
+        {items.map((item) => {
+          const isCurrent = item.state === 'current' || item.state === 'running'
+          const tagText = item.isViewing && !isCurrent
+            ? `${item.statusLabel} · 查看中`
+            : item.statusLabel
+          const btnClass = [
+            'video-path-step-btn',
+            `is-${item.state}`,
+            item.isViewing ? 'is-viewing' : '',
+          ].filter(Boolean).join(' ')
+          return (
+            <li key={item.key}>
+              <button
+                type="button"
+                className={btnClass}
+                aria-current={isCurrent ? 'step' : undefined}
+                onClick={() => onSelectStage?.(item)}
+              >
+                <span className="video-path-step-no">{item.stepNo}</span>
+                <span className="video-path-step-label">{item.label}</span>
+                <span className="video-path-step-tag">{tagText}</span>
+              </button>
+            </li>
+          )
         })}
       </ol>
       {loadError ? (
-        <div>
+        <div className="video-path-bar">
           <p className="video-path-title">读取失败</p>
-          <Button onClick={() => refresh().catch(() => setLoadError(true))}>重试</Button>
+          <div className="video-path-actions">
+            <Button onClick={() => refresh().catch(() => setLoadError(true))}>重试</Button>
+          </div>
         </div>
       ) : null}
       {!loadError && !step ? <p className="video-path-detail">读取中</p> : null}
       {!loadError && step ? (
-        <div>
+        <div className="video-path-bar">
           <p className="video-path-title">{step.title}</p>
           <div className="video-path-actions">
             {step.action ? (
@@ -287,6 +364,11 @@ export default function ProductionGuide({ work, episode, onOpenTab, onChanged })
             {step.secondary ? (
               <Button disabled={busy || step.waiting} onClick={() => run(step.secondary.kind)}>
                 {step.secondary.action}
+              </Button>
+            ) : null}
+            {viewingStageKey !== step.key && !step.allDone ? (
+              <Button onClick={() => onSelectStage?.({ key: step.key, tab: step.tab })}>
+                {`返回当前环节：${step.stepLabel}`}
               </Button>
             ) : null}
           </div>

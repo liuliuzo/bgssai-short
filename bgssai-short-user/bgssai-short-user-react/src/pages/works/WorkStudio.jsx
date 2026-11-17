@@ -3,7 +3,7 @@ import { creatorToolLabel, publicModelText } from '../../publicModel'
 import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button, Card, Checkbox, Collapse, Form, Input, Modal, Radio, Select, Skeleton, Space, Table, Tabs, Tag, Tooltip, Typography, message } from 'antd'
+import { Alert, Button, Card, Checkbox, Collapse, Dropdown, Form, Input, Modal, Radio, Select, Skeleton, Space, Table, Tag, Tooltip, Typography, message } from 'antd'
 import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import productionApi from '../../api/production'
@@ -17,6 +17,11 @@ import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
 import ProductionGuide from './ProductionGuide.jsx'
+import {
+  AUX_STUDIO_TOOLS,
+  CORE_STUDIO_TABS,
+  resolveViewingStageKey,
+} from './productionGuide'
 import {
   autoTaskOutcomeMemory,
   hasAnnouncedTaskOutcome,
@@ -239,7 +244,7 @@ async function waitBatch(workId, batchId, taskIds) {
   return waitTasks(workId, taskIds)
 }
 
-function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initialOutlineTaskId, onOutlineTaskConsumed }) {
+function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJumpTab, initialOutlineTaskId, onOutlineTaskConsumed }) {
   const workId = work?.work_id
   const [outline, setOutline] = useState([])
   const [script, setScript] = useState(null)
@@ -250,6 +255,7 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
   const [generating, setGenerating] = useState(false)
   const [scriptBusy, setScriptBusy] = useState('')
   const [openScenes, setOpenScenes] = useState([])
+  const [outlineExpanded, setOutlineExpanded] = useState(focusedStage === 'outline')
   const loadedKey = useRef('')
   const navOutlineTaskRef = useRef(null)
   if (initialOutlineTaskId) {
@@ -497,76 +503,109 @@ function ScriptPane({ work, episodeId, onReload, onFlowChange, onJumpTab, initia
     }, 60)
   }
 
+  useEffect(() => {
+    if (focusedStage === 'outline') setOutlineExpanded(true)
+    else if (focusedStage === 'script' || focusedStage === 'ready') setOutlineExpanded(false)
+    if (!focusedStage) return undefined
+    const targetId = focusedStage === 'outline' ? 'script-outline-card' : 'script-episode-card'
+    const timer = window.setTimeout(() => {
+      document.getElementById(targetId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }, 60)
+    return () => window.clearTimeout(timer)
+  }, [focusedStage])
+
+  const showFullOutline = !settled || generating || outline.length === 0 || outlineExpanded
+
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-      <div>
-        <Title level={5} style={{ margin: 0 }}>{guide.title}</Title>
-      </div>
-      <Card loading={loading || generating} title="全集大纲" extra={<Space>
-        <Select
-          placeholder="文本模型"
-          value={textModelCode}
-          onChange={setTextModelCode}
-          style={{ width: 240 }}
-          popupMatchSelectWidth={false}
-          disabled={generating}
-          options={textModels.map((m) => ({ value: m.model_code, label: modelPricingCompactLabel(m), title: modelPricingLabel(m) }))}
-        />
-        <Button onClick={runOutline} loading={generating}>生成大纲</Button>
-        <Button type="primary" onClick={saveOutline} disabled={generating}>保存大纲</Button>
-      </Space>}>
-        <Table
-          rowKey="episode_no"
-          size="small"
-          pagination={false}
-          tableLayout="fixed"
-          dataSource={outline}
-          columns={[
-            { title: '集', dataIndex: 'episode_no', width: 64 },
-            {
-              title: '标题',
-              dataIndex: 'episode_title',
-              width: 180,
-              render: (v, row, i) => <Input value={v} onChange={(e) => {
-                const next = outline.slice()
-                next[i] = { ...row, episode_title: e.target.value }
-                setOutline(next)
-              }} />,
-            },
-            {
-              title: '梗概',
-              dataIndex: 'episode_synopsis',
-              render: (v, row, i) => (
-                <Input.TextArea
-                  {...outlineLongTextProps()}
-                  value={v}
-                  onChange={(e) => {
-                    const next = outline.slice()
-                    next[i] = { ...row, episode_synopsis: e.target.value }
-                    setOutline(next)
-                  }}
-                />
-              ),
-            },
-            {
-              title: '钩子',
-              dataIndex: 'ending_hook',
-              render: (v, row, i) => (
-                <Input.TextArea
-                  {...outlineLongTextProps()}
-                  value={v}
-                  onChange={(e) => {
-                    const next = outline.slice()
-                    next[i] = { ...row, ending_hook: e.target.value }
-                    setOutline(next)
-                  }}
-                />
-              ),
-            },
-          ]}
-        />
-      </Card>
-      <Card title={`第${work.episode_list?.find((e) => e.episode_id === episodeId)?.episode_no || ''}集剧本`} extra={<Space wrap>
+      {showFullOutline ? (
+        <Card
+          id="script-outline-card"
+          loading={loading || generating}
+          title="全集大纲"
+          extra={(
+            <Space wrap>
+              <Button onClick={() => onJumpTab?.('source')}>导入原著</Button>
+              {settled && outline.length > 0 ? (
+                <Button onClick={() => setOutlineExpanded(false)}>收起大纲</Button>
+              ) : null}
+              <Select
+                placeholder="文本模型"
+                value={textModelCode}
+                onChange={setTextModelCode}
+                style={{ width: 240 }}
+                popupMatchSelectWidth={false}
+                disabled={generating}
+                options={textModels.map((m) => ({ value: m.model_code, label: modelPricingCompactLabel(m), title: modelPricingLabel(m) }))}
+              />
+              <Button onClick={runOutline} loading={generating}>生成大纲</Button>
+              <Button type="primary" onClick={saveOutline} disabled={generating}>保存大纲</Button>
+            </Space>
+          )}
+        >
+          <Table
+            rowKey="episode_no"
+            size="small"
+            pagination={false}
+            tableLayout="fixed"
+            dataSource={outline}
+            columns={[
+              { title: '集', dataIndex: 'episode_no', width: 64 },
+              {
+                title: '标题',
+                dataIndex: 'episode_title',
+                width: 180,
+                render: (v, row, i) => <Input value={v} onChange={(e) => {
+                  const next = outline.slice()
+                  next[i] = { ...row, episode_title: e.target.value }
+                  setOutline(next)
+                }} />,
+              },
+              {
+                title: '梗概',
+                dataIndex: 'episode_synopsis',
+                render: (v, row, i) => (
+                  <Input.TextArea
+                    {...outlineLongTextProps()}
+                    value={v}
+                    onChange={(e) => {
+                      const next = outline.slice()
+                      next[i] = { ...row, episode_synopsis: e.target.value }
+                      setOutline(next)
+                    }}
+                  />
+                ),
+              },
+              {
+                title: '钩子',
+                dataIndex: 'ending_hook',
+                render: (v, row, i) => (
+                  <Input.TextArea
+                    {...outlineLongTextProps()}
+                    value={v}
+                    onChange={(e) => {
+                      const next = outline.slice()
+                      next[i] = { ...row, ending_hook: e.target.value }
+                      setOutline(next)
+                    }}
+                  />
+                ),
+              },
+            ]}
+          />
+        </Card>
+      ) : (
+        <Card id="script-outline-card" size="small">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Text strong>{`全集大纲 · 共 ${outline.length} 集（已完成）`}</Text>
+            <Space wrap>
+              <Button size="small" onClick={() => onJumpTab?.('source')}>导入原著</Button>
+              <Button size="small" onClick={() => setOutlineExpanded(true)}>展开编辑大纲</Button>
+            </Space>
+          </div>
+        </Card>
+      )}
+      <Card id="script-episode-card" title={`第${work.episode_list?.find((e) => e.episode_id === episodeId)?.episode_no || ''}集剧本`} extra={<Space wrap>
         <Select
           placeholder="文本模型"
           value={textModelCode}
@@ -1434,7 +1473,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
 
 function modelLabel(row) { return modelPricingLabel(row) }
 
-function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChange, onJumpTab }) {
+function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReload, onFlowChange, onJumpTab }) {
   const [canvasView, setCanvasView] = useState(false)
   const [rows, setRows] = useState([])
   const [shotsLoaded, setShotsLoaded] = useState(false)
@@ -1462,6 +1501,15 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
     setActionError(null)
     setShotsLoaded(false)
   }, [episodeId])
+
+  useEffect(() => {
+    if (!focusedStage) return undefined
+    const targetId = focusedStage === 'shots' ? 'storyboard-split-bar' : 'storyboard-media-card'
+    const timer = window.setTimeout(() => {
+      document.getElementById(targetId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }, 60)
+    return () => window.clearTimeout(timer)
+  }, [focusedStage, rows.length])
 
   const load = useCallback(async () => {
     if (!episodeId) return
@@ -1576,7 +1624,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
     try {
       const splitRes = await productionApi.splitShots(episodeId)
       if (!splitRes?.data?.success) {
-        const msg = splitRes?.data?.message || '请先在「1. 剧本与定稿」完成本集定稿，再拆解分镜'
+        const msg = splitRes?.data?.message || '请先完成本集剧本定稿，再拆解分镜'
         showActionError(msg)
         return
       }
@@ -1599,7 +1647,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
       const readyRes = await productionApi.readyScript(episodeId, 1)
       if (!readyRes?.data?.success) {
         onJumpTab?.('script')
-        message.warning(readyRes?.data?.message || '请先在第 1 步生成本集分场剧本后再定稿')
+        message.warning(readyRes?.data?.message || '请先生成本集分场剧本后再定稿')
         return
       }
       const splitRes = await productionApi.splitShots(episodeId)
@@ -1613,7 +1661,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
       await onReload?.()
     } catch (err) {
       onJumpTab?.('script')
-      message.warning(err?.response?.data?.message || '请先在第 1 步生成本集分场剧本后再定稿')
+      message.warning(err?.response?.data?.message || '请先生成本集分场剧本后再定稿')
     } finally {
       setSplitting(false)
     }
@@ -1707,7 +1755,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
       load()
       return
     }
-    message.success('草图已提交')
+    message.success('首帧已提交')
     await waitBatch(work.work_id, data.result.batch_id, data.result.task_id_list)
     load()
   }
@@ -1768,7 +1816,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
           )}
         />
       ) : null}
-      <Space wrap>
+      <Space id="storyboard-split-bar" wrap>
         {(() => {
           const canvas = canvasSwitchState(rows.length, { ready: shotsLoaded })
           return (
@@ -1807,6 +1855,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
       ) : null}
       {rows.length > 0 ? (
         <Card
+          id="storyboard-media-card"
           size="small"
           title="本集出图与生成视频"
           extra={(
@@ -1888,12 +1937,12 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
                   model_code: imageModelCode,
                 })
                 if (!data?.success) {
-                  showActionError(data?.message || '草图费用预估未通过，请先锁定角色或场景参考图')
+                  showActionError(data?.message || '首帧费用预估未通过，请先锁定角色或场景参考图')
                   return
                 }
                 setCost(data?.result)
-              }}>估草图费用</Button>
-              <Button onClick={() => submitLevel('IMAGE', 0)}>出草图确认构图</Button>
+              }}>估首帧费用</Button>
+              <Button onClick={() => submitLevel('IMAGE', 0)}>生成首帧</Button>
               <Button onClick={async () => {
                 const { data } = await featuresApi.frameLinkBatch({
                   episode_id: episodeId,
@@ -2896,6 +2945,8 @@ export default function WorkStudio() {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [composeByEpisode, setComposeByEpisode] = useState({})
   const [mediaPreflight, setMediaPreflight] = useState(null)
+  const [guideTick, setGuideTick] = useState(0)
+  const [stepState, setStepState] = useState({ episodeId: null, step: null, error: false })
   const [flowState, setFlowState] = useState({
     outlineCount: 0,
     scriptSceneCount: 0,
@@ -2903,6 +2954,7 @@ export default function WorkStudio() {
     shots: [],
   })
   const flowSeqRef = useRef(0)
+  const followSwitchEpisodeRef = useRef(null)
   const reportComposeEntry = useCallback((id, updater) => {
     setComposeByEpisode((prev) => {
       const cur = prev[id]
@@ -2942,7 +2994,9 @@ export default function WorkStudio() {
     )
   }, [location, navigate])
 
-  const requestedEpisodeId = new URLSearchParams(location.search).get('episode_id')
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
+  const requestedEpisodeId = searchParams.get('episode_id')
+  const requestedStage = searchParams.get('stage')
   const appliedEpisodeQuery = useRef(null)
 
   const load = useCallback(async () => {
@@ -2995,24 +3049,182 @@ export default function WorkStudio() {
     })
   }, [workId, episodeId])
 
+  const bumpGuide = useCallback(() => {
+    setGuideTick((n) => n + 1)
+  }, [])
+
+  const handleFlowChange = useCallback(async () => {
+    bumpGuide()
+    await loadFlow()
+  }, [bumpGuide, loadFlow])
+
   const reloadStudio = useCallback(async () => {
+    bumpGuide()
     await Promise.all([load(), loadFlow()])
-  }, [load, loadFlow])
+  }, [bumpGuide, load, loadFlow])
+
+  const buildStagePath = useCallback((nextTab, nextStage, { keepEpisodeParam = true } = {}) => {
+    const params = new URLSearchParams()
+    const epQuery = keepEpisodeParam ? searchParams.get('episode_id') : null
+    if (epQuery) params.set('episode_id', epQuery)
+    if (nextStage) params.set('stage', nextStage)
+    const qs = params.toString()
+    return `/works/${workId}/${nextTab}${qs ? `?${qs}` : ''}`
+  }, [searchParams, workId])
+
+  const handleSelectStage = useCallback((stageItem) => {
+    if (!stageItem?.tab) return
+    followSwitchEpisodeRef.current = null
+    navigate(buildStagePath(stageItem.tab, stageItem.key))
+  }, [navigate, buildStagePath])
 
   const jumpTab = useCallback((nextTab) => {
-    if (nextTab) navigate(`/works/${workId}/${nextTab}`)
-  }, [navigate, workId])
+    if (!nextTab) return
+    followSwitchEpisodeRef.current = null
+    navigate(buildStagePath(nextTab, null))
+  }, [navigate, buildStagePath])
+
+  const handleStepChange = useCallback((nextStep, targetEpisodeId) => {
+    setStepState({ episodeId: targetEpisodeId, step: nextStep, error: false })
+  }, [])
+
+  const handleStepLoadError = useCallback((targetEpisodeId) => {
+    setStepState((prev) => ({
+      episodeId: targetEpisodeId,
+      step: prev.episodeId === targetEpisodeId ? prev.step : null,
+      error: true,
+    }))
+  }, [])
+
+  const handleEpisodeSelect = useCallback((nextEpisodeId) => {
+    setEpisodeId(nextEpisodeId)
+    if (CORE_STUDIO_TABS.has(tab)) {
+      followSwitchEpisodeRef.current = nextEpisodeId
+    } else {
+      followSwitchEpisodeRef.current = null
+    }
+    if (searchParams.has('episode_id')) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('episode_id')
+      const qs = nextParams.toString()
+      navigate(
+        { pathname: location.pathname, search: qs ? `?${qs}` : '', hash: location.hash },
+        { replace: true },
+      )
+    }
+  }, [tab, searchParams, navigate, location.pathname, location.hash])
 
   useEffect(() => { load() }, [load])
   useEffect(() => { loadFlow() }, [loadFlow])
 
-  const active = tab || 'script'
+  const hasExplicitTab = Boolean(tab)
+  const active = tab || null
   const composeTab = active === 'compose'
   const episodes = work?.episode_list || []
   const current = useMemo(() => episodes.find((e) => e.episode_id === episodeId), [episodes, episodeId])
   const chipSurface = composeSurfaceFromEntry(composeByEpisode[episodeId])
+  const resolvedStep = stepState.episodeId === episodeId ? stepState.step : null
+  const stepLoadError = stepState.episodeId === episodeId ? stepState.error : false
+  const activeAux = useMemo(
+    () => AUX_STUDIO_TOOLS.find((item) => item.key === active) || null,
+    [active],
+  )
+  const viewingStageKey = useMemo(() => resolveViewingStageKey({
+    activeTab: active,
+    requestedStage,
+    currentStep: resolvedStep,
+    outlineCount: flowState.outlineCount,
+  }), [active, requestedStage, resolvedStep, flowState.outlineCount])
+
+  useEffect(() => {
+    if (!work || hasExplicitTab || !episodeId) return
+    if (resolvedStep) {
+      navigate(buildStagePath(resolvedStep.tab, resolvedStep.key), { replace: true, state: location.state })
+    } else if (stepLoadError) {
+      navigate(buildStagePath('script', null), { replace: true, state: location.state })
+    }
+  }, [work, hasExplicitTab, episodeId, resolvedStep, stepLoadError, navigate, buildStagePath, location.state])
+
+  useEffect(() => {
+    if (!followSwitchEpisodeRef.current) return
+    if (followSwitchEpisodeRef.current !== episodeId) return
+    if (stepState.episodeId !== episodeId) return
+    followSwitchEpisodeRef.current = null
+    if (stepState.step) {
+      navigate(buildStagePath(stepState.step.tab, stepState.step.key, { keepEpisodeParam: false }), { replace: true })
+    }
+  }, [episodeId, stepState, navigate, buildStagePath])
+
+  const auxMenu = useMemo(() => ({
+    selectedKeys: activeAux ? [activeAux.key] : [],
+    items: AUX_STUDIO_TOOLS.map((tool) => ({
+      key: tool.key,
+      label: tool.label,
+    })),
+    onClick: ({ key }) => jumpTab(key),
+  }), [activeAux, jumpTab])
 
   if (!work) return <Card loading />
+
+  const waitingInitialStage = !hasExplicitTab && episodes.length > 0 && !stepLoadError
+
+  const renderWorkspace = () => {
+    if (waitingInitialStage) {
+      return <Card loading style={{ minHeight: 180 }} />
+    }
+    const effectiveTab = active || 'script'
+    if (effectiveTab === 'characters') {
+      return <CharacterPane work={work} onFlowChange={handleFlowChange} onJumpTab={jumpTab} />
+    }
+    if (effectiveTab === 'storyboard') {
+      return (
+        <StoryboardPane
+          work={work}
+          episodeId={episodeId}
+          currentEpisode={current}
+          focusedStage={viewingStageKey}
+          onReload={reloadStudio}
+          onFlowChange={handleFlowChange}
+          onJumpTab={jumpTab}
+        />
+      )
+    }
+    if (effectiveTab === 'compose') {
+      return (
+        <ComposePane
+          work={work}
+          episodeId={episodeId}
+          onReload={reloadStudio}
+          onFlowChange={handleFlowChange}
+          onJumpTab={jumpTab}
+          composeEntry={composeByEpisode[episodeId]}
+          onComposeEntry={reportComposeEntry}
+          mediaPreflight={mediaPreflight}
+          onMediaPreflight={setMediaPreflight}
+        />
+      )
+    }
+    if (effectiveTab === 'source') return <SourceImportPage work={work} />
+    if (effectiveTab === 'voice') return <VoiceStudioPage work={work} episodeId={episodeId} onJumpTab={jumpTab} />
+    if (effectiveTab === 'preview') return <EpisodePreviewPage work={work} episodeId={episodeId} />
+    if (effectiveTab === 'story-map') return <StoryMapPage work={work} episodeId={episodeId} />
+    if (effectiveTab === 'quality') return <QualityReportPage work={work} episodeId={episodeId} />
+    if (effectiveTab === 'continuity') return <ContinuityCenterPage work={work} episodeId={episodeId} />
+    if (effectiveTab === 'tasks') return <TasksPane workId={work.work_id} episodeId={episodeId} />
+    if (effectiveTab === 'edit-export') return <EditExportPage episodeId={episodeId} />
+    return (
+      <ScriptPane
+        work={work}
+        episodeId={episodeId}
+        focusedStage={viewingStageKey}
+        onReload={reloadStudio}
+        onFlowChange={handleFlowChange}
+        onJumpTab={jumpTab}
+        initialOutlineTaskId={outlineTaskId}
+        onOutlineTaskConsumed={consumeOutlineTask}
+      />
+    )
+  }
 
   return (
     <div className="work-studio">
@@ -3020,7 +3232,8 @@ export default function WorkStudio() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <Title level={4} style={{ marginTop: 0 }}>
-            {work.work_title} <Text type="secondary">{work.work_status_name}</Text>
+            {work.work_title}{' '}
+            {work.work_status_name ? <Text type="secondary">{`全剧：${work.work_status_name}`}</Text> : null}
           </Title>
           <Paragraph>
             <Link to="/works">返回列表</Link>
@@ -3029,13 +3242,13 @@ export default function WorkStudio() {
           </Paragraph>
         </div>
         <Space wrap>
+          <Dropdown menu={auxMenu} trigger={['click']}>
+            <Button type={activeAux ? 'primary' : 'default'}>
+              {activeAux ? `辅助工具：${activeAux.label}` : '辅助工具'}
+            </Button>
+          </Dropdown>
           <Button onClick={() => setAssistantOpen(true)}>
             AI 协同专家
-          </Button>
-          <Button
-            onClick={() => navigate(`/works/${workId}/edit-export`)}
-          >
-            导出剪辑工程
           </Button>
         </Space>
       </div>
@@ -3044,7 +3257,7 @@ export default function WorkStudio() {
         <Select
           style={{ minWidth: 280 }}
           value={episodeId}
-          onChange={setEpisodeId}
+          onChange={handleEpisodeSelect}
           options={episodes.map((ep) => ({
             value: ep.episode_id,
             label: episodeSelectLabel(ep, {
@@ -3054,51 +3267,65 @@ export default function WorkStudio() {
           }))}
         />
         {current ? (
-          <Tag color={episodeComposeTagColor(composeTab, chipSurface)}>
-            {episodeComposeTag(current, { onCompose: composeTab, surface: chipSurface })}
-          </Tag>
+          composeTab ? (
+            <Tag color={episodeComposeTagColor(composeTab, chipSurface)}>
+              {episodeComposeTag(current, { onCompose: composeTab, surface: chipSurface })}
+            </Tag>
+          ) : resolvedStep ? (
+            <Tag color={resolvedStep.allDone ? 'success' : 'processing'}>
+              {resolvedStep.allDone
+                ? '本集进度：8/8 已完成'
+                : `本集环节：${resolvedStep.stepNo}/8 ${resolvedStep.stepLabel}`}
+            </Tag>
+          ) : null
         ) : null}
       </Space>
       <ProductionGuide
         work={work}
         episode={current}
+        refreshKey={guideTick}
+        activeTab={active}
+        viewingStageKey={viewingStageKey}
+        onSelectStage={handleSelectStage}
         onOpenTab={(key) => {
-          if (key && key !== active) navigate(`/works/${workId}/${key}`)
+          if (key && key !== active) jumpTab(key)
         }}
+        onStepChange={handleStepChange}
+        onStepLoadError={handleStepLoadError}
         onChanged={reloadStudio}
       />
-      <Tabs
-        className="work-studio-tabs"
-        activeKey={active}
-        onChange={(key) => navigate(`/works/${workId}/${key}`)}
-        tabBarGutter={12}
-        items={[
-          { key: 'script', label: '剧本', children: <ScriptPane work={work} episodeId={episodeId} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} initialOutlineTaskId={outlineTaskId} onOutlineTaskConsumed={consumeOutlineTask} /> },
-          { key: 'characters', label: '角色场景', children: <CharacterPane work={work} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
-          { key: 'storyboard', label: '分镜', children: <StoryboardPane work={work} episodeId={episodeId} currentEpisode={current} onReload={reloadStudio} onFlowChange={loadFlow} onJumpTab={jumpTab} /> },
-          { key: 'compose', label: '成片', children: (
-            <ComposePane
-              work={work}
-              episodeId={episodeId}
-              onReload={reloadStudio}
-              onFlowChange={loadFlow}
-              onJumpTab={jumpTab}
-              composeEntry={composeByEpisode[episodeId]}
-              onComposeEntry={reportComposeEntry}
-              mediaPreflight={mediaPreflight}
-              onMediaPreflight={setMediaPreflight}
-            />
-          ) },
-          { key: 'source', label: '原著', children: <SourceImportPage work={work} /> },
-          { key: 'voice', label: '配音', children: <VoiceStudioPage work={work} episodeId={episodeId} onJumpTab={jumpTab} /> },
-          { key: 'preview', label: '预览', children: <EpisodePreviewPage work={work} episodeId={episodeId} /> },
-          { key: 'story-map', label: '剧情', children: <StoryMapPage work={work} episodeId={episodeId} /> },
-          { key: 'quality', label: '质量', children: <QualityReportPage work={work} episodeId={episodeId} /> },
-          { key: 'continuity', label: '连贯性', children: <ContinuityCenterPage work={work} episodeId={episodeId} /> },
-          { key: 'tasks', label: '任务', children: <TasksPane workId={work.work_id} episodeId={episodeId} /> },
-          { key: 'edit-export', label: '剪辑', children: <EditExportPage episodeId={episodeId} /> },
-        ]}
-      />
+      {activeAux ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            padding: '8px 12px',
+            marginBottom: 12,
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: 8,
+          }}
+        >
+          <Text strong>{`当前视图：${activeAux.label}`}</Text>
+          <Button
+            size="small"
+            type="primary"
+            onClick={() => {
+              if (resolvedStep) {
+                handleSelectStage({ key: resolvedStep.key, tab: resolvedStep.tab })
+              } else {
+                jumpTab('script')
+              }
+            }}
+          >
+            {resolvedStep && !resolvedStep.allDone ? `返回当前环节：${resolvedStep.stepLabel}` : '返回当前环节'}
+          </Button>
+        </div>
+      ) : null}
+      {renderWorkspace()}
       <DramaAssistantDrawer
         visible={assistantOpen}
         onClose={() => setAssistantOpen(false)}
@@ -3106,12 +3333,6 @@ export default function WorkStudio() {
         episodeId={episodeId}
         onApplied={reloadStudio}
       />
-      <style>{`
-        .work-studio-tabs .ant-tabs-nav { margin-bottom: 12px; }
-        .work-studio-tabs .ant-tabs-nav-list { flex-wrap: wrap; }
-        .work-studio-tabs .ant-tabs-tab { white-space: normal; padding: 8px 0; }
-        .work-studio-tabs .ant-tabs-ink-bar { height: 2px; }
-      `}</style>
     </div>
   )
 }

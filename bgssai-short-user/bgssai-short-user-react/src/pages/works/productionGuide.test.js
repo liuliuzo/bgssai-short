@@ -1,8 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  AUX_STUDIO_TOOLS,
+  CORE_STUDIO_TABS,
+  VIDEO_PATH_STEPS,
+  buildStepItems,
   buildVideoPathInput,
   resolveVideoPath,
+  resolveViewingStageKey,
   shotsForFrames,
   shotsForVideo,
   unlockedLooks,
@@ -215,4 +220,97 @@ test('api payload maps into the same path', () => {
   assert.equal(input.outlineCount, 1)
   assert.equal(input.sceneCount, 1)
   assert.equal(resolveVideoPath(input).kind, 'split')
+})
+
+test('every step carries stepNo and tab, and allDone marks step 8 as 已完成', () => {
+  assert.equal(VIDEO_PATH_STEPS.length, 8)
+  assert.deepEqual(
+    VIDEO_PATH_STEPS.map((item) => [item.stepNo, item.key, item.tab]),
+    [
+      [1, 'outline', 'script'],
+      [2, 'script', 'script'],
+      [3, 'ready', 'script'],
+      [4, 'looks', 'characters'],
+      [5, 'shots', 'storyboard'],
+      [6, 'frame', 'storyboard'],
+      [7, 'video', 'storyboard'],
+      [8, 'film', 'compose'],
+    ],
+  )
+  assert.ok(CORE_STUDIO_TABS.has('script'))
+  assert.equal(AUX_STUDIO_TOOLS.length, 8)
+
+  const finished = path({
+    outlineCount: 1,
+    scriptStatus: 'READY',
+    looks: [],
+    shotCount: 1,
+    shots: [{ shot_id: 'a', shot_status: 'LOCKED', video_url: 'https://cdn.example/a.mp4' }],
+    videoCount: 1,
+    composeStatus: 'READY',
+  })
+  assert.equal(finished.stepNo, 8)
+  assert.equal(finished.stepLabel, '成片')
+  assert.equal(finished.allDone, true)
+  const items = buildStepItems(finished, 'film')
+  assert.ok(items.every((item) => item.state === 'done' && item.statusLabel === '已完成'))
+  assert.equal(items[7].isViewing, true)
+})
+
+test('buildStepItems separates current stage from historical viewing stage and running stage', () => {
+  const atLooks = path({
+    outlineCount: 1,
+    scriptStatus: 'READY',
+    looks: [{ kind: 'character', id: 'c1', name: '李伟', candidateId: '' }],
+  })
+  assert.equal(atLooks.stepNo, 4)
+  assert.equal(atLooks.stepLabel, '定妆')
+  assert.equal(atLooks.allDone, false)
+
+  const items = buildStepItems(atLooks, 'outline')
+  assert.equal(items[0].state, 'done')
+  assert.equal(items[0].statusLabel, '已完成')
+  assert.equal(items[0].isViewing, true)
+  assert.equal(items[3].state, 'current')
+  assert.equal(items[3].statusLabel, '当前环节')
+  assert.equal(items[3].isViewing, false)
+  assert.equal(items[4].state, 'todo')
+  assert.equal(items[4].statusLabel, '未开始')
+
+  const running = path({ outlineCount: 0, outlineRunning: true })
+  const runningItems = buildStepItems(running, 'outline')
+  assert.equal(runningItems[0].state, 'running')
+  assert.equal(runningItems[0].statusLabel, '生成中')
+})
+
+test('resolveViewingStageKey maps core tabs, stage query, and aux tools', () => {
+  const currentAtLooks = path({
+    outlineCount: 1,
+    scriptStatus: 'READY',
+    looks: [{ kind: 'character', id: 'c1', name: '李伟', candidateId: '' }],
+  })
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'script', requestedStage: 'outline', currentStep: currentAtLooks, outlineCount: 3 }),
+    'outline',
+  )
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'script', requestedStage: 'looks', currentStep: currentAtLooks, outlineCount: 3 }),
+    'script',
+  )
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'script', requestedStage: '', currentStep: currentAtLooks, outlineCount: 0 }),
+    'outline',
+  )
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'characters', requestedStage: '', currentStep: currentAtLooks, outlineCount: 3 }),
+    'looks',
+  )
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'storyboard', requestedStage: 'frame', currentStep: currentAtLooks, outlineCount: 3 }),
+    'frame',
+  )
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'source', requestedStage: 'outline', currentStep: currentAtLooks, outlineCount: 3 }),
+    null,
+  )
 })
