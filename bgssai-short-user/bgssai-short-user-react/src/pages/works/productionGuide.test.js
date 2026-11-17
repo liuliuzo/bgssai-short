@@ -6,8 +6,10 @@ import {
   VIDEO_PATH_STEPS,
   buildStepItems,
   buildVideoPathInput,
+  resolveScriptRhythmScore,
   resolveVideoPath,
   resolveViewingStageKey,
+  scriptReadyDecision,
   shotsForFrames,
   shotsForVideo,
   unlockedLooks,
@@ -46,7 +48,7 @@ test('outline without a script goes to script generation', () => {
   assert.equal(step.action, '生成这一集剧本')
 })
 
-test('a draft script asks to finalize, and a low score offers force', () => {
+test('a draft script exposes a single finalize action without a force button', () => {
   const step = path({
     outlineCount: 1,
     scriptStatus: 'DRAFT',
@@ -55,9 +57,45 @@ test('a draft script asks to finalize, and a low score offers force', () => {
     episodeNo: 1,
   })
   assert.equal(step.key, 'ready')
-  assert.equal(step.action, '定稿这一集')
-  assert.equal(step.secondary.kind, 'ready-force')
+  assert.equal(step.action, '定稿')
+  assert.equal(step.secondary, null)
   assert.match(step.detail, /42/)
+  assert.doesNotMatch(step.detail, /强制定稿|定稿这一集|定稿剧本/)
+})
+
+test('scriptReadyDecision gates below 60 with confirmation and passes 60+ directly', () => {
+  assert.equal(resolveScriptRhythmScore({ rhythm_check: { total_score: 75 }, total_score: 50 }), 75)
+  assert.equal(resolveScriptRhythmScore({ total_score: 0 }), 0)
+  assert.equal(resolveScriptRhythmScore(null), null)
+  assert.equal(resolveScriptRhythmScore(''), null)
+
+  assert.deepEqual(scriptReadyDecision({ total_score: 60 }), {
+    needsConfirm: false,
+    forceReadyFlag: 0,
+    score: 60,
+  })
+  assert.deepEqual(scriptReadyDecision({ rhythm_check: { total_score: 70 } }), {
+    needsConfirm: false,
+    forceReadyFlag: 0,
+    score: 70,
+  })
+
+  const low = scriptReadyDecision({ total_score: 42 })
+  assert.equal(low.needsConfirm, true)
+  assert.equal(low.forceReadyFlag, 1)
+  assert.equal(low.score, 42)
+  assert.equal(low.okText, '定稿')
+  assert.equal(low.cancelText, '取消')
+  assert.match(low.confirmContent, /42 分/)
+
+  for (const blankOrZero of [0, null, undefined, {}]) {
+    const decision = scriptReadyDecision(blankOrZero)
+    assert.equal(decision.needsConfirm, true)
+    assert.equal(decision.forceReadyFlag, 1)
+    assert.equal(decision.okText, '定稿')
+    assert.equal(decision.cancelText, '取消')
+    assert.match(decision.confirmContent, /未满 60 分/)
+  }
 })
 
 test('unlocked cards block frames, and an existing candidate is locked for free', () => {

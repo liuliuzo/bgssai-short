@@ -23,6 +23,7 @@ test('guides creator step-by-step from empty work to finalized script, look lock
   })
   assert.equal(stepGenerateScript.nextAction.primaryTab, 'script')
   assert.equal(stepGenerateScript.nextAction.primaryLabel, '去生成本集剧本')
+  assert.doesNotMatch(stepGenerateScript.nextAction.description, /强制定稿|定稿剧本/)
 
   const stepReadyScript = buildProductionFlow({
     episode: { script_status: 'DRAFT' },
@@ -31,6 +32,9 @@ test('guides creator step-by-step from empty work to finalized script, look lock
   })
   assert.equal(stepReadyScript.nextAction.primaryTab, 'script')
   assert.equal(stepReadyScript.nextAction.primaryLabel, '去完成剧本定稿')
+  assert.doesNotMatch(stepReadyScript.nextAction.title, /强制定稿|定稿剧本/)
+  assert.doesNotMatch(stepReadyScript.nextAction.description, /强制定稿|定稿剧本/)
+  assert.doesNotMatch(stepReadyScript.steps[0].summary, /强制定稿|定稿剧本/)
 
   const stepLockCandidates = buildProductionFlow({
     episode: { script_status: 'READY' },
@@ -133,10 +137,12 @@ test('a finalized episode that already has a film does not keep step 1 as the ne
   assert.equal(filmed.offerGenerate, false)
   assert.equal(filmed.title.includes('第 1 步'), false)
   assert.match(filmed.detail, /成片/)
+  assert.doesNotMatch(filmed.detail, /强制定稿|定稿剧本/)
   const editing = scriptStudioGuide({ scriptStatus: 'READY', composeStatus: 'NONE' })
   assert.equal(editing.mode, 'editing')
   assert.equal(editing.offerGenerate, true)
   assert.match(editing.title, /第 1 步/)
+  assert.doesNotMatch(editing.detail, /强制定稿|定稿剧本/)
 })
 
 test('resolveRepairAction routes quota, look, and script errors to exact destination', () => {
