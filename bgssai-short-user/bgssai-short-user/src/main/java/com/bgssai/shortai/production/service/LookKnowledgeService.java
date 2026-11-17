@@ -1184,14 +1184,16 @@ public class LookKnowledgeService {
             created.setCreatedTime(new Date());
             shortAssetMapper.insertSelective(created);
             assetId = created.getAssetId();
-            if (material.getId() != null) {
-                ShortLookMaterial matPatch = new ShortLookMaterial();
-                matPatch.setAssetId(assetId);
-                ShortLookMaterialExample matUp = new ShortLookMaterialExample();
-                matUp.createCriteria().andIdEqualTo(material.getId());
-                materialMapper.updateByExampleSelective(matPatch, matUp);
-                material.setAssetId(assetId);
-            }
+        }
+        if (materialMapper != null && material.getId() != null && assetId != null
+                && !assetId.equals(material.getAssetId())) {
+            ShortLookMaterial matPatch = new ShortLookMaterial();
+            matPatch.setAssetId(assetId);
+            matPatch.setUpdatedTime(new Date());
+            ShortLookMaterialExample matUp = new ShortLookMaterialExample();
+            matUp.createCriteria().andIdEqualTo(material.getId());
+            materialMapper.updateByExampleSelective(matPatch, matUp);
+            material.setAssetId(assetId);
         }
         ShortCharacter patch = new ShortCharacter();
         patch.setRefImageAssetId(assetId);
