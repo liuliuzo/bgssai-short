@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, Card, Drawer, Image, Input, Modal, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { Button, Card, Drawer, Image, Input, Modal, Segmented, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
-import { publicModelText } from '../../publicModel'
 import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { shotCanvasStatusKey, shotOffersVideoRegenerate } from './shotCardMedia'
 import { runOfficialShotVideo } from './officialVideo'
@@ -17,7 +16,7 @@ import {
   thumbPlaceholderStyle,
 } from './studioListUx'
 
-const { Paragraph, Text } = Typography
+const { Text } = Typography
 const { TextArea } = Input
 
 // 与列表视图同一套状态语义，不另发明一套颜色口径
@@ -43,7 +42,6 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   const [shotsReady, setShotsReady] = useState(initialRows.length > 0)
   const [clipSeconds, setClipSeconds] = useState({})
   const [selected, setSelected] = useState([])
-  const [cost, setCost] = useState(null)
   const [dragging, setDragging] = useState(null)
   const [editing, setEditing] = useState(null)
   const [draft, setDraft] = useState('')
@@ -92,8 +90,6 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   }, [episodeId])
 
   useEffect(() => { load() }, [load])
-  // An estimate only prices the selection it was computed for; any change voids it.
-  useEffect(() => { setCost(null) }, [selected, batchTaskType, episodeId])
 
   // 行 = 场次，列 = 镜号。位置全部由数据算出来，不存任何坐标
   const lanes = useMemo(() => {
@@ -121,19 +117,19 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
     setSelected((cur) => (allIn ? cur.filter((id) => !ids.includes(id)) : Array.from(new Set(cur.concat(ids)))))
   }
 
-  const estimate = async () => {
-    const selectedModel = batchTaskType === 'VIDEO'
-      ? videoModelCode
-      : (batchTaskType === 'VOICE' ? voiceModelCode : imageModelCode)
-    const { data } = await productionApi.estimateTasks({
-      episode_id: episodeId,
-      shot_ids: selected.length ? selected : undefined,
-      task_type: batchTaskType,
-      auto_next_flag: 0,
-      model_code: selectedModel,
+  const confirmBatchEstimate = (est) => new Promise((resolve) => {
+    const zeroCost = isUserKeyModelRow(est) || Number(est?.estimated_cost_cent || 0) === 0
+    Modal.confirm({
+      title: batchTaskType === 'VOICE' ? '确认配音费用' : '确认出图费用',
+      content: zeroCost
+        ? `共 ${est?.task_count || 0} 镜，使用自有密钥或免费额度生成。`
+        : `共 ${est?.task_count || 0} 镜 · 预计 ${((est?.estimated_cost_cent || 0) / 100).toFixed(2)} 元 · 余额 ${((est?.available_cent || 0) / 100).toFixed(2)} 元`,
+      okText: '确认提交',
+      cancelText: '取消',
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
     })
-    setCost(data?.result)
-  }
+  })
 
   const submitOfficial = async (shotIds, regenerate) => {
     const body = { episode_id: episodeId, shot_ids: shotIds, model_code: videoModelCode }
@@ -171,21 +167,28 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
         const ok = await submitOfficial(selected.length ? selected : undefined, false)
         if (ok) {
           message.success('视频已提交')
-          setCost(null)
           load()
         }
         return
       }
-      const { data } = await productionApi.submitTasks({
+      const selectedModel = batchTaskType === 'VOICE' ? voiceModelCode : imageModelCode
+      const body = {
         episode_id: episodeId,
         shot_ids: selected.length ? selected : undefined,
         task_type: batchTaskType,
         auto_next_flag: 0,
-        model_code: batchTaskType === 'VOICE' ? voiceModelCode : imageModelCode,
-      })
+        model_code: selectedModel,
+      }
+      const estRes = await productionApi.estimateTasks(body)
+      if (!estRes?.data?.success) {
+        message.error(estRes?.data?.message || '费用预估未通过，请检查角色或场景参考图')
+        return
+      }
+      const ok = await confirmBatchEstimate(estRes.data.result)
+      if (!ok) return
+      const { data } = await productionApi.submitTasks(body)
       if (data?.success) {
-        message.success(`已提交 ${batchTaskType} 批量生成任务`)
-        setCost(null)
+        message.success('已提交批量生成任务')
         load()
       }
     } finally {
@@ -293,7 +296,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
     const sceneName = (sceneCards || []).find((card) => card.scene_card_id === editing?.scene_card_id)?.card_name || ''
     const text = shotSpokenText(editing, sceneName, draft)
     await featuresApi.previzSave({ shot_id: editing.shot_id, previz_text: text })
-    message.success('已保存人话分镜提示词')
+    message.success('已保存')
     setEditing(null)
     load()
   }
@@ -305,15 +308,27 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
       <Card
         size="small"
         style={{ marginBottom: 12 }}
-        title={`已选 ${selected.length} 镜`}
+        title={(
+          <Space wrap>
+            <Segmented
+              size="small"
+              value="canvas"
+              onChange={(val) => { if (val === 'list') onSwitchToList?.() }}
+              options={[
+                { label: '上下列表', value: 'list' },
+                { label: '按场次排', value: 'canvas' },
+              ]}
+            />
+            <Text type="secondary">已选 {selected.length} 镜</Text>
+          </Space>
+        )}
         extra={(
-          <Space>
-            <Button size="small" onClick={onSwitchToList}>切回列表</Button>
-            <Button size="small" onClick={() => setSelected([])}>清空选择</Button>
+          <Space wrap>
+            {selected.length > 0 ? <Button size="small" onClick={() => setSelected([])}>清空选择</Button> : null}
             <Select
               size="small"
               value={batchTaskType}
-              onChange={(val) => { setBatchTaskType(val); setCost(null) }}
+              onChange={setBatchTaskType}
               style={{ width: 110 }}
               options={[
                 { value: 'IMAGE', label: '首帧出图' },
@@ -330,7 +345,6 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
                 if (batchTaskType === 'VIDEO') setVideoModelCode(val)
                 else if (batchTaskType === 'VOICE') setVoiceModelCode(val)
                 else setImageModelCode(val)
-                setCost(null)
               }}
               options={(batchTaskType === 'VIDEO' ? videoModels : (batchTaskType === 'VOICE' ? voiceModels : imageModels)).map((m) => ({
                 value: m.model_code,
@@ -338,20 +352,10 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
                 title: modelPricingLabel(m),
               }))}
             />
-            <Button size="small" onClick={estimate}>估费用</Button>
-            <Button size="small" type="primary" disabled={!cost || submittingBatch} loading={submittingBatch} onClick={submit}>批量生成</Button>
+            <Button size="small" type="primary" disabled={submittingBatch} loading={submittingBatch} onClick={submit}>批量生成</Button>
           </Space>
         )}
-      >
-        {cost ? (
-          <Paragraph style={{ marginBottom: 0 }}>
-            约 {cost.task_count} 镜 / {((cost.estimated_cost_cent || 0) / 100).toFixed(2)} 元
-            （{(isUserKeyModelRow(cost)
-              ? (cost.display_name || cost.model_name || cost.model_code)
-              : publicModelText(cost.display_name || cost.model_code, batchTaskType)) || '-'} · {batchTaskType}）
-          </Paragraph>
-        ) : null}
-      </Card>
+      />
 
       <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
         {lanes.map((lane) => (
@@ -458,7 +462,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
             ) : (
               <Button size="small" onClick={lockCurrent}>锁定</Button>
             )}
-            <Button type="primary" onClick={saveEditor}>保存提示词</Button>
+            <Button type="primary" onClick={saveEditor}>保存</Button>
           </Space>
         )}
       >
@@ -501,7 +505,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
             </div>
 
             <Text strong style={{ display: 'block', marginBottom: 4 }}>
-              镜头画面提示词（人话分镜）：
+              画面内容描述：
             </Text>
             <TextArea
               rows={4}

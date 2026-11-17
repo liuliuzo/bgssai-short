@@ -212,4 +212,33 @@ class ShotServiceSplitTest {
         assertEquals("", unblocked.get(0).get("block_reason"));
     }
 
+    @Test
+    void splitAutoLinksConsecutiveShotsWithinSameSceneAndSkipsCrossScene() {
+        List<Map<String, Object>> scenes = new ArrayList<>();
+        for (int sceneNo = 1; sceneNo <= 2; sceneNo++) {
+            Map<String, Object> scene = new LinkedHashMap<>();
+            scene.put("scene_no", sceneNo);
+            scene.put("scene_summary", "场" + sceneNo);
+            List<Map<String, Object>> lines = new ArrayList<>();
+            for (int i = 1; i <= 2; i++) {
+                Map<String, Object> line = new LinkedHashMap<>();
+                line.put("line_text", "台词" + sceneNo + "-" + i);
+                lines.add(line);
+            }
+            scene.put("line_list", lines);
+            scenes.add(scene);
+        }
+        ShortScript script = new ShortScript();
+        script.setSceneJson(ShortJson.toJson(scenes));
+        when(scriptMapper.selectOneByExample(any())).thenReturn(script);
+        ShotReq req = new ShotReq();
+        req.setEpisodeId("e-1");
+        service.split(req);
+        var capture = org.mockito.ArgumentCaptor.forClass(com.bgssai.shortai.model.ShortShot.class);
+        verify(shortShotMapper, times(4)).insertSelective(capture.capture());
+        List<com.bgssai.shortai.model.ShortShot> inserted = capture.getAllValues();
+        assertEquals(List.of("NONE", "INHERIT_PREV", "NONE", "INHERIT_PREV"),
+                inserted.stream().map(com.bgssai.shortai.model.ShortShot::getFrameLinkMode).toList());
+    }
+
 }

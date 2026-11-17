@@ -101,7 +101,9 @@ public class ShotService {
             up.createCriteria().andIdEqualTo(shot.getId());
             shortShotMapper.updateByExampleSelective(patch, up);
         }
-        int shotNo = maxLockedNo(ep.getEpisodeId());
+        ShortShot lastLocked = lastLockedShot(ep.getEpisodeId());
+        int shotNo = lastLocked == null || lastLocked.getShotNo() == null ? 0 : lastLocked.getShotNo();
+        Integer prevSceneNo = lastLocked == null ? null : lastLocked.getSceneNo();
         List<Map<String, Object>> scenes = ShortJson.list(script.getSceneJson());
         ShortCharacterExample cx = new ShortCharacterExample();
         cx.createCriteria().andWorkIdEqualTo(ep.getWorkId()).andDeletedFlagEqualTo(0);
@@ -122,7 +124,9 @@ public class ShotService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> line = (Map<String, Object>) item;
                 shotNo++;
-                insertShot(ep, shotNo, sceneNo, scene, line, style, characters, sceneCards);
+                boolean inheritPrev = prevSceneNo != null && prevSceneNo == sceneNo;
+                insertShot(ep, shotNo, sceneNo, scene, line, style, characters, sceneCards, inheritPrev);
+                prevSceneNo = sceneNo;
             }
         }
         patchStoryboard(ep, "DRAFT");
@@ -347,7 +351,7 @@ public class ShotService {
 
     private void insertShot(ShortEpisode ep, int shotNo, int sceneNo, Map<String, Object> scene,
             Map<String, Object> line, String style, List<ShortCharacter> characters,
-            List<ShortSceneCard> sceneCards) {
+            List<ShortSceneCard> sceneCards, boolean inheritPrev) {
         String desc = ShortJson.text(scene.get("scene_summary")) + " / " + ShortJson.text(line.get("line_text"));
         String dialogue = ShortJson.text(line.get("line_text"));
         String characterName = ShortJson.text(line.get("character_name"));
@@ -359,6 +363,7 @@ public class ShotService {
         shot.setUserId(ep.getUserId());
         shot.setShotNo(shotNo);
         shot.setSceneNo(sceneNo);
+        shot.setFrameLinkMode(inheritPrev ? "INHERIT_PREV" : "NONE");
         shot.setShotSize("MEDIUM");
         shot.setCameraMove("FIXED");
         shot.setShotDurationSec(ShortJson.integer(line.get("estimated_sec"), 3));
@@ -390,12 +395,11 @@ public class ShotService {
         return ShotConsistency.hasUnlockedRefs(shot, characters, sceneCards);
     }
 
-    private int maxLockedNo(String episodeId) {
+    private ShortShot lastLockedShot(String episodeId) {
         ShortShotExample ex = new ShortShotExample();
         ex.createCriteria().andEpisodeIdEqualTo(episodeId).andShotStatusEqualTo("LOCKED").andDeletedFlagEqualTo(0);
         ex.setOrderByClause("shot_no desc");
-        ShortShot row = shortShotMapper.selectOneByExample(ex);
-        return row == null || row.getShotNo() == null ? 0 : row.getShotNo();
+        return shortShotMapper.selectOneByExample(ex);
     }
 
     private void patchStoryboard(ShortEpisode ep, String status) {
