@@ -357,7 +357,7 @@ export function buildProductionFlow({
       stepNo: 5,
       tone: 'success',
       title: '本集成片已生成完毕',
-      description: '可在「合成成片」页直接在线播放、下载 MP4 视频，或提交审核与发布。',
+      description: '可在「成片」页直接在线播放、下载 MP4 视频，或上架发布到 Tube。',
       primaryLabel: '查看与下载成片',
       primaryTab: 'compose',
       secondaryLabel: '导出剪辑工程',

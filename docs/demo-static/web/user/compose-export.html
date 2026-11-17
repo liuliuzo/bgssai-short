@@ -42,11 +42,10 @@
         <a href="works.html">我的作品</a><span class="sep">/</span>
         <a href="work-detail.html">退婚三年后她成了首富</a><span class="sep">/</span>
       </span>
-      <span class="top-title" title="2026-09-11：带字幕导出需在支持的运行环境完成真实字幕烧录；失败保留重试入口，不显示合成成功。">合成与导出 · 第 1 集</span>
+      <span class="top-title">合成与下载 · 第 1 集</span>
       <select style="width:120px"><option>第 1 集</option><option>第 12 集</option><option>第 14 集</option></select>
       <span class="spacer"></span>
       <button class="btn btn-default btn-sm">合成设置</button>
-      <button class="btn btn-primary">提交平台审核</button>
     </header>
 
     <div class="stepline">
@@ -159,7 +158,7 @@
 
           <div class="card" style="margin-top:14px">
             <div class="card-hd">
-              <h2>成片</h2>
+              <h2>合成与下载</h2>
               <span class="st done">已合成 · 未过期</span>
               <span class="spacer"></span>
               <span class="text-muted" style="font-size:12px">2026-08-12 19:40:22</span>
@@ -179,7 +178,6 @@
                   <div class="k">规格</div><div>1080x1920 · 30fps · H.264 · 42.6 MB</div>
                   <div class="k">时长</div><div>88 秒（目标 90 秒，偏差 2.2%）</div>
                   <div class="k">成片门 G4</div><div><span class="text-ok font-bold">95</span> 已通过</div>
-                  <div class="k">审核</div><div><span class="st done">已通过</span> 2026-08-13 09:12</div>
                   <div class="k">角色版本</div><div>沈知微 · 已锁定定妆</div>
                   <div class="k">时间轴版本</div><div>v2 · 镜 1 时长 4 秒 · 字幕「这份收购案，谁批准的？」</div>
                   <div class="k">作废角色</div><div>陆时衍已作废，不能标为与现行时间轴一致</div>
@@ -187,46 +185,31 @@
                 <div class="toolbar" style="margin-top:12px">
                   <button class="btn btn-default btn-sm">重新合成 2.00 元</button>
                   <button class="btn btn-default btn-sm">仅重烧字幕 0.20 元</button>
-                  <button class="btn btn-primary btn-sm">导出</button>
-                  <button class="btn btn-primary btn-sm">发布到 Tube</button>
-                  <button class="btn btn-default btn-sm">批量发布 READY 集</button>
-                </div>
-                <div class="note" style="margin:12px 0 0">
-                  审核已通过且成片 READY 时可「发布到 Tube」：本仓接口
-                  <code>POST /bgssai/user/films/publish-to-media</code> 会转发到
-                  bgssai-tube-pc 的 <code>POST /bgssai/user/tube/ingest/short</code>。整剧可用
-                  <code>POST /bgssai/user/films/publish-to-media/batch</code>（按集顺序，带进度）。
-                  按钮有 loading；成功弹窗展示作品号与播放链接（可打开 / 复制），不出现媒体产品名；失败区分 Tube 不可达、业务码 6xxxx、成片未 READY。
-                  进入页先调 <code>GET /bgssai/user/films/publish-to-media/preflight</code>：
-                  缺 <code>bgssai.tube.base-url</code> / <code>ingest-token</code> 时，只在「发布到 Tube」按钮旁短提示
-                  （「Tube 主机未配置」或「未配置 Tube 令牌」），不在成片页顶部出黄条，也不停用合成和提审，不编造令牌。
-                  本集尚未合成时没有成片行，预检不把 film not found 写进配置警告。
-                  剧集已合成或已有成片素材但缺少成片记录时，按钮旁另写「成片记录缺失，请重新合成」。
-                  进入本页、切换剧集或刷新后，在 <code>films/precheck</code> 与 <code>films/detail</code>
-                  返回前，当前剧集芯片与「合成状态 / 预检 / 风险」都显示「核对中 / 加载中」：
-                  不把还没返回的预检画成「未就绪」，也不把剧集列表上的「已就绪 / 已通过」当作已核对。
-                  返回后两边同一口径；预检未通过时芯片改为「未就绪」，即使列表里该集仍是 READY。
-                  请求失败显示「未能核对」。
-                  传 <code>work_id</code> 可看批量候选数。若存在最近一次发布记录（publish_log），
-                  成片区展示状态与播放链接。幂等键
-                  <code>short:{work_id}:{episode_id}:{film_id}</code>。
-                  同一成片已 READY 再点发布走回放（<code>replayed=true</code>），不新建 Tube 目录；
-                  <code>force=true</code> 才用同一键再 POST。重新合成后不再回放旧目录。
-                  请求体带 <code>status=READY</code> 与 <code>approved=true</code>。
-                  Tube 返回 PENDING（可以没有作品号 / 播放链接）时弹窗写「已受理，尚未可播放」，
-                  不算成功；FAILED 或 code=422 算失败。超时、结果仍未知，或查询没有可读结果时显示 UNKNOWN：
-                  不重复发布，不当成成功或失败。已有作品号时不再另建作品；只有接收端明确查无且本地还没有作品号，才用同一幂等键补发一次。
-                  成片记录绑定同一份角色版本和时间轴版本，抽检镜号、时长和字幕。已作废角色不得标成一致。
-                  base-url 为空直接失败，不编造主机 IP。失败镜头重试不会覆盖已锁定的确认版本；引用的角色、场景或道具素材缺失则明确失败。模型只走境内网关，选择器展示 0.5× / 1× / 1.5×，不出现网关品牌。
-                  下架/撤回：tube 暂无契约，本仓 skip。
-                </div>
-                <div class="note note-warn" style="margin:12px 0 0">
-                  过期分两级：<strong>重抽镜头、重配音</strong>会让成片整体过期——须重新合成，
-                  已通过的审核也要重新提交，过期成片禁止下载；<strong>只改字幕文本或样式</strong>
-                  不作废成片，点「仅重烧字幕 0.20 元」即可，不重编码画面与声音，
-                  已通过的审核结论保留并标注「仅字幕变更」。
+                  <button class="btn btn-primary btn-sm">下载成片</button>
+                  <button class="btn btn-default btn-sm">导出</button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-hd">
+              <h2>上架发布到 Tube</h2>
+              <span class="st done">已通过</span>
+              <span class="spacer"></span>
+              <span class="text-muted" style="font-size:12px">2026-08-13 09:12</span>
+            </div>
+            <div class="kv" style="grid-template-columns:100px 1fr">
+              <div class="k">上架审核</div><div><span class="st done">已通过</span> 2026-08-13 09:12</div>
+              <div class="k">发布状态</div><div>READY</div>
+              <div class="k">作品号</div><div class="mono">md-xxxx</div>
+              <div class="k">播放链接</div><div class="mono">https://www.bgssai-tube.com/play/md-xxxx</div>
+            </div>
+            <div class="toolbar" style="margin-top:12px">
+              <button class="btn btn-default btn-sm">申请上架 Tube</button>
+              <button class="btn btn-primary btn-sm">发布到 Tube</button>
+              <button class="btn btn-default btn-sm">批量发布已就绪集</button>
+              <button class="btn btn-default btn-sm">刷新发布状态</button>
             </div>
           </div>
 
@@ -384,7 +367,7 @@
             </div>
             <div class="text-muted" style="font-size:11px; margin-top:8px">
               审核中「排队位次」与「预计处理」两行实时更新，排到第几位、还要等多久都看得见，
-              不用干等着猜。提交审核后该集编辑入口整体转只读，撤回后恢复可编辑。
+              不用干等着猜。申请上架 Tube 后该集编辑入口整体转只读，撤回上架申请后恢复可编辑。
             </div>
           </div>
         </div>
