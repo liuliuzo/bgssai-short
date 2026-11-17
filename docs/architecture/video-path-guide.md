@@ -34,7 +34,7 @@
 | --- | --- |
 | 大纲 | `POST /bgssai/user/scripts/outline-generate` |
 | 剧本 | `POST /bgssai/user/scripts/generate` |
-| 定稿 / 强制定稿 | `POST /bgssai/user/scripts/ready`（`force_ready_flag` 0 或 1） |
+| 定稿 | `POST /bgssai/user/scripts/ready`（`force_ready_flag` 0，低分确认后传 1） |
 | 锁定已有定妆 | `POST /bgssai/user/characters/lock` 或 `POST /bgssai/user/scene-cards/lock` |
 | 出定妆并锁定第一张 | `POST /bgssai/user/characters/portrait-generate` 或 `POST /bgssai/user/scene-cards/portrait-generate`，`candidate_count=2`；成功后再 lock |
 | 拆镜 | `POST /bgssai/user/shots/split-from-script`，然后 `POST /bgssai/user/previz/generate-text` |

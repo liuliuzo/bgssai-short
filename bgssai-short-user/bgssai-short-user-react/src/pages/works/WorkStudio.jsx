@@ -20,7 +20,9 @@ import ProductionGuide from './ProductionGuide.jsx'
 import {
   AUX_STUDIO_TOOLS,
   CORE_STUDIO_TABS,
+  resolveScriptRhythmScore,
   resolveViewingStageKey,
+  scriptReadyDecision,
 } from './productionGuide'
 import {
   autoTaskOutcomeMemory,
@@ -152,6 +154,21 @@ function confirmOfficialVideo(preview, { regenerate } = {}) {
       cancelText: '取消',
       onOk: () => resolve(true),
       onCancel: () => resolve(false),
+    })
+  })
+}
+
+function confirmScriptReady(scriptOrScore) {
+  const decision = scriptReadyDecision(scriptOrScore)
+  if (!decision.needsConfirm) return Promise.resolve(decision.forceReadyFlag)
+  return new Promise((resolve) => {
+    Modal.confirm({
+      title: decision.confirmTitle,
+      content: decision.confirmContent,
+      okText: decision.okText,
+      cancelText: decision.cancelText,
+      onOk: () => resolve(decision.forceReadyFlag),
+      onCancel: () => resolve(null),
     })
   })
 }
@@ -449,17 +466,19 @@ function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJ
     }
   }
 
-  const ready = async (force) => {
+  const ready = async () => {
     if (!episodeId || scriptBusy) return
+    const forceFlag = await confirmScriptReady(script)
+    if (forceFlag === null) return
     setScriptBusy('ready')
     try {
-      const { data } = await productionApi.readyScript(episodeId, force)
+      const { data } = await productionApi.readyScript(episodeId, forceFlag)
       if (data?.success) {
         message.success('剧本已定稿')
         await load()
         await onReload()
       } else if (data?.message) {
-        message.warning(data.message)
+        message.warning({ content: data.message, key: data.message })
       }
     } finally {
       setScriptBusy('')
@@ -468,9 +487,9 @@ function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJ
 
   const scenes = script?.scene_list || []
   const rhythm = script?.rhythm_check || {}
-  const rhythmScore = rhythm.total_score ?? script?.total_score
+  const rhythmScore = resolveScriptRhythmScore(script)
   const isScriptReady = script?.script_status === 'READY'
-  const lowRhythmScore = typeof rhythmScore === 'number' && rhythmScore < 60
+  const lowRhythmScore = rhythmScore !== null && rhythmScore > 0 && rhythmScore < 60
   const episodeRow = work.episode_list?.find((e) => e.episode_id === episodeId)
   const guide = scriptStudioGuide({
     scriptStatus: script?.script_status,
@@ -623,12 +642,7 @@ function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJ
         <Button onClick={saveScript} loading={scriptBusy === 'save'} disabled={!!scriptBusy || !scenes.length}>保存</Button>
         <Tooltip title={filmed ? doneReason : ''}>
           <span>
-            <Button type={filmed ? 'default' : 'primary'} onClick={() => ready(0)} loading={scriptBusy === 'ready'} disabled={filmed || !!scriptBusy || !scenes.length}>定稿剧本</Button>
-          </span>
-        </Tooltip>
-        <Tooltip title={filmed ? doneReason : ''}>
-          <span>
-            <Button onClick={() => ready(1)} loading={scriptBusy === 'ready'} disabled={filmed || !!scriptBusy || !scenes.length}>强制定稿</Button>
+            <Button type={filmed || isScriptReady ? 'default' : 'primary'} onClick={ready} loading={scriptBusy === 'ready'} disabled={filmed || isScriptReady || !!scriptBusy || !scenes.length}>{isScriptReady ? '已定稿' : '定稿'}</Button>
           </span>
         </Tooltip>
       </Space>}>
@@ -666,15 +680,6 @@ function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJ
             message={lowRhythmScore
               ? `剧本草稿待定稿（节奏评分 ${rhythmScore} 分）`
               : '剧本草稿待定稿'}
-            action={(
-              <Space>
-                {lowRhythmScore ? (
-                  <Button size="small" type="primary" loading={scriptBusy === 'ready'} onClick={() => ready(1)}>强制定稿</Button>
-                ) : (
-                  <Button size="small" type="primary" loading={scriptBusy === 'ready'} onClick={() => ready(0)}>定稿剧本</Button>
-                )}
-              </Space>
-            )}
           />
         ) : (
           <Alert
@@ -691,7 +696,7 @@ function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJ
           />
         )}
         <Paragraph type="secondary">
-          状态 {labelOf(SCRIPT_STATUS_LABEL, script?.script_status, script?.script_status || '-')} / 版本 {script?.script_version || 0} / 节奏总分 {rhythm.total_score ?? script?.total_score ?? '-'}
+          状态 {isScriptReady ? '已定稿' : labelOf(SCRIPT_STATUS_LABEL, script?.script_status, script?.script_status || '-')} / 版本 {script?.script_version || 0} / 节奏总分 {rhythmScore ?? '-'}
         </Paragraph>
         {scenes.length ? (
           <Space wrap style={{ marginBottom: 8 }}>
@@ -1644,10 +1649,20 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
     setSplitting(true)
     setActionError(null)
     try {
-      const readyRes = await productionApi.readyScript(episodeId, 1)
+      const detailRes = await productionApi.getScript(episodeId)
+      const scriptDetail = detailRes?.data?.result
+      if (!scriptDetail?.scene_list?.length) {
+        onJumpTab?.('script')
+        message.warning('请先生成本集分场剧本后再定稿')
+        return
+      }
+      const forceFlag = await confirmScriptReady(scriptDetail)
+      if (forceFlag === null) return
+      const readyRes = await productionApi.readyScript(episodeId, forceFlag)
       if (!readyRes?.data?.success) {
         onJumpTab?.('script')
-        message.warning(readyRes?.data?.message || '请先生成本集分场剧本后再定稿')
+        const readyMsg = readyRes?.data?.message || '请先生成本集分场剧本后再定稿'
+        message.warning({ content: readyMsg, key: readyMsg })
         return
       }
       const splitRes = await productionApi.splitShots(episodeId)
@@ -1838,7 +1853,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
       {shotsLoaded && rows.length === 0 ? (
         <Card>
           <Title level={5} style={{ marginTop: 0 }}>
-            {scriptReady ? '本集暂无分镜' : '本集暂无分镜（待定稿剧本）'}
+            {scriptReady ? '本集暂无分镜' : '本集暂无分镜（剧本待定稿）'}
           </Title>
           <Space wrap>
             {scriptReady ? (

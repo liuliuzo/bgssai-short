@@ -98,14 +98,14 @@ export function scriptStudioGuide({ scriptStatus, composeStatus } = {}) {
     return {
       mode: 'filmed',
       title: '剧本已定稿，这一集已有成片',
-      detail: '生成剧本、定稿和强制定稿不是当前要做的事。要看或下载成片，去合成页。',
+      detail: '生成剧本和定稿不是当前要做的事。要看或下载成片，去合成页。',
       offerGenerate: false,
     }
   }
   return {
     mode: 'editing',
     title: '第 1 步：剧本与定稿',
-    detail: '先确认全集大纲，再生成当前这一集的分场剧本并点击「定稿剧本」。定稿后会自动提取角色和场景，进入下一步。',
+    detail: '先确认全集大纲，再生成当前这一集的分场剧本并点击「定稿」。定稿后会自动提取角色和场景，进入下一步。',
     offerGenerate: true,
   }
 }
@@ -160,7 +160,7 @@ export function buildProductionFlow({
     summary: scriptReady
       ? '剧本已定稿'
       : hasScriptDraft
-        ? '请点击定稿剧本'
+        ? '请点击定稿'
         : outlineCount > 0
           ? '大纲已出，待生成剧本'
           : '先生成全集大纲',
@@ -240,7 +240,7 @@ export function buildProductionFlow({
       stepNo: 1,
       tone: 'info',
       title: '第 1 步：正在生成本集剧本',
-      description: '系统正在编写本集分场台词，生成完成后点击「定稿剧本」即可自动提取角色进入定妆。',
+      description: '系统正在编写本集分场台词，生成完成后点击「定稿」即可自动提取角色进入定妆。',
       primaryLabel: '查看剧本进度',
       primaryTab: 'script',
     }
@@ -258,7 +258,7 @@ export function buildProductionFlow({
       stepNo: 1,
       tone: 'info',
       title: '第 1 步：大纲已就绪，请生成本集剧本',
-      description: '进入「剧本与定稿」页点击「生成剧本」，生成本集分场对白后再点「定稿剧本」。',
+      description: '进入「剧本与定稿」页点击「生成剧本」，生成本集分场对白后再点「定稿」。',
       primaryLabel: '去生成本集剧本',
       primaryTab: 'script',
     }
@@ -266,8 +266,8 @@ export function buildProductionFlow({
     nextAction = {
       stepNo: 1,
       tone: 'warning',
-      title: '第 1 步：剧本草稿已生成，请点击「定稿剧本」',
-      description: '定稿后系统会自动提取出场角色与场景卡，并解锁分镜拆解。若评分未满 60 分，也可直接点「强制定稿」继续。',
+      title: '第 1 步：剧本草稿已生成，请点击「定稿」',
+      description: '定稿后系统会自动提取出场角色与场景卡，并解锁分镜拆解；节奏评分未满 60 分时确认后仍可定稿。',
       primaryLabel: '去完成剧本定稿',
       primaryTab: 'script',
     }

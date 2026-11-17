@@ -7,6 +7,7 @@ import {
   buildStepItems,
   buildVideoPathInput,
   resolveVideoPath,
+  scriptReadyDecision,
   shotsForFrames,
   shotsForVideo,
 } from './productionGuide'
@@ -19,13 +20,13 @@ function formatYuan(cent) {
   return ((Number(cent) || 0) / 100).toFixed(2)
 }
 
-function confirmBox(title, content) {
+function confirmBox(title, content, { okText = '确认', cancelText = '取消' } = {}) {
   return new Promise((resolve) => {
     Modal.confirm({
       title,
       content,
-      okText: '确认',
-      cancelText: '取消',
+      okText,
+      cancelText,
       onOk: () => resolve(true),
       onCancel: () => resolve(false),
     })
@@ -197,8 +198,16 @@ export default function ProductionGuide({
         else message.error(friendlyFailReason(done?.fail_reason) || '剧本没有生成成功')
         return
       }
-      if (actionKind === 'ready' || actionKind === 'ready-force') {
-        const { data } = await productionApi.readyScript(episode.episode_id, actionKind === 'ready-force' ? 1 : 0)
+      if (actionKind === 'ready') {
+        const decision = scriptReadyDecision(snap?.script)
+        if (decision.needsConfirm) {
+          const ok = await confirmBox(decision.confirmTitle, decision.confirmContent, {
+            okText: decision.okText,
+            cancelText: decision.cancelText,
+          })
+          if (!ok) return
+        }
+        const { data } = await productionApi.readyScript(episode.episode_id, decision.forceReadyFlag)
         if (data?.success) await finish('这一集已定稿', prevKey)
         return
       }

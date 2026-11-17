@@ -2,6 +2,39 @@
 
 const OPEN = new Set(['QUEUED', 'RUNNING'])
 
+export const SCRIPT_READY_MIN_SCORE = 60
+
+export function resolveScriptRhythmScore(scriptOrScore) {
+  const raw = scriptOrScore != null && typeof scriptOrScore === 'object'
+    ? (scriptOrScore.rhythm_check?.total_score ?? scriptOrScore.total_score ?? scriptOrScore.totalScore)
+    : scriptOrScore
+  if (raw == null || (typeof raw === 'string' && raw.trim() === '')) return null
+  const score = Number(raw)
+  return Number.isFinite(score) ? score : null
+}
+
+export function scriptReadyDecision(scriptOrScore) {
+  const score = resolveScriptRhythmScore(scriptOrScore)
+  if (score !== null && score >= SCRIPT_READY_MIN_SCORE) {
+    return {
+      needsConfirm: false,
+      forceReadyFlag: 0,
+      score,
+    }
+  }
+  return {
+    needsConfirm: true,
+    forceReadyFlag: 1,
+    score,
+    confirmTitle: '确认定稿',
+    confirmContent: score !== null && score > 0
+      ? `当前节奏评分 ${score} 分（未满 60 分），确认定稿？`
+      : '当前节奏评分未满 60 分，确认定稿？',
+    okText: '定稿',
+    cancelText: '取消',
+  }
+}
+
 export const VIDEO_PATH_STEPS = [
   { key: 'outline', stepNo: 1, label: '大纲', tab: 'script' },
   { key: 'script', stepNo: 2, label: '剧本', tab: 'script' },
@@ -98,7 +131,7 @@ export function buildVideoPathInput({ outline, script, panel, shots, tasks, epis
     outlineFailed: (tasks || []).some((row) => row.target_type === 'OUTLINE' && row.task_status === 'FAILED'),
     scriptStatus: script?.script_status || episode?.script_status || 'NONE',
     sceneCount: sceneList.length,
-    totalScore: script?.total_score,
+    totalScore: resolveScriptRhythmScore(script),
     scriptRunning: episode?.script_status === 'GENERATING'
       || running(tasks, (row) => row.target_type === 'SCRIPT' && sameEpisode(row)),
     looks: unlockedLooks(panel),
@@ -238,16 +271,15 @@ export function resolveVideoPath(input) {
         action: data.scriptStatus === 'FAILED' ? '重新生成剧本' : '生成这一集剧本',
       })
     }
-    const score = Number(data.totalScore)
-    const low = Number.isFinite(score) && score > 0 && score < 60
+    const score = resolveScriptRhythmScore(data.totalScore)
+    const low = score !== null && score > 0 && score < SCRIPT_READY_MIN_SCORE
     return step(data, 'ready', {
       kind: 'ready',
       title: '把这一集剧本定稿',
       detail: low
-        ? `节奏分 ${score}，不到 60，直接定稿会被拦住。可以用强制定稿，这一步不花钱。`
-        : '定稿之后才会抽出角色、场景和道具。这一步不花钱。',
-      action: '定稿这一集',
-      secondary: { kind: 'ready-force', action: '强制定稿' },
+        ? `节奏分 ${score}（未满 60 分），确认后可定稿。`
+        : '定稿后自动提取角色、场景和道具。',
+      action: '定稿',
     })
   }
 

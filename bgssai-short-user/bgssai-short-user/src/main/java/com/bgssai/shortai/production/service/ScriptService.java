@@ -184,7 +184,7 @@ public class ScriptService {
         int score = script.getTotalScore() == null ? 0 : script.getTotalScore();
         int force = req.getForceReadyFlag() == null ? 0 : req.getForceReadyFlag();
         if (score < 60 && force != 1) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "当前剧本节奏评分未满 60 分，如需继续请点击「强制定稿」");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "当前剧本节奏评分未满 60 分，请确认后定稿");
         }
         ShortScript patch = new ShortScript();
         patch.setScriptStatus("READY");

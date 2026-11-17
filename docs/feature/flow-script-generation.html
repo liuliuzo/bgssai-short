@@ -73,7 +73,7 @@
 
   <rect class="stop" x="560" y="150" width="200" height="50" rx="6"/>
   <text class="lbl" x="660" y="172" text-anchor="middle">total_score &lt; 60</text>
-  <text class="small" x="660" y="188" text-anchor="middle">定稿受阻，须强制确认</text>
+  <text class="small" x="660" y="188" text-anchor="middle">未满 60 分，弹窗确认后定稿</text>
 
   <rect class="ai" x="300" y="150" width="200" height="50" rx="6"/>
   <text class="lbl" x="400" y="172" text-anchor="middle">定点重写 rewrite</text>
@@ -89,7 +89,7 @@
   <text class="lbl" x="910" y="267" text-anchor="middle">进入分镜拆解</text>
   <path class="arr accent" d="M 910 200 L 910 240"/>
 
-  <text class="small" x="240" y="250">强制确认路径：勾选后记录 force_ready_flag=1，</text>
+  <text class="small" x="240" y="250">低分确认路径：确认定稿后记录 force_ready_flag=1，</text>
   <text class="small" x="240" y="266">供后续复盘「哪些集是压着分上的」。</text>
 </svg>
 
@@ -122,7 +122,7 @@
 
 <p class="note">
   设计要点：体检不是为了给分，而是为了让创作者**只改该改的那一段**。因此每个维度必须产出可定位、
-  可执行的 issue，而不是一句「节奏偏慢」。低分不硬性阻断（允许强制定稿并留痕），把判断权留给创作者。
+  可执行的 issue，而不是一句「节奏偏慢」。低分不硬性阻断（弹窗确认后定稿并留痕），把判断权留给创作者。
 </p>
 
 </body>

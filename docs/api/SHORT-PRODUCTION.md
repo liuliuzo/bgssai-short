@@ -120,7 +120,7 @@ TEXT 默认模型。完成后写 `short_work.outline_json` 并回写各集标题
 
 ### POST /bgssai/user/scripts/ready
 
-`{ "episode_id", "force_ready_flag" }`。总分 &lt; 60 且未强制则 `4006`。BLOCK 预检拦截。
+`{ "episode_id", "force_ready_flag" }`。总分 &lt; 60 且 `force_ready_flag!=1` 则 `4006`。BLOCK 预检拦截。
 定稿时抽出角色/场景为 `CANDIDATE`。
 
 ### GET /bgssai/user/scripts/versions?episode_id=

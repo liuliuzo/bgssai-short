@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "1f1e18e8b61a9087729f28f23323216346b7534a384d882cd7c08bd624b88f68",
-  "code_contract_digest": "1789438d9dc448d39fff55c7d9c2d09912cf64491339704679b319f6500edf21",
+  "prototype_bundle_digest": "419f2db7c72cfe56b7938b7c0f8b8a2f72e4233caf8f1e532d35797ae0f47a19",
+  "code_contract_digest": "a5f42c165338bcc6b8f63bc54deaf4c58dbc3d87a93dfb8af6f663bbb470a3a5",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -641,7 +641,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/ProductionGuide.jsx",
-      "sha256": "1d72ea416814b64263bd7884740ba7cca346e529a42a7e5de8101425a6cdfa28"
+      "sha256": "9aab2d5432bf56e3efa56deb74d2ac0cc4fe428714716d7efd6b4936900f8ae6"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/QualityReportPage.jsx",
@@ -665,7 +665,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "990dc526a5c6d68a219083014ca24e9168b55dea2a987bac2306f9585fa36d78"
+      "sha256": "5a40045916da4f284c7d9fc280ffe04ce6b4427d6097fe94bef0bea2dad21f8e"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -689,19 +689,19 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionFlow.js",
-      "sha256": "022e4494a321c17cc8a7d22041ab632e90bb1b0b4bf513c48fb915982a62dfe4"
+      "sha256": "096bd4ad5692c74ddce526495e686c6018678c123a43b8d99f5240e5b8fea39b"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionFlow.test.js",
-      "sha256": "e56925c2f020f8e0a5ccccf0464bc9a8d581d557b2f6de1ac78638246071bd04"
+      "sha256": "5e7f1c5792fce20ef5fa18ce5062727da53afe92952587991794af2e5370a4c5"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionGuide.js",
-      "sha256": "d052092ddbcf07897946c0e15663ebd14d6c0acea4e0e25487f47a9ecee76c2e"
+      "sha256": "a4818283d9640f699f81ecde420cf24a58561c51936a33acd912f7d4179ad51e"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionGuide.test.js",
-      "sha256": "804bcaec18dc46cf21fc1f5ca398aabd9e0dd5578693ee51da0af41768eeeba4"
+      "sha256": "89b3ffbc179401b9d0999869599e4d93b25f0a3c7a4a98ba3db7be6e6e6a58a1"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/qualitySummary.js",
@@ -1013,7 +1013,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/LookKnowledgeService.java",
-      "sha256": "df6ed9df04fdf4354b4c40bccaf4aff216affb718d1885e5f1fff98c0cbe2c00"
+      "sha256": "c47033af117b58ae3c029c97fe15a926d959e129d4622545742e8417d217decf"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/OfficialShotVideoService.java",
@@ -1037,7 +1037,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ScriptService.java",
-      "sha256": "7c8fceac472881e827a52858536a238bedda6a8bcd6eb37f267ed84deec34ce0"
+      "sha256": "f59033008df0fa70e59dca5189b38492d6988f88513495bc96d32f1d24ed3894"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ShortTaskSettlementService.java",
@@ -2612,7 +2612,7 @@
     },
     {
       "path": "docs/demo-static/web/user/script-studio.html",
-      "sha256": "b07b1c5e1f1b714cdfe3bec9080833736170d2c18462d2108132d575f4940c42",
+      "sha256": "6ad481a6093c055a3b23f8d300d7d819013160ead829ef83c071540e317127be",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2675,7 +2675,7 @@
     },
     {
       "path": "docs/demo-static/web/user/source-import.html",
-      "sha256": "c2df57ccc3a89aaeb02df9ee68a7bbbf095e2195a0561f09278348eee34b0962",
+      "sha256": "1a3dee1f6a4724fe590da2169f40d6197940e99ec4eac3e3c4a6faafaba30232",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
