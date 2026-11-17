@@ -318,6 +318,19 @@ test('直接选择人物定妆与场景道具参考：聚合选项并移除跳�
   assert.match(studioSource, /定妆候选：/)
 })
 
+test('WorkStudio 用到的 mediaUrl 助手必须全部导入，避免角色页运行时白屏', () => {
+  const dir = path.dirname(fileURLToPath(import.meta.url))
+  const mediaUrlSource = fs.readFileSync(path.join(dir, '..', '..', 'lib', 'mediaUrl.js'), 'utf8')
+  const studioSource = fs.readFileSync(path.join(dir, '..', 'works', 'WorkStudio.jsx'), 'utf8')
+  const exported = [...mediaUrlSource.matchAll(/export function (\w+)/g)].map((m) => m[1])
+  const importMatch = studioSource.match(/import\s*\{([^}]+)\}\s*from\s*['"]\.\.\/\.\.\/lib\/mediaUrl['"]/)
+  const imported = importMatch ? importMatch[1].split(',').map((s) => s.trim()).filter(Boolean) : []
+  for (const name of exported) {
+    const used = new RegExp(`\\b${name}\\s*\\(`).test(studioSource)
+    if (used) assert.ok(imported.includes(name), `WorkStudio.jsx uses ${name} but does not import it`)
+  }
+})
+
 function solid(width, height, value) {
   const data = new Uint8ClampedArray(width * height * 4)
   for (let i = 0; i < data.length; i += 4) {

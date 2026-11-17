@@ -1,6 +1,6 @@
 import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { creatorToolLabel } from '../../publicModel'
-import { isPlaceholderMediaUrl } from '../../lib/mediaUrl'
+import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Button, Card, Checkbox, Collapse, Dropdown, Form, Input, Modal, Radio, Segmented, Select, Skeleton, Space, Table, Tag, Tooltip, Typography, message } from 'antd'
