@@ -1,6 +1,7 @@
 package com.bgssai.shortai.useraimodel.dto;
 
 import java.util.Date;
+import java.util.List;
 
 public class UserAiModelKeyItem {
     private String keyId;
@@ -17,6 +18,8 @@ public class UserAiModelKeyItem {
     private Integer defaultModel;
     private String lastCheckStatus;
     private Date lastCheckTime;
+    private String balanceStatus;
+    private List<ExternalApiKeyBalancePart> balanceList;
 
     public String getKeyId() {
         return keyId;
@@ -128,5 +131,21 @@ public class UserAiModelKeyItem {
 
     public void setLastCheckTime(Date lastCheckTime) {
         this.lastCheckTime = lastCheckTime;
+    }
+
+    public String getBalanceStatus() {
+        return balanceStatus;
+    }
+
+    public void setBalanceStatus(String balanceStatus) {
+        this.balanceStatus = balanceStatus;
+    }
+
+    public List<ExternalApiKeyBalancePart> getBalanceList() {
+        return balanceList;
+    }
+
+    public void setBalanceList(List<ExternalApiKeyBalancePart> balanceList) {
+        this.balanceList = balanceList;
     }
 }

@@ -77,7 +77,7 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | 配额与限流 | 按账户并发/RPM 限流，超限 HTTP 429 或 `base_resp.status_code` | 同左 | 同左 | 同左 | 同左 | 同左 |
 | 鉴权方式 | `Authorization: Bearer <MINIMAX_API_KEY>` | 同左 | 同左 | 同左 | 同左 | 同左 |
 | 模型与版本 | `MiniMax-M2.5`、`MiniMax-M2.5-highspeed`、`abab6.5s-chat` | `image-01`、`image-01-live` | `MiniMax-Hailuo-02`、`MiniMax-Hailuo-2.3`、`T2V-01-Director`、`I2V-01-Director` | `speech-2.8-hd`、`speech-2.8-turbo`、`speech-02-hd` | `asr-1.0` | `music-2.5`、`music-2.0` |
-| 合规与降级 | `POST /v1/get_voice` 零计费探活 | 不支持 `subject_reference` 时自动降级重试 | 下载 URL 校验公网 HTTPS | 预设音色映射官方系统音色 ID | `segments` 规范为 `sentences[{begin_ms, end_ms, text}]` | `music-2.0` 无词时自动补 `[Instrumental]` |
+| 合规与降级 | `POST /v1/get_voice` 零计费探活。余额先读 `GET /v1/token_plan/remains` 的剩余百分比；没有该字段时读 `GET /account/query_balance` 的 `available_amount` | 同左 | 同左 | 同左 | 同左 | 同左 |
 
 ### 3.2 可灵（`provider_code = KLING`，`https://api-beijing.klingai.com`）
 
@@ -92,6 +92,7 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | 合规与降级 | `image_reference` 报错时自动剥离并重试 | 持久化 `kling_video_task_id` 与 `kling_video_kind` | 预设音色映射可灵官方中文音色 | 需在混合模式或配用其他供应商 |
 
 - 连通性探活：`GET /v1/videos/text2video?pageNum=1&pageSize=1`（HS256 JWT，不产生计费任务）。
+- 余额：`GET /account/costs?start_time&end_time`，未过期包的 `remaining_quantity`，单位次。
 
 ### 3.3 PixVerse（`provider_code = PIXVERSE`，`https://app-api.pixverse.ai`）
 
@@ -100,7 +101,7 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | 端点是否存在 | 传图 `POST /openapi/v2/image/upload`（multipart `image`）；文生 `POST /openapi/v2/video/text/generate`；图生 `POST /openapi/v2/video/img/generate`；首尾帧 `POST /openapi/v2/video/transition/generate`；轮询 `GET /openapi/v2/video/result/{video_id}` | 无对等端点 |
 | 请求 / 响应字段 | 上传返回 `Resp.img_id`；生成返回 `ErrCode=0, Resp.video_id`；轮询返回 `Resp.status`（`1=完成`, `5=生成中`, `7=审核拒绝`, `8=失败`）与 `Resp.url` | 不支持（返回 `4014`） |
 | 异步 / 回调机制 | 异步轮询（4s 间隔，最长 `max(900, timeout_sec)` 秒） | 无 |
-| 配额与限流 | 按积分扣除，支持 `GET /openapi/v2/account/balance` 零计费查询余额探活 | 无 |
+| 配额与限流 | 按积分扣除。余额取 `GET /openapi/v2/account/balance` 的 `Resp.credit_monthly` 与 `Resp.credit_package`（积分） | 无 |
 | 鉴权方式 | 请求头 `API-KEY: <key>` + 每次独立 UUID `Ai-trace-id` | 无 |
 | 模型与版本 | `v6`、`v6-max`、`v5.6`、`v5`、`v4.5` | 无 |
 | 合规与降级 | 持久化 `pixverse_video_id`；输出 URL 校验公网 HTTPS 后下载落库 | 需在混合模式或配用其他供应商 |
@@ -112,7 +113,7 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | 端点是否存在 | `POST /chat/completions`（兼容 `https://api.deepseek.com/chat/completions`） | 无对等端点 |
 | 请求 / 响应字段 | `{model, messages, stream:false}` -> `choices[0].message.content`, `usage.total_tokens`（不强传 `temperature` 以兼容 `deepseek-reasoner`） | 不支持（返回 `4014`） |
 | 异步 / 回调机制 | 同步 JSON | 无 |
-| 配额与限流 | 按账户余额与并发限制；`GET /models` 零计费探活 | 无 |
+| 配额与限流 | `GET /user/balance` 的 `balance_infos[].total_balance`（CNY 为元，USD 为 USD）；探活仍是 `GET /models` | 无 |
 | 鉴权方式 | `Authorization: Bearer <DEEPSEEK_API_KEY>` | 无 |
 | 模型与版本 | `deepseek-chat`、`deepseek-reasoner` | 无 |
 | 合规与降级 | 直接提取终态答复文本 | 需在混合模式或配用其他供应商 |
@@ -124,7 +125,7 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | 端点是否存在 | `POST /v1/chat/completions` | 文生 `POST /v1/images/generations`；图生 `POST /v1/images/edits` | 提交 `POST /v1/videos/generations`；轮询 `GET /v1/videos/{request_id}` | `POST /v1/tts` | `POST /v1/stt`（multipart） |
 | 请求 / 响应字段 | `{model, messages, stream:false}` -> `choices[0].message.content` | `response_format:"b64_json"` -> `data[0].b64_json` / `url` | `{model, prompt, duration, aspect_ratio, resolution, image:{url}}` -> `status:done` + `video.url` | `{text, voice_id, language:"zh"}` -> 音频字节 | `file`, `model`, `format=true`, `language=zh` -> `text`, `words` |
 | 异步 / 回调机制 | 同步 JSON | 同步 JSON | 异步轮询（4s，最长 `max(900, timeout_sec)` 秒） | 同步流 | 同步 JSON |
-| 配额与限流 | `GET /v1/models` 零计费探活；超限 HTTP 429 | 同左 | 同左 | 同左 | 同左 |
+| 配额与限流 | `GET /v1/models` 零计费探活；超限 HTTP 429。推理密钥无余额接口，列表 `balance_status=UNAVAILABLE` | 同左 | 同左 | 同左 | 同左 |
 | 鉴权方式 | `Authorization: Bearer <XAI_API_KEY>` | 同左 | 同左 | 同左 | 同左 |
 | 模型与版本 | `grok-4.7`、`grok-4`、`grok-3`、`grok-3-mini` | `grok-imagine-image-2.0`、`grok-2-image` | `grok-imagine-video-1.5`、`grok-imagine-video-1.5-lite` | `grok-tts` | `grok-voice-transcribe-2.0` |
 | 合规与降级 | 规范化根路径 `https://api.x.ai` -> `/v1` | 不支持字段 400 自动降级重试 | 持久化 `xai_video_request_id` | 时长由 `MediaMetadata` 实测 | 按标点/停顿归并为 `sentences` |

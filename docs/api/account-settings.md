@@ -77,7 +77,11 @@
         "enabled": 1,
         "default_model": 1,
         "last_check_status": "OK",
-        "last_check_time": "2026-11-17 12:00:00"
+        "last_check_time": "2026-11-17 12:00:00",
+        "balance_status": "OK",
+        "balance_list": [
+          { "label": "", "amount": "110.00", "unit": "元" }
+        ]
       }
     ],
     "provider_preset_list": [
@@ -103,6 +107,8 @@
 ```
 
 `auth_type` 取值：`BEARER`（单 API Key）、`AK_SK`（可灵双密钥 `api_key` + `secret_key`）、`API_KEY_HEADER`（PixVerse `API-KEY`）。
+
+`balance_status`：`OK` / `UNAVAILABLE` / `FAILED`。`balance_list` 每项为 `label`、`amount`、`unit`。创建、更新、启停、设默认返回的 `item` 使用同一组字段。数值来自该密钥供应商的只读余额接口：PixVerse 积分、DeepSeek `total_balance`（CNY 为元）、可灵未过期资源包剩余次数、MiniMax 套餐剩余百分比或 `available_amount`。Grok 推理密钥为 `UNAVAILABLE`。失败不返回 0。
 
 ## POST /bgssai/user/ai-model-keys/create
 
