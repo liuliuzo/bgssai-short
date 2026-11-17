@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Collapse, Table } from 'antd'
 import api from '../utils/http'
-import { isValidBillingMultiplier, receiptSummary } from '../modelPricing'
+import { isUserKeyModelRow, isValidBillingMultiplier, receiptSummary } from '../modelPricing'
 import { publicModelText } from '../publicModel'
 export default function UsageReceipts({ workRef }) {
  const [rows,setRows] = useState([])
@@ -16,7 +16,9 @@ export default function UsageReceipts({ workRef }) {
   <Button loading={loading} onClick={load}>刷新对账</Button>
   {error && <Alert type="warning" message={error} />}
   <Table size="small" rowKey={(row)=>row.request_id || row.task_ref} dataSource={rows} scroll={{x:1100}} columns={[
-   {title:'模型',width:140,render:(_,row)=>publicModelText(row.model, row.ability_type) || '-'},
+   {title:'模型',width:140,render:(_,row)=>(isUserKeyModelRow(row) || String(row.model || '').toLowerCase().startsWith('umk-')
+     ? (row.display_name || row.model_name || row.model || '-')
+     : (publicModelText(row.model, row.ability_type) || '-'))},
    {title:'任务',width:160,render:(_,row)=>row.task_ref || '-'},
    {title:'倍率',width:80,render:(_,row)=>isValidBillingMultiplier(row.receipt?.billing_multiplier) ? `${Number(row.receipt.billing_multiplier)}×` : '待确认'},
    {title:'请求',width:220,render:(_,row)=>row.request_id ? <code>{row.request_id}</code> : '-'},

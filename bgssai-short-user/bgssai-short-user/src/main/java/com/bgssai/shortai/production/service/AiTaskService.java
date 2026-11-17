@@ -51,6 +51,8 @@ import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 import com.github.pagehelper.PageHelper;
 
 @Service
@@ -87,6 +89,8 @@ public class AiTaskService {
 
     @Autowired
     private com.bgssai.shortai.billing.UsageReceiptService usageReceiptService;
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     public ApiResponse estimate(AiTaskReq req) {
         if (req == null) {
@@ -123,17 +127,22 @@ public class AiTaskService {
         result.put("task_type", type);
         result.put("task_count", shots.size());
         result.put("estimated_cost_cent", estimated);
-        ProductModelAlias.hideStoredModel(result, type, model.getModelCode());
+        UserAiModelSupport.presentModel(result, type, model);
         result.put("unit_price_cent", effectiveUnitPrice(model, type));
         result.put("price_unit", model.getPriceUnit());
         if (videoModel != null) {
-            ProductModelAlias.Face next = ProductModelAlias.forStored("VIDEO", videoModel.getModelCode());
-            result.put("next_model_code", next.code());
-            result.put("next_display_name", next.name());
+            boolean nextUserKey = UserAiModelSupport.isUserKeyModel(videoModel);
+            result.put("next_model_code", nextUserKey ? videoModel.getModelId()
+                    : ProductModelAlias.forStored("VIDEO", videoModel.getModelCode()).code());
+            result.put("next_display_name", UserAiModelSupport.displayNameOf(videoModel));
             result.put("next_unit_price_cent", effectiveUnitPrice(videoModel, "VIDEO"));
         }
         result.put("shot_cost_list", shotCostList);
-        quotaConsumeService.assertAffordable(userId, estimated);
+        if (estimated > 0) {
+            if (estimated > 0) {
+            quotaConsumeService.assertAffordable(userId, estimated);
+        }
+        }
         return Responses.ok(result);
     }
 
@@ -149,7 +158,9 @@ public class AiTaskService {
             AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
             estimated += shots.stream().mapToInt(shot -> costForShot(videoModel, "VIDEO", shot)).sum();
         }
-        quotaConsumeService.assertAffordable(userId, estimated);
+        if (estimated > 0) {
+            quotaConsumeService.assertAffordable(userId, estimated);
+        }
         int autoNext = req.getAutoNextFlag() == null ? 0 : req.getAutoNextFlag();
         String batchId = com.bgssai.shortai.production.support.ShortIds.id("b-");
         List<String> ids = new ArrayList<>();
@@ -201,7 +212,9 @@ public class AiTaskService {
         result.put("unit_price_cent", effectiveUnitPrice(model, "COMPOSE"));
         result.put("price_unit", model.getPriceUnit());
         result.put("shot_cost_list", List.of());
-        quotaConsumeService.assertAffordable(userId, estimated);
+        if (estimated > 0) {
+            quotaConsumeService.assertAffordable(userId, estimated);
+        }
         return result;
     }
 
@@ -224,11 +237,13 @@ public class AiTaskService {
         result.put("task_type", "VOICE");
         result.put("task_count", shots.size());
         result.put("estimated_cost_cent", estimated);
-        ProductModelAlias.hideStoredModel(result, "VOICE", model.getModelCode());
+        UserAiModelSupport.presentModel(result, "VOICE", model);
         result.put("unit_price_cent", effectiveUnitPrice(model, "VOICE"));
         result.put("price_unit", model.getPriceUnit());
         result.put("shot_cost_list", shotCostList);
-        quotaConsumeService.assertAffordable(userId, estimated);
+        if (estimated > 0) {
+            quotaConsumeService.assertAffordable(userId, estimated);
+        }
         return result;
     }
 
@@ -256,7 +271,7 @@ public class AiTaskService {
         item.put("shot_no", shot.getShotNo());
         item.put("task_type", type);
         item.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
-        ProductModelAlias.hideStoredModel(item, type, model.getModelCode());
+        UserAiModelSupport.presentModel(item, type, model);
         item.put("unit_price_cent", effectiveUnitPrice(model, type));
         item.put("estimated_cost_cent", cost);
         return item;
@@ -284,11 +299,17 @@ public class AiTaskService {
     }
 
     private int pricedCost(AiModelConfig model, String type, int usage) {
+        if (UserAiModelSupport.isUserKeyModel(model)) {
+            return 0;
+        }
         int cost = aiModelResolveService.costCent(model, usage);
         return cost > 0 ? cost : TaskPrices.cost(type);
     }
 
     private int effectiveUnitPrice(AiModelConfig model, String type) {
+        if (UserAiModelSupport.isUserKeyModel(model)) {
+            return 0;
+        }
         int price = model.getUnitPriceCent() == null ? 0 : model.getUnitPriceCent();
         return price > 0 ? price : TaskPrices.cost(type);
     }
@@ -481,8 +502,7 @@ public class AiTaskService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("task_id", task.getTaskId());
         result.put("task_status", "QUEUED");
-        ProductModelAlias.hideStoredModel(result, task.getTaskType(),
-                patch.getModelCode() != null ? patch.getModelCode() : task.getModelCode());
+        presentStoredModel(result, task.getUserId(), task.getTaskType(), nextModel);
         result.put("fallback_model_flag", useFallback ? 1 : 0);
         return Responses.ok(result);
     }
@@ -707,7 +727,7 @@ public class AiTaskService {
         item.put("fail_reason_code", "FAILED".equals(row.getTaskStatus()) ? row.getFailReasonCode() : null);
         item.put("fail_reason", visibleFailReason(
                 row.getTaskStatus(), row.getFailReasonCode(), row.getFailReason()));
-        ProductModelAlias.hideStoredModel(item, row.getTaskType(), row.getModelCode());
+        presentStoredModel(item, row.getUserId(), row.getTaskType(), row.getModelCode());
         item.put("result_json", clientResult(row));
         item.put("cost_cent", row.getCostCent());
         item.put("created_time", row.getCreatedTime());
@@ -743,6 +763,20 @@ public class AiTaskService {
             return null;
         }
         return TokenHubClientSupport.userFacingMessage(failReason);
+    }
+
+    private void presentStoredModel(Map<String, Object> item, String userId, String abilityType, String storedCode) {
+        if (UserAiModelSupport.isUserKeyCode(storedCode)) {
+            String name = userAiModelKeyService == null ? null
+                    : userAiModelKeyService.displayNameOfKeyId(userId, storedCode);
+            String display = name == null || name.isBlank() ? storedCode : name;
+            item.put("model_code", storedCode);
+            item.put("display_name", display);
+            item.put("model_name", display);
+            item.put("credential_source", UserAiModelSupport.CREDENTIAL_SOURCE_USER);
+            return;
+        }
+        ProductModelAlias.hideStoredModel(item, abilityType, storedCode);
     }
 
     private static boolean isSuccessStatus(String taskStatus) {

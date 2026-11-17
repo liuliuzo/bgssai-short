@@ -27,6 +27,8 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 /**
  * Before a generation is queued, checks the text, image and voice models the
@@ -52,6 +54,8 @@ public class PipelineReadiness {
     private final GatewayClient client;
     private final TokenHubModelCatalog catalogCache;
     private final ConcurrentHashMap<String, Cached> cache = new ConcurrentHashMap<>();
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     @Autowired
     public PipelineReadiness(AiModelResolveService models, SysSecretReader secrets,
@@ -78,6 +82,16 @@ public class PipelineReadiness {
     public void assertReady(String taskType, String selectedModel) {
         if (taskType == null || !GATED.contains(taskType.trim().toUpperCase(Locale.ROOT))) {
             return;
+        }
+        String normalizedAbility = taskType.trim().toUpperCase(Locale.ROOT);
+        if (userAiModelKeyService != null) {
+            String userId = userAiModelKeyService.currentUserOrScopeUserId();
+            boolean userKeyRequested = UserAiModelSupport.isUserKeyCode(selectedModel);
+            boolean onlyUserKey = userId != null && userAiModelKeyService.isOnlyUserKeyMode(userId);
+            if (userKeyRequested || onlyUserKey) {
+                userAiModelKeyService.assertAbilityReady(userId, normalizedAbility, selectedModel);
+                return;
+            }
         }
         String key = TokenHubClientSupport.resolveApiKey(secrets, TokenHubClientSupport.HUB_CN, null);
         if (key.isBlank()) {

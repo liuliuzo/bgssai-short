@@ -263,18 +263,22 @@ public class SourceService {
             charCount += chapter.getCharCount() == null ? 0 : chapter.getCharCount();
         }
         AiModelConfig model = aiModelResolveService.resolve("TEXT", req.getModelCode());
+        boolean userKeyModel = com.bgssai.shortai.useraimodel.service.UserAiModelSupport.isUserKeyModel(model);
         int usage = Math.max(1, (charCount + CHARS_PER_BILLING_UNIT - 1) / CHARS_PER_BILLING_UNIT);
-        int cost = aiModelResolveService.costCent(model, usage);
-        if (cost <= 0) {
-            cost = TaskPrices.cost("TEXT") * usage;
+        int cost = 0;
+        if (!userKeyModel) {
+            cost = aiModelResolveService.costCent(model, usage);
+            if (cost <= 0) {
+                cost = TaskPrices.cost("TEXT") * usage;
+            }
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("source_id", doc.getSourceId());
         result.put("chapter_count", chapters.size());
         result.put("char_count", charCount);
         result.put("estimated_cost_cent", cost);
-        ProductModelAlias.hideStoredModel(result, "TEXT", model.getModelCode());
-        result.put("unit_price_cent", model.getUnitPriceCent());
+        com.bgssai.shortai.useraimodel.service.UserAiModelSupport.presentModel(result, "TEXT", model);
+        result.put("unit_price_cent", userKeyModel ? 0 : model.getUnitPriceCent());
         return Responses.ok(result);
     }
 

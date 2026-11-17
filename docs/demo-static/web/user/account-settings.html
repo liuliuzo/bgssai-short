@@ -34,6 +34,161 @@
         <p><a href="subscription.html">开通 / 续费 / 加量</a></p>
       </div>
       <div class="card" style="margin-top:14px">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <h2>模型密钥</h2>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" id="only-user-key-toggle" checked />
+              <span>仅使用自有密钥模型</span>
+            </label>
+            <button type="button" class="btn btn-sm" id="quick-minimax-btn">接入 MiniMax</button>
+            <button type="button" class="btn btn-sm" id="quick-kling-btn">接入可灵</button>
+            <button type="button" class="btn btn-sm" id="quick-pixverse-btn">接入 PixVerse</button>
+            <button type="button" class="btn btn-sm" id="quick-deepseek-btn">接入 DeepSeek</button>
+            <button type="button" class="btn btn-sm" id="quick-grok-btn">接入 Grok</button>
+            <button type="button" class="btn btn-sm btn-primary" id="add-model-key-btn">新增密钥</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <button type="button" class="btn btn-sm btn-primary">全部</button>
+          <button type="button" class="btn btn-sm">文本模型</button>
+          <button type="button" class="btn btn-sm">图片模型</button>
+          <button type="button" class="btn btn-sm">视频模型</button>
+          <button type="button" class="btn btn-sm">音频模型</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>类型</th>
+              <th>供应商</th>
+              <th>模型名称</th>
+              <th>模型编码</th>
+              <th>密钥</th>
+              <th>状态</th>
+              <th>默认</th>
+              <th>检测状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>DeepSeek</td>
+              <td>DeepSeek Chat</td>
+              <td>deepseek-chat</td>
+              <td>sk-d****8a1c</td>
+              <td>启用</td>
+              <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>图片模型 (IMAGE)</td>
+              <td>可灵 (Kling AI)</td>
+              <td>Kling Image V3</td>
+              <td>kling-v3</td>
+              <td>ak_9****2e1b / sk_7****4c9d</td>
+              <td>启用</td>
+              <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>视频模型 (VIDEO)</td>
+              <td>PixVerse</td>
+              <td>PixVerse v6</td>
+              <td>v6</td>
+              <td>pv-k****6m3a</td>
+              <td>启用</td>
+              <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>音频模型 (VOICE)</td>
+              <td>MiniMax (海螺)</td>
+              <td>MiniMax Speech 2.8 HD</td>
+              <td>speech-2.8-hd</td>
+              <td>eyJh****5v7n</td>
+              <td>启用</td>
+              <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>音频模型 (MUSIC)</td>
+              <td>MiniMax (海螺)</td>
+              <td>MiniMax Music 2.5</td>
+              <td>music-2.5</td>
+              <td>eyJh****5v7n</td>
+              <td>启用</td>
+              <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>Grok (xAI)</td>
+              <td>Grok 4.7</td>
+              <td>grok-4.7</td>
+              <td>xai-****9k2a</td>
+              <td>启用</td>
+              <td>-</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <form onsubmit="return false" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+          <select aria-label="供应商" id="key-provider-select">
+            <option value="MINIMAX">MiniMax (海螺)</option>
+            <option value="KLING">可灵 (Kling AI)</option>
+            <option value="PIXVERSE">PixVerse</option>
+            <option value="DEEPSEEK">DeepSeek</option>
+            <option value="XAI">Grok (xAI)</option>
+          </select>
+          <select aria-label="模态类型" id="key-modality-select">
+            <option value="TEXT">文本模型 (TEXT)</option>
+            <option value="IMAGE">图片模型 (IMAGE)</option>
+            <option value="VIDEO">视频模型 (VIDEO)</option>
+            <option value="VOICE">音频配音 (VOICE)</option>
+            <option value="ASR">音频识别 (ASR)</option>
+            <option value="MUSIC">背景音乐 (MUSIC)</option>
+          </select>
+          <input type="text" id="key-model-code-input" value="MiniMax-M2.5" placeholder="模型编码" />
+          <input type="text" id="key-model-name-input" value="MiniMax M2.5" placeholder="展示名称" />
+          <input type="url" id="key-base-url-input" value="https://api.minimaxi.com" placeholder="接口地址" />
+          <input type="password" id="key-secret-input" placeholder="API Key / Access Key" />
+          <input type="password" id="key-secret-key-input" placeholder="Secret Key（可灵填写）" />
+          <button type="button" class="btn btn-sm" id="key-test-btn">测试连接</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="key-save-btn">保存</button>
+        </form>
+      </div>
+      <div class="card" style="margin-top:14px">
         <div class="card-hd"><h2>已绑定登录方式</h2></div>
         <table>
           <thead><tr><th>类型</th><th>标识</th><th></th></tr></thead>
@@ -51,7 +206,6 @@
           <button type="button" class="btn btn-sm">发送验证码</button>
           <button type="submit" class="btn btn-sm btn-primary">绑定</button>
         </form>
-        <p class="text-muted">至少保留一种登录方式；冲突绑定拒绝且不合并账号；解绑需重新验证。</p>
       </div>
       <div class="card" style="margin-top:14px">
         <div class="card-hd"><h2>账号注销</h2></div>
@@ -68,7 +222,6 @@
           <button type="button" class="btn btn-sm">获取验证码</button>
         </form>
         <button type="button" class="btn btn-danger">注销账号</button>
-        <p class="text-muted">iOS / Android 客户端顶栏「账号」进入同一路由 <code>/account</code>。</p>
       </div>
     </div>
   </main>

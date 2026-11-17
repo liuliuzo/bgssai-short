@@ -31,6 +31,13 @@ function fenToYuan(fen) {
   return (n / 100).toFixed(2)
 }
 
+export function isUserKeyModelRow(row = {}) {
+  if (!row || typeof row !== 'object') return false
+  return row.credential_source === 'USER_KEY'
+    || Number(row.user_key_flag) === 1
+    || String(row.model_code || '').toLowerCase().startsWith('umk-')
+}
+
 export function isValidBillingMultiplier(multiplier) {
   if (multiplier == null || multiplier === '' || typeof multiplier === 'boolean') return false
   const n = Number(multiplier)
@@ -38,6 +45,9 @@ export function isValidBillingMultiplier(multiplier) {
 }
 
 export function validateDomesticGatewayRoute(row = {}) {
+  if (row && typeof row === 'object' && isUserKeyModelRow(row)) {
+    return { valid: true, region: 'user-key', reason: '' }
+  }
   const isString = typeof row === 'string'
   const region = isString
     ? DOMESTIC_GATEWAY_REGION
@@ -133,6 +143,20 @@ export function estimateShotBatchTokens(shotCount, modelRow = {}, baseTokensPerS
   const count = Array.isArray(shotCount)
     ? shotCount.length
     : Math.max(0, Math.trunc(Number(shotCount) || 0))
+  if (typeof modelRow === 'object' && isUserKeyModelRow(modelRow)) {
+    return {
+      shotCount: count,
+      shot_count: count,
+      rawTokens: 0,
+      raw_tokens: 0,
+      billedTokens: 0,
+      billed_tokens: 0,
+      multiplier: null,
+      validMultiplier: true,
+      compactBilled: '0',
+      exactBilled: '0',
+    }
+  }
   const isModelNumber = typeof modelRow === 'number'
   const base = Math.max(0, Math.trunc(Number(isModelNumber ? modelRow : baseTokensPerShot) || 0))
   const rawTokens = count * base
@@ -159,10 +183,15 @@ export function estimateShotBatchTokens(shotCount, modelRow = {}, baseTokensPerS
 /** Closed select shows the name and multiplier. The full price string stays on the title. */
 export function modelPricingCompactLabel(row = {}) {
   const ability = row.ability_type || row.ability
-  const name = publicModelText(
-    row.label || row.display_name || row.model_name || row.model_code || row.model || '',
-    ability,
-  )
+  const name = isUserKeyModelRow(row)
+    ? (row.label || row.display_name || row.model_name || row.model_code || '')
+    : publicModelText(
+      row.label || row.display_name || row.model_name || row.model_code || row.model || '',
+      ability,
+    )
+  if (isUserKeyModelRow(row)) {
+    return [name, '自有密钥'].filter(Boolean).join(' · ')
+  }
   const multiplier = row.billing_multiplier
   const value = multiplier == null ? null : Number(multiplier)
   const parts = [name]
@@ -172,10 +201,15 @@ export function modelPricingCompactLabel(row = {}) {
 
 export function modelPricingLabel(row = {}) {
   const ability = row.ability_type || row.ability
-  const name = publicModelText(
-    row.label || row.display_name || row.model_name || row.model_code || row.model || '',
-    ability,
-  )
+  const name = isUserKeyModelRow(row)
+    ? (row.label || row.display_name || row.model_name || row.model_code || '')
+    : publicModelText(
+      row.label || row.display_name || row.model_name || row.model_code || row.model || '',
+      ability,
+    )
+  if (isUserKeyModelRow(row)) {
+    return [name, '自有密钥', '0 额度'].filter(Boolean).join(' · ')
+  }
   const multiplier = row.billing_multiplier
   const value = multiplier == null ? null : Number(multiplier)
   const parts = [name]

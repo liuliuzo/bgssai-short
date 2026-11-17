@@ -31,7 +31,13 @@ final class ProviderHttp {
 
         default String postMultipart(String url, Map<String, String> headers, byte[] fileBytes,
                 String filename, String mimeType, Map<String, String> fields, int timeoutSec) throws Exception {
-            throw new UnsupportedOperationException("multipart not implemented");
+            return postMultipartField(url, headers, "file", fileBytes, filename, mimeType, fields, timeoutSec);
+        }
+
+        default String postMultipartField(String url, Map<String, String> headers, String fileFieldName,
+                byte[] fileBytes, String filename, String mimeType, Map<String, String> fields, int timeoutSec)
+                throws Exception {
+            return postMultipart(url, headers, fileBytes, filename, mimeType, fields, timeoutSec);
         }
     }
 
@@ -62,22 +68,25 @@ final class ProviderHttp {
         }
 
         @Override
-        public String postMultipart(String url, Map<String, String> headers, byte[] fileBytes,
-                String filename, String mimeType, Map<String, String> fields, int timeoutSec) throws Exception {
+        public String postMultipartField(String url, Map<String, String> headers, String fileFieldName,
+                byte[] fileBytes, String filename, String mimeType, Map<String, String> fields, int timeoutSec)
+                throws Exception {
             String boundary = "----bgssai" + java.util.UUID.randomUUID().toString().replace("-", "");
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            String safeField = (fileFieldName == null || fileFieldName.isBlank()) ? "file"
+                    : fileFieldName.replace("\"", "").replace("\r", "").replace("\n", "");
             String safeName = (filename == null || filename.isBlank()) ? "audio.wav"
                     : filename.replace("\"", "").replace("\r", "").replace("\n", "");
             String safeMime = (mimeType == null || mimeType.isBlank()) ? "audio/wav"
                     : mimeType.replace("\r", "").replace("\n", "");
-            out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
-            out.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + safeName + "\"\r\n")
-                    .getBytes(StandardCharsets.UTF_8));
-            out.write(("Content-Type: " + safeMime + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
             if (fileBytes != null && fileBytes.length > 0) {
+                out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+                out.write(("Content-Disposition: form-data; name=\"" + safeField + "\"; filename=\"" + safeName + "\"\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+                out.write(("Content-Type: " + safeMime + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
                 out.write(fileBytes);
+                out.write("\r\n".getBytes(StandardCharsets.UTF_8));
             }
-            out.write("\r\n".getBytes(StandardCharsets.UTF_8));
             if (fields != null) {
                 for (Map.Entry<String, String> entry : fields.entrySet()) {
                     if (entry.getKey() == null || entry.getValue() == null || entry.getValue().isBlank()) {

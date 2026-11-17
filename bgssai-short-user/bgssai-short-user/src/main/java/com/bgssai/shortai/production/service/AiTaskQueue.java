@@ -16,6 +16,7 @@ import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 @Service
 public class AiTaskQueue {
@@ -70,8 +71,14 @@ public class AiTaskQueue {
             ensurePipeline(taskType, resolvedModelCode);
         }
         AiModelConfig model = aiModelResolveService.resolve(taskType, resolvedModelCode);
-        if (resolvedModelCode == null || resolvedModelCode.isBlank()) {
-            req.put("model_code", model.getModelCode());
+        boolean userKeyModel = UserAiModelSupport.isUserKeyModel(model);
+        String storedModelCode = userKeyModel && model.getModelId() != null && !model.getModelId().isBlank()
+                ? model.getModelId() : model.getModelCode();
+        if (resolvedModelCode == null || resolvedModelCode.isBlank() || userKeyModel) {
+            req.put("model_code", storedModelCode);
+        }
+        if (userKeyModel) {
+            req.put("credential_source", UserAiModelSupport.CREDENTIAL_SOURCE_USER);
         }
         ShortAiTask task = new ShortAiTask();
         task.setTaskId(ShortIds.id("t-"));
@@ -83,14 +90,18 @@ public class AiTaskQueue {
         task.setTaskStatus("QUEUED");
         task.setTargetType(targetType);
         task.setTargetId(targetId);
-        task.setModelCode(model.getModelCode());
+        task.setModelCode(storedModelCode);
         task.setRequestJson(ShortJson.toJson(req));
         task.setProgressPercent(0);
         task.setRetryCount(0);
         task.setAutoNextFlag(autoNext);
-        int usage = estimatedUsage(model, req);
-        int priced = aiModelResolveService.costCent(model, usage);
-        task.setCostCent(priced > 0 ? priced : com.bgssai.shortai.production.support.TaskPrices.cost(taskType) * usage);
+        if (userKeyModel) {
+            task.setCostCent(0);
+        } else {
+            int usage = estimatedUsage(model, req);
+            int priced = aiModelResolveService.costCent(model, usage);
+            task.setCostCent(priced > 0 ? priced : com.bgssai.shortai.production.support.TaskPrices.cost(taskType) * usage);
+        }
         Date now = new Date();
         task.setQueuedTime(now);
         task.setCreatedTime(now);

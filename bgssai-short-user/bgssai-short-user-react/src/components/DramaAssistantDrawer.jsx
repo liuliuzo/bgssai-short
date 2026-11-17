@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
-import { Drawer, Radio, Input, Button, Space, Tag, Typography, Divider, message, Spin, Modal } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { Drawer, Radio, Input, Button, Space, Tag, Typography, Divider, message, Spin, Modal, Select } from 'antd'
 import productionApi from '../api/production'
+import { modelPricingCompactLabel, modelPricingLabel } from '../modelPricing'
 
 const { Text } = Typography
 const { TextArea } = Input
@@ -73,6 +74,22 @@ export default function DramaAssistantDrawer({
   const [inputVal, setInputVal] = useState('')
   const [sending, setSending] = useState(false)
   const [messages, setMessages] = useState([])
+  const [textModels, setTextModels] = useState([])
+  const [textModelCode, setTextModelCode] = useState()
+
+  useEffect(() => {
+    if (!visible) return
+    let active = true
+    productionApi.listAiModels('TEXT').then(({ data }) => {
+      if (!active) return
+      const list = data?.result?.model_list || []
+      setTextModels(list)
+      setTextModelCode((cur) => (cur && list.some((m) => m.model_code === cur))
+        ? cur
+        : (list.find((m) => m.default_flag === 1)?.model_code || list[0]?.model_code))
+    }).catch(() => {})
+    return () => { active = false }
+  }, [visible])
 
   const currentRoleObj = AGENT_ROLES.find((r) => r.key === activeRole)
 
@@ -94,6 +111,7 @@ export default function DramaAssistantDrawer({
         shot_id: currentShot?.shot_id || undefined,
         role: activeRole,
         question,
+        model_code: textModelCode,
       })
       if (!data?.success) {
         const errText = data?.message || '专家建议失败，请稍后重试'
@@ -195,6 +213,20 @@ export default function DramaAssistantDrawer({
             </Radio.Button>
           ))}
         </Radio.Group>
+        <div style={{ marginTop: 10 }}>
+          <Select
+            size="small"
+            style={{ width: '100%' }}
+            placeholder="选择文本模型"
+            value={textModelCode}
+            onChange={setTextModelCode}
+            options={textModels.map((m) => ({
+              value: m.model_code,
+              label: modelPricingCompactLabel(m),
+              title: modelPricingLabel(m),
+            }))}
+          />
+        </div>
       </div>
 
       <Divider style={{ margin: '12px 0' }} />

@@ -7,6 +7,7 @@ import com.bgssai.shortai.model.*;
 import com.bgssai.shortai.aimodel.AiModelResolveService;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 import com.bgssai.shortai.common.exception.*;
 
 @Service
@@ -22,7 +23,8 @@ public class ShortTaskSettlementService {
     }
     @Transactional
     public boolean settle(ShortAiTask task, AiModelConfig model, int usage) {
-        int cost = task.getCostCent() == null ? models.costCent(model, usage) : task.getCostCent();
+        boolean userKeyModel = UserAiModelSupport.isUserKeyModel(model);
+        int cost = userKeyModel ? 0 : (task.getCostCent() == null ? models.costCent(model, usage) : task.getCostCent());
         if (cost < 0) throw new BizException(CommonErrorCode.RULE_REJECT, "invalid task cost");
         ShortAiTask done = new ShortAiTask();
         done.setTaskStatus("SUCCEEDED"); done.setProgressPercent(100);
@@ -30,13 +32,18 @@ public class ShortTaskSettlementService {
         ShortAiTaskExample cas = new ShortAiTaskExample();
         cas.createCriteria().andIdEqualTo(task.getId()).andTaskStatusEqualTo("RUNNING");
         if (tasks.updateByExampleSelective(done, cas) != 1) return false;
-        quota.consume(task.getUserId(), cost, "task:" + task.getTaskId());
+        if (!userKeyModel && cost > 0) {
+            quota.consume(task.getUserId(), cost, "task:" + task.getTaskId());
+        }
         insertUsage(task, model, usage, cost);
-        if (task.getWorkId() != null && works.addWorkCost(task.getWorkId(), task.getUserId(), cost) != 1)
+        if (cost > 0 && task.getWorkId() != null && works.addWorkCost(task.getWorkId(), task.getUserId(), cost) != 1)
             throw new BizException(CommonErrorCode.RULE_REJECT, "task work no longer available");
         return true;
     }
     private void insertUsage(ShortAiTask task, AiModelConfig model, int usageAmount, int cost) {
+        boolean userKeyModel = UserAiModelSupport.isUserKeyModel(model);
+        String recordModelCode = userKeyModel && model.getModelId() != null && !model.getModelId().isBlank()
+                ? model.getModelId() : model.getModelCode();
         AiUsageRecord row = new AiUsageRecord();
         row.setRecordId(ShortIds.id("ur-"));
         row.setUserId(task.getUserId());
@@ -45,11 +52,11 @@ public class ShortTaskSettlementService {
         row.setShotId("SHOT".equals(task.getTargetType()) ? task.getTargetId() : null);
         row.setTaskId(task.getTaskId());
         row.setAbilityType(task.getTaskType());
-        row.setModelCode(model.getModelCode());
+        row.setModelCode(recordModelCode);
         row.setQualityLevel(model.getQualityLevel());
         row.setPriceUnit(model.getPriceUnit());
         row.setUsageAmount(usageAmount);
-        row.setUnitPriceCent(model.getUnitPriceCent());
+        row.setUnitPriceCent(userKeyModel ? 0 : model.getUnitPriceCent());
         row.setCostCent(cost);
         row.setCreatedTime(new Date());
         aiUsageRecordMapper.insertSelective(row);

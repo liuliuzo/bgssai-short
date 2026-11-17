@@ -31,6 +31,8 @@ import com.bgssai.shortai.model.ShortWork;
 import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.model.UserQuota;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 import com.github.pagehelper.PageHelper;
 
 @Service
@@ -59,6 +61,8 @@ public class UsageUserService {
     private ShortShotMapper shortShotMapper;
     @Autowired
     private QuotaWalletService quotaWalletService;
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     public ApiResponse summary(String startDate, String endDate) {
         String userId = requireUser();
@@ -174,7 +178,17 @@ public class UsageUserService {
             item.put("record_id", row.getRecordId());
             item.put("ability_type", row.getAbilityType());
             item.put("ability_type_name", ABILITY_NAME.getOrDefault(row.getAbilityType(), row.getAbilityType()));
-            ProductModelAlias.hideStoredModel(item, row.getAbilityType(), row.getModelCode());
+            if (UserAiModelSupport.isUserKeyCode(row.getModelCode())) {
+                String name = userAiModelKeyService == null ? null
+                        : userAiModelKeyService.displayNameOfKeyId(userId, row.getModelCode());
+                String display = name == null || name.isBlank() ? row.getModelCode() : name;
+                item.put("model_code", row.getModelCode());
+                item.put("display_name", display);
+                item.put("model_name", display);
+                item.put("credential_source", UserAiModelSupport.CREDENTIAL_SOURCE_USER);
+            } else {
+                ProductModelAlias.hideStoredModel(item, row.getAbilityType(), row.getModelCode());
+            }
             item.put("quality_level", row.getQualityLevel());
             item.put("quality_level_name", QUALITY_NAME.getOrDefault(row.getQualityLevel(), row.getQualityLevel()));
             item.put("price_unit", row.getPriceUnit());
