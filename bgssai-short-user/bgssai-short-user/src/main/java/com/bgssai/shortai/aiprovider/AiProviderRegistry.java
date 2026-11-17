@@ -196,12 +196,21 @@ public class AiProviderRegistry {
             }
             return byCode.get(GoogleGeminiAiProvider.CODE);
         }
-        if ("ANTHROPIC".equals(canonical)) {
+        if ("ANTHROPIC".equals(canonical) || "CLAUDE".equals(raw)) {
             return byCode.get(AnthropicAiProvider.CODE);
         }
+        if ("OPENAI".equals(canonical)) {
+            AiProvider official = byCode.get(OpenAiAiProvider.CODE);
+            if (official != null) {
+                return official;
+            }
+            return byCode.get(OpenAiCompatibleAiProvider.CODE);
+        }
+        if ("TENCENT_TOKENHUB".equals(canonical) || "TOKENHUB".equals(raw) || "TENCENT-TOKENHUB".equals(raw)) {
+            return byCode.get(TencentTokenHubAiProvider.CODE);
+        }
         if ("DASHSCOPE".equals(canonical) || "ZHIPU".equals(canonical)
-                || "MOONSHOT".equals(canonical) || "HUNYUAN".equals(canonical)
-                || "OPENAI".equals(canonical)) {
+                || "MOONSHOT".equals(canonical) || "HUNYUAN".equals(canonical)) {
             return byCode.get(OpenAiCompatibleAiProvider.CODE);
         }
         return byCode.get(raw);

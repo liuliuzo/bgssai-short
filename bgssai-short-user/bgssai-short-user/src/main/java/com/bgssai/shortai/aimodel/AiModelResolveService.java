@@ -858,11 +858,14 @@ public class AiModelResolveService {
         if ("TEXT".equals(ab)) {
             return spec.defaultChatModel();
         }
+        if ("ASR".equals(ab) && "OPENAI".equals(spec.providerCode())) {
+            return "gpt-transcribe";
+        }
         if ("IMAGE".equals(ab)) {
             return switch (spec.providerCode()) {
                 case "KLING" -> "kling-v2";
                 case "MINIMAX" -> "image-01";
-                case "OPENAI" -> "gpt-image-1";
+                case "OPENAI" -> "gpt-image-2.6-sunburst";
                 case "DASHSCOPE" -> "wanx2.1-t2i-turbo";
                 case "ZHIPU" -> "cogview-4";
                 default -> "";

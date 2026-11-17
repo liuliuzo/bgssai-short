@@ -44,12 +44,25 @@ public final class UserAiModelSupport {
     public static final String PROVIDER_XAI_NAME = "Grok (xAI)";
     public static final String DEFAULT_XAI_BASE_URL = "https://api.x.ai/v1";
 
+    public static final String PROVIDER_OPENAI = "OPENAI";
+    public static final String PROVIDER_OPENAI_NAME = "OpenAI";
+    public static final String DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
+
+    public static final String PROVIDER_ANTHROPIC = "ANTHROPIC";
+    public static final String PROVIDER_ANTHROPIC_NAME = "Claude";
+    public static final String DEFAULT_ANTHROPIC_BASE_URL = "https://api.anthropic.com";
+
+    public static final String PROVIDER_TOKENHUB = "TENCENT_TOKENHUB";
+    public static final String PROVIDER_TOKENHUB_NAME = "TokenHub";
+    public static final String DEFAULT_TOKENHUB_BASE_URL = "https://www.bgssai-tokenhub.cn";
+
     public static final String AUTH_BEARER = "BEARER";
     public static final String AUTH_AK_SK = "AK_SK";
     public static final String AUTH_API_KEY_HEADER = "API_KEY_HEADER";
 
     public static final Set<String> SUPPORTED_PROVIDERS = Set.of(
-            PROVIDER_MINIMAX, PROVIDER_KLING, PROVIDER_PIXVERSE, PROVIDER_DEEPSEEK, PROVIDER_XAI);
+            PROVIDER_MINIMAX, PROVIDER_KLING, PROVIDER_PIXVERSE, PROVIDER_DEEPSEEK, PROVIDER_XAI,
+            PROVIDER_OPENAI, PROVIDER_ANTHROPIC, PROVIDER_TOKENHUB);
     public static final Set<String> MODALITIES = Set.of("TEXT", "IMAGE", "VIDEO", "AUDIO");
     public static final Set<String> ABILITIES = Set.of("TEXT", "IMAGE", "VIDEO", "VOICE", "ASR", "MUSIC");
 
@@ -136,6 +149,13 @@ public final class UserAiModelSupport {
         if ("HAILUO".equals(code) || "MINIMAXI".equals(code)) {
             return PROVIDER_MINIMAX;
         }
+        if ("CLAUDE".equals(code)) {
+            return PROVIDER_ANTHROPIC;
+        }
+        if ("TOKENHUB".equals(code) || "TENCENT-TOKENHUB".equals(code)
+                || "BGSSAI-TOKENHUB".equals(code) || "BGSSAI_TOKENHUB".equals(code)) {
+            return PROVIDER_TOKENHUB;
+        }
         if (!SUPPORTED_PROVIDERS.contains(code)) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "unsupported provider_code: " + code);
         }
@@ -152,6 +172,9 @@ public final class UserAiModelSupport {
             case PROVIDER_PIXVERSE -> PROVIDER_PIXVERSE_NAME;
             case PROVIDER_DEEPSEEK -> PROVIDER_DEEPSEEK_NAME;
             case PROVIDER_XAI -> PROVIDER_XAI_NAME;
+            case PROVIDER_OPENAI -> PROVIDER_OPENAI_NAME;
+            case PROVIDER_ANTHROPIC -> PROVIDER_ANTHROPIC_NAME;
+            case PROVIDER_TOKENHUB -> PROVIDER_TOKENHUB_NAME;
             default -> providerCode;
         };
     }
@@ -232,8 +255,33 @@ public final class UserAiModelSupport {
             case PROVIDER_KLING -> DEFAULT_KLING_BASE_URL;
             case PROVIDER_PIXVERSE -> DEFAULT_PIXVERSE_BASE_URL;
             case PROVIDER_DEEPSEEK -> DEFAULT_DEEPSEEK_BASE_URL;
+            case PROVIDER_OPENAI -> DEFAULT_OPENAI_BASE_URL;
+            case PROVIDER_ANTHROPIC -> DEFAULT_ANTHROPIC_BASE_URL;
+            case PROVIDER_TOKENHUB -> DEFAULT_TOKENHUB_BASE_URL;
             default -> DEFAULT_XAI_BASE_URL;
         };
+    }
+
+    /**
+     * Zero-cost connectivity URL. OpenAI and xAI list models under {@code /v1/models}.
+     * Anthropic and TokenHub document {@code GET /v1/models} on a host with no version prefix.
+     */
+    public static String connectivityProbeUrl(String providerCode, String baseUrl) {
+        String provider = providerCode == null ? "" : providerCode.trim().toUpperCase(Locale.ROOT);
+        String base = baseUrl == null ? "" : baseUrl.trim();
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        if (PROVIDER_ANTHROPIC.equals(provider) || PROVIDER_TOKENHUB.equals(provider)) {
+            return stripTrailingPath(base, "/v1") + "/v1/models";
+        }
+        if (PROVIDER_XAI.equals(provider) || PROVIDER_OPENAI.equals(provider)) {
+            String path = URI.create(base).getPath();
+            if (path == null || path.isBlank() || "/".equals(path)) {
+                return base + "/v1/models";
+            }
+        }
+        return base + "/models";
     }
 
     public static String stripTrailingPath(String baseUrl, String suffix) {
@@ -478,6 +526,57 @@ public final class UserAiModelSupport {
                         new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
                                 new ModelPresetOption("grok-voice-transcribe-2.0", "Grok Voice Transcribe 2.0", true)))
                 ));
-        return List.of(minimax, kling, pixverse, deepseek, xai);
+        ProviderPresetItem openai = new ProviderPresetItem(
+                PROVIDER_OPENAI,
+                PROVIDER_OPENAI_NAME,
+                AUTH_BEARER,
+                DEFAULT_OPENAI_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("gpt-6-luna", "GPT-6 Luna", true),
+                                new ModelPresetOption("gpt-5.4", "GPT-5.4", false),
+                                new ModelPresetOption("gpt-4o", "GPT-4o", false))),
+                        new ProviderAbilityPreset("IMAGE", "IMAGE", "图片模型", List.of(
+                                new ModelPresetOption("gpt-image-2.6-sunburst", "GPT Image 2.6 Sunburst", true),
+                                new ModelPresetOption("gpt-image-2.6-flare", "GPT Image 2.6 Flare", false))),
+                        new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
+                                new ModelPresetOption("gpt-transcribe", "GPT Transcribe", true),
+                                new ModelPresetOption("whisper-1", "Whisper", false)))
+                ));
+        ProviderPresetItem claude = new ProviderPresetItem(
+                PROVIDER_ANTHROPIC,
+                PROVIDER_ANTHROPIC_NAME,
+                AUTH_BEARER,
+                DEFAULT_ANTHROPIC_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("claude-opus-5-5", "Claude Opus 5.5", true),
+                                new ModelPresetOption("claude-sonnet-5-5", "Claude Sonnet 5.5", false),
+                                new ModelPresetOption("claude-haiku-5-5", "Claude Haiku 5.5", false)))
+                ));
+        ProviderPresetItem tokenhub = new ProviderPresetItem(
+                PROVIDER_TOKENHUB,
+                PROVIDER_TOKENHUB_NAME,
+                AUTH_BEARER,
+                DEFAULT_TOKENHUB_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("deepseek-chat", "DeepSeek Chat", true),
+                                new ModelPresetOption("hy4-preview", "Hy4 preview", false),
+                                new ModelPresetOption("kimi-k3", "Kimi K3", false))),
+                        new ProviderAbilityPreset("IMAGE", "IMAGE", "图片模型", List.of(
+                                new ModelPresetOption("kling-v3", "可灵文生图", true))),
+                        new ProviderAbilityPreset("VIDEO", "VIDEO", "视频模型", List.of(
+                                new ModelPresetOption("minimax-video-h3", "MiniMax Video H3", true),
+                                new ModelPresetOption("kling-video-v3", "Kling Video V3", false),
+                                new ModelPresetOption("pixverse-video-v6.0", "PixVerse Video v6", false))),
+                        new ProviderAbilityPreset("AUDIO", "VOICE", "音频模型（配音合成）", List.of(
+                                new ModelPresetOption("minimax-speech-2.8-hd", "MiniMax Speech 2.8 HD", true))),
+                        new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
+                                new ModelPresetOption("hy-asr-3.0-preview", "Hy ASR 3.0 Preview", true))),
+                        new ProviderAbilityPreset("AUDIO", "MUSIC", "音频模型（背景音乐）", List.of(
+                                new ModelPresetOption("minimax-music-v2.6", "MiniMax Music v2.6", true)))
+                ));
+        return List.of(minimax, kling, pixverse, deepseek, xai, openai, claude, tokenhub);
     }
 }
