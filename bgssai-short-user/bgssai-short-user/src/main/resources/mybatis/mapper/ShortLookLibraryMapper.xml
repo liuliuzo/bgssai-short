@@ -101,6 +101,8 @@
   <update id="updateByExampleSelective">
     update short_look_library
     <set>
+      <if test="row.libraryId != null">library_id = #{row.libraryId,jdbcType=VARCHAR},</if>
+      <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
       <if test="row.libraryName != null">library_name = #{row.libraryName,jdbcType=VARCHAR},</if>
       <if test="row.description != null">description = #{row.description,jdbcType=VARCHAR},</if>
       <if test="row.status != null">status = #{row.status,jdbcType=VARCHAR},</if>
@@ -108,6 +110,7 @@
       <if test="row.itemCount != null">item_count = #{row.itemCount,jdbcType=INTEGER},</if>
       <if test="row.usageBytes != null">usage_bytes = #{row.usageBytes,jdbcType=BIGINT},</if>
       <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
+      <if test="row.createdTime != null">created_time = #{row.createdTime,jdbcType=TIMESTAMP},</if>
       <if test="row.updatedTime != null">updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},</if>
     </set>
     <if test="example != null"><include refid="Update_By_Example_Where_Clause" /></if>
