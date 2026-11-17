@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "c03f07d7632d5af2c63d41c1405ea8447495913105c3456b0e550f45198df801",
-  "code_contract_digest": "e594204836f6f3e1d092969713e50c1da850777e2bf2e1e002c35d55fac59777",
+  "prototype_bundle_digest": "bcd8c484e0e90bb4e5cf9b1b2c190f0941abe4c9bd928a4f85ec549418f4f911",
+  "code_contract_digest": "572fc84a94d44e1093e055b112e73c63b9b4619ab8878e3ee035434f3fdb26b4",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -15,6 +15,8 @@
     "/api/mcp/tokens/create",
     "/api/mcp/tokens/list",
     "/api/mcp/tokens/revoke",
+    "/api/user/ai-keys",
+    "/api/user/ai-keys/{providerCode}",
     "/bgssai/admin/ai-models/create",
     "/bgssai/admin/ai-models/list",
     "/bgssai/admin/ai-models/set-default",
@@ -64,6 +66,8 @@
     "/bgssai/user/account/login-methods/bind-contact",
     "/bgssai/user/account/login-methods/bind-oauth",
     "/bgssai/user/account/login-methods/unbind",
+    "/bgssai/user/ai-keys",
+    "/bgssai/user/ai-keys/{providerCode}",
     "/bgssai/user/ai-model-keys",
     "/bgssai/user/ai-models/list",
     "/bgssai/user/ai-tasks/batch-progress",
@@ -501,11 +505,23 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
-      "sha256": "0facc5a48e9b45ff2c96a2cee37227186b00202e9c33cf1a9a75ab50807ffb5d"
+      "sha256": "6f0c35dac798646e9f3d586d2ced1f2c95929144570ebbf741c23b6c6945c04c"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
       "sha256": "c08d543d41feb261383910a6d7eca3e82e95dac49fd96e98bb96cb98b6da0a4e"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+      "sha256": "9256a2260e609ecdfab18e10d82cf4979f77d3ed3f2ac00104343b5b2f3c4ad7"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+      "sha256": "c4d076bacfd57a762e8b8af472eba364d12ba950340db6dc67b22b7e1a49b98a"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js",
+      "sha256": "b9e1419762dd2f593ee5e829778648ee3adbe68884be7501d1d6b5a12d937feb"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
@@ -789,7 +805,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/AiModelResolveService.java",
-      "sha256": "0a649ec6f260296c3373723f272b224918586ccbe707746c4cd74f02ae31c906"
+      "sha256": "7854717b6e1aaa3f97a3e427908f5db974c6384d2ad16260f5350aabf81171da"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/ui/ListUserAiModelsController.java",
@@ -965,7 +981,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AiTaskService.java",
-      "sha256": "f9fbb8537f4d1e3eba379dce95443e5729c33fb0ab2e611dcc766f3a7a91b991"
+      "sha256": "0241fae80b52ca12ba385e8baa9d7c7bef64d06315d0bddb85610a8512ec988b"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AssetService.java",
@@ -1009,7 +1025,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ImageToVideoService.java",
-      "sha256": "1e76fa8726efd877e56987b3f1df1994e33973c799d587fdbd6951455379d6ed"
+      "sha256": "29285bcc8333f17c7465c1bc8951069cb662512bf590c73a7f1f57e03017e9a3"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/LookKnowledgeService.java",
@@ -1017,7 +1033,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/OfficialShotVideoService.java",
-      "sha256": "b4d2028cfbaabaf0232efa5036c335bdf00adc5d1f563191d1706586bd6a95b5"
+      "sha256": "1635691f2b789962e8ef19d65fca05d6c3a952fcf99ead6d7c746cfb44b8f660"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/PreviewService.java",
@@ -1041,7 +1057,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ShortTaskSettlementService.java",
-      "sha256": "bd762aeef3a950e77acfa0998f6164d2d88555c7564ea50f4051d10c9d11248a"
+      "sha256": "0715836e40a7423ed922e5e3e574458d3958c6c3bb6268b3c25f8aa5448f8763"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ShotReorderService.java",
@@ -1521,7 +1537,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/usage/service/UsageUserService.java",
-      "sha256": "b467a321a326966936395824f2346cf9724a4cf2af0db97d1706b3a9f1fc01a3"
+      "sha256": "d579c6a64c088e99d199d25da4f1284cf5f2e80656e702a8dfa353d2cd3c4b72"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/usage/ui/UsageRecordsController.java",
@@ -1564,8 +1580,20 @@
       "sha256": "d6f7a7960123eb896c6382481f4c4ab77687095722c55c25059f12ac83c7b4aa"
     },
     {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/controller/UserAiKeysApiController.java",
+      "sha256": "079240d901c60d1fda3db0efa9a0601a3d088cf180f45d67f1334667bdb635a1"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/controller/UserAiKeysController.java",
+      "sha256": "baf5df0ccada98fc83003ee7d55118b2d0451c36dc42cc50e161752ecfe5843c"
+    },
+    {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/service/UserAiModelKeyService.java",
       "sha256": "a374330cfea80e027267939dddcafa74b9ea98709ea17d769b4bae66816bc862"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/service/UserAiProviderKeyService.java",
+      "sha256": "86c00f3fb7309c4ab1747d209aad4cad56e7caea4ab74627948e7eb93084cc55"
     },
     {
       "path": "clients/desktop/main.js",
@@ -1589,9 +1617,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1631,9 +1659,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1673,9 +1701,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2051,9 +2079,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2072,9 +2100,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2087,15 +2115,15 @@
     },
     {
       "path": "docs/demo-static/web/user/account-settings.html",
-      "sha256": "020e3ec0a3ac05071f4305df76e271eea09265f3b819718a84149d582809c859",
+      "sha256": "e49085a6dcf86d92578f96b6e9120680308cc3b87192a9dea72f19c5e69db16a",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2114,9 +2142,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2135,9 +2163,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2156,9 +2184,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2177,9 +2205,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2198,9 +2226,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2219,9 +2247,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2240,9 +2268,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2261,9 +2289,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2282,9 +2310,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2303,9 +2331,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2324,9 +2352,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2345,9 +2373,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2366,9 +2394,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2387,9 +2415,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2408,9 +2436,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2429,9 +2457,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2450,9 +2478,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2471,9 +2499,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2492,9 +2520,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2513,9 +2541,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2534,9 +2562,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2555,9 +2583,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2576,9 +2604,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2597,9 +2625,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2618,9 +2646,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2639,9 +2667,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2660,9 +2688,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2681,9 +2709,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2702,9 +2730,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2723,9 +2751,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2744,9 +2772,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2765,9 +2793,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2786,9 +2814,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2807,9 +2835,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2828,9 +2856,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2849,9 +2877,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2870,9 +2898,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2891,9 +2919,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2912,9 +2940,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2933,9 +2961,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2954,9 +2982,9 @@
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadPage.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/download/BotDownloadSurface.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeysHelper.js"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
