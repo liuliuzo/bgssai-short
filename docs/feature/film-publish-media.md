@@ -26,7 +26,7 @@
   7. **预检**：`GET .../preflight` 检查配置与闸门；传 `work_id` 时附带批量候选数；不调用 tube。
      `warnings` 只写主机或令牌未配置。本集尚未合成时没有成片行，写入 `gate_reason`，不写 `film not found`，也不放进 `warnings`。
      剧集已是 `READY` 或已有 `film_asset_id` 但没有成片行时，`film_record_missing=true`，请重新合成，不插入空成片。
-  8. **UX**：发布 loading；成功展示作品号与播放链接（打开/复制），文案不写媒体产品名；成片区展示最近一次 publish_log。响应字段仍为 `media_id` / `play_url`。
+  8. **UX**：用户端成片页独立设置「上架发布到 Tube」卡片（与「合成与下载」卡片分离，本地预览与下载不依赖审核状态）；上架申请单按钮按 `review_status` 切换：`PENDING` 显示「撤回上架申请」（调用 `POST /bgssai/user/reviews/withdraw`），其余状态显示「申请上架 Tube」（调用 `POST /bgssai/user/reviews/submit`），与「发布到 Tube」「批量发布已就绪集」「刷新发布状态」并列；后端接口路径与枚举不变。发布 loading；成功展示作品号与播放链接（打开/复制），文案不写媒体产品名；成片区展示最近一次 publish_log。响应字段仍为 `media_id` / `play_url`。
   9. **可靠性**：瞬时 HTTP 5xx 在同一请求里可再试 1 次，幂等键不变。超时不再自动重 POST；结果记 UNKNOWN，下次发布先查状态。连接被明确拒绝仍是失败。
   10. **批量**：`POST .../batch` 按剧集顺序发布本作品全部 READY+APPROVED 成片，返回进度字段。
   11. **下架 / 撤回（skip）**：当前 bgssai-tube 未提供 short unpublish/retract 契约；本仓**不实现**下架按钮与 API。待 tube 侧补齐后再开需求。
@@ -48,8 +48,8 @@
 1. READY + APPROVED 成片可发布，返回 `media_id`、`play_url`、`status`。
 2. 未 READY / 已过期 / 未过审 / 无素材 → 拒绝且不调 tube；文案可读。
 3. 重复点击发布不炸：已 READY 回放既有 `media_id`，不新建目录；落库最近一次结果与 `media_publish_log`。
-4. 用户端成片区有「发布到 Tube」与「批量发布 READY 集」；成功可打开/复制播放链接。
-5. 缺 base-url / ingest-token 时 preflight 的 `warnings` 只写配置。缺 ingest-token 时「发布到 Tube」停用，按钮旁写明「未配置 Tube 令牌」，不编造令牌，也不在成片页顶部出黄条。尚未合成不写入 `warnings`。
+4. 用户端成片页「上架发布到 Tube」卡片提供「申请上架 Tube / 撤回上架申请」（单按钮随状态切换）、「发布到 Tube」与「批量发布已就绪集」；成功可打开/复制播放链接。
+5. 缺 base-url / ingest-token 时 preflight 的 `warnings` 只写配置。缺 ingest-token 时「发布到 Tube」停用，按钮旁写明「未配置 Tube 令牌」，不编造令牌，也不在成片页顶部出黄条；申请上架 Tube 与撤回上架申请不受影响。尚未合成不写入 `warnings`。
 6. 批量返回 `total` / `succeeded` / `failed` / `progress_percent` / `item_list`。
 7. 单测覆盖 payload、闸门、重试；本地 media 404 不影响单测。
 8. 文档明确 unpublish 为 skip。
@@ -210,19 +210,19 @@ media 侧暂无 `unpublish` / `retract` 共享契约 → **本仓不实现**。�
 
 - 涉及端：web 用户端
 - 页面：`../demo-static/web/user/compose-export.html`
-- 「发布到 Tube」+「批量发布 READY 集」+ 最近 publish_log / 批量进度
+- 「申请上架 Tube / 撤回上架申请」+「发布到 Tube」+「批量发布已就绪集」+ 最近 publish_log / 批量进度
 - 页面 → API：`../api/page-api-mapping.md`
 
 ## 八、联调与验证步骤（smoke）
 
-1. 配置 `bgssai.tube.base-url` / `ingest-token`（或 Admin 写 `sys_secret`）；缺令牌时「发布到 Tube」停用，按钮旁短提示「未配置 Tube 令牌」，成片页顶部无黄条，合成与提审仍可用。
+1. 配置 `bgssai.tube.base-url` / `ingest-token`（或 Admin 写 `sys_secret`）；缺令牌时「发布到 Tube」停用，按钮旁短提示「未配置 Tube 令牌」，成片页顶部无黄条，合成与申请上架 Tube 仍可用。
 2. READY+APPROVED 单集发布：成功可打开/复制 `play_url`。
 3. 未 READY / 未过审：拒绝且不调 tube。
 4. Tube 宕机：可读 `502000`，库表有 `media_last_error` / `media_publish_log`。
 5. 重复发布：已 READY 回放既有目录，不二次 ingest；`force=true` 才再 POST。
 6. 批量发布 READY 集：有进度汇总。
 7. `mvn -Dtest=FilmPublishToMediaServiceTest,RestMediaIngestClientTest test`。
-8. 前端：登录 demo → 作品工作台 → 成片提审 → 单集 / 批量发布。
+8. 前端：登录 demo → 作品工作台 → 合成与下载 / 上架发布到 Tube（申请上架 / 单集与批量发布）。
 9. 契约与 Tube 对端验收：[`../api/short-to-media-publish.md`](../api/short-to-media-publish.md)。
 
 ## 九、四层同步检查清单

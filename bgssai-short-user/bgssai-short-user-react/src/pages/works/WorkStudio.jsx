@@ -38,7 +38,7 @@ import {
   selectPendingVideoShotIds,
   summarizeConsistencyCards,
 } from './productionFlow'
-import { reviewActionState } from './reviewActions'
+import { formatTubePublishHint, reviewActionState } from './reviewActions'
 import { ClickThumb, ListShotVideo, ShotMediaColumn } from './shotListMedia'
 import LookSlot from '../look/LookSlot'
 import LibraryLookPicker, { ReferenceNotice } from '../look/LibraryLookPicker'
@@ -2613,7 +2613,7 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
     const ok = await new Promise((resolve) => {
       Modal.confirm({
         title: '批量发布到 Tube',
-        content: `将发布本作品全部已就绪且已过审的成片（约 ${count} 集）。确认继续？`,
+        content: `将发布本作品全部已就绪且已通过上架审核的成片（约 ${count} 集）。确认继续？`,
         okText: '开始批量发布',
         cancelText: '取消',
         onOk: () => resolve(true),
@@ -2644,295 +2644,304 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
   }
 
   return (
-    <Card title="合成成片与提审">
-      <Paragraph style={{ marginBottom: 4 }}>
-        <Text strong>{surface.headline}</Text>
-      </Paragraph>
-      <Paragraph type="secondary" style={{ fontSize: 13 }}>{surface.paneText}</Paragraph>
-      {statusSettled && film?.expired_flag === 1 ? (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 12 }}
-          message="成片已过期，请重新合成"
-        />
-      ) : null}
-      {statusSettled && (precheck?.blocker_list || []).length ? (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 12 }}
-          message="合成前置未满足"
-          description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
-          action={(
-            <Space>
-              <Button size="small" type="primary" ghost onClick={() => onJumpTab?.('storyboard')}>去分镜补齐镜头视频</Button>
-              <Button size="small" onClick={() => onJumpTab?.('voice')}>去配音字幕检查</Button>
-            </Space>
-          )}
-        />
-      ) : null}
-      {composeCost ? (
-        <Paragraph type="secondary">
-          合成预估 {formatYuan(composeCost.estimated_cost_cent)} 元 · 余额 {formatYuan(composeCost.available_cent)} 元
-          · 有配音时会混入成片音轨
+    <>
+      <Card title="合成与下载">
+        <Paragraph style={{ marginBottom: 4 }}>
+          <Text strong>{surface.headline}</Text>
         </Paragraph>
-      ) : null}
-      <Space style={{ marginBottom: 12 }} wrap>
-        <Select
-          placeholder="音乐模型"
-          value={musicModelCode}
-          onChange={setMusicModelCode}
-          style={{ width: 220 }}
-          options={musicModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
-        />
-        <Input value={musicPrompt} onChange={(e) => setMusicPrompt(e.target.value)} style={{ width: 360 }} />
-        <Button onClick={async () => {
-          const { data } = await featuresApi.filmBgmGenerate({
-            work_id: work.work_id,
-            episode_id: episodeId,
-            model_code: musicModelCode,
-            prompt: musicPrompt,
-            is_instrumental: 1,
-          })
-          if (data?.success) {
-            message.success('背景音乐任务已提交')
-            await waitTask(work.work_id, data.result.task_id)
-            await load()
-          }
-        }}>生成背景音乐</Button>
-        <Select
-          allowClear
-          placeholder="选择背景音乐"
-          value={film?.bgm_asset_id}
-          style={{ width: 260 }}
-          options={(film?.bgm_candidate_list || []).map((item, index) => ({
-            value: item.asset_id,
-            label: `候选 ${index + 1} / ${item.duration_sec || '-'}秒`,
-          }))}
-          onChange={async (assetId) => {
-            await featuresApi.filmSettingsSave({
+        <Paragraph type="secondary" style={{ fontSize: 13 }}>{surface.paneText}</Paragraph>
+        {statusSettled && film?.expired_flag === 1 ? (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message="成片已过期，请重新合成"
+          />
+        ) : null}
+        {statusSettled && (precheck?.blocker_list || []).length ? (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message="合成前置未满足"
+            description={(precheck.blocker_list || []).map((b) => `${b.blocker_desc}（${b.count || 0}）`).join('；')}
+            action={(
+              <Space>
+                <Button size="small" type="primary" ghost onClick={() => onJumpTab?.('storyboard')}>去分镜补齐镜头视频</Button>
+                <Button size="small" onClick={() => onJumpTab?.('voice')}>去配音字幕检查</Button>
+              </Space>
+            )}
+          />
+        ) : null}
+        {composeCost ? (
+          <Paragraph type="secondary">
+            合成预估 {formatYuan(composeCost.estimated_cost_cent)} 元 · 余额 {formatYuan(composeCost.available_cent)} 元
+            · 有配音时会混入成片音轨
+          </Paragraph>
+        ) : null}
+        <Space style={{ marginBottom: 12 }} wrap>
+          <Select
+            placeholder="音乐模型"
+            value={musicModelCode}
+            onChange={setMusicModelCode}
+            style={{ width: 220 }}
+            options={musicModels.map((m) => ({ value: m.model_code, label: modelLabel(m) }))}
+          />
+          <Input value={musicPrompt} onChange={(e) => setMusicPrompt(e.target.value)} style={{ width: 360 }} />
+          <Button onClick={async () => {
+            const { data } = await featuresApi.filmBgmGenerate({
               work_id: work.work_id,
               episode_id: episodeId,
-              compose_setting: { bgm_asset_id: assetId || '' },
+              model_code: musicModelCode,
+              prompt: musicPrompt,
+              is_instrumental: 1,
             })
-            message.success('背景音乐已选择')
-            await load()
-          }}
-        />
-        {(() => {
-          const candidates = film?.bgm_candidate_list || []
-          const selectedBgm = candidates.find((item) => item.asset_id === film?.bgm_asset_id)
-          const previewBgm = selectedBgm || candidates[0]
-          if (!previewBgm?.file_url) return null
-          return (
-            <Space size="small">
-              <audio
-                controls
-                preload="metadata"
-                src={previewBgm.file_url}
-                style={{ height: 32, verticalAlign: 'middle' }}
-              />
-              {!selectedBgm ? (
-                <Button size="small" onClick={async () => {
-                  await featuresApi.filmSettingsSave({
-                    work_id: work.work_id,
-                    episode_id: episodeId,
-                    compose_setting: { bgm_asset_id: previewBgm.asset_id },
-                  })
-                  message.success('背景音乐已选用')
-                  await load()
-                }}>选用最新候选</Button>
-              ) : null}
-            </Space>
-          )
-        })()}
-      </Space>
-      <Space wrap>
-        <Button onClick={load}>刷新</Button>
-        <Button onClick={async () => {
-          const { data } = await productionApi.composeEstimate(episodeId)
-          if (data?.success) setComposeCost(data.result)
-        }}>估合成费用</Button>
-        <Button type="primary" loading={composing} disabled={composing || !statusSettled || !precheck?.ready} onClick={async () => {
-          setComposing(true)
-          try {
-            const { data: estRes } = await productionApi.composeEstimate(episodeId)
-            if (!estRes?.success) {
-              if (estRes?.message) message.warning(estRes.message)
-              return
-            }
-            setComposeCost(estRes.result)
-            const ok = await confirmEstimate(estRes.result, '确认合成费用')
-            if (!ok) return
-            const { data } = await productionApi.composeFilm(episodeId)
             if (data?.success) {
-              message.success('合成任务已提交')
-              const done = await waitTask(work.work_id, data.result.task_id)
-              reportTaskOutcome(done, '本集成片已合成完毕')
+              message.success('背景音乐任务已提交')
+              await waitTask(work.work_id, data.result.task_id)
               await load()
-              await onReload()
-            } else if (data?.message) {
-              message.warning(data.message)
             }
-          } finally {
-            setComposing(false)
-          }
-        }}>合成整集成片</Button>
-        {(() => {
-          const review = reviewActionState({
-            reviewStatus: work?.episode_list?.find((ep) => ep.episode_id === episodeId)?.review_status,
-            composeReady: film?.compose_status === 'READY' || precheck?.ready === true,
-          })
-          return (
-            <>
+          }}>生成背景音乐</Button>
+          <Select
+            allowClear
+            placeholder="选择背景音乐"
+            value={film?.bgm_asset_id}
+            style={{ width: 260 }}
+            options={(film?.bgm_candidate_list || []).map((item, index) => ({
+              value: item.asset_id,
+              label: `候选 ${index + 1} / ${item.duration_sec || '-'}秒`,
+            }))}
+            onChange={async (assetId) => {
+              await featuresApi.filmSettingsSave({
+                work_id: work.work_id,
+                episode_id: episodeId,
+                compose_setting: { bgm_asset_id: assetId || '' },
+              })
+              message.success('背景音乐已选择')
+              await load()
+            }}
+          />
+          {(() => {
+            const candidates = film?.bgm_candidate_list || []
+            const selectedBgm = candidates.find((item) => item.asset_id === film?.bgm_asset_id)
+            const previewBgm = selectedBgm || candidates[0]
+            if (!previewBgm?.file_url) return null
+            return (
+              <Space size="small">
+                <audio
+                  controls
+                  preload="metadata"
+                  src={previewBgm.file_url}
+                  style={{ height: 32, verticalAlign: 'middle' }}
+                />
+                {!selectedBgm ? (
+                  <Button size="small" onClick={async () => {
+                    await featuresApi.filmSettingsSave({
+                      work_id: work.work_id,
+                      episode_id: episodeId,
+                      compose_setting: { bgm_asset_id: previewBgm.asset_id },
+                    })
+                    message.success('背景音乐已选用')
+                    await load()
+                  }}>选用最新候选</Button>
+                ) : null}
+              </Space>
+            )
+          })()}
+        </Space>
+        <Space wrap>
+          <Button onClick={load}>刷新</Button>
+          <Button onClick={async () => {
+            const { data } = await productionApi.composeEstimate(episodeId)
+            if (data?.success) setComposeCost(data.result)
+          }}>估合成费用</Button>
+          <Button type="primary" loading={composing} disabled={composing || !statusSettled || !precheck?.ready} onClick={async () => {
+            setComposing(true)
+            try {
+              const { data: estRes } = await productionApi.composeEstimate(episodeId)
+              if (!estRes?.success) {
+                if (estRes?.message) message.warning(estRes.message)
+                return
+              }
+              setComposeCost(estRes.result)
+              const ok = await confirmEstimate(estRes.result, '确认合成费用')
+              if (!ok) return
+              const { data } = await productionApi.composeFilm(episodeId)
+              if (data?.success) {
+                message.success('合成任务已提交')
+                const done = await waitTask(work.work_id, data.result.task_id)
+                reportTaskOutcome(done, '本集成片已合成完毕')
+                await load()
+                await onReload()
+              } else if (data?.message) {
+                message.warning(data.message)
+              }
+            } finally {
+              setComposing(false)
+            }
+          }}>合成整集成片</Button>
+          {surface.showFilm && film?.download_url ? (
+            <Button href={film.download_url} target="_blank" rel="noreferrer">下载成片</Button>
+          ) : null}
+        </Space>
+        {statusSettled && !film?.download_url ? (
+          <Paragraph style={{ marginTop: 12 }}>
+            这一集现在没有可以预览或下载的成片。
+          </Paragraph>
+        ) : null}
+        {surface.showFilm && film?.download_url ? (
+          <div style={{ marginTop: 12 }}>
+            <Paragraph>
+              成片预览{' '}
+              <a href={film.download_url} target="_blank" rel="noreferrer">下载</a>
+            </Paragraph>
+            <video
+              key={film.film_asset_id || film.download_url}
+              src={film.download_url}
+              controls
+              playsInline
+              style={portraitFilmPlayerStyle()}
+            />
+          </div>
+        ) : null}
+        {film?.baseline_note ? (
+          <Alert
+            type={film.consistent_flag === 1 ? 'success' : 'warning'}
+            showIcon
+            style={{ marginTop: 12 }}
+            message={film.consistent_flag === 1 ? '成片与锁定版本一致' : '成片不能标成与现行时间轴一致'}
+            description={film.baseline_note}
+          />
+        ) : null}
+      </Card>
+      <Card title="上架发布到 Tube" style={{ marginTop: 12 }}>
+        <Space wrap>
+          {(() => {
+            const review = reviewActionState({
+              reviewStatus: work?.episode_list?.find((ep) => ep.episode_id === episodeId)?.review_status,
+              composeReady: film?.compose_status === 'READY' || precheck?.ready === true,
+            })
+            if (review.mode === 'withdraw') {
+              return (
+                <Button onClick={async () => {
+                  await productionApi.withdrawReview(episodeId)
+                  message.success('已撤回上架申请')
+                  await load()
+                  await onReload()
+                }}>撤回上架申请</Button>
+              )
+            }
+            return (
               <Tooltip title={review.submit ? '' : review.submitReason}>
                 <span>
                   <Button disabled={!review.submit} onClick={async () => {
                     const { data } = await productionApi.submitReview(episodeId)
                     if (data?.success) {
-                      message.success('已提交审核')
+                      message.success('已提交上架申请')
+                      await load()
                       await onReload()
                     }
-                  }}>提交审核</Button>
+                  }}>申请上架 Tube</Button>
                 </span>
               </Tooltip>
-              <Tooltip title={review.withdraw ? '' : review.withdrawReason}>
-                <span>
-                  <Button disabled={!review.withdraw} onClick={async () => {
-                    await productionApi.withdrawReview(episodeId)
-                    message.success('已撤回')
-                    await onReload()
-                  }}>撤回审核</Button>
-                </span>
-              </Tooltip>
-            </>
-          )
-        })()}
-        <Button
-          type="primary"
-          loading={publishing}
-          disabled={!canPublish || batchPublishing}
-          onClick={runPublish}
-        >发布到 Tube</Button>
-        <Button
-          loading={batchPublishing}
-          disabled={!statusSettled || batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false
-            || !(mediaPreflight?.batch_ready_count > 0)}
-          onClick={runBatchPublish}
-        >
-          批量发布已就绪集
-          {mediaPreflight?.batch_ready_count != null ? `（${mediaPreflight.batch_ready_count}）` : ''}
-        </Button>
-        <Button onClick={async () => {
-          await load()
-          message.success('已刷新发布状态')
-        }}>刷新发布状态</Button>
-      </Space>
-      {publishHints.length ? (
-        <div style={{ marginTop: 12 }}>
-          {publishHints.map((hint) => (
-            <Paragraph key={hint} style={{ marginBottom: 4 }}>{hint}</Paragraph>
-          ))}
-        </div>
-      ) : null}
-      {batchProgress ? (
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginTop: 12 }}
-          message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 可播放 ${batchProgress.succeeded || 0} / 已受理未就绪 ${batchProgress.pending || 0} / 结果未知 ${batchProgress.unknown || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
-          description={(batchProgress.item_list || []).slice(0, 12).map((it) => (
-            <div key={`${it.episode_id}-${it.film_id}`}>
-              {it.progress_index}/{it.progress_total} {it.episode_id} · {it.status === 'UNKNOWN' ? `结果未知 ${it.media_id || '作品号未回写'}` : it.ok ? (it.status === 'PENDING' ? `已受理未就绪 ${it.media_id || ''}` : `可播放 ${it.media_id || ''}`) : `失败 ${it.error || ''}`}
-            </div>
-          ))}
-        />
-      ) : null}
-      {statusSettled && !film?.download_url ? (
-        <Paragraph style={{ marginTop: 12 }}>
-          这一集现在没有可以预览或下载的成片。
-        </Paragraph>
-      ) : null}
-      {surface.showFilm && film?.download_url ? (
-        <div style={{ marginTop: 12 }}>
-          <Paragraph>
-            成片预览{' '}
-            <a href={film.download_url} target="_blank" rel="noreferrer">下载</a>
-          </Paragraph>
-          <video
-            key={film.film_asset_id || film.download_url}
-            src={film.download_url}
-            controls
-            playsInline
-            style={portraitFilmPlayerStyle()}
+            )
+          })()}
+          <Button
+            type="primary"
+            loading={publishing}
+            disabled={!canPublish || batchPublishing}
+            onClick={runPublish}
+          >发布到 Tube</Button>
+          <Button
+            loading={batchPublishing}
+            disabled={!statusSettled || batchPublishing || publishing || !!tokenMissing || mediaPreflight?.config_ready === false
+              || !(mediaPreflight?.batch_ready_count > 0)}
+            onClick={runBatchPublish}
+          >
+            批量发布已就绪集
+            {mediaPreflight?.batch_ready_count != null ? `（${mediaPreflight.batch_ready_count}）` : ''}
+          </Button>
+          <Button onClick={async () => {
+            await load()
+            message.success('已刷新发布状态')
+          }}>刷新发布状态</Button>
+        </Space>
+        {publishHints.length ? (
+          <div style={{ marginTop: 12 }}>
+            {publishHints.map((hint) => (
+              <Paragraph key={hint} style={{ marginBottom: 4 }}>{formatTubePublishHint(hint)}</Paragraph>
+            ))}
+          </div>
+        ) : null}
+        {batchProgress ? (
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginTop: 12 }}
+            message={`批量发布进度 ${batchProgress.progress_percent ?? 0}% · 可播放 ${batchProgress.succeeded || 0} / 已受理未就绪 ${batchProgress.pending || 0} / 结果未知 ${batchProgress.unknown || 0} / 失败 ${batchProgress.failed || 0} / 共 ${batchProgress.total || 0}`}
+            description={(batchProgress.item_list || []).slice(0, 12).map((it) => (
+              <div key={`${it.episode_id}-${it.film_id}`}>
+                {it.progress_index}/{it.progress_total} {it.episode_id} · {it.status === 'UNKNOWN' ? `结果未知 ${it.media_id || '作品号未回写'}` : it.ok ? (it.status === 'PENDING' ? `已受理未就绪 ${it.media_id || ''}` : `可播放 ${it.media_id || ''}`) : `失败 ${it.error || ''}`}
+              </div>
+            ))}
           />
-        </div>
-      ) : null}
-      {film?.baseline_note ? (
-        <Alert
-          type={film.consistent_flag === 1 ? 'success' : 'warning'}
-          showIcon
-          style={{ marginTop: 12 }}
-          message={film.consistent_flag === 1 ? '成片与锁定版本一致' : '成片不能标成与现行时间轴一致'}
-          description={film.baseline_note}
-        />
-      ) : null}
-      {publishError ? (
-        <Alert
-          type="error"
-          showIcon
-          closable
-          onClose={() => setPublishError(null)}
-          style={{ marginTop: 12 }}
-          message={publishError.title}
-          description={publishError.detail}
-        />
-      ) : null}
-      {publishLog ? (
-        <Alert
-          type={publishStatusAlertType(publishLog.status)}
-          showIcon
-          style={{ marginTop: 12 }}
-          message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无作品号'}`}
-          description={(
-            <div>
-              {publishLog.play_url ? (
-                <Paragraph style={{ marginBottom: 4 }}>
-                  播放链接{' '}
-                  <a href={publishLog.play_url} target="_blank" rel="noreferrer">{publishLog.play_url}</a>
-                  {' '}
-                  <Button
-                    size="small"
-                    type="link"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(publishLog.play_url)
-                        message.success('已复制')
-                      } catch {
-                        message.warning('复制失败，请手动选择')
-                      }
-                    }}
-                  >复制</Button>
-                </Paragraph>
-              ) : null}
-              {publishLog.published_at ? (
-                <Paragraph type="secondary" style={{ marginBottom: 4 }}>
-                  发布时间 {String(publishLog.published_at)}
-                  {publishLog.http_status != null ? ` · HTTP ${publishLog.http_status}` : ''}
-                  {publishLog.attempts != null ? ` · 尝试 ${publishLog.attempts} 次` : ''}
-                  {publishLog.idempotency_key ? ` · ${publishLog.idempotency_key}` : ''}
-                  {publishLog.replayed ? ' · 幂等回放' : ''}
-                </Paragraph>
-              ) : null}
-              {publishLog.last_error ? (
-                <Paragraph type="danger" style={{ marginBottom: 0 }}>{publishLog.last_error}</Paragraph>
-              ) : null}
-            </div>
-          )}
-        />
-      ) : null}
-    </Card>
+        ) : null}
+        {publishError ? (
+          <Alert
+            type="error"
+            showIcon
+            closable
+            onClose={() => setPublishError(null)}
+            style={{ marginTop: 12 }}
+            message={publishError.title}
+            description={publishError.detail}
+          />
+        ) : null}
+        {publishLog ? (
+          <Alert
+            type={publishStatusAlertType(publishLog.status)}
+            showIcon
+            style={{ marginTop: 12 }}
+            message={`最近一次发布 · ${publishLog.status || '-'} · ${publishLog.media_id || '无作品号'}`}
+            description={(
+              <div>
+                {publishLog.play_url ? (
+                  <Paragraph style={{ marginBottom: 4 }}>
+                    播放链接{' '}
+                    <a href={publishLog.play_url} target="_blank" rel="noreferrer">{publishLog.play_url}</a>
+                    {' '}
+                    <Button
+                      size="small"
+                      type="link"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(publishLog.play_url)
+                          message.success('已复制')
+                        } catch {
+                          message.warning('复制失败，请手动选择')
+                        }
+                      }}
+                    >复制</Button>
+                  </Paragraph>
+                ) : null}
+                {publishLog.published_at ? (
+                  <Paragraph type="secondary" style={{ marginBottom: 4 }}>
+                    发布时间 {String(publishLog.published_at)}
+                    {publishLog.http_status != null ? ` · HTTP ${publishLog.http_status}` : ''}
+                    {publishLog.attempts != null ? ` · 尝试 ${publishLog.attempts} 次` : ''}
+                    {publishLog.idempotency_key ? ` · ${publishLog.idempotency_key}` : ''}
+                    {publishLog.replayed ? ' · 幂等回放' : ''}
+                  </Paragraph>
+                ) : null}
+                {publishLog.last_error ? (
+                  <Paragraph type="danger" style={{ marginBottom: 0 }}>{publishLog.last_error}</Paragraph>
+                ) : null}
+              </div>
+            )}
+          />
+        ) : null}
+      </Card>
+    </>
   )
 }
 

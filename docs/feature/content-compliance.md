@@ -26,6 +26,9 @@
      命中位置（`scene_no` / `line_no` / `shot_no`）、命中片段与改写建议。
   3. `BLOCK` 镜头的 `blocked_flag=1`，生成提交接口直接拒绝（`4006`）；修改后重新预检自动解除。
   4. **提交审核**：以**剧集**为单位提交（成片 `compose_status=READY` 且未过期）；
+     用户端成片页在「上架发布到 Tube」卡片内以单按钮承载该动作（非 `PENDING` 显示「申请上架 Tube」，
+     `PENDING` 切换为「撤回上架申请」，底层仍调用 `POST /bgssai/user/reviews/submit` 与 `/withdraw`；
+     本地成片预览与下载位于「合成与下载」卡片，不受审核状态限制）。
      提交后 `review_status=PENDING`，用户不可再改该集素材（编辑入口置只读），撤回后恢复可编辑。
      排队期间用户可见**排队位次**（`queue_position`）与**预计审核时长**（`estimated_review_hours`，
      按队列长度与近期处理速率估算），不让创作者盲等。
