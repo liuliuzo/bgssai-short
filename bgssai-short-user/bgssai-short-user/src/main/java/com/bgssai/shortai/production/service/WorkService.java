@@ -106,7 +106,10 @@ public class WorkService {
         if (count < 1 || count > 80) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "episode_count out of range");
         }
-        quotaConsumeService.assertAffordable(userId, outlineEstimateCent());
+        int estimate = outlineEstimateCent();
+        if (estimate > 0) {
+            quotaConsumeService.assertAffordable(userId, estimate);
+        }
         Date now = new Date();
         ShortWork work = new ShortWork();
         work.setWorkId(ShortIds.id("w-"));
@@ -157,6 +160,9 @@ public class WorkService {
     /** Same snapshot the outline task will settle, so a shortfall fails create before enqueue. */
     private int outlineEstimateCent() {
         AiModelConfig model = aiModelResolveService.resolve("TEXT", null);
+        if (com.bgssai.shortai.useraimodel.service.UserAiModelSupport.isUserKeyModel(model)) {
+            return 0;
+        }
         int priced = aiModelResolveService.costCent(model, 1);
         return priced > 0 ? priced : TaskPrices.cost("TEXT");
     }

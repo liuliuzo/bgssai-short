@@ -1054,9 +1054,13 @@ public class LookKnowledgeService {
         String modelCode = req.getModelCode() == null ? null : req.getModelCode().trim();
         aiTaskQueue.ensurePipeline("IMAGE", modelCode);
         AiModelConfig model = aiModelResolveService.resolve("IMAGE", modelCode);
+        boolean userKeyModel = com.bgssai.shortai.useraimodel.service.UserAiModelSupport.isUserKeyModel(model);
         int usage = angles.size();
-        int priced = aiModelResolveService.costCent(model, usage);
-        int cost = priced > 0 ? priced : TaskPrices.cost("IMAGE") * usage;
+        int cost = 0;
+        if (!userKeyModel) {
+            int priced = aiModelResolveService.costCent(model, usage);
+            cost = priced > 0 ? priced : TaskPrices.cost("IMAGE") * usage;
+        }
         boolean hasRef = target.storageKey() != null && !target.storageKey().isBlank();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("library_id", target.libraryId());
@@ -1074,7 +1078,7 @@ public class LookKnowledgeService {
             result.put("confirmed", 0);
             return Responses.ok(result);
         }
-        if (quotaConsumeService != null) {
+        if (quotaConsumeService != null && cost > 0) {
             quotaConsumeService.assertAffordable(userId, cost);
         }
         Map<String, Object> request = new LinkedHashMap<>();

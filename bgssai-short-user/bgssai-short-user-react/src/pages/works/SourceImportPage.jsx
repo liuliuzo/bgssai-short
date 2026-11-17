@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Card, Checkbox, Input, InputNumber, Select, Space, Table, Tag, Typography, message } from 'antd'
 import featuresApi from '../../api/features'
+import productionApi from '../../api/production'
+import { modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { canMergeChapterWithNext, mergeChapterWithNext, updateChapterTitle } from './sourceChapters'
 
 const { Paragraph, Text } = Typography
@@ -26,6 +28,8 @@ export default function SourceImportPage({ work }) {
   const [estimate, setEstimate] = useState(null)
   const [adapting, setAdapting] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [textModels, setTextModels] = useState([])
+  const [textModelCode, setTextModelCode] = useState()
   const [fileLabel, setFileLabel] = useState('暂未选择本地文件')
   const fileRef = useRef(null)
 
@@ -62,8 +66,18 @@ export default function SourceImportPage({ work }) {
 
   useEffect(() => { loadSources() }, [loadSources])
   useEffect(() => { loadChapters() }, [loadChapters])
+  useEffect(() => {
+    let active = true
+    productionApi.listAiModels('TEXT').then(({ data }) => {
+      if (!active) return
+      const list = data?.result?.model_list || []
+      setTextModels(list)
+      setTextModelCode((cur) => cur || list.find((m) => m.default_flag === 1)?.model_code || list[0]?.model_code)
+    }).catch(() => {})
+    return () => { active = false }
+  }, [])
   // An estimate only prices the range it was computed for; any change voids it.
-  useEffect(() => { setEstimate(null) }, [activeSourceId, chapterFrom, chapterTo, targetCount])
+  useEffect(() => { setEstimate(null) }, [activeSourceId, chapterFrom, chapterTo, targetCount, textModelCode])
 
   const doImport = async () => {
     if (!rightsConfirm) {
@@ -129,6 +143,7 @@ export default function SourceImportPage({ work }) {
       chapter_no_from: chapterFrom,
       chapter_no_to: chapterTo,
       target_episode_count: targetCount,
+      model_code: textModelCode,
     })
     if (data?.success) setEstimate(data.result)
   }
@@ -142,6 +157,7 @@ export default function SourceImportPage({ work }) {
         chapter_no_from: chapterFrom,
         chapter_no_to: chapterTo,
         target_episode_count: targetCount,
+        model_code: textModelCode,
       })
       if (data?.success) {
         message.success('改编任务已提交')
@@ -300,6 +316,17 @@ export default function SourceImportPage({ work }) {
               <InputNumber min={1} value={chapterTo} onChange={setChapterTo} />
               <span>改成几集</span>
               <InputNumber min={1} max={200} value={targetCount} onChange={setTargetCount} />
+              <Select
+                style={{ minWidth: 180 }}
+                placeholder="文本模型"
+                value={textModelCode}
+                onChange={setTextModelCode}
+                options={textModels.map((m) => ({
+                  value: m.model_code,
+                  label: modelPricingCompactLabel(m),
+                  title: modelPricingLabel(m),
+                }))}
+              />
               <Button onClick={runEstimate}>算一下费用</Button>
             </Space>
             {estimate ? (

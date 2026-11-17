@@ -112,20 +112,29 @@ function confirmOfficialVideo(preview, { regenerate } = {}) {
   const shots = (preview && preview.shot_list) || []
   const lines = shots.filter((shot) => Number(shot.blocked) !== 1)
   const blocked = shots.filter((shot) => Number(shot.blocked) === 1)
+  const zeroCost = Number(preview?.estimated_cost_cent || 0) === 0
   return new Promise((resolve) => {
     Modal.confirm({
       title: regenerate ? '重新生成这一镜视频' : '确认生成视频',
       content: (
         <div>
           <p>
-            {regenerate
-              ? '将开始一次新的生成，并按这一次计费。不会接着上次未完成的回执继续。当前成片会保留，直到新视频成功后才替换。'
-              : '确认后开始一次新的生成，并按这一次计费。'}
+            {zeroCost
+              ? (regenerate
+                ? '将使用自有密钥重新生成。当前成片会保留，直到新视频成功后才替换。'
+                : '确认后将使用自有密钥生成视频，不扣减平台额度。')
+              : (regenerate
+                ? '将开始一次新的生成，并按这一次计费。不会接着上次未完成的回执继续。当前成片会保留，直到新视频成功后才替换。'
+                : '确认后开始一次新的生成，并按这一次计费。')}
           </p>
           {lines.map((shot) => (
             <p key={shot.shot_id}>镜{shot.shot_no}：{shot.route_name}。{shot.size_note}</p>
           ))}
-          <p>预计费用 {formatYuan(preview.estimated_cost_cent)} 元，余额可用 {formatYuan(preview.available_cent)} 元。</p>
+          <p>
+            {zeroCost
+              ? '自有密钥调用（不扣减平台额度）。'
+              : `预计费用 ${formatYuan(preview.estimated_cost_cent)} 元，余额可用 ${formatYuan(preview.available_cent)} 元。`}
+          </p>
           {blocked.map((shot) => (
             <p key={`blocked-${shot.shot_id}`}>镜{shot.shot_no}：{shot.block_reason}</p>
           ))}
@@ -1620,7 +1629,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, onReload, onFlowChang
 
   const runOfficial = async (shotIds, { regenerate = false } = {}) => {
     setActionError(null)
-    const body = { episode_id: episodeId, shot_ids: shotIds }
+    const body = { episode_id: episodeId, shot_ids: shotIds, model_code: videoModelCode }
     const outcome = await runOfficialShotVideo({
       regenerate,
       preview: async () => (await productionApi.previewOfficialVideo(body)).data,

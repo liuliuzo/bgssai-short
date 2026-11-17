@@ -15,6 +15,7 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 @Component
 public class AiProviderRegistry {
@@ -65,6 +66,13 @@ public class AiProviderRegistry {
         String code = model.getProviderCode().trim();
         Map<String, Object> cfg = ShortJson.map(model.getConfigJson());
         AiProvider direct = byCode.get(code);
+
+        if (UserAiModelSupport.isUserKeyModel(model)) {
+            if (direct != null) {
+                return direct;
+            }
+            throw new BizException(CommonErrorCode.RULE_REJECT, "unknown user provider_code: " + code);
+        }
 
         if (direct != null && FfmpegComposeProvider.CODE.equals(direct.providerCode())) {
             return direct;

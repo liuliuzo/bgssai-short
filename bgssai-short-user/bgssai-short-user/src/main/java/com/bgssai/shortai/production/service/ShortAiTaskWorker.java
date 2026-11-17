@@ -85,6 +85,7 @@ import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.storage.ObjectStorage;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 @Component
 public class ShortAiTaskWorker {
@@ -398,9 +399,11 @@ public class ShortAiTaskWorker {
                 return;
             }
             AiModelConfig model = aiModelResolveService.resolve(task.getTaskType(), task.getModelCode());
-            if (quotaConsumeService != null) {
+            if (quotaConsumeService != null && !UserAiModelSupport.isUserKeyModel(model)) {
                 int cost = task.getCostCent() == null ? 0 : task.getCostCent();
-                quotaConsumeService.assertAffordable(task.getUserId(), cost);
+                if (cost > 0) {
+                    quotaConsumeService.assertAffordable(task.getUserId(), cost);
+                }
             }
             complete(task, model);
             boolean settled = settlement.settle(task, model, Math.max(1, executionUsage.get()));
@@ -776,7 +779,9 @@ public class ShortAiTaskWorker {
         String inputUrl = objectStorage.presignGet(asset.getStorageKey(), 3600).downloadUrl();
         AiProviderRequest request = baseRequest(model, "ASR", "SUBTITLE_TRANSCRIBE");
         request.getParams().put("input_url", inputUrl);
-        if (com.bgssai.shortai.aiprovider.OpenAiCompatibleAiProvider.CODE.equalsIgnoreCase(model.getProviderCode())) {
+        if (com.bgssai.shortai.aiprovider.OpenAiCompatibleAiProvider.CODE.equalsIgnoreCase(model.getProviderCode())
+                || com.bgssai.shortai.aiprovider.XaiGrokAiProvider.CODE.equalsIgnoreCase(model.getProviderCode())
+                || UserAiModelSupport.isUserKeyModel(model)) {
             byte[] audioBytes = objectStorage.get(asset.getStorageKey());
             if (audioBytes != null && audioBytes.length > 0) {
                 request.getParams().put("audio_bytes", audioBytes);
@@ -1955,7 +1960,7 @@ public class ShortAiTaskWorker {
         if (!frameLinkService.supportsLastFrame(model)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "所选视频模型不支持首尾帧（"
-                            + com.bgssai.shortai.aimodel.ProductModelAlias.forStored("VIDEO", model.getModelCode()).name()
+                            + UserAiModelSupport.displayNameOf(model)
                             + "），请换模型或改用「接上一镜」");
         }
         attachFrameAsset(shot.getLastFrameAssetId(), request,

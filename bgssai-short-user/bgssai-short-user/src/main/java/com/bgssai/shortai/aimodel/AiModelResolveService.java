@@ -23,8 +23,11 @@ import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.AiModelConfigMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.AiModelConfigExample;
+import com.bgssai.shortai.model.UserAiModelKey;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 @Service
 public class AiModelResolveService {
@@ -38,12 +41,25 @@ public class AiModelResolveService {
     /** Null in unit tests keeps the hub path. The running app always has this bean. */
     @Autowired(required = false)
     private SysSecretReader secrets;
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     public AiModelConfig resolve(String abilityType, String modelCode) {
         if (abilityType == null || abilityType.isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "ability_type required");
         }
         String ability = abilityType.trim();
+        if (!"COMPOSE".equalsIgnoreCase(ability) && userAiModelKeyService != null) {
+            String userId = userAiModelKeyService.currentUserOrScopeUserId();
+            if (userId != null && !userId.isBlank()) {
+                AiModelConfig userModel = userAiModelKeyService.resolveUserModel(userId, ability, modelCode);
+                if (userModel != null) {
+                    return userModel;
+                }
+            } else if (UserAiModelSupport.isUserKeyCode(modelCode)) {
+                throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "请先登录后使用自有模型密钥");
+            }
+        }
         if ("VIDEO".equals(ability) && ProductModelAlias.isCanonical(ability, modelCode)) {
             AiModelConfig company = companyVideo(enabledForAbility(ability));
             if (company == null) {
@@ -502,6 +518,39 @@ public class AiModelResolveService {
      * User catalog: one BGSSAI alias per product model. No provider, gateway id, or vendor name.
      */
     public ApiResponse listEnabled(String abilityType) {
+        String userId = userAiModelKeyService == null ? null : userAiModelKeyService.currentUserOrScopeUserId();
+        boolean onlyUserKey = userAiModelKeyService != null && userId != null && userAiModelKeyService.isOnlyUserKeyMode(userId);
+        List<Map<String, Object>> list = new ArrayList<>();
+        if (userAiModelKeyService != null && userId != null && !userId.isBlank()) {
+            List<UserAiModelKey> userKeys = userAiModelKeyService.listEnabledRows(userId, abilityType);
+            for (UserAiModelKey keyRow : userKeys) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("model_id", keyRow.getKeyId());
+                item.put("ability_type", keyRow.getAbilityType());
+                item.put("model_code", keyRow.getKeyId());
+                item.put("upstream_model_code", keyRow.getModelCode());
+                item.put("display_name", keyRow.getModelName());
+                item.put("model_name", keyRow.getModelName());
+                item.put("provider_code", keyRow.getProviderCode());
+                item.put("provider_name", UserAiModelSupport.providerName(keyRow.getProviderCode()));
+                item.put("quality_level", "STANDARD");
+                item.put("price_unit", "PER_CALL");
+                item.put("unit_price_cent", 0);
+                item.put("default_flag", Integer.valueOf(1).equals(keyRow.getDefaultModel()) ? 1 : 0);
+                item.put("credential_source", UserAiModelSupport.CREDENTIAL_SOURCE_USER);
+                item.put("user_key_flag", 1);
+                item.put("billing_multiplier", null);
+                item.put("pricing_status", "USER_KEY_FREE");
+                item.put("currency", "CNY");
+                list.add(item);
+            }
+        }
+        if (onlyUserKey) {
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("model_list", list);
+            result.put("only_user_key", 1);
+            return Responses.ok(result);
+        }
         AiModelConfigExample ex = new AiModelConfigExample();
         AiModelConfigExample.Criteria c = ex.createCriteria().andEnabledFlagEqualTo(1).andDeletedFlagEqualTo(0);
         if (abilityType != null && !abilityType.isBlank()) {
@@ -538,7 +587,6 @@ public class AiModelResolveService {
                 faces.put(face.code(), face);
             }
         }
-        List<Map<String, Object>> list = new ArrayList<>();
         for (java.util.Map.Entry<String, AiModelConfig> entry : chosen.entrySet()) {
             AiModelConfig row = entry.getValue();
             ProductModelAlias.Face face = faces.get(entry.getKey());
@@ -554,6 +602,8 @@ public class AiModelResolveService {
             item.put("price_unit", row.getPriceUnit());
             item.put("unit_price_cent", row.getUnitPriceCent());
             item.put("default_flag", row.getDefaultFlag());
+            item.put("credential_source", "PLATFORM");
+            item.put("user_key_flag", 0);
             item.put("region", region);
             item.put("region_label", ModelUsageMeta.regionLabel(region));
             item.put("commercial_price_unit", item.get("price_unit"));
@@ -565,6 +615,7 @@ public class AiModelResolveService {
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("model_list", list);
+        result.put("only_user_key", 0);
         return Responses.ok(result);
     }
 }

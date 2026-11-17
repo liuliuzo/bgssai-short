@@ -44,6 +44,8 @@ import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 /**
  * Official shot video. A real PNG or JPEG (first frame, or a locked look / scene / prop)
@@ -79,23 +81,35 @@ public class OfficialShotVideoService {
     private PaidOrderGrantService paidOrderGrantService;
     @Autowired
     private WorkAccessService workAccessService;
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     public ApiResponse preview(AiTaskReq req) {
         String userId = workAccessService.requireUser();
-        paidOrderGrantService.ensureFreeTier(userId);
-        List<Plan> plans = planAll(req);
+        boolean userKeyMode = isUserKeyVideoActive(userId, req);
+        AiModelConfig userVideoModel = userKeyMode
+                ? aiModelResolveService.resolve("VIDEO", req == null ? null : req.getModelCode()) : null;
+        if (!userKeyMode) {
+            paidOrderGrantService.ensureFreeTier(userId);
+        }
+        List<Plan> plans = planAll(req, userVideoModel);
         int cost = 0;
         for (Plan plan : plans) {
             if (!plan.blocked) {
                 cost += plan.costCent;
             }
         }
-        quotaConsumeService.assertAffordable(userId, cost);
-        Map<String, Object> result = wallet(userId);
+        if (!userKeyMode) {
+            quotaConsumeService.assertAffordable(userId, cost);
+        }
+        Map<String, Object> result = userKeyMode ? emptyOrWallet(userId) : wallet(userId);
         result.put("task_count", plans.size());
         result.put("estimated_cost_cent", cost);
         result.put("shot_list", views(plans));
         result.put("resumed_existing_video", false);
+        if (userVideoModel != null) {
+            UserAiModelSupport.presentModel(result, "VIDEO", userVideoModel);
+        }
         return Responses.ok(result);
     }
 
@@ -105,8 +119,13 @@ public class OfficialShotVideoService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, OfficialVideoCopy.CONFIRM);
         }
         String userId = workAccessService.requireUser();
-        paidOrderGrantService.ensureFreeTier(userId);
-        List<Plan> plans = planAll(req);
+        boolean userKeyMode = isUserKeyVideoActive(userId, req);
+        AiModelConfig userVideoModel = userKeyMode
+                ? aiModelResolveService.resolve("VIDEO", req.getModelCode()) : null;
+        if (!userKeyMode) {
+            paidOrderGrantService.ensureFreeTier(userId);
+        }
+        List<Plan> plans = planAll(req, userVideoModel);
         List<Plan> runnable = new ArrayList<>();
         int cost = 0;
         for (Plan plan : plans) {
@@ -119,13 +138,15 @@ public class OfficialShotVideoService {
             throw new BizException(CommonErrorCode.RULE_REJECT, plans.isEmpty()
                     ? "没有可生成的镜头" : plans.get(0).blockReason);
         }
-        quotaConsumeService.assertAffordable(userId, cost);
+        if (!userKeyMode) {
+            quotaConsumeService.assertAffordable(userId, cost);
+        }
         String batchId = ShortIds.id("b-");
         List<String> ids = new ArrayList<>();
         List<Map<String, Object>> routes = new ArrayList<>();
         for (Plan plan : runnable) {
             scan(plan.shot);
-            ShortAiTask task = enqueue(plan, batchId);
+            ShortAiTask task = enqueue(plan, batchId, userVideoModel);
             ids.add(task.getTaskId());
             markGenerating(plan.shot);
             Map<String, Object> route = view(plan);
@@ -142,7 +163,15 @@ public class OfficialShotVideoService {
         return Responses.ok(result);
     }
 
-    private ShortAiTask enqueue(Plan plan, String batchId) {
+    private ShortAiTask enqueue(Plan plan, String batchId, AiModelConfig userVideoModel) {
+        if (userVideoModel != null) {
+            Map<String, Object> request = new LinkedHashMap<>();
+            request.put("shot_id", plan.shot.getShotId());
+            request.put("duration_sec", plan.shot.getShotDurationSec() == null ? 5 : plan.shot.getShotDurationSec());
+            request.put("model_code", userVideoModel.getModelId());
+            return aiTaskQueue.enqueue(plan.shot.getUserId(), plan.shot.getWorkId(), plan.shot.getEpisodeId(),
+                    "VIDEO", "SHOT", plan.shot.getShotId(), request, batchId, 0, userVideoModel.getModelId());
+        }
         if (OfficialVideoCopy.ROUTE_I2V.equals(plan.route)) {
             return imageToVideoService.enqueueForShot(plan.shot, plan.assetId, plan.prompt, plan.costCent, batchId);
         }
@@ -163,17 +192,18 @@ public class OfficialShotVideoService {
         shortShotMapper.updateByExampleSelective(patch, up);
     }
 
-    private List<Plan> planAll(AiTaskReq req) {
+    private List<Plan> planAll(AiTaskReq req, AiModelConfig userVideoModel) {
         List<ShortShot> shots = aiTaskService.resolveShots(singleOrMany(req));
-        boolean i2vReady = imageToVideoService != null && imageToVideoService.readyForOfficial();
+        boolean i2vReady = userVideoModel != null
+                || (imageToVideoService != null && imageToVideoService.readyForOfficial());
         List<Plan> plans = new ArrayList<>();
         for (ShortShot shot : shots) {
-            plans.add(plan(shot, i2vReady));
+            plans.add(plan(shot, i2vReady, userVideoModel));
         }
         return plans;
     }
 
-    private Plan plan(ShortShot shot, boolean i2vReady) {
+    private Plan plan(ShortShot shot, boolean i2vReady, AiModelConfig userVideoModel) {
         Plan plan = new Plan();
         plan.shot = shot;
         if ("LOCKED".equals(shot.getShotStatus())) {
@@ -183,6 +213,17 @@ public class OfficialShotVideoService {
             return blocked(plan, OfficialVideoCopy.IN_PROGRESS);
         }
         String assetId = realPhoto(shot);
+        if (userVideoModel != null) {
+            String modelLabel = UserAiModelSupport.displayNameOf(userVideoModel);
+            boolean hasPhoto = assetId != null;
+            plan.route = hasPhoto ? OfficialVideoCopy.ROUTE_I2V : OfficialVideoCopy.ROUTE_T2V;
+            plan.routeName = hasPhoto ? "图生视频" : "文生视频";
+            plan.sizeNote = modelLabel + " · " + plan.routeName;
+            plan.assetId = assetId;
+            plan.prompt = prompt(shot);
+            plan.costCent = 0;
+            return plan;
+        }
         boolean useImage = assetId != null && i2vReady;
         try {
             aiTaskService.assertShotReady(shot, "VIDEO", useImage);
@@ -203,6 +244,26 @@ public class OfficialShotVideoService {
         plan.sizeNote = assetId == null ? OfficialVideoCopy.T2V_NO_PHOTO : OfficialVideoCopy.T2V_UNAVAILABLE;
         plan.costCent = t2vCost(shot);
         return plan;
+    }
+
+    private boolean isUserKeyVideoActive(String userId, AiTaskReq req) {
+        String code = req == null ? null : req.getModelCode();
+        if (UserAiModelSupport.isUserKeyCode(code)) {
+            return true;
+        }
+        return userAiModelKeyService != null && userAiModelKeyService.isOnlyUserKeyMode(userId);
+    }
+
+    private Map<String, Object> emptyOrWallet(String userId) {
+        try {
+            return wallet(userId);
+        } catch (RuntimeException ex) {
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("balance_cent", 0);
+            result.put("extra_balance_cent", 0);
+            result.put("available_cent", 0);
+            return result;
+        }
     }
 
     private static Plan blocked(Plan plan, String reason) {
@@ -380,6 +441,7 @@ public class OfficialShotVideoService {
                 && req.getShotId() != null && !req.getShotId().isBlank()) {
             AiTaskReq copy = new AiTaskReq();
             copy.setEpisodeId(req.getEpisodeId());
+            copy.setModelCode(req.getModelCode());
             copy.setShotIds(List.of(req.getShotId().trim()));
             return copy;
         }

@@ -37,6 +37,7 @@ import com.bgssai.shortai.production.dto.ProductionDtos;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 /**
  * Sync multi-expert drama assist over the existing CN TEXT channel.
@@ -95,11 +96,15 @@ public class DramaAssistService {
 
         pipelineReadiness.assertReady("TEXT", req.getModelCode());
         AiModelConfig model = aiModelResolveService.resolve("TEXT", req.getModelCode());
-        int estimate = aiModelResolveService.costCent(model, 1);
-        if (estimate <= 0) {
-            estimate = TaskPrices.cost("TEXT");
+        boolean userKeyModel = UserAiModelSupport.isUserKeyModel(model);
+        int estimate = 0;
+        if (!userKeyModel) {
+            estimate = aiModelResolveService.costCent(model, 1);
+            if (estimate <= 0) {
+                estimate = TaskPrices.cost("TEXT");
+            }
+            quotaConsumeService.assertAffordable(work.getUserId(), estimate);
         }
-        quotaConsumeService.assertAffordable(work.getUserId(), estimate);
 
         Map<String, Object> context = buildContext(work, episode, shot);
         String prompt = buildPrompt(role, question, context);
@@ -117,11 +122,15 @@ public class DramaAssistService {
             AiProvider provider = aiProviderRegistry.resolve(model);
             result = provider.execute(request);
         } catch (BizException ex) {
+            if (userKeyModel) {
+                throw ex;
+            }
             throw new BizException(ex.getCode(), TokenHubClientSupport.userFacingMessage(ex.getMessage()));
         } catch (Exception ex) {
             log.warn("drama assist model call failed workId={} role={}", work.getWorkId(), role, ex);
             throw new BizException(CommonErrorCode.UPSTREAM_ERROR,
-                    TokenHubClientSupport.userFacingMessage(ex.getMessage()));
+                    userKeyModel ? "模型调用失败，请检查模型密钥配置"
+                            : TokenHubClientSupport.userFacingMessage(ex.getMessage()));
         }
 
         String raw = result == null ? "" : (result.getTextContent() == null ? "" : result.getTextContent().trim());
@@ -130,13 +139,16 @@ public class DramaAssistService {
                     TokenHubClientSupport.userFacingMessage("empty chat content"));
         }
 
-        int usage = result.getUsageAmount() == null ? 1 : Math.max(1, result.getUsageAmount());
-        int cost = aiModelResolveService.costCent(model, usage);
-        if (cost <= 0) {
-            cost = TaskPrices.cost("TEXT") * usage;
+        int cost = 0;
+        if (!userKeyModel) {
+            int usage = result.getUsageAmount() == null ? 1 : Math.max(1, result.getUsageAmount());
+            cost = aiModelResolveService.costCent(model, usage);
+            if (cost <= 0) {
+                cost = TaskPrices.cost("TEXT") * usage;
+            }
+            quotaConsumeService.consume(work.getUserId(), cost,
+                    "drama-assist:" + work.getWorkId() + ":" + System.currentTimeMillis());
         }
-        quotaConsumeService.consume(work.getUserId(), cost,
-                "drama-assist:" + work.getWorkId() + ":" + System.currentTimeMillis());
 
         Map<String, Object> structured = parseStructured(raw, role);
         Map<String, Object> out = new LinkedHashMap<>();
@@ -149,7 +161,7 @@ public class DramaAssistService {
         out.put("apply_text", ShortJson.text(structured.get("apply_text")));
         out.put("context_used", contextSummary(context));
         out.put("cost_cent", cost);
-        ProductModelAlias.hideStoredModel(out, "TEXT", model.getModelCode());
+        UserAiModelSupport.presentModel(out, "TEXT", model);
         return Responses.ok(out);
     }
 

@@ -1463,3 +1463,44 @@ CREATE TABLE `short_look_material` (
   KEY `idx_short_look_material_user` (`user_id`, `material_kind`, `deleted_flag`),
   KEY `idx_short_look_material_card` (`card_id`, `view_angle`, `deleted_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定妆知识库素材';
+
+DROP TABLE IF EXISTS `user_ai_model_key`;
+DROP TABLE IF EXISTS `user_ai_setting`;
+
+CREATE TABLE `user_ai_setting` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '用户标识',
+  `is_only_user_key` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否仅启用自有密钥模型：0-否，1-是',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_ai_setting_uid` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户模型密钥模式设置表';
+
+CREATE TABLE `user_ai_model_key` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `key_id` VARCHAR(64) NOT NULL COMMENT '密钥配置业务标识',
+  `user_id` VARCHAR(64) NOT NULL COMMENT '用户标识',
+  `modality_type` VARCHAR(16) NOT NULL COMMENT '模型大类：TEXT/IMAGE/VIDEO/AUDIO',
+  `ability_type` VARCHAR(16) NOT NULL COMMENT '能力类型：TEXT/IMAGE/VIDEO/VOICE/ASR/MUSIC',
+  `provider_code` VARCHAR(32) NOT NULL COMMENT '供应商编码：XAI',
+  `model_code` VARCHAR(128) NOT NULL COMMENT '上游模型编码',
+  `model_name` VARCHAR(128) NOT NULL COMMENT '展示名称',
+  `base_url` VARCHAR(255) NOT NULL DEFAULT 'https://api.x.ai/v1' COMMENT '上游接口根地址',
+  `api_key` TEXT NOT NULL COMMENT '用户自有API密钥',
+  `is_enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用：0-停用，1-启用',
+  `is_default_model` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否同能力默认：0-否，1-是',
+  `last_check_status` VARCHAR(16) DEFAULT NULL COMMENT '最近连通检测状态：OK/FAILED',
+  `last_check_time` DATETIME DEFAULT NULL COMMENT '最近连通检测时间',
+  `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
+  `creator` VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
+  `modifier` VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',
+  `gmt_create` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_ai_model_key_id` (`key_id`),
+  KEY `idx_user_ai_model_key_user_ability` (`user_id`, `ability_type`, `is_enabled`, `del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户自定义模型密钥表';

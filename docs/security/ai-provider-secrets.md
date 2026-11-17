@@ -64,3 +64,10 @@ Standards §1 写入分环境 properties。
 1. 走境内中枢：`application-dev.properties` 已写 `bgssai.llm.tokenhub-cn-base-url=https://dev.user.bgssai-tokenhub.cn`。管理端把真实密钥写入 `ai.tokenhub_cn.api_key`。开发库 init 会把该键和旧键 `ai.tencent_tokenhub.api_key` 盖回占位符，init 之后要再填一次。不要把真实密钥提交进 git。
 2. 中枢密钥留空、改走公司自托管：管理端填写 `ai.openai_compat.api_key`。直连主机固定 `https://chat.bgssai.com/v1`，模型为 `qwen`、`sd-turbo`、`cogvideox`、`piper`。种子里的音色 `zh`、画面 `512x768` 只是占位，按网关实际值在模型配置里改。中枢密钥非空时这条直连不会生效。
 3. 成片合成仍要部署机安装 ffmpeg。对象存储按 `deploy/README.md` 注入，不在本文件。
+
+## 7. 用户自有模型密钥（`user_ai_model_key` / `user_ai_setting`）
+
+- 用户自行添加的文本/图片/视频/音频模型 API Key 落入 `user_ai_model_key`（按 `user_id` 强隔离，仅本人可读写与调用），全局独占开关落入 `user_ai_setting`。
+- 开发期沿用全局明文入库口径，但列表与详情接口仅返回掩码字段 `api_key_masked`（长度 `<=8` 返回 `****`，否则前 4 后 4 中间 `****`），严禁回显明文。
+- 任务队列仅在 `short_ai_task.model_code` 写入配置标识 `umk-...`，严禁把用户 `api_key` 写入 `short_ai_task.request_json`、`ai_usage_record` 或任何日志与异常文案。
+- 自定义 `base_url` 与上游返回的临时媒体下载地址强制执行公网 `https://` 与 DNS 解析 IP 校验，拒绝环回、私网及链路本地地址（SSRF 防护）。

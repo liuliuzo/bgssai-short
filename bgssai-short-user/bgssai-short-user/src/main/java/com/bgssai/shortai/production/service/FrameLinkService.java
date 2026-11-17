@@ -238,7 +238,7 @@ public class FrameLinkService {
         if (!supportsLastFrame(model)) {
             throw new BizException(CommonErrorCode.RULE_REJECT,
                     "所选视频模型不支持首尾帧（"
-                            + com.bgssai.shortai.aimodel.ProductModelAlias.forStored("VIDEO", model.getModelCode()).name()
+                            + com.bgssai.shortai.useraimodel.service.UserAiModelSupport.displayNameOf(model)
                             + "），请换模型或改用「接上一镜」");
         }
     }

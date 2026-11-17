@@ -48,6 +48,8 @@ import com.bgssai.shortai.production.dto.ProductionDtos.FilmReq;
 import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.production.support.SubtitleSrtBuilder;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 @Service
 public class FilmService {
@@ -76,6 +78,8 @@ public class FilmService {
     private ShortAiTaskMapper shortAiTaskMapper;
     @Autowired
     private AiTaskService aiTaskService;
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
 
     public ApiResponse precheck(String episodeId) {
         ShortEpisode ep = workAccessService.requireEpisode(episodeId);
@@ -440,7 +444,17 @@ public class FilmService {
             task = shortAiTaskMapper.selectOneByExample(tx);
         }
         if (task != null) {
-            ProductModelAlias.hideStoredModel(evidence, task.getTaskType(), task.getModelCode());
+            if (UserAiModelSupport.isUserKeyCode(task.getModelCode())) {
+                String name = userAiModelKeyService == null ? null
+                        : userAiModelKeyService.displayNameOfKeyId(task.getUserId(), task.getModelCode());
+                String display = name == null || name.isBlank() ? task.getModelCode() : name;
+                evidence.put("model_code", task.getModelCode());
+                evidence.put("display_name", display);
+                evidence.put("model_name", display);
+                evidence.put("credential_source", UserAiModelSupport.CREDENTIAL_SOURCE_USER);
+            } else {
+                ProductModelAlias.hideStoredModel(evidence, task.getTaskType(), task.getModelCode());
+            }
             evidence.put("cost_cent", task.getCostCent());
             evidence.put("task_status", task.getTaskStatus());
             evidence.put("task_type", task.getTaskType());

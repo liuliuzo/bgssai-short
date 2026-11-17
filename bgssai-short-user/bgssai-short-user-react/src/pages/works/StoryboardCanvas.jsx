@@ -4,6 +4,7 @@ import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 import { publicModelText } from '../../publicModel'
+import { modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { shotCanvasStatusKey, shotOffersVideoRegenerate } from './shotCardMedia'
 import { runOfficialShotVideo } from './officialVideo'
 import {
@@ -47,8 +48,35 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   const [editing, setEditing] = useState(null)
   const [draft, setDraft] = useState('')
   const [batchTaskType, setBatchTaskType] = useState('IMAGE')
+  const [imageModels, setImageModels] = useState([])
+  const [videoModels, setVideoModels] = useState([])
+  const [voiceModels, setVoiceModels] = useState([])
+  const [imageModelCode, setImageModelCode] = useState()
+  const [videoModelCode, setVideoModelCode] = useState()
+  const [voiceModelCode, setVoiceModelCode] = useState()
   const [submittingSingle, setSubmittingSingle] = useState(false)
   const [submittingBatch, setSubmittingBatch] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    Promise.all([
+      productionApi.listAiModels('IMAGE'),
+      productionApi.listAiModels('VIDEO'),
+      productionApi.listAiModels('VOICE'),
+    ]).then(([imgRes, vidRes, voiceRes]) => {
+      if (!active) return
+      const imgs = imgRes?.data?.result?.model_list || []
+      const vids = vidRes?.data?.result?.model_list || []
+      const voices = voiceRes?.data?.result?.model_list || []
+      setImageModels(imgs)
+      setVideoModels(vids)
+      setVoiceModels(voices)
+      setImageModelCode((cur) => cur || imgs.find((m) => m.default_flag === 1)?.model_code || imgs[0]?.model_code)
+      setVideoModelCode((cur) => cur || vids.find((m) => m.default_flag === 1)?.model_code || vids[0]?.model_code)
+      setVoiceModelCode((cur) => cur || voices.find((m) => m.default_flag === 1)?.model_code || voices[0]?.model_code)
+    }).catch(() => {})
+    return () => { active = false }
+  }, [])
 
   const load = useCallback(async () => {
     if (!episodeId) {
@@ -94,25 +122,32 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   }
 
   const estimate = async () => {
+    const selectedModel = batchTaskType === 'VIDEO'
+      ? videoModelCode
+      : (batchTaskType === 'VOICE' ? voiceModelCode : imageModelCode)
     const { data } = await productionApi.estimateTasks({
       episode_id: episodeId,
       shot_ids: selected.length ? selected : undefined,
       task_type: batchTaskType,
       auto_next_flag: 0,
+      model_code: selectedModel,
     })
     setCost(data?.result)
   }
 
   const submitOfficial = async (shotIds, regenerate) => {
-    const body = { episode_id: episodeId, shot_ids: shotIds }
+    const body = { episode_id: episodeId, shot_ids: shotIds, model_code: videoModelCode }
     const outcome = await runOfficialShotVideo({
       regenerate,
       preview: async () => (await productionApi.previewOfficialVideo(body)).data,
       confirm: (preview) => new Promise((resolve) => {
         const note = ((preview.shot_list || []).find((shot) => Number(shot.blocked) !== 1) || {}).size_note || ''
+        const zeroCost = Number(preview?.estimated_cost_cent || 0) === 0
         Modal.confirm({
           title: regenerate ? '重新生成这一镜视频' : '确认生成视频',
-          content: `${regenerate ? '将开始一次新的生成并计费。当前成片会保留到新视频成功。' : '确认后开始生成并计费。'} ${note} 预计 ${((preview.estimated_cost_cent || 0) / 100).toFixed(2)} 元。`,
+          content: zeroCost
+            ? `${regenerate ? '将使用自有密钥重新生成。当前成片会保留到新视频成功。' : '确认后使用自有密钥生成，不扣减平台额度。'} ${note}`
+            : `${regenerate ? '将开始一次新的生成并计费。当前成片会保留到新视频成功。' : '确认后开始生成并计费。'} ${note} 预计 ${((preview.estimated_cost_cent || 0) / 100).toFixed(2)} 元。`,
           okText: regenerate ? '确认重新生成' : '确认提交',
           cancelText: '取消',
           onOk: () => resolve(true),
@@ -146,6 +181,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
         shot_ids: selected.length ? selected : undefined,
         task_type: batchTaskType,
         auto_next_flag: 0,
+        model_code: batchTaskType === 'VOICE' ? voiceModelCode : imageModelCode,
       })
       if (data?.success) {
         message.success(`已提交 ${batchTaskType} 批量生成任务`)
@@ -284,6 +320,23 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
                 { value: 'VIDEO', label: '生成视频' },
                 { value: 'VOICE', label: '合成配音' },
               ]}
+            />
+            <Select
+              size="small"
+              style={{ minWidth: 160 }}
+              placeholder="选择模型"
+              value={batchTaskType === 'VIDEO' ? videoModelCode : (batchTaskType === 'VOICE' ? voiceModelCode : imageModelCode)}
+              onChange={(val) => {
+                if (batchTaskType === 'VIDEO') setVideoModelCode(val)
+                else if (batchTaskType === 'VOICE') setVoiceModelCode(val)
+                else setImageModelCode(val)
+                setCost(null)
+              }}
+              options={(batchTaskType === 'VIDEO' ? videoModels : (batchTaskType === 'VOICE' ? voiceModels : imageModels)).map((m) => ({
+                value: m.model_code,
+                label: modelPricingCompactLabel(m),
+                title: modelPricingLabel(m),
+              }))}
             />
             <Button size="small" onClick={estimate}>估费用</Button>
             <Button size="small" type="primary" disabled={!cost || submittingBatch} loading={submittingBatch} onClick={submit}>批量生成</Button>

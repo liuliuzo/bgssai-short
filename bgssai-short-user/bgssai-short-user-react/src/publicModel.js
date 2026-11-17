@@ -23,6 +23,7 @@ export function publicModelCode(value, ability) {
   const raw = String(value || '').trim()
   if (!raw) return ''
   const key = raw.toLowerCase()
+  if (key.startsWith('umk-')) return raw
   if (key === 'bgssai-video-i2v') return 'bgssai-video'
   if (ALIAS[key]) return key
   if (VENDOR.test(raw)) return CODE_BY_ABILITY[String(ability || '').toUpperCase()] || 'bgssai'
@@ -42,6 +43,7 @@ export function publicModelText(value, ability) {
   const raw = String(value || '').trim()
   if (!raw) return ''
   const key = raw.toLowerCase()
+  if (key.startsWith('umk-') || key.includes('grok')) return raw
   if (ALIAS[key]) return ALIAS[key]
   if (VENDOR.test(raw)) {
     const code = CODE_BY_ABILITY[String(ability || '').toUpperCase()]

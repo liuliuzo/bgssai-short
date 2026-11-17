@@ -23,7 +23,7 @@
 
 | 原型页 | 前端路由 | 后端接口 | 鉴权 | 契约 |
 | --- | --- | --- | --- | --- |
-| `account-settings.html` | `/account` | - | 与该页一致 | - |
+| `account-settings.html` | `/account` | `GET /bgssai/user/account/login-methods` · `POST /bgssai/user/account/login-methods/bind-oauth` · `/bind-contact` · `/unbind` · `GET /bgssai/user/account/deletion/preview` · `POST /bgssai/user/account/deletion` · `GET /bgssai/user/ai-model-keys/list` · `POST /bgssai/user/ai-model-keys/create` · `POST /bgssai/user/ai-model-keys/update` · `POST /bgssai/user/ai-model-keys/toggle` · `POST /bgssai/user/ai-model-keys/set-default` · `POST /bgssai/user/ai-model-keys/delete` · `POST /bgssai/user/ai-model-keys/test` · `POST /bgssai/user/ai-model-keys/mode` | 需 `Jwttoken` | [`account-settings.md`](./account-settings.md) |
 | `bot-download-entry.html` | `/download/bot` | - | 与该页一致 | - |
 | `home.html` | `/home` | - | 与该页一致 | - |
 | `login.html` | `/login` | - | 与该页一致 | - |
@@ -159,3 +159,11 @@
 | 解绑 | POST | `/bgssai/user/account/login-methods/unbind` |
 | 注销预览 | GET | `/bgssai/user/account/deletion/preview` |
 | 注销 | POST | `/bgssai/user/account/deletion` |
+| 自有模型密钥列表 | GET | `/bgssai/user/ai-model-keys/list` |
+| 新增自有模型密钥 | POST | `/bgssai/user/ai-model-keys/create` |
+| 更新自有模型密钥 | POST | `/bgssai/user/ai-model-keys/update` |
+| 启停自有模型密钥 | POST | `/bgssai/user/ai-model-keys/toggle` |
+| 设为同能力默认模型 | POST | `/bgssai/user/ai-model-keys/set-default` |
+| 删除自有模型密钥 | POST | `/bgssai/user/ai-model-keys/delete` |
+| 测试自有模型连通性 | POST | `/bgssai/user/ai-model-keys/test` |
+| 切换仅使用自有密钥模式 | POST | `/bgssai/user/ai-model-keys/mode` |
