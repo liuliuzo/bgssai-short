@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
-  "repo": "bgssai-short-rebase",
+  "repo": "bgssai-short",
   "entrypoints": {
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "419f2db7c72cfe56b7938b7c0f8b8a2f72e4233caf8f1e532d35797ae0f47a19",
-  "code_contract_digest": "a5f42c165338bcc6b8f63bc54deaf4c58dbc3d87a93dfb8af6f663bbb470a3a5",
+  "prototype_bundle_digest": "b346518cdb4d664cfecaafaa13a06e10a17b255aa9ddece3ac8f3c189ce7f230",
+  "code_contract_digest": "d9489b2642ede136f34180bcfd2c11bebab479652654442356678379f6bf9ff3",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -557,7 +557,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/LibraryLookPicker.jsx",
-      "sha256": "a70569986bb7c96ad916194e47d9e7676968656863211b9c323bd5d7d8ccf30a"
+      "sha256": "cea23a4062629fd485856b2882db4f07c06e0dd218c2884b401e3058339d0973"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/LookLibraryPage.jsx",
@@ -577,11 +577,11 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookGroups.js",
-      "sha256": "2cddc8fd6be30043d46bafc9b73180eb80e6eb8c3f4d43c1359ca288fe3e7f1e"
+      "sha256": "928485aadeea98a704a546848488cee93ef024459ffee6a8eb6c2c538cb9ccbf"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookGroups.test.js",
-      "sha256": "e2ed6cc1c91caae1e83ba5079ef56762eef22f3145a90aa6a7f03a49eda08dc0"
+      "sha256": "bbd702894f06e60e16a4138d03e86e0de481540b307500f84049f8c4a2970621"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/look/lookPoster.js",
@@ -665,7 +665,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "5a40045916da4f284c7d9fc280ffe04ce6b4427d6097fe94bef0bea2dad21f8e"
+      "sha256": "d30d05e7a4d82cf719678876d230f2e5d5de520c5ba4cdd9f10f3bf8fd2bd0e5"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -2066,7 +2066,7 @@
     },
     {
       "path": "docs/demo-static/web/user/PAGE-FLOW.html",
-      "sha256": "0547348bd68cdd40685ea82a7456a14d705aac8fc3eca28c2a1c21a98ed207ad",
+      "sha256": "80d1dcd35221eae033269e62a9e8c97efcd7381833a7909b28871a8329f7ea1b",
       "surface": "flow",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2171,7 +2171,7 @@
     },
     {
       "path": "docs/demo-static/web/user/character-bible.html",
-      "sha256": "69cbdb54589e31dd482f8317472176fb9bd6309048934488d548d98269115357",
+      "sha256": "2aa297e75d37e4275c41da03c20f9dad0e06d1b76713a6d8f15c3c349e442fa4",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2549,7 +2549,7 @@
     },
     {
       "path": "docs/demo-static/web/user/prop-library.html",
-      "sha256": "4a2a399dea2dd3a7e2436509b8f01f74674094b97553eb2408b8993c8fb6b249",
+      "sha256": "cc3283490525f57cc7285c74a55a7e740a26c3151ed358c1bb82cf5e8d5615ce",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2591,7 +2591,7 @@
     },
     {
       "path": "docs/demo-static/web/user/scene-library.html",
-      "sha256": "4d171856260b0bdac636c191347966faee77896ee74123aecaac71978697006f",
+      "sha256": "574376cb823afddcb20318fbb829fe507c793d41a021003a315a1f8dca346b33",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

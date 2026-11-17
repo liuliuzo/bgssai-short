@@ -277,3 +277,69 @@ export function groupLooks(materials, kind = 'CHARACTER') {
   }
   return order.map((name) => groups.get(name))
 }
+
+export function buildLibraryLookOptions(libraries, kind = 'CHARACTER') {
+  const wanted = normalizeLookKind(kind)
+  const list = Array.isArray(libraries) ? libraries : []
+  const ordered = [
+    ...list.filter((lib) => lib && lib.status !== 'ARCHIVED'),
+    ...list.filter((lib) => lib && lib.status === 'ARCHIVED'),
+  ]
+  const options = []
+  const angles = anglesForKind(wanted)
+  for (const lib of ordered) {
+    const libraryName = lib.library_name || '未命名分组'
+    const archived = lib.status === 'ARCHIVED'
+    for (const look of groupLooksOfKind(lib.material_list, wanted)) {
+      const cover = lookCover(look)
+      if (!cover || !cover.material_id) continue
+      const coverUrl = isVideoMaterial(cover)
+        ? (cover.poster_url || '')
+        : (cover.file_url || cover.poster_url || '')
+      const angleLabels = angles
+        .filter(([angle]) => arrangeAngle(look.slots[angle]).primary)
+        .map(([, label]) => label)
+      const angleSummary = angleLabels.join(' / ')
+      const materialIds = []
+      for (const slotItems of Object.values(look.slots || {})) {
+        for (const item of slotItems || []) {
+          if (item && item.material_id) materialIds.push(item.material_id)
+        }
+      }
+      for (const item of look.extra || []) {
+        if (item && item.material_id) materialIds.push(item.material_id)
+      }
+      options.push({
+        value: cover.material_id,
+        materialId: cover.material_id,
+        lookName: look.name,
+        libraryId: lib.library_id,
+        libraryName,
+        archived,
+        coverUrl,
+        angleLabels,
+        angleSummary,
+        materialIds,
+        label: `${look.name}（${libraryName}）`,
+        searchText: `${look.name} ${libraryName} ${angleLabels.join(' ')}`.trim(),
+      })
+    }
+  }
+  return options
+}
+
+export function matchSelectedLookValue(options, reference) {
+  if (!reference || (reference.used !== 1 && reference.used !== true) || reference.source !== 'CARD' || !Array.isArray(options)) {
+    return undefined
+  }
+  if (reference.material_id) {
+    const byMaterialId = options.find((opt) => Array.isArray(opt.materialIds) && opt.materialIds.includes(reference.material_id))
+    if (byMaterialId) return byMaterialId.value
+  }
+  if (!reference.material_name) return undefined
+  const byName = options.find((opt) => opt.lookName === reference.material_name && (
+    (reference.library_id && opt.libraryId === reference.library_id)
+    || (reference.library_name && opt.libraryName === reference.library_name)
+  ))
+  return byName ? byName.value : undefined
+}

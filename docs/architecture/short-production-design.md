@@ -161,3 +161,8 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 - 作品工作台顶部聚合当前剧集大纲、剧本定稿状态、资产一致性面板（角色 / 场景 / 道具锁定情况）、分镜列表与成片状态，计算五步成片进度（「1. 剧本与定稿 → 2. 角色定妆 → 3. 分镜与视频 → 4. 配音字幕（可选） → 5. 合成成片」）及当前唯一下一步主操作，消除多页签迷失与定妆未选定锁定导致的静默阻塞。
 - `ShotService.list` 按作品一次预取角色卡与场景/道具卡（消除逐镜 N+1 查询），实时计算每镜 `blocked_flag` 与可读中文 `block_reason`（点明未锁定的角色名、场景名、道具名或缺失画面描述），供前端行内展示与一键跳转定妆。
 - `OfficialShotVideoService.submit` 将生成的 `batch_id` 透传给 `ImageToVideoService.enqueueForShot`，使图生视频与文生视频任务共享同一 `batch_id`，修复 `batch-progress` 对图生视频返回空统计导致前端进度条常驻等待的问题；图生视频落库绑定镜头时同步置 `stale_flag=0` 并通知 `FinishedFilmLifecycle.expireAfterUpstreamChange` 失效旧成片。
+
+## 资产卡直接选用人物定妆与场景道具参考（2026-11-17）
+
+- `CharacterPane.load` 并行拉取 `GET /bgssai/user/assets/consistency-panel` 与 `GET /bgssai/user/look-libraries/list`，卡片存入定妆库、上传照片、补齐角度或锁定造型后同步刷新可选列表。
+- `LibraryLookPicker` 移除跳转离开作品页的「管理定妆库 / 管理场景库 / 管理道具库」链接，改为行内直接下拉选择框（展示封面缩略图、造型名、分组名与已备角度，支持搜索过滤，`onSelect` 直接触发 `apply-look` 锁定主图并绑定各面）及「大图点选」平铺缩略图面板。
