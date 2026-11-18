@@ -61,7 +61,7 @@
 ```json
 {
   "result": {
-    "only_user_key": 1,
+    "only_user_key": 0,
     "key_list": [
       {
         "key_id": "umk-1001",
@@ -108,7 +108,7 @@
 
 `auth_type` 取值：`BEARER`（单 API Key）、`AK_SK`（可灵双密钥 `api_key` + `secret_key`）、`API_KEY_HEADER`（PixVerse `API-KEY`）。
 
-`balance_status`：`OK` / `UNAVAILABLE` / `FAILED`。`balance_list` 每项为 `label`、`amount`、`unit`。创建、更新、启停、设默认返回的 `item` 使用同一组字段。数值来自该密钥供应商的只读余额接口：PixVerse 积分、DeepSeek `total_balance`（CNY 为元）、可灵未过期资源包剩余次数、MiniMax 套餐剩余百分比或 `available_amount`。其余供应商（含 Grok、OpenAI、Claude 与两个 TokenHub）为 `UNAVAILABLE`。失败不返回 0。
+`balance_status`：`OK` / `UNAVAILABLE` / `FAILED`。`balance_list` 每项为 `label`、`amount`、`unit`。创建、更新、启停、设默认返回的 `item` 使用同一组字段。数值来自该密钥供应商的只读余额接口：PixVerse 积分、DeepSeek `total_balance`（CNY 为元）、可灵未过期资源包剩余次数、MiniMax 套餐剩余百分比或 `available_amount`。BGSSAI TokenHub 取网关 `GET /v1/account/balance` 的 `balance_tokens` 与 `balance_fen`（需 TokenHub 侧同步上线）。其余供应商（Grok、OpenAI、Claude、腾讯云 TokenHub）无密钥级余额只读接口，为 `UNAVAILABLE`。失败不返回 0。
 
 ## POST /bgssai/user/ai-model-keys/create
 
@@ -124,7 +124,6 @@
   "ability_type": "VIDEO",
   "model_code": "kling-v3",
   "model_name": "Kling V3",
-  "only_user_key": 1,
   "items": [
     { "modality_type": "VIDEO", "ability_type": "VIDEO", "model_code": "kling-v3", "model_name": "Kling V3" },
     { "modality_type": "IMAGE", "ability_type": "IMAGE", "model_code": "kling-v3", "model_name": "Kling Image V3" }
@@ -132,7 +131,7 @@
 }
 ```
 
-返回 `{ "result": { "only_user_key": 1, "created_count": 2, "key_list": [ ... ] } }`。
+返回 `{ "result": { "only_user_key": 0, "created_count": 2, "key_list": [ ... ] } }`。请求中的 `only_user_key` 为兼容字段，忽略不读。
 
 ## POST /bgssai/user/ai-model-keys/update
 
@@ -206,13 +205,15 @@
 }
 ```
 
-## POST /bgssai/user/ai-model-keys/mode
+## POST /bgssai/user/ai-model-keys/mode（兼容接口）
+
+无全局模式开关；该接口仅为旧客户端保留，请求值忽略、不落库。
 
 ```json
 { "only_user_key": 1 }
 ```
 
-返回 `{ "result": { "only_user_key": 1 } }`。
+返回 `{ "result": { "only_user_key": 0 } }`。
 
 ## GET /bgssai/user/ai-keys（兼容 GET /api/user/ai-keys）
 

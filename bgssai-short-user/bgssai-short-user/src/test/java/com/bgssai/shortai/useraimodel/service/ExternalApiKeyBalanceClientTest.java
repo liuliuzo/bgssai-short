@@ -168,6 +168,52 @@ class ExternalApiKeyBalanceClientTest {
     }
 
     @Test
+    void parsesBgssaiTokenHubSummaryIntoTokensAndWallet() {
+        Snapshot both = ExternalApiKeyBalanceClient.parseBgssaiTokenHub(
+                "{\"balance_fen\":1391,\"quota_remaining_fen\":1391,"
+                        + "\"balance_tokens\":418912345,\"quota_remaining_tokens\":418912345,"
+                        + "\"plan_code\":\"prepaid\",\"plan_name\":\"预付费余额\"}");
+        assertEquals(ExternalApiKeyBalanceClient.STATUS_OK, both.status());
+        assertEquals("额度", both.parts().get(0).getLabel());
+        assertEquals("418912345", both.parts().get(0).getAmount());
+        assertEquals("Token", both.parts().get(0).getUnit());
+        assertEquals("钱包", both.parts().get(1).getLabel());
+        assertEquals("13.91", both.parts().get(1).getAmount());
+        assertEquals("元", both.parts().get(1).getUnit());
+
+        Snapshot tokensOnly = ExternalApiKeyBalanceClient.parseBgssaiTokenHub(
+                "{\"balance_fen\":0,\"balance_tokens\":0}");
+        assertEquals(ExternalApiKeyBalanceClient.STATUS_OK, tokensOnly.status());
+        assertEquals("0", tokensOnly.parts().get(0).getAmount());
+
+        assertEquals(ExternalApiKeyBalanceClient.STATUS_FAILED,
+                ExternalApiKeyBalanceClient.parseBgssaiTokenHub("{\"plan_code\":\"prepaid\"}").status());
+    }
+
+    @Test
+    void bgssaiTokenHubReadsTheGatewayBalanceRoute() throws Exception {
+        List<String> urls = new ArrayList<>();
+        ExternalApiKeyBalanceClient client = new ExternalApiKeyBalanceClient((url, headers) -> {
+            urls.add(url);
+            assertEquals("Bearer th-test-key", headers.get("Authorization"));
+            return new Result(200, "{\"balance_fen\":1200,\"balance_tokens\":9000}");
+        });
+        Snapshot snap = client.read(new Credential(
+                "BGSSAI_TOKENHUB", "https://www.bgssai-tokenhub.cn", "th-test-key", null));
+        assertEquals("https://www.bgssai-tokenhub.cn/v1/account/balance", urls.get(0));
+        assertEquals(ExternalApiKeyBalanceClient.STATUS_OK, snap.status());
+        assertEquals("9000", snap.parts().get(0).getAmount());
+        assertFalse(joined(snap).contains("th-test-key"));
+
+        ExternalApiKeyBalanceClient refused = new ExternalApiKeyBalanceClient(
+                (url, headers) -> new Result(401, "{\"error\":{\"code\":\"invalid_api_key\"}}"));
+        Snapshot denied = refused.read(new Credential(
+                "BGSSAI_TOKENHUB", "https://www.bgssai-tokenhub.cn/v1", "th-test-key", null));
+        assertEquals(ExternalApiKeyBalanceClient.STATUS_FAILED, denied.status());
+        assertTrue(denied.parts().isEmpty());
+    }
+
+    @Test
     void failedProviderReadDoesNotInventAZero() {
         assertEquals(ExternalApiKeyBalanceClient.STATUS_FAILED,
                 ExternalApiKeyBalanceClient.parsePixVerse("{\"ErrCode\":500}").status());

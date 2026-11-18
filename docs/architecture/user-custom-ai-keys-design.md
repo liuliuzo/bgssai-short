@@ -4,13 +4,13 @@
 
 ## 1. 数据模型
 
-### 1.1 `user_ai_setting`（用户密钥模式设置）
+### 1.1 `user_ai_setting`（自建模型关闭记录）
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
 | `id` | `BIGINT` | `NOT NULL AUTO_INCREMENT PK` | 主键 |
 | `user_id` | `VARCHAR(64)` | `NOT NULL UNIQUE` | 用户标识 |
-| `is_only_user_key` | `TINYINT(1)` | `NOT NULL DEFAULT 0` | `0=混合模式`，`1=仅使用自有密钥模型` |
+| `is_only_user_key` | `TINYINT(1)` | `NOT NULL DEFAULT 0` | 已废弃，恒按 `0` 处理；存量 `1` 不再停用 BGSSAI 自建模型 |
 | `suppressed_platform_abilities` | `VARCHAR(64)` | `NULL` | 用户关闭的自建模型能力，逗号分隔 `TEXT/IMAGE/VIDEO/VOICE/ASR/MUSIC` |
 | `del_flag` / `creator` / `modifier` / `gmt_create` / `gmt_modified` | 标准六列 | 见 `sql/DDL.sql` | 审计与逻辑删除 |
 
@@ -41,13 +41,13 @@
 HTTP 请求（UserContext）或 Worker（UsageScope）
   -> AiModelResolveService.resolve(abilityType, requestedCode)
      -> 取 currentUserOrScopeUserId()
-     -> 命中 umk-... 或 is_only_user_key = 1：
+     -> 命中 umk-...（显式选中自有模型）：
         -> UserAiModelKeyService.resolveUserModel(userId, ability, requestedCode)
            -> 仅查 user_ai_model_key(user_id, ability_type, is_enabled=1, del_flag=0)，同一 ability 只保留一条启用
-           -> 该能力已有启用自有密钥，或自建模型被用户关闭，或 is_only_user_key = 1：不回退该能力的 BGSSAI 自建模型
-           -> 未配置且不允许回退自建模型 -> 抛 4014
+           -> 该能力已有启用自有密钥，或自建模型被用户关闭：不回退该能力的 BGSSAI 自建模型
+           -> 未配置且自建模型被用户关闭 -> 抛 4014；未关闭自建模型 -> 回退 BGSSAI 自建模型解析
            -> 构造内存态 AiModelConfig（modelId=umk-..., unitPriceCent=0, configJson={credential_source=USER_KEY, user_key_id, user_id, base_url}）
-  -> PipelineReadiness.assertReady：自有密钥或 only_user_key=1 时只校验 user_ai_model_key 可用性，不探测平台 TokenHub
+  -> PipelineReadiness.assertReady：显式自有密钥时只校验 user_ai_model_key 可用性，不探测平台 TokenHub；其余情况按平台就绪校验
   -> AiTaskQueue / OfficialShotVideoService / DramaAssistService / AiTaskService：
      -> credential_source=USER_KEY 时 estimated_cost_cent = 0，跳过 QuotaConsumeService.assertAffordable
   -> ShortAiTaskWorker / DramaAssistService
@@ -204,4 +204,5 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | `DEEPSEEK` | `GET /user/balance` | `balance_infos[].total_balance`（CNY 元 / USD） |
 | `KLING` | `GET /account/costs`（短期 JWT） | 未过期资源包 `remaining_quantity`（次） |
 | `MINIMAX` | `GET /v1/token_plan/remains`，无该字段时 `GET /account/query_balance` | 剩余百分比，或 `available_amount`（元 / USD） |
-| `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` | 无密钥级余额只读接口 | `UNAVAILABLE` |
+| `BGSSAI_TOKENHUB` | `GET /v1/account/balance`（网关 Key 自查，需 TokenHub 侧同步上线） | `balance_tokens`（额度 Token）、`balance_fen`（钱包元） |
+| `XAI` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` | 无密钥级余额只读接口（Grok 仅管理密钥、OpenAI / Claude 仅管理员密钥） | `UNAVAILABLE`，前端显示「不支持查余额」 |
