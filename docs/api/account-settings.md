@@ -186,7 +186,7 @@
 }
 ```
 
-按供应商执行零计费探活（`MINIMAX` 调 `POST /v1/get_voice`；`KLING` 签发短期 JWT 调 `GET /v1/videos/text2video?pageNum=1&pageSize=1`；`PIXVERSE` 调 `GET /openapi/v2/account/balance`；`DEEPSEEK` / `XAI` 调 `GET /models`；`OPENAI` 调 `GET /v1/models`；`ANTHROPIC` 调 `GET /v1/models`；`TENCENT_TOKENHUB` 调 `GET /v1/models`），返回：
+按供应商执行零计费探活（`MINIMAX` 调 `POST /v1/get_voice`；`KLING` 签发短期 JWT 调 `GET /v1/videos/text2video?pageNum=1&pageSize=1`；`PIXVERSE` 调 `GET /openapi/v2/account/balance`；`DEEPSEEK` / `XAI` 调 `GET /models`；`OPENAI` 调 `GET /v1/models`；`ANTHROPIC` 调 `GET /v1/models`；`BGSSAI_TOKENHUB` 与 `TENCENT_TOKENHUB` 调 `GET /v1/models`），返回：
 
 ```json
 {

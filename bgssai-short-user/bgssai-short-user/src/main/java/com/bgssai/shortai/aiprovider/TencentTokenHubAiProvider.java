@@ -202,15 +202,7 @@ public class TencentTokenHubAiProvider implements AiProvider {
     }
 
     static String userOwnedHubBase(String configured) {
-        String base = UserAiModelSupport.normalizeBaseUrl(configured, UserAiModelSupport.PROVIDER_TOKENHUB);
-        String lower = base.toLowerCase(Locale.ROOT);
-        if ((lower.contains("bgssai-tokenhub.com") && !lower.contains("bgssai-tokenhub.cn"))
-                || lower.contains("tokenhub-global")
-                || lower.contains("tokenhub-intl")
-                || lower.contains("bgssai-tokenhub-global")) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "base_url 不在当前可用范围内");
-        }
-        return base;
+        return UserAiModelSupport.normalizeBaseUrl(configured, UserAiModelSupport.PROVIDER_BGSSAI_TOKENHUB);
     }
 
     private AiProviderResult text(String base, String apiKey, AiProviderRequest request, int timeoutSec)

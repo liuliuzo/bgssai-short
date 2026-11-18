@@ -22,7 +22,7 @@
 | `user_id` | `VARCHAR(64)` | `NOT NULL` | 用户标识 |
 | `modality_type` | `VARCHAR(16)` | `NOT NULL` | `TEXT` / `IMAGE` / `VIDEO` / `AUDIO` |
 | `ability_type` | `VARCHAR(16)` | `NOT NULL` | `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` |
-| `provider_code` | `VARCHAR(32)` | `NOT NULL` | `XAI` / `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` |
+| `provider_code` | `VARCHAR(32)` | `NOT NULL` | `XAI` / `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` |
 | `model_code` | `VARCHAR(128)` | `NOT NULL` | 上游模型编码 |
 | `model_name` | `VARCHAR(128)` | `NOT NULL` | 用户展示名称 |
 | `base_url` | `VARCHAR(255)` | `NOT NULL DEFAULT 'https://api.x.ai/v1'` | 上游公网 `https://` 根地址 |
@@ -57,7 +57,9 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
         XAI -> XaiGrokAiProvider
         OPENAI -> OpenAiAiProvider
         ANTHROPIC -> AnthropicAiProvider
-        TENCENT_TOKENHUB -> TencentTokenHubAiProvider（用户 Key，不写平台用量回执）
+        BGSSAI_TOKENHUB -> TencentTokenHubAiProvider 的用户 Key 路径（不写平台用量回执）
+        TENCENT_TOKENHUB -> TencentCloudTokenHubAiProvider（用户 Key，不写平台用量回执）
+     平台目录里的 `TENCENT_TOKENHUB` 仍走 TencentTokenHubAiProvider 的平台密钥，不是用户自有腾讯云 TokenHub。
      -> ShortTaskSettlementService.settle：cost = 0，跳过 QuotaConsumeService.consume，写 ai_usage_record(cost_cent=0)
 ```
 
@@ -156,9 +158,11 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | 模型与版本 | `claude-opus-5-5`、`claude-sonnet-5-5`、`claude-haiku-5-5` | 无 |
 | 合规与降级 | 文本请求可附带已有 `image_base64` 作为消息图片块，不把它当成图片生成 | 无余额查询接口 |
 
-### 3.8 TokenHub（`provider_code = TENCENT_TOKENHUB`，别名 `TOKENHUB` / `TENCENT-TOKENHUB`，`https://www.bgssai-tokenhub.cn`）
+### 3.8 BGSSAI TokenHub（`provider_code = BGSSAI_TOKENHUB`，别名 `TOKENHUB` / `BGSSAI-TOKENHUB`，`https://www.bgssai-tokenhub.cn`）
 
-用户 Key 复用中枢客户端已有路由，不新造路径。请求带 `Authorization: Bearer <用户 Key>`。不调用 `UsageReceiptService.begin`，不读 `ai.tokenhub_cn.api_key`。境外主机直接拒绝。
+用户 Key 复用公司中枢客户端已有路由。请求带 `Authorization: Bearer <用户 Key>`。不调用 `UsageReceiptService.begin`，不读 `ai.tokenhub_cn.api_key`。境外主机与腾讯云 TokenHub 主机直接拒绝。
+
+已保存或新提交的 `TENCENT_TOKENHUB`，当 `base_url` 为空、为公司默认主机或 BGSSAI TokenHub 主机时，改记为 `BGSSAI_TOKENHUB`。
 
 | 能力 | 模型 | 端点 |
 | --- | --- | --- |
@@ -168,6 +172,17 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | `VOICE` | `minimax-speech-2.8-hd` | `POST /v1/audio/speech` |
 | `ASR` | `hy-asr-3.0-preview` | `POST /v1/wand/asrproxy/async_create` |
 | `MUSIC` | `minimax-music-v2.6` | `POST /v1/native` |
+
+探活：`GET /v1/models`。无账户余额接口接入。
+
+### 3.9 腾讯云 TokenHub（`provider_code = TENCENT_TOKENHUB`，别名 `TENCENT-TOKENHUB`，`https://tokenhub.tencentmaas.com`）
+
+与 BGSSAI TokenHub 同级。只接受官方主机 `tokenhub.tencentmaas.com`、`tokenhub.tencentmaas.cn`、`tokenhub-intl.tencentmaas.com`、`tokenhub-intl.tencentmaas.cn`，路径为空或 `/v1`。请求带 `Authorization: Bearer <用户 Key>`。不调用 `UsageReceiptService.begin`，不读平台密钥。
+
+| 能力 | 模型 | 端点 |
+| --- | --- | --- |
+| `TEXT` | `hy4`、`deepseek-v4-pro`、`kimi-k3` | `POST /v1/chat/completions` |
+| 图片 / 视频 / 配音 / 识别 / 音乐 | 无 | 不支持 |
 
 探活：`GET /v1/models`。无账户余额接口接入。
 

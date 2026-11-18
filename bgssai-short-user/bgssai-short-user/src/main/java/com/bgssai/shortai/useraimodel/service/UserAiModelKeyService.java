@@ -102,6 +102,7 @@ public class UserAiModelKeyService {
         List<UserAiModelKeyItem> items = new ArrayList<>();
         if (rows != null) {
             for (UserAiModelKey row : rows) {
+                migrateLegacyProvider(row);
                 items.add(toItem(row));
             }
         }
@@ -118,8 +119,10 @@ public class UserAiModelKeyService {
         if (req == null || req.getApiKey() == null || req.getApiKey().isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key required");
         }
-        String providerCode = UserAiModelSupport.normalizeProvider(req.getProviderCode());
-        String baseUrl = UserAiModelSupport.normalizeBaseUrl(req.getBaseUrl(), providerCode);
+        UserAiModelSupport.OwnedProviderBinding bound = UserAiModelSupport.bindOwnedProvider(
+                req.getProviderCode(), req.getBaseUrl());
+        String providerCode = bound.providerCode();
+        String baseUrl = bound.baseUrl();
         String plainKey = req.getApiKey().trim();
         if (plainKey.length() > 512) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key too long");
@@ -211,18 +214,19 @@ public class UserAiModelKeyService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "key_id required");
         }
         UserAiModelKey existing = requireOwnedRow(userId, req.getKeyId());
-        String providerCode = req.getProviderCode() == null || req.getProviderCode().isBlank()
-                ? existing.getProviderCode()
-                : UserAiModelSupport.normalizeProvider(req.getProviderCode());
+        String rawProvider = req.getProviderCode() == null || req.getProviderCode().isBlank()
+                ? existing.getProviderCode() : req.getProviderCode();
+        String rawBase = req.getBaseUrl() == null || req.getBaseUrl().isBlank()
+                ? existing.getBaseUrl() : req.getBaseUrl();
+        UserAiModelSupport.OwnedProviderBinding bound = UserAiModelSupport.bindOwnedProvider(rawProvider, rawBase);
+        String providerCode = bound.providerCode();
         String ability = req.getAbilityType() == null || req.getAbilityType().isBlank()
                 ? (req.getModalityType() == null || req.getModalityType().isBlank()
                         ? existing.getAbilityType()
                         : UserAiModelSupport.normalizeAbility(req.getModalityType(), null))
                 : UserAiModelSupport.normalizeAbility(req.getModalityType(), req.getAbilityType());
         String modality = UserAiModelSupport.modalityForAbility(ability);
-        String baseUrl = req.getBaseUrl() == null || req.getBaseUrl().isBlank()
-                ? existing.getBaseUrl()
-                : UserAiModelSupport.normalizeBaseUrl(req.getBaseUrl(), providerCode);
+        String baseUrl = bound.baseUrl();
         String modelCode = req.getModelCode() == null || req.getModelCode().isBlank()
                 ? existing.getModelCode() : req.getModelCode().trim();
         if (modelCode.length() > 128) {
@@ -371,19 +375,17 @@ public class UserAiModelKeyService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "request required");
         }
         UserAiModelKey saved = null;
-        String providerCode;
-        String baseUrl;
+        String rawCode;
+        String rawBase;
         String plainKey;
         String plainSecret;
         String modelCode;
         if (req.getKeyId() != null && !req.getKeyId().isBlank()) {
             saved = requireOwnedRow(userId, req.getKeyId());
-            providerCode = req.getProviderCode() != null && !req.getProviderCode().isBlank()
-                    ? UserAiModelSupport.normalizeProvider(req.getProviderCode())
-                    : saved.getProviderCode();
-            baseUrl = req.getBaseUrl() != null && !req.getBaseUrl().isBlank()
-                    ? UserAiModelSupport.normalizeBaseUrl(req.getBaseUrl(), providerCode)
-                    : saved.getBaseUrl();
+            rawCode = req.getProviderCode() != null && !req.getProviderCode().isBlank()
+                    ? req.getProviderCode() : saved.getProviderCode();
+            rawBase = req.getBaseUrl() != null && !req.getBaseUrl().isBlank()
+                    ? req.getBaseUrl() : saved.getBaseUrl();
             plainKey = req.getApiKey() != null && !req.getApiKey().isBlank()
                     ? req.getApiKey().trim()
                     : saved.getApiKey();
@@ -397,12 +399,15 @@ public class UserAiModelKeyService {
             if (req.getApiKey() == null || req.getApiKey().isBlank()) {
                 throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key required");
             }
-            providerCode = UserAiModelSupport.normalizeProvider(req.getProviderCode());
-            baseUrl = UserAiModelSupport.normalizeBaseUrl(req.getBaseUrl(), providerCode);
+            rawCode = req.getProviderCode();
+            rawBase = req.getBaseUrl();
             plainKey = req.getApiKey().trim();
             plainSecret = req.getSecretKey() == null ? null : req.getSecretKey().trim();
             modelCode = req.getModelCode() == null ? "" : req.getModelCode().trim();
         }
+        UserAiModelSupport.OwnedProviderBinding bound = UserAiModelSupport.bindOwnedProvider(rawCode, rawBase);
+        String providerCode = bound.providerCode();
+        String baseUrl = bound.baseUrl();
         log.info("检测用户模型密钥连通性 userId={} keyId={} providerCode={} modelCode={}",
                 userId, saved == null ? "-" : saved.getKeyId(), providerCode, modelCode);
 
@@ -413,6 +418,10 @@ public class UserAiModelKeyService {
             patch.setId(saved.getId());
             patch.setLastCheckStatus(result.getStatus());
             patch.setLastCheckTime(new Date());
+            if (!providerCode.equals(saved.getProviderCode())) {
+                patch.setProviderCode(providerCode);
+                patch.setBaseUrl(baseUrl);
+            }
             patch.setModifier(userId);
             patch.setGmtModified(new Date());
             userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
@@ -465,7 +474,13 @@ public class UserAiModelKeyService {
             }
             ex.setOrderByClause("is_default_model desc, id asc");
             List<UserAiModelKey> rows = userAiModelKeyMapper.selectByExample(ex);
-            return rows == null ? Collections.emptyList() : rows;
+            if (rows == null) {
+                return Collections.emptyList();
+            }
+            for (UserAiModelKey row : rows) {
+                migrateLegacyProvider(row);
+            }
+            return rows;
         } catch (DataAccessException ex) {
             log.warn("读取 user_ai_model_key 失败 userId={} abilityType={}", userId, abilityType);
             return Collections.emptyList();
@@ -860,13 +875,39 @@ public class UserAiModelKeyService {
         return lower.startsWith("bgssai-") || "ffmpeg-compose-v1".equals(lower);
     }
 
+    private void migrateLegacyProvider(UserAiModelKey row) {
+        if (row == null || row.getProviderCode() == null) {
+            return;
+        }
+        String canonical = UserAiModelSupport.canonicalizeOwnedProvider(row.getProviderCode(), row.getBaseUrl());
+        if (canonical.equals(row.getProviderCode())) {
+            return;
+        }
+        row.setProviderCode(canonical);
+        if (row.getId() == null) {
+            return;
+        }
+        try {
+            UserAiModelKey patch = new UserAiModelKey();
+            patch.setId(row.getId());
+            patch.setProviderCode(canonical);
+            patch.setModifier(row.getUserId());
+            patch.setGmtModified(new Date());
+            userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+            log.info("迁移用户模型供应商编码 keyId={} providerCode={}", row.getKeyId(), canonical);
+        } catch (RuntimeException ex) {
+            log.warn("迁移用户模型供应商编码失败 keyId={}", row.getKeyId());
+        }
+    }
+
     private static UserAiModelKeyItem toItem(UserAiModelKey row) {
         UserAiModelKeyItem item = new UserAiModelKeyItem();
+        String providerCode = UserAiModelSupport.canonicalizeOwnedProvider(row.getProviderCode(), row.getBaseUrl());
         item.setKeyId(row.getKeyId());
         item.setModalityType(row.getModalityType());
         item.setAbilityType(row.getAbilityType());
-        item.setProviderCode(row.getProviderCode());
-        item.setProviderName(UserAiModelSupport.providerName(row.getProviderCode()));
+        item.setProviderCode(providerCode);
+        item.setProviderName(UserAiModelSupport.providerName(providerCode));
         item.setModelCode(row.getModelCode());
         item.setModelName(row.getModelName());
         item.setBaseUrl(row.getBaseUrl());

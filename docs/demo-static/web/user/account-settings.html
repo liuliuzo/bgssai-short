@@ -63,7 +63,8 @@
             <button type="button" class="btn btn-sm" id="quick-grok-btn">接入 Grok</button>
             <button type="button" class="btn btn-sm" id="quick-openai-btn">接入 OpenAI</button>
             <button type="button" class="btn btn-sm" id="quick-claude-btn">接入 Claude</button>
-            <button type="button" class="btn btn-sm" id="quick-tokenhub-btn">接入 TokenHub</button>
+            <button type="button" class="btn btn-sm" id="quick-bgssai-tokenhub-btn">接入 BGSSAI TokenHub</button>
+            <button type="button" class="btn btn-sm" id="quick-tencent-tokenhub-btn">接入腾讯云 TokenHub</button>
             <button type="button" class="btn btn-sm btn-primary" id="add-model-key-btn">新增密钥</button>
           </div>
         </div>
@@ -211,10 +212,25 @@
             </tr>
             <tr>
               <td>文本模型 (TEXT)</td>
-              <td>TokenHub</td>
+              <td>BGSSAI TokenHub</td>
               <td>DeepSeek Chat</td>
               <td>deepseek-chat</td>
               <td>th-k****5e6f</td>
+              <td>启用</td>
+              <td>-</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>腾讯云 TokenHub</td>
+              <td>Hy4</td>
+              <td>hy4</td>
+              <td>th-k****7a8b</td>
               <td>启用</td>
               <td>-</td>
               <td>OK</td>
@@ -235,7 +251,8 @@
             <option value="XAI">Grok (xAI)</option>
             <option value="OPENAI">OpenAI</option>
             <option value="ANTHROPIC">Claude</option>
-            <option value="TENCENT_TOKENHUB">TokenHub</option>
+            <option value="BGSSAI_TOKENHUB">BGSSAI TokenHub</option>
+            <option value="TENCENT_TOKENHUB">腾讯云 TokenHub</option>
           </select>
           <select aria-label="模态类型" id="key-modality-select">
             <option value="TEXT">文本模型 (TEXT)</option>

@@ -36,7 +36,8 @@ const QUICK_BUTTONS = [
   { code: 'XAI', label: '接入 Grok' },
   { code: 'OPENAI', label: '接入 OpenAI' },
   { code: 'ANTHROPIC', label: '接入 Claude' },
-  { code: 'TENCENT_TOKENHUB', label: '接入 TokenHub' },
+  { code: 'BGSSAI_TOKENHUB', label: '接入 BGSSAI TokenHub' },
+  { code: 'TENCENT_TOKENHUB', label: '接入腾讯云 TokenHub' },
 ]
 
 const FALLBACK_PRESETS = [
@@ -288,8 +289,8 @@ const FALLBACK_PRESETS = [
     ],
   },
   {
-    provider_code: 'TENCENT_TOKENHUB',
-    provider_name: 'TokenHub',
+    provider_code: 'BGSSAI_TOKENHUB',
+    provider_name: 'BGSSAI TokenHub',
     auth_type: 'BEARER',
     default_base_url: 'https://www.bgssai-tokenhub.cn',
     abilities: [
@@ -343,6 +344,24 @@ const FALLBACK_PRESETS = [
         ability_label: '音频模型（背景音乐）',
         models: [
           { model_code: 'minimax-music-v2.6', model_name: 'MiniMax Music v2.6', recommended: true },
+        ],
+      },
+    ],
+  },
+  {
+    provider_code: 'TENCENT_TOKENHUB',
+    provider_name: '腾讯云 TokenHub',
+    auth_type: 'BEARER',
+    default_base_url: 'https://tokenhub.tencentmaas.com',
+    abilities: [
+      {
+        modality_type: 'TEXT',
+        ability_type: 'TEXT',
+        ability_label: '文本模型',
+        models: [
+          { model_code: 'hy4', model_name: 'Hy4', recommended: true },
+          { model_code: 'deepseek-v4-pro', model_name: 'DeepSeek-V4-Pro', recommended: false },
+          { model_code: 'kimi-k3', model_name: 'Kimi K3', recommended: false },
         ],
       },
     ],
@@ -765,7 +784,7 @@ export default function UserAiModelKeysCard() {
             width: 110,
             render: (v) => ABILITY_LABEL[v] || v,
           },
-          { title: '供应商', dataIndex: 'provider_name', width: 130 },
+          { title: '供应商', dataIndex: 'provider_name', width: 160 },
           { title: '模型名称', dataIndex: 'model_name', width: 170 },
           { title: '模型编码', dataIndex: 'model_code', width: 170 },
           {
