@@ -2,7 +2,7 @@
 
 ## 1. 功能范围
 
-- 入口路由：`/account`（账号设置页「模型密钥」区块）。
+- 入口路由：`/account`（账号设置只保留「模型密钥」一块。厂商、密钥、接口地址和启停都在这一块里维护，不再另放厂商密钥表）。
 - 支持模态与能力映射：
   - 文本模型：`modality_type=TEXT` -> `ability_type=TEXT`（大纲、剧本、改写、原著改编、AI 协同专家）。
   - 图片模型：`modality_type=IMAGE` -> `ability_type=IMAGE`（角色/场景/道具定妆、多视角补全、分镜首帧、尾帧）。
@@ -126,7 +126,9 @@
 
 ## 5. 厂商级 API Key（`user_ai_provider_key`）
 
-- 接口：`GET /bgssai/user/ai-keys`、`POST /bgssai/user/ai-keys`、`DELETE /bgssai/user/ai-keys/{providerCode}`（及 `/api/user/ai-keys` 兼容路径）。
+账号设置不展示这张表。用户填写的厂商密钥落在「模型密钥」各行上。
+
+- 接口仍保留：`GET /bgssai/user/ai-keys`、`POST /bgssai/user/ai-keys`、`DELETE /bgssai/user/ai-keys/{providerCode}`（及 `/api/user/ai-keys` 兼容路径）。页面不调用。
 - 支持厂商：`DEEPSEEK`、`MINIMAX`、`KLING`（接受别名 `KLINGAI`，支持单 Bearer `api_key` 及 `access_key` + `secret_key` HS256 JWT）、`DASHSCOPE`、`ZHIPU`、`MOONSHOT`、`VOLCENGINE`、`HUNYUAN`、`OPENAI`、`ANTHROPIC`（接受别名 `CLAUDE`）、`GOOGLE`。
 - `OPENAI` / `ANTHROPIC` 不是空登记：厂商密钥已能直连官方文本接口。账号「模型密钥」另按能力保存 `umk-` 配置，`OPENAI` 再覆盖图片与语音识别。
 - 运行时与计费：匹配到已启用的厂商密钥时直连用户配置凭据（含可选 `base_url`），并跳过平台额度校验与扣费。
