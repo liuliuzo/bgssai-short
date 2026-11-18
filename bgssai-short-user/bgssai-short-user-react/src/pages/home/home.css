@@ -105,14 +105,14 @@
 
 .home-episode-summary {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px 8px;
   margin-top: 6px;
   color: #475569;
   font-size: 13px;
   line-height: 1.4;
-  white-space: nowrap;
 }
 
 .home-episode-summary .ant-btn {

@@ -234,10 +234,9 @@ export function episodeCardSummary(episodeItems, continueTo) {
 export function findEpisodeItem(episodeItems, query) {
   const items = Array.isArray(episodeItems) ? episodeItems : []
   const text = query == null ? '' : String(query).trim()
-  if (!text || text.startsWith('-')) return null
-  const match = text.match(/\d+/)
+  const match = /^(?:([0-9]+)|第([0-9]+)集)$/.exec(text)
   if (!match) return null
-  const no = Number(match[0])
+  const no = Number(match[1] || match[2])
   if (!Number.isInteger(no) || no <= 0) return null
   return items.find((item) => Number(item?.no) === no) || null
 }
