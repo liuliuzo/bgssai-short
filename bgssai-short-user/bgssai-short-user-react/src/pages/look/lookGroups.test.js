@@ -342,6 +342,8 @@ test('场景卡独立成 scenes 页签，步骤总数不再写死 8', () => {
   assert.doesNotMatch(guideSource, /8\/8|\/8 步/)
   assert.match(studioSource, /VIDEO_PATH_STEPS\.length/)
   assert.match(guideSource, /VIDEO_PATH_STEPS\.length/)
+  assert.match(studioSource, /resolveRepairAction\(row\.block_reason/)
+  assert.match(studioSource, /去场景参考锁定/)
 })
 
 function solid(width, height, value) {
