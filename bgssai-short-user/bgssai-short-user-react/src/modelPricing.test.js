@@ -4,7 +4,7 @@ import {
   modelPricingLabel,
   receiptSummary,
   isValidBillingMultiplier,
-  validateTokenhubCnRoute,
+  validateDomesticGatewayRoute,
   detectMultiplierDrift,
   estimateShotBatchTokens,
 } from './modelPricing.js'
@@ -90,9 +90,9 @@ test('tokenhub CN route and multiplier drift validation', () => {
   assert.equal(isValidBillingMultiplier(1.5), true)
   assert.equal(isValidBillingMultiplier(2.0), false)
 
-  assert.equal(validateTokenhubCnRoute('https://api.tokenhub.cn/v1').valid, true)
-  assert.equal(validateTokenhubCnRoute('https://api.openai.com/v1').valid, false)
-  const overseas = validateTokenhubCnRoute('https://www.bgssai-tokenhub.com/v1')
+  assert.equal(validateDomesticGatewayRoute('https://api.tokenhub.cn/v1').valid, true)
+  assert.equal(validateDomesticGatewayRoute('https://api.openai.com/v1').valid, false)
+  const overseas = validateDomesticGatewayRoute('https://www.bgssai-tokenhub.com/v1')
   assert.equal(overseas.valid, false)
   assert.doesNotMatch(overseas.reason, /tokenhub/i)
 
