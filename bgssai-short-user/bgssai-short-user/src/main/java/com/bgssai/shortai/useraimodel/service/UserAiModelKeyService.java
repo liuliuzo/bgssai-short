@@ -55,6 +55,9 @@ public class UserAiModelKeyService {
     @Autowired
     private UserAiModelKeyMapper userAiModelKeyMapper;
 
+    @Autowired
+    private ExternalApiKeyBalanceClient externalApiKeyBalanceClient;
+
     private final HttpClient probeHttp = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
@@ -98,6 +101,7 @@ public class UserAiModelKeyService {
                 migrateLegacyProvider(row);
                 items.add(toItem(row));
             }
+            externalApiKeyBalanceClient.fill(rows, items);
         }
         UserAiModelKeyListResponse resp = new UserAiModelKeyListResponse();
         // Kept for response compatibility; there is no exclusive mode anymore.
@@ -153,6 +157,7 @@ public class UserAiModelKeyService {
 
         log.info("创建用户模型密钥 userId={} providerCode={} count={}", userId, providerCode, pending.size());
         Date now = new Date();
+        List<UserAiModelKey> createdRows = new ArrayList<>();
         List<UserAiModelKeyItem> createdItems = new ArrayList<>();
         for (CreateUserAiModelKeyItem item : pending) {
             String ability = UserAiModelSupport.normalizeAbility(item.getModalityType(), item.getAbilityType());
@@ -187,8 +192,10 @@ public class UserAiModelKeyService {
             row.setGmtCreate(now);
             row.setGmtModified(now);
             userAiModelKeyMapper.insertSelective(row);
+            createdRows.add(row);
             createdItems.add(toItem(row));
         }
+        externalApiKeyBalanceClient.fill(createdRows, createdItems);
 
         log.info("创建用户模型密钥完成 userId={} createdCount={}", userId, createdItems.size());
 
@@ -266,7 +273,7 @@ public class UserAiModelKeyService {
 
         UserAiModelKey updated = requireOwnedRow(userId, existing.getKeyId());
         log.info("更新用户模型密钥完成 userId={} keyId={}", userId, existing.getKeyId());
-        return new UserAiModelKeyItemResponse(toItem(updated));
+        return new UserAiModelKeyItemResponse(describe(updated));
     }
 
     @Transactional
@@ -296,7 +303,7 @@ public class UserAiModelKeyService {
         }
         UserAiModelKey updated = requireOwnedRow(userId, existing.getKeyId());
         log.info("切换用户模型密钥启停完成 userId={} keyId={} enabled={}", userId, existing.getKeyId(), enabled);
-        return new UserAiModelKeyItemResponse(toItem(updated));
+        return new UserAiModelKeyItemResponse(describe(updated));
     }
 
     @Transactional
@@ -332,7 +339,7 @@ public class UserAiModelKeyService {
 
         UserAiModelKey updated = requireOwnedRow(userId, target.getKeyId());
         log.info("设置用户默认模型密钥完成 userId={} keyId={}", userId, target.getKeyId());
-        return new UserAiModelKeyItemResponse(toItem(updated));
+        return new UserAiModelKeyItemResponse(describe(updated));
     }
 
     @Transactional
@@ -823,6 +830,12 @@ public class UserAiModelKeyService {
         } catch (RuntimeException ex) {
             log.warn("迁移用户模型供应商编码失败 keyId={}", row.getKeyId());
         }
+    }
+
+    private UserAiModelKeyItem describe(UserAiModelKey row) {
+        UserAiModelKeyItem item = toItem(row);
+        externalApiKeyBalanceClient.fill(List.of(row), List.of(item));
+        return item;
     }
 
     private static UserAiModelKeyItem toItem(UserAiModelKey row) {

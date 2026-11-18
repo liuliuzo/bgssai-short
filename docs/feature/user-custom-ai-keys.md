@@ -76,11 +76,19 @@
    - `OPENAI`：`GET /v1/models`。
    - `ANTHROPIC`：`GET /v1/models`，请求头 `x-api-key`、`Authorization: Bearer` 与 `anthropic-version: 2023-06-01`。
    - `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB`：`GET /v1/models`（`Authorization: Bearer`）。
-   - 以上供应商均无单独的账户余额探活接口接入；连通性只走模型目录或既有零计费查询。
-7. **默认模型唯一性与删改联动**：
+   - 连通性只走模型目录或既有零计费查询；余额读取见下一项，与探活相互独立。
+7. **外部密钥剩余余额**：
+   - 列表、创建、更新、启停、设默认返回的密钥条目带 `balance_status` 与 `balance_list`，模型密钥表显示「余额」列。余额只来自该密钥所属供应商的只读账户接口，不读平台 `user_quota`，不记本地账，不写死数字。
+   - 同一用户、同一供应商、同一 `base_url` 与同一对密钥只查询一次，结果回填到这些条目。只查询当前登录用户自己的行。
+   - `PIXVERSE`：`GET /openapi/v2/account/balance`，取 `Resp.credit_monthly`（月度积分）与 `Resp.credit_package`（资源包积分）。
+   - `DEEPSEEK`：`GET /user/balance`，取 `balance_infos[].total_balance`；`CNY` 显示为元，`USD` 显示为 USD。
+   - `KLING`：用现有短期 JWT 调 `GET /account/costs`，取未过期资源包的 `remaining_quantity`，单位为次。
+   - `MINIMAX`：先读 `GET /v1/token_plan/remains` 的 `current_interval_remaining_percent` 与 `current_weekly_remaining_percent`；没有这两项时再读 `GET /account/query_balance` 的 `available_amount`。`minimaxi.com` / `minimax.cn` 单位为元，`minimax.io` 单位为 USD。
+   - `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` 无可用的密钥级余额只读接口，`balance_status=UNAVAILABLE`，`balance_list` 为空（前端显示 `-`）。查询失败为 `FAILED`（前端显示「查询失败」），不补 0。
+8. **默认模型唯一性与删改联动**：
    - 同一用户、同一 `ability_type` 下最多一条 `is_default_model = 1`。
    - 新增同能力首条启用模型时自动设为默认；停用或删除当前默认模型时，自动将该能力下其余首条已启用模型升为默认。
-8. **密钥安全与传输约束**：
+9. **密钥安全与传输约束**：
    - `api_key` 与 `secret_key` 明文入库（符合开发期存储规范），接口列表仅回传掩码 `api_key_masked` 与 `secret_key_masked`，禁止回显完整明文；日志与异常消息严禁打印任何密钥。
    - `base_url` 与上游媒体下载地址强制执行公网 `https://` 与 DNS 解析 IP 校验，拒绝内网/环回/元数据地址（SSRF 防护）。
    - `short_ai_task.model_code` 存储自有配置业务标识 `umk-...`（长度不超过 64 字符），`request_json` 不保存 `api_key` 或 `secret_key`。
