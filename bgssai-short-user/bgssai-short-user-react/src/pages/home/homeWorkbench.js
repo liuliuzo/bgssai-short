@@ -166,11 +166,16 @@ export function resolveEpisodeStage(episode, detail) {
   return { key: 'shots', stageLabel: '分镜', tab: 'storyboard', units: 2.2, done: false }
 }
 
+/**
+ * One list row per episode, in the order the API returned them. The card renders
+ * these as a fixed-height scrollable list, so no range folding or truncation here:
+ * every episode stays individually reachable however many episodes a work has.
+ */
 export function episodeStageItems(work, episodes, detail) {
   const list = Array.isArray(episodes) ? episodes : []
   if (!list.length) return []
   const workId = work?.work_id
-  const rawItems = list.map((episode, idx) => {
+  return list.map((episode, idx) => {
     const no = episode?.episode_no != null && episode.episode_no !== '' ? episode.episode_no : (idx + 1)
     const stage = resolveEpisodeStage(episode, detail)
     const tone = stage.done ? 'done' : (stage.key === 'pending_script' ? 'todo' : 'active')
@@ -178,68 +183,13 @@ export function episodeStageItems(work, episodes, detail) {
     return {
       key: `ep-${episode?.episode_id || no}`,
       no,
-      stageKey: stage.key,
+      noLabel: `第${no}集`,
       stageLabel: stage.stageLabel,
+      text: `第${no}集：${stage.stageLabel}`,
       tone,
       to,
     }
   })
-
-  if (rawItems.length <= 4) {
-    return rawItems.map((item) => ({
-      key: item.key,
-      text: `第${item.no}集：${item.stageLabel}`,
-      tone: item.tone,
-      to: item.to,
-    }))
-  }
-
-  const merged = []
-  for (const item of rawItems) {
-    const prev = merged[merged.length - 1]
-    if (
-      prev
-      && prev.stageKey === item.stageKey
-      && (item.stageKey === 'done' || item.stageKey === 'pending_script')
-      && Number.isFinite(Number(prev.endNo))
-      && Number.isFinite(Number(item.no))
-    ) {
-      prev.endNo = item.no
-      prev.count += 1
-    } else {
-      merged.push({
-        ...item,
-        startNo: item.no,
-        endNo: item.no,
-        count: 1,
-      })
-    }
-  }
-
-  const visible = merged.length > 5 ? merged.slice(0, 4) : merged
-  const items = visible.map((group) => {
-    const prefix = group.startNo === group.endNo
-      ? `第${group.startNo}集`
-      : `第${group.startNo}-${group.endNo}集`
-    return {
-      key: `ep-${group.startNo}-${group.endNo}-${group.stageKey}`,
-      text: `${prefix}：${group.stageLabel}`,
-      tone: group.tone,
-      to: group.to,
-    }
-  })
-
-  if (merged.length > 5) {
-    const tail = merged.slice(4)
-    const remaining = tail.reduce((sum, group) => sum + group.count, 0)
-    items.push({
-      key: 'ep-rest',
-      text: `其余 ${remaining} 集`,
-      tone: 'todo',
-      to: tail[0].to,
-    })
-  }
-  return items
 }
 
 export function episodeProgress(work, episodes, detail) {

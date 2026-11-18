@@ -156,7 +156,7 @@ test('single finished episode awaiting submission shows 已成片 instead of 合
   assert.equal(continueLabel(w, [ep]), '去看成片')
 })
 
-test('multi-episode range folding keeps card compact and links each range', () => {
+test('episode list keeps one row per episode instead of folding ranges', () => {
   const eps = []
   for (let i = 1; i <= 24; i += 1) {
     if (i <= 6) {
@@ -200,13 +200,49 @@ test('multi-episode range folding keeps card compact and links each range', () =
   const w = work('w1', '退婚三年后她成了首富', { episode_count: 24 })
   const detail = { outline_count: 24, look_total: 4, look_locked: 4 }
   const items = episodeStageItems(w, eps, detail)
-  assert.deepEqual(
-    items.map((it) => it.text),
-    ['第1-6集：已成片', '第7集：视频 3/8', '第8集：剧本', '第9-24集：待写剧本'],
-  )
-  assert.equal(items[1].to, '/works/w1/storyboard?episode_id=e7')
+  assert.equal(items.length, 24)
+  assert.deepEqual(items.map((it) => it.no), Array.from({ length: 24 }, (_, idx) => idx + 1))
+  assert.deepEqual(items[0], {
+    key: 'ep-e1',
+    no: 1,
+    noLabel: '第1集',
+    stageLabel: '已成片',
+    text: '第1集：已成片',
+    tone: 'done',
+    to: '/works/w1/compose?episode_id=e1',
+  })
+  assert.equal(items[5].text, '第6集：已成片')
+  assert.equal(items[6].noLabel, '第7集')
+  assert.equal(items[6].stageLabel, '视频 3/8')
+  assert.equal(items[6].tone, 'active')
+  assert.equal(items[6].to, '/works/w1/storyboard?episode_id=e7')
+  assert.equal(items[7].text, '第8集：剧本')
+  assert.equal(items[23].noLabel, '第24集')
+  assert.equal(items[23].stageLabel, '待写剧本')
+  assert.equal(items[23].tone, 'todo')
+  assert.equal(items[23].to, '/works/w1/script?episode_id=e24')
+  assert.ok(items.every((it) => !/第\d+-\d+集/.test(it.text) && !it.text.includes('其余')))
   assert.equal(continuePath(w, eps, detail), '/works/w1/storyboard?episode_id=e7')
   assert.equal(continueLabel(w, eps, detail), '第7集 · 去生成视频')
+})
+
+test('episode list is never truncated, even for very long dramas', () => {
+  const eps = Array.from({ length: 80 }, (_, idx) => ({
+    episode_id: `e${idx + 1}`,
+    episode_no: idx + 1,
+    script_status: 'NONE',
+    shot_total: 0,
+    compose_status: 'NONE',
+  }))
+  const items = episodeStageItems(
+    { work_id: 'w-long', episode_count: 80 },
+    eps,
+    { outline_count: 80, look_total: 0, look_locked: 0 },
+  )
+  assert.equal(items.length, 80)
+  assert.equal(items[79].noLabel, '第80集')
+  assert.equal(items[79].text, '第80集：待写剧本')
+  assert.equal(items[79].to, '/works/w-long/script?episode_id=e80')
 })
 
 test('unlocked looks route to character-bible with 去定妆', () => {

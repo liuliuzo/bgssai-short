@@ -158,18 +158,21 @@ export default function Home() {
                       <Progress percent={progress.percent} size="small" showInfo={false} />
                     )}
                     {progress.episodeItems?.length ? (
-                      <div className="home-episode-stages">
+                      <ul className="home-episode-list" aria-label="集数列表">
                         {progress.episodeItems.map((epItem) => (
-                          <button
-                            key={epItem.key}
-                            type="button"
-                            className={`home-episode-chip is-${epItem.tone}`}
-                            onClick={() => navigate(epItem.to)}
-                          >
-                            {epItem.text}
-                          </button>
+                          <li key={epItem.key}>
+                            <button
+                              type="button"
+                              className={`home-episode-row is-${epItem.tone}`}
+                              title={epItem.text}
+                              onClick={() => navigate(epItem.to)}
+                            >
+                              <span className="home-episode-no">{epItem.noLabel}</span>
+                              <span className="home-episode-stage">{epItem.stageLabel}</span>
+                            </button>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     ) : null}
                     <div className="home-work-actions">
                       <Button
