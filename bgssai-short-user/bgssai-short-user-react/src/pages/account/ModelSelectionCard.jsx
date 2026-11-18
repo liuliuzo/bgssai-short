@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, AutoComplete, Button, Card, Checkbox, Form, Input, Modal, Popconfirm, Segmented, Select, Space, Table, Tag, message } from 'antd'
+import { Alert, AutoComplete, Button, Card, Checkbox, Form, Input, Modal, Popconfirm, Segmented, Select, Space, Switch, Table, Tag, message } from 'antd'
 import api from '../../api/userAiModelKeys'
 import { ABILITY_LABEL, modelSelectionFields, modelOptions, modelsForAbility } from './modelKeySelection'
 
@@ -91,20 +91,29 @@ export default function ModelSelectionCard({ rows, presets, credentials, busy, d
     { title: '供应商', dataIndex: 'provider_name', render: (name, row) => name || row.provider_code },
     { title: '模型', dataIndex: 'model_name' },
     { title: '模型编码', dataIndex: 'model_code' },
-    { title: '状态', render: (_, row) => Number(row.enabled) === 1
-      ? <Tag color="blue">{Number(row.default_model) === 1 ? '默认模型' : '已启用'}</Tag> : '备用' },
+    { title: '状态', render: (_, row) => {
+      const platform = Number(row.platform_model) === 1
+      const enabled = Number(row.enabled) === 1
+      const needsCredential = !enabled && !platform && !ready.has(row.provider_code)
+      return (
+        <Space size={6}>
+          <Switch size="small" checked={enabled} disabled={disabled || needsCredential}
+            aria-label={`启用${ABILITY_LABEL[row.ability_type] || row.ability_type}模型 ${row.model_name || row.model_code}`}
+            title={needsCredential ? '请先在密钥管理中选用该供应商的密钥' : undefined}
+            loading={busy === 'toggle-' + row.key_id}
+            onChange={(checked) => run('toggle-' + row.key_id, () => api.toggle({
+              key_id: row.key_id, enabled: checked ? 1 : 0, provider_model_selection: !platform,
+            }), checked ? '已选用模型' : '已停用模型')} />
+          {enabled ? <Tag color="blue">{Number(row.default_model) === 1 ? '默认模型' : '已启用'}</Tag> : '备用'}
+        </Space>
+      )
+    } },
     { title: '操作', render: (_, row) => {
       const platform = Number(row.platform_model) === 1
       const enabled = Number(row.enabled) === 1
       const canSelect = platform || ready.has(row.provider_code)
       return (
         <Space wrap size={4}>
-          <Button size="small" disabled={disabled || (!enabled && !canSelect)}
-            title={!enabled && !canSelect ? '请先在密钥管理中选用该供应商的密钥' : undefined}
-            loading={busy === 'toggle-' + row.key_id}
-            onClick={() => run('toggle-' + row.key_id, () => api.toggle({ key_id: row.key_id, enabled: enabled ? 0 : 1, provider_model_selection: !platform }), enabled ? '已停用模型' : '已选用模型')}>
-            {enabled ? '停用' : '使用此模型'}
-          </Button>
           {enabled && Number(row.default_model) !== 1 && <Button size="small" disabled={disabled || !canSelect}
             onClick={() => run('set-default', () => api.setDefault({ key_id: row.key_id, provider_model_selection: !platform }), '已设为默认模型')}>设为默认</Button>}
           {!platform && <>
