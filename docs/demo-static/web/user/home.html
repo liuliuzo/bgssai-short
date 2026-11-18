@@ -80,6 +80,14 @@
         .wb-ep-stage { padding: 1px 8px; border-radius: 6px; font-size: 12px; line-height: 1.4; white-space: nowrap; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; }
         .wb-ep-row.done .wb-ep-stage { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
         .wb-ep-row.active .wb-ep-stage { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+        .wb-ep-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; margin: 0 0 10px; font-size: 13px; color: #475569; }
+        .wb-ep-all-modal { max-width: 640px; margin-top: 16px; padding: 16px; border: 1px solid var(--border, #e4e7ed); border-radius: 8px; background: #fff; }
+        .wb-ep-all-modal h3 { margin: 0 0 12px; font-size: 14px; }
+        .wb-ep-jump { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; font-size: 13px; color: #475569; }
+        .wb-ep-jump input { width: 200px; padding: 4px 8px; }
+        .wb-episodes-all { margin: 8px 0 0; padding: 0; list-style: none; max-height: 320px; overflow-y: auto; }
+        .wb-episodes-all li + li { border-top: 1px solid #f1f5f9; }
+        .wb-ep-row.located { background: #dbeafe; }
         .wb-label { margin: 16px 0 8px; font-size: 13px; color: var(--sub); }
         @media (max-width: 640px) {
           .wb-grid { grid-template-columns: 1fr; }
@@ -94,37 +102,9 @@
           <div class="wb-progress-text">总进度 23% · 已成片 6/30 集</div>
           <div class="wb-bar" aria-hidden="true"><span style="width:23%"></span></div>
           <ul class="wb-episodes">
-            <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第1集</span><span class="wb-ep-stage">已成片</span></a></li>
-            <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第2集</span><span class="wb-ep-stage">已成片</span></a></li>
-            <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第3集</span><span class="wb-ep-stage">已成片</span></a></li>
-            <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第4集</span><span class="wb-ep-stage">已成片</span></a></li>
-            <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第5集</span><span class="wb-ep-stage">已成片</span></a></li>
-            <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第6集</span><span class="wb-ep-stage">已成片</span></a></li>
             <li><a class="wb-ep-row active" href="storyboard.html"><span class="wb-ep-no">第7集</span><span class="wb-ep-stage">视频 3/8</span></a></li>
-            <li><a class="wb-ep-row active" href="script-studio.html"><span class="wb-ep-no">第8集</span><span class="wb-ep-stage">剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第9集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第10集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第11集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第12集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第13集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第14集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第15集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第16集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第17集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第18集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第19集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第20集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第21集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第22集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第23集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第24集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第25集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第26集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第27集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第28集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第29集</span><span class="wb-ep-stage">待写剧本</span></a></li>
-            <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第30集</span><span class="wb-ep-stage">待写剧本</span></a></li>
           </ul>
+          <div class="wb-ep-summary"><span>已成片 6 · 制作中 2 · 待写剧本 22</span><a href="#wb-all-episodes">全部 30 集</a></div>
           <a class="btn btn-primary btn-sm" href="storyboard.html">第7集 · 去生成视频</a>
         </div>
         <div class="card">
@@ -152,6 +132,47 @@
         </div>
       </div>
 
+      <div class="wb-ep-all-modal" id="wb-all-episodes">
+        <h3>《退婚三年后她成了首富》全部集数（点卡片「全部 30 集」打开的弹层示意）</h3>
+        <div class="wb-ep-jump">
+          <input type="text" inputmode="numeric" value="7" placeholder="输入集号，1–30" aria-label="按集号定位">
+          <button type="button">定位</button>
+          <span>已成片 6 · 制作中 2 · 待写剧本 22</span>
+        </div>
+        <ul class="wb-episodes-all">
+          <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第1集</span><span class="wb-ep-stage">已成片</span></a></li>
+          <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第2集</span><span class="wb-ep-stage">已成片</span></a></li>
+          <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第3集</span><span class="wb-ep-stage">已成片</span></a></li>
+          <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第4集</span><span class="wb-ep-stage">已成片</span></a></li>
+          <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第5集</span><span class="wb-ep-stage">已成片</span></a></li>
+          <li><a class="wb-ep-row done" href="compose-export.html"><span class="wb-ep-no">第6集</span><span class="wb-ep-stage">已成片</span></a></li>
+          <li><a class="wb-ep-row active located" href="storyboard.html"><span class="wb-ep-no">第7集</span><span class="wb-ep-stage">视频 3/8</span></a></li>
+          <li><a class="wb-ep-row active" href="script-studio.html"><span class="wb-ep-no">第8集</span><span class="wb-ep-stage">剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第9集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第10集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第11集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第12集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第13集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第14集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第15集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第16集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第17集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第18集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第19集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第20集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第21集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第22集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第23集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第24集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第25集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第26集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第27集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第28集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第29集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+          <li><a class="wb-ep-row todo" href="script-studio.html"><span class="wb-ep-no">第30集</span><span class="wb-ep-stage">待写剧本</span></a></li>
+        </ul>
+      </div>
+
       <p class="wb-label">需要处理</p>
       <div class="wb-grid">
         <div class="card">
@@ -176,7 +197,7 @@
         <code>GET /bgssai/user/ai-tasks/list?task_status=FAILED&amp;work_id=</code>。
         没有 <code>cover_url</code> 时不画封面。有作品时也放「新建作品」，链到
         <a href="work-create.html">work-create.html</a>（应用内为 <code>/works?create=1</code>）。
-        剧名、状态、总进度与集数列表分行展示；总进度按单集六环节链路（剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片）统一折算并附带「已成片 M/N 集」，集数列表每集一行（左集号、右环节）不合并区间，固定高度内滚动，卡片高度不随总集数增长。需要处理的卡片把作品名和状态分开，失败原因用中文。
+        剧名、状态、总进度与集数列表分行展示；总进度按单集六环节链路（剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片）统一折算并附带「已成片 M/N 集」，集数每集一行（左集号、右环节）不合并区间：≤4 集时全部列在卡片上；超过 4 集时卡片只保留下一集未成片那一行与状态计数（已成片 N · 制作中 N · 待写剧本 N），点「全部 N 集」在弹层中查看完整列表并可输入集号定位，卡片高度不随总集数增长。需要处理的卡片把作品名和状态分开，失败原因用中文。
         没有待处理项时不显示「需要处理」。身份只在顶栏，不在本页再放登录身份。
         「看示例流程」：本账号作品里有样例《悬疑法医手记》（<code>w-dm-005</code>）时打开该作品；
         没有时留在首页并提示当前账号没有示例作品。越权打开他人作品会返回 <code>4003</code> 并退出登录，
