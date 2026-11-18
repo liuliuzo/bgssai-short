@@ -46,6 +46,7 @@ import com.bgssai.shortai.production.support.GenerationTaskStatus;
 import com.bgssai.shortai.production.support.OfficialVideoLane;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.ShotConsistency;
+import com.bgssai.shortai.production.support.PromptComposer;
 import com.bgssai.shortai.production.support.ShortLabels;
 import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -178,6 +179,12 @@ public class AiTaskService {
             }
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("shot_id", shot.getShotId());
+            if ("IMAGE".equals(type) || "VIDEO".equals(type)) {
+                request.put("shot_prompt", PromptComposer.generationPrompt(shot, type));
+            }
+            if ("IMAGE".equals(type) && autoNext == 1) {
+                request.put("next_video_prompt", PromptComposer.generationPrompt(shot, "VIDEO"));
+            }
             if ("VIDEO".equals(type) || autoNext == 1) {
                 request.put("camera_move", shot.getCameraMove());
             }

@@ -23,6 +23,7 @@
   2. 拆镜规则：一个镜头默认承载 1 至 3 句连续台词或一个动作单元，`shot_duration_sec` 取 2 至 8 秒；
      全集镜头时长合计对齐 `episode_duration_sec ± 15%`。对话场景按「正打 / 反打 / 双人中景」交替给景别，
      情绪高点自动给 `CLOSE` 或 `EXTREME_CLOSE`。
+     「画面风格」按镜头单选真人写实、二维动画、三维动画、水墨动画或黑白胶片。重复点击当前项可取消。切换只替换该镜头的画面风格和旧版自动添加的题材标签，保留剧本文字、视角、运镜与衔接设置。
   3. 每个镜头的结构化字段：`shot_no`、`scene_no`、`shot_size`、`camera_move`、`shot_duration_sec`、
      `shot_desc`（画面描述）、`dialogue_text`（台词）、`emotion`、`lighting`、`character_ref_json`
      （出场角色 + `outfit_code`）、`scene_card_id`、`extra_prompt`（用户补充）。

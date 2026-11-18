@@ -2,7 +2,7 @@ import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel } from '
 import { creatorToolLabel } from '../../publicModel'
 import { isPlaceholderMediaUrl, isRealPhotoUrl } from '../../lib/mediaUrl'
 import UsageReceipts from '../../components/UsageReceipts'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Button, Card, Checkbox, Collapse, Dropdown, Form, Input, Modal, Radio, Segmented, Select, Skeleton, Space, Table, Tag, Tooltip, Typography, message } from 'antd'
 import ImageToVideoPanel from './ImageToVideoPanel'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -63,6 +63,7 @@ import {
   shotCardContainment,
   shotDialogueLine,
   shotPresetGroups,
+  toggleShotVisualStyle,
   shotVideoDialogProps,
   storyboardPrimaryPlan,
   canvasSwitchState,
@@ -1513,7 +1514,7 @@ function CharacterPane({ work, section = 'characters', onFlowChange, onJumpTab }
 
 function modelLabel(row) { return modelPricingLabel(row) }
 
-function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraSaves, onReload, onFlowChange, onJumpTab }) {
+function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraSaves, savingDraftsRef, draftFlushRef, onReload, onFlowChange, onJumpTab }) {
   const [canvasView, setCanvasView] = useState(false)
   const [rows, setRows] = useState([])
   const [shotsLoaded, setShotsLoaded] = useState(false)
@@ -1525,7 +1526,6 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
   const [expandedShotTools, setExpandedShotTools] = useState({})
   const [drafts, setDrafts] = useState({})
   const autoFilledEpisodeRef = useRef(null)
-  const savingDraftsRef = useRef(new Map())
   const [imageModels, setImageModels] = useState([])
   const [videoModels, setVideoModels] = useState([])
   const [imageModelCode, setImageModelCode] = useState()
@@ -1549,7 +1549,6 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
     setExpandedShotTools({})
     setDrafts({})
     autoFilledEpisodeRef.current = null
-    savingDraftsRef.current = new Map()
   }, [episodeId])
 
   useEffect(() => {
@@ -1691,29 +1690,30 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
     return spokenOfRow(row) !== (row.previz_text ?? '')
   }
 
-  const saveShotDraft = (row, { silent = true } = {}) => {
+  const saveShotDraft = (row, { silent = true, text = spokenOfRow(row) } = {}) => {
     if (!row?.shot_id) return Promise.resolve()
     const inFlight = savingDraftsRef.current.get(row.shot_id)
-    if (!isRowDirty(row)) {
+    if (text === (row.previz_text ?? '') && !inFlight) {
       if (Object.prototype.hasOwnProperty.call(drafts, row.shot_id)) {
         setDrafts((cur) => {
           if (!Object.prototype.hasOwnProperty.call(cur, row.shot_id)) return cur
+          if (spokenOfRow(row, cur) !== text) return cur
           const next = { ...cur }
           delete next[row.shot_id]
           return next
         })
       }
-      return inFlight ? inFlight.promise : Promise.resolve()
+      return Promise.resolve()
     }
-    const text = spokenOfRow(row)
     if (inFlight && inFlight.text === text) return inFlight.promise
     const basePromise = inFlight ? inFlight.promise.catch(() => {}) : Promise.resolve()
     const entry = { text, promise: null }
     entry.promise = basePromise.then(async () => {
       try {
         const { data } = await featuresApi.previzSave({ shot_id: row.shot_id, previz_text: text })
-        const saved = data?.result || {}
-        const savedText = saved.previz_text || text
+        if (!data?.success) throw new Error(data?.message || '画面描述保存失败')
+        const saved = data.result || {}
+        const savedText = saved.previz_text ?? text
         patchRow(row.shot_id, {
           previz_text: savedText,
           look_plain: saved.look_plain,
@@ -1752,6 +1752,11 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
     }
     if (tasks.length) await Promise.all(tasks)
   }
+
+  useLayoutEffect(() => {
+    draftFlushRef.current = flushDirtyDrafts
+    return () => { draftFlushRef.current = null }
+  })
 
   const plan = useMemo(() => storyboardPrimaryPlan({ rows, selected }), [rows, selected])
   const selectedIds = selected.length ? selected : undefined
@@ -2341,14 +2346,14 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                 style={{ marginTop: 6 }}
                 value={spoken}
                 onChange={(e) => setDrafts((cur) => ({ ...cur, [row.shot_id]: e.target.value }))}
-                onBlur={() => { saveShotDraft(row, { silent: true }) }}
+                onBlur={() => { saveShotDraft(row).catch((error) => showActionError(error.message)) }}
               />
               {row.reference_note ? (
                 <Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 0 }}>{row.reference_note}</Paragraph>
               ) : null}
               <Space className="shot-actions" style={{ marginTop: 8 }} wrap>
                 {dirty ? (
-                  <Button size="small" onClick={() => saveShotDraft(row, { silent: false })}>保存修改</Button>
+                  <Button size="small" onClick={() => saveShotDraft(row, { silent: false }).catch((error) => showActionError(error.message))}>保存修改</Button>
                 ) : null}
                 <Button size="small" disabled={row.shot_status === 'LOCKED'} onClick={async () => {
                   setActionError(null)
@@ -2421,7 +2426,15 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                               key={item.key}
                               size="small"
                               type={active ? 'primary' : 'default'}
+                              aria-pressed={active}
+                              disabled={row.shot_status === 'LOCKED'}
                               onClick={() => {
+                                if (group.key === 'style') {
+                                  const text = toggleShotVisualStyle(spoken, item.marker)
+                                  setDrafts((cur) => ({ ...cur, [row.shot_id]: text }))
+                                  saveShotDraft(row, { text }).catch((error) => showActionError(error.message))
+                                  return
+                                }
                                 setDrafts((cur) => {
                                   const old = reconcileEmptyScene(cur[row.shot_id] ?? row.previz_text ?? '', sceneKnown)
                                   return { ...cur, [row.shot_id]: appendPreset(old, item.marker) }
@@ -3145,6 +3158,11 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
 
 export default function WorkStudio() {
   const cameraSaves = useShotCameraSaves()
+  const savingDraftsRef = useRef(new Map())
+  const draftFlushRef = useRef(null)
+  const waitForShotDrafts = (ids) => draftFlushRef.current
+    ? draftFlushRef.current(ids)
+    : Promise.all(ids.map((id) => savingDraftsRef.current.get(id)?.promise))
   const { workId, tab } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -3390,6 +3408,8 @@ export default function WorkStudio() {
     if (effectiveTab === 'storyboard') {
       return (
         <StoryboardPane
+          draftFlushRef={draftFlushRef}
+          savingDraftsRef={savingDraftsRef}
           cameraSaves={cameraSaves}
           work={work}
           episodeId={episodeId}
@@ -3493,6 +3513,7 @@ export default function WorkStudio() {
         ) : null}
       </Space>
       <ProductionGuide
+        waitForShotDrafts={waitForShotDrafts}
         cameraSaves={cameraSaves}
         work={work}
         episode={current}

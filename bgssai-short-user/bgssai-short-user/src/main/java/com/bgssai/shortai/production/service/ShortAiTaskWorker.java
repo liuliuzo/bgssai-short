@@ -1137,8 +1137,9 @@ public class ShortAiTaskWorker {
             throw new BizException(CommonErrorCode.RULE_REJECT, "task target no longer available");
         }
         String ability = "VIDEO".equals(task.getTaskType()) ? "VIDEO" : "IMAGE";
+        Map<String, Object> queued = ShortJson.map(task.getRequestJson());
         boolean recoveringVideo = "VIDEO".equals(ability)
-                && !ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id")).isBlank();
+                && !ShortJson.text(queued.get("resume_request_id")).isBlank();
         if (recoveringVideo && (!Objects.equals(task.getUserId(), shot.getUserId())
                 || !Objects.equals(task.getWorkId(), shot.getWorkId())
                 || !Objects.equals(task.getEpisodeId(), shot.getEpisodeId()))) {
@@ -1153,16 +1154,17 @@ public class ShortAiTaskWorker {
             request.getParams().put("duration_sec", shot.getShotDurationSec());
         }
         ConsistencyBundle consistency = loadConsistency(shot);
-        String prompt = ShotConsistency.leadWithAnchors(shotPrompt(shot, ability), consistency.fragment());
+        String base = ShortJson.text(queued.get("shot_prompt"));
+        if (base.isBlank()) base = PromptComposer.generationPrompt(shot, ability);
+        String prompt = ShotConsistency.leadWithAnchors(base, consistency.fragment());
         if ("VIDEO".equals(ability)) {
-            Map<String, Object> queued = ShortJson.map(task.getRequestJson());
             String camera = queued.containsKey("camera_move")
                     ? ShortJson.text(queued.get("camera_move")) : shot.getCameraMove();
             prompt = PromptComposer.withVideoCamera(prompt, camera);
         }
-        request.setPrompt(prompt);
+        request.setPrompt(PromptComposer.withVisualStyle(prompt, PromptComposer.visualStyleMarker(base)));
         if ("VIDEO".equals(ability)) {
-            String resumeId = ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id"));
+            String resumeId = ShortJson.text(queued.get("resume_request_id"));
             if (!resumeId.isBlank()) request.getParams().put("resume_request_id", resumeId);
             else {
                 attachFrames(shot, request, model);
@@ -1231,6 +1233,9 @@ public class ShortAiTaskWorker {
                 Map<String, Object> nextReq = new LinkedHashMap<>();
                 nextReq.put("shot_id", shot.getShotId());
                 nextReq.put("camera_move", origin.getOrDefault("camera_move", shot.getCameraMove()));
+                if (origin.containsKey("next_video_prompt")) {
+                    nextReq.put("shot_prompt", origin.get("next_video_prompt"));
+                }
                 nextReq.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
                 if (!nextModel.isBlank()) {
                     nextReq.put("model_code", nextModel);
@@ -1861,24 +1866,6 @@ public class ShortAiTaskWorker {
         return result;
     }
 
-    private static String shotPrompt(ShortShot shot, String ability) {
-        String imagePrompt = shot.getImagePrompt() == null ? "" : shot.getImagePrompt().trim();
-        String desc = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
-        String extra = shot.getExtraPrompt() == null ? "" : shot.getExtraPrompt().trim();
-        if ("VIDEO".equals(ability)) {
-            String motion = desc.isBlank() ? imagePrompt : desc;
-            if (!extra.isBlank()) motion = motion.isBlank() ? extra : motion + "，" + extra;
-            return motion.isBlank() ? "人物自然动作，竖屏短剧" : motion;
-        }
-        if (!imagePrompt.isBlank()) {
-            return imagePrompt;
-        }
-        if (!desc.isBlank()) {
-            return desc + "，竖屏 9:16 电影感首帧，短剧画面";
-        }
-        return "竖屏 9:16 电影感短剧首帧";
-    }
-
     /**
      * 给视频请求挂参考帧。挂哪一张由镜头的 frame_link_mode 决定：
      * INHERIT_PREV 用上一镜的尾帧当本镜开头依据，BOOKEND 再把本镜尾帧一并送出去让模型补中间运动。
@@ -2076,7 +2063,7 @@ public class ShortAiTaskWorker {
         request.getParams().put("title", "镜 " + shot.getShotNo() + " 尾帧");
         request.getParams().put("aspect_ratio", "9:16");
         String prompt = ShortJson.text(req.get("last_frame_prompt"));
-        request.setPrompt(prompt.isBlank() ? shotPrompt(shot, "IMAGE") : prompt);
+        request.setPrompt(prompt.isBlank() ? PromptComposer.generationPrompt(shot, "IMAGE") : prompt);
         AiProviderResult result = execute(model, request);
         ShortAsset asset = saveBinary(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(),
                 shot.getShotId(), "IMAGE", result, task.getTaskId(), false);

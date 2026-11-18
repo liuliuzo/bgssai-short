@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.bgssai.shortai.model.ShortShot;
 
@@ -12,14 +14,27 @@ import com.bgssai.shortai.model.ShortShot;
  */
 public final class PromptComposer {
 
+    private static final Pattern VISUAL_STYLE = Pattern.compile("【画面风格：(真人写实|二维动画|三维动画|水墨动画|黑白胶片)】");
+    private static final String FRAME_PREFIX = "vertical 9:16 cinematic still";
+    private static final String LEGACY_RENDERING = "，photorealistic short drama";
+    private static final String FRAME_CONSTRAINTS = ", no watermark, no extra fingers";
+
     private PromptComposer() {
     }
 
     public static String compose(String desc, String dialogue, String extra, String visualStyle) {
+        return compose(desc, dialogue, extra, visualStyle, visualStyleMarker(desc));
+    }
+
+    private static String compose(String desc, String dialogue, String extra, String workStyle, String shotStyle) {
         StringBuilder sb = new StringBuilder();
-        sb.append("vertical 9:16 cinematic still, ").append(styleName(visualStyle));
-        if (desc != null && !desc.isBlank()) {
-            sb.append("，").append(desc.trim());
+        sb.append(FRAME_PREFIX);
+        if (shotStyle.isEmpty()) {
+            sb.append(", ").append(styleName(workStyle));
+        }
+        String narrative = withoutVisualStyle(desc);
+        if (!narrative.isBlank()) {
+            sb.append("，").append(narrative);
         }
         if (dialogue != null && !dialogue.isBlank()) {
             sb.append("，对白：").append(dialogue.trim());
@@ -27,8 +42,11 @@ public final class PromptComposer {
         if (extra != null && !extra.isBlank()) {
             sb.append("，").append(extra.trim());
         }
-        sb.append("，photorealistic short drama, no watermark, no extra fingers");
-        return sb.toString();
+        if (shotStyle.isEmpty() && !"ANIME".equals(workStyle)) {
+            sb.append(LEGACY_RENDERING);
+        }
+        sb.append(FRAME_CONSTRAINTS);
+        return withVisualStyle(sb.toString(), shotStyle);
     }
 
     public static String compose(ShortShot shot, String visualStyle) {
@@ -41,7 +59,63 @@ public final class PromptComposer {
                 lightName(shot.getLighting()),
                 emotionName(shot.getEmotion()),
                 shot.getExtraPrompt());
-        return compose(shot.getShotDesc(), shot.getDialogueText(), extra, visualStyle);
+        return compose(shot.getShotDesc(), shot.getDialogueText(), extra, visualStyle, shotVisualStyle(shot));
+    }
+
+    public static String visualStyleMarker(String text) {
+        Matcher matcher = VISUAL_STYLE.matcher(text == null ? "" : text);
+        String marker = "";
+        while (matcher.find()) marker = matcher.group();
+        return marker;
+    }
+
+    public static String shotVisualStyle(ShortShot shot) {
+        return visualStyleMarker(shot.getPrevizText() == null ? shot.getShotDesc() : shot.getPrevizText());
+    }
+
+    private static String withoutVisualStyle(String text) {
+        return text == null ? "" : VISUAL_STYLE.matcher(text).replaceAll("").trim();
+    }
+
+    public static String withVisualStyle(String prompt, String marker) {
+        if (marker.isEmpty()) return prompt;
+        String body = withoutVisualStyle(prompt);
+        // A client may send back a frame prompt generated before the shot's style was selected.
+        if (body.startsWith(FRAME_PREFIX + ", ") && body.endsWith(FRAME_CONSTRAINTS)) {
+            int afterWorkStyle = body.indexOf('，', FRAME_PREFIX.length());
+            int end = body.length() - FRAME_CONSTRAINTS.length();
+            if (body.endsWith(LEGACY_RENDERING + FRAME_CONSTRAINTS)) end -= LEGACY_RENDERING.length();
+            String narrative = afterWorkStyle < 0 ? "" : body.substring(afterWorkStyle, end);
+            body = FRAME_PREFIX + narrative + FRAME_CONSTRAINTS;
+        }
+        return (marker + " " + body).trim();
+    }
+
+    public static String previzNarrative(String text) {
+        String t = text == null ? "" : text.trim();
+        t = t.replace("谁：", "").replace("在哪：", " ").replace("做什么：", " ").replace("怎么拍：", " ")
+                .replace("什么感觉：", " ").replace("台词：", " ");
+        return t.replaceAll("\\s+", " ").trim();
+    }
+
+    /** Freeze the selected rendering and shot instructions together when queuing a frame or clip. */
+    public static String generationPrompt(ShortShot shot, String ability) {
+        String image = blankTo(shot.getImagePrompt(), "");
+        String desc = blankTo(shot.getShotDesc(), "");
+        String marker = shotVisualStyle(shot);
+        if ("VIDEO".equals(ability)) {
+            String motion = desc.isBlank() ? image : desc;
+            if (!marker.isEmpty()) {
+                String previz = previzNarrative(withoutVisualStyle(shot.getPrevizText()));
+                if (!previz.isBlank()) motion = previz;
+            }
+            motion = join("，", motion, shot.getExtraPrompt());
+            return withVisualStyle(blankTo(motion, "人物自然动作，竖屏短剧"), marker);
+        }
+        if (image.isBlank()) {
+            image = desc.isBlank() ? "竖屏 9:16 电影感短剧首帧" : desc + "，竖屏 9:16 电影感首帧，短剧画面";
+        }
+        return withVisualStyle(image, marker);
     }
 
     /**
@@ -58,15 +132,15 @@ public final class PromptComposer {
         if (shot == null) {
             return "";
         }
-        String who = firstSentence(shot.getShotDesc());
+        String action = withoutVisualStyle(shot.getShotDesc());
+        String who = firstSentence(action);
         if (who.isBlank() && shot.getDialogueText() != null) {
             who = "对白角色";
         }
-        String where = placeOf(shot.getShotDesc());
+        String where = placeOf(action);
         if (where.isBlank()) {
             where = usableSceneName(sceneName);
         }
-        String action = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
         String how = join("，", sizeName(shot.getShotSize()), cameraName(shot.getCameraMove()));
         String feel = join("，", lightName(shot.getLighting()), emotionName(shot.getEmotion()));
         StringBuilder sb = new StringBuilder();
@@ -78,6 +152,8 @@ public final class PromptComposer {
         if (shot.getDialogueText() != null && !shot.getDialogueText().isBlank()) {
             sb.append("。台词：").append(shot.getDialogueText().trim());
         }
+        String marker = shotVisualStyle(shot);
+        if (!marker.isEmpty()) sb.append(" ").append(marker);
         return sb.toString();
     }
 
@@ -152,7 +228,8 @@ public final class PromptComposer {
         addElement(elements, "SHOT_SIZE", "景别", containsAny(p, "特写", "近景", "中景", "全景", "景") || (shot != null && shot.getShotSize() != null));
         addElement(elements, "CAMERA", "运镜", containsAny(p, "推进", "固定", "跟拍", "摇", "运镜") || (shot != null && shot.getCameraMove() != null));
         addElement(elements, "LIGHTING", "光线", containsAny(p, "光", "夜", "日", "冷蓝", "暖") || (shot != null && shot.getLighting() != null));
-        addElement(elements, "STYLE", "风格", containsAny(p, "电影", "写实", "短剧", "9:16", "vertical"));
+        addElement(elements, "STYLE", "风格", !visualStyleMarker(p).isEmpty()
+                || containsAny(p, "电影", "写实", "短剧", "9:16", "vertical"));
         int present = 0;
         for (Map<String, Object> el : elements) {
             if (Integer.valueOf(1).equals(el.get("present_flag"))) {

@@ -2,7 +2,6 @@ import { formatTokenAmount } from '../../utils/formatToken.js'
 import { hasPlayableShotVideo, hasRealFirstFrame, isShotVideoActive, selectPendingVideoShotIds } from './productionFlow.js'
 import {
   CONTINUITY_PRESETS,
-  DRAMA_STYLES,
   QUAD_GRID_ANGLES,
 } from '../../utils/CinematographyHelper.js'
 
@@ -334,16 +333,33 @@ export function modelSelectProps(label) {
   }
 }
 
+const visualStylePresets = ['真人写实', '二维动画', '三维动画', '水墨动画', '黑白胶片'].map((label) => ({
+  key: label,
+  label,
+  marker: `【画面风格：${label}】`,
+}))
+
+const replaceableStyleMarkers = new Set([
+  ...visualStylePresets.map((item) => item.marker),
+  '【基调：都市逆袭 / 豪门爽剧】',
+  '【基调：国风修仙 / 东方玄幻】',
+  '【基调：悬疑暗黑 / 罪案反转】',
+])
+
+export function toggleShotVisualStyle(text, marker) {
+  const raw = String(text || '')
+  if (!visualStylePresets.some((item) => item.marker === marker)) return raw
+  const cleaned = raw.replace(/，?(【(?:基调|画面风格)：[^【】\r\n]*】)/g,
+    (match, tag) => replaceableStyleMarkers.has(tag) ? '' : match)
+  return raw.includes(marker) ? cleaned : appendPreset(cleaned, marker)
+}
+
 export function shotPresetGroups() {
   return [
     {
       key: 'style',
-      label: '风格',
-      items: DRAMA_STYLES.slice(0, 3).map((item) => ({
-        key: item.key,
-        label: item.label.split(' ')[0],
-        marker: `【基调：${item.label}】`,
-      })),
+      label: '画面风格',
+      items: visualStylePresets,
     },
     {
       key: 'angle',

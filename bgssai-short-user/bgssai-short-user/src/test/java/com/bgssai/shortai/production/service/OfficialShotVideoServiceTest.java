@@ -92,6 +92,8 @@ class OfficialShotVideoServiceTest {
     @Test
     void realPhotoStartsImageToVideoAndKeepsTheOldClip() {
         ShortShot shot = readyShot();
+        shot.setPrevizText("对峙 【画面风格：水墨动画】");
+        shot.setImagePrompt("对峙 " + "雨".repeat(2100) + "【画面风格：水墨动画】");
         when(tasks.resolveShots(any())).thenReturn(List.of(shot));
         when(assets.selectOneByExample(any())).thenReturn(jpeg("frame-1"));
         when(imageToVideo.readyForOfficial()).thenReturn(true);
@@ -124,6 +126,8 @@ class OfficialShotVideoServiceTest {
         verify(imageToVideo).enqueueForShot(eq(shot), eq("frame-1"), prompt.capture(), anyInt(), batchCaptor.capture());
         assertTrue(prompt.getValue().contains("向右摇镜"));
         assertTrue(prompt.getValue().contains("对峙"));
+        assertTrue(prompt.getValue().startsWith("【画面风格：水墨动画】"));
+        assertEquals(2000, prompt.getValue().length());
         assertEquals(firstSubmit.get("batch_id"), batchCaptor.getValue());
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
         verify(shots).updateByExampleSelective(patch.capture(), any());

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,8 +25,10 @@ import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortShot;
+import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.production.dto.FrameLinkDtos.FrameLinkBatchReq;
 import com.bgssai.shortai.production.dto.FrameLinkDtos.FrameLinkSaveReq;
+import com.bgssai.shortai.production.dto.FrameLinkDtos.LastFrameGenerateReq;
 
 class FrameLinkServiceTest {
 
@@ -56,6 +59,25 @@ class FrameLinkServiceTest {
         shot.setFrameLinkMode(mode);
         shot.setLastFrameAssetId(lastFrame);
         return shot;
+    }
+
+    @Test
+    void appliesTheSelectedShotStyleToTheQueuedLastFrame() {
+        FrameLinkService service = service();
+        ShortShot shot = shot(1L, 1, 1, "BOOKEND", null);
+        shot.setPrevizText("她回望门口 【画面风格：水墨动画】");
+        when(shotMapper.selectOneByExample(any())).thenReturn(shot);
+        when(aiTaskQueue.enqueue(eq("u-1"), eq("w-1"), eq("e-1"), eq("IMAGE"), eq("LAST_FRAME"), eq("s-1"),
+                any(), eq(null), eq(0), eq("bgssai-image"))).thenAnswer(call -> {
+                    Map<?, ?> input = call.getArgument(6);
+                    assertEquals("【画面风格：水墨动画】 空镜，门缓缓关上", input.get("last_frame_prompt"));
+                    return new ShortAiTask();
+                });
+        LastFrameGenerateReq req = new LastFrameGenerateReq();
+        req.setShotId("s-1");
+        req.setLastFramePrompt("空镜，门缓缓关上");
+        req.setModelCode("bgssai-image");
+        service.generateLastFrame(req);
     }
 
     @Test

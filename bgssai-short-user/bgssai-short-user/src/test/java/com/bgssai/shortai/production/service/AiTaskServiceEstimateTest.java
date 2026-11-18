@@ -145,6 +145,7 @@ class AiTaskServiceEstimateTest {
         shot.setWorkId("w-1");
         shot.setEpisodeId("e-1");
         shot.setImagePrompt("a detective crosses the empty street");
+        shot.setPrevizText("她穿过街道 【画面风格：黑白胶片】");
         when(shortShotMapper.selectOneByExample(any())).thenReturn(shot);
         AiModelConfig image = model("image-01", "PER_CALL", 0);
         image.setModelId("umk-image-a");
@@ -159,6 +160,8 @@ class AiTaskServiceEstimateTest {
                     Map<?, ?> input = call.getArgument(6);
                     assertEquals("umk-image-a", input.get("model_code"));
                     assertEquals("umk-video-a", input.get("next_model_code"));
+                    assertEquals("【画面风格：黑白胶片】 a detective crosses the empty street", input.get("shot_prompt"));
+                    assertEquals("【画面风格：黑白胶片】 她穿过街道", input.get("next_video_prompt"));
                     return task;
                 });
         AiTaskReq req = new AiTaskReq();
