@@ -22,7 +22,8 @@
    - 若对应能力下无已启用的自有密钥模型，**不得回退到平台 BGSSAI 模型**，直接拒绝并返回错误码 `4014`。
    - `COMPOSE`（`ffmpeg-compose-v1`）属本机音视频合成工具，不受 `only_user_key` 限制。
 3. **非独占模式（`only_user_key = 0`）**：
-   - 模型列表同时展示用户已启用的自有密钥模型与 BGSSAI 默认模型；未指定自有模型时可继续使用 BGSSAI 默认模型，显式选中 `umk-...` 时走用户自有密钥模型。
+   - 某一 `ability_type` 没有启用中的自有密钥、且用户未关闭该能力的自建模型时，模型列表展示该能力的 BGSSAI 自建模型；未指定模型时解析到该自建模型，显式选中 `umk-...` 时走用户自有密钥模型。
+   - 该能力已有启用中的自有密钥，或用户已关闭该能力的自建模型时，模型列表与解析都不再使用该能力的 BGSSAI 自建模型。
 4. **零平台额度扣减**：
    - 凡解析为自有密钥模型（`credential_source = "USER_KEY"`），预估费用 `estimated_cost_cent = 0`、单价 `unit_price_cent = 0`、实扣 `cost_cent = 0`。
    - 跳过平台中央账本与本地额度钱包的余额预检及扣费（不要求绑定 `bgssai-chat` 账号）；`ai_usage_record` 正常记录调用次数，金额列记 `0`。
@@ -88,9 +89,14 @@
    - `KLING`：用现有短期 JWT 调 `GET /account/costs`，取未过期资源包的 `remaining_quantity`，单位为次。
    - `MINIMAX`：先读 `GET /v1/token_plan/remains` 的 `current_interval_remaining_percent` 与 `current_weekly_remaining_percent`；没有这两项时再读 `GET /account/query_balance` 的 `available_amount`。`minimaxi.com` / `minimax.cn` 单位为元，`minimax.io` 单位为 USD。
    - `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` 无可用的密钥级余额只读接口，`balance_status=UNAVAILABLE`，`balance_list` 为空（前端显示 `-`）。查询失败为 `FAILED`（前端显示「查询失败」），不补 0。
-8. **默认模型唯一性与删改联动**：
-   - 同一用户、同一 `ability_type` 下最多一条 `is_default_model = 1`。
-   - 新增同能力首条启用模型时自动设为默认；停用或删除当前默认模型时，自动将该能力下其余首条已启用模型升为默认。
+8. **同类型只启用一个，含 BGSSAI 自建模型**：
+   - 同一用户、同一 `ability_type` 下，自有密钥与 BGSSAI 自建模型合计最多一条启用。自建模型为 `TEXT=bgssai-chat`、`IMAGE=bgssai-image`、`VIDEO=bgssai-video`、`VOICE=bgssai-tts`、`ASR=bgssai-asr`、`MUSIC=bgssai-music`。
+   - 启用一条自有密钥时，同能力其余自有密钥停用，该能力自建模型改为未启用。同一次批量新增里，同一能力只保留最后一条为启用。
+   - 启用该能力的自建模型时，同能力自有密钥全部停用。
+   - 关闭自建模型后记入 `user_ai_setting.suppressed_platform_abilities`，在用户再次启用该自建模型之前，该能力不回退到自建模型。
+   - 停用或删除当前自有密钥后，不自动启用另一条自有密钥。该能力自建模型未被用户关闭时，自建模型恢复为启用。
+   - 同一用户、同一 `ability_type` 下最多一条 `is_default_model = 1`，落在当前启用的自有密钥上。自建模型启用时不另记自有默认。
+   - `only_user_key = 1` 时全部自建模型未启用。用户改启用某一个自建模型时，`only_user_key` 改为 `0`，其它能力的自建模型保持未启用。
 9. **密钥安全与传输约束**：
    - `api_key` 与 `secret_key` 明文入库（符合开发期存储规范），接口列表仅回传掩码 `api_key_masked` 与 `secret_key_masked`，禁止回显完整明文；日志与异常消息严禁打印任何密钥。
    - `base_url` 与上游媒体下载地址强制执行公网 `https://` 与 DNS 解析 IP 校验，拒绝内网/环回/元数据地址（SSRF 防护）。
@@ -116,6 +122,7 @@
 4. `MINIMAX` 覆盖 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 六种能力；`PIXVERSE` 覆盖 `VIDEO`（含图生/首尾帧过渡）；`DEEPSEEK` 覆盖 `TEXT`（含 `deepseek-chat` 与 `deepseek-reasoner`）。
 5. 多供应商混用（如 DeepSeek 文本 + 可灵或 PixVerse 视频 + MiniMax 配音与 BGM）在同一作品全流程可执行通过，任务与对账费用 `cost_cent = 0`。
 6. `OPENAI` 覆盖 `TEXT` / `IMAGE` / `ASR`；`ANTHROPIC` 覆盖 `TEXT`；`BGSSAI_TOKENHUB` 覆盖六种能力；`TENCENT_TOKENHUB` 覆盖 `TEXT`。两者均使用用户 Key、不扣平台额度，且密钥只发往各自产品的主机。
+7. 同一 `ability_type` 同时只有一条启用。启用自有密钥后，同能力其它自有密钥与 BGSSAI 自建模型均为未启用；启用 BGSSAI 自建模型后，同能力自有密钥均为未启用。
 
 ## 5. 厂商级 API Key（`user_ai_provider_key`）
 

@@ -16,6 +16,7 @@ public class UserAiModelKeyItem {
     private String secretKeyMasked;
     private Integer enabled;
     private Integer defaultModel;
+    private Integer platformModel;
     private String lastCheckStatus;
     private Date lastCheckTime;
     private String balanceStatus;
@@ -115,6 +116,14 @@ public class UserAiModelKeyItem {
 
     public void setDefaultModel(Integer defaultModel) {
         this.defaultModel = defaultModel;
+    }
+
+    public Integer getPlatformModel() {
+        return platformModel;
+    }
+
+    public void setPlatformModel(Integer platformModel) {
+        this.platformModel = platformModel;
     }
 
     public String getLastCheckStatus() {

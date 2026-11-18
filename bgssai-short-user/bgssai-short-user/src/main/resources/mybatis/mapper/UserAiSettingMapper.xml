@@ -5,6 +5,7 @@
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
     <result column="is_only_user_key" jdbcType="TINYINT" property="onlyUserKey" />
+    <result column="suppressed_platform_abilities" jdbcType="VARCHAR" property="suppressedPlatformAbilities" />
     <result column="del_flag" jdbcType="TINYINT" property="delFlag" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
@@ -55,7 +56,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, user_id, is_only_user_key, del_flag, creator, modifier, gmt_create, gmt_modified
+    id, user_id, is_only_user_key, suppressed_platform_abilities, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.UserAiSettingExample" resultMap="BaseResultMap">
     select
@@ -95,8 +96,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.UserAiSetting" useGeneratedKeys="true" keyProperty="id">
-    insert into user_ai_setting (id, user_id, is_only_user_key, del_flag, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{onlyUserKey,jdbcType=TINYINT}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into user_ai_setting (id, user_id, is_only_user_key, suppressed_platform_abilities, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, #{onlyUserKey,jdbcType=TINYINT}, #{suppressedPlatformAbilities,jdbcType=VARCHAR}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.UserAiSetting" useGeneratedKeys="true" keyProperty="id">
     insert into user_ai_setting
@@ -104,6 +105,7 @@
       <if test="id != null">id,</if>
       <if test="userId != null">user_id,</if>
       <if test="onlyUserKey != null">is_only_user_key,</if>
+      <if test="suppressedPlatformAbilities != null">suppressed_platform_abilities,</if>
       <if test="delFlag != null">del_flag,</if>
       <if test="creator != null">creator,</if>
       <if test="modifier != null">modifier,</if>
@@ -114,6 +116,7 @@
       <if test="id != null">#{id,jdbcType=BIGINT},</if>
       <if test="userId != null">#{userId,jdbcType=VARCHAR},</if>
       <if test="onlyUserKey != null">#{onlyUserKey,jdbcType=TINYINT},</if>
+      <if test="suppressedPlatformAbilities != null">#{suppressedPlatformAbilities,jdbcType=VARCHAR},</if>
       <if test="delFlag != null">#{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">#{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">#{modifier,jdbcType=VARCHAR},</if>
@@ -131,6 +134,7 @@
       <if test="row.id != null">id = #{row.id,jdbcType=BIGINT},</if>
       <if test="row.userId != null">user_id = #{row.userId,jdbcType=VARCHAR},</if>
       <if test="row.onlyUserKey != null">is_only_user_key = #{row.onlyUserKey,jdbcType=TINYINT},</if>
+      <if test="row.suppressedPlatformAbilities != null">suppressed_platform_abilities = #{row.suppressedPlatformAbilities,jdbcType=VARCHAR},</if>
       <if test="row.delFlag != null">del_flag = #{row.delFlag,jdbcType=TINYINT},</if>
       <if test="row.creator != null">creator = #{row.creator,jdbcType=VARCHAR},</if>
       <if test="row.modifier != null">modifier = #{row.modifier,jdbcType=VARCHAR},</if>
@@ -145,6 +149,7 @@
       id = #{row.id,jdbcType=BIGINT},
       user_id = #{row.userId,jdbcType=VARCHAR},
       is_only_user_key = #{row.onlyUserKey,jdbcType=TINYINT},
+      suppressed_platform_abilities = #{row.suppressedPlatformAbilities,jdbcType=VARCHAR},
       del_flag = #{row.delFlag,jdbcType=TINYINT},
       creator = #{row.creator,jdbcType=VARCHAR},
       modifier = #{row.modifier,jdbcType=VARCHAR},
@@ -157,6 +162,7 @@
     <set>
       <if test="userId != null">user_id = #{userId,jdbcType=VARCHAR},</if>
       <if test="onlyUserKey != null">is_only_user_key = #{onlyUserKey,jdbcType=TINYINT},</if>
+      <if test="suppressedPlatformAbilities != null">suppressed_platform_abilities = #{suppressedPlatformAbilities,jdbcType=VARCHAR},</if>
       <if test="delFlag != null">del_flag = #{delFlag,jdbcType=TINYINT},</if>
       <if test="creator != null">creator = #{creator,jdbcType=VARCHAR},</if>
       <if test="modifier != null">modifier = #{modifier,jdbcType=VARCHAR},</if>
@@ -170,6 +176,7 @@
     set
       user_id = #{userId,jdbcType=VARCHAR},
       is_only_user_key = #{onlyUserKey,jdbcType=TINYINT},
+      suppressed_platform_abilities = #{suppressedPlatformAbilities,jdbcType=VARCHAR},
       del_flag = #{delFlag,jdbcType=TINYINT},
       creator = #{creator,jdbcType=VARCHAR},
       modifier = #{modifier,jdbcType=VARCHAR},
