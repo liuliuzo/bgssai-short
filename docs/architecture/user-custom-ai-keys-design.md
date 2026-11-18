@@ -191,3 +191,15 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 1. `base_url` 仅接受 `https://`，禁止 userinfo、`?`、`#`；通过 `InetAddress.getAllByName` 拒绝环回（`127.0.0.0/8` / `::1` / `localhost`）、私网（`10.0.0.0/8` / `172.16.0.0/12` / `192.168.0.0/16`）、链路本地（`169.254.0.0/16`）、`100.64.0.0/10`、多播及通配地址。
 2. 上游媒体下载 URL（`data[0].url`、`video.url`、`file.download_url`、`Resp.url` 等）执行同一公网 `https://` 校验。
 3. 列表与错误文本仅使用 `api_key_masked`、`secret_key_masked` 与用户配置 `model_name`，不回显任何明文密钥。
+
+## 5. 外部密钥余额读取
+
+`ExternalApiKeyBalanceClient.fill(rows, items)` 在模型密钥列表、创建、更新、启停、设默认的返回条目上回填 `balance_status`（`OK` / `UNAVAILABLE` / `FAILED`）与 `balance_list`（`label`、`amount`、`unit`）：同一凭据（供应商 + `base_url` + 密钥对指纹）并发只查一次，单请求 4 秒超时，失败不落 0、不记响应正文、不回写密钥。
+
+| 供应商 | 只读余额端点 | 取值 |
+| --- | --- | --- |
+| `PIXVERSE` | `GET /openapi/v2/account/balance` | `Resp.credit_monthly`、`Resp.credit_package`（积分） |
+| `DEEPSEEK` | `GET /user/balance` | `balance_infos[].total_balance`（CNY 元 / USD） |
+| `KLING` | `GET /account/costs`（短期 JWT） | 未过期资源包 `remaining_quantity`（次） |
+| `MINIMAX` | `GET /v1/token_plan/remains`，无该字段时 `GET /account/query_balance` | 剩余百分比，或 `available_amount`（元 / USD） |
+| `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` | 无密钥级余额只读接口 | `UNAVAILABLE` |
