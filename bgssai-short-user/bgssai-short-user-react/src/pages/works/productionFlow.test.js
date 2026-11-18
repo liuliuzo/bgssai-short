@@ -150,6 +150,8 @@ test('resolveRepairAction routes quota, look, and script errors to exact destina
   assert.equal(resolveRepairAction('镜1 引用的场景「公司会议室」尚未锁定参考图').tab, 'scenes')
   assert.equal(resolveRepairAction('镜1 引用的场景「公司会议室」尚未锁定参考图').label, '去场景参考处理')
   assert.equal(resolveRepairAction('待锁定定妆：角色「王芳」、场景「公司会议室」').tab, 'characters')
+  assert.equal(resolveRepairAction('待锁定定妆：场景「公司会议室」（在「角色定妆」页选定图片即可解锁）').tab, 'scenes')
+  assert.equal(resolveRepairAction('待锁定定妆：角色「王芳」、场景「开放办公区」（在「角色定妆」页选定图片即可解锁）').tab, 'characters')
   assert.equal(resolveRepairAction('可用余额不足，请先充值').href, '/subscription')
   assert.equal(resolveRepairAction('请先完成本集定稿').tab, 'script')
   assert.equal(resolveRepairAction('服务繁忙，请稍后查看任务').href, '/tasks')
