@@ -573,8 +573,6 @@ public class AiModelResolveService {
      */
     public ApiResponse listEnabled(String abilityType) {
         String userId = effectiveUserId();
-        boolean onlyUserKey = userAiModelKeyService != null && userId != null && !userId.isBlank()
-                && userAiModelKeyService.isOnlyUserKeyMode(userId);
         List<Map<String, Object>> list = new ArrayList<>();
         if (userAiModelKeyService != null && userId != null && !userId.isBlank()) {
             List<UserAiModelKey> userKeys = userAiModelKeyService.listEnabledRows(userId, abilityType);
@@ -603,12 +601,6 @@ public class AiModelResolveService {
         Map<String, ResolvedProviderKey> activeProviderKeys = (userAiProviderKeyService == null || userId == null
                 || userId.isBlank()) ? Map.of() : userAiProviderKeyService.activeKeyMap(userId);
         appendProviderByokListItems(list, abilityType, activeProviderKeys);
-        if (onlyUserKey) {
-            Map<String, Object> result = new LinkedHashMap<>();
-            result.put("model_list", list);
-            result.put("only_user_key", 1);
-            return Responses.ok(result);
-        }
         Set<String> activePlatform = userAiModelKeyService == null || userId == null || userId.isBlank()
                 ? null
                 : userAiModelKeyService.activePlatformAbilities(userId);
