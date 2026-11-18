@@ -335,8 +335,8 @@
 
       <div class="card card-flush" style="margin-top:14px">
         <div class="card-hd">
-          <h2>场景卡与道具卡</h2>
-          <span class="text-muted" style="font-size:12px">场景与关键道具，和角色卡一样锁定参考图</span>
+          <h2>场景卡（独立「场景」页签）</h2>
+          <span class="text-muted" style="font-size:12px">场景单独锁定参考图，不称定妆；位于 /works/:work_id/scenes</span>
           <span class="spacer"></span>
           <button class="btn btn-default btn-sm">新建</button>
         </div>
@@ -369,6 +369,29 @@
                 <div class="as-m">被引用 11 镜</div>
               </div>
             </div>
+            <div class="asset" style="border-color:var(--danger)">
+              <div class="phone wide bad">
+                <span class="ph-tag">待建卡</span><div class="ph-body">天台<br />尚无参考图</div>
+              </div>
+              <div class="as-b">
+                <div class="row"><span class="as-n">天台</span><span class="spacer"></span><span class="st fail">待建卡</span></div>
+                <div class="as-m">从第 15 集剧本自动抽取，描述已预填</div>
+                <button class="btn btn-primary btn-sm" style="margin-top:8px">生成参考图</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-flush" style="margin-top:14px">
+        <div class="card-hd">
+          <h2>道具卡（与角色卡同在定妆页签）</h2>
+          <span class="text-muted" style="font-size:12px">关键道具随人物定妆同区锁定参考图</span>
+          <span class="spacer"></span>
+          <button class="btn btn-default btn-sm">新建</button>
+        </div>
+        <div class="card-body">
+          <div class="assets">
             <div class="asset locked">
               <div class="phone wide" style="background:linear-gradient(150deg,#78350f,#292524)">
                 <span class="ph-tag">道具</span><div class="ph-body">退婚书</div>
@@ -376,16 +399,6 @@
               <div class="as-b">
                 <div class="row"><span class="as-n">退婚书</span><span class="spacer"></span><span class="st done">锁定</span></div>
                 <div class="as-m">关键道具 · 被引用 5 镜</div>
-              </div>
-            </div>
-            <div class="asset" style="border-color:var(--danger)">
-              <div class="phone wide bad">
-                <span class="ph-tag">待建卡</span><div class="ph-body">天台<br />尚未定妆</div>
-              </div>
-              <div class="as-b">
-                <div class="row"><span class="as-n">天台</span><span class="spacer"></span><span class="st fail">待建卡</span></div>
-                <div class="as-m">从第 15 集剧本自动抽取，描述已预填</div>
-                <button class="btn btn-primary btn-sm" style="margin-top:8px">开始定妆</button>
               </div>
             </div>
           </div>
@@ -411,7 +424,7 @@
         <code>card_status</code>（<code>CANDIDATE</code> / <code>DRAFT</code> / <code>GENERATING</code> /
         <code>LOCKED</code>）· <code>appearance_prompt</code> · <code>consistency_seed</code> ·
         <code>ref_image_asset_id</code> · <code>look_reference</code>（<code>source</code> 为 <code>CARD</code> / <code>NAME</code> / <code>NONE</code>，生成前展示将用的库和造型）·
-        可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>、<code>replace_existing</code>、<code>skip_reference</code>，<code>confirm_cost=1</code> 才出图）独立重做或生成正脸、前面、背面、侧面；不传 <code>view_angle</code> 时按四面实际格位判空，正脸为空时与其余空缺面一起生成（无初始参考图时先生成正脸并作为后续三面参考）；重做后原照片自动保留在 <code>history_list</code>，并可用 <code>POST /bgssai/user/look-materials/promote</code> 一键换回；顶部锁定汇总直接展示「全部 N 项已锁定 / 待锁定 N 项 / 暂无角色、场景或道具」 ·
+        可用 <code>POST /bgssai/user/look-materials/complete-angles</code>（<code>character_id</code>，可选 <code>view_angle</code>、<code>replace_existing</code>、<code>skip_reference</code>，<code>confirm_cost=1</code> 才出图）独立重做或生成正脸、前面、背面、侧面；不传 <code>view_angle</code> 时按四面实际格位判空，正脸为空时与其余空缺面一起生成（无初始参考图时先生成正脸并作为后续三面参考）；重做后原照片自动保留在 <code>history_list</code>，并可用 <code>POST /bgssai/user/look-materials/promote</code> 一键换回；顶部锁定汇总按页签分计：定妆页签只计角色与道具、场景页签只计场景，直接展示「全部 N 项已锁定 / 待锁定 N 项 / 暂无角色或道具（场景页签为暂无场景）」 ·
         <code>default_outfit_code</code> · <code>outfit_list</code> ·
         <code>voice_id</code> / <code>voice_speed</code> · <code>used_shot_count</code>；
         <code>character_role</code>（<code>FEMALE_LEAD</code> / <code>MALE_LEAD</code> /

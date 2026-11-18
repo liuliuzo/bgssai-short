@@ -131,7 +131,7 @@
 
 - 涉及端：web 用户端。
 - 页面：[`../demo-static/web/user/character-bible.html`](../demo-static/web/user/character-bible.html)
-  （角色卡网格 + 定妆候选选择 + 造型页签 + 场景卡分区）。
+  （定妆页签：角色卡网格 + 定妆候选选择 + 造型选用 + 道具卡分区；场景卡在独立的场景页签，不与人物定妆同页）。
 - 跳转关系：`work-detail.html` / `storyboard.html` → `character-bible.html`，登记在用户端 `PAGE-FLOW.html`。
 - 页面 → API 映射：`../api/page-api-mapping.md` 对应行。
 
