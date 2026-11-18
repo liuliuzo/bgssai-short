@@ -76,6 +76,7 @@ import com.bgssai.shortai.model.ShortWorkExample;
 import com.bgssai.shortai.production.support.EditBaselineCards;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.OfficialVideoLane;
+import com.bgssai.shortai.production.support.PromptComposer;
 import com.bgssai.shortai.production.support.LastFrameExtractor;
 import com.bgssai.shortai.production.support.LookViewPrompt;
 import com.bgssai.shortai.production.support.CardAssetSelection;
@@ -1153,6 +1154,12 @@ public class ShortAiTaskWorker {
         }
         ConsistencyBundle consistency = loadConsistency(shot);
         String prompt = ShotConsistency.leadWithAnchors(shotPrompt(shot, ability), consistency.fragment());
+        if ("VIDEO".equals(ability)) {
+            Map<String, Object> queued = ShortJson.map(task.getRequestJson());
+            String camera = queued.containsKey("camera_move")
+                    ? ShortJson.text(queued.get("camera_move")) : shot.getCameraMove();
+            prompt = PromptComposer.withVideoCamera(prompt, camera);
+        }
         request.setPrompt(prompt);
         if ("VIDEO".equals(ability)) {
             String resumeId = ShortJson.text(ShortJson.map(task.getRequestJson()).get("resume_request_id"));
@@ -1223,6 +1230,7 @@ public class ShortAiTaskWorker {
                 String nextModel = ShortJson.text(origin.get("next_model_code"));
                 Map<String, Object> nextReq = new LinkedHashMap<>();
                 nextReq.put("shot_id", shot.getShotId());
+                nextReq.put("camera_move", origin.getOrDefault("camera_move", shot.getCameraMove()));
                 nextReq.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
                 if (!nextModel.isBlank()) {
                     nextReq.put("model_code", nextModel);
@@ -1857,24 +1865,10 @@ public class ShortAiTaskWorker {
         String imagePrompt = shot.getImagePrompt() == null ? "" : shot.getImagePrompt().trim();
         String desc = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
         String extra = shot.getExtraPrompt() == null ? "" : shot.getExtraPrompt().trim();
-        String camera = shot.getCameraMove() == null ? "" : shot.getCameraMove().trim();
         if ("VIDEO".equals(ability)) {
-            StringBuilder sb = new StringBuilder();
             String motion = desc.isBlank() ? imagePrompt : desc;
             if (!extra.isBlank()) motion = motion.isBlank() ? extra : motion + "，" + extra;
-            if (!motion.isBlank()) {
-                sb.append(motion);
-            }
-            if (!camera.isBlank()) {
-                if (sb.length() > 0) {
-                    sb.append("，");
-                }
-                sb.append("运镜：").append(camera);
-            }
-            if (sb.length() == 0) {
-                sb.append("镜头缓慢推进，人物自然动作，竖屏短剧");
-            }
-            return sb.toString();
+            return motion.isBlank() ? "人物自然动作，竖屏短剧" : motion;
         }
         if (!imagePrompt.isBlank()) {
             return imagePrompt;

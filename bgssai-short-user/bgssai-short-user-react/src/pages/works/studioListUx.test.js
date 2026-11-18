@@ -108,7 +108,7 @@ test('selected model title is the full label', () => {
 
 test('preset groups keep continuity choices readable and separate from frame link', () => {
   const groups = shotPresetGroups()
-  assert.deepEqual(groups.map((group) => group.label), ['运镜', '风格', '视角', '衔接写法'])
+  assert.deepEqual(groups.map((group) => group.label), ['风格', '视角', '衔接写法'])
   const continuity = groups.find((group) => group.key === 'continuity')
   assert.ok(continuity.items.some((item) => item.label.includes('同场次首尾帧')))
   assert.ok(continuity.items.some((item) => item.label.includes('跨场景硬切')))

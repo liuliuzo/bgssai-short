@@ -16,6 +16,7 @@ import ContinuityCenterPage from './ContinuityCenterPage'
 import EditExportPage from './EditExportPage'
 import SourceImportPage from './SourceImportPage'
 import StoryboardCanvas from './StoryboardCanvas'
+import ShotCameraMove, { useShotCameraSaves } from './ShotCameraMove'
 import ProductionGuide from './ProductionGuide.jsx'
 import {
   AUX_STUDIO_TOOLS,
@@ -1512,7 +1513,7 @@ function CharacterPane({ work, section = 'characters', onFlowChange, onJumpTab }
 
 function modelLabel(row) { return modelPricingLabel(row) }
 
-function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReload, onFlowChange, onJumpTab }) {
+function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraSaves, onReload, onFlowChange, onJumpTab }) {
   const [canvasView, setCanvasView] = useState(false)
   const [rows, setRows] = useState([])
   const [shotsLoaded, setShotsLoaded] = useState(false)
@@ -1825,13 +1826,20 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
       <StoryboardCanvas
         episodeId={episodeId}
         initialRows={rows}
+        cameraSaves={cameraSaves}
         sceneCards={panel.scene_list || []}
-        onSwitchToList={() => { setCanvasView(false); load() }}
+        onCameraSaved={(id, move) => patchRow(id, { camera_move: move })}
+        onSwitchToList={async () => {
+          await cameraSaves.waitFor()
+          setCanvasView(false)
+          load()
+        }}
       />
     )
   }
 
   const runOfficial = async (shotIds, { regenerate = false } = {}) => {
+    if (!await cameraSaves.waitFor(shotIds)) return
     setActionError(null)
     const body = { episode_id: episodeId, shot_ids: shotIds, model_code: videoModelCode }
     const outcome = await runOfficialShotVideo({
@@ -2028,8 +2036,11 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
                 <Segmented
                   size="small"
                   value="list"
-                  onChange={(val) => {
-                    if (val === 'canvas' && !canvas.disabled) setCanvasView(true)
+                  onChange={async (val) => {
+                    if (val === 'canvas' && !canvas.disabled) {
+                      await cameraSaves.waitFor()
+                      setCanvasView(true)
+                    }
                   }}
                   options={[
                     { label: '上下列表', value: 'list' },
@@ -2318,6 +2329,11 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
               {dialogue ? (
                 <Paragraph type="secondary" style={{ marginBottom: 6 }}>台词：{dialogue}</Paragraph>
               ) : null}
+              <ShotCameraMove
+                shot={row}
+                saves={cameraSaves}
+                onSaved={(id, move) => patchRow(id, { camera_move: move })}
+              />
               <Text type="secondary">画面内容描述</Text>
               <TextArea
                 className="shot-spoken"
@@ -3128,6 +3144,7 @@ function ComposePane({ work, episodeId, onReload, onFlowChange, onJumpTab, compo
 }
 
 export default function WorkStudio() {
+  const cameraSaves = useShotCameraSaves()
   const { workId, tab } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -3373,6 +3390,7 @@ export default function WorkStudio() {
     if (effectiveTab === 'storyboard') {
       return (
         <StoryboardPane
+          cameraSaves={cameraSaves}
           work={work}
           episodeId={episodeId}
           currentEpisode={current}
@@ -3475,6 +3493,7 @@ export default function WorkStudio() {
         ) : null}
       </Space>
       <ProductionGuide
+        cameraSaves={cameraSaves}
         work={work}
         episode={current}
         refreshKey={guideTick}

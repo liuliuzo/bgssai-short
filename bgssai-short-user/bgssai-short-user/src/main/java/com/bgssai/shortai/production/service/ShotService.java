@@ -177,6 +177,24 @@ public class ShotService {
         if ("LOCKED".equals(shot.getShotStatus())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "locked shot cannot be edited");
         }
+        if (req.getCameraMove() != null && req.getShotDesc() == null && req.getDialogueText() == null
+                && req.getShotSize() == null && req.getShotDurationSec() == null && req.getExtraPrompt() == null) {
+            // A motion-only edit preserves the authored frame prompt and storyboard text.
+            String move = req.getCameraMove().trim();
+            if (move.isEmpty() || move.length() > 32) {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "运镜需要 1 到 32 个字符");
+            }
+            ShortShot motion = new ShortShot();
+            motion.setCameraMove(move);
+            motion.setUpdatedTime(new Date());
+            ShortShotExample editable = new ShortShotExample();
+            editable.createCriteria().andIdEqualTo(shot.getId()).andDeletedFlagEqualTo(0)
+                    .andShotStatusNotEqualTo("LOCKED");
+            if (shortShotMapper.updateByExampleSelective(motion, editable) == 0) {
+                throw new BizException(CommonErrorCode.RULE_REJECT, "镜头已锁定或不可用");
+            }
+            return Responses.ok("ok");
+        }
         ShortWorkExample wx = new ShortWorkExample();
         wx.createCriteria().andWorkIdEqualTo(shot.getWorkId()).andDeletedFlagEqualTo(0);
         ShortWork work = shortWorkMapper.selectOneByExample(wx);

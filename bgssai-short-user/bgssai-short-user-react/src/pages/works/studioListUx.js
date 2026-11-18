@@ -1,7 +1,6 @@
 import { formatTokenAmount } from '../../utils/formatToken.js'
 import { hasPlayableShotVideo, hasRealFirstFrame, isShotVideoActive, selectPendingVideoShotIds } from './productionFlow.js'
 import {
-  CAMERA_MOVEMENTS,
   CONTINUITY_PRESETS,
   DRAMA_STYLES,
   QUAD_GRID_ANGLES,
@@ -337,15 +336,6 @@ export function modelSelectProps(label) {
 
 export function shotPresetGroups() {
   return [
-    {
-      key: 'camera',
-      label: '运镜',
-      items: CAMERA_MOVEMENTS.slice(1, 6).map((item) => ({
-        key: item.value,
-        label: item.label.split(' ')[0],
-        marker: `【运镜：${item.label}】`,
-      })),
-    },
     {
       key: 'style',
       label: '风格',

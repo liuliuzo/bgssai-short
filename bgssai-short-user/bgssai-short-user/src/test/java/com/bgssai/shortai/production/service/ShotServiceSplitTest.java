@@ -93,6 +93,28 @@ class ShotServiceSplitTest {
     }
 
     @Test
+    void changingOnlyCameraPreservesAuthoredTextAndMedia() {
+        var shot = new com.bgssai.shortai.model.ShortShot();
+        shot.setId(2L);
+        shot.setShotId("s1");
+        shot.setUserId("u-1");
+        shot.setPrevizText("保留原创分镜");
+        shot.setImagePrompt("保留首帧提示词");
+        when(shortShotMapper.selectOneByExample(any())).thenReturn(shot);
+        when(shortShotMapper.updateByExampleSelective(any(), any())).thenReturn(1);
+        ShotReq req = new ShotReq();
+        req.setShotId("s1");
+        req.setCameraMove("ORBIT");
+        service.update(req);
+        var patch = org.mockito.ArgumentCaptor.forClass(com.bgssai.shortai.model.ShortShot.class);
+        verify(shortShotMapper).updateByExampleSelective(patch.capture(), any());
+        assertEquals("ORBIT", patch.getValue().getCameraMove());
+        org.junit.jupiter.api.Assertions.assertNull(patch.getValue().getPrevizText());
+        org.junit.jupiter.api.Assertions.assertNull(patch.getValue().getImagePrompt());
+        org.junit.jupiter.api.Assertions.assertNull(patch.getValue().getVideoAssetId());
+    }
+
+    @Test
     void splitInsertsOneShotPerLine() {
         ShotReq req = new ShotReq();
         req.setEpisodeId("e-1");

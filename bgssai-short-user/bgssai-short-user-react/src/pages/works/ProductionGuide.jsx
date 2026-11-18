@@ -59,6 +59,7 @@ export default function ProductionGuide({
   work,
   episode,
   refreshKey = 0,
+  cameraSaves,
   activeTab,
   viewingStageKey,
   onSelectStage,
@@ -289,6 +290,7 @@ export default function ProductionGuide({
           auto_next_flag: 0,
           model_code: model?.model_code,
         }
+        if (taskType === 'VIDEO' && !await cameraSaves.waitFor(body.shot_ids)) return
         const { data: estRes } = await productionApi.estimateTasks(body)
         if (!estRes?.success) return
         const est = estRes.result || {}

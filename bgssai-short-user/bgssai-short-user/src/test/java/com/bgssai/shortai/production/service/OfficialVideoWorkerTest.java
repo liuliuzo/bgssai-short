@@ -112,11 +112,12 @@ class OfficialVideoWorkerTest {
         task.setTaskId("t-1");
         task.setTargetType("SHOT");
         task.setTargetId("shot");
-        task.setRequestJson("{}");
+        task.setRequestJson(ShortJson.toJson(java.util.Map.of("camera_move", "PAN_LEFT")));
         ShortShot shot = new ShortShot();
         shot.setShotId("shot");
         shot.setShotNo(1);
         shot.setShotDesc("人物走进宴会厅");
+        shot.setCameraMove("PUSH");
         when(tasks.selectByExample(any())).thenReturn(List.of(task));
         when(tasks.updateByExampleSelective(any(), any())).thenReturn(1);
         when(shots.selectOneByExample(any())).thenReturn(shot);
@@ -127,6 +128,11 @@ class OfficialVideoWorkerTest {
         when(registry.resolve(model)).thenReturn(provider);
         when(provider.execute(any())).thenThrow(new OfficialVideoStillOpenException("981ab970-447e-4a04-a2f0-a085ebbf435b"));
         worker.tick();
+        ArgumentCaptor<com.bgssai.shortai.aiprovider.AiProviderRequest> sent =
+                ArgumentCaptor.forClass(com.bgssai.shortai.aiprovider.AiProviderRequest.class);
+        verify(provider).execute(sent.capture());
+        assertTrue(sent.getValue().getPrompt().contains("向左摇镜"));
+        assertTrue(sent.getValue().getPrompt().contains("人物走进宴会厅"));
         ArgumentCaptor<ShortAiTask> patches = ArgumentCaptor.forClass(ShortAiTask.class);
         verify(tasks, org.mockito.Mockito.atLeastOnce()).updateByExampleSelective(patches.capture(), any());
         assertTrue(patches.getAllValues().stream().noneMatch(p -> "FAILED".equals(p.getTaskStatus())));
