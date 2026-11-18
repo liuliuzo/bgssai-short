@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Card, Checkbox, Form, Input, Modal, Popconfirm, Segmented, Select, Space, Switch, Table, Tag, message } from 'antd'
 import userAiModelKeysApi from '../../api/userAiModelKeys'
+import { formatKeyBalance } from './keyBalance'
 
 const MODALITY_FILTER = [
   { label: '全部', value: 'ALL' },
@@ -794,6 +795,11 @@ export default function UserAiModelKeysCard() {
             render: (_, row) => (row.secret_key_masked
               ? `${row.api_key_masked || ''} / ${row.secret_key_masked}`
               : (row.api_key_masked || '-')),
+          },
+          {
+            title: '余额',
+            width: 220,
+            render: (_, row) => formatKeyBalance(row),
           },
           {
             title: '状态',
