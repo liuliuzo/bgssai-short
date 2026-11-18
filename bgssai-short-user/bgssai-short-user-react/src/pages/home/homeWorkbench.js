@@ -167,9 +167,11 @@ export function resolveEpisodeStage(episode, detail) {
 }
 
 /**
- * One list row per episode, in the order the API returned them. The card renders
- * these as a fixed-height scrollable list, so no range folding or truncation here:
+ * One list row per episode, in the order the API returned them. No range
+ * folding or truncation here: the full list backs the all-episodes view, so
  * every episode stays individually reachable however many episodes a work has.
+ * The card itself shows episodeCardSummary(): the whole list when short, or
+ * the next episode plus stage counts when long.
  */
 export function episodeStageItems(work, episodes, detail) {
   const list = Array.isArray(episodes) ? episodes : []
@@ -190,6 +192,54 @@ export function episodeStageItems(work, episodes, detail) {
       to,
     }
   })
+}
+
+/** Works with at most this many episodes list every episode on the card itself. */
+export const CARD_EPISODE_INLINE_LIMIT = 4
+
+/**
+ * Card-space view of the episode list. Short lists stay fully inline; longer
+ * ones fold to the next unfinished episode plus stage counts, with the full
+ * list one click away, so card height never depends on the episode count.
+ * `continueTo` is the card's primary-action target: when it names an
+ * unfinished episode, that episode is the one kept visible.
+ */
+export function episodeCardSummary(episodeItems, continueTo) {
+  const items = Array.isArray(episodeItems) ? episodeItems : []
+  const counts = { done: 0, active: 0, todo: 0 }
+  for (const item of items) {
+    if (item?.tone === 'done') counts.done += 1
+    else if (item?.tone === 'todo') counts.todo += 1
+    else counts.active += 1
+  }
+  const countsLabel = `已成片 ${counts.done} · 制作中 ${counts.active} · 待写剧本 ${counts.todo}`
+  const total = items.length
+  if (total <= CARD_EPISODE_INLINE_LIMIT) {
+    return { total, folded: false, nextItem: null, inlineItems: items, counts, countsLabel }
+  }
+  const firstPending = items.find((item) => item?.tone !== 'done') || null
+  const target = continueTo ? items.find((item) => item?.to === continueTo) : null
+  const nextItem = firstPending && target && target.tone !== 'done' ? target : firstPending
+  return {
+    total,
+    folded: true,
+    nextItem,
+    inlineItems: nextItem ? [nextItem] : [],
+    counts,
+    countsLabel,
+  }
+}
+
+/** Locate one episode row by a user-typed episode number (`57` or `第57集`). */
+export function findEpisodeItem(episodeItems, query) {
+  const items = Array.isArray(episodeItems) ? episodeItems : []
+  const text = query == null ? '' : String(query).trim()
+  if (!text || text.startsWith('-')) return null
+  const match = text.match(/\d+/)
+  if (!match) return null
+  const no = Number(match[0])
+  if (!Number.isInteger(no) || no <= 0) return null
+  return items.find((item) => Number(item?.no) === no) || null
 }
 
 export function episodeProgress(work, episodes, detail) {

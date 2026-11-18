@@ -84,9 +84,10 @@
   overflow-wrap: anywhere;
 }
 
-/* One row per episode. Height is capped at 4 full rows plus a half-row peek,
-   so the card stays the same size whether a work has 4 or 80 episodes and
-   the remaining episodes scroll inside the list instead of stretching it. */
+/* One row per episode. Works with few episodes list them all here; longer
+   works fold to the next unfinished episode (--summary) plus stage counts,
+   and the full list opens in the all-episodes modal. Either way card height
+   never depends on how many episodes a work has. */
 .home-episode-list {
   margin: 8px 0 0;
   padding: 0;
@@ -95,6 +96,59 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+}
+
+.home-episode-list--summary {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.home-episode-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.home-episode-summary .ant-btn {
+  padding-inline: 0;
+  flex: none;
+}
+
+.home-episode-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-episode-jump-counts {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.home-episode-all-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: min(56vh, 480px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.home-episode-all-list li + li {
+  border-top: 1px solid #f1f5f9;
+}
+
+.home-episode-row.is-located {
+  background: #dbeafe;
 }
 
 .home-episode-list li + li {

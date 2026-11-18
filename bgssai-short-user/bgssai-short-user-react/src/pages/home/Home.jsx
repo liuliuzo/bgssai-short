@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Card, Progress, Skeleton, Typography, message } from 'antd'
+import { Alert, Button, Card, Input, Modal, Progress, Skeleton, Typography, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import productionApi from '../../api/production'
 import {
@@ -11,7 +11,9 @@ import {
   continuePath,
   continueLabel,
   coverUrl,
+  episodeCardSummary,
   episodeProgress,
+  findEpisodeItem,
   nextStepText,
   workCardStatus,
 } from './homeWorkbench'
@@ -55,6 +57,9 @@ export default function Home() {
   const [failedByWorkId, setFailedByWorkId] = useState({})
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [episodesModal, setEpisodesModal] = useState(null)
+  const [episodeQuery, setEpisodeQuery] = useState('')
+  const [locatedKey, setLocatedKey] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -114,6 +119,52 @@ export default function Home() {
     message.info('当前账号没有示例作品《悬疑法医手记》')
   }
 
+  const openEpisodesModal = (workTitle, items) => {
+    setEpisodeQuery('')
+    setLocatedKey(null)
+    setEpisodesModal({ title: workTitle || '未命名作品', items })
+  }
+
+  const closeEpisodesModal = () => {
+    setEpisodesModal(null)
+    setLocatedKey(null)
+  }
+
+  const locateEpisode = () => {
+    const items = episodesModal?.items || []
+    const found = findEpisodeItem(items, episodeQuery)
+    if (!found) {
+      message.info(`请输入 1–${items.length} 之间的集号`)
+      return
+    }
+    setLocatedKey(found.key)
+    const reduceMotion = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    document.getElementById(`home-episode-all-${found.key}`)
+      ?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' })
+  }
+
+  const renderEpisodeRow = (epItem, { idPrefix = '', located = false, onPick = null } = {}) => (
+    <li key={epItem.key}>
+      <button
+        type="button"
+        id={idPrefix ? `${idPrefix}${epItem.key}` : undefined}
+        className={`home-episode-row is-${epItem.tone}${located ? ' is-located' : ''}`}
+        title={epItem.text}
+        onClick={() => {
+          if (onPick) onPick()
+          navigate(epItem.to)
+        }}
+      >
+        <span className="home-episode-no">{epItem.noLabel}</span>
+        <span className="home-episode-stage">{epItem.stageLabel}</span>
+      </button>
+    </li>
+  )
+
+  const modalSummary = episodesModal ? episodeCardSummary(episodesModal.items) : null
+
   return (
     <section className="home-workbench">
       <p className="home-next">
@@ -146,6 +197,8 @@ export default function Home() {
             const progress = episodeProgress(work, detail ? episodes : null, detail)
             const statusText = workCardStatus(work, detail ? episodes : null, detail)
             const cover = coverUrl(detail) || coverUrl(work)
+            const targetPath = continuePath(work, episodes, detail)
+            const summary = episodeCardSummary(progress.episodeItems, targetPath)
             return (
               <Card key={work.work_id} size="small">
                 <div className="home-work-body">
@@ -157,28 +210,31 @@ export default function Home() {
                     {progress.percent == null ? null : (
                       <Progress percent={progress.percent} size="small" showInfo={false} />
                     )}
-                    {progress.episodeItems?.length ? (
-                      <ul className="home-episode-list" aria-label="集数列表">
-                        {progress.episodeItems.map((epItem) => (
-                          <li key={epItem.key}>
-                            <button
-                              type="button"
-                              className={`home-episode-row is-${epItem.tone}`}
-                              title={epItem.text}
-                              onClick={() => navigate(epItem.to)}
-                            >
-                              <span className="home-episode-no">{epItem.noLabel}</span>
-                              <span className="home-episode-stage">{epItem.stageLabel}</span>
-                            </button>
-                          </li>
-                        ))}
+                    {summary.inlineItems.length ? (
+                      <ul
+                        className={summary.folded ? 'home-episode-list home-episode-list--summary' : 'home-episode-list'}
+                        aria-label="集数列表"
+                      >
+                        {summary.inlineItems.map((epItem) => renderEpisodeRow(epItem))}
                       </ul>
+                    ) : null}
+                    {summary.folded ? (
+                      <div className="home-episode-summary">
+                        <span>{summary.countsLabel}</span>
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={() => openEpisodesModal(work.work_title, progress.episodeItems)}
+                        >
+                          全部 {summary.total} 集
+                        </Button>
+                      </div>
                     ) : null}
                     <div className="home-work-actions">
                       <Button
                         type="primary"
                         size="small"
-                        onClick={() => navigate(continuePath(work, episodes, detail))}
+                        onClick={() => navigate(targetPath)}
                       >
                         {continueLabel(work, episodes, detail)}
                       </Button>
@@ -212,6 +268,40 @@ export default function Home() {
           </div>
         </div>
       ) : null}
+
+      <Modal
+        title={episodesModal ? `《${episodesModal.title}》全部集数` : '全部集数'}
+        open={Boolean(episodesModal)}
+        onCancel={closeEpisodesModal}
+        footer={null}
+        width={640}
+        destroyOnClose
+      >
+        {episodesModal ? (
+          <>
+            <div className="home-episode-jump">
+              <Input
+                value={episodeQuery}
+                onChange={(event) => setEpisodeQuery(event.target.value)}
+                onPressEnter={locateEpisode}
+                placeholder={`输入集号，1–${episodesModal.items.length}`}
+                inputMode="numeric"
+                aria-label="按集号定位"
+                style={{ width: 200 }}
+              />
+              <Button onClick={locateEpisode}>定位</Button>
+              {modalSummary ? <span className="home-episode-jump-counts">{modalSummary.countsLabel}</span> : null}
+            </div>
+            <ul className="home-episode-all-list" aria-label="全部集数">
+              {episodesModal.items.map((epItem) => renderEpisodeRow(epItem, {
+                idPrefix: 'home-episode-all-',
+                located: locatedKey === epItem.key,
+                onPick: closeEpisodesModal,
+              }))}
+            </ul>
+          </>
+        ) : null}
+      </Modal>
     </section>
   )
 }

@@ -9,8 +9,11 @@ import {
   continuePath,
   continueLabel,
   coverUrl,
+  CARD_EPISODE_INLINE_LIMIT,
+  episodeCardSummary,
   episodeProgress,
   episodeStageItems,
+  findEpisodeItem,
   nextStepText,
   resolveEpisodeStage,
   workCardStatus,
@@ -243,6 +246,108 @@ test('episode list is never truncated, even for very long dramas', () => {
   assert.equal(items[79].noLabel, '第80集')
   assert.equal(items[79].text, '第80集：待写剧本')
   assert.equal(items[79].to, '/works/w-long/script?episode_id=e80')
+})
+
+function mixedEpisodes(count) {
+  const eps = []
+  for (let i = 1; i <= count; i += 1) {
+    if (i <= 6) {
+      eps.push({
+        episode_id: `e${i}`, episode_no: i, script_status: 'READY',
+        shot_total: 5, shot_frame_ready: 5, shot_ready: 5, compose_status: 'READY',
+      })
+    } else if (i === 7) {
+      eps.push({
+        episode_id: 'e7', episode_no: 7, script_status: 'READY',
+        shot_total: 8, shot_frame_ready: 8, shot_ready: 3, compose_status: 'NONE',
+      })
+    } else if (i === 8) {
+      eps.push({ episode_id: 'e8', episode_no: 8, script_status: 'DRAFT', shot_total: 0, compose_status: 'NONE' })
+    } else {
+      eps.push({ episode_id: `e${i}`, episode_no: i, script_status: 'NONE', shot_total: 0, compose_status: 'NONE' })
+    }
+  }
+  return eps
+}
+
+test('card summary folds long episode lists to the next episode plus counts', () => {
+  const w = work('w1', '退婚三年后她成了首富', { episode_count: 24 })
+  const eps = mixedEpisodes(24)
+  const detail = { outline_count: 24, look_total: 4, look_locked: 4 }
+  const items = episodeStageItems(w, eps, detail)
+  const summary = episodeCardSummary(items, continuePath(w, eps, detail))
+  assert.equal(CARD_EPISODE_INLINE_LIMIT, 4)
+  assert.equal(summary.total, 24)
+  assert.equal(summary.folded, true)
+  assert.deepEqual(summary.counts, { done: 6, active: 2, todo: 16 })
+  assert.equal(summary.countsLabel, '已成片 6 · 制作中 2 · 待写剧本 16')
+  assert.equal(summary.nextItem.noLabel, '第7集')
+  assert.deepEqual(summary.inlineItems.map((it) => it.noLabel), ['第7集'])
+  // Without a continue target the first unfinished episode is shown.
+  assert.equal(episodeCardSummary(items).nextItem.noLabel, '第7集')
+  // The full list is untouched: every episode stays reachable from the modal.
+  assert.equal(items.length, 24)
+})
+
+test('card summary keeps short lists fully inline at and below the limit', () => {
+  for (const count of [1, 3, CARD_EPISODE_INLINE_LIMIT]) {
+    const eps = mixedEpisodes(count)
+    const items = episodeStageItems(
+      { work_id: 'w1', episode_count: count }, eps, { outline_count: count, look_total: 4, look_locked: 4 },
+    )
+    const summary = episodeCardSummary(items)
+    assert.equal(summary.folded, false)
+    assert.equal(summary.inlineItems.length, count)
+  }
+  const five = episodeStageItems(
+    { work_id: 'w1', episode_count: 5 }, mixedEpisodes(5), { outline_count: 5, look_total: 4, look_locked: 4 },
+  )
+  assert.equal(episodeCardSummary(five).folded, true)
+})
+
+test('card summary shows no next row when every episode is filmed', () => {
+  const eps = Array.from({ length: 12 }, (_, idx) => ({
+    episode_id: `e${idx + 1}`, episode_no: idx + 1, script_status: 'READY',
+    shot_total: 4, shot_frame_ready: 4, shot_ready: 4, compose_status: 'READY',
+  }))
+  const items = episodeStageItems(
+    { work_id: 'w-done', episode_count: 12 }, eps, { outline_count: 12, look_total: 2, look_locked: 2 },
+  )
+  const summary = episodeCardSummary(items, '/works/w-done/compose?episode_id=e1')
+  assert.equal(summary.folded, true)
+  assert.equal(summary.nextItem, null)
+  assert.deepEqual(summary.inlineItems, [])
+  assert.equal(summary.countsLabel, '已成片 12 · 制作中 0 · 待写剧本 0')
+  assert.deepEqual(episodeCardSummary(null), {
+    total: 0,
+    folded: false,
+    nextItem: null,
+    inlineItems: [],
+    counts: { done: 0, active: 0, todo: 0 },
+    countsLabel: '已成片 0 · 制作中 0 · 待写剧本 0',
+  })
+})
+
+test('findEpisodeItem locates an episode by number and rejects bad input', () => {
+  const eps = Array.from({ length: 80 }, (_, idx) => ({
+    episode_id: `e${idx + 1}`, episode_no: idx + 1, script_status: 'NONE', shot_total: 0, compose_status: 'NONE',
+  }))
+  const items = episodeStageItems(
+    { work_id: 'w-long', episode_count: 80 }, eps, { outline_count: 80, look_total: 0, look_locked: 0 },
+  )
+  assert.equal(findEpisodeItem(items, '57').noLabel, '第57集')
+  assert.equal(findEpisodeItem(items, ' 57 ').no, 57)
+  assert.equal(findEpisodeItem(items, '第57集').no, 57)
+  assert.equal(findEpisodeItem(items, 57).no, 57)
+  assert.equal(findEpisodeItem(items, '1').no, 1)
+  assert.equal(findEpisodeItem(items, '80').no, 80)
+  assert.equal(findEpisodeItem(items, '81'), null)
+  assert.equal(findEpisodeItem(items, '0'), null)
+  assert.equal(findEpisodeItem(items, '-3'), null)
+  assert.equal(findEpisodeItem(items, 'abc'), null)
+  assert.equal(findEpisodeItem(items, ''), null)
+  assert.equal(findEpisodeItem(items, null), null)
+  assert.equal(findEpisodeItem(null, '1'), null)
 })
 
 test('unlocked looks route to character-bible with 去定妆', () => {

@@ -177,4 +177,4 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 
 - `WorkService.detail` 通过 MyBatis Example 批量查询 `short_character`、`short_scene_card`、`short_shot`、`short_film`，在详情响应中聚合作品级 `outline_count`、`character_count`、`scene_card_count`、`look_total`、`look_locked`，以及每集 `shot_total`、`shot_frame_ready`、`shot_ready`、`shot_spoken_ready`、`film_expired_flag`。
 - `ShotService.split` 重拆剧本分镜前调用 `FinishedFilmLifecycle.expireAfterUpstreamChange` 使已有旧成片失效，再回写 `storyboard_status=DRAFT`。
-- 用户端首页 `homeWorkbench.js` 按单集六环节链路（`剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片`，每集满额 6 单位）统一折算总进度 `总进度 X% · 已成片 M/N 集`，卡片内以每集一行的集数列表展示各集当前环节（不折叠区间、不限行数，列表固定高度内滚动），并基于实时环节状态计算卡片状态（`草稿` / `剧本中` / `制作中` / `合成中` / `已成片` / `审核中` / `已完成` / `已归档`）及主操作按钮跳转。
+- 用户端首页 `homeWorkbench.js` 按单集六环节链路（`剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片`，每集满额 6 单位）统一折算总进度 `总进度 X% · 已成片 M/N 集`，卡片内按集展示当前环节：≤4 集时每集一行全列，>4 集时只保留下一集未成片行与状态计数，完整列表在「全部集数」弹层内查看并可按集号定位（`episodeCardSummary` / `findEpisodeItem`；不合并区间，每集仍可直达，卡片高度不随集数增长），并基于实时环节状态计算卡片状态（`草稿` / `剧本中` / `制作中` / `合成中` / `已成片` / `审核中` / `已完成` / `已归档`）及主操作按钮跳转。
