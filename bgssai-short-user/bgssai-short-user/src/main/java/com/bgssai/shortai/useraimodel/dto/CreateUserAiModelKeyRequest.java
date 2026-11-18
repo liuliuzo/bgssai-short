@@ -14,8 +14,18 @@ public class CreateUserAiModelKeyRequest {
     private String abilityType;
     private String modelCode;
     private String modelName;
+    private String keyName;
     private Integer onlyUserKey;
+    private Boolean activateOnCreate;
     private List<CreateUserAiModelKeyItem> items;
+
+    public Boolean getActivateOnCreate() {
+        return activateOnCreate;
+    }
+
+    public void setActivateOnCreate(Boolean activateOnCreate) {
+        this.activateOnCreate = activateOnCreate;
+    }
 
     public String getProviderCode() {
         return providerCode;
@@ -71,6 +81,14 @@ public class CreateUserAiModelKeyRequest {
 
     public void setModelCode(String modelCode) {
         this.modelCode = modelCode;
+    }
+
+    public String getKeyName() {
+        return keyName;
+    }
+
+    public void setKeyName(String keyName) {
+        this.keyName = keyName;
     }
 
     public String getModelName() {

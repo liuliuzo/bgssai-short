@@ -11,6 +11,7 @@ public class UserAiModelKey {
     private String providerCode;
     private String modelCode;
     private String modelName;
+    private String keyName;
     private String baseUrl;
     private String apiKey;
     private String secretKey;
@@ -78,6 +79,14 @@ public class UserAiModelKey {
 
     public void setModelCode(String modelCode) {
         this.modelCode = modelCode == null ? null : modelCode.trim();
+    }
+
+    public String getKeyName() {
+        return keyName;
+    }
+
+    public void setKeyName(String keyName) {
+        this.keyName = keyName;
     }
 
     public String getModelName() {

@@ -26,6 +26,7 @@ import com.bgssai.shortai.mapper.ShortCharacterMapper;
 import com.bgssai.shortai.mapper.ShortSceneCardMapper;
 import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.model.AiModelConfig;
+import com.bgssai.shortai.model.ShortAiTask;
 import com.bgssai.shortai.model.ShortEpisode;
 import com.bgssai.shortai.model.ShortShot;
 import com.bgssai.shortai.model.UserQuota;
@@ -42,6 +43,7 @@ class AiTaskServiceEstimateTest {
     private QuotaWalletService quotaWalletService;
     private QuotaConsumeService quotaConsumeService;
     private ShortShotMapper shortShotMapper;
+    private AiTaskQueue queue;
 
     @BeforeEach
     void setUp() {
@@ -64,8 +66,8 @@ class AiTaskServiceEstimateTest {
                 org.mockito.Mockito.mock(ShortAiTaskMapper.class));
         ReflectionTestUtils.setField(service, "paidOrderGrantService",
                 org.mockito.Mockito.mock(PaidOrderGrantService.class));
-        ReflectionTestUtils.setField(service, "aiTaskQueue",
-                org.mockito.Mockito.mock(AiTaskQueue.class));
+        queue = org.mockito.Mockito.mock(AiTaskQueue.class);
+        ReflectionTestUtils.setField(service, "aiTaskQueue", queue);
 
         when(workAccessService.requireUser()).thenReturn("u-1");
         UserQuota quota = new UserQuota();
@@ -134,6 +136,39 @@ class AiTaskServiceEstimateTest {
         Map<String, Object> result = (Map<String, Object>) service.estimate(req).getResult();
         assertEquals(200, result.get("estimated_cost_cent"));
         verify(quotaConsumeService).assertAffordable("u-1", 200);
+    }
+
+    @Test
+    void submitPinsBothModelKeysBeforeAnAutomaticVideoContinuation() {
+        ShortShot shot = shot("s-1", 1, 3);
+        shot.setId(1L);
+        shot.setWorkId("w-1");
+        shot.setEpisodeId("e-1");
+        shot.setImagePrompt("a detective crosses the empty street");
+        when(shortShotMapper.selectOneByExample(any())).thenReturn(shot);
+        AiModelConfig image = model("image-01", "PER_CALL", 0);
+        image.setModelId("umk-image-a");
+        AiModelConfig video = model("video-01", "PER_CALL", 0);
+        video.setModelId("umk-video-a");
+        when(aiModelResolveService.resolve("IMAGE", "bgssai-image")).thenReturn(image);
+        when(aiModelResolveService.resolve("VIDEO", null)).thenReturn(video);
+        ShortAiTask task = new ShortAiTask();
+        task.setTaskId("t-test");
+        when(queue.enqueue(eq("u-1"), eq("w-1"), eq("e-1"), eq("IMAGE"), eq("SHOT"), eq("s-1"),
+                any(), anyString(), eq(1), eq("umk-image-a"))).thenAnswer(call -> {
+                    Map<?, ?> input = call.getArgument(6);
+                    assertEquals("umk-image-a", input.get("model_code"));
+                    assertEquals("umk-video-a", input.get("next_model_code"));
+                    return task;
+                });
+        AiTaskReq req = new AiTaskReq();
+        req.setTaskType("IMAGE");
+        req.setModelCode("bgssai-image");
+        req.setShotIds(List.of("s-1"));
+        req.setAutoNextFlag(1);
+
+        Map<?, ?> response = (Map<?, ?>) service.submit(req).getResult();
+        assertEquals(List.of("t-test"), response.get("task_id_list"));
     }
 
     @Test

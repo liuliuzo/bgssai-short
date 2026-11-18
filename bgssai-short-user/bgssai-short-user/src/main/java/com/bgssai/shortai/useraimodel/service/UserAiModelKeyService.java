@@ -173,6 +173,8 @@ public class UserAiModelKeyService {
             KlingJwtSupport.resolveBearerToken(plainKey, plainSecret, baseUrl);
         }
 
+        String keyName = normalizeKeyName(req.getKeyName());
+        boolean activate = !Boolean.FALSE.equals(req.getActivateOnCreate());
         List<CreateUserAiModelKeyItem> pending = new ArrayList<>();
         if (req.getItems() != null && !req.getItems().isEmpty()) {
             for (CreateUserAiModelKeyItem item : req.getItems()) {
@@ -213,6 +215,7 @@ public class UserAiModelKeyService {
             UserAiModelKey row = new UserAiModelKey();
             row.setKeyId(ShortIds.id(UserAiModelSupport.USER_KEY_PREFIX));
             row.setUserId(userId);
+            row.setKeyName(keyName == null || keyName.isEmpty() ? null : keyName);
             row.setModalityType(modality);
             row.setAbilityType(ability);
             row.setProviderCode(providerCode);
@@ -221,7 +224,7 @@ public class UserAiModelKeyService {
             row.setBaseUrl(baseUrl);
             row.setApiKey(plainKey);
             row.setSecretKey(plainSecret);
-            row.setEnabled(1);
+            row.setEnabled(0);
             row.setDefaultModel(0);
             row.setDelFlag(0);
             row.setCreator(userId);
@@ -229,7 +232,9 @@ public class UserAiModelKeyService {
             row.setGmtCreate(now);
             row.setGmtModified(now);
             userAiModelKeyMapper.insertSelective(row);
-            enabledKeyByAbility.put(ability, row.getKeyId());
+            if (activate) {
+                enabledKeyByAbility.put(ability, row.getKeyId());
+            }
             createdRows.add(row);
             createdItems.add(toItem(row));
         }
@@ -298,6 +303,7 @@ public class UserAiModelKeyService {
         patch.setModalityType(modality);
         patch.setModelCode(modelCode);
         patch.setModelName(modelName);
+        patch.setKeyName(normalizeKeyName(req.getKeyName()));
         patch.setBaseUrl(baseUrl);
         if (req.getApiKey() != null && !req.getApiKey().isBlank()) {
             String plainKey = req.getApiKey().trim();
@@ -321,7 +327,7 @@ public class UserAiModelKeyService {
         patch.setModifier(userId);
         patch.setGmtModified(new Date());
         userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
-        if (Integer.valueOf(1).equals(existing.getEnabled())) {
+        if (Integer.valueOf(1).equals(existing.getEnabled()) && !ability.equals(existing.getAbilityType())) {
             claimAbility(userId, ability, existing.getKeyId());
         }
 
@@ -1077,6 +1083,15 @@ public class UserAiModelKeyService {
         return item;
     }
 
+    private static String normalizeKeyName(String name) {
+        if (name == null) return null;
+        String trimmed = name.strip();
+        if (trimmed.codePointCount(0, trimmed.length()) > 64) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "密钥名称最多 64 个字符");
+        }
+        return trimmed;
+    }
+
     private static UserAiModelKeyItem toItem(UserAiModelKey row) {
         UserAiModelKeyItem item = new UserAiModelKeyItem();
         String providerCode = UserAiModelSupport.canonicalizeOwnedProvider(row.getProviderCode(), row.getBaseUrl());
@@ -1087,6 +1102,7 @@ public class UserAiModelKeyService {
         item.setProviderName(UserAiModelSupport.providerName(providerCode));
         item.setModelCode(row.getModelCode());
         item.setModelName(row.getModelName());
+        item.setKeyName(row.getKeyName());
         item.setBaseUrl(row.getBaseUrl());
         item.setApiKeyMasked(UserAiModelSupport.maskApiKey(row.getApiKey()));
         item.setSecretKeyMasked(UserAiModelSupport.maskApiKey(row.getSecretKey()));

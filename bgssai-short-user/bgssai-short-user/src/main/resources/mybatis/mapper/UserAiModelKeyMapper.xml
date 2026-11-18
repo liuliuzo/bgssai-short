@@ -10,6 +10,7 @@
     <result column="provider_code" jdbcType="VARCHAR" property="providerCode" />
     <result column="model_code" jdbcType="VARCHAR" property="modelCode" />
     <result column="model_name" jdbcType="VARCHAR" property="modelName" />
+    <result column="key_name" jdbcType="VARCHAR" property="keyName" />
     <result column="base_url" jdbcType="VARCHAR" property="baseUrl" />
     <result column="api_key" jdbcType="LONGVARCHAR" property="apiKey" />
     <result column="secret_key" jdbcType="LONGVARCHAR" property="secretKey" />
@@ -67,7 +68,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, key_id, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, secret_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified
+    id, key_id, key_name, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, secret_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.UserAiModelKeyExample" resultMap="BaseResultMap">
     select
@@ -107,8 +108,8 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.UserAiModelKey" useGeneratedKeys="true" keyProperty="id">
-    insert into user_ai_model_key (id, key_id, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, secret_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified)
-    values (#{id,jdbcType=BIGINT}, #{keyId,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{modalityType,jdbcType=VARCHAR}, #{abilityType,jdbcType=VARCHAR}, #{providerCode,jdbcType=VARCHAR}, #{modelCode,jdbcType=VARCHAR}, #{modelName,jdbcType=VARCHAR}, #{baseUrl,jdbcType=VARCHAR}, #{apiKey,jdbcType=LONGVARCHAR}, #{secretKey,jdbcType=LONGVARCHAR}, #{enabled,jdbcType=TINYINT}, #{defaultModel,jdbcType=TINYINT}, #{lastCheckStatus,jdbcType=VARCHAR}, #{lastCheckTime,jdbcType=TIMESTAMP}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+    insert into user_ai_model_key (id, key_id, key_name, user_id, modality_type, ability_type, provider_code, model_code, model_name, base_url, api_key, secret_key, is_enabled, is_default_model, last_check_status, last_check_time, del_flag, creator, modifier, gmt_create, gmt_modified)
+    values (#{id,jdbcType=BIGINT}, #{keyId,jdbcType=VARCHAR}, #{keyName,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{modalityType,jdbcType=VARCHAR}, #{abilityType,jdbcType=VARCHAR}, #{providerCode,jdbcType=VARCHAR}, #{modelCode,jdbcType=VARCHAR}, #{modelName,jdbcType=VARCHAR}, #{baseUrl,jdbcType=VARCHAR}, #{apiKey,jdbcType=LONGVARCHAR}, #{secretKey,jdbcType=LONGVARCHAR}, #{enabled,jdbcType=TINYINT}, #{defaultModel,jdbcType=TINYINT}, #{lastCheckStatus,jdbcType=VARCHAR}, #{lastCheckTime,jdbcType=TIMESTAMP}, #{delFlag,jdbcType=TINYINT}, #{creator,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bgssai.shortai.model.UserAiModelKey" useGeneratedKeys="true" keyProperty="id">
     insert into user_ai_model_key
@@ -121,6 +122,7 @@
       <if test="providerCode != null">provider_code,</if>
       <if test="modelCode != null">model_code,</if>
       <if test="modelName != null">model_name,</if>
+      <if test="keyName != null">key_name,</if>
       <if test="baseUrl != null">base_url,</if>
       <if test="apiKey != null">api_key,</if>
       <if test="secretKey != null">secret_key,</if>
@@ -143,6 +145,7 @@
       <if test="providerCode != null">#{providerCode,jdbcType=VARCHAR},</if>
       <if test="modelCode != null">#{modelCode,jdbcType=VARCHAR},</if>
       <if test="modelName != null">#{modelName,jdbcType=VARCHAR},</if>
+      <if test="keyName != null">#{keyName,jdbcType=VARCHAR},</if>
       <if test="baseUrl != null">#{baseUrl,jdbcType=VARCHAR},</if>
       <if test="apiKey != null">#{apiKey,jdbcType=LONGVARCHAR},</if>
       <if test="secretKey != null">#{secretKey,jdbcType=LONGVARCHAR},</if>
@@ -172,6 +175,7 @@
       <if test="row.providerCode != null">provider_code = #{row.providerCode,jdbcType=VARCHAR},</if>
       <if test="row.modelCode != null">model_code = #{row.modelCode,jdbcType=VARCHAR},</if>
       <if test="row.modelName != null">model_name = #{row.modelName,jdbcType=VARCHAR},</if>
+      <if test="row.keyName != null">key_name = nullif(#{row.keyName,jdbcType=VARCHAR}, ''),</if>
       <if test="row.baseUrl != null">base_url = #{row.baseUrl,jdbcType=VARCHAR},</if>
       <if test="row.apiKey != null">api_key = #{row.apiKey,jdbcType=LONGVARCHAR},</if>
       <if test="row.secretKey != null">secret_key = #{row.secretKey,jdbcType=LONGVARCHAR},</if>
@@ -198,6 +202,7 @@
       provider_code = #{row.providerCode,jdbcType=VARCHAR},
       model_code = #{row.modelCode,jdbcType=VARCHAR},
       model_name = #{row.modelName,jdbcType=VARCHAR},
+      key_name = #{row.keyName,jdbcType=VARCHAR},
       base_url = #{row.baseUrl,jdbcType=VARCHAR},
       api_key = #{row.apiKey,jdbcType=LONGVARCHAR},
       secret_key = #{row.secretKey,jdbcType=LONGVARCHAR},
@@ -222,6 +227,7 @@
       <if test="providerCode != null">provider_code = #{providerCode,jdbcType=VARCHAR},</if>
       <if test="modelCode != null">model_code = #{modelCode,jdbcType=VARCHAR},</if>
       <if test="modelName != null">model_name = #{modelName,jdbcType=VARCHAR},</if>
+      <if test="keyName != null">key_name = nullif(#{keyName,jdbcType=VARCHAR}, ''),</if>
       <if test="baseUrl != null">base_url = #{baseUrl,jdbcType=VARCHAR},</if>
       <if test="apiKey != null">api_key = #{apiKey,jdbcType=LONGVARCHAR},</if>
       <if test="secretKey != null">secret_key = #{secretKey,jdbcType=LONGVARCHAR},</if>
@@ -247,6 +253,7 @@
       provider_code = #{providerCode,jdbcType=VARCHAR},
       model_code = #{modelCode,jdbcType=VARCHAR},
       model_name = #{modelName,jdbcType=VARCHAR},
+      key_name = #{keyName,jdbcType=VARCHAR},
       base_url = #{baseUrl,jdbcType=VARCHAR},
       api_key = #{apiKey,jdbcType=LONGVARCHAR},
       secret_key = #{secretKey,jdbcType=LONGVARCHAR},

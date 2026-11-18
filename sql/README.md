@@ -85,4 +85,6 @@ schema 由部署方手动执行。
 
 已有库补登录日志明细时执行 `sql/upgrade/20261114_login_log_context.sql`（只加列，可重复执行）。已有库补自建模型关闭列时执行 `sql/upgrade/20261118_platform_model_exclusive.sql`（只加列，可重复执行）。新库仍以 `DDL.sql` 为准。
 
+发布命名模型密钥功能前，在已有库执行 `sql/upgrade/20261118_model_key_name.sql`，为 `user_ai_model_key` 添加可空的 `key_name`。脚本可重复执行。
+
 短剧业务种子可由 `tmp/gen_short_seed_dml.py` 重新生成后写回 `DML.sql` 的 `SHORT-BIZ-SEED` 段。

@@ -127,6 +127,26 @@ class ExternalApiKeyBalanceClientTest {
     }
 
     @Test
+    void sameProviderAndMaskCanHaveDistinctBalances() {
+        String first = "sk-1-account-a-tail";
+        String second = "sk-1-account-b-tail";
+        assertEquals(UserAiModelSupport.maskApiKey(first), UserAiModelSupport.maskApiKey(second));
+        ExternalApiKeyBalanceClient client = new ExternalApiKeyBalanceClient((url, headers) -> {
+            String balance = switch (headers.get("Authorization")) {
+                case "Bearer sk-1-account-a-tail" -> "12.50";
+                case "Bearer sk-1-account-b-tail" -> "0.00";
+                default -> throw new AssertionError("Unexpected credential");
+            };
+            return new Result(200, "{\"balance_infos\":[{\"currency\":\"CNY\",\"total_balance\":\"" + balance + "\"}]}");
+        });
+        List<UserAiModelKeyItem> items = List.of(new UserAiModelKeyItem(), new UserAiModelKeyItem());
+        client.fill(List.of(row("DEEPSEEK", "https://api.deepseek.com", first, null),
+                row("DEEPSEEK", "https://api.deepseek.com", second, null)), items);
+        assertEquals("12.50", items.get(0).getBalanceList().get(0).getAmount());
+        assertEquals("0.00", items.get(1).getBalanceList().get(0).getAmount());
+    }
+
+    @Test
     void klingAndMiniMaxUseTheProviderBalanceRoutes() throws Exception {
         List<String> urls = new ArrayList<>();
         ExternalApiKeyBalanceClient client = new ExternalApiKeyBalanceClient((url, headers) -> {

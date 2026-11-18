@@ -153,9 +153,12 @@ public class AiTaskService {
         String userId = workAccessService.requireUser();
         ensureWallet(userId);
         AiModelConfig model = aiModelResolveService.resolve(type, req.getModelCode());
+        String modelCode = selectedModelCode(model, req.getModelCode());
+        String nextModelCode = req.getNextModelCode();
         int estimated = shots.stream().mapToInt(shot -> costForShot(model, type, shot)).sum();
         if (Integer.valueOf(1).equals(req.getAutoNextFlag()) && "IMAGE".equals(type)) {
-            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", req.getNextModelCode());
+            AiModelConfig videoModel = aiModelResolveService.resolve("VIDEO", nextModelCode);
+            nextModelCode = selectedModelCode(videoModel, nextModelCode);
             estimated += shots.stream().mapToInt(shot -> costForShot(videoModel, "VIDEO", shot)).sum();
         }
         if (estimated > 0) {
@@ -179,14 +182,14 @@ public class AiTaskService {
                 request.put("camera_move", shot.getCameraMove());
             }
             request.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
-            if (req.getModelCode() != null && !req.getModelCode().isBlank()) {
-                request.put("model_code", req.getModelCode().trim());
+            if (modelCode != null && !modelCode.isBlank()) {
+                request.put("model_code", modelCode.trim());
             }
-            if (req.getNextModelCode() != null && !req.getNextModelCode().isBlank()) {
-                request.put("next_model_code", req.getNextModelCode().trim());
+            if (nextModelCode != null && !nextModelCode.isBlank()) {
+                request.put("next_model_code", nextModelCode.trim());
             }
             ShortAiTask task = aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(), type, "SHOT",
-                    shot.getShotId(), request, batchId, autoNext, req.getModelCode());
+                    shot.getShotId(), request, batchId, autoNext, modelCode);
             ids.add(task.getTaskId());
             patchShotStatus(shot, "IMAGE".equals(type) ? "IMAGE_GENERATING" : "VIDEO_GENERATING");
         }
@@ -197,6 +200,11 @@ public class AiTaskService {
         result.put("task_count", ids.size());
         result.put("estimated_cost_cent", estimated);
         return Responses.ok(result);
+    }
+
+    private static String selectedModelCode(AiModelConfig resolved, String requested) {
+        String id = resolved.getModelId();
+        return id != null && id.startsWith(UserAiModelSupport.USER_KEY_PREFIX) ? id : requested;
     }
 
     private Map<String, Object> estimateCompose(AiTaskReq req, String userId) {

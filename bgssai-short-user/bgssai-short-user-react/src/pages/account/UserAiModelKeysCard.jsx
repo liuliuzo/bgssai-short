@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Card, Checkbox, Form, Input, Modal, Popconfirm, Segmented, Select, Space, Switch, Table, Tag, message } from 'antd'
 import userAiModelKeysApi from '../../api/userAiModelKeys'
 import { formatKeyBalance } from './keyBalance'
+import { activateNewProviderKey, modelKeyMask } from './modelKeySelection'
 
 const MODALITY_FILTER = [
   { label: '全部', value: 'ALL' },
@@ -369,7 +370,7 @@ const FALLBACK_PRESETS = [
   },
 ]
 
-function buildQuickValues(preset, currentFormValues = {}) {
+function buildQuickValues(preset, keys) {
   const modelsByAbility = {}
   const abilities = []
   ;(preset?.abilities || []).forEach((ab) => {
@@ -381,8 +382,10 @@ function buildQuickValues(preset, currentFormValues = {}) {
   })
   return {
     provider_code: preset?.provider_code || 'MINIMAX',
-    api_key: currentFormValues.api_key || '',
-    secret_key: currentFormValues.secret_key || '',
+    key_name: '',
+    activate_on_create: activateNewProviderKey(keys, preset?.provider_code),
+    api_key: '',
+    secret_key: '',
     base_url: preset?.default_base_url || '',
     abilities,
     models_by_ability: modelsByAbility,
@@ -391,7 +394,9 @@ function buildQuickValues(preset, currentFormValues = {}) {
 
 export default function UserAiModelKeysCard() {
   const [loading, setLoading] = useState(false)
-  const [keys, setKeys] = useState([])
+  const [keys, setKeys] = useState(null)
+  const loadSequence = useRef(0)
+  const [changingKeyId, setChangingKeyId] = useState(null)
   const [presets, setPresets] = useState([])
   const [modalityFilter, setModalityFilter] = useState('ALL')
   const [testingKeyId, setTestingKeyId] = useState(null)
@@ -408,15 +413,21 @@ export default function UserAiModelKeysCard() {
   const [quickForm] = Form.useForm()
 
   const load = useCallback(async () => {
+    const sequence = ++loadSequence.current
     setLoading(true)
     try {
       const { data } = await userAiModelKeysApi.list()
-      if (data?.success && data.result) {
-        setKeys(Array.isArray(data.result.key_list) ? data.result.key_list : [])
+      if (sequence !== loadSequence.current) return
+      if (data?.success && Array.isArray(data.result?.key_list)) {
+        setKeys(data.result.key_list)
         setPresets(Array.isArray(data.result.provider_preset_list) ? data.result.provider_preset_list : [])
+      } else {
+        setKeys(null)
       }
+    } catch {
+      if (sequence === loadSequence.current) setKeys(null)
     } finally {
-      setLoading(false)
+      if (sequence === loadSequence.current) setLoading(false)
     }
   }, [])
 
@@ -438,6 +449,7 @@ export default function UserAiModelKeysCard() {
   }, [effectivePresets])
 
   const filteredKeys = useMemo(() => {
+    if (!keys) return []
     if (modalityFilter === 'ALL') return keys
     return keys.filter((k) => k.modality_type === modalityFilter)
   }, [keys, modalityFilter])
@@ -478,6 +490,8 @@ export default function UserAiModelKeysCard() {
     const firstModel = matchingAbility?.models?.[0]
     editForm.setFieldsValue({
       provider_code: defaultProvider?.provider_code || 'MINIMAX',
+      key_name: '',
+      activate_on_create: activateNewProviderKey(keys, defaultProvider?.provider_code),
       ability_type: matchingAbility?.ability_type || defaultAbilityCandidate,
       model_code: firstModel?.model_code || 'MiniMax-M2.5',
       model_name: firstModel?.model_name || 'MiniMax M2.5',
@@ -492,6 +506,7 @@ export default function UserAiModelKeysCard() {
     setEditingRow(row)
     editForm.setFieldsValue({
       provider_code: row.provider_code || 'XAI',
+      key_name: row.key_name || '',
       ability_type: row.ability_type || 'TEXT',
       model_code: row.model_code || '',
       model_name: row.model_name || '',
@@ -510,6 +525,8 @@ export default function UserAiModelKeysCard() {
     const firstModel = matched?.models?.[0]
     editForm.setFieldsValue({
       base_url: preset.default_base_url || '',
+      api_key: '',
+      activate_on_create: activateNewProviderKey(keys, providerCode),
       ability_type: matched?.ability_type || curAbility,
       model_code: firstModel?.model_code || '',
       model_name: firstModel?.model_name || '',
@@ -567,6 +584,7 @@ export default function UserAiModelKeysCard() {
       if (editingRow) {
         const { data } = await userAiModelKeysApi.update({
           key_id: editingRow.key_id,
+          key_name: (values.key_name || '').trim(),
           provider_code: values.provider_code,
           modality_type: modality,
           ability_type: values.ability_type,
@@ -583,6 +601,8 @@ export default function UserAiModelKeysCard() {
         }
       } else {
         const { data } = await userAiModelKeysApi.create({
+          key_name: (values.key_name || '').trim(),
+          activate_on_create: values.activate_on_create,
           provider_code: values.provider_code,
           modality_type: modality,
           ability_type: values.ability_type,
@@ -593,11 +613,13 @@ export default function UserAiModelKeysCard() {
           secret_key: values.secret_key || undefined,
         })
         if (data?.success) {
-          message.success('已添加并启用')
+          message.success(values.activate_on_create ? '已添加并启用' : '已添加备用密钥')
           setEditOpen(false)
           await load()
         }
       }
+    } catch {
+      // The HTTP client shows the error. Keep the form open for retry.
     } finally {
       setSaving(false)
     }
@@ -605,14 +627,14 @@ export default function UserAiModelKeysCard() {
 
   const openQuickProvider = (providerCode) => {
     const preset = presetMap[providerCode] || effectivePresets[0]
-    quickForm.setFieldsValue(buildQuickValues(preset))
+    quickForm.setFieldsValue(buildQuickValues(preset, keys))
     setQuickOpen(true)
   }
 
   const onQuickProviderChange = (providerCode) => {
     const preset = presetMap[providerCode]
     if (!preset) return
-    quickForm.setFieldsValue(buildQuickValues(preset, quickForm.getFieldsValue()))
+    quickForm.setFieldsValue(buildQuickValues(preset, keys))
   }
 
   const onTestQuick = async () => {
@@ -670,6 +692,8 @@ export default function UserAiModelKeysCard() {
     setQuickSaving(true)
     try {
       const { data } = await userAiModelKeysApi.create({
+        key_name: (vals.key_name || '').trim(),
+        activate_on_create: vals.activate_on_create,
         provider_code: vals.provider_code,
         base_url: vals.base_url,
         api_key: vals.api_key,
@@ -677,10 +701,12 @@ export default function UserAiModelKeysCard() {
         items,
       })
       if (data?.success) {
-        message.success(`已接入 ${data.result?.created_count || items.length} 项 ${quickPreset?.provider_name || ''} 模型配置`)
+        message.success(vals.activate_on_create ? '已保存并启用' : '已添加备用密钥')
         setQuickOpen(false)
         await load()
       }
+    } catch {
+      // Keep the selected models and key on a failed save.
     } finally {
       setQuickSaving(false)
     }
@@ -702,10 +728,17 @@ export default function UserAiModelKeysCard() {
   }
 
   const onToggleRow = async (row, checked) => {
-    const { data } = await userAiModelKeysApi.toggle({ key_id: row.key_id, enabled: checked ? 1 : 0 })
-    if (data?.success) {
-      message.success(checked ? '已启用' : '已停用')
+    setChangingKeyId(row.key_id)
+    try {
+      const { data } = await userAiModelKeysApi.toggle({ key_id: row.key_id, enabled: checked ? 1 : 0 })
+      if (data?.success) {
+        message.success(checked ? '已启用' : '已停用')
+        await load()
+      }
+    } catch {
       await load()
+    } finally {
+      setChangingKeyId(null)
     }
   }
 
@@ -736,9 +769,9 @@ export default function UserAiModelKeysCard() {
       extra={(
         <Space wrap>
           {QUICK_BUTTONS.map((btn) => (
-            <Button key={btn.code} onClick={() => openQuickProvider(btn.code)}>{btn.label}</Button>
+            <Button key={btn.code} disabled={!keys || loading} onClick={() => openQuickProvider(btn.code)}>{btn.label}</Button>
           ))}
-          <Button type="primary" onClick={openAdd}>新增密钥</Button>
+          <Button type="primary" disabled={!keys || loading} onClick={openAdd}>新增密钥</Button>
         </Space>
       )}
     >
@@ -755,7 +788,7 @@ export default function UserAiModelKeysCard() {
         size="small"
         pagination={false}
         dataSource={filteredKeys}
-        locale={{ emptyText: '暂无模型密钥' }}
+        locale={{ emptyText: keys ? '暂无模型密钥' : <Button onClick={load}>重新加载密钥</Button> }}
         columns={[
           {
             title: '类型',
@@ -770,9 +803,12 @@ export default function UserAiModelKeysCard() {
             title: '密钥',
             dataIndex: 'api_key_masked',
             width: 190,
-            render: (_, row) => (row.secret_key_masked
-              ? `${row.api_key_masked || ''} / ${row.secret_key_masked}`
-              : (row.api_key_masked || '-')),
+            render: (_, row) => (
+              <Space direction="vertical" size={0}>
+                {row.key_name && <strong>{row.key_name}</strong>}
+                <span>{modelKeyMask(row)}</span>
+              </Space>
+            ),
           },
           {
             title: '余额',
@@ -781,14 +817,31 @@ export default function UserAiModelKeysCard() {
           },
           {
             title: '状态',
-            width: 80,
-            render: (_, row) => (
-              <Switch
-                size="small"
-                checked={Number(row.enabled) === 1}
-                onChange={(checked) => onToggleRow(row, checked)}
-              />
-            ),
+            width: 110,
+            render: (_, row) => {
+              const enabled = Number(row.enabled) === 1
+              if (Number(row.platform_model) === 1) {
+                return (
+                  <Switch
+                    size="small"
+                    checked={enabled}
+                    disabled={!!changingKeyId}
+                    loading={changingKeyId === row.key_id}
+                    onChange={(checked) => onToggleRow(row, checked)}
+                  />
+                )
+              }
+              return (
+                <Button
+                  size="small"
+                  loading={changingKeyId === row.key_id}
+                  disabled={!!changingKeyId}
+                  onClick={() => onToggleRow(row, !enabled)}
+                >
+                  {enabled ? '停用' : '使用此密钥'}
+                </Button>
+              )
+            },
           },
           {
             title: '默认',
@@ -823,7 +876,7 @@ export default function UserAiModelKeysCard() {
                   <Button size="small" onClick={() => onSetDefaultRow(row)}>设为默认</Button>
                 ) : null}
                 <Button size="small" onClick={() => openEdit(row)}>编辑</Button>
-                <Popconfirm title="确认删除该模型密钥？" onConfirm={() => onDeleteRow(row)}>
+                <Popconfirm title={`删除${row.model_name} 的「${row.key_name || modelKeyMask(row)}」密钥？`} onConfirm={() => onDeleteRow(row)}>
                   <Button size="small" danger>删除</Button>
                 </Popconfirm>
               </Space>
@@ -863,11 +916,14 @@ export default function UserAiModelKeysCard() {
           <Form.Item name="model_code" label="模型编码" rules={[{ required: true, message: '请输入模型编码' }]}>
             <Input placeholder="例如 MiniMax-M2.5 / kling-v3 / v6 / deepseek-chat" />
           </Form.Item>
-          <Form.Item name="model_name" label="展示名称" rules={[{ required: true, message: '请输入展示名称' }]}>
+          <Form.Item name="model_name" label="模型名称" rules={[{ required: true, message: '请输入展示名称' }]}>
             <Input placeholder="例如 MiniMax M2.5" />
           </Form.Item>
           <Form.Item name="base_url" label="接口地址" rules={[{ required: true, message: '请输入接口地址' }]}>
             <Input placeholder={editPreset?.default_base_url || 'https://...'} />
+          </Form.Item>
+          <Form.Item name="key_name" label="密钥名称">
+            <Input maxLength={64} placeholder="例如 工作账号、测试账号" />
           </Form.Item>
           <Form.Item
             name="api_key"
@@ -885,6 +941,11 @@ export default function UserAiModelKeysCard() {
               rules={editingRow ? [] : [{ required: true, message: '请输入 Secret Key' }]}
             >
               <Input.Password placeholder="可灵 Secret Key" autoComplete="off" />
+            </Form.Item>
+          )}
+          {!editingRow && (
+            <Form.Item name="activate_on_create" valuePropName="checked">
+              <Checkbox>保存后启用</Checkbox>
             </Form.Item>
           )}
           <Space>
@@ -906,6 +967,9 @@ export default function UserAiModelKeysCard() {
           <Form.Item name="provider_code" label="供应商" rules={[{ required: true }]}>
             <Select options={providerSelectOptions} onChange={onQuickProviderChange} />
           </Form.Item>
+          <Form.Item name="key_name" label="密钥名称">
+            <Input maxLength={64} placeholder="例如 工作账号、测试账号" />
+          </Form.Item>
           <Form.Item
             name="api_key"
             label={isQuickKling ? 'Access Key' : `${quickPreset?.provider_name || ''} API Key`}
@@ -925,7 +989,7 @@ export default function UserAiModelKeysCard() {
           <Form.Item name="base_url" label="接口地址" rules={[{ required: true, message: '请输入接口地址' }]}>
             <Input placeholder={quickPreset?.default_base_url || 'https://...'} />
           </Form.Item>
-          <Form.Item name="abilities" label="启用能力" rules={[{ required: true, message: '请至少选择一项能力' }]}>
+          <Form.Item name="abilities" label="模型能力" rules={[{ required: true, message: '请至少选择一项能力' }]}>
             <Checkbox.Group
               options={(quickPreset?.abilities || []).map((ab) => ({
                 label: ABILITY_LABEL[ab.ability_type] || ab.ability_label || ab.ability_type,
@@ -950,9 +1014,12 @@ export default function UserAiModelKeysCard() {
               </Form.Item>
             ))}
           </div>
+          <Form.Item name="activate_on_create" valuePropName="checked">
+            <Checkbox>保存后启用</Checkbox>
+          </Form.Item>
           <Space>
             <Button loading={quickTesting} onClick={onTestQuick}>测试连接</Button>
-            <Button type="primary" htmlType="submit" loading={quickSaving}>保存并启用</Button>
+            <Button type="primary" htmlType="submit" loading={quickSaving}>保存</Button>
           </Space>
         </Form>
       </Modal>
