@@ -13,6 +13,7 @@ import {
   shotsForFrames,
   shotsForVideo,
   unlockedLooks,
+  unlockedScenes,
 } from './productionGuide.js'
 
 const episode = (extra = {}) => ({ episode_id: 'e1', episode_no: 1, script_status: 'NONE', compose_status: 'NONE', ...extra })
@@ -108,12 +109,14 @@ test('unlocked cards block frames, and an existing candidate is locked for free'
     prop_list: [],
   }
   const looks = unlockedLooks(panel)
-  assert.deepEqual(looks.map((item) => item.name), ['苏曼', '客厅'])
+  assert.deepEqual(looks.map((item) => item.name), ['苏曼'])
+  assert.deepEqual(unlockedScenes(panel).map((item) => item.name), ['客厅'])
   const step = path({
     outlineCount: 1,
     scriptStatus: 'READY',
     sceneCount: 2,
     looks,
+    sceneRefs: unlockedScenes(panel),
     shotCount: 0,
     episodeNo: 1,
   })
@@ -123,18 +126,54 @@ test('unlocked cards block frames, and an existing candidate is locked for free'
   assert.equal(step.tab, 'characters')
 })
 
-test('a card without a picture asks for a portrait before the storyboard', () => {
+test('a scene card without a picture asks for a reference image in its own step', () => {
   const step = path({
     outlineCount: 1,
     scriptStatus: 'READY',
-    looks: [{ kind: 'scene', id: 's1', name: '客厅', candidateId: '' }],
+    looks: [],
+    sceneRefs: [{ kind: 'scene', id: 's1', name: '客厅', candidateId: '' }],
     shotCount: 3,
     shots: [],
     episodeNo: 1,
   })
+  assert.equal(step.key, 'scenes')
+  assert.equal(step.tab, 'scenes')
+  assert.equal(step.stepNo, 5)
   assert.equal(step.kind, 'portrait')
   assert.match(step.detail, /2 张/)
   assert.match(step.detail, /失败/)
+})
+
+test('locked looks move to scenes, and scene portrait wait only blocks the scenes step', () => {
+  const panel = {
+    character_list: [{ character_id: 'c1', character_name: '苏曼', card_status: 'LOCKED', ref_image_asset_id: 'a1' }],
+    scene_list: [{ scene_card_id: 's1', card_name: '客厅', card_status: 'DRAFT', candidate_list: [{ asset_id: 'a9' }] }],
+    prop_list: [],
+  }
+  const lockInput = buildVideoPathInput({
+    outline: { outline: [{ episode_no: 1 }] },
+    script: { script_status: 'READY', scene_list: [{ scene_no: 1 }] },
+    panel,
+    shots: [],
+    tasks: [{ target_type: 'PORTRAIT', task_status: 'RUNNING' }],
+    episode: episode({ script_status: 'READY' }),
+  })
+  const lockStep = path(lockInput)
+  assert.equal(lockStep.key, 'scenes')
+  assert.equal(lockStep.kind, 'lock')
+  assert.equal(lockStep.look.id, 's1')
+
+  const waitInput = buildVideoPathInput({
+    outline: { outline: [{ episode_no: 1 }] },
+    script: { script_status: 'READY', scene_list: [{ scene_no: 1 }] },
+    panel,
+    shots: [],
+    tasks: [{ target_type: 'SCENE_PORTRAIT', task_status: 'RUNNING' }],
+    episode: episode({ script_status: 'READY' }),
+  })
+  const waitStep = path(waitInput)
+  assert.equal(waitStep.key, 'scenes')
+  assert.equal(waitStep.waiting, true)
 })
 
 test('ready script with no open cards splits into shots', () => {
@@ -149,7 +188,7 @@ test('ready script with no open cards splits into shots', () => {
   assert.equal(step.key, 'shots')
   assert.equal(step.kind, 'split')
   assert.equal(step.action, '从剧本拆镜')
-  assert.deepEqual(step.doneKeys, ['outline', 'script', 'ready', 'looks'])
+  assert.deepEqual(step.doneKeys, ['outline', 'script', 'ready', 'looks', 'scenes'])
 })
 
 test('shots without a picture description stay on spoken previz', () => {
@@ -260,8 +299,8 @@ test('api payload maps into the same path', () => {
   assert.equal(resolveVideoPath(input).kind, 'split')
 })
 
-test('every step carries stepNo and tab, and allDone marks step 8 as 已完成', () => {
-  assert.equal(VIDEO_PATH_STEPS.length, 8)
+test('every step carries stepNo and tab, and allDone marks step 9 as 已完成', () => {
+  assert.equal(VIDEO_PATH_STEPS.length, 9)
   assert.deepEqual(
     VIDEO_PATH_STEPS.map((item) => [item.stepNo, item.key, item.tab]),
     [
@@ -269,13 +308,15 @@ test('every step carries stepNo and tab, and allDone marks step 8 as 已完成',
       [2, 'script', 'script'],
       [3, 'ready', 'script'],
       [4, 'looks', 'characters'],
-      [5, 'shots', 'storyboard'],
-      [6, 'frame', 'storyboard'],
-      [7, 'video', 'storyboard'],
-      [8, 'film', 'compose'],
+      [5, 'scenes', 'scenes'],
+      [6, 'shots', 'storyboard'],
+      [7, 'frame', 'storyboard'],
+      [8, 'video', 'storyboard'],
+      [9, 'film', 'compose'],
     ],
   )
   assert.ok(CORE_STUDIO_TABS.has('script'))
+  assert.ok(CORE_STUDIO_TABS.has('scenes'))
   assert.equal(AUX_STUDIO_TOOLS.length, 8)
 
   const finished = path({
@@ -287,12 +328,12 @@ test('every step carries stepNo and tab, and allDone marks step 8 as 已完成',
     videoCount: 1,
     composeStatus: 'READY',
   })
-  assert.equal(finished.stepNo, 8)
+  assert.equal(finished.stepNo, 9)
   assert.equal(finished.stepLabel, '成片')
   assert.equal(finished.allDone, true)
   const items = buildStepItems(finished, 'film')
   assert.ok(items.every((item) => item.state === 'done' && item.statusLabel === '已完成'))
-  assert.equal(items[7].isViewing, true)
+  assert.equal(items[8].isViewing, true)
 })
 
 test('buildStepItems separates current stage from historical viewing stage and running stage', () => {
@@ -342,6 +383,10 @@ test('resolveViewingStageKey maps core tabs, stage query, and aux tools', () => 
   assert.equal(
     resolveViewingStageKey({ activeTab: 'characters', requestedStage: '', currentStep: currentAtLooks, outlineCount: 3 }),
     'looks',
+  )
+  assert.equal(
+    resolveViewingStageKey({ activeTab: 'scenes', requestedStage: '', currentStep: currentAtLooks, outlineCount: 3 }),
+    'scenes',
   )
   assert.equal(
     resolveViewingStageKey({ activeTab: 'storyboard', requestedStage: 'frame', currentStep: currentAtLooks, outlineCount: 3 }),

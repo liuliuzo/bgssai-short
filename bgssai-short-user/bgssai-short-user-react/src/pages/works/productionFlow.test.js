@@ -147,6 +147,8 @@ test('a finalized episode that already has a film does not keep step 1 as the ne
 
 test('resolveRepairAction routes quota, look, and script errors to exact destination', () => {
   assert.equal(resolveRepairAction('镜1 引用的角色「沈知微」尚未定妆').tab, 'characters')
+  assert.equal(resolveRepairAction('镜1 引用的场景「公司会议室」尚未锁定参考图').tab, 'scenes')
+  assert.equal(resolveRepairAction('镜1 引用的场景「公司会议室」尚未锁定参考图').label, '去场景参考处理')
   assert.equal(resolveRepairAction('可用余额不足，请先充值').href, '/subscription')
   assert.equal(resolveRepairAction('请先完成本集定稿').tab, 'script')
   assert.equal(resolveRepairAction('服务繁忙，请稍后查看任务').href, '/tasks')
