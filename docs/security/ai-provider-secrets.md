@@ -67,7 +67,7 @@ Standards §1 写入分环境 properties。
 
 ## 7. 用户自有模型密钥（`user_ai_model_key`）
 
-- 用户自行添加的文本/图片/视频/音频模型 API Key 落入 `user_ai_model_key`（按 `user_id` 强隔离，仅本人可读写与调用；可灵双密钥中的 Access Key 存 `api_key`、Secret Key 存 `secret_key`）。`provider_code` 含 `MINIMAX`、`KLING`、`PIXVERSE`、`DEEPSEEK`、`XAI`、`OPENAI`、`ANTHROPIC`、`BGSSAI_TOKENHUB`、`TENCENT_TOKENHUB`。无全局模式开关；`user_ai_setting` 只记用户逐项关闭的自建模型能力（`suppressed_platform_abilities`），其历史 `is_only_user_key` 不再参与解析。
+- 「密钥管理」将命名凭据保存在 `user_ai_saved_credential`，按供应商选择当前 Key。模型的运行时绑定保存在 `user_ai_model_key`，通过 `credential_id` 引用所属凭据。两张表均按 `user_id` 隔离，仅本人可管理与调用。可灵双密钥中的 Access Key 存 `api_key`，Secret Key 存 `secret_key`。`provider_code` 含 `MINIMAX`、`KLING`、`PIXVERSE`、`DEEPSEEK`、`XAI`、`OPENAI`、`ANTHROPIC`、`BGSSAI_TOKENHUB`、`TENCENT_TOKENHUB`。无全局模式开关；`user_ai_setting` 只记用户逐项关闭的自建模型能力（`suppressed_platform_abilities`），其历史 `is_only_user_key` 不再参与解析。
 - 开发期沿用全局明文入库口径，但列表与详情接口仅返回掩码字段 `api_key_masked` 与 `secret_key_masked`（长度 `<=8` 返回 `****`，否则前 4 后 4 中间 `****`），严禁回显明文；可灵短期 HS256 JWT 仅在每次请求内存即时签发，不落库、不落日志。
 - 任务队列仅在 `short_ai_task.model_code` 写入配置标识 `umk-...`，严禁把用户 `api_key` 或 `secret_key` 写入 `short_ai_task.request_json`、`ai_usage_record` 或任何日志与异常文案。
 - 自定义 `base_url` 与上游返回的临时媒体下载地址强制执行公网 `https://` 与 DNS 解析 IP 校验，拒绝环回、私网及链路本地地址（SSRF 防护）。

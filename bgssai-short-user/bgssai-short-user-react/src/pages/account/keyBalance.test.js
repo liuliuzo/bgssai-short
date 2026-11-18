@@ -31,9 +31,9 @@ describe('external api key balance', () => {
     assert.equal(formatKeyBalance({ balance_status: 'OK', balance_list: [] }), '-')
   })
 
-  it('model key table and list payload actually carry the balance', () => {
+  it('credential table and list payload carry the balance', () => {
     const dir = path.dirname(fileURLToPath(import.meta.url))
-    const cardSource = fs.readFileSync(path.join(dir, 'UserAiModelKeysCard.jsx'), 'utf8')
+    const cardSource = fs.readFileSync(path.join(dir, 'CredentialManagementCard.jsx'), 'utf8')
     assert.match(cardSource, /formatKeyBalance/)
     assert.match(cardSource, /title: '余额'/)
     const dtoSource = fs.readFileSync(path.join(dir, '..', '..', '..', '..', 'bgssai-short-user', 'src', 'main', 'java', 'com', 'bgssai', 'shortai', 'useraimodel', 'dto', 'UserAiModelKeyItem.java'), 'utf8')

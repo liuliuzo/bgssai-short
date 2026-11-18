@@ -4,6 +4,26 @@ import java.util.Date;
 import java.util.List;
 
 public class UserAiModelKeyItem {
+    private Boolean active;
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    private String credentialId;
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
     private String keyId;
     private String modalityType;
     private String abilityType;

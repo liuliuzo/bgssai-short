@@ -32,13 +32,17 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.UserAiModelKeyMapper;
 import com.bgssai.shortai.mapper.UserAiSettingMapper;
+import com.bgssai.shortai.mapper.UserAiSavedCredentialMapper;
 import com.bgssai.shortai.model.AiModelConfig;
+import com.bgssai.shortai.model.UserAiCredentialData;
+import com.bgssai.shortai.model.UserAiSavedCredential;
 import com.bgssai.shortai.model.UserAiModelKey;
 import com.bgssai.shortai.model.UserAiModelKeyExample;
 import com.bgssai.shortai.model.UserAiSetting;
 import com.bgssai.shortai.model.UserAiSettingExample;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.useraimodel.dto.SavedCredentialRequest;
 import com.bgssai.shortai.useraimodel.dto.CreateUserAiModelKeyItem;
 import com.bgssai.shortai.useraimodel.dto.CreateUserAiModelKeyRequest;
 import com.bgssai.shortai.useraimodel.dto.CreateUserAiModelKeyResponse;
@@ -71,6 +75,12 @@ public class UserAiModelKeyService {
     @Autowired
     private ExternalApiKeyBalanceClient externalApiKeyBalanceClient;
 
+    @Autowired
+    private SavedCredentialRegistry registry;
+
+    @Autowired
+    private UserAiSavedCredentialMapper savedCredentialMapper;
+
     private final HttpClient probeHttp = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
@@ -96,6 +106,7 @@ public class UserAiModelKeyService {
     public UserAiModelKeyListResponse listForCurrentUser(String modalityType, String abilityType) {
         String userId = requireCurrentUser();
         log.info("查询用户模型密钥列表 userId={} modalityType={} abilityType={}", userId, modalityType, abilityType);
+        List<UserAiSavedCredential> saved = registry.prepare(userId);
         listEnabledRows(userId, null);
         UserAiModelKeyExample ex = new UserAiModelKeyExample();
         UserAiModelKeyExample.Criteria criteria = ex.createCriteria()
@@ -115,8 +126,13 @@ public class UserAiModelKeyService {
                 migrateLegacyProvider(row);
                 items.add(toItem(row));
             }
-            externalApiKeyBalanceClient.fill(rows, items);
         }
+        var credentialItems = saved.stream().map(UserAiModelKeyService::credentialItem).toList();
+        var balanceRows = new ArrayList<UserAiCredentialData>(rows == null ? List.of() : rows);
+        var balanceItems = new ArrayList<>(items);
+        balanceRows.addAll(saved);
+        balanceItems.addAll(credentialItems);
+        externalApiKeyBalanceClient.fill(balanceRows, balanceItems);
         Set<String> activePlatform = activePlatformAbilities(userId);
         for (String ability : PLATFORM_ABILITIES) {
             if (!platformRowVisible(ability, modalityType, abilityType)) {
@@ -144,6 +160,7 @@ public class UserAiModelKeyService {
         // Kept for response compatibility; there is no exclusive mode anymore.
         resp.setOnlyUserKey(0);
         resp.setKeyList(items);
+        resp.setCredentialList(credentialItems);
         resp.setProviderPresetList(UserAiModelSupport.buildProviderPresets());
         return resp;
     }
@@ -151,18 +168,27 @@ public class UserAiModelKeyService {
     @Transactional
     public CreateUserAiModelKeyResponse create(CreateUserAiModelKeyRequest req) {
         String userId = requireCurrentUser();
-        if (req == null || req.getApiKey() == null || req.getApiKey().isBlank()) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key required");
+        if (req == null) throw new BizException(CommonErrorCode.INVALID_PARAM, "request required");
+        List<UserAiSavedCredential> saved = registry.prepare(userId);
+        boolean legacy = req.getApiKey() != null && !req.getApiKey().isBlank();
+        UserAiSavedCredential credential = null;
+        if (!legacy) {
+            if (req.getProviderCode() == null || req.getProviderCode().isBlank()) {
+                throw new BizException(CommonErrorCode.INVALID_PARAM, "provider_code required");
+            }
+            String provider = UserAiModelSupport.normalizeProvider(req.getProviderCode());
+            credential = SavedCredentialRegistry.active(saved, provider);
         }
         UserAiModelSupport.OwnedProviderBinding bound = UserAiModelSupport.bindOwnedProvider(
-                req.getProviderCode(), req.getBaseUrl());
+                legacy ? req.getProviderCode() : credential.getProviderCode(),
+                legacy ? req.getBaseUrl() : credential.getBaseUrl());
         String providerCode = bound.providerCode();
         String baseUrl = bound.baseUrl();
-        String plainKey = req.getApiKey().trim();
+        String plainKey = legacy ? secretValue(req.getApiKey(), null) : credential.getApiKey();
         if (plainKey.length() > 512) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key too long");
         }
-        String plainSecret = req.getSecretKey() == null ? null : req.getSecretKey().trim();
+        String plainSecret = legacy ? secretValue(req.getSecretKey(), null) : credential.getSecretKey();
         if (plainSecret != null && plainSecret.length() > 512) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "secret_key too long");
         }
@@ -173,7 +199,7 @@ public class UserAiModelKeyService {
             KlingJwtSupport.resolveBearerToken(plainKey, plainSecret, baseUrl);
         }
 
-        String keyName = normalizeKeyName(req.getKeyName());
+        String keyName = legacy ? normalizeKeyName(req.getKeyName()) : credential.getKeyName();
         boolean activate = !Boolean.FALSE.equals(req.getActivateOnCreate());
         List<CreateUserAiModelKeyItem> pending = new ArrayList<>();
         if (req.getItems() != null && !req.getItems().isEmpty()) {
@@ -224,6 +250,15 @@ public class UserAiModelKeyService {
             row.setBaseUrl(baseUrl);
             row.setApiKey(plainKey);
             row.setSecretKey(plainSecret);
+            if (credential == null) {
+                credential = SavedCredentialRegistry.findMatching(saved, row);
+                if (credential == null) {
+                    boolean first = saved.stream().noneMatch(c -> providerCode.equals(c.getProviderCode()));
+                    credential = registry.insert(row, first);
+                    saved.add(credential);
+                }
+            }
+            row.setCredentialId(credential.getCredentialId());
             row.setEnabled(0);
             row.setDefaultModel(0);
             row.setDelFlag(0);
@@ -251,6 +286,9 @@ public class UserAiModelKeyService {
                 created.setDefaultModel(0);
             }
         }
+        if (legacy && activate) {
+            registry.inferSelection(userId, providerCode, registry.models(userId), saved);
+        }
         externalApiKeyBalanceClient.fill(createdRows, createdItems);
 
         log.info("创建用户模型密钥完成 userId={} createdCount={}", userId, createdItems.size());
@@ -268,7 +306,15 @@ public class UserAiModelKeyService {
         if (req == null || req.getKeyId() == null || req.getKeyId().isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "key_id required");
         }
+        var saved = registry.prepare(userId);
         UserAiModelKey existing = requireOwnedRow(userId, req.getKeyId());
+        boolean modelOnly = Boolean.TRUE.equals(req.getProviderModelSelection());
+        if (modelOnly && req.getProviderCode() != null && !existing.getProviderCode().equals(req.getProviderCode())) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请为新供应商另建模型");
+        }
+        if (modelOnly && (req.getBaseUrl() != null || req.getApiKey() != null || req.getSecretKey() != null || req.getKeyName() != null)) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请在密钥管理中更新凭据");
+        }
         String rawProvider = req.getProviderCode() == null || req.getProviderCode().isBlank()
                 ? existing.getProviderCode() : req.getProviderCode();
         String rawBase = req.getBaseUrl() == null || req.getBaseUrl().isBlank()
@@ -324,6 +370,55 @@ public class UserAiModelKeyService {
             String effectiveSk = patch.getSecretKey() != null ? patch.getSecretKey() : existing.getSecretKey();
             KlingJwtSupport.resolveBearerToken(effectiveAk, effectiveSk, baseUrl);
         }
+        if (modelOnly) {
+            if (!ability.equals(existing.getAbilityType())) throw new BizException(CommonErrorCode.INVALID_PARAM, "请为新能力另建模型");
+            for (var member : registry.models(userId)) {
+                if (!sameModel(member, existing)) continue;
+                var update = new UserAiModelKey();
+                update.setId(member.getId());
+                update.setModelCode(modelCode);
+                update.setModelName(modelName);
+                update.setModifier(userId);
+                update.setGmtModified(new Date());
+                userAiModelKeyMapper.updateByPrimaryKeySelective(update);
+            }
+            return new UserAiModelKeyItemResponse(describe(requireOwnedRow(userId, existing.getKeyId())));
+        }
+
+        var previousCredential = SavedCredentialRegistry.require(saved, existing.getCredentialId());
+        var effective = new UserAiModelKey();
+        effective.setUserId(userId);
+        effective.setProviderCode(providerCode);
+        effective.setBaseUrl(baseUrl);
+        effective.setApiKey(patch.getApiKey() == null ? existing.getApiKey() : patch.getApiKey());
+        effective.setSecretKey(patch.getSecretKey() == null ? existing.getSecretKey() : patch.getSecretKey());
+        String effectiveName = patch.getKeyName() == null ? existing.getKeyName() : patch.getKeyName();
+        effective.setKeyName(effectiveName == null || effectiveName.isEmpty() ? null : effectiveName);
+        var associated = SavedCredentialRegistry.findMatching(saved, effective);
+        if (associated == null) {
+            boolean nameOnly = previousCredential.getProviderCode().equals(providerCode)
+                    && SavedCredentialRegistry.sameConnection(previousCredential, effective);
+            boolean shared = registry.models(userId).stream().anyMatch(row -> !row.getKeyId().equals(existing.getKeyId())
+                    && previousCredential.getCredentialId().equals(row.getCredentialId()));
+            if (nameOnly && !shared) {
+                previousCredential.setKeyName(effective.getKeyName());
+                savedCredentialMapper.update(previousCredential);
+                associated = previousCredential;
+            } else {
+                associated = registry.insert(effective, saved.stream().noneMatch(c -> providerCode.equals(c.getProviderCode())));
+                saved.add(associated);
+            }
+        }
+        patch.setCredentialId(associated.getCredentialId());
+        if (!SavedCredentialRegistry.sameConnection(existing, associated) || !existing.getProviderCode().equals(providerCode)) {
+            existing.setModelCode(modelCode);
+            existing.setModelName(modelName);
+            existing.setModalityType(modality);
+            existing.setAbilityType(ability);
+            var updated = replaceBinding(existing, associated);
+            registry.inferSelection(userId, providerCode, registry.models(userId), saved);
+            return new UserAiModelKeyItemResponse(describe(requireOwnedRow(userId, updated.getKeyId())));
+        }
         patch.setModifier(userId);
         patch.setGmtModified(new Date());
         userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
@@ -342,6 +437,7 @@ public class UserAiModelKeyService {
         if (req == null || req.getKeyId() == null || req.getKeyId().isBlank() || req.getEnabled() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "key_id and enabled required");
         }
+        var saved = registry.prepare(userId);
         int enabled = Integer.valueOf(1).equals(req.getEnabled()) ? 1 : 0;
         String platformAbility = ProductModelAlias.abilityOfCode(req.getKeyId());
         if (platformAbility != null) {
@@ -358,7 +454,16 @@ public class UserAiModelKeyService {
         log.info("切换用户模型密钥启停 userId={} keyId={} enabled={}", userId, existing.getKeyId(), enabled);
 
         if (enabled == 1) {
+            if (Boolean.TRUE.equals(req.getProviderModelSelection())) {
+                var active = SavedCredentialRegistry.active(saved, existing.getProviderCode());
+                if (!active.getCredentialId().equals(existing.getCredentialId())) {
+                    existing = replaceBinding(existing, active);
+                }
+            }
             claimAbility(userId, existing.getAbilityType(), existing.getKeyId());
+            if (!Boolean.TRUE.equals(req.getProviderModelSelection())) {
+                registry.inferSelection(userId, existing.getProviderCode(), registry.models(userId), saved);
+            }
         } else {
             UserAiModelKey patch = new UserAiModelKey();
             patch.setId(existing.getId());
@@ -384,8 +489,12 @@ public class UserAiModelKeyService {
         if (req == null || req.getKeyId() == null || req.getKeyId().isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "key_id required");
         }
+        var saved = registry.prepare(userId);
         UserAiModelKey target = requireOwnedRow(userId, req.getKeyId());
-        if (!Integer.valueOf(1).equals(target.getEnabled())) {
+        if (Boolean.TRUE.equals(req.getProviderModelSelection())) {
+            var current = SavedCredentialRegistry.active(saved, target.getProviderCode());
+            if (!current.getCredentialId().equals(target.getCredentialId())) target = replaceBinding(target, current);
+        } else if (!Integer.valueOf(1).equals(target.getEnabled())) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "请先启用该模型密钥后再设为默认");
         }
         log.info("设置用户默认模型密钥 userId={} keyId={} abilityType={}",
@@ -403,22 +512,19 @@ public class UserAiModelKeyService {
         if (req == null || req.getKeyId() == null || req.getKeyId().isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "key_id required");
         }
+        registry.prepare(userId);
         UserAiModelKey existing = requireOwnedRow(userId, req.getKeyId());
         log.info("删除用户模型密钥 userId={} keyId={} abilityType={}",
                 userId, existing.getKeyId(), existing.getAbilityType());
 
-        UserAiModelKey patch = new UserAiModelKey();
-        patch.setId(existing.getId());
-        patch.setDelFlag(1);
-        patch.setEnabled(0);
-        patch.setDefaultModel(0);
-        patch.setModifier(userId);
-        patch.setGmtModified(new Date());
-        userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
-
-        if (Integer.valueOf(1).equals(existing.getDefaultModel())) {
-            promoteFallbackDefault(userId, existing.getAbilityType(), existing.getKeyId());
+        var members = Boolean.TRUE.equals(req.getProviderModelSelection()) ? registry.models(userId).stream()
+                .filter(row -> sameModel(row, existing)).toList() : List.of(existing);
+        boolean wasDefault = false;
+        for (var member : members) {
+            wasDefault |= Integer.valueOf(1).equals(member.getDefaultModel());
+            retire(member);
         }
+        if (wasDefault) promoteFallbackDefault(userId, existing.getAbilityType(), existing.getKeyId());
         log.info("删除用户模型密钥完成 userId={} keyId={}", userId, existing.getKeyId());
         return new DeleteUserAiModelKeyResponse(1, existing.getKeyId());
     }
@@ -1092,22 +1198,200 @@ public class UserAiModelKeyService {
         return trimmed;
     }
 
+    @Transactional
+    public UserAiModelKeyItem createCredential(SavedCredentialRequest req) {
+        String user = requireCurrentUser();
+        var saved = registry.prepare(user);
+        var row = credentialInput(user, req, null);
+        boolean first = saved.stream().noneMatch(c -> c.getProviderCode().equals(row.getProviderCode()));
+        return credentialItem(registry.insert(row, first));
+    }
+
+    private UserAiSavedCredential credentialInput(String user, SavedCredentialRequest req, UserAiSavedCredential old) {
+        String requested = req.getProviderCode();
+        if (old == null && (requested == null || requested.isBlank())) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "provider_code required");
+        }
+        String provider = old == null || requested != null
+                ? UserAiModelSupport.normalizeProvider(requested) : old.getProviderCode();
+        if (old != null && !old.getProviderCode().equals(provider)) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "密钥供应商不能更改");
+        }
+        String base = old != null && req.getBaseUrl() == null ? old.getBaseUrl() : req.getBaseUrl();
+        var row = new UserAiSavedCredential();
+        row.setUserId(user);
+        row.setProviderCode(provider);
+        row.setBaseUrl(UserAiModelSupport.normalizeBaseUrl(base, provider));
+        String name = normalizeKeyName(req.getKeyName() == null && old != null ? old.getKeyName() : req.getKeyName());
+        row.setKeyName(name == null || name.isEmpty() ? null : name);
+        row.setApiKey(secretValue(req.getApiKey(), old == null ? null : old.getApiKey()));
+        row.setSecretKey(secretValue(req.getSecretKey(), old == null ? null : old.getSecretKey()));
+        if (row.getApiKey() == null) throw new BizException(CommonErrorCode.INVALID_PARAM, "api_key required");
+        if (UserAiModelSupport.PROVIDER_KLING.equals(row.getProviderCode())) {
+            KlingJwtSupport.resolveBearerToken(row.getApiKey(), row.getSecretKey(), row.getBaseUrl());
+        }
+        return row;
+    }
+
+    private static String secretValue(String value, String retained) {
+        if (value == null || value.isBlank()) return retained;
+        String trimmed = value.trim();
+        if (trimmed.equals(UserAiModelSupport.maskApiKey(retained)) || trimmed.contains("****")) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请输入完整密钥，留空可保留原值");
+        }
+        if (trimmed.length() > 512) throw new BizException(CommonErrorCode.INVALID_PARAM, "密钥最多 512 个字符");
+        return trimmed;
+    }
+
+    @Transactional
+    public UserAiModelKeyItem activateCredential(SavedCredentialRequest req) {
+        String user = requireCurrentUser();
+        var saved = registry.prepare(user);
+        var chosen = SavedCredentialRegistry.require(saved, req.getCredentialId());
+        savedCredentialMapper.clearActive(user, chosen.getProviderCode());
+        chosen.setActive(1);
+        savedCredentialMapper.update(chosen);
+        for (var model : registry.models(user)) {
+            if (chosen.getProviderCode().equals(model.getProviderCode()) && !chosen.getCredentialId().equals(model.getCredentialId())) {
+                replaceBinding(model, chosen);
+            }
+        }
+        return credentialItem(chosen);
+    }
+
+    @Transactional
+    public UserAiModelKeyItem updateCredential(SavedCredentialRequest req) {
+        String user = requireCurrentUser();
+        var old = SavedCredentialRegistry.require(registry.prepare(user), req.getCredentialId());
+        var replacement = credentialInput(user, req, old);
+        replacement.setCredentialId(old.getCredentialId());
+        replacement.setActive(old.getActive());
+        boolean rotated = !SavedCredentialRegistry.sameConnection(replacement, old);
+        if (!rotated) {
+            replacement.setLastCheckStatus(old.getLastCheckStatus());
+            replacement.setLastCheckTime(old.getLastCheckTime());
+        }
+        savedCredentialMapper.update(replacement);
+        for (var model : registry.models(user)) {
+            if (!old.getCredentialId().equals(model.getCredentialId())) continue;
+            if (rotated) {
+                replaceBinding(model, replacement);
+            } else {
+                var patch = new UserAiModelKey();
+                patch.setId(model.getId());
+                patch.setKeyName(replacement.getKeyName() == null ? "" : replacement.getKeyName());
+                patch.setModifier(user);
+                patch.setGmtModified(new Date());
+                userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+            }
+        }
+        return credentialItem(replacement);
+    }
+
+    @Transactional
+    public boolean deleteCredential(SavedCredentialRequest req) {
+        String user = requireCurrentUser();
+        var credential = SavedCredentialRegistry.require(registry.prepare(user), req.getCredentialId());
+        if (registry.models(user).stream().anyMatch(m -> credential.getCredentialId().equals(m.getCredentialId()))) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "仍有模型使用这把密钥，请先切换该供应商密钥或移除关联模型");
+        }
+        savedCredentialMapper.delete(user, credential.getCredentialId());
+        return true;
+    }
+
+    public TestUserAiModelKeyResponse testCredential(SavedCredentialRequest req) {
+        String user = requireCurrentUser();
+        var credential = SavedCredentialRegistry.require(registry.prepare(user), req.getCredentialId());
+        var result = probeProviderConnectivity(credential.getProviderCode(), credential.getBaseUrl(),
+                credential.getApiKey(), credential.getSecretKey(), "");
+        savedCredentialMapper.recordCheck(credential, result.getStatus(), new Date());
+        return result;
+    }
+
+    private static boolean sameModel(UserAiModelKey left, UserAiModelKey right) {
+        return Objects.equals(left.getAbilityType(), right.getAbilityType())
+                && Objects.equals(left.getModelCode(), right.getModelCode())
+                && Objects.equals(left.getProviderCode(), right.getProviderCode());
+    }
+
+    // A queued job refers to the exact umk id. Never overwrite its connection to a new credential.
+    private UserAiModelKey replaceBinding(UserAiModelKey previous, UserAiSavedCredential credential) {
+        var replacement = registry.models(previous.getUserId()).stream()
+                .filter(row -> !row.getKeyId().equals(previous.getKeyId()) && sameModel(row, previous)
+                        && credential.getCredentialId().equals(row.getCredentialId())
+                        && SavedCredentialRegistry.sameConnection(row, credential))
+                .findFirst().orElse(null);
+        if (replacement == null) {
+            replacement = new UserAiModelKey();
+            replacement.setUserId(previous.getUserId());
+            replacement.setKeyId(ShortIds.id(UserAiModelSupport.USER_KEY_PREFIX));
+            replacement.setModalityType(previous.getModalityType());
+            replacement.setAbilityType(previous.getAbilityType());
+            replacement.setProviderCode(credential.getProviderCode());
+            replacement.setModelCode(previous.getModelCode());
+            replacement.setModelName(previous.getModelName());
+            replacement.setCredentialId(credential.getCredentialId());
+            replacement.setKeyName(credential.getKeyName());
+            replacement.setBaseUrl(credential.getBaseUrl());
+            replacement.setApiKey(credential.getApiKey());
+            replacement.setSecretKey(credential.getSecretKey());
+            replacement.setEnabled(0);
+            replacement.setDefaultModel(0);
+            replacement.setDelFlag(0);
+            replacement.setCreator(previous.getUserId());
+            replacement.setModifier(previous.getUserId());
+            replacement.setGmtCreate(new Date());
+            replacement.setGmtModified(new Date());
+            userAiModelKeyMapper.insertSelective(replacement);
+        }
+        retire(previous);
+        if (Integer.valueOf(1).equals(previous.getEnabled())) {
+            claimAbility(previous.getUserId(), previous.getAbilityType(), replacement.getKeyId());
+        }
+        return replacement;
+    }
+
+    private void retire(UserAiModelKey model) {
+        var patch = new UserAiModelKey();
+        patch.setId(model.getId());
+        patch.setApiKey("");
+        patch.setSecretKey("");
+        patch.setEnabled(0);
+        patch.setDefaultModel(0);
+        patch.setDelFlag(1);
+        patch.setModifier(model.getUserId());
+        patch.setGmtModified(new Date());
+        userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+    }
+
+    private static UserAiModelKeyItem credentialItem(UserAiSavedCredential credential) {
+        var item = credentialFields(credential);
+        item.setActive(Integer.valueOf(1).equals(credential.getActive()));
+        return item;
+    }
+
     private static UserAiModelKeyItem toItem(UserAiModelKey row) {
-        UserAiModelKeyItem item = new UserAiModelKeyItem();
-        String providerCode = UserAiModelSupport.canonicalizeOwnedProvider(row.getProviderCode(), row.getBaseUrl());
+        var item = credentialFields(row);
         item.setKeyId(row.getKeyId());
         item.setModalityType(row.getModalityType());
         item.setAbilityType(row.getAbilityType());
-        item.setProviderCode(providerCode);
-        item.setProviderName(UserAiModelSupport.providerName(providerCode));
         item.setModelCode(row.getModelCode());
         item.setModelName(row.getModelName());
+        item.setEnabled(row.getEnabled());
+        item.setDefaultModel(row.getDefaultModel());
+        return item;
+    }
+
+    private static UserAiModelKeyItem credentialFields(UserAiCredentialData row) {
+        var item = new UserAiModelKeyItem();
+        String providerCode = UserAiModelSupport.canonicalizeOwnedProvider(row.getProviderCode(), row.getBaseUrl());
+        item.setCredentialId(row.getCredentialId());
+        item.setProviderCode(providerCode);
+        item.setProviderName(UserAiModelSupport.providerName(providerCode));
         item.setKeyName(row.getKeyName());
         item.setBaseUrl(row.getBaseUrl());
         item.setApiKeyMasked(UserAiModelSupport.maskApiKey(row.getApiKey()));
         item.setSecretKeyMasked(UserAiModelSupport.maskApiKey(row.getSecretKey()));
-        item.setEnabled(row.getEnabled());
-        item.setDefaultModel(row.getDefaultModel());
         item.setLastCheckStatus(row.getLastCheckStatus());
         item.setLastCheckTime(row.getLastCheckTime());
         return item;

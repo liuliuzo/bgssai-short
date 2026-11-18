@@ -159,7 +159,12 @@
 | 解绑 | POST | `/bgssai/user/account/login-methods/unbind` |
 | 注销预览 | GET | `/bgssai/user/account/deletion/preview` |
 | 注销 | POST | `/bgssai/user/account/deletion` |
-| 自有模型密钥列表 | GET | `/bgssai/user/ai-model-keys/list` |
+| 保存供应商凭据 | POST | `/bgssai/user/ai-model-keys/credentials/create` |
+| 编辑供应商凭据 | POST | `/bgssai/user/ai-model-keys/credentials/update` |
+| 选用供应商凭据 | POST | `/bgssai/user/ai-model-keys/credentials/activate` |
+| 测试供应商凭据 | POST | `/bgssai/user/ai-model-keys/credentials/test` |
+| 删除供应商凭据 | POST | `/bgssai/user/ai-model-keys/credentials/delete` |
+| 账户凭据与模型列表 | GET | `/bgssai/user/ai-model-keys/list` |
 | 新增自有模型密钥 | POST | `/bgssai/user/ai-model-keys/create` |
 | 更新自有模型密钥 | POST | `/bgssai/user/ai-model-keys/update` |
 | 启停自有模型密钥 | POST | `/bgssai/user/ai-model-keys/toggle` |

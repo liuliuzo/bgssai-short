@@ -111,9 +111,23 @@
 
 `balance_status`：`OK` / `UNAVAILABLE` / `FAILED`。`balance_list` 每项为 `label`、`amount`、`unit`。创建、更新、启停、设默认返回的 `item` 使用同一组字段。数值来自该密钥供应商的只读余额接口：PixVerse 积分、DeepSeek `total_balance`（CNY 为元）、可灵未过期资源包剩余次数、MiniMax 套餐剩余百分比或 `available_amount`。BGSSAI TokenHub 取网关 `GET /v1/account/balance` 的 `balance_tokens` 与 `balance_fen`（需 TokenHub 侧同步上线）。其余供应商（Grok、OpenAI、Claude、腾讯云 TokenHub）无密钥级余额只读接口，为 `UNAVAILABLE`。失败不返回 0。
 
+## 供应商凭据
+
+`GET /bgssai/user/ai-model-keys/list` 在原有模型列表之外返回 `credential_list`。凭据使用 `credential_id` 标识；密钥管理显示名称、供应商、脱敏密钥和当前使用状态。模型行保留原 `key_id`。
+
+下表路径以 `/bgssai/user/ai-model-keys/credentials/` 为前缀，各操作均为 POST，限定当前用户。
+
+| 路径后缀 | 参数与作用 |
+| --- | --- |
+| `create` | 提交供应商、名称、地址及密钥，可先于模型独立保存。 |
+| `update` | 按 `credential_id` 修改名称、地址或密钥，密码字段留空时沿用旧值。 |
+| `activate` | 按 `credential_id` 切换该供应商当前使用的 Key。 |
+| `test` | 按 `credential_id` 对该凭据执行只读连通检测。 |
+| `delete` | 按 `credential_id` 删除，服务端检查是否在用。 |
+
 ## POST /bgssai/user/ai-model-keys/create
 
-支持单条创建或通过 `items` 一键批量创建多模态配置：
+账号页发送供应商、能力、模型编码和展示名，服务端使用供应商当前凭据。供应商尚未选定当前凭据时，先在「密钥管理」选用。支持单条或通过 `items` 批量创建。旧客户端仍可随请求传入密钥，兼容示例如下。
 
 ```json
 {
@@ -137,6 +151,8 @@
 返回 `{ "result": { "only_user_key": 0, "created_count": 2, "key_list": [ ... ] } }`。顶层 `key_name` 可选，最多 64 个字符，批量新增时复制到每条新记录。`activate_on_create` 省略时为 true；传 false 时新增行均为停用，当前启用项不变。请求中的 `only_user_key` 为兼容字段，忽略不读。
 
 ## POST /bgssai/user/ai-model-keys/update
+
+「模型选择」对自有模型的编辑、启停、设为默认和移除均发送 `provider_model_selection: true`。服务端按供应商、能力和模型编码识别同一模型的历史配置；与旧客户端的单条密钥配置操作并行兼容。模型编辑仅提交模型字段。
 
 `key_id` 定位当前用户的单条配置。同供应商同模型可有多个 ID。`key_name` 省略保留原名称，空字符串清除名称。`api_key` 与 `secret_key` 留空时保留已存密钥：
 

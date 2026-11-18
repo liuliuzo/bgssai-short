@@ -33,326 +33,57 @@
         <p>剩余额度 <strong title="418,912,345">418.9M</strong> · 到期 2026-11-17 12:00:00</p>
         <p><a href="subscription.html">开通 / 续费 / 加量</a></p>
       </div>
-      <div class="card" style="margin-top:14px">
-        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <h2>模型密钥</h2>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button type="button" class="btn btn-sm" id="quick-minimax-btn">接入 MiniMax</button>
-            <button type="button" class="btn btn-sm" id="quick-kling-btn">接入可灵</button>
-            <button type="button" class="btn btn-sm" id="quick-pixverse-btn">接入 PixVerse</button>
-            <button type="button" class="btn btn-sm" id="quick-deepseek-btn">接入 DeepSeek</button>
-            <button type="button" class="btn btn-sm" id="quick-grok-btn">接入 Grok</button>
-            <button type="button" class="btn btn-sm" id="quick-openai-btn">接入 OpenAI</button>
-            <button type="button" class="btn btn-sm" id="quick-claude-btn">接入 Claude</button>
-            <button type="button" class="btn btn-sm" id="quick-bgssai-tokenhub-btn">接入 BGSSAI TokenHub</button>
-            <button type="button" class="btn btn-sm" id="quick-tencent-tokenhub-btn">接入腾讯云 TokenHub</button>
-            <button type="button" class="btn btn-sm btn-primary" id="add-model-key-btn">新增密钥</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-          <button type="button" class="btn btn-sm btn-primary">全部</button>
-          <button type="button" class="btn btn-sm">文本模型</button>
-          <button type="button" class="btn btn-sm">图片模型</button>
-          <button type="button" class="btn btn-sm">视频模型</button>
-          <button type="button" class="btn btn-sm">音频模型</button>
-        </div>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2>密钥管理</h2></div>
         <table>
-          <thead>
-            <tr>
-              <th>类型</th>
-              <th>供应商</th>
-              <th>模型名称</th>
-              <th>模型编码</th>
-              <th>密钥</th>
-              <th>余额</th>
-              <th>状态</th>
-              <th>默认</th>
-              <th>检测状态</th>
-              <th>操作</th>
-            </tr>
-          </thead>
+          <thead><tr><th>供应商</th><th>密钥名称</th><th>密钥</th><th>余额</th><th>状态</th><th>操作</th></tr></thead>
           <tbody>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>BGSSAI</td>
-              <td>BGSSAI Chat</td>
-              <td>bgssai-chat</td>
-              <td>-</td>
-              <td>-</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>图片模型 (IMAGE)</td>
-              <td>BGSSAI</td>
-              <td>BGSSAI Image</td>
-              <td>bgssai-image</td>
-              <td>-</td>
-              <td>-</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>视频模型 (VIDEO)</td>
-              <td>BGSSAI</td>
-              <td>BGSSAI Video</td>
-              <td>bgssai-video</td>
-              <td>-</td>
-              <td>-</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>音频模型 (VOICE)</td>
-              <td>BGSSAI</td>
-              <td>BGSSAI TTS</td>
-              <td>bgssai-tts</td>
-              <td>-</td>
-              <td>-</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>音频模型 (ASR)</td>
-              <td>BGSSAI</td>
-              <td>BGSSAI ASR</td>
-              <td>bgssai-asr</td>
-              <td>-</td>
-              <td>-</td>
-              <td>启用</td>
-              <td>默认</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>音频模型 (MUSIC)</td>
-              <td>BGSSAI</td>
-              <td>BGSSAI Music</td>
-              <td>bgssai-music</td>
-              <td>-</td>
-              <td>-</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>DeepSeek</td>
-              <td>DeepSeek Chat</td>
-              <td>deepseek-chat</td>
-              <td>工作室<br><small>sk-d****8a1c</small></td>
-              <td>110.00 元</td>
-              <td><button type="button" class="btn btn-sm">停用</button></td>
-              <td>默认</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>DeepSeek</td>
-              <td>DeepSeek Chat</td>
-              <td>deepseek-chat</td>
-              <td>个人备用<br><small>sk-d****3f9b</small></td>
-              <td>38.00 元</td>
-              <td><button type="button" class="btn btn-sm">使用此密钥</button></td>
-              <td>-</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>图片模型 (IMAGE)</td>
-              <td>可灵 (Kling AI)</td>
-              <td>Kling Image V3</td>
-              <td>kling-v3</td>
-              <td>ak_9****2e1b / sk_7****4c9d</td>
-              <td>118 次</td>
-              <td>启用</td>
-              <td>默认</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>视频模型 (VIDEO)</td>
-              <td>PixVerse</td>
-              <td>PixVerse v6</td>
-              <td>v6</td>
-              <td>pv-k****6m3a</td>
-              <td>月度 0 积分 · 资源包 10000 积分</td>
-              <td>启用</td>
-              <td>默认</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>音频模型 (VOICE)</td>
-              <td>MiniMax (海螺)</td>
-              <td>MiniMax Speech 2.8 HD</td>
-              <td>speech-2.8-hd</td>
-              <td>eyJh****5v7n</td>
-              <td>13.91 元</td>
-              <td>启用</td>
-              <td>默认</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>音频模型 (MUSIC)</td>
-              <td>MiniMax (海螺)</td>
-              <td>MiniMax Music 2.5</td>
-              <td>music-2.5</td>
-              <td>eyJh****5v7n</td>
-              <td>13.91 元</td>
-              <td>启用</td>
-              <td>默认</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>Grok (xAI)</td>
-              <td>Grok 4.7</td>
-              <td>grok-4.7</td>
-              <td>xai-****9k2a</td>
-              <td>不支持查余额</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>OpenAI</td>
-              <td>GPT-6 Luna</td>
-              <td>gpt-6-luna</td>
-              <td>sk-o****1a2b</td>
-              <td>不支持查余额</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>Claude</td>
-              <td>Claude Opus 5.5</td>
-              <td>claude-opus-5-5</td>
-              <td>sk-a****3c4d</td>
-              <td>不支持查余额</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>BGSSAI TokenHub</td>
-              <td>DeepSeek Chat</td>
-              <td>deepseek-chat</td>
-              <td>th-k****5e6f</td>
-              <td>额度 418912345 Token · 钱包 12 元</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
-            <tr>
-              <td>文本模型 (TEXT)</td>
-              <td>腾讯云 TokenHub</td>
-              <td>Hy4</td>
-              <td>hy4</td>
-              <td>th-k****7a8b</td>
-              <td>不支持查余额</td>
-              <td>停用</td>
-              <td>-</td>
-              <td>OK</td>
-              <td>
-                <button type="button" class="btn btn-sm">测试</button>
-                <button type="button" class="btn btn-sm">编辑</button>
-                <button type="button" class="btn btn-sm">删除</button>
-              </td>
-            </tr>
+            <tr><td>DeepSeek</td><td>工作室</td><td>sk-d****8a1c</td><td>110.00 元</td><td>当前使用</td>
+              <td><button class="btn btn-sm">测试</button> <button class="btn btn-sm">编辑</button></td></tr>
+            <tr><td>DeepSeek</td><td>备用</td><td>sk-p****2d4f</td><td>35.00 元</td><td>备用</td>
+              <td><button class="btn btn-sm">使用此密钥</button> <button class="btn btn-sm">测试</button> <button class="btn btn-sm">编辑</button> <button class="btn btn-sm">删除</button></td></tr>
           </tbody>
         </table>
-        <form onsubmit="return false" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
-          <select aria-label="供应商" id="key-provider-select">
-            <option value="MINIMAX">MiniMax (海螺)</option>
-            <option value="KLING">可灵 (Kling AI)</option>
-            <option value="PIXVERSE">PixVerse</option>
-            <option value="DEEPSEEK">DeepSeek</option>
-            <option value="XAI">Grok (xAI)</option>
-            <option value="OPENAI">OpenAI</option>
-            <option value="ANTHROPIC">Claude</option>
-            <option value="BGSSAI_TOKENHUB">BGSSAI TokenHub</option>
-            <option value="TENCENT_TOKENHUB">腾讯云 TokenHub</option>
-          </select>
-          <select aria-label="模态类型" id="key-modality-select">
-            <option value="TEXT">文本模型 (TEXT)</option>
-            <option value="IMAGE">图片模型 (IMAGE)</option>
-            <option value="VIDEO">视频模型 (VIDEO)</option>
-            <option value="VOICE">音频配音 (VOICE)</option>
-            <option value="ASR">音频识别 (ASR)</option>
-            <option value="MUSIC">背景音乐 (MUSIC)</option>
-          </select>
-          <input type="text" id="key-model-code-input" value="MiniMax-M2.5" placeholder="模型编码" />
-          <input type="text" id="key-model-name-input" value="MiniMax M2.5" placeholder="展示名称" />
-          <input type="url" id="key-base-url-input" value="https://api.minimaxi.com" placeholder="接口地址" />
-          <input type="text" maxlength="64" aria-label="密钥名称" placeholder="密钥名称（选填）" />
-          <label><input type="checkbox" /> 保存后启用</label>
-          <input type="password" id="key-secret-input" placeholder="API Key / Access Key" />
-          <input type="password" id="key-secret-key-input" placeholder="Secret Key（可灵填写）" />
-          <button type="button" class="btn btn-sm" id="key-test-btn">测试连接</button>
-          <button type="submit" class="btn btn-sm btn-primary" id="key-save-btn">保存</button>
-        </form>
-      </div>
+        <details><summary>新增密钥</summary>
+          <form onsubmit="return false">
+            <label>供应商 <select><option>DeepSeek</option><option>可灵</option><option>MiniMax</option></select></label>
+            <label>密钥名称 <input type="text" placeholder="例如：工作室" /></label>
+            <label>接口地址 <input type="url" placeholder="https://api.deepseek.com" /></label>
+            <label>API Key / Access Key <input type="password" /></label>
+            <label>Secret Key（可灵） <input type="password" /></label>
+            <button class="btn btn-sm btn-primary">保存密钥</button>
+          </form>
+        </details>
+      </section>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2>模型选择</h2></div>
+        <div role="group" aria-label="筛选能力" style="display:flex;gap:6px;overflow-x:auto">
+          <button type="button" class="btn btn-sm btn-primary">全部</button>
+          <button type="button" class="btn btn-sm">文本</button>
+          <button type="button" class="btn btn-sm">图片</button>
+          <button type="button" class="btn btn-sm">视频</button>
+          <button type="button" class="btn btn-sm">配音</button>
+          <button type="button" class="btn btn-sm">字幕识别</button>
+          <button type="button" class="btn btn-sm">背景音乐</button>
+        </div>
+        <table>
+          <thead><tr><th>能力</th><th>供应商</th><th>模型</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>文本</td><td>DeepSeek</td><td>DeepSeek Chat</td><td>使用中</td><td><button class="btn btn-sm">停用</button></td></tr>
+            <tr><td>文本</td><td>BGSSAI</td><td>BGSSAI Chat</td><td>停用</td><td><button class="btn btn-sm">使用此模型</button></td></tr>
+            <tr><td>图片</td><td>BGSSAI</td><td>BGSSAI Image</td><td>使用中</td><td><button class="btn btn-sm">停用</button></td></tr>
+          </tbody>
+        </table>
+        <details><summary>添加模型</summary>
+          <form onsubmit="return false">
+            <label>能力 <select><option>文本</option><option>图片</option><option>视频</option><option>配音</option><option>语音识别</option><option>背景音乐</option></select></label>
+            <label>供应商 <select><option>DeepSeek</option></select></label>
+            <label>模型编码 <input value="deepseek-reasoner" /></label>
+            <label>展示名称 <input value="DeepSeek Reasoner" /></label>
+            <button class="btn btn-sm btn-primary">保存模型</button>
+          </form>
+        </details>
+      </section>
       <div class="card" style="margin-top:14px">
         <div class="card-hd"><h2>已绑定登录方式</h2></div>
         <table>

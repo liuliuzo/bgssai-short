@@ -124,6 +124,9 @@ public class UserAiModelKeyExample {
         public Criteria andModelNameIsNotNull() { addCriterion("model_name is not null"); return (Criteria) this; }
         public Criteria andModelNameEqualTo(String value) { addCriterion("model_name =", value, "modelName"); return (Criteria) this; }
 
+        public Criteria andCredentialIdIsNull() { addCriterion("credential_id is null"); return (Criteria) this; }
+        public Criteria andCredentialIdEqualTo(String value) { addCriterion("credential_id =", value, "credentialId"); return (Criteria) this; }
+
         public Criteria andKeyNameIsNull() { addCriterion("key_name is null"); return (Criteria) this; }
         public Criteria andKeyNameIsNotNull() { addCriterion("key_name is not null"); return (Criteria) this; }
         public Criteria andKeyNameEqualTo(String value) { addCriterion("key_name =", value, "keyName"); return (Criteria) this; }
