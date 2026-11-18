@@ -793,7 +793,9 @@ export default function UserAiModelKeysCard() {
           {
             title: '默认',
             width: 70,
-            render: (_, row) => (Number(row.default_model) === 1 ? <Tag color="blue">默认</Tag> : '-'),
+            render: (_, row) => (Number(row.enabled) === 1 && Number(row.default_model) === 1
+              ? <Tag color="blue">默认</Tag>
+              : '-'),
           },
           {
             title: '检测状态',
@@ -808,7 +810,7 @@ export default function UserAiModelKeysCard() {
           {
             title: '操作',
             width: 230,
-            render: (_, row) => (
+            render: (_, row) => (Number(row.platform_model) === 1 ? '-' : (
               <Space size={4} wrap>
                 <Button
                   size="small"
@@ -825,7 +827,7 @@ export default function UserAiModelKeysCard() {
                   <Button size="small" danger>删除</Button>
                 </Popconfirm>
               </Space>
-            ),
+            )),
           },
         ]}
       />

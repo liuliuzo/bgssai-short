@@ -6,6 +6,7 @@ public class UserAiSetting {
     private Long id;
     private String userId;
     private Integer onlyUserKey;
+    private String suppressedPlatformAbilities;
     private Integer delFlag;
     private String creator;
     private String modifier;
@@ -34,6 +35,14 @@ public class UserAiSetting {
 
     public void setOnlyUserKey(Integer onlyUserKey) {
         this.onlyUserKey = onlyUserKey;
+    }
+
+    public String getSuppressedPlatformAbilities() {
+        return suppressedPlatformAbilities;
+    }
+
+    public void setSuppressedPlatformAbilities(String suppressedPlatformAbilities) {
+        this.suppressedPlatformAbilities = suppressedPlatformAbilities;
     }
 
     public Integer getDelFlag() {

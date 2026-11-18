@@ -4,13 +4,14 @@
 
 ## 1. 数据模型
 
-### 1.1 `user_ai_setting`（历史兼容表，不再参与解析）
+### 1.1 `user_ai_setting`（自建模型关闭记录）
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
 | `id` | `BIGINT` | `NOT NULL AUTO_INCREMENT PK` | 主键 |
 | `user_id` | `VARCHAR(64)` | `NOT NULL UNIQUE` | 用户标识 |
 | `is_only_user_key` | `TINYINT(1)` | `NOT NULL DEFAULT 0` | 已废弃，恒按 `0` 处理；存量 `1` 不再停用 BGSSAI 自建模型 |
+| `suppressed_platform_abilities` | `VARCHAR(64)` | `NULL` | 用户关闭的自建模型能力，逗号分隔 `TEXT/IMAGE/VIDEO/VOICE/ASR/MUSIC` |
 | `del_flag` / `creator` / `modifier` / `gmt_create` / `gmt_modified` | 标准六列 | 见 `sql/DDL.sql` | 审计与逻辑删除 |
 
 ### 1.2 `user_ai_model_key`（用户自定义模型密钥）
@@ -42,8 +43,9 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
      -> 取 currentUserOrScopeUserId()
      -> 命中 umk-...（显式选中自有模型）：
         -> UserAiModelKeyService.resolveUserModel(userId, ability, requestedCode)
-           -> 仅查 user_ai_model_key(user_id, ability_type, is_enabled=1, del_flag=0)
-           -> 未选中/未启用/未配置 -> 回退 BGSSAI 自建（平台）模型解析，不因缺少自有模型抛 4014
+           -> 仅查 user_ai_model_key(user_id, ability_type, is_enabled=1, del_flag=0)，同一 ability 只保留一条启用
+           -> 该能力已有启用自有密钥，或自建模型被用户关闭：不回退该能力的 BGSSAI 自建模型
+           -> 未配置且自建模型被用户关闭 -> 抛 4014；未关闭自建模型 -> 回退 BGSSAI 自建模型解析
            -> 构造内存态 AiModelConfig（modelId=umk-..., unitPriceCent=0, configJson={credential_source=USER_KEY, user_key_id, user_id, base_url}）
   -> PipelineReadiness.assertReady：显式自有密钥时只校验 user_ai_model_key 可用性，不探测平台 TokenHub；其余情况按平台就绪校验
   -> AiTaskQueue / OfficialShotVideoService / DramaAssistService / AiTaskService：

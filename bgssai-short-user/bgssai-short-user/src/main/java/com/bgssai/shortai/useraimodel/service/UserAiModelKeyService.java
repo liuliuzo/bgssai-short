@@ -9,10 +9,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -22,14 +25,18 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bgssai.shortai.aimodel.ProductModelAlias;
 import com.bgssai.shortai.billing.UsageScope;
 import com.bgssai.shortai.common.aop.UserContext;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.mapper.UserAiModelKeyMapper;
+import com.bgssai.shortai.mapper.UserAiSettingMapper;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.model.UserAiModelKey;
 import com.bgssai.shortai.model.UserAiModelKeyExample;
+import com.bgssai.shortai.model.UserAiSetting;
+import com.bgssai.shortai.model.UserAiSettingExample;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.useraimodel.dto.CreateUserAiModelKeyItem;
@@ -52,8 +59,14 @@ public class UserAiModelKeyService {
 
     private static final Logger log = LoggerFactory.getLogger(UserAiModelKeyService.class);
 
+    private static final List<String> PLATFORM_ABILITIES = List.of(
+            "TEXT", "IMAGE", "VIDEO", "VOICE", "ASR", "MUSIC");
+
     @Autowired
     private UserAiModelKeyMapper userAiModelKeyMapper;
+
+    @Autowired
+    private UserAiSettingMapper userAiSettingMapper;
 
     @Autowired
     private ExternalApiKeyBalanceClient externalApiKeyBalanceClient;
@@ -83,6 +96,7 @@ public class UserAiModelKeyService {
     public UserAiModelKeyListResponse listForCurrentUser(String modalityType, String abilityType) {
         String userId = requireCurrentUser();
         log.info("查询用户模型密钥列表 userId={} modalityType={} abilityType={}", userId, modalityType, abilityType);
+        listEnabledRows(userId, null);
         UserAiModelKeyExample ex = new UserAiModelKeyExample();
         UserAiModelKeyExample.Criteria criteria = ex.createCriteria()
                 .andUserIdEqualTo(userId)
@@ -103,6 +117,29 @@ public class UserAiModelKeyService {
             }
             externalApiKeyBalanceClient.fill(rows, items);
         }
+        Set<String> activePlatform = activePlatformAbilities(userId);
+        for (String ability : PLATFORM_ABILITIES) {
+            if (!platformRowVisible(ability, modalityType, abilityType)) {
+                continue;
+            }
+            items.add(platformItem(ability, activePlatform.contains(ability)));
+        }
+        items.sort((left, right) -> {
+            int byAbility = Integer.compare(platformAbilityOrder(left.getAbilityType()),
+                    platformAbilityOrder(right.getAbilityType()));
+            if (byAbility != 0) {
+                return byAbility;
+            }
+            int byPlatform = Integer.compare(
+                    Integer.valueOf(1).equals(right.getPlatformModel()) ? 1 : 0,
+                    Integer.valueOf(1).equals(left.getPlatformModel()) ? 1 : 0);
+            if (byPlatform != 0) {
+                return byPlatform;
+            }
+            return Integer.compare(
+                    Integer.valueOf(1).equals(right.getDefaultModel()) ? 1 : 0,
+                    Integer.valueOf(1).equals(left.getDefaultModel()) ? 1 : 0);
+        });
         UserAiModelKeyListResponse resp = new UserAiModelKeyListResponse();
         // Kept for response compatibility; there is no exclusive mode anymore.
         resp.setOnlyUserKey(0);
@@ -159,6 +196,7 @@ public class UserAiModelKeyService {
         Date now = new Date();
         List<UserAiModelKey> createdRows = new ArrayList<>();
         List<UserAiModelKeyItem> createdItems = new ArrayList<>();
+        Map<String, String> enabledKeyByAbility = new LinkedHashMap<>();
         for (CreateUserAiModelKeyItem item : pending) {
             String ability = UserAiModelSupport.normalizeAbility(item.getModalityType(), item.getAbilityType());
             String modality = UserAiModelSupport.modalityForAbility(ability);
@@ -171,7 +209,6 @@ public class UserAiModelKeyService {
             if (modelName.length() > 128) {
                 modelName = modelName.substring(0, 128);
             }
-            boolean hasDefault = hasEnabledDefault(userId, ability);
 
             UserAiModelKey row = new UserAiModelKey();
             row.setKeyId(ShortIds.id(UserAiModelSupport.USER_KEY_PREFIX));
@@ -185,15 +222,29 @@ public class UserAiModelKeyService {
             row.setApiKey(plainKey);
             row.setSecretKey(plainSecret);
             row.setEnabled(1);
-            row.setDefaultModel(hasDefault ? 0 : 1);
+            row.setDefaultModel(0);
             row.setDelFlag(0);
             row.setCreator(userId);
             row.setModifier(userId);
             row.setGmtCreate(now);
             row.setGmtModified(now);
             userAiModelKeyMapper.insertSelective(row);
+            enabledKeyByAbility.put(ability, row.getKeyId());
             createdRows.add(row);
             createdItems.add(toItem(row));
+        }
+        Set<String> enabledIds = new LinkedHashSet<>(enabledKeyByAbility.values());
+        for (Map.Entry<String, String> winner : enabledKeyByAbility.entrySet()) {
+            claimAbility(userId, winner.getKey(), winner.getValue());
+        }
+        for (UserAiModelKeyItem created : createdItems) {
+            if (enabledIds.contains(created.getKeyId())) {
+                created.setEnabled(1);
+                created.setDefaultModel(1);
+            } else {
+                created.setEnabled(0);
+                created.setDefaultModel(0);
+            }
         }
         externalApiKeyBalanceClient.fill(createdRows, createdItems);
 
@@ -270,6 +321,9 @@ public class UserAiModelKeyService {
         patch.setModifier(userId);
         patch.setGmtModified(new Date());
         userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+        if (Integer.valueOf(1).equals(existing.getEnabled())) {
+            claimAbility(userId, ability, existing.getKeyId());
+        }
 
         UserAiModelKey updated = requireOwnedRow(userId, existing.getKeyId());
         log.info("更新用户模型密钥完成 userId={} keyId={}", userId, existing.getKeyId());
@@ -283,23 +337,35 @@ public class UserAiModelKeyService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "key_id and enabled required");
         }
         int enabled = Integer.valueOf(1).equals(req.getEnabled()) ? 1 : 0;
+        String platformAbility = ProductModelAlias.abilityOfCode(req.getKeyId());
+        if (platformAbility != null) {
+            log.info("切换自建模型启停 userId={} abilityType={} enabled={}", userId, platformAbility, enabled);
+            if (enabled == 1) {
+                selectPlatform(userId, platformAbility);
+            } else {
+                suppressPlatform(userId, platformAbility);
+            }
+            log.info("切换自建模型启停完成 userId={} abilityType={} enabled={}", userId, platformAbility, enabled);
+            return new UserAiModelKeyItemResponse(platformItem(platformAbility, enabled == 1));
+        }
         UserAiModelKey existing = requireOwnedRow(userId, req.getKeyId());
         log.info("切换用户模型密钥启停 userId={} keyId={} enabled={}", userId, existing.getKeyId(), enabled);
 
-        UserAiModelKey patch = new UserAiModelKey();
-        patch.setId(existing.getId());
-        patch.setEnabled(enabled);
-        if (enabled == 0 && Integer.valueOf(1).equals(existing.getDefaultModel())) {
-            patch.setDefaultModel(0);
-        } else if (enabled == 1 && !hasEnabledDefault(userId, existing.getAbilityType())) {
-            patch.setDefaultModel(1);
-        }
-        patch.setModifier(userId);
-        patch.setGmtModified(new Date());
-        userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
-
-        if (enabled == 0 && Integer.valueOf(1).equals(existing.getDefaultModel())) {
-            promoteFallbackDefault(userId, existing.getAbilityType(), existing.getKeyId());
+        if (enabled == 1) {
+            claimAbility(userId, existing.getAbilityType(), existing.getKeyId());
+        } else {
+            UserAiModelKey patch = new UserAiModelKey();
+            patch.setId(existing.getId());
+            patch.setEnabled(0);
+            if (Integer.valueOf(1).equals(existing.getDefaultModel())) {
+                patch.setDefaultModel(0);
+            }
+            patch.setModifier(userId);
+            patch.setGmtModified(new Date());
+            userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+            if (Integer.valueOf(1).equals(existing.getDefaultModel())) {
+                promoteFallbackDefault(userId, existing.getAbilityType(), existing.getKeyId());
+            }
         }
         UserAiModelKey updated = requireOwnedRow(userId, existing.getKeyId());
         log.info("切换用户模型密钥启停完成 userId={} keyId={} enabled={}", userId, existing.getKeyId(), enabled);
@@ -318,24 +384,7 @@ public class UserAiModelKeyService {
         }
         log.info("设置用户默认模型密钥 userId={} keyId={} abilityType={}",
                 userId, target.getKeyId(), target.getAbilityType());
-
-        UserAiModelKey clear = new UserAiModelKey();
-        clear.setDefaultModel(0);
-        clear.setModifier(userId);
-        clear.setGmtModified(new Date());
-        UserAiModelKeyExample clearEx = new UserAiModelKeyExample();
-        clearEx.createCriteria()
-                .andUserIdEqualTo(userId)
-                .andAbilityTypeEqualTo(target.getAbilityType())
-                .andDelFlagEqualTo(0);
-        userAiModelKeyMapper.updateByExampleSelective(clear, clearEx);
-
-        UserAiModelKey set = new UserAiModelKey();
-        set.setId(target.getId());
-        set.setDefaultModel(1);
-        set.setModifier(userId);
-        set.setGmtModified(new Date());
-        userAiModelKeyMapper.updateByPrimaryKeySelective(set);
+        claimAbility(userId, target.getAbilityType(), target.getKeyId());
 
         UserAiModelKey updated = requireOwnedRow(userId, target.getKeyId());
         log.info("设置用户默认模型密钥完成 userId={} keyId={}", userId, target.getKeyId());
@@ -458,9 +507,7 @@ public class UserAiModelKeyService {
             }
             ex.setOrderByClause("is_default_model desc, id asc");
             List<UserAiModelKey> rows = userAiModelKeyMapper.selectByExample(ex);
-            if (rows == null) {
-                return Collections.emptyList();
-            }
+            rows = retainSingleEnabled(userId.trim(), rows);
             for (UserAiModelKey row : rows) {
                 migrateLegacyProvider(row);
             }
@@ -469,6 +516,36 @@ public class UserAiModelKeyService {
             log.warn("读取 user_ai_model_key 失败 userId={} abilityType={}", userId, abilityType);
             return Collections.emptyList();
         }
+    }
+
+    public AiModelConfig enabledUserModel(String userId, String abilityType) {
+        if (userId == null || userId.isBlank() || abilityType == null || abilityType.isBlank()) {
+            return null;
+        }
+        List<UserAiModelKey> rows = listEnabledRows(userId, abilityType);
+        if (rows.isEmpty()) {
+            return null;
+        }
+        return UserAiModelSupport.toTransientModelConfig(rows.get(0));
+    }
+
+    public Set<String> activePlatformAbilities(String userId) {
+        Set<String> active = new LinkedHashSet<>(PLATFORM_ABILITIES);
+        if (userId == null || userId.isBlank()) {
+            return active;
+        }
+        String uid = userId.trim();
+        for (UserAiModelKey row : listEnabledRows(uid, null)) {
+            if (row.getAbilityType() != null) {
+                active.remove(row.getAbilityType().trim().toUpperCase(Locale.ROOT));
+            }
+        }
+        try {
+            active.removeAll(readSuppressed(uid));
+        } catch (DataAccessException ex) {
+            log.warn("读取自建模型开关失败 userId={}", uid);
+        }
+        return active;
     }
 
     public AiModelConfig resolveUserModel(String userId, String abilityType, String requestedCode) {
@@ -558,15 +635,177 @@ public class UserAiModelKeyService {
         }
     }
 
-    private boolean hasEnabledDefault(String userId, String abilityType) {
+    private void claimAbility(String userId, String abilityType, String keepKeyId) {
+        disableOtherUserKeys(userId, abilityType, keepKeyId);
+    }
+
+    private void selectPlatform(String userId, String ability) {
+        disableOtherUserKeys(userId, ability, null);
+        Set<String> suppressed = readSuppressed(userId);
+        if (suppressed.remove(ability)) {
+            saveSuppressed(userId, suppressed);
+        }
+    }
+
+    private void suppressPlatform(String userId, String ability) {
+        Set<String> suppressed = readSuppressed(userId);
+        if (suppressed.add(ability)) {
+            saveSuppressed(userId, suppressed);
+        }
+    }
+
+    private void disableOtherUserKeys(String userId, String abilityType, String keepKeyId) {
+        Date now = new Date();
+        UserAiModelKey clear = new UserAiModelKey();
+        clear.setEnabled(0);
+        clear.setDefaultModel(0);
+        clear.setModifier(userId);
+        clear.setGmtModified(now);
         UserAiModelKeyExample ex = new UserAiModelKeyExample();
-        ex.createCriteria()
+        UserAiModelKeyExample.Criteria criteria = ex.createCriteria()
                 .andUserIdEqualTo(userId)
                 .andAbilityTypeEqualTo(abilityType)
-                .andEnabledEqualTo(1)
-                .andDefaultModelEqualTo(1)
                 .andDelFlagEqualTo(0);
-        return userAiModelKeyMapper.countByExample(ex) > 0;
+        if (keepKeyId != null && !keepKeyId.isBlank()) {
+            criteria.andKeyIdNotEqualTo(keepKeyId);
+        }
+        userAiModelKeyMapper.updateByExampleSelective(clear, ex);
+        if (keepKeyId == null || keepKeyId.isBlank()) {
+            return;
+        }
+        UserAiModelKey keep = new UserAiModelKey();
+        keep.setEnabled(1);
+        keep.setDefaultModel(1);
+        keep.setModifier(userId);
+        keep.setGmtModified(now);
+        UserAiModelKeyExample keepEx = new UserAiModelKeyExample();
+        keepEx.createCriteria()
+                .andUserIdEqualTo(userId)
+                .andKeyIdEqualTo(keepKeyId)
+                .andDelFlagEqualTo(0);
+        userAiModelKeyMapper.updateByExampleSelective(keep, keepEx);
+    }
+
+    private List<UserAiModelKey> retainSingleEnabled(String userId, List<UserAiModelKey> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<String, UserAiModelKey> keep = new LinkedHashMap<>();
+        List<UserAiModelKey> drop = new ArrayList<>();
+        for (UserAiModelKey row : rows) {
+            String ability = row.getAbilityType() == null ? "" : row.getAbilityType();
+            if (!keep.containsKey(ability)) {
+                keep.put(ability, row);
+            } else {
+                drop.add(row);
+            }
+        }
+        Date now = new Date();
+        try {
+            for (UserAiModelKey row : drop) {
+                UserAiModelKey patch = new UserAiModelKey();
+                patch.setId(row.getId());
+                patch.setEnabled(0);
+                patch.setDefaultModel(0);
+                patch.setModifier(userId);
+                patch.setGmtModified(now);
+                userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+            }
+            for (UserAiModelKey row : keep.values()) {
+                if (!Integer.valueOf(1).equals(row.getDefaultModel())) {
+                    UserAiModelKey patch = new UserAiModelKey();
+                    patch.setId(row.getId());
+                    patch.setDefaultModel(1);
+                    patch.setModifier(userId);
+                    patch.setGmtModified(now);
+                    userAiModelKeyMapper.updateByPrimaryKeySelective(patch);
+                    row.setDefaultModel(1);
+                }
+            }
+        } catch (DataAccessException ex) {
+            log.warn("收口同类型启用模型失败 userId={}", userId);
+        }
+        return new ArrayList<>(keep.values());
+    }
+
+    private boolean platformRowVisible(String ability, String modalityType, String abilityType) {
+        if (abilityType != null && !abilityType.isBlank()
+                && !ability.equalsIgnoreCase(abilityType.trim())) {
+            return false;
+        }
+        if (modalityType != null && !modalityType.isBlank()) {
+            String modality = UserAiModelSupport.modalityForAbility(ability);
+            return modality.equalsIgnoreCase(modalityType.trim());
+        }
+        return true;
+    }
+
+    private static int platformAbilityOrder(String ability) {
+        int index = ability == null ? -1 : PLATFORM_ABILITIES.indexOf(ability.trim().toUpperCase(Locale.ROOT));
+        return index < 0 ? PLATFORM_ABILITIES.size() : index;
+    }
+
+    private UserAiModelKeyItem platformItem(String ability, boolean enabled) {
+        ProductModelAlias.Face face = ProductModelAlias.canonical(ability);
+        UserAiModelKeyItem item = new UserAiModelKeyItem();
+        item.setKeyId(face.code());
+        item.setModalityType(UserAiModelSupport.modalityForAbility(ability));
+        item.setAbilityType(ability);
+        item.setProviderCode("BGSSAI");
+        item.setProviderName("BGSSAI");
+        item.setModelCode(face.code());
+        item.setModelName(face.name());
+        item.setEnabled(enabled ? 1 : 0);
+        item.setDefaultModel(enabled ? 1 : 0);
+        item.setPlatformModel(1);
+        return item;
+    }
+
+    private UserAiSetting loadSetting(String userId) {
+        UserAiSettingExample ex = new UserAiSettingExample();
+        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
+        return userAiSettingMapper.selectOneByExample(ex);
+    }
+
+    private Set<String> readSuppressed(String userId) {
+        UserAiSetting row = loadSetting(userId);
+        Set<String> suppressed = new LinkedHashSet<>();
+        if (row == null || row.getSuppressedPlatformAbilities() == null
+                || row.getSuppressedPlatformAbilities().isBlank()) {
+            return suppressed;
+        }
+        for (String part : row.getSuppressedPlatformAbilities().split(",")) {
+            String ability = part.trim().toUpperCase(Locale.ROOT);
+            if (PLATFORM_ABILITIES.contains(ability)) {
+                suppressed.add(ability);
+            }
+        }
+        return suppressed;
+    }
+
+    private void saveSuppressed(String userId, Set<String> suppressed) {
+        String value = String.join(",", suppressed);
+        UserAiSetting existing = loadSetting(userId);
+        Date now = new Date();
+        if (existing == null) {
+            UserAiSetting row = new UserAiSetting();
+            row.setUserId(userId);
+            row.setOnlyUserKey(0);
+            row.setSuppressedPlatformAbilities(value);
+            row.setDelFlag(0);
+            row.setCreator(userId);
+            row.setModifier(userId);
+            row.setGmtCreate(now);
+            row.setGmtModified(now);
+            userAiSettingMapper.insertSelective(row);
+            return;
+        }
+        UserAiSetting patch = new UserAiSetting();
+        patch.setId(existing.getId());
+        patch.setSuppressedPlatformAbilities(value);
+        patch.setModifier(userId);
+        patch.setGmtModified(now);
+        userAiSettingMapper.updateByPrimaryKeySelective(patch);
     }
 
     private void promoteFallbackDefault(String userId, String abilityType, String excludeKeyId) {
