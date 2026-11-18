@@ -1465,6 +1465,7 @@ CREATE TABLE `short_look_material` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定妆知识库素材';
 
 DROP TABLE IF EXISTS `user_ai_provider_key`;
+DROP TABLE IF EXISTS `user_ai_saved_credential`;
 DROP TABLE IF EXISTS `user_ai_model_key`;
 DROP TABLE IF EXISTS `user_ai_setting`;
 
@@ -1482,9 +1483,30 @@ CREATE TABLE `user_ai_setting` (
   UNIQUE KEY `uk_user_ai_setting_uid` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户模型密钥模式设置表';
 
+CREATE TABLE IF NOT EXISTS user_ai_saved_credential (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  credential_id VARCHAR(64) NOT NULL UNIQUE,
+  user_id VARCHAR(64) NOT NULL,
+  provider_code VARCHAR(32) NOT NULL,
+  key_name VARCHAR(64) DEFAULT NULL,
+  base_url VARCHAR(255) NOT NULL,
+  api_key TEXT NOT NULL,
+  secret_key TEXT DEFAULT NULL,
+  is_active TINYINT DEFAULT NULL,
+  last_check_status VARCHAR(16) DEFAULT NULL,
+  last_check_time DATETIME DEFAULT NULL,
+  del_flag TINYINT NOT NULL DEFAULT 0,
+  creator VARCHAR(64) DEFAULT NULL,
+  modifier VARCHAR(64) DEFAULT NULL,
+  gmt_create DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  gmt_modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_saved_credential_active (user_id, provider_code, is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `user_ai_model_key` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
   `key_id` VARCHAR(64) NOT NULL COMMENT '密钥配置业务标识',
+  `credential_id` VARCHAR(64) DEFAULT NULL COMMENT '关联的供应商凭据',
   `key_name` VARCHAR(64) DEFAULT NULL COMMENT '用户自定义密钥名称',
   `user_id` VARCHAR(64) NOT NULL COMMENT '用户标识',
   `modality_type` VARCHAR(16) NOT NULL COMMENT '模型大类：TEXT/IMAGE/VIDEO/AUDIO',

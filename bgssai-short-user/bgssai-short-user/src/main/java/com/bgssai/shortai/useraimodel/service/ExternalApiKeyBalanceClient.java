@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.bgssai.shortai.model.UserAiModelKey;
+import com.bgssai.shortai.model.UserAiCredentialData;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.useraimodel.dto.ExternalApiKeyBalancePart;
 import com.bgssai.shortai.useraimodel.dto.UserAiModelKeyItem;
@@ -65,7 +65,7 @@ public class ExternalApiKeyBalanceClient {
         this.transport = transport;
     }
 
-    public void fill(List<UserAiModelKey> rows, List<UserAiModelKeyItem> items) {
+    public void fill(List<? extends UserAiCredentialData> rows, List<UserAiModelKeyItem> items) {
         if (rows == null || items == null || rows.isEmpty() || items.isEmpty()) {
             return;
         }
@@ -73,7 +73,7 @@ public class ExternalApiKeyBalanceClient {
         Map<String, Credential> credentials = new LinkedHashMap<>();
         Map<String, List<Integer>> indexes = new LinkedHashMap<>();
         for (int i = 0; i < count; i++) {
-            UserAiModelKey row = rows.get(i);
+            UserAiCredentialData row = rows.get(i);
             if (row == null || items.get(i) == null) {
                 continue;
             }
@@ -495,7 +495,7 @@ public class ExternalApiKeyBalanceClient {
         return new Snapshot(STATUS_UNAVAILABLE, List.of());
     }
 
-    private static String fingerprint(UserAiModelKey row) {
+    private static String fingerprint(UserAiCredentialData row) {
         return text(row.getProviderCode()) + "\0"
                 + text(row.getBaseUrl()) + "\0"
                 + text(row.getApiKey()) + "\0"
@@ -530,7 +530,7 @@ public class ExternalApiKeyBalanceClient {
     }
 
     record Credential(String providerCode, String baseUrl, String apiKey, String secretKey) {
-        static Credential from(UserAiModelKey row) {
+        static Credential from(UserAiCredentialData row) {
             String provider = row.getProviderCode() == null
                     ? ""
                     : row.getProviderCode().trim().toUpperCase(Locale.ROOT);

@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "06bbea2aa8662804f02fc7501a63a7e7848bf94225bef58fe6b226843aea144e",
-  "code_contract_digest": "ccc6f97302de999a2231aea758f471c6ae7c6f8cd2fde81fdac55193e13b9207",
+  "prototype_bundle_digest": "dc15e1c7984317b937c6a167fdafe8608eb8a9c0225148211579281170765a38",
+  "code_contract_digest": "d9f84246dfd64975454914f9dbb6034a66e8ed4cd4beff2da0ade92770405950",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -69,6 +69,7 @@
     "/bgssai/user/ai-keys",
     "/bgssai/user/ai-keys/{providerCode}",
     "/bgssai/user/ai-model-keys",
+    "/bgssai/user/ai-model-keys/credentials",
     "/bgssai/user/ai-models/list",
     "/bgssai/user/ai-tasks/batch-progress",
     "/bgssai/user/ai-tasks/cancel",
@@ -508,8 +509,16 @@
       "sha256": "0facc5a48e9b45ff2c96a2cee37227186b00202e9c33cf1a9a75ab50807ffb5d"
     },
     {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+      "sha256": "c345376a4000f130f1630ef5a3caf6eb5a36e9b2bb810a6805a632d13d343a8b"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
+      "sha256": "51d8b317815d45caf92e7e0711a8b3f8818195532e27f356ec7be0be5dfb0e6f"
+    },
+    {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-      "sha256": "481670a077f994601583c652f29096cf11287ad5174b6f1037b9650abd06f427"
+      "sha256": "c50e17f9d175b451eab2b2f7cbb1bb5d3fd2fc38132a12318b85661debdd5c38"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
@@ -521,15 +530,19 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js",
-      "sha256": "8d78eb2f180bd89e9454885d740afc23998276c6b6da93f9912f444ee2c549a6"
+      "sha256": "6f026d15aa6bd1f16464e209d255a15b8b82e0921d891575e048196eafdc2c53"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/modelKeySelection.js",
-      "sha256": "6561ec98a9426270396bd8604dee266ab394d1c07beab2f51e3c6a3c6c5263ce"
+      "sha256": "c33e8561f6881a8ebb332af4bffcf4e5b695cf152787940d8687bfcd325a66ab"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/modelKeySelection.test.js",
-      "sha256": "518082d6120040d2f68d24b642a2e629102da65a9c1646a6bbbb4bab787948ef"
+      "sha256": "f3bceadc1177667103ce1a92b0a9fb0b09f800e46db1484e3d80159d33dabdfe"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/modelProviderPresets.js",
+      "sha256": "726858e551384a7343fe880e28ecc19ab01e64127f4a1cfb2c4afb0c42cba64b"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/userAiProviderKeys.test.js",
@@ -1580,6 +1593,10 @@
       "sha256": "061a86d62d3472bb974435890175776fda4f29365faccec8e14bdbda720a932d"
     },
     {
+      "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/controller/SavedCredentialController.java",
+      "sha256": "d5af6c65c9b308cfea5e7511d0bcc4c69fbd4037abe69f4fb9ab250e2be3f166"
+    },
+    {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/controller/SetDefaultUserAiModelKeyController.java",
       "sha256": "4eaf25fcaf599e21df8efba4660751a4b60b4709f4b90bfa76dc4085b33d12e6"
     },
@@ -1609,7 +1626,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/service/UserAiModelKeyService.java",
-      "sha256": "f0dcaae45166e49fe3e4ed662db346552a929e6f0475269c8373b5792905a327"
+      "sha256": "a99ae19a5a3fe20815fd7d402753de9cd4b63e14f80607ea106e7c8145caef29"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/service/UserAiProviderKeyService.java",
@@ -1636,10 +1653,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1678,10 +1695,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -1720,10 +1737,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2098,10 +2115,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2119,10 +2136,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2135,15 +2152,15 @@
     },
     {
       "path": "docs/demo-static/web/user/account-settings.html",
-      "sha256": "ab02c3ac698b2a0f23ff74f54e7ddf1b405d37726d0cb3ff6b00f415741d1948",
+      "sha256": "909484af7e2e5e2abbefe8f908aba13682d07744ee75b7e4bb7e42386490afd9",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2161,10 +2178,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2182,10 +2199,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2203,10 +2220,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2224,10 +2241,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2245,10 +2262,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2266,10 +2283,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2287,10 +2304,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2308,10 +2325,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2329,10 +2346,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2350,10 +2367,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2371,10 +2388,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2392,10 +2409,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2413,10 +2430,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2434,10 +2451,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2455,10 +2472,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2476,10 +2493,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2497,10 +2514,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2518,10 +2535,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2539,10 +2556,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2560,10 +2577,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2581,10 +2598,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2602,10 +2619,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2623,10 +2640,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2644,10 +2661,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2665,10 +2682,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2686,10 +2703,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2707,10 +2724,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2728,10 +2745,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2749,10 +2766,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2770,10 +2787,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2791,10 +2808,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2812,10 +2829,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2833,10 +2850,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2854,10 +2871,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2875,10 +2892,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2896,10 +2913,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2917,10 +2934,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2938,10 +2955,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2959,10 +2976,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -2980,10 +2997,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",
@@ -3001,10 +3018,10 @@
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/AccountSettingsPage.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/CredentialManagementCard.jsx",
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/ModelSelectionCard.jsx",
         "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.js",
-        "bgssai-short-user/bgssai-short-user-react/src/pages/account/keyBalance.test.js"
+        "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx"
       ],
       "bound_endpoints": [
         "/api/cs/support/callback",

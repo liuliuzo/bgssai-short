@@ -2,12 +2,9 @@ package com.bgssai.shortai.useraimodel.dto;
 
 import java.util.List;
 
-import jakarta.validation.constraints.NotBlank;
-
 public class CreateUserAiModelKeyRequest {
     private String providerCode;
     private String baseUrl;
-    @NotBlank(message = "api_key required")
     private String apiKey;
     private String secretKey;
     private String modalityType;
