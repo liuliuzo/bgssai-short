@@ -38,6 +38,7 @@ import com.bgssai.shortai.production.support.ComplianceLexicon;
 import com.bgssai.shortai.production.support.ImageToVideoPolicy;
 import com.bgssai.shortai.production.support.OfficialVideoCopy;
 import com.bgssai.shortai.production.support.OfficialVideoLane;
+import com.bgssai.shortai.production.support.PromptComposer;
 import com.bgssai.shortai.production.support.ShotConsistency;
 import com.bgssai.shortai.production.support.ShortIds;
 import com.bgssai.shortai.production.support.ShortJson;
@@ -168,6 +169,7 @@ public class OfficialShotVideoService {
         if (userVideoModel != null) {
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("shot_id", plan.shot.getShotId());
+            request.put("camera_move", plan.shot.getCameraMove());
             request.put("duration_sec", plan.shot.getShotDurationSec() == null ? 5 : plan.shot.getShotDurationSec());
             request.put("model_code", userVideoModel.getModelId());
             return aiTaskQueue.enqueue(plan.shot.getUserId(), plan.shot.getWorkId(), plan.shot.getEpisodeId(),
@@ -178,6 +180,7 @@ public class OfficialShotVideoService {
         }
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("shot_id", plan.shot.getShotId());
+        request.put("camera_move", plan.shot.getCameraMove());
         request.put("duration_sec", plan.shot.getShotDurationSec() == null ? 3 : plan.shot.getShotDurationSec());
         request.put("model_code", OfficialVideoLane.MODEL);
         return aiTaskQueue.enqueue(plan.shot.getUserId(), plan.shot.getWorkId(), plan.shot.getEpisodeId(),
@@ -372,6 +375,7 @@ public class OfficialShotVideoService {
             base = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
         }
         String text = ShotConsistency.leadWithAnchors(base, anchorText(shot));
+        text = PromptComposer.withVideoCamera(text, shot.getCameraMove());
         if (text.length() > 2000) {
             return text.substring(0, 2000);
         }

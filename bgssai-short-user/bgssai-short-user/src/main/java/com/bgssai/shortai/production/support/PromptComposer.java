@@ -203,16 +203,29 @@ public final class PromptComposer {
         };
     }
 
+    /** Put the selected direction first so a prompt length limit cannot discard it. */
+    public static String withVideoCamera(String prompt, String code) {
+        String move = cameraName(code);
+        return move.isBlank() ? prompt : "视频运镜以此为准：" + move + "。" + prompt;
+    }
+
     public static String cameraName(String code) {
         if (code == null) {
             return "";
         }
         return switch (code) {
             case "FIXED", "STATIC" -> "固定不动";
-            case "PUSH" -> "缓缓推进";
-            case "PULL" -> "慢慢拉远";
+            case "PUSH", "PUSH_IN" -> "缓缓推进";
+            case "PULL", "PULL_OUT" -> "慢慢拉远";
             case "PAN" -> "横向摇过";
-            case "FOLLOW" -> "跟着人物走";
+            case "FOLLOW", "TRACKING" -> "跟着人物走";
+            case "PAN_LEFT" -> "向左摇镜";
+            case "PAN_RIGHT" -> "向右摇镜";
+            case "TILT_UP" -> "向上摇镜";
+            case "TILT_DOWN" -> "向下摇镜";
+            case "HANDHELD" -> "手持拍摄";
+            case "ORBIT" -> "围绕主体环绕拍摄";
+            case "DOLLY_ZOOM" -> "移动机位并同步变焦，保持主体大小不变";
             case "TILT" -> "上下摇";
             default -> code;
         };

@@ -26,6 +26,7 @@
   3. 每个镜头的结构化字段：`shot_no`、`scene_no`、`shot_size`、`camera_move`、`shot_duration_sec`、
      `shot_desc`（画面描述）、`dialogue_text`（台词）、`emotion`、`lighting`、`character_ref_json`
      （出场角色 + `outfit_code`）、`scene_card_id`、`extra_prompt`（用户补充）。
+     镜头制作的列表与画布均可逐镜头设置运镜。已锁定镜头只读。变更运镜后已有素材保留，下次生成视频使用所选运镜。
   4. **提示词合成（只读派生）**：`image_prompt` 由系统按固定模板拼装，不允许手工直接编辑正文，
      只能通过改上述结构化字段、`extra_prompt`，或改画面文字稿 `previz_text`（见
      `previz-text-storyboard.md`，文字稿可编辑并反向回写结构化字段）间接改变。拼装顺序：
@@ -78,7 +79,7 @@
         "retry_count": 1, "cost_spent_cent": 320 } ],
       "page_num": 1, "page_size": 20, "total_size": 42 } }
   ```
-- `POST /bgssai/user/shots/update`（单镜结构化字段更新，返回重新合成的 `image_prompt`）
+- `POST /bgssai/user/shots/update`（更新镜头字段。单独修改运镜时保留现有首帧提示词与分镜文字稿）
 - `POST /bgssai/user/shots/split` · `/merge` · `/move` · `/insert` · `/delete`
 - `GET /bgssai/user/shots/prompt-preview?shot_id=s-40001`（改前预览合成结果）
 - 鉴权：需 `Jwttoken`；按 JWT `user_id` 校验作品归属。

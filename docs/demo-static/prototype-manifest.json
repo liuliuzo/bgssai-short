@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "2d4f50dd214eea9da9affc8f2df471e7021888d64ddc64e0d38312ff2fa50bc8",
-  "code_contract_digest": "6f28bf61a3ee24d4401613b13f9cd47fed73538a5f029b0433d840464b699592",
+  "prototype_bundle_digest": "e2e9077ca3c2d00e6fc35b1fbf94b18d015e81eecd56fb73d4b3174bf97dd181",
+  "code_contract_digest": "837da63c201ad54727c18e8ca6ff7a37b85b11c3da5ea56a79a5faf49b58a315",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -665,11 +665,15 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/ProductionGuide.jsx",
-      "sha256": "cb4e437a2171f97e5f6e48d5849a06be5764b25230da9e1bdb440cbc40c526ee"
+      "sha256": "4c94f2d05964dd51c11915a70ecd06182ac3cfdf24be87c15e6ad7488d1ea958"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/QualityReportPage.jsx",
       "sha256": "30dfc5dc12fe9ce308b638a7f01e6e967aa31289ad1f24cf3401e51e785c6458"
+    },
+    {
+      "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/ShotCameraMove.jsx",
+      "sha256": "3baf8c1688b08d1176772391dbf3a5d6e7629c1ba902d51165aa1d8518440536"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/SourceImportPage.jsx",
@@ -681,7 +685,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/StoryboardCanvas.jsx",
-      "sha256": "1b5ceb34a457d3978835aa31bf57276b1d1e7085290c0f6b09f884ce8c891e54"
+      "sha256": "142ae944e3724d671dd1bdfa369ffddaa1cd90b89de341f23a15f834f1707dd9"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/VoiceStudioPage.jsx",
@@ -689,7 +693,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorkStudio.jsx",
-      "sha256": "ffba723bf637e4279f0db70a5f02ab06f76a6e108eaa9f3869b582b84b801b8d"
+      "sha256": "056daf0071b7d46f6e3bbb6e9407540d4a72cafdb4fab24bb77019b1fb19f7f2"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/WorksPage.jsx",
@@ -721,11 +725,11 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionGuide.js",
-      "sha256": "a8134bd89eb4e6049c4a6fb86526239bfa204fc073b0a95a164a29b90e4cae65"
+      "sha256": "f65eb034fe6115c7c0ccfb0b6617211da2f2949ef20290014263a411b5bc36d3"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/productionGuide.test.js",
-      "sha256": "681865f9ba2bfb176fcf1b33ce8c8cd508d9830a342feca0c6661fbc7b70b031"
+      "sha256": "440b2fa3de8c7bafd377035a5e84816e69ed0f898c472a69bc187f5d5b38a688"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/qualitySummary.js",
@@ -765,11 +769,11 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/studioListUx.js",
-      "sha256": "f252a1565f9cc5bb1850eb5ded218bc334863833e6e8371b254a12d2532ddcc9"
+      "sha256": "6f374abad044c1677ee06794499be057427386c6bf2c653ad24f02bd3175af38"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/studioListUx.test.js",
-      "sha256": "608518aa4476c5ee86574100ab88511032ad67db3bd3585c7d8853ecafd3ded5"
+      "sha256": "fabcb515e9469c38c24058507ec2eadc11d85092231c24019b8fb5d83da89402"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/works/taskOutcome.js",
@@ -989,7 +993,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AiTaskService.java",
-      "sha256": "0241fae80b52ca12ba385e8baa9d7c7bef64d06315d0bddb85610a8512ec988b"
+      "sha256": "307806875df70604a1d22359128507ebd68002f709ca16da18217ed37ed0eb5a"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/AssetService.java",
@@ -1041,7 +1045,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/OfficialShotVideoService.java",
-      "sha256": "ce877ff703446ff077f19224c7f21422fe9f90171f2fb82287c91c6b7618fcd9"
+      "sha256": "e125dbe0f14ac88ee268d699ce4ad4455562e89d7fc7cccbbf8461255f1616cb"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/PreviewService.java",
@@ -1073,7 +1077,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/ShotService.java",
-      "sha256": "2f452a7d4581eb6e5375f900cbdcfebe9cda795f74bd8a7ecd03128791300df0"
+      "sha256": "87d35c383647ec9d2603911c4bfd57f5f6a76b0727c47f2005aa5343eb5cce06"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/production/service/SourceService.java",
@@ -2753,7 +2757,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard-canvas.html",
-      "sha256": "aa8d68fdfa77a04f05f59b15cd0ba5f84a0ac3567c3ce4bf3619601aa5e7d930",
+      "sha256": "683ac7ad04aa540a057d311b2d21450797ff5bcdd8931b7cf75ab74589b2665d",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2774,7 +2778,7 @@
     },
     {
       "path": "docs/demo-static/web/user/storyboard.html",
-      "sha256": "6585b41a483e3bbff77cb5ce08e428c379e6815fa4abcf7434ff32725577739f",
+      "sha256": "5a8c78ab7550f645c40a576fcb0033b4250ada586ed44cb8a016857c0567c143",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
@@ -2900,7 +2904,7 @@
     },
     {
       "path": "docs/demo-static/web/user/video-path-guide.html",
-      "sha256": "f15f766c237ac44df93beaf3216ea806bd7c1e78addf24d83ff962bebd2364f2",
+      "sha256": "0d5a713ddec9a26ae755c2ab06fcba9794b5c8a8c304e5db1de7723e8bfb00fd",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

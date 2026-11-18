@@ -221,7 +221,7 @@ test('framed shots are the only ones sent to video, and bare shots go to stills 
     videoCount: 0,
     episodeNo: 1,
   })
-  assert.equal(step.key, 'frame')
+  assert.equal(step.key, 'shots')
   assert.equal(step.action, '出首帧')
 })
 
@@ -251,7 +251,10 @@ test('stills that exist move to video, then to the film page', () => {
     videoCount: 0,
     episodeNo: 1,
   })
-  assert.equal(video.key, 'video')
+  assert.equal(video.key, 'shots')
+  assert.equal(video.stepNo, 6)
+  assert.equal(video.stepLabel, '镜头制作')
+  assert.equal(video.doneKeys.length, 5)
   assert.equal(video.action, '生成视频')
 
   const filmed = path({
@@ -281,7 +284,7 @@ test('a ready film is the end of the path', () => {
     episodeNo: 1,
   })
   assert.equal(step.action, '查看成片')
-  assert.ok(step.doneKeys.includes('video'))
+  assert.ok(step.doneKeys.includes('shots'))
   assert.ok(step.doneKeys.includes('film'))
 })
 
@@ -299,8 +302,8 @@ test('api payload maps into the same path', () => {
   assert.equal(resolveVideoPath(input).kind, 'split')
 })
 
-test('every step carries stepNo and tab, and allDone marks step 9 as 已完成', () => {
-  assert.equal(VIDEO_PATH_STEPS.length, 9)
+test('every step carries stepNo and tab, and allDone marks step 7 as 已完成', () => {
+  assert.equal(VIDEO_PATH_STEPS.length, 7)
   assert.deepEqual(
     VIDEO_PATH_STEPS.map((item) => [item.stepNo, item.key, item.tab]),
     [
@@ -310,9 +313,7 @@ test('every step carries stepNo and tab, and allDone marks step 9 as 已完成',
       [4, 'looks', 'characters'],
       [5, 'scenes', 'scenes'],
       [6, 'shots', 'storyboard'],
-      [7, 'frame', 'storyboard'],
-      [8, 'video', 'storyboard'],
-      [9, 'film', 'compose'],
+      [7, 'film', 'compose'],
     ],
   )
   assert.ok(CORE_STUDIO_TABS.has('script'))
@@ -328,12 +329,12 @@ test('every step carries stepNo and tab, and allDone marks step 9 as 已完成',
     videoCount: 1,
     composeStatus: 'READY',
   })
-  assert.equal(finished.stepNo, 9)
+  assert.equal(finished.stepNo, 7)
   assert.equal(finished.stepLabel, '成片')
   assert.equal(finished.allDone, true)
   const items = buildStepItems(finished, 'film')
   assert.ok(items.every((item) => item.state === 'done' && item.statusLabel === '已完成'))
-  assert.equal(items[8].isViewing, true)
+  assert.equal(items[6].isViewing, true)
 })
 
 test('buildStepItems separates current stage from historical viewing stage and running stage', () => {
@@ -388,10 +389,9 @@ test('resolveViewingStageKey maps core tabs, stage query, and aux tools', () => 
     resolveViewingStageKey({ activeTab: 'scenes', requestedStage: '', currentStep: currentAtLooks, outlineCount: 3 }),
     'scenes',
   )
-  assert.equal(
-    resolveViewingStageKey({ activeTab: 'storyboard', requestedStage: 'frame', currentStep: currentAtLooks, outlineCount: 3 }),
-    'frame',
-  )
+  for (const requestedStage of ['shots', 'frame', 'video']) {
+    assert.equal(resolveViewingStageKey({ activeTab: 'storyboard', requestedStage, currentStep: currentAtLooks }), 'shots')
+  }
   assert.equal(
     resolveViewingStageKey({ activeTab: 'source', requestedStage: 'outline', currentStep: currentAtLooks, outlineCount: 3 }),
     null,

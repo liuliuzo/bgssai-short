@@ -195,7 +195,7 @@ create 可传 `card_type`（`SCENE` 默认 / `PROP`）。
 ### POST /bgssai/user/shots/update|lock|unlock
 
 update 可改 `shot_desc` `dialogue_text` `shot_size` `camera_move` `shot_duration_sec` `extra_prompt`，
-并重算 `image_prompt`。
+并重算 `image_prompt`。单独提交 `shot_id` 和 `camera_move` 时仅更新运镜（1–32 个字符）。已锁定镜头返回 `4006`。新视频任务保存提交时的运镜，历史任务缺少该字段时取镜头当前值。
 
 ---
 

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Card, Drawer, Image, Input, Modal, Segmented, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
-import { SHOT_TYPES, CAMERA_MOVEMENTS, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
+import ShotCameraMove from './ShotCameraMove'
+import { SHOT_TYPES, QUAD_GRID_ANGLES, CONTINUITY_PRESETS } from '../../utils/CinematographyHelper'
 import { isUserKeyModelRow, modelPricingCompactLabel, modelPricingLabel } from '../../modelPricing'
 import { shotCanvasStatusKey, shotOffersVideoRegenerate } from './shotCardMedia'
 import { runOfficialShotVideo } from './officialVideo'
@@ -37,7 +38,7 @@ function styleOf(row) {
   return STATUS_STYLE[key] || STATUS_STYLE.PENDING
 }
 
-export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRows = [], sceneCards = [] }) {
+export default function StoryboardCanvas({ episodeId, onSwitchToList, cameraSaves, onCameraSaved, initialRows = [], sceneCards = [] }) {
   const [rows, setRows] = useState(initialRows)
   const [shotsReady, setShotsReady] = useState(initialRows.length > 0)
   const [clipSeconds, setClipSeconds] = useState({})
@@ -132,6 +133,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
   })
 
   const submitOfficial = async (shotIds, regenerate) => {
+    if (!await cameraSaves.waitFor(shotIds)) return false
     const body = { episode_id: episodeId, shot_ids: shotIds, model_code: videoModelCode }
     const outcome = await runOfficialShotVideo({
       regenerate,
@@ -528,18 +530,16 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, initialRow
               </Space>
             </div>
 
-            <div style={{ marginBottom: 10 }}>
-              <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                运镜方式:
-              </Text>
-              <Space wrap size={[4, 4]}>
-                {CAMERA_MOVEMENTS.slice(0, 8).map((cm) => (
-                  <Button key={cm.value} size="small" style={{ fontSize: 11 }} onClick={() => appendDraftTag(cm.prompt)}>
-                    + {cm.label.split(' ')[0]}
-                  </Button>
-                ))}
-              </Space>
-            </div>
+            <ShotCameraMove
+              key={editing.shot_id}
+              shot={editing}
+              saves={cameraSaves}
+              onSaved={(id, move) => {
+                onCameraSaved(id, move)
+                setRows((cur) => cur.map((row) => row.shot_id === id ? { ...row, camera_move: move } : row))
+                setEditing((cur) => cur?.shot_id === id ? { ...cur, camera_move: move } : cur)
+              }}
+            />
 
             <div style={{ marginBottom: 10 }}>
               <Text strong style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>

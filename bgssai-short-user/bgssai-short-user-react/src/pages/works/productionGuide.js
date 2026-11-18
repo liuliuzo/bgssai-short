@@ -41,10 +41,8 @@ export const VIDEO_PATH_STEPS = [
   { key: 'ready', stepNo: 3, label: '定稿', tab: 'script' },
   { key: 'looks', stepNo: 4, label: '定妆', tab: 'characters' },
   { key: 'scenes', stepNo: 5, label: '场景', tab: 'scenes' },
-  { key: 'shots', stepNo: 6, label: '拆镜', tab: 'storyboard' },
-  { key: 'frame', stepNo: 7, label: '首帧', tab: 'storyboard' },
-  { key: 'video', stepNo: 8, label: '视频', tab: 'storyboard' },
-  { key: 'film', stepNo: 9, label: '成片', tab: 'compose' },
+  { key: 'shots', stepNo: 6, label: '镜头制作', tab: 'storyboard' },
+  { key: 'film', stepNo: 7, label: '成片', tab: 'compose' },
 ]
 
 export const CORE_STUDIO_TABS = new Set(['script', 'characters', 'scenes', 'storyboard', 'compose'])
@@ -380,14 +378,14 @@ export function resolveVideoPath(input) {
   }
   if (unframed.length) {
     if (data.imageShotRunning) {
-      return step(data, 'frame', {
+      return step(data, 'shots', {
         kind: 'wait',
         waiting: true,
         title: '首帧正在生成',
         detail: '先别重复提交。好了之后才能生成视频。',
       })
     }
-    return step(data, 'frame', {
+    return step(data, 'shots', {
       kind: 'frame',
       title: '先出首帧，才能生成视频',
       detail: '没有首帧的镜头，生成视频会被直接拒绝。确认费用后才出图。',
@@ -397,14 +395,14 @@ export function resolveVideoPath(input) {
   const videoCount = data.videoCount != null ? data.videoCount : shots.filter(shotHasVideo).length
   if (videoCount < data.shotCount) {
     if (data.videoShotRunning) {
-      return step(data, 'video', {
+      return step(data, 'shots', {
         kind: 'wait',
         waiting: true,
         title: '视频正在生成',
         detail: '生成通常要几分钟。先别重复提交。',
       })
     }
-    return step(data, 'video', {
+    return step(data, 'shots', {
       kind: 'video',
       title: '可以生成镜头视频了',
       detail: '只提交已经有首帧、还没有视频的镜头。确认费用后才开始。',

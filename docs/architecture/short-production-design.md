@@ -167,9 +167,9 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 - `CharacterPane.load` 并行拉取 `GET /bgssai/user/assets/consistency-panel` 与 `GET /bgssai/user/look-libraries/list`，卡片存入定妆库、上传照片、补齐角度或锁定造型后同步刷新可选列表。
 - `LibraryLookPicker` 移除跳转离开作品页的「管理定妆库 / 管理场景库 / 管理道具库」链接，卡内只保留一条选用路径：行首展示当前所选条目（`matchSelectedLookValue` 按卡片 `look_reference` 在 `buildLibraryLookOptions` 聚合选项中命中，未命中写「未从库中选择」），展开后为平铺缩略图面板，按分组切换且展开时默认回到当前条目所在分组，支持按条目名或分组名跨分组搜索；当前条目标「使用中」且不可重复选用，点其他条目的选用按钮触发 `apply-look` 锁定主图并绑定各面，封面图本身不触发选用。
 
-## 定妆步与场景步拆分（九步，2026-11-17）
+## 工作台环节与镜头制作
 
-- 工作台主流程由八步改九步：`4 looks（定妆）` 只计角色与道具的未锁定卡，新增 `5 scenes（场景）` 单独计场景卡（`unlockedLooks` / `unlockedScenes`），之后才是拆镜；步骤总数一律取 `VIDEO_PATH_STEPS.length`，不再写死 8。
+- 工作台主流程共七步：`4 looks（定妆）` 只计角色与道具的未锁定卡，新增 `5 scenes（场景）` 单独计场景卡（`unlockedLooks` / `unlockedScenes`），第 6 步统一处理拆镜、运镜、首帧与镜头视频，第 7 步为成片。步骤总数取 `VIDEO_PATH_STEPS.length`。
 - 核心工作区新增 `scenes` 页签（`/works/:work_id/scenes`）：`CharacterPane` 按分区渲染 — `characters` 渲染角色卡 + 道具卡，`scenes` 只渲染场景卡 — 分区内的待锁定汇总与一键锁定按各自分区计；镜头拦截原因含「场景」时修复入口跳 `scenes`，其余定妆类仍落 `characters`。
 - `SCENE_PORTRAIT` 进行中停在场景步（`scenePortraitRunning`）；首页粗粒度六环节与 `look_total` / `look_locked` 聚合口径不变（仍含全部三类卡）。
 

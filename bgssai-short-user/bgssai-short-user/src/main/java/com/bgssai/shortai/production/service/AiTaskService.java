@@ -175,6 +175,9 @@ public class AiTaskService {
             }
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("shot_id", shot.getShotId());
+            if ("VIDEO".equals(type) || autoNext == 1) {
+                request.put("camera_move", shot.getCameraMove());
+            }
             request.put("duration_sec", shot.getShotDurationSec() == null ? 3 : shot.getShotDurationSec());
             if (req.getModelCode() != null && !req.getModelCode().isBlank()) {
                 request.put("model_code", req.getModelCode().trim());

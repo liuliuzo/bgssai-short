@@ -120,7 +120,10 @@ class OfficialShotVideoServiceTest {
         Map<String, Object> firstSubmit = (Map<String, Object>) service.submit(submit).getResult();
         verify(queue, never()).enqueue(any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), any());
         ArgumentCaptor<String> batchCaptor = ArgumentCaptor.forClass(String.class);
-        verify(imageToVideo).enqueueForShot(eq(shot), eq("frame-1"), anyString(), anyInt(), batchCaptor.capture());
+        ArgumentCaptor<String> prompt = ArgumentCaptor.forClass(String.class);
+        verify(imageToVideo).enqueueForShot(eq(shot), eq("frame-1"), prompt.capture(), anyInt(), batchCaptor.capture());
+        assertTrue(prompt.getValue().contains("向右摇镜"));
+        assertTrue(prompt.getValue().contains("对峙"));
         assertEquals(firstSubmit.get("batch_id"), batchCaptor.getValue());
         ArgumentCaptor<ShortShot> patch = ArgumentCaptor.forClass(ShortShot.class);
         verify(shots).updateByExampleSelective(patch.capture(), any());
@@ -152,6 +155,7 @@ class OfficialShotVideoServiceTest {
                     Map<String, Object> request = invocation.getArgument(6);
                     assertFalse(request.containsKey("resume_request_id"));
                     assertEquals("bgssai-video", request.get("model_code"));
+                    assertEquals("PAN_RIGHT", request.get("camera_move"));
                     return queued;
                 });
         AiTaskReq submit = req();
@@ -206,6 +210,7 @@ class OfficialShotVideoServiceTest {
         shot.setVideoAssetId("vid-old");
         shot.setFirstFrameAssetId("frame-1");
         shot.setImagePrompt("对峙");
+        shot.setCameraMove("PAN_RIGHT");
         shot.setShotDurationSec(6);
         return shot;
     }
