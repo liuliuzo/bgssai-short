@@ -10,7 +10,6 @@ import { labelOf, LOGIN_METHOD_LABEL } from '../../lib/displayLabels'
 import PhoneDialField from '../../components/PhoneDialField'
 import { composeApiPhone, DEFAULT_DIAL_CODE, validatePhoneParts } from '../../lib/phoneDial'
 import UserAiModelKeysCard from './UserAiModelKeysCard'
-import UserAiProviderKeysCard from './UserAiProviderKeysCard'
 
 const { Title, Text } = Typography
 
@@ -131,8 +130,6 @@ export default function AccountSettingsPage() {
           <Button type="link" onClick={() => navigate('/subscription')}>开通 / 续费 / 加量</Button>
         </Space>
       </Card>
-
-      <UserAiProviderKeysCard />
 
       <UserAiModelKeysCard />
 
