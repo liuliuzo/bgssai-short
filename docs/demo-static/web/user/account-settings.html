@@ -7,6 +7,19 @@
   <link rel="stylesheet" href="../assets/theme.css" />
   <link rel="stylesheet" href="../assets/short.css" />
   <link rel="stylesheet" href="../assets/liquid-glass.css" />
+  <style>
+    .model-state { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; }
+    .model-switch {
+      appearance: none; width: 28px; height: 16px; margin: 0; padding: 2px; border: 0;
+      box-sizing: border-box; border-radius: 8px; background: var(--muted); cursor: pointer;
+    }
+    .model-switch::before {
+      content: ""; display: block; width: 12px; height: 12px; border-radius: 50%; background: white;
+    }
+    .model-switch:checked { background: var(--brand); }
+    .model-switch:checked::before { transform: translateX(12px); }
+    .model-switch:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  </style>
 </head>
 <body>
 <div class="app">
@@ -69,9 +82,13 @@
         <table>
           <thead><tr><th>能力</th><th>供应商</th><th>模型</th><th>状态</th><th>操作</th></tr></thead>
           <tbody>
-            <tr><td>文本</td><td>DeepSeek</td><td>DeepSeek Chat</td><td>使用中</td><td><button class="btn btn-sm">停用</button></td></tr>
-            <tr><td>文本</td><td>BGSSAI</td><td>BGSSAI Chat</td><td>停用</td><td><button class="btn btn-sm">使用此模型</button></td></tr>
-            <tr><td>图片</td><td>BGSSAI</td><td>BGSSAI Image</td><td>使用中</td><td><button class="btn btn-sm">停用</button></td></tr>
+            <tr><td>文本</td><td>DeepSeek</td><td>DeepSeek Chat</td>
+              <td><label class="model-state"><input type="checkbox" role="switch" class="model-switch" name="text" aria-label="启用 DeepSeek Chat" checked /><span>默认模型</span></label></td>
+              <td><button class="btn btn-sm">编辑</button> <button class="btn btn-sm">移除</button></td></tr>
+            <tr><td>文本</td><td>BGSSAI</td><td>BGSSAI Chat</td>
+              <td><label class="model-state"><input type="checkbox" role="switch" class="model-switch" name="text" data-platform aria-label="启用 BGSSAI Chat" /><span>备用</span></label></td><td></td></tr>
+            <tr><td>图片</td><td>BGSSAI</td><td>BGSSAI Image</td>
+              <td><label class="model-state"><input type="checkbox" role="switch" class="model-switch" name="image" data-platform aria-label="启用 BGSSAI Image" checked /><span>默认模型</span></label></td><td></td></tr>
           </tbody>
         </table>
         <details><summary>添加模型</summary>
@@ -122,5 +139,20 @@
     </div>
   </main>
 </div>
+<script>
+  const modelSwitches = Array.from(document.querySelectorAll('.model-switch'));
+  for (const control of modelSwitches) {
+    control.addEventListener('change', () => {
+      const group = modelSwitches.filter(item => item.name === control.name);
+      const platform = group.find(item => item.hasAttribute('data-platform'));
+      if (control === platform) platform.toggleAttribute('data-suppressed', !control.checked);
+      const selected = control.checked ? control : (platform.hasAttribute('data-suppressed') ? null : platform);
+      for (const item of group) {
+        item.checked = item === selected;
+        item.nextElementSibling.textContent = item.checked ? '默认模型' : '备用';
+      }
+    });
+  }
+</script>
 </body>
 </html>
