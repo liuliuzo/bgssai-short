@@ -4,6 +4,7 @@ import productionApi from '../../api/production'
 import featuresApi from '../../api/features'
 import { friendlyFailReason } from '../../lib/displayLabels'
 import {
+  VIDEO_PATH_STEPS,
   buildStepItems,
   buildVideoPathInput,
   resolveVideoPath,
@@ -248,7 +249,7 @@ export default function ProductionGuide({
         const card = cards.find((row) => (row.character_id || row.scene_card_id) === look.id)
         const assetId = card?.candidate_list?.[0]?.asset_id
         if (!assetId) {
-          message.warning('定妆图还没回到当前定妆项上，请在定妆区点击选定')
+          message.warning(step.key === 'scenes' ? '参考图还没回到当前场景上，请在场景区点击选定' : '定妆图还没回到当前定妆项上，请在定妆区点击选定')
           await finish(undefined, prevKey)
           return
         }
@@ -313,17 +314,17 @@ export default function ProductionGuide({
     : 'video-path-badge'
   const badgeText = step
     ? (step.allDone
-      ? '全流程已完成（8/8）'
+      ? `全流程已完成（${VIDEO_PATH_STEPS.length}/${VIDEO_PATH_STEPS.length}）`
       : step.waiting
-        ? `当前环节：第 ${step.stepNo}/8 步 · ${step.stepLabel}（生成中）`
-        : `当前环节：第 ${step.stepNo}/8 步 · ${step.stepLabel}`)
+        ? `当前环节：第 ${step.stepNo}/${VIDEO_PATH_STEPS.length} 步 · ${step.stepLabel}（生成中）`
+        : `当前环节：第 ${step.stepNo}/${VIDEO_PATH_STEPS.length} 步 · ${step.stepLabel}`)
     : '当前环节：读取中'
 
   return (
     <section className="video-path" aria-label="出视频步骤">
       <div className="video-path-head">
         <span className={badgeClass}>{badgeText}</span>
-        {step ? <span className="video-path-count">{`已完成 ${step.doneKeys.length}/8 步`}</span> : null}
+        {step ? <span className="video-path-count">{`已完成 ${step.doneKeys.length}/${VIDEO_PATH_STEPS.length} 步`}</span> : null}
       </div>
       <ol className="video-path-steps">
         {items.map((item) => {

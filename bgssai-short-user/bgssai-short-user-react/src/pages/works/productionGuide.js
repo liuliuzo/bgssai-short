@@ -40,13 +40,14 @@ export const VIDEO_PATH_STEPS = [
   { key: 'script', stepNo: 2, label: '剧本', tab: 'script' },
   { key: 'ready', stepNo: 3, label: '定稿', tab: 'script' },
   { key: 'looks', stepNo: 4, label: '定妆', tab: 'characters' },
-  { key: 'shots', stepNo: 5, label: '拆镜', tab: 'storyboard' },
-  { key: 'frame', stepNo: 6, label: '首帧', tab: 'storyboard' },
-  { key: 'video', stepNo: 7, label: '视频', tab: 'storyboard' },
-  { key: 'film', stepNo: 8, label: '成片', tab: 'compose' },
+  { key: 'scenes', stepNo: 5, label: '场景', tab: 'scenes' },
+  { key: 'shots', stepNo: 6, label: '拆镜', tab: 'storyboard' },
+  { key: 'frame', stepNo: 7, label: '首帧', tab: 'storyboard' },
+  { key: 'video', stepNo: 8, label: '视频', tab: 'storyboard' },
+  { key: 'film', stepNo: 9, label: '成片', tab: 'compose' },
 ]
 
-export const CORE_STUDIO_TABS = new Set(['script', 'characters', 'storyboard', 'compose'])
+export const CORE_STUDIO_TABS = new Set(['script', 'characters', 'scenes', 'storyboard', 'compose'])
 
 export const AUX_STUDIO_TOOLS = [
   { key: 'source', label: '原著导入' },
@@ -86,6 +87,22 @@ export function isCardLocked(row) {
   return row?.card_status === 'LOCKED' && text(row?.ref_image_asset_id) !== ''
 }
 
+function unlockedSceneCards(rows) {
+  const list = []
+  for (const row of rows || []) {
+    if (isCardLocked(row)) continue
+    const id = text(row?.scene_card_id)
+    if (!id) continue
+    list.push({
+      kind: 'scene',
+      id,
+      name: text(row.card_name) || '未命名',
+      candidateId: text((row.candidate_list || [])[0]?.asset_id),
+    })
+  }
+  return list
+}
+
 export function unlockedLooks(panel) {
   const list = []
   for (const row of panel?.character_list || []) {
@@ -99,18 +116,11 @@ export function unlockedLooks(panel) {
       candidateId: text((row.candidate_list || [])[0]?.asset_id),
     })
   }
-  for (const row of [...(panel?.scene_list || []), ...(panel?.prop_list || [])]) {
-    if (isCardLocked(row)) continue
-    const id = text(row?.scene_card_id)
-    if (!id) continue
-    list.push({
-      kind: 'scene',
-      id,
-      name: text(row.card_name) || '未命名',
-      candidateId: text((row.candidate_list || [])[0]?.asset_id),
-    })
-  }
-  return list
+  return [...list, ...unlockedSceneCards(panel?.prop_list)]
+}
+
+export function unlockedScenes(panel) {
+  return unlockedSceneCards(panel?.scene_list)
 }
 
 function running(tasks, pred) {
@@ -135,12 +145,14 @@ export function buildVideoPathInput({ outline, script, panel, shots, tasks, epis
     scriptRunning: episode?.script_status === 'GENERATING'
       || running(tasks, (row) => row.target_type === 'SCRIPT' && sameEpisode(row)),
     looks: unlockedLooks(panel),
+    sceneRefs: unlockedScenes(panel),
     shots: shotRows,
     shotCount: shotRows.length,
     videoCount: shotRows.filter(shotHasVideo).length,
     imageShotRunning: running(tasks, (row) => row.target_type === 'SHOT' && row.task_type === 'IMAGE' && sameEpisode(row)),
     videoShotRunning: running(tasks, (row) => row.target_type === 'SHOT' && row.task_type === 'VIDEO' && sameEpisode(row)),
     portraitRunning: running(tasks, (row) => row.target_type === 'PORTRAIT' || row.target_type === 'SCENE_PORTRAIT'),
+    scenePortraitRunning: running(tasks, (row) => row.target_type === 'SCENE_PORTRAIT'),
     composeStatus: episode?.compose_status || 'NONE',
   }
 }
@@ -197,6 +209,7 @@ export function resolveViewingStageKey({ activeTab, requestedStage, currentStep,
   if (currentStep?.tab === activeTab) return currentStep.key
   if (activeTab === 'script') return outlineCount > 0 ? 'script' : 'outline'
   if (activeTab === 'characters') return 'looks'
+  if (activeTab === 'scenes') return 'scenes'
   if (activeTab === 'storyboard') return 'shots'
   if (activeTab === 'compose') return 'film'
   return null
@@ -310,6 +323,36 @@ export function resolveVideoPath(input) {
       title: `先给「${first.name}」定妆`,
       detail: `还没定妆的有 ${names}。会出 2 张并锁定第一张。没锁定的卡，后面的出图和出视频都会失败。`,
       action: `给「${first.name}」出定妆`,
+    })
+  }
+
+  const sceneRefs = Array.isArray(data.sceneRefs) ? data.sceneRefs : []
+  if (sceneRefs.length) {
+    if (data.scenePortraitRunning) {
+      return step(data, 'scenes', {
+        kind: 'wait',
+        waiting: true,
+        title: '场景参考图正在生成',
+        detail: '生成完再锁定。没锁定的场景，出图和出视频都会失败。',
+      })
+    }
+    const first = sceneRefs[0]
+    const names = sceneRefs.slice(0, 3).map((item) => item.name).join('、')
+    if (first.candidateId) {
+      return step(data, 'scenes', {
+        kind: 'lock',
+        look: first,
+        title: `锁定「${first.name}」的场景参考图`,
+        detail: `还没锁定的场景有 ${names}。已有图的先锁定，不用再花钱。`,
+        action: `锁定「${first.name}」`,
+      })
+    }
+    return step(data, 'scenes', {
+      kind: 'portrait',
+      look: first,
+      title: `先给「${first.name}」出场景参考图`,
+      detail: `还没锁定的场景有 ${names}。会出 2 张并锁定第一张。没锁定的场景，后面的出图和出视频都会失败。`,
+      action: `给「${first.name}」出参考图`,
     })
   }
 

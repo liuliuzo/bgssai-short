@@ -331,6 +331,19 @@ test('WorkStudio 用到的 mediaUrl 助手必须全部导入，避免角色页�
   }
 })
 
+test('场景卡独立成 scenes 页签，步骤总数不再写死 8', () => {
+  const dir = path.dirname(fileURLToPath(import.meta.url))
+  const studioSource = fs.readFileSync(path.join(dir, '..', 'works', 'WorkStudio.jsx'), 'utf8')
+  const guideSource = fs.readFileSync(path.join(dir, '..', 'works', 'ProductionGuide.jsx'), 'utf8')
+  assert.match(studioSource, /effectiveTab === 'scenes'/)
+  assert.match(studioSource, /section="scenes"/)
+  assert.match(studioSource, /section="characters"/)
+  assert.doesNotMatch(studioSource, /8\/8|\/8 \}/)
+  assert.doesNotMatch(guideSource, /8\/8|\/8 步/)
+  assert.match(studioSource, /VIDEO_PATH_STEPS\.length/)
+  assert.match(guideSource, /VIDEO_PATH_STEPS\.length/)
+})
+
 function solid(width, height, value) {
   const data = new Uint8ClampedArray(width * height * 4)
   for (let i = 0; i < data.length; i += 4) {

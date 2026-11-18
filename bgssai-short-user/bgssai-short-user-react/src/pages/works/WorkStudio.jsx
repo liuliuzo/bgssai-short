@@ -20,6 +20,7 @@ import ProductionGuide from './ProductionGuide.jsx'
 import {
   AUX_STUDIO_TOOLS,
   CORE_STUDIO_TABS,
+  VIDEO_PATH_STEPS,
   resolveScriptRhythmScore,
   resolveViewingStageKey,
   scriptReadyDecision,
@@ -771,7 +772,8 @@ function CardReference({ reference, refImageUrl, candidates, selectedAssetId, bu
   )
 }
 
-function CharacterPane({ work, onFlowChange, onJumpTab }) {
+function CharacterPane({ work, section = 'characters', onFlowChange, onJumpTab }) {
+  const isScenes = section === 'scenes'
   const [chars, setChars] = useState([])
   const [scenes, setScenes] = useState([])
   const [props, setProps] = useState([])
@@ -1068,7 +1070,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
     setLockingAll(true)
     try {
       let locked = 0
-      for (const row of chars) {
+      for (const row of (isScenes ? [] : chars)) {
         if (row.card_status === 'LOCKED') continue
         const first = (row.candidate_list || []).find((item) => isRealPhotoUrl(item.file_url))
         if (first?.asset_id) {
@@ -1076,7 +1078,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           if (data?.success) locked += 1
         }
       }
-      for (const row of [...scenes, ...props]) {
+      for (const row of (isScenes ? scenes : props)) {
         if (row.card_status === 'LOCKED') continue
         const first = (row.candidate_list || []).find((item) => isRealPhotoUrl(item.file_url))
         if (first?.asset_id) {
@@ -1093,11 +1095,9 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
     }
   }
 
-  const cardSummary = summarizeConsistencyCards({
-    character_list: chars,
-    scene_list: scenes,
-    prop_list: props,
-  })
+  const cardSummary = summarizeConsistencyCards(isScenes
+    ? { scene_list: scenes }
+    : { character_list: chars, prop_list: props })
 
   const modelSelect = (
     <Select
@@ -1112,13 +1112,14 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <div>
-        <Title level={5} style={{ margin: 0 }}>角色定妆与场景参考图</Title>
+        <Title level={5} style={{ margin: 0 }}>{isScenes ? '场景参考图' : '角色定妆与道具参考'}</Title>
       </div>
+      <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
       {cardsReady && cardSummary.totalCards === 0 ? (
         <Alert
           type="info"
           showIcon
-          message="暂无角色、场景或道具"
+          message={isScenes ? '暂无场景' : '暂无角色或道具'}
           action={(
             <Space>
               <Button size="small" type="primary" onClick={() => onJumpTab?.('script')}>去剧本与定稿</Button>
@@ -1150,9 +1151,12 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           type="success"
           showIcon
           message={`全部 ${cardSummary.totalCards} 项已锁定`}
-          action={<Button size="small" type="primary" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>}
+          action={isScenes
+            ? <Button size="small" type="primary" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>
+            : <Button size="small" type="primary" onClick={() => onJumpTab?.('scenes')}>去场景参考</Button>}
         />
       ) : null}
+      {!isScenes ? (
       <Card title="角色卡" extra={<Space>{modelSelect}<Button onClick={load}>刷新</Button></Space>}>
         <Form form={form} layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
           await productionApi.createCharacter({ work_id: work.work_id, ...v })
@@ -1164,7 +1168,6 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           <Form.Item name="appearance_prompt"><Input placeholder="外观描述" style={{ width: 220 }} /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
-        <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
         {!cardsReady ? <LibrarySkeleton /> : null}
         {cardsReady && !chars.length ? <Text type="secondary">暂无角色</Text> : null}
         {cardsReady ? chars.map((row) => {
@@ -1295,7 +1298,9 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           )
         }) : null}
       </Card>
-      <Card title="场景卡">
+      ) : null}
+      {isScenes ? (
+      <Card title="场景卡" extra={<Space>{modelSelect}<Button onClick={load}>刷新</Button></Space>}>
         <Form layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
           await productionApi.createScene({ work_id: work.work_id, card_type: 'SCENE', ...v })
           load()
@@ -1365,6 +1370,8 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           )
         }) : null}
       </Card>
+      ) : null}
+      {!isScenes ? (
       <Card title="道具卡">
         <Form form={propForm} layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
           await productionApi.createScene({ work_id: work.work_id, card_type: 'PROP', ...v })
@@ -1436,6 +1443,7 @@ function CharacterPane({ work, onFlowChange, onJumpTab }) {
           )
         }) : null}
       </Card>
+      ) : null}
       <Modal
         title={portrait ? `确认生成「${portrait.title || ''}」` : '确认生成'}
         open={!!portrait}
@@ -3356,7 +3364,10 @@ export default function WorkStudio() {
     }
     const effectiveTab = active || 'script'
     if (effectiveTab === 'characters') {
-      return <CharacterPane work={work} onFlowChange={handleFlowChange} onJumpTab={jumpTab} />
+      return <CharacterPane work={work} section="characters" onFlowChange={handleFlowChange} onJumpTab={jumpTab} />
+    }
+    if (effectiveTab === 'scenes') {
+      return <CharacterPane work={work} section="scenes" onFlowChange={handleFlowChange} onJumpTab={jumpTab} />
     }
     if (effectiveTab === 'storyboard') {
       return (
@@ -3456,8 +3467,8 @@ export default function WorkStudio() {
           ) : resolvedStep ? (
             <Tag color={resolvedStep.allDone ? 'success' : 'processing'}>
               {resolvedStep.allDone
-                ? '本集进度：8/8 已完成'
-                : `本集环节：${resolvedStep.stepNo}/8 ${resolvedStep.stepLabel}`}
+                ? `本集进度：${VIDEO_PATH_STEPS.length}/${VIDEO_PATH_STEPS.length} 已完成`
+                : `本集环节：${resolvedStep.stepNo}/${VIDEO_PATH_STEPS.length} ${resolvedStep.stepLabel}`}
             </Tag>
           ) : null
         ) : null}
