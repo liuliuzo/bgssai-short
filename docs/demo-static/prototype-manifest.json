@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "b5fecdc77bb1c83f26b381fedcabc80ee43502489ea92c820b03b2380de0b7eb",
-  "code_contract_digest": "4e967febde162f760b35ad99fee6b92a85ac706a9039c48910f82f2e96f7e478",
+  "prototype_bundle_digest": "573572e1b0008678fe56739d3882c84d9914ca9b6edb0ce00d91dad53f64e963",
+  "code_contract_digest": "3f3bf539a73ba19342eb0c206a46e63bf8e341bedaa3a30f79bd2ecef72e292e",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -533,15 +533,15 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/home/Home.jsx",
-      "sha256": "2d66b5f2116408740d347acff1871fd6c59ad45ae3d8563cbf24e0c562787134"
+      "sha256": "aeef92ce567a73967e07212cf8cf195df662a4a020c118b209bba30dd8eeffd1"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.js",
-      "sha256": "d43190d186741e2f9997fe5ea22900fe973bade5184e9b46fd1a2ea2e37249e8"
+      "sha256": "53884bbbd1fe3fa9a879bdeb924b7912d12cc481b9b4c0ee95d39daffc126678"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/home/homeWorkbench.test.js",
-      "sha256": "5ad00deb90399c919afeed13331206cc48bfd1419a5a0781db32a531cf7033fb"
+      "sha256": "da6c33d2714ee4bd4899f7ffb6d6eeeab3c4f04c9ffb28fcbab71529d0ad3b6f"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/login/BotDownloadLayout.jsx",
@@ -2325,7 +2325,7 @@
     },
     {
       "path": "docs/demo-static/web/user/home.html",
-      "sha256": "f5c263078719894ab14e03176498b9fd03d565b7448d4831e96037d50ecd21a1",
+      "sha256": "218513a2d80a4ae8dd58c543268ca270a101542e81e73d704fc274f6e5eab13e",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",
