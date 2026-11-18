@@ -78,7 +78,7 @@ export function selectPendingVideoShotIds(shots) {
 
 export function resolveRepairAction(errorMessage) {
   const msg = String(errorMessage || '')
-  if (/场景/.test(msg)) {
+  if (/场景/.test(msg) && !/角色/.test(msg)) {
     return { label: '去场景参考处理', tab: 'scenes' }
   }
   if (/定妆|锁定|角色|道具|占位图/.test(msg)) {

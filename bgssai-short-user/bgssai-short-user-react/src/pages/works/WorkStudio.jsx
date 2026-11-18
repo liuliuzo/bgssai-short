@@ -2236,6 +2236,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
         const hasFrame = hasRealFirstFrame(row)
         const canRegenVideo = shotOffersVideoRegenerate(row, playback)
         const dialogue = shotDialogueLine(row)
+        const blockedRepair = resolveRepairAction(row.block_reason || '')
         const toolsExpanded = Boolean(expandedShotTools[row.shot_id])
         return (
         <Card
@@ -2289,8 +2290,8 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, onReloa
                   style={{ marginBottom: 8 }}
                   message={row.block_reason || '该镜头引用的角色、场景或道具尚未锁定参考图，暂时无法出图和生成视频'}
                   action={(
-                    <Button size="small" type="primary" ghost onClick={() => onJumpTab?.('characters')}>
-                      去角色定妆锁定
+                    <Button size="small" type="primary" ghost onClick={() => onJumpTab?.(blockedRepair.tab || 'characters')}>
+                      {blockedRepair.tab === 'scenes' ? '去场景参考锁定' : '去角色定妆锁定'}
                     </Button>
                   )}
                 />
