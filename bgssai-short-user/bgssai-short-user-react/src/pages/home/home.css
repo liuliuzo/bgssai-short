@@ -84,41 +84,78 @@
   overflow-wrap: anywhere;
 }
 
-.home-episode-stages {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+/* One row per episode. Height is capped at 4 full rows plus a half-row peek,
+   so the card stays the same size whether a work has 4 or 80 episodes and
+   the remaining episodes scroll inside the list instead of stretching it. */
+.home-episode-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 144px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
-.home-episode-chip {
+.home-episode-list li + li {
+  border-top: 1px solid #f1f5f9;
+}
+
+.home-episode-row {
   appearance: none;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 12px;
-  line-height: 1.4;
-  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 0;
   border-radius: 6px;
+  background: transparent;
+  text-align: left;
   cursor: pointer;
 }
 
-.home-episode-chip.is-done {
+.home-episode-row:hover {
+  background: #f8fafc;
+}
+
+.home-episode-row:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: -2px;
+}
+
+.home-episode-no {
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-episode-stage {
+  flex: none;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 1px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.home-episode-row.is-done .home-episode-stage {
   background: #f0fdf4;
   border-color: #bbf7d0;
   color: #166534;
 }
 
-.home-episode-chip.is-active {
+.home-episode-row.is-active .home-episode-stage {
   background: #eff6ff;
   border-color: #bfdbfe;
   color: #1d4ed8;
-}
-
-.home-episode-chip.is-todo {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #64748b;
 }
 
 .home-work-actions {
