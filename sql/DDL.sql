@@ -1485,6 +1485,7 @@ CREATE TABLE `user_ai_setting` (
 CREATE TABLE `user_ai_model_key` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
   `key_id` VARCHAR(64) NOT NULL COMMENT '密钥配置业务标识',
+  `key_name` VARCHAR(64) DEFAULT NULL COMMENT '用户自定义密钥名称',
   `user_id` VARCHAR(64) NOT NULL COMMENT '用户标识',
   `modality_type` VARCHAR(16) NOT NULL COMMENT '模型大类：TEXT/IMAGE/VIDEO/AUDIO',
   `ability_type` VARCHAR(16) NOT NULL COMMENT '能力类型：TEXT/IMAGE/VIDEO/VOICE/ASR/MUSIC',

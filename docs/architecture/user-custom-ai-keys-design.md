@@ -21,6 +21,7 @@
 | `id` | `BIGINT` | `NOT NULL AUTO_INCREMENT PK` | 主键 |
 | `key_id` | `VARCHAR(64)` | `NOT NULL UNIQUE` | 业务标识（`umk-...`） |
 | `user_id` | `VARCHAR(64)` | `NOT NULL` | 用户标识 |
+| `key_name` | `VARCHAR(64)` | `NULL` | 该密钥的展示名称，未命名的历史行显示掩码 |
 | `modality_type` | `VARCHAR(16)` | `NOT NULL` | `TEXT` / `IMAGE` / `VIDEO` / `AUDIO` |
 | `ability_type` | `VARCHAR(16)` | `NOT NULL` | `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` |
 | `provider_code` | `VARCHAR(32)` | `NOT NULL` | `XAI` / `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` |
@@ -34,6 +35,8 @@
 | `last_check_status` | `VARCHAR(16)` | `NULL` | `OK` / `FAILED` |
 | `last_check_time` | `DATETIME` | `NULL` | 最近连通检测时间 |
 | `del_flag` / `creator` / `modifier` / `gmt_create` / `gmt_modified` | 标准六列 | 见 `sql/DDL.sql` | 审计与逻辑删除 |
+
+创建时为每个模型配置分配独立的 `key_id`。备用配置以停用状态写入；选择某行时按用户、能力和该 ID 切换默认。查看余额使用该行凭据，同一供应商下名称或模型编码相同也可独立操作。已有库在部署前执行 `sql/upgrade/20261118_model_key_name.sql`。
 
 ## 2. 解析、调度与零额度链路
 
@@ -65,6 +68,7 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
      -> ShortTaskSettlementService.settle：cost = 0，跳过 QuotaConsumeService.consume，写 ai_usage_record(cost_cent=0)
 ```
 
+- 同步估费后的首帧转视频任务保存已解析的自有模型 ID，后续阶段按该 ID 校验当前用户、能力与启用状态。切换密钥后，已停用的旧 ID 拒绝执行。
 - **异步重试与视频/图片任务防重提交**：各异步供应商在提交取得任务标识后立即写入 `short_ai_task.request_json`（不写入 `api_key` 或 `secret_key`），Worker 重跑同一任务时直接续查原任务：
   - `XAI`：`xai_video_request_id`
   - `MINIMAX`：`minimax_video_task_id`

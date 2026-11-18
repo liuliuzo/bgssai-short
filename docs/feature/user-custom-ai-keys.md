@@ -10,6 +10,8 @@
   - 音频模型：`modality_type=AUDIO` -> 细分 `ability_type` 为 `VOICE`（配音合成）、`ASR`（语音转文字字幕校准）、`MUSIC`（背景音乐）。
 - 支持操作：
   - 单条新增、一键按供应商批量创建多模态配置、编辑（留空密钥则保留原值）、启停、设为同能力默认、删除、连通性测试。
+  - 同一供应商、能力与模型可保存多把密钥。为每把密钥填写可选名称（最多 64 字符），列表展示名称与掩码。测试、余额、编辑、删除和启用均定位到所选行。
+  - 单条与批量新增提供「保存后启用」。首次接入供应商默认勾选，再次接入同一供应商默认保存为备用。选择「使用此密钥」时只切换当前能力，例如切换文本 Key 后图片仍使用原 Key。
   - 多供应商混用：用户可按能力自由组合不同供应商（如 `DEEPSEEK` 文本 + `KLING` 或 `PIXVERSE` 视频 + `MINIMAX` 图片/配音/识别/背景音乐），系统按各能力默认（或前端指定）自有密钥路由。
 
 ## 2. 业务规则
@@ -19,6 +21,7 @@
    - 某一 `ability_type` 没有启用中的自有密钥、且用户未关闭该能力的自建模型时，模型列表展示并解析到该能力的 BGSSAI 自建（默认）模型（`bgssai-chat` / `bgssai-image` / `bgssai-video` / `bgssai-tts` / `bgssai-asr` / `bgssai-music`），不因缺少自有模型而拒绝生成。
    - 用户已关闭该能力的自建模型、且没有启用中的自有密钥时，该能力不可用。
    - 账号页只保留单个模型（自有或自建）的启用/停用，不设全局模式开关；首次新增密钥不开启任何全局模式。
+   - 自有密钥任务在提交时记录所选密钥 ID，首帧自动接视频分别记录两阶段的选项。执行前密钥已停用或删除时，任务报该密钥不可用，不能改扣另一把密钥。
    - `COMPOSE`（`ffmpeg-compose-v1`）属本机音视频合成工具，不走上述模型来源解析。
 2. **`only_user_key` 兼容**：字段与 `POST /bgssai/user/ai-model-keys/mode` 接口保留兼容，请求值忽略、响应恒为 `0`，不再参与模型解析；历史 `user_ai_setting.is_only_user_key = 1` 记录按统一规则处理。
 3. **零平台额度扣减**：
@@ -89,7 +92,7 @@
    - `XAI` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` 无可用的密钥级余额只读接口（Grok 仅管理密钥、OpenAI / Claude 仅管理员密钥可查），`balance_status=UNAVAILABLE`，`balance_list` 为空（前端显示「不支持查余额」）。查询失败为 `FAILED`（前端显示「查询失败」），不补 0。
 7. **同类型只启用一个，含 BGSSAI 自建模型**：
    - 同一用户、同一 `ability_type` 下，自有密钥与 BGSSAI 自建模型合计最多一条启用。自建模型为 `TEXT=bgssai-chat`、`IMAGE=bgssai-image`、`VIDEO=bgssai-video`、`VOICE=bgssai-tts`、`ASR=bgssai-asr`、`MUSIC=bgssai-music`。
-   - 启用一条自有密钥时，同能力其余自有密钥停用，该能力自建模型改为未启用。同一次批量新增里，同一能力只保留最后一条为启用。
+   - 启用一条自有密钥时，同能力其余自有密钥停用，该能力自建模型改为未启用。勾选「保存后启用」时，同一批次、同一能力只启用最后一条；未勾选则全部存为备用，当前选择保留。
    - 启用该能力的自建模型时，同能力自有密钥全部停用。
    - 关闭自建模型后记入 `user_ai_setting.suppressed_platform_abilities`，在用户再次启用该自建模型之前，该能力不回退到自建模型。
    - 停用或删除当前自有密钥后，不自动启用另一条自有密钥。该能力自建模型未被用户关闭时，自建模型恢复为启用。
@@ -115,12 +118,13 @@
 ## 4. 验收条目
 
 1. 用户在 `/account` 添加任意已支持供应商的 API Key 后不改变模型来源规则，账号页无全局模式开关；历史 `is_only_user_key = 1` 用户按统一规则处理。
-2. `GET /bgssai/user/ai-models/list` 与制作工作台各模态选择器同时显示已启用的自有模型（保留用户设置展示名与供应商真实名称）与 BGSSAI 自建模型；某能力没有已启用自有模型时使用 BGSSAI 自建模型，不因缺少自有模型返回 `4014`。
+2. 工作台按能力展示当前启用的自有模型，使用该模型行对应的密钥。该能力无启用的自有模型且自建模型可用时，使用 BGSSAI 自建模型。
 3. 可灵配置支持 Access Key + Secret Key 双密钥录入与掩码展示（`ak**** / sk****`），运行时动态签发 HS256 JWT 完成连通测试与图片/视频/配音生成。
 4. `MINIMAX` 覆盖 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 六种能力；`PIXVERSE` 覆盖 `VIDEO`（含图生/首尾帧过渡）；`DEEPSEEK` 覆盖 `TEXT`（含 `deepseek-chat` 与 `deepseek-reasoner`）。
 5. 多供应商混用（如 DeepSeek 文本 + 可灵或 PixVerse 视频 + MiniMax 配音与 BGM）在同一作品全流程可执行通过，任务与对账费用 `cost_cent = 0`。
 6. `OPENAI` 覆盖 `TEXT` / `IMAGE` / `ASR`；`ANTHROPIC` 覆盖 `TEXT`；`BGSSAI_TOKENHUB` 覆盖六种能力；`TENCENT_TOKENHUB` 覆盖 `TEXT`。两者均使用用户 Key、不扣平台额度，且密钥只发往各自产品的主机。
 7. 同一 `ability_type` 同时只有一条启用。启用自有密钥后，同能力其它自有密钥与 BGSSAI 自建模型均为未启用；启用 BGSSAI 自建模型后，同能力自有密钥均为未启用。
+8. 同一供应商的同一模型可同时保存「工作室」与「备用」两行。未勾选「保存后启用」时当前密钥保持启用；在备用行点击「使用此密钥」后，仅该能力改用备用行的凭据。
 
 ## 5. 厂商级 API Key（`user_ai_provider_key`）
 

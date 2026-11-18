@@ -144,6 +144,25 @@ class UserOwnedProviderKeyTest {
     }
 
     @Test
+    void sameOpenAiModelUsesTheSelectedRowCredentialEvenWithLegacyProviderKeys() {
+        UserAiModelKeyService modelKeys = mock(UserAiModelKeyService.class);
+        when(modelKeys.requirePlainApiKey("u-1", "umk-first")).thenReturn("first-test-key");
+        when(modelKeys.requirePlainApiKey("u-1", "umk-second")).thenReturn("second-test-key");
+        AtomicReference<Map<String, String>> headers = new AtomicReference<>();
+        OpenAiAiProvider provider = new OpenAiAiProvider(modelKeys, jsonClient(new AtomicReference<>(), headers,
+                "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}"));
+        UserAiProviderKeyService legacyKeys = mock(UserAiProviderKeyService.class);
+        provider.setUserAiProviderKeyService(legacyKeys);
+
+        for (String name : List.of("first", "second")) {
+            AiModelConfig model = userModel("TEXT", "OPENAI", "gpt-6-luna", "https://api.openai.com/v1", "umk-" + name);
+            provider.execute(request("TEXT", model, "test"));
+            assertEquals("Bearer " + name + "-test-key", headers.get().get("Authorization"));
+        }
+        verifyNoInteractions(legacyKeys);
+    }
+
+    @Test
     void openAiUserKeyUsesOfficialTextImageAndAsrEndpoints() throws Exception {
         UserAiModelKeyService modelKeys = mock(UserAiModelKeyService.class);
         when(modelKeys.requirePlainApiKey("u-1", "umk-oa")).thenReturn("oa-user-secret");

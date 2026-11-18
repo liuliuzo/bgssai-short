@@ -65,6 +65,7 @@
     "key_list": [
       {
         "key_id": "umk-1001",
+        "key_name": "工作室",
         "modality_type": "TEXT",
         "ability_type": "TEXT",
         "provider_code": "XAI",
@@ -117,6 +118,8 @@
 ```json
 {
   "provider_code": "KLING",
+  "key_name": "备用账户",
+  "activate_on_create": false,
   "base_url": "https://api-beijing.klingai.com",
   "api_key": "ak_...",
   "secret_key": "sk_...",
@@ -131,11 +134,11 @@
 }
 ```
 
-返回 `{ "result": { "only_user_key": 0, "created_count": 2, "key_list": [ ... ] } }`。请求中的 `only_user_key` 为兼容字段，忽略不读。
+返回 `{ "result": { "only_user_key": 0, "created_count": 2, "key_list": [ ... ] } }`。顶层 `key_name` 可选，最多 64 个字符，批量新增时复制到每条新记录。`activate_on_create` 省略时为 true；传 false 时新增行均为停用，当前启用项不变。请求中的 `only_user_key` 为兼容字段，忽略不读。
 
 ## POST /bgssai/user/ai-model-keys/update
 
-`api_key` 与 `secret_key` 可选，留空时保留已存密钥：
+`key_id` 定位当前用户的单条配置。同供应商同模型可有多个 ID。`key_name` 省略保留原名称，空字符串清除名称。`api_key` 与 `secret_key` 留空时保留已存密钥：
 
 ```json
 {

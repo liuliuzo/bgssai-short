@@ -149,10 +149,26 @@
               <td>DeepSeek</td>
               <td>DeepSeek Chat</td>
               <td>deepseek-chat</td>
-              <td>sk-d****8a1c</td>
+              <td>工作室<br><small>sk-d****8a1c</small></td>
               <td>110.00 元</td>
-              <td>启用</td>
+              <td><button type="button" class="btn btn-sm">停用</button></td>
               <td>默认</td>
+              <td>OK</td>
+              <td>
+                <button type="button" class="btn btn-sm">测试</button>
+                <button type="button" class="btn btn-sm">编辑</button>
+                <button type="button" class="btn btn-sm">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>文本模型 (TEXT)</td>
+              <td>DeepSeek</td>
+              <td>DeepSeek Chat</td>
+              <td>deepseek-chat</td>
+              <td>个人备用<br><small>sk-d****3f9b</small></td>
+              <td>38.00 元</td>
+              <td><button type="button" class="btn btn-sm">使用此密钥</button></td>
+              <td>-</td>
               <td>OK</td>
               <td>
                 <button type="button" class="btn btn-sm">测试</button>
@@ -329,6 +345,8 @@
           <input type="text" id="key-model-code-input" value="MiniMax-M2.5" placeholder="模型编码" />
           <input type="text" id="key-model-name-input" value="MiniMax M2.5" placeholder="展示名称" />
           <input type="url" id="key-base-url-input" value="https://api.minimaxi.com" placeholder="接口地址" />
+          <input type="text" maxlength="64" aria-label="密钥名称" placeholder="密钥名称（选填）" />
+          <label><input type="checkbox" /> 保存后启用</label>
           <input type="password" id="key-secret-input" placeholder="API Key / Access Key" />
           <input type="password" id="key-secret-key-input" placeholder="Secret Key（可灵填写）" />
           <button type="button" class="btn btn-sm" id="key-test-btn">测试连接</button>
