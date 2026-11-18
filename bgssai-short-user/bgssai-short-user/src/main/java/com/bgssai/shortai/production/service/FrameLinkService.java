@@ -25,6 +25,7 @@ import com.bgssai.shortai.production.dto.FrameLinkDtos.FrameLinkBatchReq;
 import com.bgssai.shortai.production.dto.FrameLinkDtos.FrameLinkSaveReq;
 import com.bgssai.shortai.production.dto.FrameLinkDtos.LastFrameGenerateReq;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.PromptComposer;
 
 /**
  * 首尾帧衔接：让相邻镜头接得上，同时明确「哪里不接」。
@@ -127,7 +128,7 @@ public class FrameLinkService {
 
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("shot_id", shot.getShotId());
-        request.put("last_frame_prompt", prompt);
+        request.put("last_frame_prompt", PromptComposer.withVisualStyle(prompt, PromptComposer.shotVisualStyle(shot)));
         request.put("model_code", req.getModelCode());
         ShortAiTask task = aiTaskQueue.enqueue(shot.getUserId(), shot.getWorkId(), shot.getEpisodeId(),
                 "IMAGE", "LAST_FRAME", shot.getShotId(), request, null, 0, req.getModelCode());

@@ -29,6 +29,7 @@ import {
   shotDialogueLine,
   shotDrawerProps,
   shotPresetGroups,
+  toggleShotVisualStyle,
   shotSpokenText,
   shotTimingLabel,
   shotVideoDialogProps,
@@ -108,7 +109,7 @@ test('selected model title is the full label', () => {
 
 test('preset groups keep continuity choices readable and separate from frame link', () => {
   const groups = shotPresetGroups()
-  assert.deepEqual(groups.map((group) => group.label), ['风格', '视角', '衔接写法'])
+  assert.deepEqual(groups.map((group) => group.label), ['画面风格', '视角', '衔接写法'])
   const continuity = groups.find((group) => group.key === 'continuity')
   assert.ok(continuity.items.some((item) => item.label.includes('同场次首尾帧')))
   assert.ok(continuity.items.some((item) => item.label.includes('跨场景硬切')))
@@ -120,6 +121,18 @@ test('preset groups keep continuity choices readable and separate from frame lin
   const once = appendPreset('谁：沈知微。', marker)
   assert.equal(appendPreset(once, marker), once)
   assert.equal(presetIsActive(once, marker), true)
+})
+
+test('shot visual style replaces only recognized preset tags on explicit selection', () => {
+  const styles = shotPresetGroups().find((group) => group.key === 'style').items
+  assert.deepEqual(styles.map((s) => s.label), ['真人写实', '二维动画', '三维动画', '水墨动画', '黑白胶片'])
+  const narrative = '都市逆袭，国风修仙。【基调：悬疑冷调】，【机位：低角度】'
+  const old = narrative + '，【基调：都市逆袭 / 豪门爽剧】，【基调：国风修仙 / 东方玄幻】，【基调：悬疑暗黑 / 罪案反转】'
+  const selected = toggleShotVisualStyle(old, styles[1].marker)
+  assert.equal(selected, narrative + '，【画面风格：二维动画】')
+  assert.equal(toggleShotVisualStyle(selected, styles[3].marker), narrative + '，【画面风格：水墨动画】')
+  assert.equal(toggleShotVisualStyle(selected, styles[1].marker), narrative)
+  assert.equal(toggleShotVisualStyle(styles[0].marker, styles[0].marker), '')
 })
 
 test('known scene replaces 未写清场景 and does not invent one', () => {

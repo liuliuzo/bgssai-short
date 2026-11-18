@@ -8,10 +8,58 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.bgssai.shortai.model.ShortShot;
 
 class PromptComposerTest {
+
+    @ParameterizedTest
+    @ValueSource(strings = {"真人写实", "二维动画", "三维动画", "水墨动画", "黑白胶片"})
+    void explicitShotStyleOverridesWorkRenderingAndSurvivesRegeneratingPreviz(String style) {
+        ShortShot shot = shot();
+        String marker = "【画面风格：" + style + "】";
+        shot.setPrevizText("做什么：她推开门。【连贯：衣着不变】 " + marker);
+        String image = PromptComposer.compose(shot, "MODERN_URBAN");
+        assertTrue(image.startsWith(marker));
+        assertEquals(image.indexOf(marker), image.lastIndexOf(marker));
+        assertFalse(image.contains("现代都市写实"));
+        assertFalse(image.contains("photorealistic short drama"));
+        assertTrue(image.contains("固定不动"));
+        assertTrue(PromptComposer.previzText(shot).endsWith(marker));
+        String motion = PromptComposer.generationPrompt(shot, "VIDEO");
+        assertTrue(motion.startsWith(marker));
+        assertTrue(motion.contains("她推开门"));
+        assertTrue(motion.contains("【连贯：衣着不变】"));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> elements = (List<Map<String, Object>>) PromptComposer.check(shot, marker).get("element_list");
+        assertTrue(elements.stream().anyMatch(el -> "STYLE".equals(el.get("element")) && Integer.valueOf(1).equals(el.get("present_flag"))));
+    }
+
+    @Test
+    void unmarkedAndLegacyGenreNarrativeKeepTheExistingRendering() {
+        ShortShot shot = shot();
+        shot.setShotDesc("会议室里她推开门。【基调：悬疑暗黑 / 罪案反转】");
+        String image = PromptComposer.compose(shot, "MODERN_URBAN");
+        assertTrue(image.contains(shot.getShotDesc()));
+        assertTrue(image.contains("现代都市写实"));
+        assertTrue(image.contains("photorealistic short drama"));
+        assertEquals(shot.getShotDesc(), PromptComposer.generationPrompt(shot, "VIDEO"));
+    }
+
+    @Test
+    void reusingAnOldFramePromptDropsOnlyItsGeneratedWorkStyleAndRenderingDefaults() {
+        ShortShot shot = shot();
+        shot.setImagePrompt(PromptComposer.compose(shot, "MODERN_URBAN"));
+        shot.setPrevizText("【画面风格：三维动画】");
+        String frame = PromptComposer.generationPrompt(shot, "IMAGE");
+        assertTrue(frame.startsWith("【画面风格：三维动画】"));
+        assertFalse(frame.contains("现代都市写实"));
+        assertFalse(frame.contains("photorealistic"));
+        assertTrue(frame.contains(shot.getShotDesc()));
+        assertTrue(frame.contains("no watermark"));
+    }
 
     @Test
     void previzTextHasFiveElementsWithoutPromptJargon() {

@@ -60,6 +60,7 @@ export default function ProductionGuide({
   episode,
   refreshKey = 0,
   cameraSaves,
+  waitForShotDrafts,
   activeTab,
   viewingStageKey,
   onSelectStage,
@@ -289,6 +290,12 @@ export default function ProductionGuide({
           task_type: taskType,
           auto_next_flag: 0,
           model_code: model?.model_code,
+        }
+        try {
+          await waitForShotDrafts(body.shot_ids)
+        } catch (error) {
+          message.error(error.message || '画面描述保存失败')
+          return
         }
         if (taskType === 'VIDEO' && !await cameraSaves.waitFor(body.shot_ids)) return
         const { data: estRes } = await productionApi.estimateTasks(body)

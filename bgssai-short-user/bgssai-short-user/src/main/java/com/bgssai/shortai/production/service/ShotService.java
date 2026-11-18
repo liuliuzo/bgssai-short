@@ -226,6 +226,8 @@ public class ShotService {
         patch.setExtraPrompt(extra);
         ShortShot merged = new ShortShot();
         merged.setShotDesc(desc);
+        String editedStyle = PromptComposer.visualStyleMarker(req.getShotDesc());
+        merged.setPrevizText(editedStyle.isEmpty() ? shot.getPrevizText() : editedStyle);
         merged.setDialogueText(dialogue);
         merged.setExtraPrompt(extra);
         merged.setShotSize(req.getShotSize() == null ? shot.getShotSize() : req.getShotSize());

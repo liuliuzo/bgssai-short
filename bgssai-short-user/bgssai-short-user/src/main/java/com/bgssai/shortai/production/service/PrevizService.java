@@ -88,13 +88,14 @@ public class PrevizService {
     @Transactional
     public ApiResponse generateText(PrevizGenerateReq req) {
         ShortEpisode ep = workAccessService.requireEpisode(req == null ? null : req.getEpisodeId());
+        ShortWork work = workAccessService.requireWork(ep.getWorkId());
         List<ShortShot> shots = filterShots(ep.getEpisodeId(), req.getShotIdList());
         Map<String, String> sceneNames = sceneNamesByWork(ep.getWorkId());
         List<Map<String, Object>> updated = new ArrayList<>();
         ShortShot prev = null;
         for (ShortShot shot : shots) {
             String text = PromptComposer.previzText(shot, sceneName(sceneNames, shot));
-            String prompt = PromptComposer.compose(shot, null);
+            String prompt = PromptComposer.compose(shot, work.getVisualStyle());
             upsertPreviz(shot, "TEXT", text, null);
             patchShotLevel(shot, "TEXT", text, prompt);
             if (prev != null && obviousMismatch(prev, shot)) {
@@ -152,13 +153,20 @@ public class PrevizService {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "shot_id required");
         }
         ShortShot shot = requireShot(req.getShotId());
+        String priorStyle = PromptComposer.shotVisualStyle(shot);
         String text = req.getPrevizText() == null ? shot.getPrevizText() : req.getPrevizText();
+        shot.setPrevizText(text);
         if (text != null && !text.isBlank()) {
-            shot.setShotDesc(stripPrevizLabels(text));
+            shot.setShotDesc(PromptComposer.previzNarrative(text));
         }
         String prompt = req.getImagePrompt();
-        if (prompt == null || prompt.isBlank()) {
-            prompt = PromptComposer.compose(shot, null);
+        String selectedStyle = PromptComposer.shotVisualStyle(shot);
+        if (prompt == null || prompt.isBlank() || (prompt.equals(shot.getImagePrompt()) && !priorStyle.equals(selectedStyle))) {
+            String workStyle = selectedStyle.isEmpty()
+                    ? workAccessService.requireWork(shot.getWorkId()).getVisualStyle() : null;
+            prompt = PromptComposer.compose(shot, workStyle);
+        } else {
+            prompt = PromptComposer.withVisualStyle(prompt, selectedStyle);
         }
         upsertPreviz(shot, shot.getPrevizLevel() == null || "NONE".equals(shot.getPrevizLevel()) ? "TEXT"
                 : shot.getPrevizLevel(), text, null);
@@ -347,13 +355,6 @@ public class PrevizService {
             throw new ForbiddenException("shot not found");
         }
         return shot;
-    }
-
-    private static String stripPrevizLabels(String text) {
-        String t = text == null ? "" : text.trim();
-        t = t.replace("谁：", "").replace("在哪：", " ").replace("做什么：", " ").replace("怎么拍：", " ")
-                .replace("什么感觉：", " ").replace("台词：", " ");
-        return t.replaceAll("\\s+", " ").trim();
     }
 
     private static boolean obviousMismatch(ShortShot prev, ShortShot cur) {

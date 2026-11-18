@@ -16,6 +16,7 @@ import com.bgssai.shortai.mapper.ShortShotMapper;
 import com.bgssai.shortai.model.*;
 import com.bgssai.shortai.production.dto.ProductionDtos.AiTaskReq;
 import com.bgssai.shortai.production.support.ShortJson;
+import com.bgssai.shortai.production.support.PromptComposer;
 
 class VideoTaskRecoveryTest {
     final AiTaskService service = new AiTaskService();
@@ -107,10 +108,12 @@ class VideoTaskRecoveryTest {
 
     @Test void videoPromptRetainsStoryWhenStyleIsPresent() {
         shot.setShotDesc("A shopkeeper examines an old ticket"); shot.setExtraPrompt("warm amber light"); shot.setCameraMove("PUSH");
-        String prompt=ReflectionTestUtils.invokeMethod(ShortAiTaskWorker.class,"shotPrompt",shot,"VIDEO");
-        assertTrue(prompt.startsWith(shot.getShotDesc())); assertTrue(prompt.contains("warm amber light")); assertTrue(prompt.contains("PUSH"));
+        String prompt = PromptComposer.generationPrompt(shot, "VIDEO");
+        assertTrue(prompt.startsWith(shot.getShotDesc()));
+        assertTrue(prompt.contains("warm amber light"));
+        assertTrue(PromptComposer.withVideoCamera(prompt, shot.getCameraMove()).contains("缓缓推进"));
         shot.setShotDesc(""); shot.setImagePrompt("A rainy shop window");
-        prompt=ReflectionTestUtils.invokeMethod(ShortAiTaskWorker.class,"shotPrompt",shot,"VIDEO");
+        prompt = PromptComposer.generationPrompt(shot, "VIDEO");
         assertTrue(prompt.startsWith("A rainy shop window")); assertTrue(prompt.contains("warm amber light"));
     }
 }

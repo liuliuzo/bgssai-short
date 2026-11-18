@@ -170,6 +170,7 @@ public class OfficialShotVideoService {
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("shot_id", plan.shot.getShotId());
             request.put("camera_move", plan.shot.getCameraMove());
+            request.put("shot_prompt", PromptComposer.generationPrompt(plan.shot, "VIDEO"));
             request.put("duration_sec", plan.shot.getShotDurationSec() == null ? 5 : plan.shot.getShotDurationSec());
             request.put("model_code", userVideoModel.getModelId());
             return aiTaskQueue.enqueue(plan.shot.getUserId(), plan.shot.getWorkId(), plan.shot.getEpisodeId(),
@@ -181,6 +182,7 @@ public class OfficialShotVideoService {
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("shot_id", plan.shot.getShotId());
         request.put("camera_move", plan.shot.getCameraMove());
+        request.put("shot_prompt", PromptComposer.generationPrompt(plan.shot, "VIDEO"));
         request.put("duration_sec", plan.shot.getShotDurationSec() == null ? 3 : plan.shot.getShotDurationSec());
         request.put("model_code", OfficialVideoLane.MODEL);
         return aiTaskQueue.enqueue(plan.shot.getUserId(), plan.shot.getWorkId(), plan.shot.getEpisodeId(),
@@ -374,8 +376,11 @@ public class OfficialShotVideoService {
         if (base.isBlank()) {
             base = shot.getShotDesc() == null ? "" : shot.getShotDesc().trim();
         }
+        String marker = PromptComposer.shotVisualStyle(shot);
+        base = PromptComposer.withVisualStyle(base, marker);
         String text = ShotConsistency.leadWithAnchors(base, anchorText(shot));
         text = PromptComposer.withVideoCamera(text, shot.getCameraMove());
+        text = PromptComposer.withVisualStyle(text, marker);
         if (text.length() > 2000) {
             return text.substring(0, 2000);
         }

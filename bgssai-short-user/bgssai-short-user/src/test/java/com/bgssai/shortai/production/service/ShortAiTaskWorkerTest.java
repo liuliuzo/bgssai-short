@@ -456,6 +456,7 @@ class ShortAiTaskWorkerTest {
         shot.setWorkId("w-1");
         shot.setEpisodeId("e-1");
         shot.setShotDesc("沈知微转身");
+        shot.setPrevizText("后来改为推门 【画面风格：真人写实】");
         shot.setCharacterRefJson("[{\"character_id\":\"c-1\"}]");
         var character = new com.bgssai.shortai.model.ShortCharacter();
         character.setCharacterId("c-1");
@@ -486,9 +487,15 @@ class ShortAiTaskWorkerTest {
         task.setTaskId("t-1");
         task.setTargetId("s-1");
         task.setTaskType("VIDEO");
-        task.setRequestJson("{}");
+        task.setRequestJson("{\"shot_prompt\":\"【画面风格：二维动画】沈知微转身\",\"camera_move\":\"PUSH\"}");
         Assertions.assertThrows(IllegalStateException.class,
                 () -> ReflectionTestUtils.invokeMethod(worker, "finishShot", task, model));
+        String prompt = captured.get().getPrompt();
+        Assertions.assertTrue(prompt.startsWith("【画面风格：二维动画】"));
+        Assertions.assertTrue(prompt.contains("缓缓推进"));
+        Assertions.assertTrue(prompt.contains("鹅蛋脸，黑色长直发"));
+        Assertions.assertTrue(prompt.contains("沈知微转身"));
+        Assertions.assertFalse(prompt.contains("真人写实"));
         Assertions.assertEquals("https://cdn.example/look.png", captured.get().param("image_url"));
         Assertions.assertEquals("subject", captured.get().param("image_reference"));
         Assertions.assertEquals(0.75d, captured.get().param("image_fidelity"));

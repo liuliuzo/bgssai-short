@@ -44,4 +44,6 @@
 
 镜头列表和画布通过 `POST /bgssai/user/shots/update` 保存 `shot_id` 与 `camera_move`。视频生成读取镜头运镜，已有首帧、视频和画面描述保留。
 
+逐镜画面风格通过现有 previz/save 写入画面描述的【画面风格：…】标记。没有逐镜选择时使用既有生成规则。选定风格应用于首帧和视频的画面表现；作品题材仍由作品数据维护。
+
 模型用对应能力的默认项：`GET /bgssai/user/ai-models/list`。
