@@ -1,6 +1,9 @@
 export function formatKeyBalance(row) {
-  if (!row || !row.balance_status || row.balance_status === 'UNAVAILABLE') {
+  if (!row || !row.balance_status) {
     return '-'
+  }
+  if (row.balance_status === 'UNAVAILABLE') {
+    return '不支持查余额'
   }
   if (row.balance_status !== 'OK') {
     return '查询失败'

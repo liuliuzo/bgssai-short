@@ -25,7 +25,7 @@ describe('external api key balance', () => {
   })
 
   it('does not invent a number when the provider has no balance read', () => {
-    assert.equal(formatKeyBalance({ balance_status: 'UNAVAILABLE', balance_list: [] }), '-')
+    assert.equal(formatKeyBalance({ balance_status: 'UNAVAILABLE', balance_list: [] }), '不支持查余额')
     assert.equal(formatKeyBalance({ balance_status: 'FAILED', balance_list: [] }), '查询失败')
     assert.equal(formatKeyBalance({}), '-')
     assert.equal(formatKeyBalance({ balance_status: 'OK', balance_list: [] }), '-')

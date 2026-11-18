@@ -161,6 +161,9 @@ public class ExternalApiKeyBalanceClient {
         if (UserAiModelSupport.PROVIDER_MINIMAX.equals(provider)) {
             return readMiniMax(baseUrl, credential.apiKey());
         }
+        if (UserAiModelSupport.PROVIDER_BGSSAI_TOKENHUB.equals(provider)) {
+            return readBgssaiTokenHub(baseUrl, credential.apiKey());
+        }
         return unavailable();
     }
 
@@ -224,6 +227,55 @@ public class ExternalApiKeyBalanceClient {
         }
         Snapshot money = parseMiniMaxPayg(payg.body(), moneyUnit(baseUrl));
         return money == null ? failed() : money;
+    }
+
+    private Snapshot readBgssaiTokenHub(String baseUrl, String apiKey) throws Exception {
+        String root = UserAiModelSupport.stripTrailingPath(baseUrl, "/v1");
+        Result result = transport.get(root + "/v1/account/balance", Map.of(
+                "Authorization", "Bearer " + apiKey,
+                "Accept", "application/json"));
+        if (result.status() < 200 || result.status() >= 300) {
+            log.warn("外部密钥余额查询失败 provider=BGSSAI_TOKENHUB host={} http={}", hostOf(baseUrl), result.status());
+            return failed();
+        }
+        return parseBgssaiTokenHub(result.body());
+    }
+
+    static Snapshot parseBgssaiTokenHub(String body) {
+        Map<String, Object> parsed = ShortJson.map(body);
+        Long tokens = longValue(parsed.get("balance_tokens"));
+        if (tokens == null) {
+            tokens = longValue(parsed.get("quota_remaining_tokens"));
+        }
+        Long fen = longValue(parsed.get("balance_fen"));
+        if (fen == null) {
+            fen = longValue(parsed.get("quota_remaining_fen"));
+        }
+        if (tokens == null && fen == null) {
+            return failed();
+        }
+        List<ExternalApiKeyBalancePart> parts = new ArrayList<>();
+        if (tokens != null) {
+            parts.add(part("额度", String.valueOf(tokens), "Token"));
+        }
+        if (fen != null && (fen > 0 || parts.isEmpty())) {
+            parts.add(part("钱包", new BigDecimal(fen).movePointLeft(2).stripTrailingZeros().toPlainString(), "元"));
+        }
+        return ok(parts);
+    }
+
+    private static Long longValue(Object raw) {
+        if (raw instanceof Number number) {
+            return number.longValue();
+        }
+        if (raw instanceof String text && !text.isBlank()) {
+            try {
+                return Long.parseLong(text.trim());
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+        }
+        return null;
     }
 
     static Snapshot parsePixVerse(String body) {

@@ -108,7 +108,7 @@
 
 `auth_type` 取值：`BEARER`（单 API Key）、`AK_SK`（可灵双密钥 `api_key` + `secret_key`）、`API_KEY_HEADER`（PixVerse `API-KEY`）。
 
-`balance_status`：`OK` / `UNAVAILABLE` / `FAILED`。`balance_list` 每项为 `label`、`amount`、`unit`。创建、更新、启停、设默认返回的 `item` 使用同一组字段。数值来自该密钥供应商的只读余额接口：PixVerse 积分、DeepSeek `total_balance`（CNY 为元）、可灵未过期资源包剩余次数、MiniMax 套餐剩余百分比或 `available_amount`。其余供应商（含 Grok、OpenAI、Claude 与两个 TokenHub）为 `UNAVAILABLE`。失败不返回 0。
+`balance_status`：`OK` / `UNAVAILABLE` / `FAILED`。`balance_list` 每项为 `label`、`amount`、`unit`。创建、更新、启停、设默认返回的 `item` 使用同一组字段。数值来自该密钥供应商的只读余额接口：PixVerse 积分、DeepSeek `total_balance`（CNY 为元）、可灵未过期资源包剩余次数、MiniMax 套餐剩余百分比或 `available_amount`。BGSSAI TokenHub 取网关 `GET /v1/account/balance` 的 `balance_tokens` 与 `balance_fen`（需 TokenHub 侧同步上线）。其余供应商（Grok、OpenAI、Claude、腾讯云 TokenHub）无密钥级余额只读接口，为 `UNAVAILABLE`。失败不返回 0。
 
 ## POST /bgssai/user/ai-model-keys/create
 
