@@ -204,4 +204,5 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | `DEEPSEEK` | `GET /user/balance` | `balance_infos[].total_balance`（CNY 元 / USD） |
 | `KLING` | `GET /account/costs`（短期 JWT） | 未过期资源包 `remaining_quantity`（次） |
 | `MINIMAX` | `GET /v1/token_plan/remains`，无该字段时 `GET /account/query_balance` | 剩余百分比，或 `available_amount`（元 / USD） |
-| `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` | 无密钥级余额只读接口 | `UNAVAILABLE` |
+| `BGSSAI_TOKENHUB` | `GET /v1/account/balance`（网关 Key 自查，需 TokenHub 侧同步上线） | `balance_tokens`（额度 Token）、`balance_fen`（钱包元） |
+| `XAI` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` | 无密钥级余额只读接口（Grok 仅管理密钥、OpenAI / Claude 仅管理员密钥） | `UNAVAILABLE`，前端显示「不支持查余额」 |

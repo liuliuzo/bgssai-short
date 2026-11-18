@@ -85,7 +85,8 @@
    - `DEEPSEEK`：`GET /user/balance`，取 `balance_infos[].total_balance`；`CNY` 显示为元，`USD` 显示为 USD。
    - `KLING`：用现有短期 JWT 调 `GET /account/costs`，取未过期资源包的 `remaining_quantity`，单位为次。
    - `MINIMAX`：先读 `GET /v1/token_plan/remains` 的 `current_interval_remaining_percent` 与 `current_weekly_remaining_percent`；没有这两项时再读 `GET /account/query_balance` 的 `available_amount`。`minimaxi.com` / `minimax.cn` 单位为元，`minimax.io` 单位为 USD。
-   - `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` 无可用的密钥级余额只读接口，`balance_status=UNAVAILABLE`，`balance_list` 为空（前端显示 `-`）。查询失败为 `FAILED`（前端显示「查询失败」），不补 0。
+   - `BGSSAI_TOKENHUB`：`GET /v1/account/balance`（网关 Key 自查），取 `balance_tokens`（显示为额度 Token）与 `balance_fen`（显示为钱包元）；该接口需 TokenHub 侧同步上线，未上线或查询失败为 `FAILED`。
+   - `XAI` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` 无可用的密钥级余额只读接口（Grok 仅管理密钥、OpenAI / Claude 仅管理员密钥可查），`balance_status=UNAVAILABLE`，`balance_list` 为空（前端显示「不支持查余额」）。查询失败为 `FAILED`（前端显示「查询失败」），不补 0。
 7. **同类型只启用一个，含 BGSSAI 自建模型**：
    - 同一用户、同一 `ability_type` 下，自有密钥与 BGSSAI 自建模型合计最多一条启用。自建模型为 `TEXT=bgssai-chat`、`IMAGE=bgssai-image`、`VIDEO=bgssai-video`、`VOICE=bgssai-tts`、`ASR=bgssai-asr`、`MUSIC=bgssai-music`。
    - 启用一条自有密钥时，同能力其余自有密钥停用，该能力自建模型改为未启用。同一次批量新增里，同一能力只保留最后一条为启用。
