@@ -2002,7 +2002,9 @@ public class ShortAiTaskWorker {
                 || mime.contains("image/") || mime.isBlank())) {
             return false;
         }
-        if (request.getModel() != null && TencentTokenHubAiProvider.CODE.equals(request.getModel().getProviderCode())) {
+        if (request.getModel() != null
+                && (TencentTokenHubAiProvider.CODE.equals(request.getModel().getProviderCode())
+                || UserAiModelSupport.PROVIDER_BGSSAI_TOKENHUB.equals(request.getModel().getProviderCode()))) {
             try {
                 String signed = objectStorage.presignGet(frame.getStorageKey(), 3600).downloadUrl();
                 if (signed != null && (signed.startsWith("https://") || signed.startsWith("http://"))

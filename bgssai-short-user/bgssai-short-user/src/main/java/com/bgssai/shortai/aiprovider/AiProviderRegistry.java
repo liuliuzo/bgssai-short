@@ -88,6 +88,22 @@ public class AiProviderRegistry {
         AiProvider direct = byCode.get(code);
 
         if (DirectVendorGuard.isExplicitUserModelKey(model)) {
+            if (UserAiModelSupport.isOwnedTokenHubCode(code)) {
+                String resolved = UserAiModelSupport.canonicalizeOwnedProvider(
+                        code, ShortJson.text(cfg.get("base_url")));
+                if (UserAiModelSupport.PROVIDER_BGSSAI_TOKENHUB.equals(resolved)) {
+                    AiProvider hub = byCode.get(TencentTokenHubAiProvider.CODE);
+                    if (hub == null) {
+                        throw new BizException(CommonErrorCode.RULE_REJECT, "unknown user provider_code: " + code);
+                    }
+                    return hub;
+                }
+                AiProvider cloud = byCode.get(TencentCloudTokenHubAiProvider.CODE);
+                if (cloud == null) {
+                    throw new BizException(CommonErrorCode.RULE_REJECT, "unknown user provider_code: " + code);
+                }
+                return cloud;
+            }
             if (direct != null) {
                 return direct;
             }
@@ -206,8 +222,11 @@ public class AiProviderRegistry {
             }
             return byCode.get(OpenAiCompatibleAiProvider.CODE);
         }
-        if ("TENCENT_TOKENHUB".equals(canonical) || "TOKENHUB".equals(raw) || "TENCENT-TOKENHUB".equals(raw)) {
+        if ("BGSSAI_TOKENHUB".equals(canonical) || "TOKENHUB".equals(raw) || "BGSSAI-TOKENHUB".equals(raw)) {
             return byCode.get(TencentTokenHubAiProvider.CODE);
+        }
+        if ("TENCENT_TOKENHUB".equals(canonical) || "TENCENT-TOKENHUB".equals(raw)) {
+            return byCode.get(TencentCloudTokenHubAiProvider.CODE);
         }
         if ("DASHSCOPE".equals(canonical) || "ZHIPU".equals(canonical)
                 || "MOONSHOT".equals(canonical) || "HUNYUAN".equals(canonical)) {
