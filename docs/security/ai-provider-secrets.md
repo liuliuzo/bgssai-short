@@ -71,3 +71,4 @@ Standards §1 写入分环境 properties。
 - 开发期沿用全局明文入库口径，但列表与详情接口仅返回掩码字段 `api_key_masked` 与 `secret_key_masked`（长度 `<=8` 返回 `****`，否则前 4 后 4 中间 `****`），严禁回显明文；可灵短期 HS256 JWT 仅在每次请求内存即时签发，不落库、不落日志。
 - 任务队列仅在 `short_ai_task.model_code` 写入配置标识 `umk-...`，严禁把用户 `api_key` 或 `secret_key` 写入 `short_ai_task.request_json`、`ai_usage_record` 或任何日志与异常文案。
 - 自定义 `base_url` 与上游返回的临时媒体下载地址强制执行公网 `https://` 与 DNS 解析 IP 校验，拒绝环回、私网及链路本地地址（SSRF 防护）。
+- 余额查询只用当前用户自己的密钥，请求不跟随重定向。响应只保留金额、单位和状态，不回写密钥，不记录响应正文。
