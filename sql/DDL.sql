@@ -1472,6 +1472,7 @@ CREATE TABLE `user_ai_setting` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
   `user_id` VARCHAR(64) NOT NULL COMMENT '用户标识',
   `is_only_user_key` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否仅启用自有密钥模型：0-否，1-是',
+  `suppressed_platform_abilities` VARCHAR(64) DEFAULT NULL COMMENT '用户关闭的自建模型能力，逗号分隔：TEXT/IMAGE/VIDEO/VOICE/ASR/MUSIC',
   `del_flag` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除字段',
   `creator` VARCHAR(64) DEFAULT NULL COMMENT '创建者标识',
   `modifier` VARCHAR(64) DEFAULT NULL COMMENT '最后修改者标识',

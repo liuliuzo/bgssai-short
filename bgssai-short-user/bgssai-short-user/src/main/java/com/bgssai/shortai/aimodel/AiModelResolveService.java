@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.BeanUtils;
@@ -74,6 +75,18 @@ public class AiModelResolveService {
                 AiModelConfig userModel = userAiModelKeyService.resolveUserModel(userId, ability, modelCode);
                 if (userModel != null) {
                     return userModel;
+                }
+                if (requestsPlatformModel(modelCode)) {
+                    AiModelConfig enabledUser = userAiModelKeyService.enabledUserModel(userId, ability);
+                    if (enabledUser != null) {
+                        return enabledUser;
+                    }
+                    if (!userAiModelKeyService.activePlatformAbilities(userId)
+                            .contains(ability.toUpperCase(Locale.ROOT))) {
+                        throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
+                                "请先在账号设置启用" + UserAiModelSupport.abilityLabel(
+                                        ability.toUpperCase(Locale.ROOT)) + "模型");
+                    }
                 }
             }
             if (userAiProviderKeyService != null && userId != null && !userId.isBlank()
@@ -596,6 +609,9 @@ public class AiModelResolveService {
             result.put("only_user_key", 1);
             return Responses.ok(result);
         }
+        Set<String> activePlatform = userAiModelKeyService == null || userId == null || userId.isBlank()
+                ? null
+                : userAiModelKeyService.activePlatformAbilities(userId);
         AiModelConfigExample ex = new AiModelConfigExample();
         AiModelConfigExample.Criteria c = ex.createCriteria().andEnabledFlagEqualTo(1).andDeletedFlagEqualTo(0);
         if (abilityType != null && !abilityType.isBlank()) {
@@ -635,6 +651,10 @@ public class AiModelResolveService {
         }
         for (java.util.Map.Entry<String, AiModelConfig> entry : chosen.entrySet()) {
             AiModelConfig row = entry.getValue();
+            if (activePlatform != null && (row.getAbilityType() == null
+                    || !activePlatform.contains(row.getAbilityType().trim().toUpperCase(Locale.ROOT)))) {
+                continue;
+            }
             ProductModelAlias.Face face = faces.get(entry.getKey());
             Map<String, Object> cfg = ShortJson.map(row.getConfigJson());
             ResolvedProviderKey matchedByok = findActiveProviderKey(activeProviderKeys, row.getProviderCode());
@@ -670,6 +690,13 @@ public class AiModelResolveService {
         result.put("model_list", list);
         result.put("only_user_key", 0);
         return Responses.ok(result);
+    }
+
+    private static boolean requestsPlatformModel(String modelCode) {
+        if (modelCode == null || modelCode.isBlank()) {
+            return true;
+        }
+        return modelCode.trim().toLowerCase(Locale.ROOT).startsWith("bgssai-");
     }
 
     private String effectiveUserId() {

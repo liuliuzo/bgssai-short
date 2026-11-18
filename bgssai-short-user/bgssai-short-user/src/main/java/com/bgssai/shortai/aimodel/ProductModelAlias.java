@@ -69,6 +69,22 @@ public final class ProductModelAlias {
     private ProductModelAlias() {
     }
 
+    public static String abilityOfCode(String code) {
+        if (code == null || code.isBlank()) {
+            return null;
+        }
+        String normalized = code.trim().toLowerCase(Locale.ROOT);
+        for (Map.Entry<String, Face> entry : BY_ABILITY.entrySet()) {
+            if (entry.getValue().code().equals(normalized)) {
+                return entry.getKey();
+            }
+        }
+        if ("bgssai-video-i2v".equals(normalized)) {
+            return "VIDEO";
+        }
+        return null;
+    }
+
     public static Face canonical(String ability) {
         if (ability == null) {
             return null;
