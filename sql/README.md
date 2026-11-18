@@ -87,6 +87,6 @@ schema 由部署方手动执行。
 
 发布命名模型密钥功能前，在已有库执行 `sql/upgrade/20261118_model_key_name.sql`，为 `user_ai_model_key` 添加可空的 `key_name`。脚本可重复执行。
 
-短剧业务种子可由 `tmp/gen_short_seed_dml.py` 重新生成后写回 `DML.sql` 的 `SHORT-BIZ-SEED` 段。
+短剧业务样例直接维护在 `sql/DML.sql` 的 `SHORT-BIZ-SEED` 段内。
 
 已有库发布账户页「密钥管理」与「模型选择」前，先执行 `sql/upgrade/20261118_saved_model_credentials.sql` 创建凭据表并添加模型关联列。升级可重复执行。首次访问按用户关联原有模型配置。
