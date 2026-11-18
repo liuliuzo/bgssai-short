@@ -34,6 +34,10 @@ const QUICK_BUTTONS = [
   { code: 'PIXVERSE', label: '接入 PixVerse' },
   { code: 'DEEPSEEK', label: '接入 DeepSeek' },
   { code: 'XAI', label: '接入 Grok' },
+  { code: 'OPENAI', label: '接入 OpenAI' },
+  { code: 'ANTHROPIC', label: '接入 Claude' },
+  { code: 'BGSSAI_TOKENHUB', label: '接入 BGSSAI TokenHub' },
+  { code: 'TENCENT_TOKENHUB', label: '接入腾讯云 TokenHub' },
 ]
 
 const FALLBACK_PRESETS = [
@@ -226,6 +230,138 @@ const FALLBACK_PRESETS = [
         ability_label: '音频模型（字幕识别）',
         models: [
           { model_code: 'grok-voice-transcribe-2.0', model_name: 'Grok Voice Transcribe 2.0', recommended: true },
+        ],
+      },
+    ],
+  },
+  {
+    provider_code: 'OPENAI',
+    provider_name: 'OpenAI',
+    auth_type: 'BEARER',
+    default_base_url: 'https://api.openai.com/v1',
+    abilities: [
+      {
+        modality_type: 'TEXT',
+        ability_type: 'TEXT',
+        ability_label: '文本模型',
+        models: [
+          { model_code: 'gpt-6-luna', model_name: 'GPT-6 Luna', recommended: true },
+          { model_code: 'gpt-5.4', model_name: 'GPT-5.4', recommended: false },
+          { model_code: 'gpt-4o', model_name: 'GPT-4o', recommended: false },
+        ],
+      },
+      {
+        modality_type: 'IMAGE',
+        ability_type: 'IMAGE',
+        ability_label: '图片模型',
+        models: [
+          { model_code: 'gpt-image-2.6-sunburst', model_name: 'GPT Image 2.6 Sunburst', recommended: true },
+          { model_code: 'gpt-image-2.6-flare', model_name: 'GPT Image 2.6 Flare', recommended: false },
+        ],
+      },
+      {
+        modality_type: 'AUDIO',
+        ability_type: 'ASR',
+        ability_label: '音频模型（字幕识别）',
+        models: [
+          { model_code: 'gpt-transcribe', model_name: 'GPT Transcribe', recommended: true },
+          { model_code: 'whisper-1', model_name: 'Whisper', recommended: false },
+        ],
+      },
+    ],
+  },
+  {
+    provider_code: 'ANTHROPIC',
+    provider_name: 'Claude',
+    auth_type: 'BEARER',
+    default_base_url: 'https://api.anthropic.com',
+    abilities: [
+      {
+        modality_type: 'TEXT',
+        ability_type: 'TEXT',
+        ability_label: '文本模型',
+        models: [
+          { model_code: 'claude-opus-5-5', model_name: 'Claude Opus 5.5', recommended: true },
+          { model_code: 'claude-sonnet-5-5', model_name: 'Claude Sonnet 5.5', recommended: false },
+          { model_code: 'claude-haiku-5-5', model_name: 'Claude Haiku 5.5', recommended: false },
+        ],
+      },
+    ],
+  },
+  {
+    provider_code: 'BGSSAI_TOKENHUB',
+    provider_name: 'BGSSAI TokenHub',
+    auth_type: 'BEARER',
+    default_base_url: 'https://www.bgssai-tokenhub.cn',
+    abilities: [
+      {
+        modality_type: 'TEXT',
+        ability_type: 'TEXT',
+        ability_label: '文本模型',
+        models: [
+          { model_code: 'deepseek-chat', model_name: 'DeepSeek Chat', recommended: true },
+          { model_code: 'hy4-preview', model_name: 'Hy4 preview', recommended: false },
+          { model_code: 'kimi-k3', model_name: 'Kimi K3', recommended: false },
+        ],
+      },
+      {
+        modality_type: 'IMAGE',
+        ability_type: 'IMAGE',
+        ability_label: '图片模型',
+        models: [
+          { model_code: 'kling-v3', model_name: '可灵文生图', recommended: true },
+        ],
+      },
+      {
+        modality_type: 'VIDEO',
+        ability_type: 'VIDEO',
+        ability_label: '视频模型',
+        models: [
+          { model_code: 'minimax-video-h3', model_name: 'MiniMax Video H3', recommended: true },
+          { model_code: 'kling-video-v3', model_name: 'Kling Video V3', recommended: false },
+          { model_code: 'pixverse-video-v6.0', model_name: 'PixVerse Video v6', recommended: false },
+        ],
+      },
+      {
+        modality_type: 'AUDIO',
+        ability_type: 'VOICE',
+        ability_label: '音频模型（配音合成）',
+        models: [
+          { model_code: 'minimax-speech-2.8-hd', model_name: 'MiniMax Speech 2.8 HD', recommended: true },
+        ],
+      },
+      {
+        modality_type: 'AUDIO',
+        ability_type: 'ASR',
+        ability_label: '音频模型（字幕识别）',
+        models: [
+          { model_code: 'hy-asr-3.0-preview', model_name: 'Hy ASR 3.0 Preview', recommended: true },
+        ],
+      },
+      {
+        modality_type: 'AUDIO',
+        ability_type: 'MUSIC',
+        ability_label: '音频模型（背景音乐）',
+        models: [
+          { model_code: 'minimax-music-v2.6', model_name: 'MiniMax Music v2.6', recommended: true },
+        ],
+      },
+    ],
+  },
+  {
+    provider_code: 'TENCENT_TOKENHUB',
+    provider_name: '腾讯云 TokenHub',
+    auth_type: 'BEARER',
+    default_base_url: 'https://tokenhub.tencentmaas.com',
+    abilities: [
+      {
+        modality_type: 'TEXT',
+        ability_type: 'TEXT',
+        ability_label: '文本模型',
+        models: [
+          { model_code: 'hy4', model_name: 'Hy4', recommended: true },
+          { model_code: 'deepseek-v4-pro', model_name: 'DeepSeek-V4-Pro', recommended: false },
+          { model_code: 'kimi-k3', model_name: 'Kimi K3', recommended: false },
         ],
       },
     ],
@@ -648,7 +784,7 @@ export default function UserAiModelKeysCard() {
             width: 110,
             render: (v) => ABILITY_LABEL[v] || v,
           },
-          { title: '供应商', dataIndex: 'provider_name', width: 130 },
+          { title: '供应商', dataIndex: 'provider_name', width: 160 },
           { title: '模型名称', dataIndex: 'model_name', width: 170 },
           { title: '模型编码', dataIndex: 'model_code', width: 170 },
           {

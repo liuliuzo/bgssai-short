@@ -36,8 +36,8 @@ public final class UserAiProviderCatalog {
             new ProviderSpec("MOONSHOT", "月之暗面 Kimi", "https://api.moonshot.cn/v1", false, "moonshot-v1-8k", ""),
             new ProviderSpec("VOLCENGINE", "火山引擎方舟", "https://ark.cn-beijing.volces.com/api/v3", false, "doubao-1-5-pro-32k-250115", "doubao-seedance-1-0-pro-250528"),
             new ProviderSpec("HUNYUAN", "腾讯混元", "https://api.hunyuan.cloud.tencent.com/v1", false, "hunyuan-turbo", ""),
-            new ProviderSpec("OPENAI", "OpenAI", "https://api.openai.com/v1", false, "gpt-4o", "sora-2"),
-            new ProviderSpec("ANTHROPIC", "Anthropic", "https://api.anthropic.com", false, "claude-3-5-sonnet-latest", ""),
+            new ProviderSpec("OPENAI", "OpenAI", "https://api.openai.com/v1", false, "gpt-6-luna", ""),
+            new ProviderSpec("ANTHROPIC", "Claude", "https://api.anthropic.com", false, "claude-opus-5-5", ""),
             new ProviderSpec("GOOGLE", "Google Gemini", "https://generativelanguage.googleapis.com", false, "gemini-2.5-flash", "veo-3.0-generate-preview")
     );
 
@@ -74,6 +74,9 @@ public final class UserAiProviderCatalog {
         String code = raw.trim().toUpperCase(Locale.ROOT);
         if ("KLINGAI".equals(code)) {
             return "KLING";
+        }
+        if ("CLAUDE".equals(code)) {
+            return "ANTHROPIC";
         }
         return code;
     }

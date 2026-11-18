@@ -5,8 +5,8 @@
     "index": "docs/demo-static/index.html",
     "page_flow": "docs/demo-static/PAGE-FLOW.html"
   },
-  "prototype_bundle_digest": "46a8d0f98bc96f0415389d9319f1ffb52b8c42458482fea635528d4a7c4e436e",
-  "code_contract_digest": "c1be207a955f875134d54d625d06c78262b8795a8ce152b7296b7692396befc9",
+  "prototype_bundle_digest": "b5fecdc77bb1c83f26b381fedcabc80ee43502489ea92c820b03b2380de0b7eb",
+  "code_contract_digest": "f839ee2116b71cf4075c4a8f8808db678d36039a88a52b99bde5e208f353f7c3",
   "api_endpoints": [
     "/api/cs/support/callback",
     "/api/download/bot",
@@ -509,7 +509,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiModelKeysCard.jsx",
-      "sha256": "c08d543d41feb261383910a6d7eca3e82e95dac49fd96e98bb96cb98b6da0a4e"
+      "sha256": "c8725c57899d906c19c0b56616c0602851897fece7ee422a44a3d82f491c97a9"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user-react/src/pages/account/UserAiProviderKeysCard.jsx",
@@ -805,7 +805,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/AiModelResolveService.java",
-      "sha256": "7854717b6e1aaa3f97a3e427908f5db974c6384d2ad16260f5350aabf81171da"
+      "sha256": "6988858f33911bd2f61302a9fd559f575c2393ac648e6f950113c5c90327bde3"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/aimodel/ui/ListUserAiModelsController.java",
@@ -1589,7 +1589,7 @@
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/service/UserAiModelKeyService.java",
-      "sha256": "a374330cfea80e027267939dddcafa74b9ea98709ea17d769b4bae66816bc862"
+      "sha256": "00ef1740bb78dd55454cbcc32ae584c12d694bc18f2433ab9c6c6c8722bfb9a0"
     },
     {
       "path": "bgssai-short-user/bgssai-short-user/src/main/java/com/bgssai/shortai/useraimodel/service/UserAiProviderKeyService.java",
@@ -2115,7 +2115,7 @@
     },
     {
       "path": "docs/demo-static/web/user/account-settings.html",
-      "sha256": "e49085a6dcf86d92578f96b6e9120680308cc3b87192a9dea72f19c5e69db16a",
+      "sha256": "dc71dcc35afd137fb2a75f1f0395d3d074edf5ffee04b3247593aa906899836b",
       "surface": "user",
       "bound_code_files": [
         "bgssai-short-user/bgssai-short-user-react/src/App.jsx",

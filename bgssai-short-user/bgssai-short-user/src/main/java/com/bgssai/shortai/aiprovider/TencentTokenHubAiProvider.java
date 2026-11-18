@@ -19,6 +19,8 @@ import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.CommonErrorCode;
 import com.bgssai.shortai.production.support.ShortJson;
 import com.bgssai.shortai.secret.SysSecretReader;
+import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
+import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 
 /**
  * provider_code=TENCENT_TOKENHUB. The user picks a model id. This client sends
@@ -47,6 +49,13 @@ public class TencentTokenHubAiProvider implements AiProvider {
 
     @Autowired
     private com.bgssai.shortai.billing.UsageReceiptService receipts;
+
+    @Autowired(required = false)
+    private UserAiModelKeyService userAiModelKeyService;
+
+    void setUserAiModelKeyService(UserAiModelKeyService userAiModelKeyService) {
+        this.userAiModelKeyService = userAiModelKeyService;
+    }
     private final ThreadLocal<com.bgssai.shortai.billing.UsageReceiptRow> activeReceipt=new ThreadLocal<>();
 
     private final SysSecretReader secretReader;
@@ -87,6 +96,9 @@ public class TencentTokenHubAiProvider implements AiProvider {
     public AiProviderResult execute(AiProviderRequest request) {
         if (request == null || request.getModel() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "model required");
+        }
+        if (DirectVendorGuard.isExplicitUserModelKey(request.getModel())) {
+            return executeUserOwnedKey(request);
         }
         Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
         if (TokenHubClientSupport.wouldSelectGlobal(cfg, request.getModel().getModelCode())) {
@@ -144,6 +156,53 @@ public class TencentTokenHubAiProvider implements AiProvider {
             activeReceipt.remove();
             if(receipts!=null)receipts.refresh(receipt,apiKey);
         }
+    }
+
+    /**
+     * User-owned TokenHub key. Calls the same CN gateway routes as the platform client
+     * and does not open a platform usage receipt.
+     */
+    private AiProviderResult executeUserOwnedKey(AiProviderRequest request) {
+        Map<String, Object> cfg = ShortJson.map(request.getModel().getConfigJson());
+        String userId = ShortJson.text(cfg.get("user_id"));
+        String keyId = ProviderHttp.firstNonBlank(ShortJson.text(cfg.get("user_key_id")),
+                request.getModel().getModelId());
+        if (userAiModelKeyService == null) {
+            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE, "自有模型密钥配置缺失");
+        }
+        String apiKey = userAiModelKeyService.requirePlainApiKey(userId, keyId);
+        String base = userOwnedHubBase(ShortJson.text(cfg.get("base_url")));
+        String ability = request.getAbilityType() == null ? ""
+                : request.getAbilityType().trim().toUpperCase(Locale.ROOT);
+        int timeoutSec = ProviderHttp.timeoutSec(request, 180);
+        log.info("tokenhub user key userId={} keyId={} ability={} model={}",
+                userId, keyId, ability, request.getModel().getModelCode());
+        try {
+            return switch (ability) {
+                case "TEXT" -> text(base, apiKey, request, timeoutSec);
+                case "IMAGE" -> image(base, apiKey, request, timeoutSec);
+                case "VIDEO" -> video(base, apiKey, cfg, request, timeoutSec);
+                case "VOICE" -> speech(base, apiKey, cfg, request, timeoutSec);
+                case "ASR" -> asr(base, apiKey, cfg, request, timeoutSec);
+                case "MUSIC" -> music(base, apiKey, request, timeoutSec);
+                default -> throw new BizException(CommonErrorCode.RULE_REJECT,
+                        "unsupported ability for model gateway: " + ability);
+            };
+        } catch (BizException ex) {
+            throw new BizException(ex.getCode(), TokenHubClientSupport.userFacingMessage(ex.getMessage()));
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new BizException(CommonErrorCode.UPSTREAM_TIMEOUT,
+                    TokenHubClientSupport.userFacingMessage("model call interrupted"));
+        } catch (Exception ex) {
+            log.warn("tokenhub user key failed ability={} model={} errType={}",
+                    ability, request.getModel().getModelCode(), ex.getClass().getSimpleName());
+            throw new BizException(CommonErrorCode.UPSTREAM_ERROR, safe(ex));
+        }
+    }
+
+    static String userOwnedHubBase(String configured) {
+        return UserAiModelSupport.normalizeBaseUrl(configured, UserAiModelSupport.PROVIDER_BGSSAI_TOKENHUB);
     }
 
     private AiProviderResult text(String base, String apiKey, AiProviderRequest request, int timeoutSec)

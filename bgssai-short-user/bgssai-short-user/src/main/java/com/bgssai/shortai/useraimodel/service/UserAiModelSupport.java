@@ -44,12 +44,35 @@ public final class UserAiModelSupport {
     public static final String PROVIDER_XAI_NAME = "Grok (xAI)";
     public static final String DEFAULT_XAI_BASE_URL = "https://api.x.ai/v1";
 
+    public static final String PROVIDER_OPENAI = "OPENAI";
+    public static final String PROVIDER_OPENAI_NAME = "OpenAI";
+    public static final String DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
+
+    public static final String PROVIDER_ANTHROPIC = "ANTHROPIC";
+    public static final String PROVIDER_ANTHROPIC_NAME = "Claude";
+    public static final String DEFAULT_ANTHROPIC_BASE_URL = "https://api.anthropic.com";
+
+    public static final String PROVIDER_BGSSAI_TOKENHUB = "BGSSAI_TOKENHUB";
+    public static final String PROVIDER_BGSSAI_TOKENHUB_NAME = "BGSSAI TokenHub";
+    public static final String DEFAULT_BGSSAI_TOKENHUB_BASE_URL = "https://www.bgssai-tokenhub.cn";
+
+    public static final String PROVIDER_TENCENT_TOKENHUB = "TENCENT_TOKENHUB";
+    public static final String PROVIDER_TENCENT_TOKENHUB_NAME = "腾讯云 TokenHub";
+    public static final String DEFAULT_TENCENT_TOKENHUB_BASE_URL = "https://tokenhub.tencentmaas.com";
+
+    public static final Set<String> TENCENT_TOKENHUB_HOSTS = Set.of(
+            "tokenhub.tencentmaas.com",
+            "tokenhub.tencentmaas.cn",
+            "tokenhub-intl.tencentmaas.com",
+            "tokenhub-intl.tencentmaas.cn");
+
     public static final String AUTH_BEARER = "BEARER";
     public static final String AUTH_AK_SK = "AK_SK";
     public static final String AUTH_API_KEY_HEADER = "API_KEY_HEADER";
 
     public static final Set<String> SUPPORTED_PROVIDERS = Set.of(
-            PROVIDER_MINIMAX, PROVIDER_KLING, PROVIDER_PIXVERSE, PROVIDER_DEEPSEEK, PROVIDER_XAI);
+            PROVIDER_MINIMAX, PROVIDER_KLING, PROVIDER_PIXVERSE, PROVIDER_DEEPSEEK, PROVIDER_XAI,
+            PROVIDER_OPENAI, PROVIDER_ANTHROPIC, PROVIDER_BGSSAI_TOKENHUB, PROVIDER_TENCENT_TOKENHUB);
     public static final Set<String> MODALITIES = Set.of("TEXT", "IMAGE", "VIDEO", "AUDIO");
     public static final Set<String> ABILITIES = Set.of("TEXT", "IMAGE", "VIDEO", "VOICE", "ASR", "MUSIC");
 
@@ -136,6 +159,15 @@ public final class UserAiModelSupport {
         if ("HAILUO".equals(code) || "MINIMAXI".equals(code)) {
             return PROVIDER_MINIMAX;
         }
+        if ("CLAUDE".equals(code)) {
+            return PROVIDER_ANTHROPIC;
+        }
+        if ("TOKENHUB".equals(code) || "BGSSAI-TOKENHUB".equals(code) || PROVIDER_BGSSAI_TOKENHUB.equals(code)) {
+            return PROVIDER_BGSSAI_TOKENHUB;
+        }
+        if ("TENCENT-TOKENHUB".equals(code)) {
+            return PROVIDER_TENCENT_TOKENHUB;
+        }
         if (!SUPPORTED_PROVIDERS.contains(code)) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "unsupported provider_code: " + code);
         }
@@ -152,6 +184,10 @@ public final class UserAiModelSupport {
             case PROVIDER_PIXVERSE -> PROVIDER_PIXVERSE_NAME;
             case PROVIDER_DEEPSEEK -> PROVIDER_DEEPSEEK_NAME;
             case PROVIDER_XAI -> PROVIDER_XAI_NAME;
+            case PROVIDER_OPENAI -> PROVIDER_OPENAI_NAME;
+            case PROVIDER_ANTHROPIC -> PROVIDER_ANTHROPIC_NAME;
+            case PROVIDER_BGSSAI_TOKENHUB, "TOKENHUB", "BGSSAI-TOKENHUB" -> PROVIDER_BGSSAI_TOKENHUB_NAME;
+            case PROVIDER_TENCENT_TOKENHUB, "TENCENT-TOKENHUB" -> PROVIDER_TENCENT_TOKENHUB_NAME;
             default -> providerCode;
         };
     }
@@ -215,12 +251,158 @@ public final class UserAiModelSupport {
     }
 
     public static String normalizeBaseUrl(String rawBaseUrl, String providerCode) {
-        String value = rawBaseUrl == null || rawBaseUrl.isBlank() ? defaultBaseUrl(providerCode) : rawBaseUrl.trim();
+        String provider = aliasOwnedProvider(providerCode);
+        String value = rawBaseUrl == null || rawBaseUrl.isBlank() ? defaultBaseUrl(provider) : rawBaseUrl.trim();
         while (value.endsWith("/")) {
             value = value.substring(0, value.length() - 1);
         }
+        if (PROVIDER_BGSSAI_TOKENHUB.equals(provider) || PROVIDER_TENCENT_TOKENHUB.equals(provider)) {
+            assertOwnedHost(provider, value);
+        }
         validatePublicHttpsUrl(value, "base_url");
         return value;
+    }
+
+    public static boolean isOwnedTokenHubCode(String providerCode) {
+        String code = providerCode == null ? "" : providerCode.trim().toUpperCase(Locale.ROOT);
+        return "TOKENHUB".equals(code)
+                || "BGSSAI-TOKENHUB".equals(code)
+                || PROVIDER_BGSSAI_TOKENHUB.equals(code)
+                || "TENCENT-TOKENHUB".equals(code)
+                || PROVIDER_TENCENT_TOKENHUB.equals(code);
+    }
+
+    /**
+     * User-owned provider after alias and legacy migration.
+     * {@code TENCENT_TOKENHUB} with an empty, company-default, or BGSSAI TokenHub host
+     * becomes {@code BGSSAI_TOKENHUB}. Official Tencent hosts stay {@code TENCENT_TOKENHUB}.
+     */
+    public static String canonicalizeOwnedProvider(String providerCode, String baseUrl) {
+        String code = providerCode == null ? "" : providerCode.trim().toUpperCase(Locale.ROOT);
+        if ("TOKENHUB".equals(code) || "BGSSAI-TOKENHUB".equals(code) || PROVIDER_BGSSAI_TOKENHUB.equals(code)) {
+            return PROVIDER_BGSSAI_TOKENHUB;
+        }
+        if ("TENCENT-TOKENHUB".equals(code) || PROVIDER_TENCENT_TOKENHUB.equals(code)) {
+            return isLegacyCompanyHubBase(baseUrl) ? PROVIDER_BGSSAI_TOKENHUB : PROVIDER_TENCENT_TOKENHUB;
+        }
+        return normalizeProvider(providerCode);
+    }
+
+    public static OwnedProviderBinding bindOwnedProvider(String rawCode, String rawBase) {
+        String providerCode = canonicalizeOwnedProvider(rawCode, rawBase);
+        return new OwnedProviderBinding(providerCode, normalizeBaseUrl(rawBase, providerCode));
+    }
+
+    public static boolean isLegacyCompanyHubBase(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return true;
+        }
+        String trimmed = baseUrl.trim();
+        while (trimmed.endsWith("/")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.equals(DEFAULT_BGSSAI_TOKENHUB_BASE_URL)
+                || lower.equals(DEFAULT_BGSSAI_TOKENHUB_BASE_URL + "/v1")) {
+            return true;
+        }
+        return isBgssaiTokenHubHost(hostOf(trimmed));
+    }
+
+    public static void assertOwnedHost(String providerCode, String baseUrl) {
+        String provider = aliasOwnedProvider(providerCode);
+        String value = baseUrl == null ? "" : baseUrl.trim();
+        if (PROVIDER_BGSSAI_TOKENHUB.equals(provider) && rejectsBgssaiBase(value)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "base_url 不在当前可用范围内");
+        }
+        if (PROVIDER_TENCENT_TOKENHUB.equals(provider) && !allowsTencentBase(value)) {
+            throw new BizException(CommonErrorCode.RULE_REJECT, "base_url 不在当前可用范围内");
+        }
+    }
+
+    public static boolean isBgssaiTokenHubHost(String host) {
+        if (host == null || host.isBlank()) {
+            return false;
+        }
+        String h = host.trim().toLowerCase(Locale.ROOT);
+        if (com.bgssai.shortai.aiprovider.TokenHubClientSupport.OFFICIAL_HUB_DOMAINS.contains(h)) {
+            return true;
+        }
+        if ("bgssai-tokenhub.cn".equals(h) || h.endsWith(".bgssai-tokenhub.cn")) {
+            return true;
+        }
+        if ("bgssai-tokenhub.com".equals(h) || h.endsWith(".bgssai-tokenhub.com")) {
+            return true;
+        }
+        if ("tokenhub.bgssai.cn".equals(h) || h.endsWith(".tokenhub.bgssai.cn")) {
+            return true;
+        }
+        return h.contains("tokenhub-global") || h.contains("bgssai-tokenhub-global");
+    }
+
+    private static String aliasOwnedProvider(String providerCode) {
+        String code = providerCode == null ? "" : providerCode.trim().toUpperCase(Locale.ROOT);
+        if ("TOKENHUB".equals(code) || "BGSSAI-TOKENHUB".equals(code) || PROVIDER_BGSSAI_TOKENHUB.equals(code)) {
+            return PROVIDER_BGSSAI_TOKENHUB;
+        }
+        if ("TENCENT-TOKENHUB".equals(code) || PROVIDER_TENCENT_TOKENHUB.equals(code)) {
+            return PROVIDER_TENCENT_TOKENHUB;
+        }
+        return code;
+    }
+
+    private static boolean rejectsBgssaiBase(String baseUrl) {
+        String lower = baseUrl == null ? "" : baseUrl.toLowerCase(Locale.ROOT);
+        if ((lower.contains("bgssai-tokenhub.com") && !lower.contains("bgssai-tokenhub.cn"))
+                || lower.contains("tokenhub-global")
+                || lower.contains("tokenhub-intl")
+                || lower.contains("bgssai-tokenhub-global")) {
+            return true;
+        }
+        return isTencentMaasHost(hostOf(baseUrl));
+    }
+
+    private static boolean allowsTencentBase(String baseUrl) {
+        URI uri;
+        try {
+            uri = URI.create(baseUrl == null ? "" : baseUrl.trim());
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+        if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null) {
+            return false;
+        }
+        String host = uri.getHost().toLowerCase(Locale.ROOT);
+        if (!TENCENT_TOKENHUB_HOSTS.contains(host) || isBgssaiTokenHubHost(host)) {
+            return false;
+        }
+        String path = uri.getPath();
+        return path == null || path.isBlank() || "/".equals(path) || "/v1".equalsIgnoreCase(path);
+    }
+
+    private static boolean isTencentMaasHost(String host) {
+        if (host == null || host.isBlank()) {
+            return false;
+        }
+        String h = host.toLowerCase(Locale.ROOT);
+        return TENCENT_TOKENHUB_HOSTS.contains(h)
+                || "tencentmaas.com".equals(h) || h.endsWith(".tencentmaas.com")
+                || "tencentmaas.cn".equals(h) || h.endsWith(".tencentmaas.cn");
+    }
+
+    private static String hostOf(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return "";
+        }
+        try {
+            String host = URI.create(rawUrl.trim()).getHost();
+            return host == null ? "" : host.toLowerCase(Locale.ROOT);
+        } catch (RuntimeException ex) {
+            return "";
+        }
+    }
+
+    public record OwnedProviderBinding(String providerCode, String baseUrl) {
     }
 
     public static String defaultBaseUrl(String providerCode) {
@@ -232,8 +414,36 @@ public final class UserAiModelSupport {
             case PROVIDER_KLING -> DEFAULT_KLING_BASE_URL;
             case PROVIDER_PIXVERSE -> DEFAULT_PIXVERSE_BASE_URL;
             case PROVIDER_DEEPSEEK -> DEFAULT_DEEPSEEK_BASE_URL;
+            case PROVIDER_OPENAI -> DEFAULT_OPENAI_BASE_URL;
+            case PROVIDER_ANTHROPIC -> DEFAULT_ANTHROPIC_BASE_URL;
+            case PROVIDER_BGSSAI_TOKENHUB, "TOKENHUB", "BGSSAI-TOKENHUB" -> DEFAULT_BGSSAI_TOKENHUB_BASE_URL;
+            case PROVIDER_TENCENT_TOKENHUB, "TENCENT-TOKENHUB" -> DEFAULT_TENCENT_TOKENHUB_BASE_URL;
             default -> DEFAULT_XAI_BASE_URL;
         };
+    }
+
+    /**
+     * Zero-cost connectivity URL. OpenAI and xAI list models under {@code /v1/models}.
+     * Anthropic and TokenHub document {@code GET /v1/models} on a host with no version prefix.
+     */
+    public static String connectivityProbeUrl(String providerCode, String baseUrl) {
+        String provider = providerCode == null ? "" : providerCode.trim().toUpperCase(Locale.ROOT);
+        String base = baseUrl == null ? "" : baseUrl.trim();
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        if (PROVIDER_ANTHROPIC.equals(provider) || PROVIDER_BGSSAI_TOKENHUB.equals(provider)
+                || "TOKENHUB".equals(provider) || "BGSSAI-TOKENHUB".equals(provider)
+                || PROVIDER_TENCENT_TOKENHUB.equals(provider) || "TENCENT-TOKENHUB".equals(provider)) {
+            return stripTrailingPath(base, "/v1") + "/v1/models";
+        }
+        if (PROVIDER_XAI.equals(provider) || PROVIDER_OPENAI.equals(provider)) {
+            String path = URI.create(base).getPath();
+            if (path == null || path.isBlank() || "/".equals(path)) {
+                return base + "/v1/models";
+            }
+        }
+        return base + "/models";
     }
 
     public static String stripTrailingPath(String baseUrl, String suffix) {
@@ -330,7 +540,7 @@ public final class UserAiModelSupport {
         AiModelConfig model = new AiModelConfig();
         model.setModelId(row.getKeyId());
         model.setAbilityType(row.getAbilityType());
-        model.setProviderCode(row.getProviderCode());
+        model.setProviderCode(canonicalizeOwnedProvider(row.getProviderCode(), row.getBaseUrl()));
         model.setModelCode(row.getModelCode());
         model.setModelName(row.getModelName());
         model.setQualityLevel("STANDARD");
@@ -478,6 +688,68 @@ public final class UserAiModelSupport {
                         new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
                                 new ModelPresetOption("grok-voice-transcribe-2.0", "Grok Voice Transcribe 2.0", true)))
                 ));
-        return List.of(minimax, kling, pixverse, deepseek, xai);
+        ProviderPresetItem openai = new ProviderPresetItem(
+                PROVIDER_OPENAI,
+                PROVIDER_OPENAI_NAME,
+                AUTH_BEARER,
+                DEFAULT_OPENAI_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("gpt-6-luna", "GPT-6 Luna", true),
+                                new ModelPresetOption("gpt-5.4", "GPT-5.4", false),
+                                new ModelPresetOption("gpt-4o", "GPT-4o", false))),
+                        new ProviderAbilityPreset("IMAGE", "IMAGE", "图片模型", List.of(
+                                new ModelPresetOption("gpt-image-2.6-sunburst", "GPT Image 2.6 Sunburst", true),
+                                new ModelPresetOption("gpt-image-2.6-flare", "GPT Image 2.6 Flare", false))),
+                        new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
+                                new ModelPresetOption("gpt-transcribe", "GPT Transcribe", true),
+                                new ModelPresetOption("whisper-1", "Whisper", false)))
+                ));
+        ProviderPresetItem claude = new ProviderPresetItem(
+                PROVIDER_ANTHROPIC,
+                PROVIDER_ANTHROPIC_NAME,
+                AUTH_BEARER,
+                DEFAULT_ANTHROPIC_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("claude-opus-5-5", "Claude Opus 5.5", true),
+                                new ModelPresetOption("claude-sonnet-5-5", "Claude Sonnet 5.5", false),
+                                new ModelPresetOption("claude-haiku-5-5", "Claude Haiku 5.5", false)))
+                ));
+        ProviderPresetItem bgssaiTokenhub = new ProviderPresetItem(
+                PROVIDER_BGSSAI_TOKENHUB,
+                PROVIDER_BGSSAI_TOKENHUB_NAME,
+                AUTH_BEARER,
+                DEFAULT_BGSSAI_TOKENHUB_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("deepseek-chat", "DeepSeek Chat", true),
+                                new ModelPresetOption("hy4-preview", "Hy4 preview", false),
+                                new ModelPresetOption("kimi-k3", "Kimi K3", false))),
+                        new ProviderAbilityPreset("IMAGE", "IMAGE", "图片模型", List.of(
+                                new ModelPresetOption("kling-v3", "可灵文生图", true))),
+                        new ProviderAbilityPreset("VIDEO", "VIDEO", "视频模型", List.of(
+                                new ModelPresetOption("minimax-video-h3", "MiniMax Video H3", true),
+                                new ModelPresetOption("kling-video-v3", "Kling Video V3", false),
+                                new ModelPresetOption("pixverse-video-v6.0", "PixVerse Video v6", false))),
+                        new ProviderAbilityPreset("AUDIO", "VOICE", "音频模型（配音合成）", List.of(
+                                new ModelPresetOption("minimax-speech-2.8-hd", "MiniMax Speech 2.8 HD", true))),
+                        new ProviderAbilityPreset("AUDIO", "ASR", "音频模型（字幕识别）", List.of(
+                                new ModelPresetOption("hy-asr-3.0-preview", "Hy ASR 3.0 Preview", true))),
+                        new ProviderAbilityPreset("AUDIO", "MUSIC", "音频模型（背景音乐）", List.of(
+                                new ModelPresetOption("minimax-music-v2.6", "MiniMax Music v2.6", true)))
+                ));
+        ProviderPresetItem tencentTokenhub = new ProviderPresetItem(
+                PROVIDER_TENCENT_TOKENHUB,
+                PROVIDER_TENCENT_TOKENHUB_NAME,
+                AUTH_BEARER,
+                DEFAULT_TENCENT_TOKENHUB_BASE_URL,
+                List.of(
+                        new ProviderAbilityPreset("TEXT", "TEXT", "文本模型", List.of(
+                                new ModelPresetOption("hy4", "Hy4", true),
+                                new ModelPresetOption("deepseek-v4-pro", "DeepSeek-V4-Pro", false),
+                                new ModelPresetOption("kimi-k3", "Kimi K3", false)))
+                ));
+        return List.of(minimax, kling, pixverse, deepseek, xai, openai, claude, bgssaiTokenhub, tencentTokenhub);
     }
 }
