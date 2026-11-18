@@ -10,23 +10,20 @@
   - 音频模型：`modality_type=AUDIO` -> 细分 `ability_type` 为 `VOICE`（配音合成）、`ASR`（语音转文字字幕校准）、`MUSIC`（背景音乐）。
 - 支持操作：
   - 单条新增、一键按供应商批量创建多模态配置、编辑（留空密钥则保留原值）、启停、设为同能力默认、删除、连通性测试。
-  - 全局开关「仅使用自有密钥模型」（`only_user_key`）。
   - 多供应商混用：用户可按能力自由组合不同供应商（如 `DEEPSEEK` 文本 + `KLING` 或 `PIXVERSE` 视频 + `MINIMAX` 图片/配音/识别/背景音乐），系统按各能力默认（或前端指定）自有密钥路由。
 
 ## 2. 业务规则
 
-1. **首次自动开启独占模式**：用户首次新增自定义模型密钥且尚未存在 `user_ai_setting` 记录时，系统自动开启 `only_user_key = 1`（请求显式传 `only_user_key = 0` 时按请求值落库）。用户可随时通过开关切换 `only_user_key` 为 `0` 或 `1`。
-2. **仅使用自有密钥模式（`only_user_key = 1`）**：
-   - `GET /bgssai/user/ai-models/list` 仅返回当前用户已启用（`is_enabled = 1`）的自有密钥模型，完全隐藏并停用默认 BGSSAI 平台模型（`bgssai-chat` / `bgssai-image` / `bgssai-video` / `bgssai-tts` / `bgssai-asr` / `bgssai-music`）。
-   - 服务端解析 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 时，仅从当前用户已启用的自有密钥模型中选择；未传 `model_code` 或内部调用传入平台别名（如新建作品自动生成大纲、分镜一键生成视频）时，自动采用用户在该能力下的默认（`is_default_model = 1`）或首条已启用自有密钥模型。
-   - 若对应能力下无已启用的自有密钥模型，**不得回退到平台 BGSSAI 模型**，直接拒绝并返回错误码 `4014`。
-   - `COMPOSE`（`ffmpeg-compose-v1`）属本机音视频合成工具，不受 `only_user_key` 限制。
-3. **非独占模式（`only_user_key = 0`）**：
-   - 模型列表同时展示用户已启用的自有密钥模型与 BGSSAI 默认模型；未指定自有模型时可继续使用 BGSSAI 默认模型，显式选中 `umk-...` 时走用户自有密钥模型。
-4. **零平台额度扣减**：
+1. **模型来源统一规则（无全局模式开关）**：
+   - 模型列表同时展示用户已启用的自有密钥模型与 BGSSAI 自建（默认）模型（`bgssai-chat` / `bgssai-image` / `bgssai-video` / `bgssai-tts` / `bgssai-asr` / `bgssai-music`）。
+   - 显式选中自有模型（`umk-...`）时走用户自有密钥；未指定、未启用或未配置自有模型时使用 BGSSAI 自建模型，不因缺少自有模型而拒绝生成。
+   - 账号页只保留单个模型的启用/停用，不设全局模式开关；首次新增密钥不改变任何模式。
+   - `COMPOSE`（`ffmpeg-compose-v1`）属本机音视频合成工具，不走上述模型来源解析。
+2. **`only_user_key` 兼容**：字段与 `POST /bgssai/user/ai-model-keys/mode` 接口保留兼容，请求值忽略、响应恒为 `0`，不再参与模型解析；历史 `user_ai_setting.is_only_user_key = 1` 记录按统一规则处理。
+3. **零平台额度扣减**：
    - 凡解析为自有密钥模型（`credential_source = "USER_KEY"`），预估费用 `estimated_cost_cent = 0`、单价 `unit_price_cent = 0`、实扣 `cost_cent = 0`。
    - 跳过平台中央账本与本地额度钱包的余额预检及扣费（不要求绑定 `bgssai-chat` 账号）；`ai_usage_record` 正常记录调用次数，金额列记 `0`。
-5. **支持供应商与能力矩阵**：
+4. **支持供应商与能力矩阵**：
    - `MINIMAX`（`MiniMax (海螺)`，`auth_type=BEARER`，默认 `https://api.minimaxi.com`）：
      - `TEXT`：`MiniMax-M2.5`（默认）、`MiniMax-M2.5-highspeed`、`abab6.5s-chat`（`POST /v1/chat/completions`）。
      - `IMAGE`：`image-01`（默认）、`image-01-live`（`POST /v1/image_generation`，存在参考图时自动传 `subject_reference` 并支持不支持时降级重试）。
@@ -97,13 +94,13 @@
 | `provider_code` | `MINIMAX` / `KLING` / `PIXVERSE` / `DEEPSEEK` / `XAI` / `OPENAI` / `ANTHROPIC` / `BGSSAI_TOKENHUB` / `TENCENT_TOKENHUB` |
 | `auth_type` | `BEARER` / `AK_SK` / `API_KEY_HEADER` |
 | `credential_source` | `USER_KEY`（自有密钥）/ `PLATFORM`（平台默认） |
-| `only_user_key` | `0`（混合模式）/ `1`（仅使用自有密钥模型，停用默认 BGSSAI 模型） |
+| `only_user_key` | 恒为 `0`（兼容字段，不再区分模式） |
 | `last_check_status` | `OK` / `FAILED` / `null` |
 
 ## 4. 验收条目
 
-1. 用户在 `/account` 添加任意已支持供应商的 API Key 后，首次自动启用 `only_user_key = 1`。
-2. `only_user_key = 1` 时，`GET /bgssai/user/ai-models/list` 与制作工作台各模态选择器均只显示自有模型，保留用户设置展示名与供应商真实名称，不显示平台默认模型。
+1. 用户在 `/account` 添加任意已支持供应商的 API Key 后不改变模型来源规则，账号页无全局模式开关；历史 `is_only_user_key = 1` 用户按统一规则处理。
+2. `GET /bgssai/user/ai-models/list` 与制作工作台各模态选择器同时显示已启用的自有模型（保留用户设置展示名与供应商真实名称）与 BGSSAI 自建模型；某能力没有已启用自有模型时使用 BGSSAI 自建模型，不因缺少自有模型返回 `4014`。
 3. 可灵配置支持 Access Key + Secret Key 双密钥录入与掩码展示（`ak**** / sk****`），运行时动态签发 HS256 JWT 完成连通测试与图片/视频/配音生成。
 4. `MINIMAX` 覆盖 `TEXT` / `IMAGE` / `VIDEO` / `VOICE` / `ASR` / `MUSIC` 六种能力；`PIXVERSE` 覆盖 `VIDEO`（含图生/首尾帧过渡）；`DEEPSEEK` 覆盖 `TEXT`（含 `deepseek-chat` 与 `deepseek-reasoner`）。
 5. 多供应商混用（如 DeepSeek 文本 + 可灵或 PixVerse 视频 + MiniMax 配音与 BGM）在同一作品全流程可执行通过，任务与对账费用 `cost_cent = 0`。

@@ -385,17 +385,14 @@ function buildQuickValues(preset, currentFormValues = {}) {
     base_url: preset?.default_base_url || '',
     abilities,
     models_by_ability: modelsByAbility,
-    only_user_key: currentFormValues.only_user_key ?? true,
   }
 }
 
 export default function UserAiModelKeysCard() {
   const [loading, setLoading] = useState(false)
-  const [onlyUserKey, setOnlyUserKey] = useState(false)
   const [keys, setKeys] = useState([])
   const [presets, setPresets] = useState([])
   const [modalityFilter, setModalityFilter] = useState('ALL')
-  const [modeBusy, setModeBusy] = useState(false)
   const [testingKeyId, setTestingKeyId] = useState(null)
 
   const [editOpen, setEditOpen] = useState(false)
@@ -414,7 +411,6 @@ export default function UserAiModelKeysCard() {
     try {
       const { data } = await userAiModelKeysApi.list()
       if (data?.success && data.result) {
-        setOnlyUserKey(Number(data.result.only_user_key) === 1)
         setKeys(Array.isArray(data.result.key_list) ? data.result.key_list : [])
         setPresets(Array.isArray(data.result.provider_preset_list) ? data.result.provider_preset_list : [])
       }
@@ -471,19 +467,6 @@ export default function UserAiModelKeysCard() {
     () => effectivePresets.map((p) => ({ value: p.provider_code, label: p.provider_name })),
     [effectivePresets],
   )
-
-  const onModeChange = async (checked) => {
-    setModeBusy(true)
-    try {
-      const { data } = await userAiModelKeysApi.updateMode({ only_user_key: checked ? 1 : 0 })
-      if (data?.success) {
-        setOnlyUserKey(Number(data.result?.only_user_key) === 1)
-        message.success(checked ? '已开启仅使用自有密钥模型' : '已切换为混合模型模式')
-      }
-    } finally {
-      setModeBusy(false)
-    }
-  }
 
   const openAdd = () => {
     setEditingRow(null)
@@ -690,7 +673,6 @@ export default function UserAiModelKeysCard() {
         base_url: vals.base_url,
         api_key: vals.api_key,
         secret_key: vals.secret_key || undefined,
-        only_user_key: vals.only_user_key ? 1 : 0,
         items,
       })
       if (data?.success) {
@@ -752,10 +734,6 @@ export default function UserAiModelKeysCard() {
       style={{ marginBottom: 16 }}
       extra={(
         <Space wrap>
-          <Space size={6}>
-            <span>仅使用自有密钥模型</span>
-            <Switch checked={onlyUserKey} loading={modeBusy} onChange={onModeChange} />
-          </Space>
           {QUICK_BUTTONS.map((btn) => (
             <Button key={btn.code} onClick={() => openQuickProvider(btn.code)}>{btn.label}</Button>
           ))}
@@ -964,9 +942,6 @@ export default function UserAiModelKeysCard() {
               </Form.Item>
             ))}
           </div>
-          <Form.Item name="only_user_key" valuePropName="checked">
-            <Checkbox>仅使用自有密钥模型（停用默认 BGSSAI 模型）</Checkbox>
-          </Form.Item>
           <Space>
             <Button loading={quickTesting} onClick={onTestQuick}>测试连接</Button>
             <Button type="primary" htmlType="submit" loading={quickSaving}>保存并启用</Button>

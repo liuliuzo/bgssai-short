@@ -4,13 +4,13 @@
 
 ## 1. 数据模型
 
-### 1.1 `user_ai_setting`（用户密钥模式设置）
+### 1.1 `user_ai_setting`（历史兼容表，不再参与解析）
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
 | `id` | `BIGINT` | `NOT NULL AUTO_INCREMENT PK` | 主键 |
 | `user_id` | `VARCHAR(64)` | `NOT NULL UNIQUE` | 用户标识 |
-| `is_only_user_key` | `TINYINT(1)` | `NOT NULL DEFAULT 0` | `0=混合模式`，`1=仅使用自有密钥模型` |
+| `is_only_user_key` | `TINYINT(1)` | `NOT NULL DEFAULT 0` | 已废弃，恒按 `0` 处理；存量 `1` 不再停用 BGSSAI 自建模型 |
 | `del_flag` / `creator` / `modifier` / `gmt_create` / `gmt_modified` | 标准六列 | 见 `sql/DDL.sql` | 审计与逻辑删除 |
 
 ### 1.2 `user_ai_model_key`（用户自定义模型密钥）
@@ -40,12 +40,12 @@
 HTTP 请求（UserContext）或 Worker（UsageScope）
   -> AiModelResolveService.resolve(abilityType, requestedCode)
      -> 取 currentUserOrScopeUserId()
-     -> 命中 umk-... 或 is_only_user_key = 1：
+     -> 命中 umk-...（显式选中自有模型）：
         -> UserAiModelKeyService.resolveUserModel(userId, ability, requestedCode)
            -> 仅查 user_ai_model_key(user_id, ability_type, is_enabled=1, del_flag=0)
-           -> 未配置且 is_only_user_key = 1 -> 抛 4014（不回退平台模型）
+           -> 未选中/未启用/未配置 -> 回退 BGSSAI 自建（平台）模型解析，不因缺少自有模型抛 4014
            -> 构造内存态 AiModelConfig（modelId=umk-..., unitPriceCent=0, configJson={credential_source=USER_KEY, user_key_id, user_id, base_url}）
-  -> PipelineReadiness.assertReady：自有密钥或 only_user_key=1 时只校验 user_ai_model_key 可用性，不探测平台 TokenHub
+  -> PipelineReadiness.assertReady：显式自有密钥时只校验 user_ai_model_key 可用性，不探测平台 TokenHub；其余情况按平台就绪校验
   -> AiTaskQueue / OfficialShotVideoService / DramaAssistService / AiTaskService：
      -> credential_source=USER_KEY 时 estimated_cost_cent = 0，跳过 QuotaConsumeService.assertAffordable
   -> ShortAiTaskWorker / DramaAssistService
