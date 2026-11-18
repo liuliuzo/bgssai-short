@@ -7,7 +7,6 @@ const toggle = (body) => http.post('/user/ai-model-keys/toggle', body)
 const setDefault = (body) => http.post('/user/ai-model-keys/set-default', body)
 const remove = (body) => http.post('/user/ai-model-keys/delete', body)
 const test = (body) => http.post('/user/ai-model-keys/test', body)
-const updateMode = (body) => http.post('/user/ai-model-keys/mode', body)
 
 export default {
   list,
@@ -17,5 +16,4 @@ export default {
   setDefault,
   remove,
   test,
-  updateMode,
 }

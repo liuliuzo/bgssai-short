@@ -96,7 +96,6 @@ public class UserAiModelKeyService {
     public UserAiModelKeyListResponse listForCurrentUser(String modalityType, String abilityType) {
         String userId = requireCurrentUser();
         log.info("查询用户模型密钥列表 userId={} modalityType={} abilityType={}", userId, modalityType, abilityType);
-        int onlyUserKey = isOnlyUserKeyMode(userId) ? 1 : 0;
         listEnabledRows(userId, null);
         UserAiModelKeyExample ex = new UserAiModelKeyExample();
         UserAiModelKeyExample.Criteria criteria = ex.createCriteria()
@@ -142,7 +141,8 @@ public class UserAiModelKeyService {
                     Integer.valueOf(1).equals(left.getDefaultModel()) ? 1 : 0);
         });
         UserAiModelKeyListResponse resp = new UserAiModelKeyListResponse();
-        resp.setOnlyUserKey(onlyUserKey);
+        // Kept for response compatibility; there is no exclusive mode anymore.
+        resp.setOnlyUserKey(0);
         resp.setKeyList(items);
         resp.setProviderPresetList(UserAiModelSupport.buildProviderPresets());
         return resp;
@@ -248,12 +248,10 @@ public class UserAiModelKeyService {
         }
         externalApiKeyBalanceClient.fill(createdRows, createdItems);
 
-        int onlyMode = ensureInitialModeOnCreate(userId, req.getOnlyUserKey());
-        log.info("创建用户模型密钥完成 userId={} createdCount={} onlyUserKey={}",
-                userId, createdItems.size(), onlyMode);
+        log.info("创建用户模型密钥完成 userId={} createdCount={}", userId, createdItems.size());
 
         CreateUserAiModelKeyResponse resp = new CreateUserAiModelKeyResponse();
-        resp.setOnlyUserKey(onlyMode);
+        resp.setOnlyUserKey(0);
         resp.setCreatedCount(createdItems.size());
         resp.setKeyList(createdItems);
         return resp;
@@ -480,33 +478,18 @@ public class UserAiModelKeyService {
         return result;
     }
 
-    @Transactional
+    /**
+     * Kept for older clients only. There is no exclusive mode anymore: enabled own-key
+     * models stay selectable and everything else uses the BGSSAI built-in models, so
+     * this always reports the mixed mode value 0 and persists nothing.
+     */
     public UpdateUserAiKeyModeResponse updateMode(UpdateUserAiKeyModeRequest req) {
         String userId = requireCurrentUser();
         if (req == null || req.getOnlyUserKey() == null) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "only_user_key required");
         }
-        int onlyMode = Integer.valueOf(1).equals(req.getOnlyUserKey()) ? 1 : 0;
-        log.info("切换仅使用自有密钥模式 userId={} onlyUserKey={}", userId, onlyMode);
-        upsertSetting(userId, onlyMode);
-        log.info("切换仅使用自有密钥模式完成 userId={} onlyUserKey={}", userId, onlyMode);
-        return new UpdateUserAiKeyModeResponse(onlyMode);
-    }
-
-    public boolean isOnlyUserKeyMode(String userId) {
-        if (userId == null || userId.isBlank()) {
-            return false;
-        }
-        try {
-            UserAiSettingExample ex = new UserAiSettingExample();
-            ex.createCriteria().andUserIdEqualTo(userId.trim()).andDelFlagEqualTo(0);
-            ex.selectColumns("id", "is_only_user_key");
-            UserAiSetting row = userAiSettingMapper.selectOneByExample(ex);
-            return row != null && Integer.valueOf(1).equals(row.getOnlyUserKey());
-        } catch (DataAccessException ex) {
-            log.warn("读取 user_ai_setting 失败，按未开启自有独占模式回退 userId={}", userId);
-            return false;
-        }
+        log.info("模型密钥模式切换请求按混合模式处理 userId={}", userId);
+        return new UpdateUserAiKeyModeResponse(0);
     }
 
     public List<UserAiModelKey> listEnabledRows(String userId, String abilityType) {
@@ -552,9 +535,6 @@ public class UserAiModelKeyService {
             return active;
         }
         String uid = userId.trim();
-        if (isOnlyUserKeyMode(uid)) {
-            return Set.of();
-        }
         for (UserAiModelKey row : listEnabledRows(uid, null)) {
             if (row.getAbilityType() != null) {
                 active.remove(row.getAbilityType().trim().toUpperCase(Locale.ROOT));
@@ -587,7 +567,6 @@ public class UserAiModelKeyService {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
                     "所选自有密钥模型未启用或不存在，请到账号设置检查" + UserAiModelSupport.abilityLabel(ability) + "模型密钥");
         }
-        boolean onlyMode = isOnlyUserKeyMode(userId);
         if (!code.isBlank() && !isPlatformAlias(code)) {
             for (UserAiModelKey row : rows) {
                 if (code.equalsIgnoreCase(row.getModelCode())) {
@@ -595,13 +574,7 @@ public class UserAiModelKeyService {
                 }
             }
         }
-        if (onlyMode) {
-            if (!rows.isEmpty()) {
-                return UserAiModelSupport.toTransientModelConfig(rows.get(0));
-            }
-            throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
-                    "当前已开启仅使用自有密钥，请先在账号设置配置并启用" + UserAiModelSupport.abilityLabel(ability) + "模型密钥");
-        }
+        // No own-key model selected: the caller falls back to the BGSSAI built-in models.
         return null;
     }
 
@@ -612,7 +585,7 @@ public class UserAiModelKeyService {
         AiModelConfig resolved = resolveUserModel(userId, abilityType, requestedCode);
         if (resolved == null) {
             throw new BizException(CommonErrorCode.ABILITY_UNAVAILABLE,
-                    "当前已开启仅使用自有密钥，请先在账号设置配置并启用"
+                    "请先在账号设置配置并启用"
                             + UserAiModelSupport.abilityLabel(abilityType) + "模型密钥");
         }
     }
@@ -662,51 +635,6 @@ public class UserAiModelKeyService {
         }
     }
 
-    private int ensureInitialModeOnCreate(String userId, Integer requestedMode) {
-        UserAiSettingExample ex = new UserAiSettingExample();
-        ex.createCriteria().andUserIdEqualTo(userId).andDelFlagEqualTo(0);
-        UserAiSetting existing = userAiSettingMapper.selectOneByExample(ex);
-        if (existing != null) {
-            if (requestedMode != null) {
-                int target = Integer.valueOf(1).equals(requestedMode) ? 1 : 0;
-                if (!Objects.equals(existing.getOnlyUserKey(), target)) {
-                    upsertSetting(userId, target);
-                    return target;
-                }
-            }
-            return Integer.valueOf(1).equals(existing.getOnlyUserKey()) ? 1 : 0;
-        }
-        int initial = requestedMode == null ? 1 : (Integer.valueOf(1).equals(requestedMode) ? 1 : 0);
-        upsertSetting(userId, initial);
-        return initial;
-    }
-
-    private void upsertSetting(String userId, int onlyUserKey) {
-        UserAiSettingExample ex = new UserAiSettingExample();
-        ex.createCriteria().andUserIdEqualTo(userId);
-        UserAiSetting existing = userAiSettingMapper.selectOneByExample(ex);
-        Date now = new Date();
-        if (existing == null) {
-            UserAiSetting row = new UserAiSetting();
-            row.setUserId(userId);
-            row.setOnlyUserKey(onlyUserKey);
-            row.setDelFlag(0);
-            row.setCreator(userId);
-            row.setModifier(userId);
-            row.setGmtCreate(now);
-            row.setGmtModified(now);
-            userAiSettingMapper.insertSelective(row);
-            return;
-        }
-        UserAiSetting patch = new UserAiSetting();
-        patch.setId(existing.getId());
-        patch.setOnlyUserKey(onlyUserKey);
-        patch.setDelFlag(0);
-        patch.setModifier(userId);
-        patch.setGmtModified(now);
-        userAiSettingMapper.updateByPrimaryKeySelective(patch);
-    }
-
     private void claimAbility(String userId, String abilityType, String keepKeyId) {
         disableOtherUserKeys(userId, abilityType, keepKeyId);
     }
@@ -714,17 +642,6 @@ public class UserAiModelKeyService {
     private void selectPlatform(String userId, String ability) {
         disableOtherUserKeys(userId, ability, null);
         Set<String> suppressed = readSuppressed(userId);
-        if (isOnlyUserKeyMode(userId)) {
-            suppressed.clear();
-            for (String item : PLATFORM_ABILITIES) {
-                if (!item.equals(ability)) {
-                    suppressed.add(item);
-                }
-            }
-            saveSuppressed(userId, suppressed);
-            upsertSetting(userId, 0);
-            return;
-        }
         if (suppressed.remove(ability)) {
             saveSuppressed(userId, suppressed);
         }
@@ -873,7 +790,7 @@ public class UserAiModelKeyService {
         if (existing == null) {
             UserAiSetting row = new UserAiSetting();
             row.setUserId(userId);
-            row.setOnlyUserKey(isOnlyUserKeyMode(userId) ? 1 : 0);
+            row.setOnlyUserKey(0);
             row.setSuppressedPlatformAbilities(value);
             row.setDelFlag(0);
             row.setCreator(userId);

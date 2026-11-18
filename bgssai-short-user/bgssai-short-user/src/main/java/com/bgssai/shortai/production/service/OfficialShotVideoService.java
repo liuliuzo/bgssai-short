@@ -45,7 +45,6 @@ import com.bgssai.shortai.production.support.TaskPrices;
 import com.bgssai.shortai.model.AiModelConfig;
 import com.bgssai.shortai.quota.service.QuotaConsumeService;
 import com.bgssai.shortai.quota.service.QuotaWalletService;
-import com.bgssai.shortai.useraimodel.service.UserAiModelKeyService;
 import com.bgssai.shortai.useraimodel.service.UserAiModelSupport;
 import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService;
 
@@ -83,8 +82,6 @@ public class OfficialShotVideoService {
     private PaidOrderGrantService paidOrderGrantService;
     @Autowired
     private WorkAccessService workAccessService;
-    @Autowired(required = false)
-    private UserAiModelKeyService userAiModelKeyService;
     @Autowired(required = false)
     private UserAiProviderKeyService userAiProviderKeyService;
 
@@ -253,9 +250,6 @@ public class OfficialShotVideoService {
     private boolean isUserKeyVideoActive(String userId, AiTaskReq req) {
         String code = req == null ? null : req.getModelCode();
         if (UserAiModelSupport.isUserKeyCode(code)) {
-            return true;
-        }
-        if (userAiModelKeyService != null && userAiModelKeyService.isOnlyUserKeyMode(userId)) {
             return true;
         }
         if (userAiProviderKeyService != null && aiModelResolveService != null

@@ -105,8 +105,7 @@ public class PipelineReadiness {
         if (userAiModelKeyService != null) {
             String userId = userAiModelKeyService.currentUserOrScopeUserId();
             boolean userKeyRequested = UserAiModelSupport.isUserKeyCode(selectedModel);
-            boolean onlyUserKey = userId != null && userAiModelKeyService.isOnlyUserKeyMode(userId);
-            if (userKeyRequested || onlyUserKey) {
+            if (userKeyRequested) {
                 try {
                     userAiModelKeyService.assertAbilityReady(userId, normalizedAbility, selectedModel);
                     return;

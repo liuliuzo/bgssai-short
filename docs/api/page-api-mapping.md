@@ -166,4 +166,4 @@
 | 设为同能力默认模型 | POST | `/bgssai/user/ai-model-keys/set-default` |
 | 删除自有模型密钥 | POST | `/bgssai/user/ai-model-keys/delete` |
 | 测试自有模型连通性 | POST | `/bgssai/user/ai-model-keys/test` |
-| 切换仅使用自有密钥模式 | POST | `/bgssai/user/ai-model-keys/mode` |
+| 模式切换（兼容接口，恒返回 0） | POST | `/bgssai/user/ai-model-keys/mode` |

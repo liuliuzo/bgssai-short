@@ -61,7 +61,7 @@
 ```json
 {
   "result": {
-    "only_user_key": 1,
+    "only_user_key": 0,
     "key_list": [
       {
         "key_id": "umk-1001",
@@ -124,7 +124,6 @@
   "ability_type": "VIDEO",
   "model_code": "kling-v3",
   "model_name": "Kling V3",
-  "only_user_key": 1,
   "items": [
     { "modality_type": "VIDEO", "ability_type": "VIDEO", "model_code": "kling-v3", "model_name": "Kling V3" },
     { "modality_type": "IMAGE", "ability_type": "IMAGE", "model_code": "kling-v3", "model_name": "Kling Image V3" }
@@ -132,7 +131,7 @@
 }
 ```
 
-返回 `{ "result": { "only_user_key": 1, "created_count": 2, "key_list": [ ... ] } }`。
+返回 `{ "result": { "only_user_key": 0, "created_count": 2, "key_list": [ ... ] } }`。请求中的 `only_user_key` 为兼容字段，忽略不读。
 
 ## POST /bgssai/user/ai-model-keys/update
 
@@ -206,13 +205,15 @@
 }
 ```
 
-## POST /bgssai/user/ai-model-keys/mode
+## POST /bgssai/user/ai-model-keys/mode（兼容接口）
+
+无全局模式开关；该接口仅为旧客户端保留，请求值忽略、不落库。
 
 ```json
 { "only_user_key": 1 }
 ```
 
-返回 `{ "result": { "only_user_key": 1 } }`。
+返回 `{ "result": { "only_user_key": 0 } }`。
 
 ## GET /bgssai/user/ai-keys（兼容 GET /api/user/ai-keys）
 
