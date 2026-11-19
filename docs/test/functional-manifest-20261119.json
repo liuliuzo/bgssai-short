@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "date": "2026-11-19",
+  "repo": "liuliuzo/bgssai-short",
+  "local_repo": "bgssai-short",
+  "baseline": "0f1d97337c5da416590f27ee2211d81b1f8ebccb",
+  "requirement_file": "docs/test/TRACEABILITY-20261119.md",
+  "design_only": true,
+  "requirements": [
+    {
+      "id": "REQ-SHORT-20261119-01",
+      "title": "密钥切换 / 模型停用与回退",
+      "cases": [
+        "TC-SHORT-20261119-01-P",
+        "TC-SHORT-20261119-01-N"
+      ],
+      "file": "docs/test/TC-current-20261119.md"
+    },
+    {
+      "id": "REQ-SHORT-20261119-02",
+      "title": "镜头画面风格 / 锁定镜头",
+      "cases": [
+        "TC-SHORT-20261119-02-P",
+        "TC-SHORT-20261119-02-N"
+      ],
+      "file": "docs/test/TC-current-20261119.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-SHORT-20261119-01-P",
+      "requirement": "REQ-SHORT-20261119-01",
+      "file": "TC-current-20261119.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-20261119-01-N",
+      "requirement": "REQ-SHORT-20261119-01",
+      "file": "TC-current-20261119.md",
+      "status": "待测",
+      "kind": "N"
+    },
+    {
+      "id": "TC-SHORT-20261119-02-P",
+      "requirement": "REQ-SHORT-20261119-02",
+      "file": "TC-current-20261119.md",
+      "status": "待测",
+      "kind": "P"
+    },
+    {
+      "id": "TC-SHORT-20261119-02-N",
+      "requirement": "REQ-SHORT-20261119-02",
+      "file": "TC-current-20261119.md",
+      "status": "待测",
+      "kind": "N"
+    }
+  ],
+  "coverage": [
+    {
+      "source": "docs/feature/user-custom-ai-keys.md",
+      "classification": "执行依据",
+      "requirements": [
+        "REQ-SHORT-20261119-01",
+        "REQ-SHORT-20261119-02"
+      ],
+      "cases": [
+        "TC-SHORT-20261119-01-P",
+        "TC-SHORT-20261119-01-N",
+        "TC-SHORT-20261119-02-P",
+        "TC-SHORT-20261119-02-N"
+      ],
+      "legacy": []
+    },
+    {
+      "source": "docs/feature/storyboard-workbench.md",
+      "classification": "执行依据",
+      "requirements": [
+        "REQ-SHORT-20261119-01",
+        "REQ-SHORT-20261119-02"
+      ],
+      "cases": [
+        "TC-SHORT-20261119-01-P",
+        "TC-SHORT-20261119-01-N",
+        "TC-SHORT-20261119-02-P",
+        "TC-SHORT-20261119-02-N"
+      ],
+      "legacy": []
+    },
+    {
+      "source": "bgssai-short-user/bgssai-short-user-react/src/pages/account/modelKeySelection.test.js",
+      "classification": "执行依据",
+      "requirements": [
+        "REQ-SHORT-20261119-01",
+        "REQ-SHORT-20261119-02"
+      ],
+      "cases": [
+        "TC-SHORT-20261119-01-P",
+        "TC-SHORT-20261119-01-N",
+        "TC-SHORT-20261119-02-P",
+        "TC-SHORT-20261119-02-N"
+      ],
+      "legacy": []
+    }
+  ],
+  "historical_suites": [],
+  "progress": {
+    "待测": 4,
+    "通过": 0,
+    "失败": 0,
+    "阻塞": 0,
+    "不适用": 0
+  },
+  "suite_counts": {
+    "TC-current-20261119.md": {
+      "待测": 4,
+      "通过": 0,
+      "失败": 0,
+      "阻塞": 0,
+      "不适用": 0
+    }
+  }
+}
