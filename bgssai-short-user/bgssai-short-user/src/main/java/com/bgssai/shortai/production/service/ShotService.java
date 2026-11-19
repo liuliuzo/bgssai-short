@@ -505,7 +505,7 @@ public class ShotService {
         item.put("first_frame_placeholder_flag", framePlaceholder ? 1 : 0);
         item.put("video_placeholder_flag", videoPlaceholder ? 1 : 0);
         item.put("reference_note", framePlaceholder
-                ? "首帧还是占位图，不会当作参考。公司视频按定妆外貌、服装和场景文字生成，有真实定妆照片时会作为参考图提交。"
+                ? "首帧还是占位图，不会当作参考。公司视频按人物定妆和场景文字生成，有真实定妆照时会作为参考图提交。"
                 : null);
         item.put("previz_level", row.getPrevizLevel() == null ? "NONE" : row.getPrevizLevel());
         item.put("emotion", row.getEmotion());

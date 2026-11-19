@@ -82,7 +82,7 @@ test('preview and submit errors return readable failure messages', async () => {
     confirm: async () => true,
     submit: async () => {
       const err = new Error('network')
-      err.response = { data: { message: '镜1 引用的角色「沈知微」尚未定妆，请先完成定妆' } }
+      err.response = { data: { message: '镜1 引用的人物定妆「沈知微」尚未锁定，请先选定定妆图' } }
       throw err
     },
   })

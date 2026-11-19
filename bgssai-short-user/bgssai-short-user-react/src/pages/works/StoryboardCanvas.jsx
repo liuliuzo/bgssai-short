@@ -183,7 +183,7 @@ export default function StoryboardCanvas({ episodeId, onSwitchToList, cameraSave
       }
       const estRes = await productionApi.estimateTasks(body)
       if (!estRes?.data?.success) {
-        message.error(estRes?.data?.message || '费用预估未通过，请检查角色或场景参考图')
+        message.error(estRes?.data?.message || '费用预估未通过，请检查人物定妆或场景参考图')
         return
       }
       const ok = await confirmBatchEstimate(estRes.data.result)

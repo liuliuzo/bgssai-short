@@ -20,7 +20,7 @@ export const PROP_ANGLES = [
 ]
 
 export const LOOK_KINDS = [
-  { key: 'CHARACTER', label: '人物定妆', pageTitle: '定妆库', route: '/look-library', itemNoun: '造型', cardNoun: '角色' },
+  { key: 'CHARACTER', label: '人物定妆', pageTitle: '定妆库', route: '/look-library', itemNoun: '人物定妆', cardNoun: '人物定妆' },
   { key: 'SCENE', label: '场景参考', pageTitle: '场景库', route: '/scene-library', itemNoun: '场景', cardNoun: '场景' },
   { key: 'PROP', label: '道具参考', pageTitle: '道具库', route: '/prop-library', itemNoun: '道具', cardNoun: '道具' },
 ]
@@ -86,7 +86,7 @@ export function librarySummaryCounts(materials) {
 
 export function librarySummaryText(materials) {
   const { characterCount, sceneCount, propCount } = librarySummaryCounts(materials)
-  const parts = [`${characterCount} 个造型`, `${sceneCount} 个场景`]
+  const parts = [`${characterCount} 个人物定妆`, `${sceneCount} 个场景`]
   if (propCount > 0) parts.push(`${propCount} 个道具`)
   return parts.join(' · ')
 }
@@ -96,14 +96,14 @@ export function libraryKindCountText(materials, kind) {
   const { characterCount, sceneCount, propCount } = librarySummaryCounts(materials)
   if (normalized === 'SCENE') return `${sceneCount} 个场景`
   if (normalized === 'PROP') return `${propCount} 个道具`
-  return `${characterCount} 个造型`
+  return `${characterCount} 个人物定妆`
 }
 
 export function libraryOtherKindsNotice(materials, kind) {
   const normalized = normalizeLookKind(kind)
   const { characterCount, sceneCount, propCount } = librarySummaryCounts(materials)
   const others = []
-  if (normalized !== 'CHARACTER' && characterCount > 0) others.push(`${characterCount} 个造型`)
+  if (normalized !== 'CHARACTER' && characterCount > 0) others.push(`${characterCount} 个人物定妆`)
   if (normalized !== 'SCENE' && sceneCount > 0) others.push(`${sceneCount} 个场景`)
   if (normalized !== 'PROP' && propCount > 0) others.push(`${propCount} 个道具`)
   if (!others.length) return ''

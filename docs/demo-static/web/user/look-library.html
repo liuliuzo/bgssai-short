@@ -23,30 +23,29 @@
   <main class="app-main">
     <div class="container">
       <h1 class="title">定妆库</h1>
-      <p class="subtitle">这里放可以跨剧集、跨作品反复使用的人物定妆造型。每个造型按正脸、前面、背面、侧面排好；四个角度都可以直接生成或重做，重做后原来的照片会自动保留在下方，方便随时换回。</p>
-      <p><a href="character-bible.html">返回角色与场景</a></p>
+      <p><a href="character-bible.html">返回人物定妆与场景</a></p>
       <div class="card">
         <div class="card-hd"><h2>定妆库</h2><button class="btn btn-primary btn-sm">新建分组</button></div>
         <div class="card-body" style="display:flex;gap:16px;align-items:flex-start">
           <div style="width:196px;flex-shrink:0">
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆<div class="text-muted">2 个造型 · 生成时参考</div></div>
-            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">现代都市剧资产库<div class="text-muted">1 个造型 · 生成时参考</div></div>
-            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">古装女主造型组<div class="text-muted">3 个造型 · 先放着</div></div>
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px;margin-bottom:8px">我的定妆<div class="text-muted">2 个人物定妆 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #d48806;border-radius:8px;margin-bottom:8px;background:#fff7e6">现代都市剧资产库<div class="text-muted">1 个人物定妆 · 生成时参考</div></div>
+            <div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:8px">古装女主组<div class="text-muted">3 个人物定妆 · 先放着</div></div>
           </div>
           <div style="flex:1">
             <div class="row" style="margin-bottom:4px;gap:8px">
               <strong>现代都市剧资产库</strong>
-              <span class="text-muted">（1 个造型）</span>
-              <span style="margin-left:auto">生成定妆时自动匹配这个分组</span>
+              <span class="text-muted">（1 个人物定妆）</span>
+              <span style="margin-left:auto">自动匹配</span>
               <input type="checkbox" checked disabled />
             </div>
             <div class="text-muted" style="font-size:12px;margin-bottom:12px">这个分组里还有 2 个场景、1 个道具，自动匹配开关和归档恢复会一起生效。</div>
             <div class="row" style="margin-bottom:12px;gap:8px">
-              <input placeholder="造型名称，例如白纱花瓣" />
-              <input placeholder="外观特征（可选，例如黑长直、珍珠耳环）" />
-              <button class="btn btn-default btn-sm">添加造型</button>
+              <input placeholder="人物定妆名称，例如沈知微·白纱花瓣" />
+              <input placeholder="外观与穿搭特征（可选，例如黑长直、珍珠耳环）" />
+              <button class="btn btn-default btn-sm">添加人物定妆</button>
             </div>
-            <div class="card-hd" style="padding:0 0 12px"><h2>红礼服</h2><button class="btn btn-default btn-sm">一次补齐空缺面</button><button class="btn btn-default btn-sm">删除造型</button></div>
+            <div class="card-hd" style="padding:0 0 12px"><h2>沈知微·红礼服</h2><button class="btn btn-default btn-sm">一次补齐空缺面</button><button class="btn btn-default btn-sm">删除人物定妆</button></div>
             <div style="display:flex;gap:12px;align-items:flex-start">
               <div style="width:112px">
                 <div class="text-muted">正脸</div>
@@ -101,14 +100,14 @@
       </div>
       <div class="spec">
         <div class="spec-t">字段口径</div>
-        路由：<code>/look-library</code>（仅展示 <code>material_kind=CHARACTER</code> 的人物造型；访问旧 <code>/look-library?kind=SCENE</code> 或 <code>?kind=PROP</code> 自动转入 <code>/scene-library</code> 或 <code>/prop-library</code> 并保留 <code>return</code>）。
+        路由：<code>/look-library</code>（仅展示 <code>material_kind=CHARACTER</code> 的人物定妆；访问旧 <code>/look-library?kind=SCENE</code> 或 <code>?kind=PROP</code> 自动转入 <code>/scene-library</code> 或 <code>/prop-library</code> 并保留 <code>return</code>）。
         接口：<code>GET /bgssai/user/look-libraries/list</code> ·
         <code>POST /bgssai/user/look-libraries/save</code> ·
         <code>POST /bgssai/user/look-materials/upload</code> ·
         <code>POST /bgssai/user/look-materials/delete</code> ·
         <code>POST /bgssai/user/look-materials/promote</code> ·
         <code>POST /bgssai/user/look-materials/complete-angles</code>。
-        正脸、前面、背面、侧面四个角度均支持直接重做（<code>skip_reference=1</code> 按外观描述重新生成）或参考已有照片重做；重做后原照片自动保留在历史列表中，可通过 <code>promote</code> 一键换回。左侧分组只统计当前页的人物造型数量；分组内同时存在场景或道具时，明确提示自动匹配开关和归档恢复会一起生效。
+        正脸、前面、背面、侧面四个角度均支持直接重做（<code>skip_reference=1</code> 按外观描述重新生成）或参考已有照片重做；重做后原照片自动保留在历史列表中，可通过 <code>promote</code> 一键换回。左侧分组只统计当前页的人物定妆数量；分组内同时存在场景或道具时，明确提示自动匹配开关和归档恢复会一起生效。
       </div>
       <div class="footer legal-fanout legal-quiet">
         <p class="legal-quiet-line"><span>© 2026 昆山兵贵神速智能科技有限公司</span><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/terms-of-service/" target="_blank" rel="noopener noreferrer">用户协议</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/privacy-policy/" target="_blank" rel="noopener noreferrer">隐私政策</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/personal-information-inventory/" target="_blank" rel="noopener noreferrer" title="Personal Information Inventory">个人信息收集清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/third-party-sharing/" target="_blank" rel="noopener noreferrer" title="Third-Party Sharing">第三方信息共享清单</a><span aria-hidden="true"> · </span><a href="https://www.bgssai.com/app-permissions/" target="_blank" rel="noopener noreferrer" title="App Permissions">应用权限说明</a><span aria-hidden="true"> · </span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">苏ICP备2024070062号-15</a></p>

@@ -147,11 +147,14 @@ test('a finalized episode that already has a film does not keep step 1 as the ne
 
 test('resolveRepairAction routes quota, look, and script errors to exact destination', () => {
   assert.equal(resolveRepairAction('镜1 引用的角色「沈知微」尚未定妆').tab, 'characters')
+  assert.equal(resolveRepairAction('镜1 引用的人物定妆「沈知微」尚未锁定，请先选定定妆图').tab, 'characters')
+  assert.equal(resolveRepairAction('镜1 引用的人物定妆「沈知微」尚未锁定，请先选定定妆图').label, '去人物定妆处理')
   assert.equal(resolveRepairAction('镜1 引用的场景「公司会议室」尚未锁定参考图').tab, 'scenes')
   assert.equal(resolveRepairAction('镜1 引用的场景「公司会议室」尚未锁定参考图').label, '去场景参考处理')
   assert.equal(resolveRepairAction('待锁定定妆：角色「王芳」、场景「公司会议室」').tab, 'characters')
-  assert.equal(resolveRepairAction('待锁定定妆：场景「公司会议室」（在「角色定妆」页选定图片即可解锁）').tab, 'scenes')
-  assert.equal(resolveRepairAction('待锁定定妆：角色「王芳」、场景「开放办公区」（在「角色定妆」页选定图片即可解锁）').tab, 'characters')
+  assert.equal(resolveRepairAction('待锁定定妆：人物定妆「王芳」、场景「公司会议室」').tab, 'characters')
+  assert.equal(resolveRepairAction('待锁定定妆：场景「公司会议室」（在「人物定妆」页选定图片即可解锁）').tab, 'scenes')
+  assert.equal(resolveRepairAction('待锁定定妆：人物定妆「王芳」、场景「开放办公区」（在「人物定妆」页选定图片即可解锁）').tab, 'characters')
   assert.equal(resolveRepairAction('可用余额不足，请先充值').href, '/subscription')
   assert.equal(resolveRepairAction('请先完成本集定稿').tab, 'script')
   assert.equal(resolveRepairAction('服务繁忙，请稍后查看任务').href, '/tasks')

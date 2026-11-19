@@ -350,11 +350,11 @@ public class LookKnowledgeService {
 
     public ShortLookMaterial requireMaterial(String userId, String materialId) {
         if (materialId == null || materialId.isBlank()) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择一个造型");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择一个人物定妆");
         }
         ShortLookMaterial row = findMaterial(userId, materialId);
         if (row == null) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "造型不存在");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "人物定妆不存在");
         }
         return row;
     }
@@ -929,7 +929,7 @@ public class LookKnowledgeService {
         row.setLibraryId(ShortIds.id("lk-"));
         row.setUserId(userId);
         row.setLibraryName(DEFAULT_NAME);
-        row.setDescription("角色卡上上传的照片会放在这里，生成定妆时也可以直接选用。");
+        row.setDescription("人物定妆上传的照片会放在这里，生成定妆时也可以直接选用。");
         row.setStatus("ACTIVE");
         row.setMountPortrait(1);
         row.setItemCount(0);
@@ -1042,7 +1042,7 @@ public class LookKnowledgeService {
     public ApiResponse completeAngles(LookCompleteReq req) {
         String userId = workAccessService.requireUser();
         if (req == null) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要生成的造型");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要生成的人物定妆");
         }
         boolean confirm = req.getConfirmCost() != null && req.getConfirmCost() == 1;
         AngleTarget target = resolveTarget(userId, req, confirm);
@@ -1214,7 +1214,7 @@ public class LookKnowledgeService {
         String libraryId = req.getLibraryId() == null ? "" : req.getLibraryId().trim();
         String name = req.getMaterialName() == null ? "" : req.getMaterialName().trim();
         if (libraryId.isEmpty() || name.isEmpty()) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要生成的造型");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "请选择要生成的人物定妆");
         }
         ShortLookLibrary library = requireLibrary(userId, libraryId);
         if (!"ACTIVE".equals(library.getStatus())) {
@@ -1240,7 +1240,7 @@ public class LookKnowledgeService {
         ex.createCriteria().andCharacterIdEqualTo(characterId).andUserIdEqualTo(userId).andDeletedFlagEqualTo(0);
         ShortCharacter character = shortCharacterMapper.selectOneByExample(ex);
         if (character == null) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, "角色不存在");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "人物定妆不存在");
         }
         List<ShortLookMaterial> rows = cardMaterials(userId, characterId);
         String fallbackName = character.getCharacterName() == null || character.getCharacterName().isBlank()

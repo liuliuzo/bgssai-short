@@ -41,10 +41,10 @@ export default function LibraryLookPicker({
   const [libraryId, setLibraryId] = useState()
   const isScene = kind === 'SCENE'
   const isProp = kind === 'PROP'
-  const noun = isProp ? '道具' : isScene ? '场景' : '角色'
+  const noun = isProp ? '道具' : isScene ? '场景' : '人物定妆'
   const pickLabel = isProp ? '道具参考' : isScene ? '场景参考' : '人物定妆'
-  const itemNoun = isProp ? '道具' : isScene ? '场景' : '造型'
-  const actionLabel = isProp ? '用这个道具' : isScene ? '用这个场景' : '用这个造型'
+  const itemNoun = isProp ? '道具' : isScene ? '场景' : '人物定妆'
+  const actionLabel = isProp ? '用这个道具' : isScene ? '用这个场景' : '用这个人物定妆'
   const thumbWidth = isScene ? 136 : isProp ? 100 : 104
   const thumbHeight = isScene ? 90 : isProp ? 100 : 140
   const cardWidth = isScene ? 148 : isProp ? 112 : 120

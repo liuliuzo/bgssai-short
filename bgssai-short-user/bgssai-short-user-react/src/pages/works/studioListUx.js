@@ -531,15 +531,15 @@ export function buildAssetBindPayload({ shotId, bindChars = [], bindScene, bindP
 }
 
 export function assetLibrarySummary({ characters, scenes, props, ready = true } = {}) {
-  if (!ready) return '正在读取可绑定的角色、场景和道具。'
+  if (!ready) return '正在读取可绑定的人物定妆、场景和道具。'
   const parts = []
   const characterNames = namesOf(characters)
   const sceneNames = namesOf(scenes)
   const propNames = namesOf(props)
-  if (characterNames.length) parts.push(`角色 ${characterNames.join('、')}`)
+  if (characterNames.length) parts.push(`人物定妆 ${characterNames.join('、')}`)
   if (sceneNames.length) parts.push(`场景 ${sceneNames.join('、')}`)
   if (propNames.length) parts.push(`道具 ${propNames.join('、')}`)
-  if (!parts.length) return '暂无可绑定的角色、场景或道具'
+  if (!parts.length) return '暂无可绑定的人物定妆、场景或道具'
   return `本剧可绑定：${parts.join(' · ')}`
 }
 

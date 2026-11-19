@@ -149,8 +149,8 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 
 `LookAngle.ALL` 覆盖 `FRONT_FACE`（正脸）、`FRONT`（前面）、`BACK`（背面）、`SIDE`（侧面）全部四面。`POST /bgssai/user/look-materials/complete-angles` 支持任一角度单面生成或重做（`replace_existing=1`），也支持一次补齐空缺面，不再拒绝 `FRONT_FACE`，也不再强制要求先上传正脸或必须按正脸重做：
 - `LookKnowledgeService.characterTarget` 仅按 `ShortLookMaterial` 四面实际静态照片计算 `filled`，不再因 `refImageAssetId` 存在而把空的 `FRONT_FACE` 标为已填充，确保「一次补齐空缺面」把正脸与前面、背面、侧面一起生成（未勾选跳过参考图时仍沿用 `refImageAssetId` 作为主体参考）。
-- 当 `skip_reference=1` 或当前造型尚无任何静态定妆照时，`ShortAiTaskWorker.finishLookAngles` 直接按造型名、外观描述与补充说明执行纯文生图，不塞参考图；当无初始参考图一次生成包含 `FRONT_FACE` 的多个角度时，先生成 `FRONT_FACE`，随后将新生成的正脸字节作为同任务后续角度（`FRONT`、`BACK`、`SIDE`）的主体参考图，保持四面同人同衣。
-- 当用户选择参考已有定妆照时，优先采用 `reference_material_id` 指定的照片（未指定时默认取正脸或该造型任意已有静态照片）写入 `image` 主体参考字段；重做 `FRONT_FACE` 采用适度主体权重（`0.80/0.82`）允许更新神态与细节，生成其他角度采用高一致性权重（`0.92/0.88`）。
+- 当 `skip_reference=1` 或当前人物定妆尚无任何静态定妆照时，`ShortAiTaskWorker.finishLookAngles` 直接按人物定妆名、外观描述与补充说明执行纯文生图，不塞参考图；当无初始参考图一次生成包含 `FRONT_FACE` 的多个角度时，先生成 `FRONT_FACE`，随后将新生成的正脸字节作为同任务后续角度（`FRONT`、`BACK`、`SIDE`）的主体参考图，保持四面同人同衣。
+- 当用户选择参考已有定妆照时，优先采用 `reference_material_id` 指定的照片（未指定时默认取正脸或该人物定妆任意已有静态照片）写入 `image` 主体参考字段；重做 `FRONT_FACE` 采用适度主体权重（`0.80/0.82`）允许更新神态与细节，生成其他角度采用高一致性权重（`0.92/0.88`）。
 
 角度以格子为准。说明里只出现一个角度词、又没指定格子时，按正脸 / 前面 / 背面 / 侧面归位。站姿、坐姿、行走仍算那一面的补充，这一面已有普通照片时排到「历史与补充照片」，不拿补充去填另一个空格。
 
@@ -164,13 +164,13 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 
 ## 资产卡直接选用人物定妆与场景道具参考（2026-11-17）
 
-- `CharacterPane.load` 并行拉取 `GET /bgssai/user/assets/consistency-panel` 与 `GET /bgssai/user/look-libraries/list`，卡片存入定妆库、上传照片、补齐角度或锁定造型后同步刷新可选列表。
+- `CharacterPane.load` 并行拉取 `GET /bgssai/user/assets/consistency-panel` 与 `GET /bgssai/user/look-libraries/list`，卡片存入定妆库、上传照片、补齐角度或锁定人物定妆后同步刷新可选列表。
 - `LibraryLookPicker` 移除跳转离开作品页的「管理定妆库 / 管理场景库 / 管理道具库」链接，卡内只保留一条选用路径：行首展示当前所选条目（`matchSelectedLookValue` 按卡片 `look_reference` 在 `buildLibraryLookOptions` 聚合选项中命中，未命中写「未从库中选择」），展开后为平铺缩略图面板，按分组切换且展开时默认回到当前条目所在分组，支持按条目名或分组名跨分组搜索；当前条目标「使用中」且不可重复选用，点其他条目的选用按钮触发 `apply-look` 锁定主图并绑定各面，封面图本身不触发选用。
 
 ## 工作台环节与镜头制作
 
-- 工作台主流程共七步：`4 looks（定妆）` 只计角色与道具的未锁定卡，新增 `5 scenes（场景）` 单独计场景卡（`unlockedLooks` / `unlockedScenes`），第 6 步统一处理拆镜、运镜、首帧与镜头视频，第 7 步为成片。步骤总数取 `VIDEO_PATH_STEPS.length`。
-- 核心工作区新增 `scenes` 页签（`/works/:work_id/scenes`）：`CharacterPane` 按分区渲染 — `characters` 渲染角色卡 + 道具卡，`scenes` 只渲染场景卡 — 分区内的待锁定汇总与一键锁定按各自分区计；镜头拦截原因含「场景」时修复入口跳 `scenes`，其余定妆类仍落 `characters`。
+- 工作台主流程共七步：`4 looks（定妆）` 只计人物定妆与道具的未锁定卡，新增 `5 scenes（场景）` 单独计场景卡（`unlockedLooks` / `unlockedScenes`），第 6 步统一处理拆镜、运镜、首帧与镜头视频，第 7 步为成片。步骤总数取 `VIDEO_PATH_STEPS.length`。
+- 核心工作区新增 `scenes` 页签（`/works/:work_id/scenes`）：`CharacterPane` 按分区渲染 — `characters` 渲染人物定妆卡 + 道具卡，`scenes` 只渲染场景卡 — 分区内的待锁定汇总与一键锁定按各自分区计；镜头拦截原因含「场景」时修复入口跳 `scenes`，其余定妆类仍落 `characters`。
 - `SCENE_PORTRAIT` 进行中停在场景步（`scenePortraitRunning`）；首页粗粒度六环节与 `look_total` / `look_locked` 聚合口径不变（仍含全部三类卡）。
 
 ## 首页作品进度与分集环节统一计算（2026-11-17）
@@ -178,3 +178,9 @@ PENDING 不是商业成功；stub / 未配置不得写成 READY。
 - `WorkService.detail` 通过 MyBatis Example 批量查询 `short_character`、`short_scene_card`、`short_shot`、`short_film`，在详情响应中聚合作品级 `outline_count`、`character_count`、`scene_card_count`、`look_total`、`look_locked`，以及每集 `shot_total`、`shot_frame_ready`、`shot_ready`、`shot_spoken_ready`、`film_expired_flag`。
 - `ShotService.split` 重拆剧本分镜前调用 `FinishedFilmLifecycle.expireAfterUpstreamChange` 使已有旧成片失效，再回写 `storyboard_status=DRAFT`。
 - 用户端首页 `homeWorkbench.js` 按单集六环节链路（`剧本 → 定妆 → 分镜 → 首帧 → 视频 → 成片`，每集满额 6 单位）统一折算总进度 `总进度 X% · 已成片 M/N 集`，卡片内按集展示当前环节：≤4 集时每集一行全列，>4 集时只保留下一集未成片行与状态计数，完整列表在「全部集数」弹层内查看并可按集号定位（`episodeCardSummary` / `findEpisodeItem`；不合并区间，每集仍可直达，卡片高度不随集数增长），并基于实时环节状态计算卡片状态（`草稿` / `剧本中` / `制作中` / `合成中` / `已成片` / `审核中` / `已完成` / `已归档`）及主操作按钮跳转。
+
+## 角色与造型收敛为单一人物定妆（2026-11-19）
+
+- 取消「角色包含造型1、造型2」的两层嵌套结构，将「角色 + 造型」收敛为单一平铺实体「人物定妆」（`short_character`），每张人物定妆直接持有统一的 `appearance_prompt` 与 `ref_image_asset_id`，不同穿搭直接作为独立人物定妆建卡与锁定。
+- 从 `sql/DDL.sql`、`sql/DML.sql`、`scripts/gen_short_mappers.py`、用户端与管理端持久层三件套（`ShortCharacter`、`ShortCharacterExample`、`ShortCharacterMapper.xml`）及 `ShotConsistency.outfitLine` 移除 `default_outfit_code` 与 `outfit_json`。
+- 锁定后的人物定妆通过 `short_shot.character_ref_json` 直接绑定到场景/镜头，直接用于首帧与视频生成。

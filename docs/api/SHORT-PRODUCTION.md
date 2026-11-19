@@ -146,13 +146,13 @@ lock：`{ "character_id", "asset_id" }`
 
 ### POST /bgssai/user/characters/apply-look
 
-`{ "character_id", "material_id" }`。把知识库里这个造型用到该角色卡上并锁定主图。只接受角色造型。
+`{ "character_id", "material_id" }`。把定妆库里这个人物定妆用到该人物定妆卡上并锁定主图。只接受 `CHARACTER` 人物定妆。
 
 ### GET /bgssai/user/assets/consistency-panel?work_id=
 
 返回 `{ "character_list", "scene_list", "prop_list", "unbound_shot_count", "unlocked_ref_count" }`。
 每条资产含 `card_status`、`used_shot_count`、`ref_image_url`、`look_reference`。
-`look_reference.source` 为 `CARD`（这张卡已选定的造型）、`NAME`（按名称对上的兜底）或 `NONE`（没有参考图）。
+`look_reference.source` 为 `CARD`（这张卡已选定的人物定妆）、`NAME`（按名称对上的兜底）或 `NONE`（没有参考图）。
 道具来自 `short_scene_card.card_type=PROP`。
 
 ### GET /bgssai/user/scene-cards/list?work_id=&card_type=
@@ -244,10 +244,10 @@ query：`page_num` `page_size` `task_type` `task_status` `batch_id` `episode_id`
 
 `{ "character_id" | "scene_card_id", "candidate_count", "model_code", "skip_look_reference" }`。
 `model_code` 可选，缺省用该能力的默认模型；取值来自 `GET /bgssai/user/ai-models/list?ability_type=IMAGE`。
-`skip_look_reference=1` 时这一次不附带知识库或角色卡上的参考图。
+`skip_look_reference=1` 时这一次不附带定妆库或人物定妆上的参考图。
 
 list 每条另回 `task_status_name`、`task_type_name`、`recoverable_flag`、`cancellable_flag`。
-公司视频（`bgssai-video`）在排队时另回 `queue_ahead`、`progress_hint`（排队中，前面还有几条，一次只生成一条，通常每条约十多分钟）、`status_note`，`progress_percent` 为 0。执行中另回 `elapsed_sec` 和 `progress_hint`（已等待多久），进度随等待时间变化，不固定在 30。镜头列表的 `latest_task` 使用同一组字段。`image_prompt` 展示时带上已锁定的定妆外貌、服装、场景和道具。首帧若是占位图，`first_frame_placeholder_flag=1`，并给出 `reference_note`。
+公司视频（`bgssai-video`）在排队时另回 `queue_ahead`、`progress_hint`（排队中，前面还有几条，一次只生成一条，通常每条约十多分钟）、`status_note`，`progress_percent` 为 0。执行中另回 `elapsed_sec` 和 `progress_hint`（已等待多久），进度随等待时间变化，不固定在 30。镜头列表的 `latest_task` 使用同一组字段。`image_prompt` 展示时带上已锁定的人物定妆、场景和道具。首帧若是占位图，`first_frame_placeholder_flag=1`，并给出 `reference_note`。
 TEXT / IMAGE / VIDEO / VOICE / COMPOSE 共用
 `QUEUED` → `RUNNING` → `SUCCEEDED` / `FAILED`，可 `CANCELED`。
 

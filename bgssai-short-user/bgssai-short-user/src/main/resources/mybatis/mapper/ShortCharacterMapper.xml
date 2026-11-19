@@ -12,8 +12,6 @@
     <result column="appearance_prompt" jdbcType="VARCHAR" property="appearancePrompt" />
     <result column="consistency_seed" jdbcType="BIGINT" property="consistencySeed" />
     <result column="ref_image_asset_id" jdbcType="VARCHAR" property="refImageAssetId" />
-    <result column="default_outfit_code" jdbcType="VARCHAR" property="defaultOutfitCode" />
-    <result column="outfit_json" jdbcType="LONGVARCHAR" property="outfitJson" />
     <result column="voice_id" jdbcType="VARCHAR" property="voiceId" />
     <result column="voice_speed" jdbcType="VARCHAR" property="voiceSpeed" />
     <result column="deleted_flag" jdbcType="TINYINT" property="deletedFlag" />
@@ -64,7 +62,7 @@
   </sql>
 
   <sql id="Base_Column_List">
-    id, character_id, work_id, user_id, character_name, character_role, card_status, appearance_prompt, consistency_seed, ref_image_asset_id, default_outfit_code, outfit_json, voice_id, voice_speed, deleted_flag, created_time, updated_time
+    id, character_id, work_id, user_id, character_name, character_role, card_status, appearance_prompt, consistency_seed, ref_image_asset_id, voice_id, voice_speed, deleted_flag, created_time, updated_time
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.ShortCharacterExample" resultMap="BaseResultMap">
     select
@@ -101,8 +99,6 @@
       appearance_prompt,
       consistency_seed,
       ref_image_asset_id,
-      default_outfit_code,
-      outfit_json,
       voice_id,
       voice_speed,
       deleted_flag,
@@ -119,8 +115,6 @@
       #{appearancePrompt,jdbcType=VARCHAR},
       #{consistencySeed,jdbcType=BIGINT},
       #{refImageAssetId,jdbcType=VARCHAR},
-      #{defaultOutfitCode,jdbcType=VARCHAR},
-      #{outfitJson,jdbcType=LONGVARCHAR},
       #{voiceId,jdbcType=VARCHAR},
       #{voiceSpeed,jdbcType=VARCHAR},
       #{deletedFlag,jdbcType=TINYINT},
@@ -141,8 +135,6 @@
       <if test="appearancePrompt != null">appearance_prompt,</if>
       <if test="consistencySeed != null">consistency_seed,</if>
       <if test="refImageAssetId != null">ref_image_asset_id,</if>
-      <if test="defaultOutfitCode != null">default_outfit_code,</if>
-      <if test="outfitJson != null">outfit_json,</if>
       <if test="voiceId != null">voice_id,</if>
       <if test="voiceSpeed != null">voice_speed,</if>
       <if test="deletedFlag != null">deleted_flag,</if>
@@ -160,8 +152,6 @@
       <if test="appearancePrompt != null">#{appearancePrompt,jdbcType=VARCHAR},</if>
       <if test="consistencySeed != null">#{consistencySeed,jdbcType=BIGINT},</if>
       <if test="refImageAssetId != null">#{refImageAssetId,jdbcType=VARCHAR},</if>
-      <if test="defaultOutfitCode != null">#{defaultOutfitCode,jdbcType=VARCHAR},</if>
-      <if test="outfitJson != null">#{outfitJson,jdbcType=LONGVARCHAR},</if>
       <if test="voiceId != null">#{voiceId,jdbcType=VARCHAR},</if>
       <if test="voiceSpeed != null">#{voiceSpeed,jdbcType=VARCHAR},</if>
       <if test="deletedFlag != null">#{deletedFlag,jdbcType=TINYINT},</if>
@@ -181,8 +171,6 @@
       <if test="row.appearancePrompt != null">appearance_prompt = #{row.appearancePrompt,jdbcType=VARCHAR},</if>
       <if test="row.consistencySeed != null">consistency_seed = #{row.consistencySeed,jdbcType=BIGINT},</if>
       <if test="row.refImageAssetId != null">ref_image_asset_id = #{row.refImageAssetId,jdbcType=VARCHAR},</if>
-      <if test="row.defaultOutfitCode != null">default_outfit_code = #{row.defaultOutfitCode,jdbcType=VARCHAR},</if>
-      <if test="row.outfitJson != null">outfit_json = #{row.outfitJson,jdbcType=LONGVARCHAR},</if>
       <if test="row.voiceId != null">voice_id = #{row.voiceId,jdbcType=VARCHAR},</if>
       <if test="row.voiceSpeed != null">voice_speed = #{row.voiceSpeed,jdbcType=VARCHAR},</if>
       <if test="row.deletedFlag != null">deleted_flag = #{row.deletedFlag,jdbcType=TINYINT},</if>
@@ -203,8 +191,6 @@
       <if test="appearancePrompt != null">appearance_prompt = #{appearancePrompt,jdbcType=VARCHAR},</if>
       <if test="consistencySeed != null">consistency_seed = #{consistencySeed,jdbcType=BIGINT},</if>
       <if test="refImageAssetId != null">ref_image_asset_id = #{refImageAssetId,jdbcType=VARCHAR},</if>
-      <if test="defaultOutfitCode != null">default_outfit_code = #{defaultOutfitCode,jdbcType=VARCHAR},</if>
-      <if test="outfitJson != null">outfit_json = #{outfitJson,jdbcType=LONGVARCHAR},</if>
       <if test="voiceId != null">voice_id = #{voiceId,jdbcType=VARCHAR},</if>
       <if test="voiceSpeed != null">voice_speed = #{voiceSpeed,jdbcType=VARCHAR},</if>
       <if test="deletedFlag != null">deleted_flag = #{deletedFlag,jdbcType=TINYINT},</if>

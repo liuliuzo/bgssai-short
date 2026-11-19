@@ -658,13 +658,13 @@ public class AiTaskService {
             ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
             if (row == null) {
                 throw new BizException(CommonErrorCode.RULE_REJECT,
-                        "镜" + shot.getShotNo() + " 引用的角色素材缺失：" + characterId);
+                        "镜" + shot.getShotNo() + " 引用的人物定妆缺失：" + characterId);
             }
             if (!"LOCKED".equals(row.getCardStatus()) || row.getRefImageAssetId() == null
                     || row.getRefImageAssetId().isBlank()) {
                 throw new BizException(CommonErrorCode.RULE_REJECT,
-                        "镜" + shot.getShotNo() + " 引用的角色「" + row.getCharacterName()
-                                + "」尚未定妆，请先完成定妆");
+                        "镜" + shot.getShotNo() + " 引用的人物定妆「" + row.getCharacterName()
+                                + "」尚未锁定，请先选定定妆图");
             }
         }
         if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {

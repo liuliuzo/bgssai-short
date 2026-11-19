@@ -110,7 +110,7 @@ export function unlockedLooks(panel) {
     list.push({
       kind: 'character',
       id,
-      name: text(row.character_name) || '未命名角色',
+      name: text(row.character_name) || '未命名定妆',
       candidateId: text((row.candidate_list || [])[0]?.asset_id),
     })
   }
