@@ -1359,7 +1359,14 @@
     },
     {
       "path": "docs/review/test-cases/TC-script-studio.md",
-      "sha256": "866f4b49fdae90648666dc76ba3fe30131b0a5d229c900ddb698d6f170cd0930"
+      "sha256": "42f7ed15a2c500140e2ffccc3f9acba5a7222674655329acb2f3800e8c956cce",
+      "source_commit": "fcb5e6a4e0a297e3430f7dfe9b15188ec777fa0c",
+      "previous_revisions": [
+        {
+          "source_commit": "d0d13e8477df7a254e12a4b8d312bc0af8eed6e9",
+          "sha256": "866f4b49fdae90648666dc76ba3fe30131b0a5d229c900ddb698d6f170cd0930"
+        }
+      ]
     },
     {
       "path": "docs/review/test-cases/TC-short-01-commercial-gate.md",
