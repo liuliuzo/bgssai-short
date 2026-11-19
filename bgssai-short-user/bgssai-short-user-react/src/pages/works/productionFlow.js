@@ -26,9 +26,9 @@ export function summarizeConsistencyCards(panel) {
   const props = Array.isArray(panel?.prop_list) ? panel.prop_list : []
   const items = [
     ...chars.map((c) => ({
-      kind: '角色',
+      kind: '人物定妆',
       id: c.character_id,
-      name: c.character_name || '未命名角色',
+      name: c.character_name || '未命名定妆',
       status: c.card_status || 'CANDIDATE',
       locked: c.card_status === 'LOCKED' && Boolean(c.ref_image_asset_id || isRealPhotoUrl(c.ref_image_url)),
       hasCandidatePhoto: Array.isArray(c.candidate_list) && c.candidate_list.some((item) => isRealPhotoUrl(item?.file_url)),
@@ -79,11 +79,11 @@ export function selectPendingVideoShotIds(shots) {
 export function resolveRepairAction(errorMessage) {
   const msg = String(errorMessage || '')
   const core = msg.split('（在')[0]
-  if (/场景「/.test(core) && !/角色「/.test(core)) {
+  if (/场景「/.test(core) && !/人物定妆「|角色「/.test(core)) {
     return { label: '去场景参考处理', tab: 'scenes' }
   }
   if (/定妆|锁定|角色|道具|占位图/.test(msg)) {
-    return { label: '去角色定妆处理', tab: 'characters' }
+    return { label: '去人物定妆处理', tab: 'characters' }
   }
   if (/余额|额度|套餐|加量|触顶|充值/.test(msg)) {
     return { label: '去套餐与加量', href: '/subscription' }
@@ -174,7 +174,7 @@ export function buildProductionFlow({
     stepNo: 2,
     key: 'characters',
     tab: 'characters',
-    title: '2. 角色定妆',
+    title: '2. 人物定妆',
     status: !scriptReady
       ? 'todo'
       : looksBlocked
@@ -195,7 +195,7 @@ export function buildProductionFlow({
         ? `${cardSummary.unlockedCards.length} 项待选图锁定`
         : cardSummary.totalCards > 0
           ? `已锁定 ${cardSummary.lockedCount} 项`
-          : '定稿后自动提取角色与场景',
+          : '定稿后自动提取人物定妆与场景',
   }
 
   const step3 = {
@@ -283,11 +283,11 @@ export function buildProductionFlow({
       tone: hasCandidates ? 'warning' : 'info',
       title: hasCandidates
         ? '第 2 步：候选图已生成，请点击「选定」锁定定妆'
-        : `第 2 步：请先为 ${cardSummary.unlockedCards.length} 张角色/场景卡锁定参考图`,
+        : `第 2 步：请先为 ${cardSummary.unlockedCards.length} 项人物定妆/场景锁定参考图`,
       description: hasCandidates
         ? `待锁定：${names}。生成参考图后必须点击某张图下方的「选定」变为「已锁定」，后续分镜才能生成画面和视频。`
         : `待定妆：${names}。可生成参考图后点「选定」，或直接上传照片、从定妆库或场景库选用。`,
-      primaryLabel: hasCandidates ? '去选定并锁定定妆' : '去完成角色定妆',
+      primaryLabel: hasCandidates ? '去选定并锁定定妆' : '去完成人物定妆',
       primaryTab: 'characters',
       secondaryLabel: '先去拆解分镜',
       secondaryTab: 'storyboard',
@@ -297,7 +297,7 @@ export function buildProductionFlow({
       stepNo: 3,
       tone: 'info',
       title: '第 3 步：从定稿剧本一键拆解分镜',
-      description: '剧本与角色定妆已就绪，进入「分镜与视频」点击「一键从剧本拆解分镜」即可生成镜头表。',
+      description: '剧本与人物定妆已就绪，进入「分镜与视频」点击「一键从剧本拆解分镜」即可生成镜头表。',
       primaryLabel: '去拆解分镜',
       primaryTab: 'storyboard',
     }
@@ -307,8 +307,8 @@ export function buildProductionFlow({
       stepNo: 2,
       tone: 'warning',
       title: `第 2 步：有 ${blockedShots.length || cardSummary.unlockedRefCount} 个镜头因未锁定定妆暂时无法生成`,
-      description: sampleReason || '请前往「角色定妆」页为引用的角色、场景或道具点击「选定」锁定参考图，锁定后分镜会自动解锁。',
-      primaryLabel: '去角色定妆解锁',
+      description: sampleReason || '请前往「人物定妆」页为引用的人物定妆、场景或道具点击「选定」锁定参考图，锁定后分镜会自动解锁。',
+      primaryLabel: '去人物定妆解锁',
       primaryTab: 'characters',
       secondaryLabel: '查看分镜列表',
       secondaryTab: 'storyboard',

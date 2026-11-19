@@ -21,7 +21,7 @@ import {
 } from './lookGroups.js'
 import { laplacianScore, posterTimes } from './lookPoster.js'
 
-test('同一造型的四面归到一张卡上', () => {
+test('同一人物定妆的四面归到一张卡上', () => {
   const groups = groupLooks([
     { material_name: '白纱花瓣', view_angle: 'SIDE' },
     { material_name: '白衬衫', view_angle: 'FRONT_FACE' },
@@ -176,11 +176,11 @@ test('场景参考按全景主图、中景机位、局部陈设分组，封面�
     sceneCount: 2,
     propCount: 1,
   })
-  assert.equal(librarySummaryText(materials), '1 个造型 · 2 个场景 · 1 个道具')
-  assert.equal(libraryKindCountText(materials, 'CHARACTER'), '1 个造型')
+  assert.equal(librarySummaryText(materials), '1 个人物定妆 · 2 个场景 · 1 个道具')
+  assert.equal(libraryKindCountText(materials, 'CHARACTER'), '1 个人物定妆')
   assert.equal(libraryKindCountText(materials, 'SCENE'), '2 个场景')
   assert.equal(libraryKindCountText(materials, 'PROP'), '1 个道具')
-  assert.equal(libraryOtherKindsNotice(materials, 'SCENE'), '这个分组里还有 1 个造型、1 个道具，自动匹配开关和归档恢复会一起生效。')
+  assert.equal(libraryOtherKindsNotice(materials, 'SCENE'), '这个分组里还有 1 个人物定妆、1 个道具，自动匹配开关和归档恢复会一起生效。')
   assert.equal(libraryOtherKindsNotice([{ material_name: '天台', material_kind: 'SCENE' }], 'SCENE'), '')
   assert.equal(libraryRouteForKind('CHARACTER'), '/look-library')
   assert.equal(libraryRouteForKind('SCENE'), '/scene-library')
@@ -235,7 +235,7 @@ test('直接选择人物定妆与场景道具参考：聚合选项并移除跳�
       material_list: [
         {
           material_id: 'lm-arch-1',
-          material_name: '旧造型',
+          material_name: '旧人物定妆',
           material_kind: 'CHARACTER',
           view_angle: 'FRONT_FACE',
           file_url: 'https://cdn.example/old.jpg',
@@ -344,6 +344,24 @@ test('场景卡独立成 scenes 页签，步骤总数不再写死 8', () => {
   assert.match(guideSource, /VIDEO_PATH_STEPS\.length/)
   assert.match(studioSource, /resolveRepairAction\(row\.block_reason/)
   assert.match(studioSource, /去场景参考锁定/)
+})
+
+test('人物定妆概念收敛后，页面与静态原型不再保留角色+造型的嵌套文案或字段', () => {
+  const dir = path.dirname(fileURLToPath(import.meta.url))
+  const repoRoot = path.join(dir, '..', '..', '..', '..', '..')
+  const files = [
+    path.join(dir, 'LookLibraryPage.jsx'),
+    path.join(dir, 'LibraryLookPicker.jsx'),
+    path.join(dir, 'lookGroups.js'),
+    path.join(dir, '..', 'works', 'WorkStudio.jsx'),
+    path.join(repoRoot, 'docs', 'demo-static', 'web', 'user', 'character-bible.html'),
+    path.join(repoRoot, 'docs', 'demo-static', 'web', 'user', 'look-library.html'),
+  ]
+  const banned = /加造型|选择造型|更换造型|用这个造型|添加造型|删除造型|个造型|outfit_list|outfit_code|default_outfit_code/
+  for (const file of files) {
+    const text = fs.readFileSync(file, 'utf8')
+    assert.doesNotMatch(text, banned, `${path.basename(file)} still contains nested outfit concept`)
+  }
 })
 
 function solid(width, height, value) {

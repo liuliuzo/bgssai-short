@@ -142,7 +142,7 @@ export function evaluateShotReadiness(shot = {}, consistencyPanel = {}) {
   for (const charId of shot.character_ref_json || []) {
     const card = charList.find((c) => c.character_id === charId)
     if (card && card.card_status !== 'LOCKED' && card.lock_flag !== 1) {
-      blockers.push(`关联角色「${card.character_name || charId}」尚未锁定定妆`)
+      blockers.push(`关联人物定妆「${card.character_name || charId}」尚未锁定`)
     }
   }
   if (shot.scene_card_id) {
@@ -159,7 +159,7 @@ export function evaluateShotReadiness(shot = {}, consistencyPanel = {}) {
   }
 
   if (shot.stale_flag === 1) {
-    warnings.push('角色或场景定妆已变更，建议重抽以保持跨镜一致')
+    warnings.push('人物定妆或场景参考已变更，建议重抽以保持跨镜一致')
   }
   if (shot.blocked_flag === 1) {
     blockers.push('镜头处于阻塞状态，请先解除前置依赖')

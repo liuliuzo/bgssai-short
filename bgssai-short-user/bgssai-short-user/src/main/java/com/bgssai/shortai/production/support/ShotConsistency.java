@@ -142,11 +142,11 @@ public final class ShotConsistency {
             ShortCharacter card = characters == null ? null : characters.stream()
                     .filter(c -> c != null && id.equals(c.getCharacterId())).findFirst().orElse(null);
             if (card == null) {
-                pending.add("角色素材缺失");
+                pending.add("人物定妆缺失");
             } else if (!usableReference(card.getCardStatus(), card.getRefImageAssetId())) {
                 String name = card.getCharacterName() == null || card.getCharacterName().isBlank()
                         ? id : card.getCharacterName().trim();
-                pending.add("角色「" + name + "」");
+                pending.add("人物定妆「" + name + "」");
             }
         }
         if (shot.getSceneCardId() != null && !shot.getSceneCardId().isBlank()) {
@@ -179,7 +179,7 @@ public final class ShotConsistency {
             return "缺少画面描述，请先填写分镜内容";
         }
         if (!pending.isEmpty()) {
-            String reason = "待锁定定妆：" + String.join("、", pending) + "（在「角色定妆」页选定图片即可解锁）";
+            String reason = "待锁定定妆：" + String.join("、", pending) + "（在「人物定妆」页选定图片即可解锁）";
             return missingPrompt ? "缺少画面描述；" + reason : reason;
         }
         return "";
@@ -250,18 +250,14 @@ public final class ShotConsistency {
                 if (c == null) {
                     continue;
                 }
-                String name = c.getCharacterName() == null ? "角色" : c.getCharacterName().trim();
+                String name = c.getCharacterName() == null ? "人物定妆" : c.getCharacterName().trim();
                 String appearance = c.getAppearancePrompt() == null ? "" : c.getAppearancePrompt().trim();
                 if (sb.length() > 0) {
                     sb.append("；");
                 }
-                sb.append("角色「").append(name).append("」保持定妆一致");
+                sb.append("人物定妆「").append(name).append("」保持一致");
                 if (!appearance.isBlank()) {
                     sb.append("：").append(appearance);
-                }
-                String outfit = outfitLine(c);
-                if (!outfit.isBlank()) {
-                    sb.append("，服装：").append(outfit);
                 }
             }
         }
@@ -307,30 +303,6 @@ public final class ShotConsistency {
             return act.isBlank() ? anc : act;
         }
         return anc + "。" + act;
-    }
-
-    static String outfitLine(com.bgssai.shortai.model.ShortCharacter character) {
-        if (character == null) {
-            return "";
-        }
-        String code = character.getDefaultOutfitCode() == null ? "" : character.getDefaultOutfitCode().trim();
-        String chosen = "";
-        for (java.util.Map<String, Object> item : ShortJson.list(character.getOutfitJson())) {
-            String itemCode = ShortJson.text(item.get("outfit_code"));
-            String name = ShortJson.text(item.get("outfit_name"));
-            String prompt = ShortJson.text(item.get("prompt"));
-            String line = name.isBlank() ? prompt : (prompt.isBlank() ? name : name + "，" + prompt);
-            if (line.isBlank()) {
-                continue;
-            }
-            if (!code.isBlank() && code.equals(itemCode)) {
-                return line;
-            }
-            if (chosen.isBlank()) {
-                chosen = line;
-            }
-        }
-        return chosen;
     }
 
     public static String withConsistency(String basePrompt, String fragment) {

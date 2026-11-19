@@ -215,13 +215,13 @@ function sideMedia(look, kind) {
 const KIND_COPY = {
   CHARACTER: {
     pageTitle: '定妆库',
-    itemNoun: '造型',
+    itemNoun: '人物定妆',
     slotNoun: '面',
     emptySlotText: '还没有照片',
     otherTitle: '历史与补充照片',
-    namePlaceholder: '造型名称',
-    descPlaceholder: '外观特征（可选）',
-    emptyText: '暂无造型',
+    namePlaceholder: '定妆名称',
+    descPlaceholder: '外貌与穿搭特征（可选）',
+    emptyText: '暂无人物定妆',
     noGroupText: '暂无分组',
     autoMatchLabel: '自动匹配',
     groupPlaceholder: '分组名称',
@@ -279,7 +279,7 @@ export default function LookLibraryPage({ kind = 'CHARACTER' }) {
   const activeAngles = anglesForKind(activeKind)
   const primaryAngle = primaryAngleForKind(activeKind)
   const back = safeReturnPath(params.get('return'))
-  const backLabel = back && back.includes('/characters') ? '返回角色与场景' : '返回'
+  const backLabel = back && back.includes('/characters') ? '返回人物定妆与场景' : '返回'
   const [libraries, setLibraries] = useState([])
   const [librariesReady, setLibrariesReady] = useState(false)
   const [libraryId, setLibraryId] = useState()

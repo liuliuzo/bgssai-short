@@ -279,8 +279,6 @@ class LookAngleWorkerTest {
                     appearance_prompt VARCHAR(1024),
                     consistency_seed BIGINT,
                     ref_image_asset_id VARCHAR(64),
-                    default_outfit_code VARCHAR(64),
-                    outfit_json LONGTEXT,
                     voice_id VARCHAR(64),
                     voice_speed VARCHAR(16),
                     deleted_flag TINYINT NOT NULL DEFAULT 0,

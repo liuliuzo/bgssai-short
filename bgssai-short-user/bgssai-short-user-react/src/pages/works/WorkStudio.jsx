@@ -693,7 +693,7 @@ function ScriptPane({ work, episodeId, focusedStage, onReload, onFlowChange, onJ
             message="本集剧本已定稿"
             action={(
               <Space>
-                <Button size="small" type="primary" onClick={() => onJumpTab?.('characters')}>去角色定妆</Button>
+                <Button size="small" type="primary" onClick={() => onJumpTab?.('characters')}>去人物定妆</Button>
                 <Button size="small" onClick={() => onJumpTab?.('storyboard')}>去分镜与视频</Button>
               </Space>
             )}
@@ -1114,14 +1114,14 @@ function CharacterPane({ work, section = 'characters', onFlowChange, onJumpTab }
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       <div>
-        <Title level={5} style={{ margin: 0 }}>{isScenes ? '场景参考图' : '角色定妆与道具参考'}</Title>
+        <Title level={5} style={{ margin: 0 }}>{isScenes ? '场景参考图' : '人物定妆与道具参考'}</Title>
       </div>
       <input ref={ownImageRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onOwnImage} />
       {cardsReady && cardSummary.totalCards === 0 ? (
         <Alert
           type="info"
           showIcon
-          message={isScenes ? '暂无场景' : '暂无角色或道具'}
+          message={isScenes ? '暂无场景' : '暂无人物定妆或道具'}
           action={(
             <Space>
               <Button size="small" type="primary" onClick={() => onJumpTab?.('script')}>去剧本与定稿</Button>
@@ -1159,19 +1159,19 @@ function CharacterPane({ work, section = 'characters', onFlowChange, onJumpTab }
         />
       ) : null}
       {!isScenes ? (
-      <Card title="角色卡" extra={<Space>{modelSelect}<Button onClick={load}>刷新</Button></Space>}>
+      <Card title="人物定妆" extra={<Space>{modelSelect}<Button onClick={load}>刷新</Button></Space>}>
         <Form form={form} layout="inline" style={{ marginBottom: 12 }} onFinish={async (v) => {
           await productionApi.createCharacter({ work_id: work.work_id, ...v })
           form.resetFields()
           load()
         }}>
-          <Form.Item name="character_name" rules={[{ required: true }]}><Input placeholder="角色名" /></Form.Item>
+          <Form.Item name="character_name" rules={[{ required: true }]}><Input placeholder="定妆名称" /></Form.Item>
           <Form.Item name="character_role"><Input placeholder="身份" /></Form.Item>
-          <Form.Item name="appearance_prompt"><Input placeholder="外观描述" style={{ width: 220 }} /></Form.Item>
+          <Form.Item name="appearance_prompt"><Input placeholder="外貌与穿搭描述" style={{ width: 220 }} /></Form.Item>
           <Form.Item><Button htmlType="submit">新增</Button></Form.Item>
         </Form>
         {!cardsReady ? <LibrarySkeleton /> : null}
-        {cardsReady && !chars.length ? <Text type="secondary">暂无角色</Text> : null}
+        {cardsReady && !chars.length ? <Text type="secondary">暂无人物定妆</Text> : null}
         {cardsReady ? chars.map((row) => {
           const views = row.look_view_list || []
           const viewOf = (angle) => views.find((view) => view.view_angle === angle && isRealPhotoUrl(view.file_url))
@@ -1908,11 +1908,11 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
     try {
       estRes = (await productionApi.estimateTasks(estimateBody)).data
     } catch (err) {
-      showActionError(err?.response?.data?.message || err?.message || '费用预估失败，请检查角色与场景定妆是否已锁定')
+      showActionError(err?.response?.data?.message || err?.message || '费用预估失败，请检查人物定妆与场景参考是否已锁定')
       return
     }
     if (!estRes?.success) {
-      showActionError(estRes?.message || '费用预估未通过，请先锁定引用的角色与场景参考图')
+      showActionError(estRes?.message || '费用预估未通过，请先锁定引用的人物定妆与场景参考图')
       return
     }
     const ok = await confirmEstimate(estRes.result, '确认出图费用')
@@ -2106,7 +2106,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                 <Button onClick={() => onJumpTab?.('script')}>去剧本定稿</Button>
               </>
             )}
-            <Button onClick={() => onJumpTab?.('characters')}>查看角色定妆</Button>
+            <Button onClick={() => onJumpTab?.('characters')}>查看人物定妆</Button>
           </Space>
         </Card>
       ) : null}
@@ -2162,7 +2162,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                 </Card>
                 <Card
                   size="small"
-                  title="修改勾选镜头的角色与场景"
+                  title="修改勾选镜头的人物定妆与场景"
                   extra={<Text type="secondary">{selected.length ? `已选 ${selected.length} 镜` : '请先在下方勾选镜头'}</Text>}
                 >
                   <Space wrap>
@@ -2170,7 +2170,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                       mode="multiple"
                       allowClear
                       {...bindSelectProps()}
-                      placeholder={assetBinderPlaceholder('角色', (panel.character_list || []).length, panelReady)}
+                      placeholder={assetBinderPlaceholder('人物定妆', (panel.character_list || []).length, panelReady)}
                       style={{ minWidth: 180 }}
                       value={bindChars}
                       onChange={setBindChars}
@@ -2304,10 +2304,10 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                   type="warning"
                   showIcon
                   style={{ marginBottom: 8 }}
-                  message={row.block_reason || '该镜头引用的角色、场景或道具尚未锁定参考图，暂时无法出图和生成视频'}
+                  message={row.block_reason || '该镜头引用的人物定妆、场景或道具尚未锁定参考图，暂时无法出图和生成视频'}
                   action={(
                     <Button size="small" type="primary" ghost onClick={() => onJumpTab?.(blockedRepair.tab || 'characters')}>
-                      {blockedRepair.tab === 'scenes' ? '去场景参考锁定' : '去角色定妆锁定'}
+                      {blockedRepair.tab === 'scenes' ? '去场景参考锁定' : '去人物定妆锁定'}
                     </Button>
                   )}
                 />
@@ -2367,7 +2367,7 @@ function StoryboardPane({ work, episodeId, currentEpisode, focusedStage, cameraS
                   }
                   const { data: estRes } = await productionApi.estimateTasks(body)
                   if (!estRes?.success) {
-                    showActionError(estRes?.message || '这一镜存在未锁定的角色或场景参考图，请先完成定妆锁定')
+                    showActionError(estRes?.message || '这一镜存在未锁定的人物定妆或场景参考图，请先完成锁定')
                     return
                   }
                   const ok = await confirmEstimate(estRes.result, '确认出图费用')

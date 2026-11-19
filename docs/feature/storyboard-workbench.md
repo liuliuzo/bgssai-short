@@ -26,7 +26,7 @@
      「画面风格」按镜头单选真人写实、二维动画、三维动画、水墨动画或黑白胶片。重复点击当前项可取消。切换只替换该镜头的画面风格和旧版自动添加的题材标签，保留剧本文字、视角、运镜与衔接设置。
   3. 每个镜头的结构化字段：`shot_no`、`scene_no`、`shot_size`、`camera_move`、`shot_duration_sec`、
      `shot_desc`（画面描述）、`dialogue_text`（台词）、`emotion`、`lighting`、`character_ref_json`
-     （出场角色 + `outfit_code`）、`scene_card_id`、`extra_prompt`（用户补充）。
+     （绑定的人物定妆 ID 列表，直接用于场景画面与视频生成）、`scene_card_id`、`extra_prompt`（用户补充）。
      镜头制作的列表与画布均可逐镜头设置运镜。已锁定镜头只读。变更运镜后已有素材保留，下次生成视频使用所选运镜。
   4. **提示词合成（只读派生）**：`image_prompt` 由系统按固定模板拼装，不允许手工直接编辑正文，
      只能通过改上述结构化字段、`extra_prompt`，或改画面文字稿 `previz_text`（见
@@ -66,7 +66,7 @@
         "shot_duration_sec": 4, "emotion": "COLD", "lighting": "COLD_BLUE",
         "shot_desc": "沈知微立于婚礼台前，众人哗然",
         "dialogue_text": "退婚书我签，但有个条件。",
-        "character_ref_json": [ { "character_id": "c-30001", "outfit_code": "WEDDING" } ],
+        "character_ref_json": ["c-30001"],
         "scene_card_id": "sc-31001",
         "image_prompt": "都市写实画风，婚礼现场，26 岁女性 鹅蛋脸 黑色长直发 冷感眼神 婚纱，中景，镜头推进，冷蓝光，冷冽情绪，沈知微立于婚礼台前众人哗然",
         "prompt_source_list": [

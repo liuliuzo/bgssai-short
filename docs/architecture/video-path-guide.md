@@ -20,7 +20,7 @@
 
 1. 七步环节映射核心工作区：
    - `1 outline` / `2 script` / `3 ready` → `script`
-   - `4 looks` → `characters`（角色卡 + 道具卡）
+   - `4 looks` → `characters`（人物定妆 + 道具卡）
    - `5 scenes` → `scenes`（只含场景卡，与定妆共用同一个卡片面板组件并按分区渲染）
    - `6 shots`（镜头制作，旧链接 frame、video 仍进入该环节） → `storyboard`
    - `7 film` → `compose`

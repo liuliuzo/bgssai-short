@@ -504,8 +504,6 @@ CREATE TABLE `short_character` (
   `appearance_prompt` VARCHAR(1024) DEFAULT NULL,
   `consistency_seed` BIGINT DEFAULT NULL,
   `ref_image_asset_id` VARCHAR(64) DEFAULT NULL,
-  `default_outfit_code` VARCHAR(64) DEFAULT NULL,
-  `outfit_json` LONGTEXT,
   `voice_id` VARCHAR(64) DEFAULT NULL,
   `voice_speed` VARCHAR(16) DEFAULT NULL,
   `deleted_flag` TINYINT NOT NULL DEFAULT 0,
@@ -514,7 +512,7 @@ CREATE TABLE `short_character` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_short_character_id` (`character_id`),
   KEY `idx_short_character_work` (`work_id`, `deleted_flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色卡';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='人物定妆';
 
 DROP TABLE IF EXISTS `short_scene_card`;
 CREATE TABLE `short_scene_card` (

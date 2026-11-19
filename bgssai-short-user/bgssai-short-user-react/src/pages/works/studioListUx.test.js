@@ -154,7 +154,7 @@ test('known scene replaces 未写清场景 and does not invent one', () => {
 })
 
 test('asset binder shows that cards exist when nothing is selected yet', () => {
-  assert.equal(assetBinderPlaceholder('角色', 4), '选择角色（共 4 项）')
+  assert.equal(assetBinderPlaceholder('人物定妆', 4), '选择人物定妆（共 4 项）')
   assert.equal(assetBinderPlaceholder('场景', 0), '还没有场景')
   const line = assetLibrarySummary({
     characters: ['沈知微', '顾景深'],
@@ -163,7 +163,7 @@ test('asset binder shows that cards exist when nothing is selected yet', () => {
   })
   assert.match(line, /沈知微/)
   assert.match(line, /宴会厅/)
-  assert.equal(assetBinderPlaceholder('角色', 0, false), '正在读取角色')
+  assert.equal(assetBinderPlaceholder('人物定妆', 0, false), '正在读取人物定妆')
   assert.match(assetLibrarySummary({ ready: false }), /正在读取/)
   assert.equal(assetLibrarySummary({ ready: false }).includes('还没有'), false)
 })

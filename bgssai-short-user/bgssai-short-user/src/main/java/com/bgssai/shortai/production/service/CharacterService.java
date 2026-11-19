@@ -417,7 +417,7 @@ public class CharacterService {
     private ApiResponse applyLook(String userId, String workId, String cardId, String kind, String materialId, boolean character) {
         ShortLookMaterial source = lookKnowledgeService.requireMaterial(userId, materialId);
         if (!kind.equals(source.getMaterialKind())) {
-            throw new BizException(CommonErrorCode.INVALID_PARAM, character ? "请选择角色造型" : "请选择和这张卡同一类的参考图");
+            throw new BizException(CommonErrorCode.INVALID_PARAM, character ? "请选择人物定妆" : "请选择和这张卡同一类的参考图");
         }
         List<ShortLookMaterial> group = lookKnowledgeService.lookGroup(source);
         if (group.isEmpty()) {
@@ -476,7 +476,7 @@ public class CharacterService {
                 issue.setWorkId(character.getWorkId());
                 issue.setIssueType("CHARACTER");
                 issue.setSeverity("MAJOR");
-                issue.setIssueDesc("角色设定已变更（" + label + "），需重新对齐镜头一致性");
+                issue.setIssueDesc("人物定妆已变更（" + label + "），需重新对齐镜头一致性");
                 issue.setShotId(shot.getShotId());
                 issue.setRelatedShotId(character.getCharacterId());
                 issue.setHandleStatus("OPEN");

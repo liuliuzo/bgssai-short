@@ -98,8 +98,6 @@ TABLES = [
         C("appearance_prompt", "appearancePrompt", "VARCHAR", "String"),
         C("consistency_seed", "consistencySeed", "BIGINT", "Long"),
         C("ref_image_asset_id", "refImageAssetId", "VARCHAR", "String"),
-        C("default_outfit_code", "defaultOutfitCode", "VARCHAR", "String"),
-        C("outfit_json", "outfitJson", "LONGVARCHAR", "String"),
         C("voice_id", "voiceId", "VARCHAR", "String"),
         C("voice_speed", "voiceSpeed", "VARCHAR", "String"),
         C("deleted_flag", "deletedFlag", "TINYINT", "Integer"),

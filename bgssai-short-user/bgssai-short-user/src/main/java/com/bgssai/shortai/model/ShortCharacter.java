@@ -26,10 +26,6 @@ public class ShortCharacter implements Serializable {
 
     private String refImageAssetId;
 
-    private String defaultOutfitCode;
-
-    private String outfitJson;
-
     private String voiceId;
 
     private String voiceSpeed;
@@ -118,22 +114,6 @@ public class ShortCharacter implements Serializable {
 
     public void setRefImageAssetId(String refImageAssetId) {
         this.refImageAssetId = refImageAssetId == null ? null : refImageAssetId.trim();
-    }
-
-    public String getDefaultOutfitCode() {
-        return defaultOutfitCode;
-    }
-
-    public void setDefaultOutfitCode(String defaultOutfitCode) {
-        this.defaultOutfitCode = defaultOutfitCode == null ? null : defaultOutfitCode.trim();
-    }
-
-    public String getOutfitJson() {
-        return outfitJson;
-    }
-
-    public void setOutfitJson(String outfitJson) {
-        this.outfitJson = outfitJson == null ? null : outfitJson.trim();
     }
 
     public String getVoiceId() {

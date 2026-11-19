@@ -106,22 +106,6 @@ public class ShortCharacterExample {
         public Criteria andRefImageAssetIdLessThan(String value) { addCriterion("ref_image_asset_id <", value, "refImageAssetId"); return (Criteria) this; }
         public Criteria andRefImageAssetIdLike(String value) { addCriterion("ref_image_asset_id like", value, "refImageAssetId"); return (Criteria) this; }
         public Criteria andRefImageAssetIdIn(List<String> values) { addCriterion("ref_image_asset_id in", values, "refImageAssetId"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeIsNull() { addCriterion("default_outfit_code is null"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeIsNotNull() { addCriterion("default_outfit_code is not null"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeEqualTo(String value) { addCriterion("default_outfit_code =", value, "defaultOutfitCode"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeNotEqualTo(String value) { addCriterion("default_outfit_code <>", value, "defaultOutfitCode"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeGreaterThan(String value) { addCriterion("default_outfit_code >", value, "defaultOutfitCode"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeLessThan(String value) { addCriterion("default_outfit_code <", value, "defaultOutfitCode"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeLike(String value) { addCriterion("default_outfit_code like", value, "defaultOutfitCode"); return (Criteria) this; }
-        public Criteria andDefaultOutfitCodeIn(List<String> values) { addCriterion("default_outfit_code in", values, "defaultOutfitCode"); return (Criteria) this; }
-        public Criteria andOutfitJsonIsNull() { addCriterion("outfit_json is null"); return (Criteria) this; }
-        public Criteria andOutfitJsonIsNotNull() { addCriterion("outfit_json is not null"); return (Criteria) this; }
-        public Criteria andOutfitJsonEqualTo(String value) { addCriterion("outfit_json =", value, "outfitJson"); return (Criteria) this; }
-        public Criteria andOutfitJsonNotEqualTo(String value) { addCriterion("outfit_json <>", value, "outfitJson"); return (Criteria) this; }
-        public Criteria andOutfitJsonGreaterThan(String value) { addCriterion("outfit_json >", value, "outfitJson"); return (Criteria) this; }
-        public Criteria andOutfitJsonLessThan(String value) { addCriterion("outfit_json <", value, "outfitJson"); return (Criteria) this; }
-        public Criteria andOutfitJsonLike(String value) { addCriterion("outfit_json like", value, "outfitJson"); return (Criteria) this; }
-        public Criteria andOutfitJsonIn(List<String> values) { addCriterion("outfit_json in", values, "outfitJson"); return (Criteria) this; }
         public Criteria andVoiceIdIsNull() { addCriterion("voice_id is null"); return (Criteria) this; }
         public Criteria andVoiceIdIsNotNull() { addCriterion("voice_id is not null"); return (Criteria) this; }
         public Criteria andVoiceIdEqualTo(String value) { addCriterion("voice_id =", value, "voiceId"); return (Criteria) this; }

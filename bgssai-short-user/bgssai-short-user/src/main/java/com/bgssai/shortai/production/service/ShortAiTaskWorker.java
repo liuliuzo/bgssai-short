@@ -1318,7 +1318,7 @@ public class ShortAiTaskWorker {
             ShortCharacterExample cx = new ShortCharacterExample();
             cx.createCriteria().andCharacterIdEqualTo(characterId).andDeletedFlagEqualTo(0);
             ShortCharacter row = shortCharacterMapper.selectOneByExample(cx);
-            ShotVersionGuard.requireReferencedAsset("角色", characterId, row != null,
+            ShotVersionGuard.requireReferencedAsset("人物定妆", characterId, row != null,
                     row != null && "LOCKED".equals(row.getCardStatus()),
                     row != null && row.getRefImageAssetId() != null && !row.getRefImageAssetId().isBlank());
             lockedChars.add(row);
@@ -1418,7 +1418,7 @@ public class ShortAiTaskWorker {
             }
         }
         if (libraryId.isBlank() || name.isBlank() || angles.isEmpty()) {
-            throw new BizException(CommonErrorCode.RULE_REJECT, "要生成的造型已经不在了，请重新选一次");
+            throw new BizException(CommonErrorCode.RULE_REJECT, "要生成的人物定妆已经不在了，请重新选一次");
         }
         String promptBase = appearance.isBlank() ? name : appearance;
         boolean referenced = encoded != null && !encoded.isBlank();
