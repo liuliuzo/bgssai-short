@@ -2658,7 +2658,7 @@ INSERT INTO `short_script` (`script_id`, `episode_id`, `work_id`, `user_id`, `sc
 --               但部署机必须预装 ffmpeg，否则合成任务会明确报「本机未安装 ffmpeg」。
 -- 换网关：改环境 profile 的 bgssai.llm.tokenhub-cn-base-url。模型行不写主机。密钥走 Admin 写 sys_secret。
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.openai_compat.api_key', '', '公司自托管多模态 API Key（仅 https://chat.bgssai.com/v1；文本 qwen、画面 sd-turbo、视频 cogvideox、配音 piper）。留空不直连。由管理端填写，不写入仓库。', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tencent_tokenhub.api_key', '', '腾讯云 TokenHub API Key（TEXT / VIDEO / VOICE / ASR / MUSIC 共用）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `platform_key_name`, `description`, `enabled`, `updated_by`) VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'bgssai-short temporary gateway key (tokenhub-cn)', '腾讯云 TokenHub API Key（TEXT / VIDEO / VOICE / ASR / MUSIC 共用）', 1, 'system') ON DUPLICATE KEY UPDATE `platform_key_name` = IF((`secret_value` IS NULL OR `secret_value` = '' OR (`secret_value` = VALUES(`secret_value`) AND (`platform_key_name` IS NULL OR `platform_key_name` = ''))), VALUES(`platform_key_name`), `platform_key_name`), `description` = VALUES(`description`), `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.kling.api_key', '', '可灵 Kling API Key（Bearer）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.minimax.api_key', '', 'MiniMax / 海螺 API Key（Bearer）', 0, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.seedance.api_key', '', '火山方舟 Seedance API Key（Bearer）', 0, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
@@ -2700,13 +2700,14 @@ SET config_json = JSON_REMOVE(COALESCE(config_json, '{}'), '$.base_url')
 WHERE provider_code = 'TENCENT_TOKENHUB' AND ability_type = 'TEXT';
 
 -- Short is CN-only. The overseas key stays disabled and is never a fallback.
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', '', 'BGSSAI TokenHub-CN API Key（境内模型中枢）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `platform_key_name`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', 'sk-bgssai-short-cn-temp', 'bgssai-short temporary gateway key (tokenhub-cn)', 'BGSSAI TokenHub-CN API Key（境内模型中枢）', 1, 'system') ON DUPLICATE KEY UPDATE `platform_key_name` = IF((`secret_value` IS NULL OR `secret_value` = '' OR (`secret_value` = VALUES(`secret_value`) AND (`platform_key_name` IS NULL OR `platform_key_name` = ''))), VALUES(`platform_key_name`), `platform_key_name`), `description` = VALUES(`description`), `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', '', '短剧不使用境外中枢密钥', 0, 'system') ON DUPLICATE KEY UPDATE `enabled` = 0, `description` = VALUES(`description`);
 UPDATE `sys_secret` cn
 JOIN `sys_secret` legacy ON legacy.`secret_key` = 'ai.tencent_tokenhub.api_key'
-SET cn.`secret_value` = legacy.`secret_value`
+SET cn.`platform_key_name` = IF(legacy.`secret_value` = 'sk-bgssai-short-cn-temp', COALESCE(NULLIF(cn.`platform_key_name`, ''), legacy.`platform_key_name`), legacy.`platform_key_name`),
+    cn.`secret_value` = legacy.`secret_value`
 WHERE cn.`secret_key` = 'ai.tokenhub_cn.api_key'
-  AND (cn.`secret_value` IS NULL OR cn.`secret_value` = '')
+  AND (cn.`secret_value` IS NULL OR cn.`secret_value` = '' OR (cn.`secret_value` = 'sk-bgssai-short-cn-temp' AND legacy.`secret_value` <> 'sk-bgssai-short-cn-temp'))
   AND legacy.`secret_value` IS NOT NULL AND legacy.`secret_value` <> '';
 UPDATE `ai_model_config`
 SET `config_json` = JSON_REMOVE(JSON_SET(COALESCE(`config_json`, '{}'),

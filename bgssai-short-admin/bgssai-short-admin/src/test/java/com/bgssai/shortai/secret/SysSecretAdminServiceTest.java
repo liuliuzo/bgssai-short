@@ -31,12 +31,24 @@ import com.bgssai.shortai.common.ApiResponse;
 import com.bgssai.shortai.common.aop.UserContext;
 import com.bgssai.shortai.common.exception.BizException;
 import com.bgssai.shortai.common.exception.ForbiddenException;
+import com.bgssai.shortai.secret.ui.UpdateSysSecretController;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class SysSecretAdminServiceTest {
 
     private static final class SecretRow {
         String key;
         String value;
+        String keyName;
+        String platformKeyName;
         String description;
         int enabled;
         Timestamp updatedAt = Timestamp.from(Instant.now());
@@ -128,6 +140,8 @@ class SysSecretAdminServiceTest {
                     return switch ((String) i.getArgument(0)) {
                         case "secret_key" -> cur.key;
                         case "secret_value" -> cur.value;
+                        case "key_name" -> cur.keyName;
+                        case "platform_key_name" -> cur.platformKeyName;
                         case "description" -> cur.description;
                         case "updated_by" -> cur.updatedBy;
                         default -> null;
@@ -143,6 +157,22 @@ class SysSecretAdminServiceTest {
                 when(rs.next()).thenAnswer(i -> count[0]++ == 0 && found);
                 return rs;
             }
+            if (sql.contains("SELECT secret_value, key_name, platform_key_name")) {
+                SecretRow row = db.get(String.valueOf(params[0]));
+                int[] count = { 0 };
+                when(rs.next()).thenAnswer(i -> count[0]++ == 0 && row != null);
+                when(rs.getString(anyString())).thenAnswer(i -> {
+                    if (row == null) return null;
+                    return switch ((String) i.getArgument(0)) {
+                        case "secret_value" -> row.value;
+                        case "key_name" -> row.keyName;
+                        case "platform_key_name" -> row.platformKeyName;
+                        default -> null;
+                    };
+                });
+                when(rs.getInt("enabled")).thenAnswer(i -> row == null ? 0 : row.enabled);
+                return rs;
+            }
             String key = String.valueOf(params[0]);
             SecretRow row = db.get(key);
             boolean hit = row != null && row.enabled == 1;
@@ -155,9 +185,16 @@ class SysSecretAdminServiceTest {
         when(ps.executeUpdate()).thenAnswer(inv -> {
             if (sql.startsWith("INSERT INTO")) {
                 String k = (String) params[0];
-                seed(k, (String) params[1], (String) params[2], (int) params[3]);
+                SecretRow row = new SecretRow(k, (String) params[1], (String) params[4], (int) params[5]);
+                row.keyName = (String) params[2];
+                row.platformKeyName = (String) params[3];
+                db.put(k, row);
             } else if (sql.contains("SET secret_value")) {
                 db.get((String) params[2]).value = (String) params[0];
+            } else if (sql.contains("SET key_name")) {
+                db.get((String) params[2]).keyName = (String) params[0];
+            } else if (sql.contains("SET platform_key_name")) {
+                db.get((String) params[2]).platformKeyName = (String) params[0];
             } else if (sql.contains("SET enabled")) {
                 db.get((String) params[2]).enabled = (int) params[0];
             } else if (sql.contains("SET description")) {
@@ -220,5 +257,51 @@ class SysSecretAdminServiceTest {
         service.update("sms.intl.region", "ap-guangzhou", 1, null);
         Map<String, Object> badCombo = (Map<String, Object>) service.testConnection("sms.intl").getResult();
         assertEquals(false, badCombo.get("ok"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void probesPreservesAndRefreshesKeyNameAndPlatformKeyNameAcrossLifecycle() throws Exception {
+        PlatformKeyNameProber prober = mock(PlatformKeyNameProber.class);
+        when(prober.probe("ai.tokenhub_cn.api_key", "sk-th-live-12345678")).thenReturn("cn-primary-key");
+        SysSecretAdminService aiService = new SysSecretAdminService(inMemoryDataSource(), prober);
+
+        ObjectMapper snakeMapper = new ObjectMapper();
+        snakeMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        UpdateSysSecretController controller = new UpdateSysSecretController();
+        ReflectionTestUtils.setField(controller, "service", aiService);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(snakeMapper))
+                .build();
+
+        mvc.perform(MockMvcRequestBuilders.post("/bgssai/admin/secrets/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"secret_key\":\"ai.tokenhub_cn.api_key\",\"secret_value\":\"sk-th-live-12345678\",\"key_name\":\"  Prod Gateway  \",\"enabled\":1}"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result.key_name").value("Prod Gateway"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result.platform_key_name").value("cn-primary-key"));
+
+        // Omitting secret_value, passing blank or masked secret_value, and toggling must preserve platform_key_name and key_name
+        aiService.update("ai.tokenhub_cn.api_key", null, 0, "updated desc", null);
+        aiService.update("ai.tokenhub_cn.api_key", "   ", 1, null, null);
+        aiService.update("ai.tokenhub_cn.api_key", "sk-t****5678", 1, null, null);
+        assertEquals("sk-th-live-12345678", db.get("ai.tokenhub_cn.api_key").value);
+        assertEquals("cn-primary-key", db.get("ai.tokenhub_cn.api_key").platformKeyName);
+        assertEquals("Prod Gateway", db.get("ai.tokenhub_cn.api_key").keyName);
+
+        // Blank key_name clears key_name, while testConnection refreshes platform_key_name
+        aiService.update("ai.tokenhub_cn.api_key", null, null, null, "   ");
+        assertNull(db.get("ai.tokenhub_cn.api_key").keyName);
+
+        when(prober.probe("ai.tokenhub_cn.api_key", "sk-th-live-12345678")).thenReturn("cn-refreshed-key");
+        Map<String, Object> tested = (Map<String, Object>) aiService.testConnection("ai.tokenhub_cn.api_key").getResult();
+        assertEquals(true, tested.get("ok"));
+        assertEquals("cn-refreshed-key", tested.get("platform_key_name"));
+        assertEquals("cn-refreshed-key", db.get("ai.tokenhub_cn.api_key").platformKeyName);
+
+        // Exceeding 64 chars rejects cleanly
+        String over64 = "a".repeat(65);
+        assertEquals("50000001", assertThrows(BizException.class,
+                () -> aiService.update("ai.tokenhub_cn.api_key", null, null, null, over64)).getCode());
     }
 }

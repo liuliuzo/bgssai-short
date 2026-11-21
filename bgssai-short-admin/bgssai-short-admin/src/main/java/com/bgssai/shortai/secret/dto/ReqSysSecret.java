@@ -4,6 +4,7 @@ public class ReqSysSecret {
 
     private String secretKey;
     private String secretValue;
+    private String keyName;
     private Integer enabled;
     private String description;
 
@@ -37,5 +38,13 @@ public class ReqSysSecret {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getKeyName() {
+        return keyName;
+    }
+
+    public void setKeyName(String keyName) {
+        this.keyName = keyName;
     }
 }

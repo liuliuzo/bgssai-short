@@ -131,7 +131,7 @@
 
 该兼容接口独立于账号页。「密钥管理」通过已存凭据接口维护同一供应商的多把密钥。
 
-- 接口仍保留：`GET /bgssai/user/ai-keys`、`POST /bgssai/user/ai-keys`、`DELETE /bgssai/user/ai-keys/{providerCode}`（及 `/api/user/ai-keys` 兼容路径）。页面不调用。
+- 接口仍保留：`GET /bgssai/user/ai-keys`、`POST /bgssai/user/ai-keys`、`DELETE /bgssai/user/ai-keys/{providerCode}`（及 `/api/user/ai-keys` 兼容路径）。支持可选 `key_name`（最多 64 字，空串清除，省略保留）与只读 `platform_key_name`（提交新明文 `api_key` 时非阻塞探测 BGSSAI TokenHub / xAI / OpenRouter，省略或留空 `api_key` 及启停切换保留原 `platform_key_name`；删除行时一并清除）。
 - 支持厂商：`DEEPSEEK`、`MINIMAX`、`KLING`（接受别名 `KLINGAI`，支持单 Bearer `api_key` 及 `access_key` + `secret_key` HS256 JWT）、`DASHSCOPE`、`ZHIPU`、`MOONSHOT`、`VOLCENGINE`、`HUNYUAN`、`OPENAI`、`ANTHROPIC`（接受别名 `CLAUDE`）、`GOOGLE`。
 - `OPENAI` / `ANTHROPIC` 不是空登记：厂商密钥已能直连官方文本接口。账号「模型选择」按能力保存 `umk-` 配置，`OPENAI` 再覆盖图片与语音识别。
 - 运行时与计费：匹配到已启用的厂商密钥时直连用户配置凭据（含可选 `base_url`），并跳过平台额度校验与扣费。

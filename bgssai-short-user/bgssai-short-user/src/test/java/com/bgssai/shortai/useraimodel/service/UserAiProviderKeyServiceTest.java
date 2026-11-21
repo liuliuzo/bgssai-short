@@ -222,6 +222,76 @@ class UserAiProviderKeyServiceTest {
     }
 
     @Test
+    void savesProbesPreservesAndClearsKeyNameAndPlatformKeyName() throws Exception {
+        PlatformKeyNameProber mockProber = mock(PlatformKeyNameProber.class);
+        when(mockProber.probe("OPENAI", "https://www.bgssai-tokenhub.cn/v1", "sk-th-user-123456"))
+                .thenReturn("user-tokenhub-key");
+        UserAiProviderKeyMapper mapper = mock(UserAiProviderKeyMapper.class);
+        when(mapper.insertSelective(any(UserAiProviderKey.class))).thenAnswer(inv -> {
+            UserAiProviderKey row = inv.getArgument(0);
+            if (row.getId() == null) row.setId(idSeq.getAndIncrement());
+            store.put(row.getUserId() + ":" + row.getProviderCode(), cloneRow(row));
+            return 1;
+        });
+        when(mapper.updateByPrimaryKey(any(UserAiProviderKey.class))).thenAnswer(inv -> {
+            UserAiProviderKey row = inv.getArgument(0);
+            store.put(row.getUserId() + ":" + row.getProviderCode(), cloneRow(row));
+            return 1;
+        });
+        when(mapper.selectByExample(any(UserAiProviderKeyExample.class))).thenAnswer(inv -> filterRows(inv.getArgument(0)));
+        when(mapper.selectOneByExample(any(UserAiProviderKeyExample.class))).thenAnswer(inv -> {
+            List<UserAiProviderKey> hits = filterRows(inv.getArgument(0));
+            return hits.isEmpty() ? null : hits.get(0);
+        });
+        when(mapper.deleteByExample(any(UserAiProviderKeyExample.class))).thenAnswer(inv -> {
+            List<UserAiProviderKey> hits = filterRows(inv.getArgument(0));
+            for (UserAiProviderKey row : hits) store.remove(row.getUserId() + ":" + row.getProviderCode());
+            return hits.size();
+        });
+
+        UserAiProviderKeyService customService = new UserAiProviderKeyService(mapper, mockProber);
+        UpsertUserAiProviderKeyRequest createReq = new UpsertUserAiProviderKeyRequest();
+        createReq.setProviderCode("OPENAI");
+        createReq.setApiKey("sk-th-user-123456");
+        createReq.setBaseUrl("https://www.bgssai-tokenhub.cn/v1");
+        createReq.setKeyName("  Gateway Primary  ");
+
+        UserAiProviderKeyItem created = customService.upsert(createReq);
+        assertEquals("Gateway Primary", created.getKeyName());
+        assertEquals("user-tokenhub-key", created.getPlatformKeyName());
+
+        // Toggle without api_key or key_name must preserve both
+        UpsertUserAiProviderKeyRequest toggleReq = new UpsertUserAiProviderKeyRequest();
+        toggleReq.setProviderCode("OPENAI");
+        toggleReq.setEnabled(false);
+        UserAiProviderKeyItem toggled = customService.upsert(toggleReq);
+        assertEquals("Gateway Primary", toggled.getKeyName());
+        assertEquals("user-tokenhub-key", toggled.getPlatformKeyName());
+
+        // Clear key_name explicitly with blank while omitting api_key still preserves platform_key_name
+        UpsertUserAiProviderKeyRequest clearNameReq = new UpsertUserAiProviderKeyRequest();
+        clearNameReq.setProviderCode("OPENAI");
+        clearNameReq.setKeyName("   ");
+        UserAiProviderKeyItem clearedName = customService.upsert(clearNameReq);
+        assertNull(clearedName.getKeyName());
+        assertEquals("user-tokenhub-key", clearedName.getPlatformKeyName());
+
+        // Delete removes both key_name and platform_key_name
+        customService.deleteByProviderCode("OPENAI");
+        UserAiProviderKeyItem afterDelete = customService.listForCurrentUser().stream()
+                .filter(i -> "OPENAI".equals(i.getProviderCode())).findFirst().orElseThrow();
+        assertNull(afterDelete.getKeyName());
+        assertNull(afterDelete.getPlatformKeyName());
+
+        // Key name > 64 chars fails validation
+        UpsertUserAiProviderKeyRequest tooLong = new UpsertUserAiProviderKeyRequest();
+        tooLong.setProviderCode("DEEPSEEK");
+        tooLong.setApiKey("sk-ds-12345678");
+        tooLong.setKeyName("x".repeat(65));
+        assertThrows(BizException.class, () -> customService.upsert(tooLong));
+    }
+
+    @Test
     void controllersNeverReturnPlaintextOverApiOrBgssaiPrefixes() throws Exception {
         String payload = """
                 {
@@ -291,6 +361,8 @@ class UserAiProviderKeyServiceTest {
         copy.setAccessKey(src.getAccessKey());
         copy.setSecretKey(src.getSecretKey());
         copy.setBaseUrl(src.getBaseUrl());
+        copy.setKeyName(src.getKeyName());
+        copy.setPlatformKeyName(src.getPlatformKeyName());
         copy.setEnabled(src.getEnabled());
         copy.setCreatedAt(src.getCreatedAt());
         copy.setUpdatedAt(src.getUpdatedAt());

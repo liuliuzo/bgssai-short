@@ -23,6 +23,7 @@ public class UpdateSysSecretController {
                 req == null ? null : req.getSecretKey(),
                 req == null ? null : req.getSecretValue(),
                 req == null ? null : req.getEnabled(),
-                req == null ? null : req.getDescription());
+                req == null ? null : req.getDescription(),
+                req == null ? null : req.getKeyName());
     }
 }

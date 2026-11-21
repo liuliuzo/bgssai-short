@@ -9,6 +9,8 @@
     <result column="access_key" jdbcType="VARCHAR" property="accessKey" />
     <result column="secret_key" jdbcType="VARCHAR" property="secretKey" />
     <result column="base_url" jdbcType="VARCHAR" property="baseUrl" />
+    <result column="key_name" jdbcType="VARCHAR" property="keyName" />
+    <result column="platform_key_name" jdbcType="VARCHAR" property="platformKeyName" />
     <result column="enabled" jdbcType="TINYINT" property="enabled" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
@@ -72,7 +74,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, user_id, provider_code, api_key, access_key, secret_key, base_url, enabled, created_at, updated_at
+    id, user_id, provider_code, api_key, access_key, secret_key, base_url, key_name, platform_key_name, enabled, created_at, updated_at
   </sql>
   <select id="selectByExample" parameterType="com.bgssai.shortai.model.UserAiProviderKeyExample" resultMap="BaseResultMap">
     select
@@ -113,7 +115,7 @@
     <if test="_parameter != null"><include refid="Example_Where_Clause" /></if>
   </delete>
   <insert id="insert" parameterType="com.bgssai.shortai.model.UserAiProviderKey" useGeneratedKeys="true" keyProperty="id">
-    insert into user_ai_provider_key (user_id, provider_code, api_key, access_key, secret_key, base_url, enabled, created_at, updated_at)
+    insert into user_ai_provider_key (user_id, provider_code, api_key, access_key, secret_key, base_url, key_name, platform_key_name, enabled, created_at, updated_at)
     values (
       #{userId,jdbcType=VARCHAR},
       #{providerCode,jdbcType=VARCHAR},
@@ -121,6 +123,8 @@
       #{accessKey,jdbcType=VARCHAR},
       #{secretKey,jdbcType=VARCHAR},
       #{baseUrl,jdbcType=VARCHAR},
+      #{keyName,jdbcType=VARCHAR},
+      #{platformKeyName,jdbcType=VARCHAR},
       #{enabled,jdbcType=TINYINT},
       #{createdAt,jdbcType=TIMESTAMP},
       #{updatedAt,jdbcType=TIMESTAMP}
@@ -136,6 +140,8 @@
       <if test="accessKey != null">access_key,</if>
       <if test="secretKey != null">secret_key,</if>
       <if test="baseUrl != null">base_url,</if>
+      <if test="keyName != null">key_name,</if>
+      <if test="platformKeyName != null">platform_key_name,</if>
       <if test="enabled != null">enabled,</if>
       <if test="createdAt != null">created_at,</if>
       <if test="updatedAt != null">updated_at,</if>
@@ -148,6 +154,8 @@
       <if test="accessKey != null">#{accessKey,jdbcType=VARCHAR},</if>
       <if test="secretKey != null">#{secretKey,jdbcType=VARCHAR},</if>
       <if test="baseUrl != null">#{baseUrl,jdbcType=VARCHAR},</if>
+      <if test="keyName != null">#{keyName,jdbcType=VARCHAR},</if>
+      <if test="platformKeyName != null">#{platformKeyName,jdbcType=VARCHAR},</if>
       <if test="enabled != null">#{enabled,jdbcType=TINYINT},</if>
       <if test="createdAt != null">#{createdAt,jdbcType=TIMESTAMP},</if>
       <if test="updatedAt != null">#{updatedAt,jdbcType=TIMESTAMP},</if>
@@ -166,6 +174,8 @@
       <if test="row.accessKey != null">access_key = #{row.accessKey,jdbcType=VARCHAR},</if>
       <if test="row.secretKey != null">secret_key = #{row.secretKey,jdbcType=VARCHAR},</if>
       <if test="row.baseUrl != null">base_url = #{row.baseUrl,jdbcType=VARCHAR},</if>
+      <if test="row.keyName != null">key_name = #{row.keyName,jdbcType=VARCHAR},</if>
+      <if test="row.platformKeyName != null">platform_key_name = #{row.platformKeyName,jdbcType=VARCHAR},</if>
       <if test="row.enabled != null">enabled = #{row.enabled,jdbcType=TINYINT},</if>
       <if test="row.createdAt != null">created_at = #{row.createdAt,jdbcType=TIMESTAMP},</if>
       <if test="row.updatedAt != null">updated_at = #{row.updatedAt,jdbcType=TIMESTAMP},</if>
@@ -181,6 +191,8 @@
       access_key = #{row.accessKey,jdbcType=VARCHAR},
       secret_key = #{row.secretKey,jdbcType=VARCHAR},
       base_url = #{row.baseUrl,jdbcType=VARCHAR},
+      key_name = #{row.keyName,jdbcType=VARCHAR},
+      platform_key_name = #{row.platformKeyName,jdbcType=VARCHAR},
       enabled = #{row.enabled,jdbcType=TINYINT},
       created_at = #{row.createdAt,jdbcType=TIMESTAMP},
       updated_at = #{row.updatedAt,jdbcType=TIMESTAMP}
@@ -195,6 +207,8 @@
       <if test="accessKey != null">access_key = #{accessKey,jdbcType=VARCHAR},</if>
       <if test="secretKey != null">secret_key = #{secretKey,jdbcType=VARCHAR},</if>
       <if test="baseUrl != null">base_url = #{baseUrl,jdbcType=VARCHAR},</if>
+      <if test="keyName != null">key_name = #{keyName,jdbcType=VARCHAR},</if>
+      <if test="platformKeyName != null">platform_key_name = #{platformKeyName,jdbcType=VARCHAR},</if>
       <if test="enabled != null">enabled = #{enabled,jdbcType=TINYINT},</if>
       <if test="createdAt != null">created_at = #{createdAt,jdbcType=TIMESTAMP},</if>
       <if test="updatedAt != null">updated_at = #{updatedAt,jdbcType=TIMESTAMP},</if>
@@ -210,6 +224,8 @@
       access_key = #{accessKey,jdbcType=VARCHAR},
       secret_key = #{secretKey,jdbcType=VARCHAR},
       base_url = #{baseUrl,jdbcType=VARCHAR},
+      key_name = #{keyName,jdbcType=VARCHAR},
+      platform_key_name = #{platformKeyName,jdbcType=VARCHAR},
       enabled = #{enabled,jdbcType=TINYINT},
       created_at = #{createdAt,jdbcType=TIMESTAMP},
       updated_at = #{updatedAt,jdbcType=TIMESTAMP}

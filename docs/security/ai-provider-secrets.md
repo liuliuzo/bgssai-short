@@ -6,7 +6,7 @@
 ## 1. 原则
 
 - AI 供应商 API Key **禁止**写入 `ai_model_config.config_json`、properties、前端包或仓库明文。
-- AI 供应商密钥落点：表 `sys_secret`（`secret_key` / `secret_value` / `enabled`），与现有 OAuth
+- AI 供应商密钥落点：表 `sys_secret`（`secret_key` / `secret_value` / `key_name` / `platform_key_name` / `enabled`），与现有 OAuth
   读库凭据同一通道；OBS 属中间件，AK/SK 只进 `application-*.properties`，不进本表。
 - `ai_model_config.config_json` 只存非密钥参数，并通过 `secret_ref` 引用 `sys_secret.secret_key`。
 - 管理端模型配置接口的请求/响应 **不得回显** 密钥明文；编辑模型时只读写 `secret_ref` 字符串。
@@ -26,10 +26,8 @@
 | `ai.image_to_video.api_key` | 图生视频 Bearer。只在 `sql/dev/DML.sql` 放空种子。空值时改读 `ai.openai_compat.api_key`，只用于 `https://chat.bgssai.com/i2v`。不读中枢键，不把密钥写进仓库。模型机 8007 端口和公司主机根路径仍然拒绝 |
 | `ai.{provider_code}.{model_code}.api_key` | 单模型覆盖（可选） |
 
-本仓 DML 对所有 AI 供应商只放空值占位行；真实值由 **Admin「AI 密钥」页**
-（`GET/POST /bgssai/admin/secrets/**`）或受控 SQL 写入。TokenHub 行使用
-`ON DUPLICATE KEY UPDATE` 的仅空值回填规则，禁止提交真实 Bearer Key。九个生产模型可以保持启用，
-但密钥为空或停用时任务必须明确失败。Admin「测试」只检查密钥非空已启用，**不向供应商发扣费请求**。
+本仓 DML 仅在 `secret_value` 为空时按 `ON DUPLICATE KEY UPDATE` 左到右顺序回填占位值（`ai.tokenhub_cn.api_key` 与旧键 `ai.tencent_tokenhub.api_key` 初始化为 `'sk-bgssai-short-cn-temp'` 及 `platform_key_name='bgssai-short temporary gateway key (tokenhub-cn)'`），不覆盖已配置的真实密钥；`ai.tokenhub_global.api_key` 保持空串且 `enabled=0`。九个生产模型可以保持启用，
+但密钥为空或停用时任务必须明确失败。Admin「测试」检查密钥非空已启用并对受支持平台（TokenHub / xAI / OpenRouter）执行只读 `platform_key_name` 探测，**不向供应商发扣费请求**。
 properties 只允许写中枢 base URL，禁止写 TokenHub API Key。
 
 ## 3. 运行时读取
@@ -41,9 +39,9 @@ properties 只允许写中枢 base URL，禁止写 TokenHub API Key。
 
 ## 4. Admin 接口
 
-- `GET /bgssai/admin/secrets/list?key_prefix=ai.|bgssai.sms.|sms.` → `secret_list`（敏感密钥掩码，不回显明文；非敏配置键带 `config_value`）
-- `POST /bgssai/admin/secrets/update` → `{ secret_key, secret_value?, enabled?, description? }`（校验允许前缀与 SMS `endpoint` / `region` / `template_param_count` / `enabled` 合规性）
-- `POST /bgssai/admin/secrets/test` → `{ secret_key }` → `{ ok, configured_flag, message }`（支持单键或 `sms.`/`sms.intl.`/`bgssai.sms.` 通道就绪校验）
+- `GET /bgssai/admin/secrets/list?key_prefix=ai.|bgssai.sms.|sms.` → `secret_list`（敏感密钥掩码，返回 `key_name` 与 `platform_key_name`，不回显明文；非敏配置键带 `config_value`）
+- `POST /bgssai/admin/secrets/update` → `{ secret_key, secret_value?, key_name?, enabled?, description? }`（校验允许前缀、`key_name <= 64` 字与 SMS 合规性；新明文密钥非阻塞探测 `platform_key_name`，留空/省略/掩码保留原值与原 `platform_key_name`）
+- `POST /bgssai/admin/secrets/test` → `{ secret_key }` → `{ ok, configured_flag, message, platform_key_name? }`（支持单键、TokenHub/xAI/OpenRouter 平台名刷新及 SMS 通道校验）
 
 ## 4. 日志与审计
 
@@ -61,7 +59,7 @@ Standards §1 写入分环境 properties。
 
 主机是中间件，密钥是业务凭证，两边分开。
 
-1. 走境内中枢：`application-dev.properties` 已写 `bgssai.llm.tokenhub-cn-base-url=https://dev.user.bgssai-tokenhub.cn`。管理端把真实密钥写入 `ai.tokenhub_cn.api_key`。开发库 init 会把该键和旧键 `ai.tencent_tokenhub.api_key` 盖回占位符，init 之后要再填一次。不要把真实密钥提交进 git。
+1. 走境内中枢：`application-dev.properties` 已写 `bgssai.llm.tokenhub-cn-base-url=https://dev.user.bgssai-tokenhub.cn`。管理端把真实密钥写入 `ai.tokenhub_cn.api_key`。DML 仅在 `secret_value` 为空时写入临时占位 `'sk-bgssai-short-cn-temp'`，不会覆盖管理端已填入的真实密钥。不要把真实密钥提交进 git。
 2. 中枢密钥留空、改走公司自托管：管理端填写 `ai.openai_compat.api_key`。直连主机固定 `https://chat.bgssai.com/v1`，模型为 `qwen`、`sd-turbo`、`cogvideox`、`piper`。种子里的音色 `zh`、画面 `512x768` 只是占位，按网关实际值在模型配置里改。中枢密钥非空时这条直连不会生效。
 3. 成片合成仍要部署机安装 ffmpeg。对象存储按 `deploy/README.md` 注入，不在本文件。
 

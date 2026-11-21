@@ -9,6 +9,7 @@ public class UpsertUserAiProviderKeyRequest {
     private String accessKey;
     private String secretKey;
     private String baseUrl;
+    private String keyName;
     private Boolean enabled;
 
     public String getProviderCode() { return providerCode; }
@@ -25,6 +26,9 @@ public class UpsertUserAiProviderKeyRequest {
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
+    public String getKeyName() { return keyName; }
+    public void setKeyName(String keyName) { this.keyName = keyName; }
 
     public Boolean getEnabled() { return enabled; }
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }

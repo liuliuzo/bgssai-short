@@ -14,7 +14,7 @@ USE `bgssai_short`;
 
 SET NAMES utf8mb4;
 
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'TokenHub-CN gateway key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `platform_key_name`, `description`, `enabled`, `updated_by`) VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'bgssai-short temporary gateway key (tokenhub-cn)', 'TokenHub-CN gateway key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `platform_key_name` = IF((`secret_value` IS NULL OR `secret_value` = '' OR (`secret_value` = VALUES(`secret_value`) AND (`platform_key_name` IS NULL OR `platform_key_name` = ''))), VALUES(`platform_key_name`), `platform_key_name`), `description` = VALUES(`description`), `enabled` = 1, `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 
 -- 腾讯云短信 SdkAppId（BGSSAI 共享控制台 · 开发应用）；SignName / TemplateId 见共享 DML STEP SMS-1
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('bgssai.sms.sdk-app-id', '1401156379', '腾讯云短信 SdkAppId（开发 · 共享控制台）', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`), `description` = VALUES(`description`);
@@ -33,9 +33,9 @@ INSERT INTO `alipay_config` (`merchant_name`, `app_id`, `notify_url`, `env_mode`
 
 -- 
 -- Keep TokenHub-CN routing normalized without overriding company defaults
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`)
-VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'TokenHub-CN gateway key (bgssai-short)', 1, 'system')
-ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `platform_key_name`, `description`, `enabled`, `updated_by`)
+VALUES ('ai.tencent_tokenhub.api_key', 'sk-bgssai-short-cn-temp', 'bgssai-short temporary gateway key (tokenhub-cn)', 'TokenHub-CN gateway key (bgssai-short)', 1, 'system')
+ON DUPLICATE KEY UPDATE `platform_key_name` = IF((`secret_value` IS NULL OR `secret_value` = '' OR (`secret_value` = VALUES(`secret_value`) AND (`platform_key_name` IS NULL OR `platform_key_name` = ''))), VALUES(`platform_key_name`), `platform_key_name`), `description` = VALUES(`description`), `enabled` = 1, `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 UPDATE ai_model_config
 SET model_code = 'deepseek-chat', model_name = 'DeepSeek Chat', default_flag = 0,
     config_json = JSON_REMOVE(JSON_SET(COALESCE(config_json, '{}'), '$.hub', 'cn', '$.chat_path', '/v1/chat/completions', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')
@@ -45,7 +45,7 @@ SET config_json = JSON_REMOVE(COALESCE(config_json, '{}'), '$.base_url')
 WHERE provider_code = 'TENCENT_TOKENHUB';
 
 -- CN gateway key only. Overseas key is disabled and is not a fallback.
-INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', 'sk-bgssai-short-cn-temp', 'BGSSAI TokenHub-CN API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `secret_value` = VALUES(`secret_value`), `description` = VALUES(`description`), `enabled` = 1;
+INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `platform_key_name`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_cn.api_key', 'sk-bgssai-short-cn-temp', 'bgssai-short temporary gateway key (tokenhub-cn)', 'BGSSAI TokenHub-CN API Key (bgssai-short)', 1, 'system') ON DUPLICATE KEY UPDATE `platform_key_name` = IF((`secret_value` IS NULL OR `secret_value` = '' OR (`secret_value` = VALUES(`secret_value`) AND (`platform_key_name` IS NULL OR `platform_key_name` = ''))), VALUES(`platform_key_name`), `platform_key_name`), `description` = VALUES(`description`), `enabled` = 1, `secret_value` = IF(`secret_value` IS NULL OR `secret_value` = '', VALUES(`secret_value`), `secret_value`);
 INSERT INTO `sys_secret` (`secret_key`, `secret_value`, `description`, `enabled`, `updated_by`) VALUES ('ai.tokenhub_global.api_key', '', '短剧不使用境外中枢密钥', 0, 'system') ON DUPLICATE KEY UPDATE `enabled` = 0, `description` = VALUES(`description`);
 UPDATE `ai_model_config`
 SET `config_json` = JSON_REMOVE(JSON_SET(COALESCE(`config_json`, '{}'), '$.hub', 'cn', '$.secret_ref', 'ai.tokenhub_cn.api_key'), '$.base_url')

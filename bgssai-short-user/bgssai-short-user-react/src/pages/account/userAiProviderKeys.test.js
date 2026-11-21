@@ -63,3 +63,29 @@ test('buildProviderKeyPayload trims inputs and validates KLING dual modes and MI
   assert.equal(formatProviderStatus({ configured: true, enabled: true }), '已启用')
   assert.equal(formatProviderStatus({ configured: true, enabled: false }), '已停用')
 })
+
+test('buildProviderKeyPayload trims key_name, allows explicit clear, and enforces 64 char max', () => {
+  const withName = buildProviderKeyPayload({
+    providerCode: 'DEEPSEEK',
+    configured: false,
+    apiKey: 'sk-live-1234',
+    keyName: '  Production Key  ',
+  })
+  assert.equal(withName.error, undefined)
+  assert.equal(withName.payload.key_name, 'Production Key')
+
+  const cleared = buildProviderKeyPayload({
+    providerCode: 'DEEPSEEK',
+    configured: true,
+    keyName: '   ',
+  })
+  assert.equal(cleared.error, undefined)
+  assert.equal(cleared.payload.key_name, '')
+
+  const tooLong = buildProviderKeyPayload({
+    providerCode: 'DEEPSEEK',
+    configured: true,
+    keyName: 'a'.repeat(65),
+  })
+  assert.match(tooLong.error, /64/)
+})

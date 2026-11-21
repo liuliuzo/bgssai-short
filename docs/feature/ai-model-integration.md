@@ -176,8 +176,7 @@
   用户别名写在 `ai_model_config.config_json` 的 `public_alias` / `public_name`。
 - `short_work.compose_setting_json` 增加 `bgm_asset_id`、`bgm_volume`、`duck_flag` 键。
 - ASR 结果复用 `short_subtitle`；音乐与配音结果复用 `short_asset(asset_type=AUDIO)`。
-- `sys_secret` 增加空值种子 `ai.tokenhub_cn.api_key`（及兼容旧键
-  `ai.tencent_tokenhub.api_key`），由 Admin / 运维写入真实值。境外键保持停用，短剧不读取。
+- `sys_secret` 的 `ai.tokenhub_cn.api_key` 与兼容旧键 `ai.tencent_tokenhub.api_key` 仅在空值时初始化为临时网关占位 `'sk-bgssai-short-cn-temp'` 并回填 `platform_key_name = 'bgssai-short temporary gateway key (tokenhub-cn)'`（不覆盖已配置真实密钥），并扩展可空列 `key_name` / `platform_key_name`；境外键保持空串且 `enabled = 0`，短剧不读取。
 
 ## 七、原型
 
