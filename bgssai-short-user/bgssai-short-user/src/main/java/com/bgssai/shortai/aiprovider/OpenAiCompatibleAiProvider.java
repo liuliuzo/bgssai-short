@@ -24,7 +24,7 @@ import com.bgssai.shortai.useraimodel.service.UserAiProviderKeyService.ResolvedP
 
 /**
  * provider_code=OPENAI_COMPAT. Runs only against the company host
- * {@code https://chat.bgssai.com}. Any other host is rejected so billed
+ * {@code https://llm.bgssai.cn}. Any other host is rejected so billed
  * third-party calls stay on the CN hub.
  */
 @Component

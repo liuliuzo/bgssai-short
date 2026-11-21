@@ -12,7 +12,7 @@
   也不读取 `ai.tokenhub_global.api_key`。密钥优先 `ai.tokenhub_cn.api_key`
   （旧 CN 键空值回填兼容）。第三方直连（VEO/KLING/MINIMAX/SEEDANCE，以及指向其它主机的
   OPENAI_COMPAT）的 `execute` 拒绝，计费生成经 registry 走境内中枢。唯一例外是公司主机
-  `https://chat.bgssai.com`：仅当中枢密钥为空且 `ai.openai_compat.api_key` 已填写时直连。
+  `https://llm.bgssai.cn`：仅当中枢密钥为空且 `ai.openai_compat.api_key` 已填写时直连。
 - 用户端只见 BGSSAI 产品别名（`bgssai-chat` / `bgssai-image` / `bgssai-video` / `bgssai-tts` / `bgssai-asr` / `bgssai-music`，展示名为 BGSSAI Chat / Image / Video / TTS / ASR / Music）与 `0.5×` / `1×` / `1.5×`。客户端提交的 `model_code` 是别名，服务端再映射到网关编号。错误与 `fail_reason` 脱敏，不含中枢品牌或供应商品牌。对账列表不回显网关主机或网关编号。
 - 所选模型不可用时回退同能力默认模型；重试可换备用模型。
 - 上游返回的临时视频、音频、字幕 URL 只在 Worker 内使用；成功后立即下载并转存对象存储。
@@ -95,7 +95,7 @@ Java 客户端对画面、视频、配音实际调用的是兼容接口，不读
 | VIDEO | `POST /v1/videos/generations` | `GET /v1/videos/generations/{id}?model=` |
 | VOICE | `POST /v1/audio/speech` | 同步；JSON `audio` 或原始音频字节 |
 
-公司直连只接受 `https://chat.bgssai.com`（无用户信息、查询串、片段，端口仅 443）。模型编号限于
+公司直连只接受 `https://llm.bgssai.cn`（过渡期兼容 `chat.bgssai.com`，无用户信息、查询串、片段，端口仅 443）。模型编号限于
 `qwen` / `qwen2*` / `bgssai-chat`、`sd-turbo` / `bgssai-image`、`cogvideox*` / `bgssai-video`、
 `piper` / `bgssai-tts` / `edge-tts`。`qwen-tts` 不当作文本模型。开跑前对公司网关只做 `GET /v1/models`。
 视频任务在中枢上只按目录核对 `video_generation`，不 POST 视频探测，避免探测本身扣费。

@@ -16,6 +16,9 @@ class ImageConditionEndpointTest {
         assertTrue(ImageConditionEndpoint.admit("http://[::1]:8007").isEmpty());
         assertTrue(ImageConditionEndpoint.admit("http://124.70.197.39:8007").isEmpty());
         assertTrue(ImageConditionEndpoint.admit("http://172.31.10.199:8007").isEmpty());
+        assertTrue(ImageConditionEndpoint.admit("https://llm.bgssai.cn").isEmpty());
+        assertTrue(ImageConditionEndpoint.admit("https://llm.bgssai.cn/v1").isEmpty());
+        assertTrue(ImageConditionEndpoint.admit("http://llm.bgssai.cn/i2v").isEmpty());
         assertTrue(ImageConditionEndpoint.admit("https://chat.bgssai.com").isEmpty());
         assertTrue(ImageConditionEndpoint.admit("https://chat.bgssai.com/v1").isEmpty());
         assertTrue(ImageConditionEndpoint.admit("http://chat.bgssai.com/i2v").isEmpty());
@@ -27,10 +30,12 @@ class ImageConditionEndpointTest {
 
     @Test
     void laterApprovedOriginCanBeAdmittedWithoutADefault() {
-        assertEquals("https://chat.bgssai.com/i2v",
+        assertEquals("https://llm.bgssai.cn/i2v",
+                ImageConditionEndpoint.admit("https://llm.bgssai.cn/i2v").orElseThrow().value());
+        assertEquals("https://llm.bgssai.cn/i2v",
+                ImageConditionEndpoint.admit("https://llm.bgssai.cn/i2v/").orElseThrow().value());
+        assertEquals("https://llm.bgssai.cn/i2v",
                 ImageConditionEndpoint.admit("https://chat.bgssai.com/i2v").orElseThrow().value());
-        assertEquals("https://chat.bgssai.com/i2v",
-                ImageConditionEndpoint.admit("https://chat.bgssai.com/i2v/").orElseThrow().value());
         assertEquals("https://i2v.invalid", ImageConditionEndpoint.admit("https://i2v.invalid").orElseThrow().value());
         assertEquals("http://approved.example:8443",
                 ImageConditionEndpoint.admit("http://approved.example:8443/").orElseThrow().value());

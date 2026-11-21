@@ -24,12 +24,13 @@ class OpenAiCompatibleAiProviderTest {
 
     @Test
     void allowsOnlyTheCompanyHost() {
+        assertTrue(CompanyCompatGateway.allows("https://llm.bgssai.cn/v1"));
+        assertTrue(CompanyCompatGateway.allows("https://llm.bgssai.cn/v1/"));
         assertTrue(CompanyCompatGateway.allows("https://chat.bgssai.com/v1"));
-        assertTrue(CompanyCompatGateway.allows("https://chat.bgssai.com/v1/"));
-        assertFalse(CompanyCompatGateway.allows("http://chat.bgssai.com/v1"));
-        assertFalse(CompanyCompatGateway.allows("https://user:pw@chat.bgssai.com/v1"));
-        assertFalse(CompanyCompatGateway.allows("https://chat.bgssai.com/v1?x=1"));
-        assertFalse(CompanyCompatGateway.allows("https://chat.bgssai.com.evil/v1"));
+        assertFalse(CompanyCompatGateway.allows("http://llm.bgssai.cn/v1"));
+        assertFalse(CompanyCompatGateway.allows("https://user:pw@llm.bgssai.cn/v1"));
+        assertFalse(CompanyCompatGateway.allows("https://llm.bgssai.cn/v1?x=1"));
+        assertFalse(CompanyCompatGateway.allows("https://llm.bgssai.cn.evil/v1"));
         assertFalse(CompanyCompatGateway.allows("https://api.openai.com/v1"));
         assertFalse(CompanyCompatGateway.directModel("TEXT", "qwen-tts"));
         assertTrue(CompanyCompatGateway.directModel("TEXT", "qwen2.5-instruct"));
@@ -68,7 +69,7 @@ class OpenAiCompatibleAiProviderTest {
         AiProviderResult result = provider(http, "sk-company").execute(request("IMAGE", "sd-turbo", "a street"));
         assertEquals("image/png", result.getMimeType());
         assertEquals("png", new String(result.getBinaryContent(), StandardCharsets.UTF_8));
-        assertTrue(http.postedUrls.get(0).startsWith("https://chat.bgssai.com/v1/images/generations"));
+        assertTrue(http.postedUrls.get(0).startsWith("https://llm.bgssai.cn/v1/images/generations"));
         assertEquals("Bearer sk-company", http.postedHeaders.get(0).get("Authorization"));
         assertTrue(http.postedBodies.get(0).contains("\"size\":\"512x768\""));
         assertFalse(http.postedBodies.get(0).contains("\"image\""));

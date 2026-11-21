@@ -108,7 +108,7 @@ class ImageConditionedVideoProviderTest {
         model.setConfigJson("{\"secret_ref\":\"ai.image_to_video.api_key\"}");
         var decision = provider.submit(model, PNG, "image/png", "a cat walks", 384, 256, 25, 8, 20, 42);
         assertEquals(SubmitKind.ACCEPTED, decision.kind());
-        assertEquals("https://chat.bgssai.com/i2v/v1/videos", calls.get(0).url());
+        assertEquals("https://llm.bgssai.cn/i2v/v1/videos", calls.get(0).url());
         assertEquals("company-key", calls.get(0).bearer());
     }
 

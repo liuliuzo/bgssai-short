@@ -81,9 +81,9 @@ public class CompanyModelSeeder implements ApplicationRunner {
                 new SecretPlaceholder(SysSecretReader.AI_TOKENHUB_CN_API_KEY,
                         "BGSSAI TokenHub-CN API Key（境内模型中枢）"),
                 new SecretPlaceholder(SysSecretReader.AI_OPENAI_COMPAT_API_KEY,
-                        "公司自建多模态网关 Bearer（https://chat.bgssai.com/v1）。不写真实密钥。"),
+                        "公司自建多模态网关 Bearer（https://llm.bgssai.cn/v1）。不写真实密钥。"),
                 new SecretPlaceholder(SysSecretReader.AI_IMAGE_TO_VIDEO_API_KEY,
-                        "图生视频 Bearer。空值时改用公司键 ai.openai_compat.api_key 调用 https://chat.bgssai.com/i2v 。不写真实密钥。"));
+                        "图生视频 Bearer。空值时改用公司键 ai.openai_compat.api_key 调用 https://llm.bgssai.cn/i2v 。不写真实密钥。"));
         try (Connection conn = dataSource.getConnection()) {
             for (SecretPlaceholder item : placeholders) {
                 ensureSecretPlaceholder(conn, item);
@@ -301,7 +301,7 @@ public class CompanyModelSeeder implements ApplicationRunner {
                         "{\"hub\":\"cn\",\"secret_ref\":\"ai.tokenhub_cn.api_key\",\"public_alias\":\"bgssai-music\",\"public_name\":\"BGSSAI Music\"}"),
                 new SeedRow(ImageConditionedVideoProvider.MODEL_ID, "VIDEO", ImageConditionedVideoProvider.CODE,
                         ImageConditionedVideoProvider.MODEL_CODE, "BGSSAI Video", "STANDARD", "PER_SECOND", 20, 14400, 0,
-                        "{\"base_url\":\"https://chat.bgssai.com/i2v\",\"secret_ref\":\"ai.image_to_video.api_key\",\"public_alias\":\"bgssai-video\",\"public_name\":\"BGSSAI Video\",\"width\":384,\"height\":256,\"num_frames\":25,\"fps\":8}"),
+                        "{\"base_url\":\"https://llm.bgssai.cn/i2v\",\"secret_ref\":\"ai.image_to_video.api_key\",\"public_alias\":\"bgssai-video\",\"public_name\":\"BGSSAI Video\",\"width\":384,\"height\":256,\"num_frames\":25,\"fps\":8}"),
                 new SeedRow("m-compat-text-qwen", "TEXT", OpenAiCompatibleAiProvider.CODE, "qwen",
                         "剧本文本", "STANDARD", "PER_KILO_TOKEN", 1, 180, 1,
                         "{\"base_url\":\"" + CompanyCompatGateway.DEFAULT_BASE + "\",\"secret_ref\":\"ai.openai_compat.api_key\",\"chat_path\":\"/chat/completions\"}"),

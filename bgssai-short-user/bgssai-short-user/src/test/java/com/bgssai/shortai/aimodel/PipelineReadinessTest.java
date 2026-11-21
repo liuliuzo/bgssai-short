@@ -140,7 +140,7 @@ class PipelineReadinessTest {
     void compatKeyUsesCompanyCatalogWithoutPostingGeneration() {
         AiModelResolveService models = org.mockito.Mockito.mock(AiModelResolveService.class);
         ScriptedGateway gateway = new ScriptedGateway(true, companyDirectCatalog(), 400,
-                "https://chat.bgssai.com/v1/models", "sk-company");
+                "https://llm.bgssai.cn/v1/models", "sk-company");
         PipelineReadiness readiness = new PipelineReadiness(models,
                 new SysSecretReader(key -> SysSecretReader.AI_OPENAI_COMPAT_API_KEY.equals(key) ? "sk-company" : ""),
                 "https://dev.user.bgssai-tokenhub.cn",
@@ -148,7 +148,7 @@ class PipelineReadinessTest {
         readiness.assertReady("IMAGE", null);
         readiness.assertReady("VIDEO", null);
         assertTrue(gateway.posted.isEmpty());
-        assertTrue(gateway.got.stream().allMatch(url -> url.startsWith("https://chat.bgssai.com/v1/models")));
+        assertTrue(gateway.got.stream().allMatch(url -> url.startsWith("https://llm.bgssai.cn/v1/models")));
         verify(models, never()).resolve(any(), any());
     }
 
