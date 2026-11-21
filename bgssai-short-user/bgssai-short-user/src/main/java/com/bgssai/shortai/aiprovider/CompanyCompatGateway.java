@@ -15,8 +15,9 @@ import com.bgssai.shortai.secret.SysSecretReader;
  */
 public final class CompanyCompatGateway {
 
-    public static final String HOST = "chat.bgssai.com";
-    public static final String DEFAULT_BASE = "https://chat.bgssai.com/v1";
+    public static final String HOST = "llm.bgssai.cn";
+    public static final String DEFAULT_BASE = "https://llm.bgssai.cn/v1";
+    private static final java.util.Set<String> ALLOWED_HOSTS = java.util.Set.of(HOST, "chat.bgssai.com");
 
     private CompanyCompatGateway() {
     }
@@ -40,7 +41,7 @@ public final class CompanyCompatGateway {
                 return false;
             }
             String host = uri.getHost();
-            return host != null && HOST.equalsIgnoreCase(host);
+            return host != null && ALLOWED_HOSTS.contains(host.toLowerCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             return false;
         }

@@ -37,15 +37,15 @@ class AiProviderRegistryTest {
         AiModelConfig model = new AiModelConfig();
         model.setProviderCode(OpenAiCompatibleAiProvider.CODE);
         model.setAbilityType("IMAGE");
-        model.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\"}");
+        model.setConfigJson("{\"base_url\":\"https://llm.bgssai.cn/v1\"}");
         assertEquals(OpenAiCompatibleAiProvider.CODE, registry.resolve(model).providerCode());
         AiModelConfig lookalike = new AiModelConfig();
         lookalike.setProviderCode(OpenAiCompatibleAiProvider.CODE);
-        lookalike.setConfigJson("{\"base_url\":\"https://chat.bgssai.com.evil/v1\"}");
+        lookalike.setConfigJson("{\"base_url\":\"https://llm.bgssai.cn.evil/v1\"}");
         assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(lookalike).providerCode());
         AiModelConfig insecure = new AiModelConfig();
         insecure.setProviderCode(OpenAiCompatibleAiProvider.CODE);
-        insecure.setConfigJson("{\"base_url\":\"http://chat.bgssai.com/v1\"}");
+        insecure.setConfigJson("{\"base_url\":\"http://llm.bgssai.cn/v1\"}");
         assertEquals(TencentTokenHubAiProvider.CODE, registry.resolve(insecure).providerCode());
     }
 

@@ -76,7 +76,7 @@ public class AiProviderRegistry {
 
     /**
      * Resolves a runnable bean. Billed generation goes through the CN hub.
-     * The company host {@code https://chat.bgssai.com} is the only OpenAI-compatible
+     * The company host {@code https://llm.bgssai.cn} is the only OpenAI-compatible
      * exception. allow_direct is ignored. Local ffmpeg compose is not a billed model.
      */
     public AiProvider resolve(AiModelConfig model) {

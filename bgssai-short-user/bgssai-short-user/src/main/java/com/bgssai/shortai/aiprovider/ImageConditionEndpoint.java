@@ -26,7 +26,8 @@ public final class ImageConditionEndpoint {
             "ip6-localhost",
             "metadata.google.internal",
             "metadata.google",
-            CompanyCompatGateway.HOST);
+            CompanyCompatGateway.HOST,
+            "chat.bgssai.com");
 
     /** Addresses that are not a cross-host route while the listener stays on loopback. */
     static final Set<String> UNEXPOSED_LISTENER_HOSTS = Set.of(
@@ -37,7 +38,7 @@ public final class ImageConditionEndpoint {
     }
 
     /** Public CPU image-to-video prefix. Text-to-video stays on {@code /v1}. */
-    public static final String COMPANY_IMAGE_TO_VIDEO = "https://chat.bgssai.com/i2v";
+    public static final String COMPANY_IMAGE_TO_VIDEO = "https://llm.bgssai.cn/i2v";
 
     public record Origin(String value) {
     }
@@ -60,7 +61,7 @@ public final class ImageConditionEndpoint {
             return Optional.empty();
         }
         String host = uri.getHost();
-        if (host == null || !CompanyCompatGateway.HOST.equalsIgnoreCase(host)) {
+        if (host == null || !(CompanyCompatGateway.HOST.equalsIgnoreCase(host) || "chat.bgssai.com".equalsIgnoreCase(host))) {
             return Optional.empty();
         }
         String path = uri.getPath() == null ? "" : uri.getPath();

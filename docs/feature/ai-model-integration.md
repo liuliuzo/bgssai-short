@@ -108,7 +108,7 @@
     境内中枢密钥非空时仍走中枢，主机只来自环境 profile。目录里没有当前默认编号时，若同一能力已列出公司模型
     （优先 `bgssai-chat` / `qwen`、`bgssai-image` / `sd-turbo`、`cogvideox`、`bgssai-tts` / `piper` / `edge-tts`、`bgssai-music` / `musicgen-small`），
     改用该编号；已经列出的可灵或 MiniMax 不改，也不把一种第三方换成另一种。
-    中枢密钥为空且 `sys_secret.ai.openai_compat.api_key` 已填写时，只允许 `https://chat.bgssai.com/v1`。
+    中枢密钥为空且 `sys_secret.ai.openai_compat.api_key` 已填写时，只允许 `https://llm.bgssai.cn/v1`。
     `api.openai.com`、可灵、海螺等其它主机仍不直连。这时开跑前只 `GET /v1/models`，不对画面、视频、配音发会扣费的探测。
     DEV 要直连该公司网关：管理端清空 `ai.tokenhub_cn.api_key`（开发库 init 会把占位符写回）后再填写兼容密钥。
     走中枢则把真实中枢密钥写入 `ai.tokenhub_cn.api_key`，DEV 主机已是 `bgssai.llm.tokenhub-cn-base-url`。

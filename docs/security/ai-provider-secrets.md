@@ -18,12 +18,12 @@
 | `ai.tokenhub_cn.api_key` | BGSSAI TokenHub-CN Bearer Key（境内中枢，短剧唯一调用键） |
 | `ai.tokenhub_global.api_key` | 停用。短剧不读取、不作为境内失败时的回退 |
 | `ai.tencent_tokenhub.api_key` | 旧 CN 键（仅空值回填兼容，新配置请用 `ai.tokenhub_cn.api_key`） |
-| `ai.openai_compat.api_key` | 公司自托管网关密钥。仅 `https://chat.bgssai.com/v1`，文本 `qwen`、画面 `sd-turbo`、视频 `cogvideox`、配音 `piper`。中枢密钥非空时不走这条 |
+| `ai.openai_compat.api_key` | 公司自托管网关密钥。仅 `https://llm.bgssai.cn/v1`，文本 `qwen`、画面 `sd-turbo`、视频 `cogvideox`、配音 `piper`。中枢密钥非空时不走这条 |
 | `ai.kling.api_key` | 可灵官方 API Key（Bearer；`provider_code=KLING` 的 IMAGE / VIDEO 共用） |
 | `ai.minimax.api_key` | MiniMax / 海螺 API Key（Bearer） |
 | `ai.seedance.api_key` | 火山方舟 Seedance API Key（Bearer） |
 | `ai.veo.api_key` | Google Gemini / Veo API Key（`x-goog-api-key`） |
-| `ai.image_to_video.api_key` | 图生视频 Bearer。只在 `sql/dev/DML.sql` 放空种子。空值时改读 `ai.openai_compat.api_key`，只用于 `https://chat.bgssai.com/i2v`。不读中枢键，不把密钥写进仓库。模型机 8007 端口和公司主机根路径仍然拒绝 |
+| `ai.image_to_video.api_key` | 图生视频 Bearer。只在 `sql/dev/DML.sql` 放空种子。空值时改读 `ai.openai_compat.api_key`，只用于 `https://llm.bgssai.cn/i2v`。不读中枢键，不把密钥写进仓库。模型机 8007 端口和公司主机根路径仍然拒绝 |
 | `ai.{provider_code}.{model_code}.api_key` | 单模型覆盖（可选） |
 
 本仓 DML 仅在 `secret_value` 为空时按 `ON DUPLICATE KEY UPDATE` 左到右顺序回填占位值（`ai.tokenhub_cn.api_key` 与旧键 `ai.tencent_tokenhub.api_key` 初始化为 `'sk-bgssai-short-cn-temp'` 及 `platform_key_name='bgssai-short temporary gateway key (tokenhub-cn)'`），不覆盖已配置的真实密钥；`ai.tokenhub_global.api_key` 保持空串且 `enabled=0`。九个生产模型可以保持启用，
@@ -60,7 +60,7 @@ Standards §1 写入分环境 properties。
 主机是中间件，密钥是业务凭证，两边分开。
 
 1. 走境内中枢：`application-dev.properties` 已写 `bgssai.llm.tokenhub-cn-base-url=https://dev.user.bgssai-tokenhub.cn`。管理端把真实密钥写入 `ai.tokenhub_cn.api_key`。DML 仅在 `secret_value` 为空时写入临时占位 `'sk-bgssai-short-cn-temp'`，不会覆盖管理端已填入的真实密钥。不要把真实密钥提交进 git。
-2. 中枢密钥留空、改走公司自托管：管理端填写 `ai.openai_compat.api_key`。直连主机固定 `https://chat.bgssai.com/v1`，模型为 `qwen`、`sd-turbo`、`cogvideox`、`piper`。种子里的音色 `zh`、画面 `512x768` 只是占位，按网关实际值在模型配置里改。中枢密钥非空时这条直连不会生效。
+2. 中枢密钥留空、改走公司自托管：管理端填写 `ai.openai_compat.api_key`。直连主机固定 `https://llm.bgssai.cn/v1`，模型为 `qwen`、`sd-turbo`、`cogvideox`、`piper`。种子里的音色 `zh`、画面 `512x768` 只是占位，按网关实际值在模型配置里改。中枢密钥非空时这条直连不会生效。
 3. 成片合成仍要部署机安装 ffmpeg。对象存储按 `deploy/README.md` 注入，不在本文件。
 
 ## 7. 用户自有模型密钥（`user_ai_model_key`）

@@ -209,7 +209,7 @@ public class ImageConditionedVideoProvider implements AiProvider, ImageCondition
 
     /**
      * Prefer the image-to-video secret. When that row is still empty, use the
-     * company gateway key already stored for chat.bgssai.com. Never a literal key,
+     * company gateway key already stored for llm.bgssai.cn. Never a literal key,
      * and never the TokenHub key.
      */
     private String bearer(AiModelConfig model) {

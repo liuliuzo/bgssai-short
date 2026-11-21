@@ -86,7 +86,7 @@ class AiModelResolveCatalogTest {
         AiModelConfig chosen = service.resolve("IMAGE", null);
         assertEquals("sd-turbo", chosen.getModelCode());
         assertEquals("OPENAI_COMPAT", chosen.getProviderCode());
-        assertTrue(chosen.getConfigJson().contains("chat.bgssai.com"));
+        assertTrue(chosen.getConfigJson().contains("llm.bgssai.cn"));
     }
 
     @Test
@@ -104,7 +104,7 @@ class AiModelResolveCatalogTest {
         ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key -> "sk"));
         AiModelConfig hub = row("IMAGE", "TENCENT_TOKENHUB", "sd-turbo");
         AiModelConfig compat = row("IMAGE", "OPENAI_COMPAT", "sd-turbo");
-        compat.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\"}");
+        compat.setConfigJson("{\"base_url\":\"https://llm.bgssai.cn/v1\"}");
         when(mapper.selectByExample(any())).thenReturn(List.of(hub, compat));
         AiModelConfig chosen = service.resolve("IMAGE", "sd-turbo");
         assertEquals("TENCENT_TOKENHUB", chosen.getProviderCode());
@@ -115,7 +115,7 @@ class AiModelResolveCatalogTest {
         ReflectionTestUtils.setField(service, "secrets", new SysSecretReader(key -> "sk"));
         AiModelConfig whisper = row("ASR", "OPENAI_COMPAT", "whisper-1");
         whisper.setDefaultFlag(0);
-        whisper.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\",\"transcription_path\":\"/audio/transcriptions\"}");
+        whisper.setConfigJson("{\"base_url\":\"https://llm.bgssai.cn/v1\",\"transcription_path\":\"/audio/transcriptions\"}");
         when(mapper.selectByExample(any())).thenReturn(List.of(whisper));
         AiModelConfig chosen = service.resolve("ASR", null);
         assertEquals("OPENAI_COMPAT", chosen.getProviderCode());
@@ -135,7 +135,7 @@ class AiModelResolveCatalogTest {
         }));
         AiModelConfig whisper = row("ASR", "OPENAI_COMPAT", "whisper-1");
         whisper.setDefaultFlag(0);
-        whisper.setConfigJson("{\"base_url\":\"https://chat.bgssai.com/v1\",\"transcription_path\":\"/audio/transcriptions\"}");
+        whisper.setConfigJson("{\"base_url\":\"https://llm.bgssai.cn/v1\",\"transcription_path\":\"/audio/transcriptions\"}");
         when(mapper.selectByExample(any())).thenReturn(List.of(whisper));
         AiModelConfig chosen = service.resolve("ASR", null);
         assertEquals("OPENAI_COMPAT", chosen.getProviderCode());

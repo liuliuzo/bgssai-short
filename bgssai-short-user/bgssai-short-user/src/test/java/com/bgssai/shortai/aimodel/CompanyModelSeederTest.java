@@ -54,7 +54,7 @@ class CompanyModelSeederTest {
 
         AiModelConfig i2v = mapper.byModelId("m-bgssai-image-to-video");
         assertNotNull(i2v);
-        assertTrue(i2v.getConfigJson().contains("https://chat.bgssai.com/i2v"));
+        assertTrue(i2v.getConfigJson().contains("https://llm.bgssai.cn/i2v"));
         assertEquals(0, i2v.getDefaultFlag());
 
         AiModelConfig asr = mapper.byModelId("m-compat-asr-whisper");

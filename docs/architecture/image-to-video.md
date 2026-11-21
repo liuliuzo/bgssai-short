@@ -12,7 +12,7 @@
 
 ## 2. 调用
 
-- 公司图生视频源站固定为 `https://chat.bgssai.com/i2v`（再拼 `/v1/videos`）。`https://chat.bgssai.com` 根路径、`/v1`、明文 http、以及模型机 8007 端口仍然拒绝。模型行 `base_url` 为空时用这一条公网前缀。其它主机仍只接受根路径。
+- 公司图生视频源站固定为 `https://llm.bgssai.cn/i2v`（再拼 `/v1/videos`）。`https://llm.bgssai.cn` 根路径、`/v1`、明文 http、以及模型机 8007 端口仍然拒绝。模型行 `base_url` 为空时用这一条公网前缀。其它主机仍只接受根路径。
 - Bearer 先读 `ai.image_to_video.api_key`。该行为空时改读 `ai.openai_compat.api_key`。不读中枢键，不把密钥写进仓库。`secret_ref` 指向其它键时视为未配置。
 - 提交是 multipart `POST {origin}/v1/videos`。字段为图片文件和 prompt、width、height、num_frames、fps、steps、seed。不传 model、duration、image_url、回调或音频。
 - 只接受 HTTP 202，且 `id` 为 `i2v_` 加 32 位小写十六进制、`status_url` 恰好为 `/v1/videos/{id}`。否则记为结果不确定，不按返回的地址再请求。
@@ -34,7 +34,7 @@
 
 ## 4. 官方镜头
 
-- 共享种子、开发种子与生产种子均启用 `m-bgssai-image-to-video`，地址 `https://chat.bgssai.com/i2v`，超时 14400 秒，单价与文生视频同为每秒 20 分，按 25 帧 / 8 fps 向上取整计费；仓库只写空占位密钥，由管理端注入真实密钥后正式生效。
+- 共享种子、开发种子与生产种子均启用 `m-bgssai-image-to-video`，地址 `https://llm.bgssai.cn/i2v`，超时 14400 秒，单价与文生视频同为每秒 20 分，按 25 帧 / 8 fps 向上取整计费；仓库只写空占位密钥，由管理端注入真实密钥后正式生效。
 - 官方按钮有真实 PNG/JPEG 时入队图生视频，并沿用 `OfficialShotVideoService.submit` 分配的 `batch_id` 以便 `batch-progress` 追踪整批进度；成功后才把 `video_asset_id` 换成新成片，同时清零 `stale_flag` 并调用 `FinishedFilmLifecycle.expireAfterUpstreamChange` 将旧成片置为过期。失败把 `VIDEO_GENERATING` 按仍绑定的真实成片或首帧退回。种子占位不算照片，改走文生视频。
 - 供应商技术成片是 384×256、25 帧、8 fps、约 3 秒。界面照实写，不说成 9:16 或 6 秒。
 - v0.2 在解码前拒绝超过 16000000 像素，返回 HTTP 400。完成前读取内容返回 409。应用侧仍先做同样的像素检查，并且只在 `completed` 且相对路径吻合时取成片。
