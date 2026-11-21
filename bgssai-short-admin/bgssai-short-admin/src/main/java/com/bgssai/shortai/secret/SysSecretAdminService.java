@@ -12,6 +12,7 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,10 +55,24 @@ public class SysSecretAdminService {
             "sms.intl.template_param_count",
             "sms.intl.product_label");
 
+    private static final int MAX_KEY_NAME_LENGTH = 64;
+
+    private record SecretMeta(String value, String keyName, String platformKeyName, int enabled) {
+    }
+
     private final DataSource dataSource;
+    private final PlatformKeyNameProber platformKeyNameProber;
 
     public SysSecretAdminService(DataSource dataSource) {
+        this(dataSource, new PlatformKeyNameProber(null));
+    }
+
+    @Autowired
+    public SysSecretAdminService(DataSource dataSource, PlatformKeyNameProber platformKeyNameProber) {
         this.dataSource = dataSource;
+        this.platformKeyNameProber = platformKeyNameProber == null
+                ? new PlatformKeyNameProber(null)
+                : platformKeyNameProber;
     }
 
     public ApiResponse list(String keyPrefix) {
@@ -67,7 +82,7 @@ public class SysSecretAdminService {
             throw new BizException(CommonErrorCode.RULE_REJECT, "unsupported secret key_prefix");
         }
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT secret_key, secret_value, description, enabled, updated_at, updated_by "
+        String sql = "SELECT secret_key, secret_value, key_name, platform_key_name, description, enabled, updated_at, updated_by "
                 + "FROM sys_secret WHERE secret_key LIKE ? ORDER BY secret_key ASC";
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -79,6 +94,8 @@ public class SysSecretAdminService {
                     boolean sensitive = isSensitiveKey(key);
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("secret_key", key);
+                    item.put("key_name", trimToNull(rs.getString("key_name")));
+                    item.put("platform_key_name", trimToNull(rs.getString("platform_key_name")));
                     item.put("description", rs.getString("description"));
                     item.put("enabled", rs.getInt("enabled"));
                     item.put("configured_flag", value != null && !value.isBlank() ? 1 : 0);
@@ -102,6 +119,11 @@ public class SysSecretAdminService {
 
     @Transactional
     public ApiResponse update(String secretKey, String secretValue, Integer enabled, String description) {
+        return update(secretKey, secretValue, enabled, description, null);
+    }
+
+    @Transactional
+    public ApiResponse update(String secretKey, String secretValue, Integer enabled, String description, String keyName) {
         requireAdmin();
         if (secretKey == null || secretKey.isBlank()) {
             throw new BizException(CommonErrorCode.INVALID_PARAM, "secret_key required");
@@ -110,17 +132,37 @@ public class SysSecretAdminService {
         if (!isAllowedPrefix(key)) {
             throw new BizException(CommonErrorCode.RULE_REJECT, "admin secrets page does not edit key: " + key);
         }
-        String normalizedValue = secretValue == null ? null : normalizeAndValidateSecretValue(key, secretValue);
+        boolean sensitive = isSensitiveKey(key);
+        boolean blankOrMasked = secretValue == null || secretValue.isBlank() || isMaskedSecret(secretValue);
+        boolean allowSensitiveClear = sensitive && key.startsWith("sms.intl.") && secretValue != null && secretValue.isBlank();
+        boolean hasNewValue = secretValue != null && (!sensitive || !blankOrMasked || allowSensitiveClear);
+        String normalizedValue = hasNewValue ? normalizeAndValidateSecretValue(key, secretValue) : null;
+        boolean hasNewNonMaskedValue = normalizedValue != null && !normalizedValue.isBlank() && !isMaskedSecret(normalizedValue);
+
+        boolean keyNameSubmitted = keyName != null;
+        String normalizedKeyName = keyNameSubmitted ? normalizeAndValidateKeyName(keyName) : null;
         Integer normalizedEnabled = enabled == null ? null : (enabled == 1 ? 1 : 0);
         String admin = UserContext.getUserId() == null ? "admin" : UserContext.getUserId();
+
         boolean exists = exists(key);
         if (!exists) {
-            insert(key, normalizedValue == null ? "" : normalizedValue,
+            String initialValue = normalizedValue == null ? "" : normalizedValue;
+            String initialPlatformKeyName = hasNewNonMaskedValue
+                    ? platformKeyNameProber.probe(key, initialValue)
+                    : null;
+            insert(key, initialValue, normalizedKeyName, initialPlatformKeyName,
                     description == null ? key : description,
                     normalizedEnabled == null ? 1 : normalizedEnabled, admin);
         } else {
-            if (normalizedValue != null) {
+            if (hasNewValue) {
                 updateValue(key, normalizedValue, admin);
+            }
+            if (hasNewNonMaskedValue) {
+                String probedPlatformKeyName = platformKeyNameProber.probe(key, normalizedValue);
+                updatePlatformKeyName(key, probedPlatformKeyName, admin);
+            }
+            if (keyNameSubmitted) {
+                updateKeyName(key, normalizedKeyName, admin);
             }
             if (normalizedEnabled != null) {
                 updateEnabled(key, normalizedEnabled, admin);
@@ -129,10 +171,13 @@ public class SysSecretAdminService {
                 updateDescription(key, description, admin);
             }
         }
-        String current = read(key);
+        SecretMeta meta = readMeta(key);
+        boolean configured = meta.enabled() == 1 && meta.value() != null && !meta.value().isBlank();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("secret_key", key);
-        result.put("configured_flag", current != null && !current.isBlank() ? 1 : 0);
+        result.put("key_name", meta.keyName());
+        result.put("platform_key_name", meta.platformKeyName());
+        result.put("configured_flag", configured ? 1 : 0);
         return Responses.ok(result);
     }
 
@@ -167,8 +212,20 @@ public class SysSecretAdminService {
         }
         String value = read(key);
         boolean ok = value != null && !value.isBlank();
+        String platformKeyName = null;
+        if (ok) {
+            String probed = platformKeyNameProber.probe(key, value);
+            if (probed != null) {
+                String admin = UserContext.getUserId() == null ? "admin" : UserContext.getUserId();
+                updatePlatformKeyName(key, probed, admin);
+                platformKeyName = probed;
+            } else {
+                platformKeyName = readMeta(key).platformKeyName();
+            }
+        }
         return testResult(key, ok, ok ? 1 : 0,
-                ok ? "密钥已配置（未向供应商发起真实扣费探测）" : "密钥为空或未启用，写入后再测");
+                ok ? "密钥已配置（未向供应商发起真实扣费探测）" : "密钥为空或未启用，写入后再测",
+                platformKeyName);
     }
 
     private ApiResponse testDomesticSmsChannel(String key) {
@@ -223,11 +280,18 @@ public class SysSecretAdminService {
     }
 
     private static ApiResponse testResult(String key, boolean ok, int configuredFlag, String message) {
+        return testResult(key, ok, configuredFlag, message, null);
+    }
+
+    private static ApiResponse testResult(String key, boolean ok, int configuredFlag, String message, String platformKeyName) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("secret_key", key);
         result.put("ok", ok);
         result.put("configured_flag", configuredFlag);
         result.put("message", message);
+        if (platformKeyName != null) {
+            result.put("platform_key_name", platformKeyName);
+        }
         return Responses.ok(result);
     }
 
@@ -327,20 +391,89 @@ public class SysSecretAdminService {
         }
     }
 
-    private void insert(String key, String value, String description, int enabled, String admin) {
-        String sql = "INSERT INTO sys_secret (secret_key, secret_value, description, enabled, updated_by) "
-                + "VALUES (?, ?, ?, ?, ?)";
+    private void insert(String key, String value, String keyName, String platformKeyName,
+                        String description, int enabled, String admin) {
+        String sql = "INSERT INTO sys_secret (secret_key, secret_value, key_name, platform_key_name, description, enabled, updated_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, key);
             ps.setString(2, value);
-            ps.setString(3, description);
-            ps.setInt(4, enabled);
-            ps.setString(5, admin);
+            ps.setString(3, keyName);
+            ps.setString(4, platformKeyName);
+            ps.setString(5, description);
+            ps.setInt(6, enabled);
+            ps.setString(7, admin);
             ps.executeUpdate();
         } catch (Exception ex) {
             throw new BizException(CommonErrorCode.SYSTEM_ERROR, "insert sys_secret failed");
         }
+    }
+
+    private void updateKeyName(String key, String keyName, String admin) {
+        String sql = "UPDATE sys_secret SET key_name = ?, updated_by = ? WHERE secret_key = ?";
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, keyName);
+            ps.setString(2, admin);
+            ps.setString(3, key);
+            ps.executeUpdate();
+        } catch (Exception ex) {
+            throw new BizException(CommonErrorCode.SYSTEM_ERROR, "update sys_secret key_name failed");
+        }
+    }
+
+    private void updatePlatformKeyName(String key, String platformKeyName, String admin) {
+        String sql = "UPDATE sys_secret SET platform_key_name = ?, updated_by = ? WHERE secret_key = ?";
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, platformKeyName);
+            ps.setString(2, admin);
+            ps.setString(3, key);
+            ps.executeUpdate();
+        } catch (Exception ex) {
+            throw new BizException(CommonErrorCode.SYSTEM_ERROR, "update sys_secret platform_key_name failed");
+        }
+    }
+
+    private SecretMeta readMeta(String key) {
+        String sql = "SELECT secret_value, key_name, platform_key_name, enabled FROM sys_secret WHERE secret_key = ? LIMIT 1";
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, key);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new SecretMeta(
+                            trimToNull(rs.getString("secret_value")),
+                            trimToNull(rs.getString("key_name")),
+                            trimToNull(rs.getString("platform_key_name")),
+                            rs.getInt("enabled"));
+                }
+            }
+        } catch (Exception ignored) {
+            return new SecretMeta(null, null, null, 0);
+        }
+        return new SecretMeta(null, null, null, 0);
+    }
+
+    private static String normalizeAndValidateKeyName(String raw) {
+        String trimmed = trimToNull(raw);
+        if (trimmed != null && trimmed.length() > MAX_KEY_NAME_LENGTH) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "密钥名称最多 64 个字符");
+        }
+        return trimmed;
+    }
+
+    private static boolean isMaskedSecret(String value) {
+        return value != null && value.contains("****");
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void updateValue(String key, String value, String admin) {

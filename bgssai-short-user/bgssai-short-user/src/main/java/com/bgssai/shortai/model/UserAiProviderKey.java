@@ -10,6 +10,8 @@ public class UserAiProviderKey {
     private String accessKey;
     private String secretKey;
     private String baseUrl;
+    private String keyName;
+    private String platformKeyName;
     private Byte enabled;
     private Date createdAt;
     private Date updatedAt;
@@ -34,6 +36,12 @@ public class UserAiProviderKey {
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
+    public String getKeyName() { return keyName; }
+    public void setKeyName(String keyName) { this.keyName = keyName; }
+
+    public String getPlatformKeyName() { return platformKeyName; }
+    public void setPlatformKeyName(String platformKeyName) { this.platformKeyName = platformKeyName; }
 
     public Byte getEnabled() { return enabled; }
     public void setEnabled(Byte enabled) { this.enabled = enabled; }

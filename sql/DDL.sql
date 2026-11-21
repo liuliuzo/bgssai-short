@@ -120,10 +120,12 @@ CREATE TABLE `login_log`  (
 
 DROP TABLE IF EXISTS `sys_secret`;
 CREATE TABLE `sys_secret` (
-  `secret_key`   VARCHAR(128) NOT NULL                           COMMENT '密钥标识,对应代码中原配置键',
-  `secret_value` TEXT         NOT NULL                           COMMENT '密钥值(明文存储)',
-  `description`  VARCHAR(255) DEFAULT NULL                       COMMENT '说明',
-  `enabled`      TINYINT(1)   NOT NULL DEFAULT 1                 COMMENT '0=停用,1=启用',
+  `secret_key`        VARCHAR(128) NOT NULL                           COMMENT '密钥标识,对应代码中原配置键',
+  `secret_value`      TEXT         NOT NULL                           COMMENT '密钥值(明文存储)',
+  `key_name`          VARCHAR(64)  DEFAULT NULL                       COMMENT '密钥名称(自定义标签)',
+  `platform_key_name` VARCHAR(128) DEFAULT NULL                       COMMENT '平台侧密钥名称(自动探测)',
+  `description`       VARCHAR(255) DEFAULT NULL                       COMMENT '说明',
+  `enabled`           TINYINT(1)   NOT NULL DEFAULT 1                 COMMENT '0=停用,1=启用',
   `updated_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by`   VARCHAR(64)  DEFAULT NULL                       COMMENT '最后修改人',
   PRIMARY KEY (`secret_key`)
@@ -1537,6 +1539,8 @@ CREATE TABLE IF NOT EXISTS `user_ai_provider_key` (
   `access_key` VARCHAR(512) DEFAULT NULL COMMENT 'Access Key（如可灵 AK/SK 模式）',
   `secret_key` VARCHAR(1024) DEFAULT NULL COMMENT 'Secret Key（如可灵 AK/SK 模式）',
   `base_url` VARCHAR(512) DEFAULT NULL COMMENT '可选自定义接口根地址',
+  `key_name` VARCHAR(64) DEFAULT NULL COMMENT '密钥名称(用户自定义标签)',
+  `platform_key_name` VARCHAR(128) DEFAULT NULL COMMENT '平台侧密钥名称(自动探测)',
   `enabled` TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用：0-停用，1-启用',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

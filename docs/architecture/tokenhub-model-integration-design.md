@@ -122,8 +122,8 @@ Java 客户端对画面、视频、配音实际调用的是兼容接口，不读
 
 ## 5. 数据与配置
 
-本次不改表结构：复用 `ai_model_config`、`short_ai_task`、`short_asset`、`short_dubbing`、
-`short_subtitle`、`ai_usage_record` 和 `short_work.compose_setting_json`。DML 新增九个模型行及空值密钥种子。
+本次不改业务表结构：复用 `ai_model_config`、`short_ai_task`、`short_asset`、`short_dubbing`、
+`short_subtitle`、`ai_usage_record` 和 `short_work.compose_setting_json`。DML 新增九个模型行并将 `ai.tokenhub_cn.api_key` 与 `ai.tencent_tokenhub.api_key` 仅在空值时初始化为临时网关占位 `'sk-bgssai-short-cn-temp'` 及 `platform_key_name = 'bgssai-short temporary gateway key (tokenhub-cn)'`。
 
 TokenHub `config_json` 共同字段：
 

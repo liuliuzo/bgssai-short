@@ -17,6 +17,8 @@ public class UserAiProviderKeyItem {
     private String maskedAccessKey;
     private boolean hasSecretKey;
     private String baseUrl;
+    private String keyName;
+    private String platformKeyName;
     private Date updatedAt;
 
     public String getProviderCode() { return providerCode; }
@@ -51,6 +53,12 @@ public class UserAiProviderKeyItem {
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
+    public String getKeyName() { return keyName; }
+    public void setKeyName(String keyName) { this.keyName = keyName; }
+
+    public String getPlatformKeyName() { return platformKeyName; }
+    public void setPlatformKeyName(String platformKeyName) { this.platformKeyName = platformKeyName; }
 
     public Date getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }

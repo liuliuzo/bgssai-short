@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Button, Card, Checkbox, Form, Input, Modal, Select, Space, Switch, Table, Tabs, Typography, message } from 'antd'
+import { Button, Card, Checkbox, Form, Input, Modal, Select, Space, Switch, Table, Tabs, Tag, Typography, message } from 'antd'
 import secretsApi from '../../api/secrets'
 
 const { Title } = Typography
@@ -65,6 +65,7 @@ export default function AiSecretsPage() {
     const { data } = await secretsApi.test({ secret_key: secretKey })
     if (data?.result?.ok) {
       message.success(data.result.message)
+      await load()
     } else {
       message.warning(data?.result?.message || '未配置')
     }
@@ -120,6 +121,20 @@ export default function AiSecretsPage() {
           pagination={false}
           columns={[
             { title: '密钥', dataIndex: 'secret_key' },
+            ...(tab === 'ai'
+              ? [
+                  {
+                    title: '密钥名称',
+                    dataIndex: 'key_name',
+                    render: (v) => v || <Typography.Text type="secondary">-</Typography.Text>,
+                  },
+                  {
+                    title: '平台名称',
+                    dataIndex: 'platform_key_name',
+                    render: (v) => (v ? <Tag>{v}</Tag> : <Typography.Text type="secondary">-</Typography.Text>),
+                  },
+                ]
+              : []),
             { title: '说明', dataIndex: 'description' },
             {
               title: '已配置',
@@ -148,6 +163,7 @@ export default function AiSecretsPage() {
                     setClearSecret(false)
                     form.setFieldsValue({
                       secret_key: row.secret_key,
+                      key_name: row.key_name ?? '',
                       secret_value: row.is_sensitive === false ? (row.config_value ?? '') : '',
                       enabled: row.enabled === 1,
                       description: row.description,
@@ -174,6 +190,7 @@ export default function AiSecretsPage() {
           const values = await form.validateFields()
           const body = {
             secret_key: values.secret_key,
+            key_name: typeof values.key_name === 'string' ? values.key_name.trim() : '',
             enabled: values.enabled ? 1 : 0,
             description: values.description,
           }
@@ -195,6 +212,14 @@ export default function AiSecretsPage() {
           <Form.Item name="secret_key" label="密钥键">
             <Input disabled />
           </Form.Item>
+          <Form.Item name="key_name" label="密钥名称">
+            <Input maxLength={64} allowClear placeholder="可选" />
+          </Form.Item>
+          {editing?.platform_key_name && (
+            <Form.Item label="平台名称">
+              <Tag>{editing.platform_key_name}</Tag>
+            </Form.Item>
+          )}
           <Form.Item
             name="secret_value"
             label="配置值 / 密钥值"

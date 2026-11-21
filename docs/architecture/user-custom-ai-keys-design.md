@@ -216,3 +216,14 @@ HTTP 请求（UserContext）或 Worker（UsageScope）
 | `MINIMAX` | `GET /v1/token_plan/remains`，无该字段时 `GET /account/query_balance` | 剩余百分比，或 `available_amount`（元 / USD） |
 | `BGSSAI_TOKENHUB` | `GET /v1/account/balance`（网关 Key 自查，需 TokenHub 侧同步上线） | `balance_tokens`（额度 Token）、`balance_fen`（钱包元） |
 | `XAI` / `OPENAI` / `ANTHROPIC` / `TENCENT_TOKENHUB` | 无密钥级余额只读接口（Grok 仅管理密钥、OpenAI / Claude 仅管理员密钥） | `UNAVAILABLE`，前端显示「不支持查余额」 |
+
+## 6. 密钥命名与平台名称只读探测（`sys_secret` 与 `user_ai_provider_key`）
+
+- `sys_secret` 与 `user_ai_provider_key` 均扩展可空列 `key_name VARCHAR(64)` 与 `platform_key_name VARCHAR(128)`。
+- 管理员与用户均可通过 `key_name` 维护自定义标签（前后裁剪、最多 64 字、空串清为 `NULL`、省略保留原值）；删除 BYOK 行一并清除。
+- `PlatformKeyNameProber` 仅在收到非脱敏明文密钥（或管理端点击「测试」且探测返回非空）时执行公网 `https://`（禁重定向、禁私网/环回/CGNAT/ULA、`3s` 超时、失败静默返回 `null`）只读查询：
+  - BGSSAI TokenHub（`ai.tokenhub_cn.api_key`、`ai.tencent_tokenhub.api_key`，或 `base_url` 匹配 `*.bgssai-tokenhub.cn`、`*.bgssai-tokenhub.com`、`*.bgssai-tokenhub-global.com`、`*.developers.bgssai.cn`、`*.developers.bgssai.com`）：`GET <base_without_/v1>/v1/api-key` -> `name`。
+  - xAI（`ai.xai.api_key`、`XAI`/`GROK` 或 `api.x.ai`）：`GET <base_or_https://api.x.ai>/v1/api-key` -> `name`。
+  - OpenRouter（`ai.openrouter.api_key`、`OPENROUTER` 或 `openrouter.ai`）：`GET <base_or_https://openrouter.ai/api/v1>/auth/key` -> `data.name`（回退 `data.label`）。
+  - 其余供应商与非 AI 键不发起 HTTP 请求（直接返回 `null`）。
+- 留空、省略或提交脱敏掩码（`****`）更新或启停切换时保留现有 `platform_key_name`。

@@ -47,6 +47,7 @@ export default function UserAiProviderKeysCard() {
     setAuthMode(mode)
     setEditing(record)
     form.setFieldsValue({
+      keyName: record.key_name || '',
       apiKey: '',
       accessKey: '',
       secretKey: '',
@@ -69,6 +70,7 @@ export default function UserAiProviderKeysCard() {
       accessKey: values.accessKey,
       secretKey: values.secretKey,
       baseUrl: values.baseUrl,
+      keyName: values.keyName ?? '',
       enabled: values.enabled,
     })
     if (error) {
@@ -123,6 +125,26 @@ export default function UserAiProviderKeysCard() {
           <Typography.Text type="secondary">{r.provider_code}</Typography.Text>
         </Space>
       ),
+    },
+    {
+      title: '密钥名称',
+      key: 'keyName',
+      render: (_, r) =>
+        r.key_name ? (
+          <span>{r.key_name}</span>
+        ) : (
+          <Typography.Text type="secondary">-</Typography.Text>
+        ),
+    },
+    {
+      title: '平台名称',
+      key: 'platformKeyName',
+      render: (_, r) =>
+        r.platform_key_name ? (
+          <Tag>{r.platform_key_name}</Tag>
+        ) : (
+          <Typography.Text type="secondary">-</Typography.Text>
+        ),
     },
     {
       title: '状态',
@@ -220,6 +242,14 @@ export default function UserAiProviderKeysCard() {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
+          <Form.Item name="keyName" label="密钥名称">
+            <Input autoComplete="off" maxLength={64} allowClear placeholder="可选" />
+          </Form.Item>
+          {editing?.platform_key_name && (
+            <Form.Item label="平台名称">
+              <Tag>{editing.platform_key_name}</Tag>
+            </Form.Item>
+          )}
           {editing?.supports_ak_sk && (
             <Form.Item label="鉴权方式">
               <Segmented

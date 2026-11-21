@@ -253,6 +253,8 @@
         "masked_key": "mm-k****7890",
         "has_secret_key": false,
         "base_url": "https://api.minimax.io",
+        "key_name": "工作室",
+        "platform_key_name": null,
         "updated_at": "2026-11-17T10:00:00Z"
       }
     ]
@@ -262,11 +264,12 @@
 
 ## POST /bgssai/user/ai-keys（兼容 POST /api/user/ai-keys）
 
-保存或更新指定厂商的 BYOK 凭据。`provider_code` 支持 `KLINGAI` 别名自动归一化为 `KLING`，可灵支持单 `api_key`（Bearer）及 `access_key` + `secret_key`（HS256 JWT）两种模式；会校验空白裁剪、拒绝脱敏占位符（`****`）并校验 `base_url`（公网 HTTPS）。启用后运行时直连对应厂商并跳过 BGSSAI 平台额度检查与扣费。
+保存或更新指定厂商的 BYOK 凭据。`provider_code` 支持 `KLINGAI` 别名自动归一化为 `KLING`，可灵支持单 `api_key`（Bearer）及 `access_key` + `secret_key`（HS256 JWT）两种模式；会校验空白裁剪、拒绝脱敏占位符（`****`）并校验 `base_url`（公网 HTTPS）。可选 `key_name`（最多 64 字，省略保留原名称，空串清除）；提交非脱敏 `api_key` 时对 BGSSAI TokenHub / xAI / OpenRouter 非阻塞只读探测 `platform_key_name`，留空/省略 `api_key` 或启停切换时保留原 `platform_key_name`。启用后运行时直连对应厂商并跳过 BGSSAI 平台额度检查与扣费。
 
 ```json
 {
   "provider_code": "KLINGAI",
+  "key_name": "备用账户",
   "access_key": "ak-xxx",
   "secret_key": "sk-xxx",
   "base_url": "https://api.klingai.com",

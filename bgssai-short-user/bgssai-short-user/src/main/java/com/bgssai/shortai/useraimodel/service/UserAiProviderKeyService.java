@@ -50,10 +50,20 @@ public class UserAiProviderKeyService {
     }
 
     private final UserAiProviderKeyMapper userAiProviderKeyMapper;
+    private final PlatformKeyNameProber platformKeyNameProber;
+
+    public UserAiProviderKeyService(UserAiProviderKeyMapper userAiProviderKeyMapper) {
+        this(userAiProviderKeyMapper, new PlatformKeyNameProber());
+    }
 
     @Autowired
-    public UserAiProviderKeyService(UserAiProviderKeyMapper userAiProviderKeyMapper) {
+    public UserAiProviderKeyService(
+            UserAiProviderKeyMapper userAiProviderKeyMapper,
+            PlatformKeyNameProber platformKeyNameProber) {
         this.userAiProviderKeyMapper = userAiProviderKeyMapper;
+        this.platformKeyNameProber = platformKeyNameProber == null
+                ? new PlatformKeyNameProber()
+                : platformKeyNameProber;
     }
 
     public List<UserAiProviderKeyItem> listForCurrentUser() {
@@ -91,6 +101,8 @@ public class UserAiProviderKeyService {
 
         boolean baseUrlSubmitted = req.getBaseUrl() != null;
         String validatedBaseUrl = baseUrlSubmitted ? UserAiProviderCatalog.validateBaseUrl(req.getBaseUrl()) : null;
+        boolean keyNameSubmitted = req.getKeyName() != null;
+        String submittedKeyName = keyNameSubmitted ? normalizeAndValidateKeyName(req.getKeyName()) : null;
 
         UserAiProviderKey existing = selectOneByUserAndProvider(userId, providerCode);
 
@@ -146,6 +158,17 @@ public class UserAiProviderKeyService {
         String finalBaseUrl = baseUrlSubmitted
                 ? validatedBaseUrl
                 : (existing != null ? trimToNull(existing.getBaseUrl()) : null);
+        String finalKeyName = keyNameSubmitted
+                ? submittedKeyName
+                : (existing != null ? trimToNull(existing.getKeyName()) : null);
+        String finalPlatformKeyName;
+        if (hasNewApiKey) {
+            finalPlatformKeyName = platformKeyNameProber.probe(providerCode, finalBaseUrl, finalApiKey);
+        } else if (!hasText(finalApiKey)) {
+            finalPlatformKeyName = null;
+        } else {
+            finalPlatformKeyName = existing != null ? trimToNull(existing.getPlatformKeyName()) : null;
+        }
         Byte finalEnabled;
         if (req.getEnabled() != null) {
             finalEnabled = (byte) (req.getEnabled() ? 1 : 0);
@@ -164,6 +187,8 @@ public class UserAiProviderKeyService {
             row.setAccessKey(finalAccessKey);
             row.setSecretKey(finalSecretKey);
             row.setBaseUrl(finalBaseUrl);
+            row.setKeyName(finalKeyName);
+            row.setPlatformKeyName(finalPlatformKeyName);
             row.setEnabled(finalEnabled);
             row.setCreatedAt(now);
             row.setUpdatedAt(now);
@@ -175,6 +200,8 @@ public class UserAiProviderKeyService {
         existing.setAccessKey(finalAccessKey);
         existing.setSecretKey(finalSecretKey);
         existing.setBaseUrl(finalBaseUrl);
+        existing.setKeyName(finalKeyName);
+        existing.setPlatformKeyName(finalPlatformKeyName);
         existing.setEnabled(finalEnabled);
         existing.setUpdatedAt(now);
         userAiProviderKeyMapper.updateByPrimaryKey(existing);
@@ -328,6 +355,8 @@ public class UserAiProviderKeyService {
         item.setEnabled(isRowEnabled(row));
         item.setHasSecretKey(hasSk);
         item.setBaseUrl(trimToNull(row.getBaseUrl()));
+        item.setKeyName(trimToNull(row.getKeyName()));
+        item.setPlatformKeyName(trimToNull(row.getPlatformKeyName()));
         item.setUpdatedAt(row.getUpdatedAt());
 
         if (hasAk && hasSk) {
@@ -366,6 +395,14 @@ public class UserAiProviderKeyService {
 
     private static boolean isRowEnabled(UserAiProviderKey row) {
         return row != null && row.getEnabled() != null && row.getEnabled() == 1;
+    }
+
+    private static String normalizeAndValidateKeyName(String raw) {
+        String trimmed = trimToNull(raw);
+        if (trimmed != null && trimmed.length() > 64) {
+            throw new BizException(CommonErrorCode.INVALID_PARAM, "密钥名称最多 64 个字符");
+        }
+        return trimmed;
     }
 
     private static String trimToNull(String raw) {

@@ -18,6 +18,7 @@ export function buildProviderKeyPayload({
   accessKey = '',
   secretKey = '',
   baseUrl = '',
+  keyName,
   enabled = true,
 }) {
   const code = trimText(providerCode).toUpperCase()
@@ -43,6 +44,13 @@ export function buildProviderKeyPayload({
     provider_code: code,
     base_url: trimmedBaseUrl,
     enabled: Boolean(enabled),
+  }
+  if (keyName !== undefined) {
+    const trimmedKeyName = trimText(keyName)
+    if (trimmedKeyName.length > 64) {
+      return { error: '密钥名称最多 64 个字符' }
+    }
+    payload.key_name = trimmedKeyName
   }
 
   if (useAkSk) {
